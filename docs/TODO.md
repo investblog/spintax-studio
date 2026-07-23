@@ -31,7 +31,16 @@ interchangeable.
 - [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderBatch` /
       `ExtractModel` / `HealthReport` over the engine. Pure Pascal, GUI- and network-free,
       fully tested — verifiable without a window. The layer both the GUI and the LLM loop
-      hang off.
+      hang off. **This is where the Studio-context ↔ pure-engine boundary lives**, and the
+      review pinned four contracts M0 must carry (spec §§4.2–4.6, 5):
+      - `HealthReport`/validation pass **both** `knownIncludes` and `knownVariables`
+        (engine has the overload) — else panel-declared vars flag false `variable.undefined`;
+      - partial preview renders the selection in **full-document context** (directives +
+        runtime ctx + locale in scope), not isolated;
+      - batch seeds are `seedBase + i`, recorded, with a dedup retry budget and a
+        requested/generated/dropped report;
+      - the diagnostic **locator is Studio-side** (engine gives no offsets): the anchorable
+        vs general code split is specified for M2, and never alters the engine's verdict.
 - [ ] **M1 — GUI shell.** Two panes, SynEdit + a spintax highlighter, live preview, bracket
       matching, validity indicator. The DeepL skeleton.
 - [ ] **M2 — panels.** Variables (`SpExtract`), diagnostics (`SpValidate`) with
