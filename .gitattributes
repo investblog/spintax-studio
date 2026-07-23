@@ -1,0 +1,18 @@
+# Normalize to LF in the repository. Studio is built on Windows (Lazarus/Delphi) and its
+# CI runs on Linux; Pascal sources travel between the two, and a CRLF round-trip through
+# git would show every line as changed.
+* text=auto eol=lf
+
+# Shell scripts must stay LF even on a Windows checkout: CRLF breaks the shebang.
+*.sh text eol=lf
+
+# Pascal sources
+*.pas text eol=lf
+*.lpr text eol=lf
+*.lfm text eol=lf
+*.inc text eol=lf
+
+# Binary assets, never diffed or line-normalized
+*.ico binary
+*.png binary
+*.res binary

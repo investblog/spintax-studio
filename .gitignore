@@ -1,0 +1,81 @@
+# Baseline (from the canon library's template) + the Free Pascal / Lazarus stack.
+
+# secrets — never commit (templates like .env.example are kept)
+.env
+.env.*
+!.env.example
+.dev.vars
+.secrets
+*.pem
+id_rsa
+id_ed25519
+
+# LLM provider keys and local model config — this app talks to Anthropic / OpenAI /
+# Google / a local endpoint, and the keys are the user's. They live in %APPDATA% or the
+# Windows Credential Manager at runtime; a key must never be committable.
+*.key
+apikeys.*
+providers.local.*
+
+# dependencies
+node_modules/
+.venv/
+venv/
+__pycache__/
+
+# build / generated artifacts
+dist/
+build/
+*.log
+
+# local indexes — regenerable caches; never commit
+.codegraph/
+.docindex/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# --- Free Pascal / Lazarus / Delphi ---
+# compiler units and intermediates
+*.o
+*.ppu
+*.or
+*.a
+*.compiled
+*.res
+*.rsj
+*.dcu
+lib/
+backup/
+__history/
+__recovery/
+
+# fpc drops its link script beside the sources
+ppas.bat
+ppas.sh
+
+# built binaries — a source repo tracks no executable
+*.exe
+
+# Lazarus / Delphi per-user session state — machine-local, never shared
+*.lps
+*.identcache
+*.local
+*.dproj.local
+*.dsk
+
+# IDE build output
+Win32/
+Win64/
+Debug/
+Release/
+
+# Agent working state, not the product. It is instructions for the tooling that builds
+# the app, not something a reader of this repository needs. It stays ON DISK so a session
+# opened here still gets its charter; only the repository is kept free of it — the same
+# split the engine repo uses.
+.claude/
+.agents/
+AGENTS.md
+CLAUDE.md
