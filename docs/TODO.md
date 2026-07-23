@@ -54,6 +54,34 @@ interchangeable.
       Fix), the authoring-prompt as system, a local model via localhost, synonyms through
       the same layer. Keys local, zero telemetry.
 
+## Publish prep — Microsoft Store (spec §11)
+
+Distribution target is the Store via MSIX. Some of these are **constraints on M0/M1** (bake
+them in, don't retrofit); the submission tasks come once M1/M2 give a demoable product.
+
+Constraints (design into the app from the start):
+- [ ] **No admin, known-folder storage.** Settings / templates / keys go to the user profile
+      via known-folder APIs (`%APPDATA%` / `LocalAppData` / Credential Manager), never next to
+      the `.exe` — required for the MSIX container and to avoid elevation (spec §7, §11).
+- [ ] **Stable app identity.** Package name + publisher (must match Partner Center), 4-part
+      MSIX version that only increases, an icon/asset set for Store tiles.
+- [ ] **Offline baseline is the review keystone.** Editor / validation / render / export must
+      work with no key and no network; AI stays opt-in — so a reviewer verifies the product
+      without any setup (spec §1, §11).
+
+Submission tasks (after a demoable build):
+- [ ] **MSIX packaging** of the Lazarus `.exe` (Store re-signs; fallback EXE/MSI only if MSIX
+      won't do — then versioned HTTPS URL + silent install + our own signing/hosting/updates).
+- [ ] **Privacy policy** (required with LLM/keys/network): what is user-generated, data goes
+      straight to the user's provider with no transit storage, keys stay local, zero telemetry.
+- [ ] **AI disclosure + report path** (if live generative AI ships): disclose in listing +
+      Partner Center, and give an in-app/listing contact for reporting problematic AI output.
+- [ ] **Listing** = a real product (clear screenshots: template → preview → export), not a
+      dev-tool stub.
+
+Decision owed **before first submission** (not switchable later): Partner Center account type —
+individual vs company (company for commercial). See spec §10/§11.
+
 ## Non-negotiable, carried from the engine's experience (spec §7)
 
 Each of these has already cost the engine a real debugging session — they are not
