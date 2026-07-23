@@ -12,17 +12,15 @@ the decisions still owed.
 
 ## Decisions to settle first (spec §10)
 
-These gate everything below — especially the first, which sets the whole tech direction.
+The two that gate M0/M1 are settled; the rest are M3/M4-level and can wait.
 
-- [ ] **GUI framework — Lazarus/LCL vs Delphi VCL.** The spec recommends Lazarus: same FPC
-      that builds the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
-      Delphi VCL is possible (the engine already compiles there) but is a licence and weight.
-      → record as ADR 0002 once chosen.
-- [ ] **How Studio pulls the engine** — git submodule (recommended), source-vendor, or a
-      Delphi package (DPM/Boss). → ADR 0001.
-- [ ] **Thesaurus for the synonym feature** — a local base (which one?) or LLM-only.
+- [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
+      FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
+- [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
+      at `engine/`, pinned to tag `v0.1.0`. Clone with `--recurse-submodules`.
+- [ ] **Thesaurus for the synonym feature** — a local base (which one?) or LLM-only. (M4)
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
-      sessions, or treat them as session-only.
+      sessions, or treat them as session-only. (M4 / M3)
 - [ ] **On-disk "template set" format** — feeds `#include` resolution and `knownIncludes`.
 
 ## Milestones (spec §9)
@@ -62,3 +60,6 @@ theoretical:
 ## Done
 
 - [x] Repository bootstrapped; the spec homed as the source of truth (2026-07-23).
+- [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
+- [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
+      0002 and 0001 (2026-07-23).
