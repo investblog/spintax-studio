@@ -39,13 +39,15 @@ interchangeable.
         runtime ctx + locale in scope), not isolated;
       - batch seeds are `seedBase + i`, recorded, with a dedup retry budget and a
         requested/generated/dropped report;
-      - the diagnostic **locator is Studio-side** (engine gives no offsets): the anchorable
-        vs general code split is specified for M2, and never alters the engine's verdict.
+      - diagnostics are **consumed with their `TSpDiag` positions** (`Line`/`Column`/`End*`,
+        engine ≥ `v0.2.0`) — Studio does NOT reimplement the validator scan; `Line = 0`
+        means unknown → panel-only, no squiggle, and positions never alter the verdict.
 - [ ] **M1 — GUI shell.** Two panes, SynEdit + a spintax highlighter, live preview, bracket
       matching, validity indicator. The DeepL skeleton.
-- [ ] **M2 — panels.** Variables (`SpExtract`), diagnostics (`SpValidate`) with
-      jump-to-error, partial preview of a selection, select-and-wrap, hotkeys on every key
-      action.
+- [ ] **M2 — panels.** Variables (`SpExtract`), diagnostics (`SpValidate`) with squiggles
+      and jump-to-error driven by `TSpDiag` positions (**needs engine ≥ `v0.2.0`** — the
+      submodule is pinned at `v0.1.0`, so bump it here), partial preview of a selection,
+      select-and-wrap, hotkeys on every key action.
 - [ ] **M3 — export.** Generate N with distinct seeds, shingle dedup, `.xlsx` / `.txt` /
       per-file.
 - [ ] **M4 — LLM loop.** `TLlmProvider` + adapters + `TAuthoringLoop` (Generate / Verify /

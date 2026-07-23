@@ -86,23 +86,25 @@
 - Парные скобки: подсветка пары под курсором; незакрытая/лишняя — из
   `SpValidate` (`bracket.unclosed`, `bracket.mismatched`,
   `bracket.unexpected-closing`).
-- Подчёркивания ошибок (squiggles) прямо в тексте по диагностике движка (см.
-  4.3). Позиции движок не отдаёт: `TSpDiag` — это только `Code` + `Severity`, без
-  offset/token (проверено, `engine/src/Spintax.pas`). Значит локатор — на стороне
-  Studio, и его контракт задаётся явно (**M2**, вместе с панелью диагностики; в M1
-  squiggles допустимо не иметь):
-  - **Привязываемые к offset** (Studio своим сканом находит место): `bracket.*`
-    (к скобке под курсором), `variable.undefined` / `variable.self-reference` /
-    `variable.circular-reference` (к вхождению `%var%`), `definition.duplicate-name`
-    / `set/def.malformed` / `def.include-in-value` (к соответствующему
-    `#set`/`#def`), `include.unknown-target` (к `#include`), `permutation.unknown-key`
-    / `permutation.min/maxsize-not-integer` (к `[<config>]`).
-  - **Остаются общими** (подсветка блока или предупреждение в панели без точного
-    caret): `plural.arity`, `plural.count-macro`, `plural.nested-brackets` — их
-    место — конкретный `{plural …}`-блок, но без токена от движка Studio привязывает
-    к началу блока, а не к точной подстроке.
-  Один источник истины — вердикт движка; локатор лишь помогает глазу и никогда не
-  меняет сам вердикт.
+- Подчёркивания ошибок (squiggles) прямо в тексте по диагностике движка (см. 4.3).
+  **Позиции даёт сам движок** (с `spintax-win` v0.2.0): `TSpDiag` несёт
+  `Line` / `Column` / `EndLine` / `EndColumn` поверх `Code` / `Severity`. Studio их
+  **потребляет напрямую и НЕ переписывает скан валидатора** — это и есть смысл жить
+  на движке-как-истине. Контракт потребления:
+  - все 1-based; **колонки в code points** от начала строки (одинаково под FPC-UTF-8
+    и UTF-16), строки — по редакторному EOL (`\n`, `\r\n`, `\r`). SynEdit тоже считает
+    колонку в символах, так что маппинг прямой; если бы движок отдавал байты, Studio
+    промахивался бы на каждой кириллической строке — он отдаёт code points, поэтому нет.
+  - `Line = 0` означает «позиция неизвестна» (движок локализует editor-critical коды —
+    скобки, malformed-директивы, undefined-переменные, unknown-includes, plural arity —
+    а редкие оставляет `0/0`, честно, а не наугад). На `Line = 0` squiggle не рисуем:
+    диагноз идёт **только в панель** (4.3), без подчёркивания в тексте.
+  - `End* > 0` — рисуем подчёркивание на диапазоне `[Line:Column .. EndLine:EndColumn)`;
+    `End* = 0` — ставим caret/точечную метку в `Line:Column`.
+  Один источник истины — вердикт движка; позиции — вспомогательный слой поверх него и
+  никогда не меняют сам вердикт. Squiggles едут в **M2** (вместе с панелью диагностики);
+  в M1 их допустимо не иметь. Требование к движку: submodule на теге ≥ `v0.2.0`
+  ([ADR 0001](decisions/0001-engine-as-submodule.md) — сейчас пин `v0.1.0`, позиций там ещё нет).
 - **Select-and-wrap** (hotkey): выделение → `{выделение|}`; повтор на пустом
   варианте добавляет `|`. Отдельные врапы: в permutation `[...]`, в условку
   `{?VAR?...}`.
@@ -138,11 +140,13 @@
   **оба** множества обязательно. `knownVariables` — имена, которые пользователь
   задал в панели переменных (4.4); без них валидатор выдаст `variable.undefined`
   на переменную, которую пользователь уже определил, и статус ложно покраснеет.
-  Список `TSpDiag` (code + severity). Вердикт: невалидно, если есть хоть один
-  `error`.
+  Список `TSpDiag` (`code` + `severity` + позиции `Line`/`Column`/`EndLine`/`EndColumn`,
+  см. 4.1). Вердикт: невалидно, если есть хоть один `error`.
 - Индикатор в статус-строке: зелёный (valid) / красный (N ошибок) / жёлтый
   (только warning, напр. `variable.undefined`).
-- Клик по строке диагностики — прыжок к месту в редакторе.
+- Клик по строке диагностики — **прыжок кареткой в `Line:Column`** из `TSpDiag`
+  (и выделение диапазона, если есть `End*`). При `Line = 0` (позиция неизвестна) строка
+  диагностики остаётся в панели, но никуда не прыгает — Studio не выдумывает место.
 - Коды: скобки, `set/def.malformed`, `definition.duplicate-name`,
   `def.include-in-value`, `permutation.unknown-key`,
   `permutation.min/maxsize-not-integer`, `plural.nested-brackets`,
@@ -170,10 +174,12 @@
 - **Verify**: возвращённый шаблон сразу через `SpValidate` + N пробных
   `SpRender` (детект пустых рендеров и fullwidth-fallback как признака битого
   плюраля).
-- **Fix / repair loop**: если есть `error`-диагностика — она формализованно
-  уходит обратно модели («строка 3: `plural.arity`, ru требует 3 формы»), модель
-  чинит, цикл до чистого вердикта или до лимита итераций. Человек включается,
-  когда валидно.
+- **Fix / repair loop**: если есть `error`-диагностика — она формализованно уходит
+  обратно модели, и `Line`/`Column` берутся **из `TSpDiag`**, а не угадываются
+  («строка 3, кол. 1: `plural.arity`, ru требует 3 формы»). Точная координата плюс
+  фрагмент этой строки резко повышают шанс, что модель починит нужное место; при
+  `Line = 0` даём код без координаты. Модель чинит, цикл до чистого вердикта или до
+  лимита итераций. Человек включается, когда валидно.
 - **Провайдеры** (абстракция `TLlmProvider`): облачные (Anthropic, OpenAI,
   Google) + локальная модель через localhost (Ollama/совместимый OpenAI API).
   authoring-prompt провайдер-независим. Ключи — локально.
@@ -208,7 +214,8 @@
 1. **Движок** — `spintax-win` (`unit Spintax`), встроен в процесс как git
    submodule на теге (ADR 0001, `docs/decisions/`). Не трогаем. API: `SpRender`,
    `SpNeutralize`, `SpSafetyRestore`, `SpStripSentinels`, `SpExtract`, `SpValidate`
-   (в т.ч. overload с `knownVariables`), `NormalizeBaseLang`, `PluralArity`. RNG-шов:
+   (overload с `knownVariables`; `TSpDiag` несёт позиции `Line`/`Column`/`EndLine`/
+   `EndColumn` с ≥ `v0.2.0`), `NormalizeBaseLang`, `PluralArity`. RNG-шов:
    `TFirstRng`, `TLastRng`, `TSequenceRng`, `TMulberry32Rng`.
 2. **editor-core** (`SpxStudio.pas`) — тонкий, чистый, zero-dep слой оркестрации
    над движком, GUI- и сеть-независимый. Именно к нему одинаково цепляются GUI и
@@ -222,7 +229,9 @@
    - `ExtractModel(tmpl): TVarModel` — переменные/инклюды для панели.
    - `HealthReport(tmpl; ctx; knownIncludes; knownVariables): TReport` — диагностика
      (`SpValidate` с **обоими** множествами, чтобы заданная в панели переменная не
-     ловила ложный `variable.undefined`) + M пробных рендеров в контексте `ctx` +
+     ловила ложный `variable.undefined`; `TReport` прокидывает позиции `TSpDiag` без
+     изменений — их потребляют и squiggles, и прыжок, и repair-петля) + M пробных
+     рендеров в контексте `ctx` +
      флаги (есть пустые? есть fullwidth-fallback? сколько вариативности?). Это то,
      что потребляет и панель, и repair-петля.
 3. **LLM-слой** (`SpxLlm.pas`) — `TLlmProvider` + адаптеры + `TAuthoringLoop`
@@ -292,8 +301,9 @@ Generate/Fix → LLM-слой → left panel → тот же цикл прове
   Верифицируемо без GUI.
 - **M1 — GUI-оболочка.** Две панели, SynEdit + spintax-highlighter, живой
   предпросмотр, парные скобки, статус валидности. DeepL-скелет.
-- **M2 — панели.** Переменные (SpExtract), диагностика (SpValidate) с прыжком к
-  ошибке, частичный предпросмотр, select-and-wrap, горячие клавиши.
+- **M2 — панели.** Переменные (SpExtract), диагностика (SpValidate) со squiggles и
+  прыжком к ошибке **по позициям `TSpDiag`** (не свой скан; требует движок ≥ `v0.2.0`),
+  частичный предпросмотр, select-and-wrap, горячие клавиши.
 - **M3 — экспорт.** Generate N, дедуп по шинглам, xlsx/txt/по-файлу.
 - **M4 — LLM-петля.** `TLlmProvider` + адаптеры + `TAuthoringLoop`
   (Generate/Verify/Fix), authoring-prompt как system, локальная модель. Синонимы.
