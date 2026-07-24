@@ -26,8 +26,13 @@ The two that gate M0/M1 are settled; the rest are M3/M4-level and can wait.
 ## Milestones (spec §9)
 
 M0 is reused whole; the GUI (M1–M2) and the LLM loop (M4) are independent; M3/M4 order is
-interchangeable.
+interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spec §9); M4 and
+the managed tier are later releases.
 
+- [ ] **Pre-M0 — bump the engine submodule to `v0.2.0`** once `spintax-win` is tagged.
+      Diagnostic positions (`TSpDiag.Line/Column/…`) exist only from v0.2.0, and M0's
+      `HealthReport` already carries them — so bump before M0 touches positions, not at M2,
+      or M0 is written against an API the `v0.1.0` pin lacks (spec §9).
 - [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderBatch` /
       `ExtractModel` / `HealthReport` over the engine. Pure Pascal, GUI- and network-free,
       fully tested — verifiable without a window. The layer both the GUI and the LLM loop
@@ -45,9 +50,8 @@ interchangeable.
 - [ ] **M1 — GUI shell.** Two panes, SynEdit + a spintax highlighter, live preview, bracket
       matching, validity indicator. The DeepL skeleton.
 - [ ] **M2 — panels.** Variables (`SpExtract`), diagnostics (`SpValidate`) with squiggles
-      and jump-to-error driven by `TSpDiag` positions (**needs engine ≥ `v0.2.0`** — the
-      submodule is pinned at `v0.1.0`, so bump it here), partial preview of a selection,
-      select-and-wrap, hotkeys on every key action.
+      and jump-to-error driven by `TSpDiag` positions (engine ≥ `v0.2.0` — bumped in Pre-M0,
+      not here), partial preview of a selection, select-and-wrap, hotkeys on every key action.
 - [ ] **M3 — export.** Generate N with distinct seeds, shingle dedup, `.xlsx` / `.txt` /
       per-file.
 - [ ] **M4 — LLM loop.** `TLlmProvider` + adapters + `TAuthoringLoop` (Generate / Verify /
@@ -72,15 +76,23 @@ Constraints (design into the app from the start):
 Submission tasks (after a demoable build):
 - [ ] **MSIX packaging** of the Lazarus `.exe` (Store re-signs; fallback EXE/MSI only if MSIX
       won't do — then versioned HTTPS URL + silent install + our own signing/hosting/updates).
-- [ ] **Privacy policy** (required with LLM/keys/network): what is user-generated, data goes
-      straight to the user's provider with no transit storage, keys stay local, zero telemetry.
-- [ ] **AI disclosure + report path** (if live generative AI ships): disclose in listing +
-      Partner Center, and give an in-app/listing contact for reporting problematic AI output.
+- [ ] **Privacy policy — even for R0.** R0 is offline, so a short page is trivially true and
+      builds Store trust: *no telemetry, no account, no network, local files only.* Expand it
+      when BYOK AI (R1) adds network, and again for a managed tier (data transits our
+      zero-retention proxy).
+- [ ] **No purchases in R0** — no paywall, trial, or IAP; a free offline app keeps the first
+      submission out of financial policy too.
+- [ ] **AI disclosure + report path** — **R1+ only** (once live generative AI ships): disclose
+      in listing + Partner Center, and give an in-app/listing contact for reporting problematic
+      AI output. R0 ships no AI, so this obligation does not apply to the first submission.
 - [ ] **Listing** = a real product (clear screenshots: template → preview → export), not a
       dev-tool stub.
 
-Decision owed **before first submission** (not switchable later): Partner Center account type —
-individual vs company (company for commercial). See spec §10/§11.
+Decisions owed **before the relevant submission** (not switchable later):
+- Partner Center account type — individual vs company (company for commercial), before R0.
+- **Paid managed-AI tier needs its own ADR** before any billing (R2+): Store IAP vs
+  third-party purchase API (Stripe/…), prices/terms, cancellation, Partner Center disclosure.
+  See spec §10/§11.
 
 ## Non-negotiable, carried from the engine's experience (spec §7)
 
