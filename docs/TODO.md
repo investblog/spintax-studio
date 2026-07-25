@@ -43,11 +43,11 @@ interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spe
 the managed tier are later releases.
 
 - [ ] **Pre-M0 (a) — release the engine as `v0.2.0`, then bump the submodule.** Two additive
-      public-API pieces ride that tag: `TSpDiag` positions (already on the engine's `main`)
-      and `SpExtractDirectives` (still to write, spec §4.2) — every `#set` / `#def` /
-      `#include` the renderer sees, each with its source span (the `TSpDiag` position
-      contract), its source text and, for macros, its value. Three M0 consumers need it and
-      none of them can be served by `SpExtract`:
+      public-API pieces ride that tag, **both already on the engine's `main`**: `TSpDiag`
+      positions and `SpExtractDirectives` (spec §4.2) — every `#set` / `#def` / `#include`
+      the renderer sees, each with its source span (the `TSpDiag` position contract), its
+      source text and, for macros, its value. Three M0 consumers need it and none of them
+      can be served by `SpExtract`:
       - the **include resolver** substitutes occurrences by span. A target *list* is not
         enough — it is deduplicated, so the same slug commented out and live is one entry
         (measured), and expanding both leaks the commented copy's text plus a stray `#/`,
@@ -93,7 +93,16 @@ the managed tier are later releases.
         `knownIncludes` = the set's slugs. Without the closure a document is green while the
         export degrades on a broken fragment; without the union a fragment using a parent's
         macro reports a false `variable.undefined` (measured). Any `error` anywhere in the
-        closure makes the verdict red.
+        closure makes the verdict red. Cache per file text: validation cost grows
+        super-linearly with directive count (engine measurement: ~28 ms at 400 directives,
+        ~245 ms at 1600), so only the edited file may revalidate on a keystroke.
+      - **Expand only what has the reference shape.** The engine recognises `#include` wider
+        than `spintax-js`/PHP/Python do (`#includes "x"`, `#include"x"`, `#include "x" junk`,
+        `#include ""`, `#include "a" "b"`), and misses `#include` + newline + `"x"` which the
+        reference accepts — a known engine defect with its own fix pending. M0 gates every
+        occurrence on `^[ \t]*#include\s+"([^"]+)"\s*$` over the reported line, and **writes
+        its tests against that reference rule**, never against the engine's current width, so
+        the gate turns into a no-op when the engine narrows (ADR 0003).
       - **One engine thread, warmed at startup.** The engine's post-process builds a lazy
         global (`GAbbrevs`) with no synchronisation, so two first renders on two threads
         race; and post-process is 0.7 s on a 237 KB template, too slow for the UI thread on
@@ -101,9 +110,13 @@ the managed tier are later releases.
         own every engine call, "latest wins" (spec §5).
 - [ ] **M1 — GUI shell.** Two panes, SynEdit + a spintax highlighter, live preview, bracket
       matching, validity indicator. The DeepL skeleton.
-- [ ] **M2 — panels.** Variables (`SpExtract`), diagnostics (`SpValidate`) with squiggles
-      and jump-to-error driven by `TSpDiag` positions (engine ≥ `v0.2.0` — bumped in Pre-M0,
-      not here), partial preview of a selection, select-and-wrap, hotkeys on every key action.
+- [ ] **M2 — panels.** Variables (`SpExtract` + `SpExtractDirectives` for the values),
+      diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`
+      positions (engine ≥ `v0.2.0` — bumped in Pre-M0, not here), partial preview of a
+      selection, select-and-wrap, hotkeys on every key action. Studio's own lints surface
+      here too, labelled as ours rather than the engine's: a raw U+E000–U+E005 sentinel in
+      the document, an include cycle, a depth-limit hit, a slug collision in the set, and an
+      `#include` the engine accepts but the family reference renders as text.
 - [ ] **M3 — export.** Generate N with distinct seeds, shingle dedup, `.xlsx` / `.txt` /
       per-file.
 - [ ] **M4 — LLM loop.** `TLlmProvider` + adapters + `TAuthoringLoop` (Generate / Verify /
@@ -159,6 +172,11 @@ theoretical:
   `TLastRng` are for deterministic checks, never the UI.
 - The engine stays pure — no network, no GUI is added to it. The golden corpus is
   referenced, never vendored.
+- Reserved sentinels U+E000–U+E005 are the engine's. `SpRender` deletes them before parsing
+  while `SpExtract` / `SpValidate` / `SpExtractDirectives` read the source as written, so a
+  raw one in a document makes the panel and the preview tell different stories — the family
+  reference included. Data-derived values go in through `SpNeutralize`; the template itself is
+  author content and is never auto-shielded.
 
 ## Done
 

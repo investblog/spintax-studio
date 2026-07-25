@@ -72,10 +72,23 @@ So the resolver needs an **occurrence-level** contract — positions, not a set 
    include is simply not in the list, and an inline `#include` — which the engine does not
    treat as a directive — is not either. Studio replaces spans **last occurrence first**, so
    earlier offsets stay valid, and owns no scanner of its own.
-4. **editor-core never touches the disk.** The set reaches it as an in-memory `slug → text`
+4. **An occurrence is expanded only if its line has the reference shape** —
+   `^[ \t]*#include\s+"([^"]+)"\s*$` against the `Text` the engine reported. The engine
+   currently recognises `#include` **wider** than the family reference: `#includes "frag"`,
+   `#include"frag"`, `#include "frag" junk`, `#include ""` and `#include "a" "b"` come back as
+   includes (and `SpValidate` calls the target unknown), where `spintax-js`, PHP and Python
+   render all five as ordinary text; conversely `#include` + newline + `"frag"` is an include
+   to the reference and invisible to the engine. That is a long-standing engine defect, not
+   corpus-covered and scheduled for its own fix. Until it lands, Studio expanding what the
+   engine reports would produce output no other engine in the family produces — so the shape
+   check stands between them. It is not a scanner: Studio still never looks for directives,
+   it only checks the shape of a line it was handed, and when the engine narrows the check
+   becomes a no-op with its tests unchanged. The case the engine misses stays unexpanded, and
+   is a known, recorded divergence rather than a silent one.
+5. **editor-core never touches the disk.** The set reaches it as an in-memory `slug → text`
    map built by the host from the folder listing. M0 stays verifiable without a filesystem,
    and the flat-folder rule (with its collision check) lives in the loader.
-5. **Recursion is bounded**: a depth limit, and a cycle is a slug already on the current
+6. **Recursion is bounded**: a depth limit, and a cycle is a slug already on the current
    expansion path (a diamond — the same fragment included twice from different places — is
    fine). An unknown target, a cycle or an over-deep chain leaves the directive verbatim and
    raises a Studio-level note — never a crash, never a hang. The verdict stays the engine's:
@@ -124,5 +137,19 @@ So the resolver needs an **occurrence-level** contract — positions, not a set 
 - Loading a fragment strips a leading UTF-8 BOM; substituting a directive keeps the line
   terminator that followed it and drops the fragment's trailing newlines, so an include does
   not manufacture blank lines.
+- **A span can carry a comment with it, and on this path that is harmless.** A comment at the
+  head or tail of a directive line stays outside the span; one *inside* the directive is part
+  of what the renderer consumed, so the span covers it — and if that comment swallowed the
+  line's terminator, the span crosses into the next source line, and replacing it deletes the
+  comment. Expansion feeds `SpRender`, which strips comments anyway, and never writes back
+  into the editor buffer, so nothing is lost. It is a trap for any later feature that *does*
+  write a span replacement into the document (an "inline this include" refactor): that one
+  must re-check the span against the buffer first.
+- **Raw sentinels split the two views.** The editor-side calls read the source as written,
+  while `SpRender` deletes the reserved U+E000–U+E005 before parsing. A document carrying raw
+  ones can therefore hold a directive the panel sees and the renderer does not, or the
+  reverse. The family's reference diverges in exactly the same way, so Studio does not paper
+  over it: foreign text enters a template through `SpNeutralize`, and a raw sentinel in a
+  document is a Studio lint (spec §4.3, §7).
 - Revisit if nested sets or per-project manifests become a real need — the resolver seam and
   the in-memory set are where they would plug in, and no stored format has to be migrated.
