@@ -82,6 +82,85 @@ type
   end;
   TSpxVariantList = TList<TSpxVariant>;
 
+  { What the variables panel draws (spec §4.4). A macro is `#set` or `#def` and comes with
+    the value and the position the ENGINE reported for its directive; a runtime variable is
+    a `%name%` the document references and nothing defines, so its value is whatever the
+    user has typed into the panel and its position is 0/0 -- there is no definition to jump
+    to. }
+  TSpxVarKind = (spxVarSet, spxVarDef, spxVarRuntime);
+
+  TSpxVarInfo = record
+    Name: string;          // lower-cased, the way the engine keys macros
+    Kind: TSpxVarKind;
+    Value: string;
+    Line, Column: Integer;
+  end;
+
+  { One `#include` OCCURRENCE, so "jump to the directive" has somewhere to go and two
+    includes of one target stay two rows. Known is measured against the template set, with
+    the engine's exact comparison. }
+  TSpxIncludeInfo = record
+    Target: string;
+    Known: Boolean;
+    Line, Column: Integer;
+  end;
+
+  TSpxModel = class
+  public
+    Vars: TList<TSpxVarInfo>;
+    Includes: TList<TSpxIncludeInfo>;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  { Diagnostics for ONE file, in that file's own coordinates. Slug is '' for the open
+    document. Mixing coordinate spaces is the one thing this must never do: a position from
+    a fragment means nothing in the editor's buffer. }
+  TSpxFileReport = class
+  public
+    Slug: string;
+    Diags: TSpDiagList;
+    constructor Create(const ASlug: string; ADiags: TSpDiagList);
+    destructor Destroy; override;
+  end;
+
+  { Studio's OWN findings, kept apart from engine diagnostics so the panel can say which is
+    which (spec §4.3). They carry a file and a position for the same reason engine
+    diagnostics do -- a note the user cannot jump to is a note they cannot act on.
+
+    Position 0/0 means "unknown", the engine's own convention: the raw-sentinel note has one,
+    because locating it would mean re-deriving the engine's editor-coordinate walk, and this
+    layer does not re-derive what the engine owns. }
+  TSpxNoteKind = (spxNoteCycle, spxNoteTooDeep, spxNoteCaseMismatch, spxNoteUnknownTarget,
+                  spxNoteRawSentinel);
+
+  TSpxNote = record
+    Kind: TSpxNoteKind;
+    Slug: string;      // the file the note was found in; '' = the open document
+    Target: string;    // the include target it is about, where there is one
+    Hint: string;      // the near-miss slug for a case mismatch
+    Line, Column: Integer;
+  end;
+  TSpxNoteList = TList<TSpxNote>;
+
+  { What the diagnostics panel and the repair loop consume (spec §4.3, §5).
+
+    Errors/Warnings are counted over the WHOLE include closure, because an export degrades
+    on a broken fragment just as surely as on a broken document. Probes are M renders used
+    for the health flags, on fixed seeds so the same document always reports the same
+    numbers. }
+  TSpxReport = class
+  public
+    Files: TObjectList<TSpxFileReport>;
+    Errors, Warnings: Integer;
+    Probes, EmptyProbes, DistinctProbes: Integer;
+    FullwidthFallback: Boolean;
+    Notes: TSpxNoteList;
+    constructor Create;
+    destructor Destroy; override;
+    function IsValid: Boolean;
+  end;
+
 { Call once at start-up, before any engine call.
 
   Under FPC a `string` holds UTF-8 BYTES, and the RTL decodes literals, files and OS
@@ -111,6 +190,48 @@ function SpxSeededContext(const Locale: string; Vars: TStrMap; Seed: LongWord;
   and capitalization. }
 function SpxRenderSample(const Tmpl: string; const Ctx: TSpxContext): string;
 
+{ A selection rendered in the document's scope (spec §4.2): the document's `#set`/`#def`
+  lines, in source order, prepended to the fragment. The directives come from the engine's
+  own list, so a `#set` that only LOOKS like one -- inside a `/# ... #/` comment, or
+  malformed -- is not in scope here either.
+
+  Not byte-identical to the same slice of a full render (fresh draw, `#def` rolled again).
+  It is a true preview of what the fragment produces, not a promise of the same bytes. A
+  selection taken from the MIDDLE of a line is rendered at a line start, so a line-anchored
+  construct inside it (`#include`, `#set`) behaves as it would at the start of a line, not
+  as it does where it sits -- the fragment is rendered "as if it were the template", which
+  is the definition, not an accident. }
+function SpxRenderFragment(const Doc, Fragment: string; const Ctx: TSpxContext): string;
+
+{ The variables and includes panel model (spec §4.4). Macros and include occurrences come
+  from `SpExtractDirectives` -- values and positions included -- and the runtime variables
+  are what the document references and nothing defines. Caller frees. }
+function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
+
+{ Diagnostics for the document AND every file it includes, each validated separately in its
+  own coordinates (spec §4.3), plus Probes health renders. Caller frees.
+
+  `knownVariables` is the runtime context's names, for every file: a file's own `#set`/`#def`
+  are visible to the validator already, and the parent's are NOT visible to a child at render
+  time, so passing them down would silence a warning that is true (ADR 0003).
+
+  DocSlug is the document's own slug when it is a member of the set -- which it is whenever
+  the host built the set from the folder the document lives in. Without it the walk would
+  reach the document again through its own slug and validate the same text twice, counting
+  one broken bracket as two errors.
+
+  LIMIT, and it cannot be closed here: the closure is found by scanning SOURCE for `#include`
+  lines, while the engine resolves over the RENDERED text. An include that only appears after
+  a macro expands (`#set %inc% = #include "frag"`, then `%inc%`) is resolved by the engine and
+  never validated by this walk. Closing it would mean rendering first and re-parsing the
+  output, which buys a corner at the price of the whole design.
+
+  No caching here: this layer stays stateless so one worker can own every engine call
+  (spec §5). Deciding what to re-validate on a keystroke is the caller's, which is the layer
+  that knows what the user touched. }
+function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
+  Probes: Integer; const DocSlug: string = ''): TSpxReport;
+
 { Count variants with reproducible seeds: `seed_i = SeedBase + i`, recorded on each variant.
   TMulberry32Rng mixes its seed internally (add-constant, then xorshift-multiply), so
   consecutive seeds give uncorrelated streams and the derivation needs nothing cleverer
@@ -122,6 +243,9 @@ function SpxRenderBatch(const Tmpl: string; const Ctx: TSpxContext;
   Count: Integer; SeedBase: LongWord): TSpxVariantList;
 
 implementation
+
+uses
+  SysUtils;   // implementation-only: Trim, Format-free helpers below
 
 procedure SpxInitHost;
 begin
@@ -215,6 +339,395 @@ begin
     v.Seed := SeedBase + LongWord(i);
     v.Text := RenderWith(Tmpl, Ctx, True, v.Seed);
     Result.Add(v);
+  end;
+end;
+
+{ ── the fragment preview ─────────────────────────────────────────────────── }
+
+function SpxRenderFragment(const Doc, Fragment: string; const Ctx: TSpxContext): string;
+var dirs: TSpDirectiveList; i: Integer; prelude: string;
+begin
+  prelude := '';
+  dirs := SpExtractDirectives(Doc);
+  try
+    for i := 0 to dirs.Count - 1 do
+      if (dirs[i].Kind = 'set') or (dirs[i].Kind = 'def') then
+        { Text is the line the RENDERER consumed, comments already gone, so re-emitting it
+          costs no re-spelling of the grammar. }
+        prelude := prelude + dirs[i].Text + #10;
+  finally
+    dirs.Free;
+  end;
+  Result := SpxRenderSample(prelude + Fragment, Ctx);
+end;
+
+{ ── the panel model ──────────────────────────────────────────────────────── }
+
+constructor TSpxModel.Create;
+begin
+  inherited Create;
+  Vars := TList<TSpxVarInfo>.Create;
+  Includes := TList<TSpxIncludeInfo>.Create;
+end;
+
+destructor TSpxModel.Destroy;
+begin
+  Vars.Free;
+  Includes.Free;
+  inherited Destroy;
+end;
+
+function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
+var
+  dirs: TSpDirectiveList;
+  ex: TExtractResult;
+  defined: TStringList;
+  runtimeVals: TStrMap;
+  pair: TPair<string, string>;
+  i: Integer;
+  v: TSpxVarInfo;
+  incInfo: TSpxIncludeInfo;
+begin
+  Result := TSpxModel.Create;
+  defined := nil;
+  runtimeVals := nil;
+  try
+   try
+    defined := TStringList.Create;
+    { Macro names are ASCII by the engine's grammar, so the default (case-insensitive)
+      compare would only ever fold names that are already equal -- but say what is meant. }
+    defined.CaseSensitive := True;
+    runtimeVals := TStrMap.Create;
+    { The engine keys macros lower-cased and matches runtime names case-insensitively, so
+      the panel can show a value the user typed as BRAND against a %brand% reference. }
+    if Assigned(Ctx.Vars) then
+      for pair in Ctx.Vars do runtimeVals.AddOrSetValue(LowerCase(pair.Key), pair.Value);
+
+    dirs := SpExtractDirectives(Tmpl);
+    try
+      for i := 0 to dirs.Count - 1 do
+        if dirs[i].Kind = 'include' then
+        begin
+          { Known is False both for a real miss and for "there is no set at all"; the caller
+            knows which, because it is the caller that did or did not supply Templates. }
+          incInfo.Target := dirs[i].Name;
+          incInfo.Known := (Ctx.Templates <> nil) and Ctx.Templates.ContainsKey(dirs[i].Name);
+          incInfo.Line := dirs[i].Line;
+          incInfo.Column := dirs[i].Column;
+          Result.Includes.Add(incInfo);
+        end
+        else
+        begin
+          v.Name := dirs[i].Name;
+          if dirs[i].Kind = 'def' then v.Kind := spxVarDef else v.Kind := spxVarSet;
+          v.Value := dirs[i].Value;
+          v.Line := dirs[i].Line;
+          v.Column := dirs[i].Column;
+          Result.Vars.Add(v);
+          { Duplicates are kept: two definitions of one name is what the engine calls
+            definition.duplicate-name, and a panel that silently showed one row would hide
+            the second half of the error. }
+          if defined.IndexOf(v.Name) < 0 then defined.Add(v.Name);
+        end;
+    finally
+      dirs.Free;
+    end;
+
+    { Everything referenced and not defined here is a runtime variable: the panel offers a
+      value for it, and until one is given the validator warns (spec §4.3/§4.4). }
+    ex := SpExtract(Tmpl);
+    try
+      for i := 0 to ex.Refs.Count - 1 do
+        if defined.IndexOf(ex.Refs[i]) < 0 then
+        begin
+          v.Name := ex.Refs[i];
+          v.Kind := spxVarRuntime;
+          if not runtimeVals.TryGetValue(v.Name, v.Value) then v.Value := '';
+          v.Line := 0;
+          v.Column := 0;
+          Result.Vars.Add(v);
+        end;
+    finally
+      ex.Refs.Free; ex.Sets.Free; ex.Defs.Free; ex.Includes.Free;
+    end;
+   finally
+    defined.Free;
+    runtimeVals.Free;
+   end;
+  except
+    { Result is the return value: if we leave by exception nobody else can free it. }
+    Result.Free;
+    raise;
+  end;
+end;
+
+{ ── the health report ────────────────────────────────────────────────────── }
+
+constructor TSpxFileReport.Create(const ASlug: string; ADiags: TSpDiagList);
+begin
+  inherited Create;
+  Slug := ASlug;
+  Diags := ADiags;
+end;
+
+destructor TSpxFileReport.Destroy;
+begin
+  Diags.Free;
+  inherited Destroy;
+end;
+
+constructor TSpxReport.Create;
+begin
+  inherited Create;
+  Files := TObjectList<TSpxFileReport>.Create(True);
+  Notes := TSpxNoteList.Create;
+end;
+
+destructor TSpxReport.Destroy;
+begin
+  Files.Free;
+  Notes.Free;
+  inherited Destroy;
+end;
+
+function TSpxReport.IsValid: Boolean;
+begin
+  Result := Errors = 0;
+end;
+
+{ U+FF5B / U+FF5D -- the fullwidth braces the engine emits when a block is too malformed to
+  render but must not throw. Their presence in a probe is the signal that something the
+  validator may have called a mere warning is destroying output. Spelled per string width,
+  like the engine's own literals. }
+function FullwidthBrace(opening: Boolean): string;
+begin
+  {$IFDEF UNICODE}
+  if opening then Result := #$FF5B else Result := #$FF5D;
+  {$ELSE}
+  if opening then Result := #$EF#$BD#$9B else Result := #$EF#$BD#$9D;
+  {$ENDIF}
+end;
+
+{ Case folding through the ENGINE's Unicode tables, not SysUtils.LowerCase, which folds
+  A..Z and stops. This runs on include targets, and targets are filenames: in a product
+  written for Russian templates they will be Cyrillic, where an ASCII fold makes
+  `Вступление` and `вступление` look like different words and the near-miss hint below
+  would never fire -- exactly where it is needed most. }
+function FoldCase(const s: string): string;
+var i, cpLen: Integer;
+begin
+  Result := '';
+  i := 1;
+  while i <= Length(s) do
+  begin
+    Result := Result + SpUpperCodePoint(SpCodePointAt(s, i, cpLen));
+    Inc(i, cpLen);
+  end;
+end;
+
+{ Reserved sentinels in author markup. `SpRender` deletes U+E000..U+E005 before parsing
+  while the editor-side calls read the source as written, so a document carrying raw ones
+  makes the panel and the preview tell different stories (spec §7). No position: locating it
+  would mean re-deriving the engine's editor-coordinate walk, and this layer does not
+  re-derive what the engine owns. }
+function HasRawSentinel(const s: string): Boolean;
+var i, cpLen: Integer; cp: LongWord;
+begin
+  Result := False;
+  i := 1;
+  while i <= Length(s) do
+  begin
+    cp := SpCodePointAt(s, i, cpLen);
+    if (cp >= $E000) and (cp <= $E005) then Exit(True);
+    Inc(i, cpLen);
+  end;
+end;
+
+procedure AddNote(Report: TSpxReport; Kind: TSpxNoteKind; const Slug, Target, Hint: string;
+  Line, Column: Integer);
+var n: TSpxNote;
+begin
+  n.Kind := Kind;
+  n.Slug := Slug;
+  n.Target := Target;
+  n.Hint := Hint;
+  n.Line := Line;
+  n.Column := Column;
+  Report.Notes.Add(n);
+end;
+
+{ Validate ONE file and file its diagnostics under its own slug. Coordinate spaces are never
+  merged: a position from a fragment means nothing in the document's buffer. }
+procedure ValidateFile(Report: TSpxReport; const Slug, Text, Locale: string;
+  KnownIncludes, KnownVars: TStringList);
+var diags: TSpDiagList; i: Integer;
+begin
+  diags := SpValidate(Text, Locale, KnownIncludes, KnownVars);
+  try
+    for i := 0 to diags.Count - 1 do
+      if diags[i].Severity = 'error' then Inc(Report.Errors) else Inc(Report.Warnings);
+    Report.Files.Add(TSpxFileReport.Create(Slug, diags));
+    diags := nil;   // ownership moved into the file report
+  finally
+    diags.Free;     // only reached if the line above raised
+  end;
+  if HasRawSentinel(Text) then
+    AddNote(Report, spxNoteRawSentinel, Slug, '', '', 0, 0);
+end;
+
+{ The include closure, walked the way the engine renders it: targets compared exactly, a
+  cycle keyed on the ref string, the depth cap counting the include stack only. Each file is
+  validated once however many times it is included; Path is what makes a cycle a cycle and a
+  diamond merely a second visit. }
+procedure WalkClosure(Report: TSpxReport; const Text, Slug: string; const Ctx: TSpxContext;
+  Visited, Path, KnownIncludes, KnownVars: TStringList);
+var
+  dirs: TSpDirectiveList;
+  i, j: Integer;
+  target, childText, folded, hint: string;
+begin
+  ValidateFile(Report, Slug, Text, Ctx.Locale, KnownIncludes, KnownVars);
+  if Ctx.Templates = nil then Exit;
+
+  dirs := SpExtractDirectives(Text);
+  try
+    for i := 0 to dirs.Count - 1 do
+    begin
+      if dirs[i].Kind <> 'include' then Continue;
+      target := dirs[i].Name;
+
+      { Path IS the engine's include stack: a cycle is a target already on it, keyed on the
+        ref string, and the depth cap counts this stack only. Both lists compare
+        case-sensitively (set where they are created) because the engine compares targets
+        exactly -- a case-insensitive IndexOf here would call `Intro` a cycle of `intro` and
+        skip a real file that differs only in case. }
+      if Path.IndexOf(target) >= 0 then
+      begin
+        { The engine unwinds this to the empty string and does not call it invalid -- so
+          neither do we. But a fragment that silently renders as nothing deserves a word. }
+        AddNote(Report, spxNoteCycle, Slug, target, '', dirs[i].Line, dirs[i].Column);
+        Continue;
+      end;
+      if Path.Count >= SP_DEFAULT_INCLUDE_DEPTH then
+      begin
+        AddNote(Report, spxNoteTooDeep, Slug, target, '', dirs[i].Line, dirs[i].Column);
+        Continue;
+      end;
+
+      if not Ctx.Templates.TryGetValue(target, childText) then
+      begin
+        { The engine reports include.unknown-target against the set's slugs -- but only when
+          it was given a non-empty list, so an EMPTY set leaves the miss unsaid. And it can
+          never know that the set holds the same name in another case, which on Windows is
+          the likeliest reason for the miss. }
+        folded := FoldCase(target);
+        hint := '';
+        for j := 0 to KnownIncludes.Count - 1 do
+          if FoldCase(KnownIncludes[j]) = folded then
+            { Several slugs can fold to one target (`frag` and `FRAG`). Take the smallest
+              rather than whichever the map happened to enumerate first, so the note reads
+              the same on every rebuild of the set. }
+            if (hint = '') or (KnownIncludes[j] < hint) then hint := KnownIncludes[j];
+        if hint <> '' then
+          AddNote(Report, spxNoteCaseMismatch, Slug, target, hint,
+                  dirs[i].Line, dirs[i].Column);
+        if KnownIncludes.Count = 0 then
+          AddNote(Report, spxNoteUnknownTarget, Slug, target, '',
+                  dirs[i].Line, dirs[i].Column);
+        Continue;
+      end;
+
+      { Visited is per-closure, not per-path: a file included from two places is one file to
+        validate, while two ALIASES of one text are two slugs and neither is a cycle. }
+      if Visited.IndexOf(target) >= 0 then Continue;
+      Visited.Add(target);
+      Path.Add(target);
+      WalkClosure(Report, childText, target, Ctx, Visited, Path, KnownIncludes, KnownVars);
+      Path.Delete(Path.Count - 1);
+    end;
+  finally
+    dirs.Free;
+  end;
+end;
+
+function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
+  Probes: Integer; const DocSlug: string = ''): TSpxReport;
+var
+  knownIncludes, knownVars, visited, path, outputs: TStringList;
+  pair: TPair<string, string>;
+  i: Integer;
+  probe, savedDoc: string;
+begin
+  Result := TSpxReport.Create;
+  knownIncludes := nil; knownVars := nil; visited := nil; path := nil; outputs := nil;
+  try
+    knownIncludes := TStringList.Create;
+    knownVars := TStringList.Create;
+    visited := TStringList.Create;
+    path := TStringList.Create;
+    outputs := TStringList.Create;
+    try
+      { The engine compares include targets EXACTLY (v0.2.2). `visited` and `path` decide
+        what counts as already-seen and as a cycle, so leaving them on TStringList's
+        case-INSENSITIVE default would reintroduce, inside Studio, the very defect the
+        engine fixed: `Intro` would read as a cycle of `intro`, and a real file differing
+        only in case would never be validated. `knownIncludes` is only ever indexed here --
+        SpValidate compares slugs with its own exact helper -- so its flag changes nothing
+        today and is set so it cannot start to. }
+      knownIncludes.CaseSensitive := True;
+      visited.CaseSensitive := True;
+      path.CaseSensitive := True;
+
+      if Ctx.Templates <> nil then
+        for pair in Ctx.Templates do knownIncludes.Add(pair.Key);
+      { Variable names are ASCII by the engine's grammar and it matches knownVariables
+        case-insensitively, so an ASCII fold is the right one here. }
+      if Assigned(Ctx.Vars) then
+        for pair in Ctx.Vars do knownVars.Add(LowerCase(pair.Key));
+
+      { The document is normally a member of its own folder's set, so the walk can reach it
+        again through its own slug. Skip that ONLY when the set's copy is the same text as
+        the buffer -- then it is genuinely the same file and validating it twice would count
+        one broken bracket as two errors. When the buffer has unsaved edits the two differ,
+        and the SAVED copy is what the engine will render for an `#include`, so it has to be
+        validated on its own. Path stays EMPTY at document level either way, because the
+        engine's include stack is empty there and the depth cap counts that stack. }
+      if (DocSlug <> '') and (Ctx.Templates <> nil) and
+         Ctx.Templates.TryGetValue(DocSlug, savedDoc) and (savedDoc = Doc) then
+        visited.Add(DocSlug);
+
+      { Both sets go in on every pass. knownVars carries the RUNTIME names only: a file's own
+        macros are visible to the validator anyway, and the parent's are not visible to a
+        child at render time (ADR 0003). }
+      WalkClosure(Result, Doc, '', Ctx, visited, path, knownIncludes, knownVars);
+
+      { Health probes on fixed seeds, so the same document always reports the same numbers --
+        a status bar that flickers between runs teaches the user to ignore it. }
+      outputs.CaseSensitive := True;   // 'AA' and 'aa' are two renders, not one
+      outputs.Sorted := True;
+      outputs.Duplicates := dupIgnore;
+      for i := 1 to Probes do
+      begin
+        probe := RenderWith(Doc, Ctx, True, LongWord(i));
+        Inc(Result.Probes);
+        if Trim(probe) = '' then Inc(Result.EmptyProbes);
+        if (Pos(FullwidthBrace(True), probe) > 0) or (Pos(FullwidthBrace(False), probe) > 0) then
+          Result.FullwidthFallback := True;
+        outputs.Add(probe);
+      end;
+      Result.DistinctProbes := outputs.Count;
+    finally
+      knownIncludes.Free;
+      knownVars.Free;
+      visited.Free;
+      path.Free;
+      outputs.Free;
+    end;
+  except
+    { The report is the return value, so nothing else can free it if we leave by exception --
+      and this layer is built for a cancelling worker (spec §5), where that is not exotic. }
+    Result.Free;
+    raise;
   end;
 end;
 
