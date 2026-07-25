@@ -30,10 +30,12 @@ uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
   SysUtils, Classes, Generics.Collections,
   {$IFDEF FPC}
-  Spintax, SpxStudio, SpxEngineThread;
+  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxEngineThread;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
+  SpxTokens in '..\src\SpxTokens.pas',
+  SpxDemo in '..\src\SpxDemo.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas';
   {$ENDIF}
 
@@ -997,7 +999,268 @@ begin
   end;
 end;
 
-{ ── 6. the engine thread (GUI layer, but the part that is logic) ─────────── }
+{ ── 6. the tokenizer the editor colours by ───────────────────────────────── }
+
+function Scan(const line: string; var st: TSpxScanState): string;
+const KIND: array[TSpxTokenKind] of string =
+  ('text', 'comment', 'dir', 'str', 'var', '{', '}', '[', ']', '|', 'cond', 'plural', 'cfg');
+var toks: TSpxTokenList; i: Integer;
+begin
+  toks := TSpxTokenList.Create;
+  try
+    SpxScanLine(line, st, toks);
+    Result := '';
+    for i := 0 to toks.Count - 1 do
+    begin
+      if i > 0 then Result := Result + ' ';
+      Result := Result + Format('%s(%s)%d', [KIND[toks[i].Kind],
+        Copy(line, toks[i].Start, toks[i].Length), toks[i].Depth]);
+    end;
+    if Result = '' then Result := '<none>';
+  finally
+    toks.Free;
+  end;
+end;
+
+function ScanOne(const line: string): string;
+var st: TSpxScanState;
+begin
+  st := Default(TSpxScanState);
+  st.LineEmpty := True;
+  Result := Scan(line, st);
+end;
+
+{ Every token must butt against the previous one, the first must start at 1, and the last
+  must end at the end of the line. SynEdit paints exactly what it is handed: a gap leaves
+  text unpainted and an overlap corrupts the run beside it, and neither shows up in a check
+  that only compares kinds. }
+function Tiles(const line: string): Boolean;
+var st: TSpxScanState; toks: TSpxTokenList; i, expect: Integer;
+begin
+  st := Default(TSpxScanState);
+  st.LineEmpty := True;
+  toks := TSpxTokenList.Create;
+  try
+    SpxScanLine(line, st, toks);
+    Result := True;
+    expect := 1;
+    for i := 0 to toks.Count - 1 do
+    begin
+      if (toks[i].Start <> expect) or (toks[i].Length <= 0) then Exit(False);
+      expect := toks[i].Start + toks[i].Length;
+    end;
+    Result := expect = Length(line) + 1;
+  finally
+    toks.Free;
+  end;
+end;
+
+procedure TestTokenizer;
+var
+  st: TSpxScanState;
+  toks: TSpxTokenList;
+  lines: TStringList;
+  i: Integer;
+  deep: string;
+  seenKinds: set of TSpxTokenKind;
+begin
+  { The classes the family's own grammar colours, one line each. }
+  Check('scan/plain-text', ScanOne('Привет, мир'), 'text(Привет, мир)0');
+  Check('scan/enumeration', ScanOne('{a|b}'), '{({)1 text(a)1 |(|)1 text(b)1 }(})1');
+  Check('scan/variable', ScanOne('%brand% рулит'), 'var(%brand%)0 text( рулит)0');
+  Check('scan/not-a-variable', ScanOne('50% скидка'), 'text(50% скидка)0');
+  Check('scan/directive-set', ScanOne('#set %x% = {a|b}'),
+        'dir(#set)0 text( )0 var(%x%)0 text( = )0 {({)1 text(a)1 |(|)1 text(b)1 }(})1');
+  Check('scan/directive-include', ScanOne('#include "frag"'),
+        'dir(#include)0 text( )0 str("frag")0');
+  Check('scan/conditional', ScanOne('{?ai?да|нет}'),
+        '{({)1 cond(?ai?)1 text(да)1 |(|)1 text(нет)1 }(})1');
+  Check('scan/negated-conditional', ScanOne('{?!ai?нет}'),
+        '{({)1 cond(?!ai?)1 text(нет)1 }(})1');
+  Check('scan/plural', ScanOne('{plural %n%: товар|товара}'),
+        '{({)1 plural(plural %n%:)1 text( товар)1 |(|)1 text(товара)1 }(})1');
+  Check('scan/permutation-with-config', ScanOne('[<minsize=2;sep=", ">a|b]'),
+        '[([)1 cfg(<minsize=2;sep=", ">)1 text(a)1 |(|)1 text(b)1 ](])1');
+  Check('scan/inline-comment', ScanOne('до /# заметка #/ после'),
+        'text(до )0 comment(/# заметка #/)0 text( после)0');
+
+  { Nesting is a number, not a stack -- which is exactly why unbounded depth is not a
+    problem for a line-at-a-time highlighter (ADR 0002's open risk). }
+  Check('scan/nesting-depth', ScanOne('{a{b}c}'),
+        '{({)1 text(a)1 {({)2 text(b)2 }(})2 text(c)1 }(})1');
+
+  { State crosses lines: a comment stays open... }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Check('scan/comment-opens', Scan('до /# начало', st), 'text(до )0 comment(/# начало)0');
+  CheckTrue('scan/comment-state-carries', st.InComment);
+  Check('scan/comment-continues', Scan('всё ещё внутри', st), 'comment(всё ещё внутри)0');
+  Check('scan/comment-closes', Scan('конец #/ хвост', st),
+        'comment(конец #/)0 text( хвост)0');
+  CheckTrue('scan/comment-state-cleared', not st.InComment);
+
+  { ...and so does depth, which is what makes a multi-line template colour correctly. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('{первая', st);
+  CheckTrue('scan/depth-carries-to-the-next-line', st.Depth = 1);
+  Check('scan/close-on-a-later-line', Scan('вторая}', st), 'text(вторая)1 }(})1');
+  CheckTrue('scan/depth-returns-to-zero', st.Depth = 0);
+
+  { A closer with nothing open is drawn, not diagnosed: this scan has no opinion about
+    validity, which belongs to SpValidate (spec §4.1). }
+  Check('scan/unmatched-close-is-just-a-brace', ScanOne('}'), '}(})0');
+
+  { A directive is anchored to the LOGICAL line -- what survives comment removal -- which is
+    how the engine anchors it. Both halves matter, and each was wrong once:
+      * text before the comment means the #set is NOT a directive (the engine renders it
+        literally and never defines the macro), and colouring it bold would confirm a
+        definition that does not exist;
+      * a comment that opened at the very start IS transparent, and the #set after it is a
+        real directive. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('до /# начало', st);
+  Check('scan/set-after-text-and-comment-is-not-a-directive',
+        Scan('конец #/ #set %x% = 1', st),
+        'comment(конец #/)0 text( #set )0 var(%x%)0 text( = 1)0');
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('/# начало', st);
+  Check('scan/set-after-only-a-comment-is-a-directive',
+        Scan('конец #/ #set %x% = 1', st),
+        'comment(конец #/)0 text( )0 dir(#set)0 text( )0 var(%x%)0 text( = 1)0');
+
+  { A keyword alone is not a directive: `#set brand = Acme` (no percent signs) is literal
+    text to the engine, and it is the likeliest directive typo there is. }
+  Check('scan/set-without-a-macro-name-is-text', ScanOne('#set brand = Акме'),
+        'text(#set brand = Акме)0');
+  Check('scan/set-without-an-equals-is-text', ScanOne('#set %x% Акме'),
+        'text(#set )0 var(%x%)0 text( Акме)0');
+
+  { A digit-leading or empty conditional name is not a conditional -- the engine falls
+    through to an enumeration, and so must the colouring. }
+  Check('scan/digit-leading-conditional-is-an-enumeration', ScanOne('{?1x?да|нет}'),
+        '{({)1 text(?1x?да)1 |(|)1 text(нет)1 }(})1');
+  Check('scan/empty-conditional-name-is-an-enumeration', ScanOne('{??да}'),
+        '{({)1 text(??да)1 }(})1');
+
+  { The engine left-trims a permutation config, so a space before it does not turn it off
+    and must not turn the colour off either. }
+  Check('scan/config-after-a-space', ScanOne('[ <minsize=2>a|b]'),
+        '[([)1 text( )1 cfg(<minsize=2>)1 text(a)1 |(|)1 text(b)1 ](])1');
+
+  { Tokens must tile the line exactly: SynEdit paints what it is handed, so a gap leaves
+    text unpainted and an overlap corrupts its neighbour. Neither shows up in a check that
+    only compares kinds. }
+  CheckTrue('scan/tiles-plain', Tiles('обычный текст'));
+  CheckTrue('scan/tiles-markup', Tiles('{a|b} [<minsize=2>c|d] %v% /# c #/ }'));
+  CheckTrue('scan/tiles-directive', Tiles('#set %x% = {a|b}'));
+  CheckTrue('scan/tiles-include', Tiles('#include "frag"'));
+  CheckTrue('scan/tiles-unterminated-quote', Tiles('#include "frag'));
+  CheckTrue('scan/tiles-empty-line', Tiles(''));
+  CheckTrue('scan/tiles-crlf-remnant', Tiles('текст'#13));
+
+  { Depth is capped so it can ride in SynEdit's range pointer; three hundred levels must
+    neither crash nor wrap. }
+  deep := StringOfChar('{', 300);
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  toks := TSpxTokenList.Create;
+  try
+    SpxScanLine(deep, st, toks);
+    CheckTrue('scan/deep-nesting-is-capped', st.Depth = SPX_MAX_DEPTH);
+    CheckTrue('scan/deep-nesting-emits-every-brace', toks.Count = 300);
+    { ...and comes back down. An asymmetric Push/Pop only shows on the way out. }
+    SpxScanLine(StringOfChar('}', 300), st, toks);
+    CheckTrue('scan/deep-nesting-unwinds-to-zero', st.Depth = 0);
+  finally
+    toks.Free;
+  end;
+
+  { The state round-trips through the integer SynEdit hands back. }
+  { Round-trip AT the cap: the depth mask and the flags used to share bits, so a deep nest
+    turned the whole document into a comment. }
+  st.InComment := True;
+  st.LineEmpty := True;
+  st.Depth := SPX_MAX_DEPTH;
+  st := SpxUnpackState(SpxPackState(st));
+  CheckTrue('scan/state-round-trips-at-the-cap',
+            st.InComment and st.LineEmpty and (st.Depth = SPX_MAX_DEPTH));
+
+  { The demo template, scanned line by line: a real document must come out BALANCED, with
+    every brace and bracket closed and no comment left open. A tokenizer that miscounts
+    would leave the rest of the file coloured as the inside of something. }
+  lines := TStringList.Create;
+  toks := TSpxTokenList.Create;
+  try
+    lines.Text := SpxDemoTemplate;
+    st := Default(TSpxScanState);
+    st.LineEmpty := True;
+    for i := 0 to lines.Count - 1 do
+      SpxScanLine(lines[i], st, toks);
+    CheckTrue('demo/scan-ends-balanced', (st.Depth = 0) and (not st.InComment));
+    CheckTrue('demo/scan-produced-tokens', toks.Count > lines.Count);
+
+    { And it exercises what it claims to. Presence of each class, not a count: a threshold
+      would be a number nobody can defend, while "the demo contains a conditional" is the
+      actual claim. #include and a block comment are the two it has no reason to hold. }
+    seenKinds := [];
+    for i := 0 to toks.Count - 1 do
+      Include(seenKinds, toks[i].Kind);
+    CheckTrue('demo/covers-directives', sptDirective in seenKinds);
+    CheckTrue('demo/covers-variables', sptVariable in seenKinds);
+    CheckTrue('demo/covers-enumerations', sptBraceOpen in seenKinds);
+    CheckTrue('demo/covers-permutations', sptBracketOpen in seenKinds);
+    CheckTrue('demo/covers-options', sptPipe in seenKinds);
+    CheckTrue('demo/covers-conditionals', sptCondHead in seenKinds);
+    CheckTrue('demo/covers-plurals', sptPluralHead in seenKinds);
+    CheckTrue('demo/covers-permutation-config', sptPermConfig in seenKinds);
+  finally
+    toks.Free;
+    lines.Free;
+  end;
+end;
+
+{ ── 7. the demo template as a document ───────────────────────────────────── }
+
+procedure TestDemoTemplate;
+var
+  r: TSpxReport;
+  seen: TStringList;
+  i: Integer;
+begin
+  { It must validate CLEAN. Every macro it references it defines, so a warning here means
+    either the template drifted or this project misunderstands the language. }
+  r := SpxHealthReport(SpxDemoTemplate, SpxContext('en', nil), 8);
+  try
+    CheckTrue('demo/validates-clean', r.IsValid);
+    CheckTrue('demo/no-warnings', r.Warnings = 0);
+    CheckTrue('demo/no-studio-notes', r.Notes.Count = 0);
+
+    { It renders, it never renders empty, and it never falls back to the fullwidth braces
+      the engine emits for a block it could not render. }
+    CheckTrue('demo/renders-something', r.EmptyProbes = 0);
+    CheckTrue('demo/no-fullwidth-fallback', not r.FullwidthFallback);
+
+    { And it varies -- which is the whole point of the document. }
+    CheckTrue('demo/varies-across-seeds', r.DistinctProbes = r.Probes);
+  finally
+    r.Free;
+  end;
+
+  { The same seed gives the same text: this is what the export promise rests on, checked
+    here on a document with permutations, plurals and conditionals rather than on a two-
+    option toy. }
+  seen := TStringList.Create;
+  try
+    for i := 1 to 3 do
+      seen.Add(SpxRenderSample(SpxDemoTemplate, SpxSeededContext('en', nil, 12345)));
+    CheckTrue('demo/seeded-render-is-stable', (seen[0] = seen[1]) and (seen[1] = seen[2]));
+    { Longer than the template's own prose minus its markup: proof it rendered rather
+      than collapsed to a fragment. }
+    CheckTrue('demo/render-is-substantial', Length(seen[0]) > Length(SpxDemoTemplate) div 2);
+  finally
+    seen.Free;
+  end;
+end;
+
+{ ── 8. the engine thread (GUI layer, but the part that is logic) ─────────── }
 
 type
   { Collects what the worker delivers. The form does the same thing with a status bar. }
@@ -1119,6 +1382,8 @@ begin
   TestRenderPath;
   TestIncludeResolution;
   TestAnalysisPath;
+  TestTokenizer;
+  TestDemoTemplate;
   TestEngineThread;
 
   Writeln(Format('studio tests: %d checks, %d failed', [Checks, Failures]));

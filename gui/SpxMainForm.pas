@@ -15,7 +15,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Clipbrd, Graphics,
-  SynEdit, SpxEngineThread;
+  SynEdit, SynEditWrappedView, SpxEngineThread, SpxSynHighlighter, SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -28,6 +28,7 @@ type
     FCopy: TButton;
     FSplit: TSplitter;
     FEditor: TSynEdit;
+    FHighlighter: TSpxSynHighlighter;
     FPreview: TMemo;
     FStatus: TStatusBar;
     FDebounce: TTimer;
@@ -124,12 +125,18 @@ begin
   FEditor.Font.Name := 'Consolas';
   FEditor.Font.Size := 11;
   FEditor.Gutter.Visible := True;
-  FEditor.Text :=
-    '#set %бренд% = Акме' + LineEnding +
-    LineEnding +
-    '{Привет|Здравствуйте}, %бренд%! ' +
-    '{Мы|Наша команда} {предлагаем|даём} [лучшее|решение|сегодня].';
+  { The walkthrough from spintax.net: it opens on something that demonstrates the product
+    -- macros, a conditional, plurals, permutations with config -- rather than a toy, and
+    the suite scans and validates the same text (SpxDemo). }
+  FHighlighter := TSpxSynHighlighter.Create(Self);
+  FEditor.Highlighter := FHighlighter;
+  FEditor.Text := SpxDemoTemplate;
   FEditor.OnChange := @EditorChanged;
+  { The demo's paragraphs run past 500 characters, and a template pane that opens on
+    one-eighth of a line teaches the user to scroll rather than to read. Wrapping is the
+    editor's own plugin, so the buffer keeps its real lines and every position the engine
+    reports still lands where it should. }
+  TLazSynEditLineWrapPlugin.Create(FEditor);
 
   FSplit := TSplitter.Create(Self);
   FSplit.Parent := Self;

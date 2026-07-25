@@ -129,8 +129,30 @@ the managed tier are later releases.
       can run — the superseded ones must be dropped, not walked through one stale preview at
       a time.
 
-      Still to come: the spintax highlighter (the tmLanguage rules in `vscode-spintax` are
-      the grammar), bracket matching, and the panels of M2.
+      **The highlighter landed** (2026-07-26), split the way editor-core is: `src/SpxTokens.pas`
+      is a pure line tokenizer with no SynEdit in it, gated by the console suite;
+      `gui/SpxSynHighlighter.pas` is the adapter that hands SynEdit one token and a colour.
+      Nesting is coloured by depth through four cycling shades, and the between-line state is
+      a comment flag, a "logical line still empty" flag and a depth — an integer, not a
+      stack, which is what makes unbounded nesting a non-issue and answers ADR 0002's open
+      risk. The editor opens on the spintax.net walkthrough (`src/SpxDemo.pas`), which is
+      also a test fixture: it must scan balanced, validate clean, render non-empty and vary.
+
+      A review before the commit found six real defects, all now fixed with regression
+      checks: a `#set` after a comment that closed mid-line was coloured as a directive
+      (confirming a macro the engine never defines), `#set`/`#def` were coloured without
+      `%name%` and `=`, `{?1x?…}` and `{??…}` were coloured as conditionals where the engine
+      falls through to an enumeration, a config after a space was left uncoloured although
+      the engine trims and applies it, the depth cap doubled as the pack mask (raising it
+      would have flipped the comment flag), and the adapter never called
+      `SetAttributesOnChange`, so a future settings pane would not have repainted.
+
+      Still to come: bracket matching, and the panels of M2.
+
+- [ ] **Highlighter gap — the per-element trailing separator.** `[a<br>|b]`: the family's
+      grammars colour the `<br>` and the engine acts on it (`extractTrailingSep`), but
+      `SpxTokens` leaves it as text. A missing colour, not a wrong one, which is why it did
+      not block M1.
 - [ ] **M2 — panels.** Variables (`SpExtract` + `SpExtractDirectives` for the values),
       diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`
       positions (engine ≥ `v0.2.0` — bumped in Pre-M0, not here), partial preview of a
@@ -179,6 +201,17 @@ Decisions owed **before the relevant submission** (not switchable later):
 - **Paid managed-AI tier needs its own ADR** before any billing (R2+): Store IAP vs
   third-party purchase API (Stripe/…), prices/terms, cancellation, Partner Center disclosure.
   See spec §10/§11.
+
+## Reported to the engine
+
+- [ ] **`[<li>one</li>|<li>two</li>]` — the engine takes `li` as a permutation config.**
+      Measured 2026-07-26 against the pinned `v0.3.2`: it renders `One</li> Li <li>Two</li>`,
+      because `ParsePermConfig` has no HTML guard where `@spintax/core` and the Sublime
+      grammar both carry one (`looksLikeHtmlStartTag`, and the `(?!([A-Za-z][A-Za-z0-9-]*)…)`
+      lookahead), and where this engine's own TRAILING-separator path does (`looksHtml`).
+      Studio's highlighter follows the engine and therefore colours `<li>` as a config —
+      which is how the divergence became visible in the first place. Whichever way it
+      resolves upstream, the tokenizer follows; it is not worked around here.
 
 ## Non-negotiable, carried from the engine's experience (spec §7)
 
