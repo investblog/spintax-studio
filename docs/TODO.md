@@ -22,14 +22,12 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       at `engine/`, pinned to tag `v0.1.0`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
-      the same day). The family resolves includes **inside render**, behind a host callback
-      (`@spintax/core`, the Python port, both from the plugin's `for_child_render`), with a
-      child scope, lenient empty on unknown target / cycle / depth, and `maxDepth` 20.
-      `spintax-win` is the only port without that seam, so the seam is the engine's to grow
-      and Studio's job is to supply the resolver — not to expand text, which cannot reproduce
-      those semantics. A set is the flat folder of `*.spintax` files beside the document (slug
-      = filename, matched case-insensitively as the engine's `knownIncludes` check does; a
-      case-collision inside one set is a workspace error, not a coin toss).
+      twice the same day). The family resolves includes **inside render**, behind a host
+      callback, with a child scope, lenient empty on unknown target / cycle / depth, and a
+      depth cap of 20. `spintax-win` grew that seam in `v0.3.0`, so Studio supplies a
+      `TSpIncludeResolver` and expands nothing itself. A set is the flat folder of `*.spintax`
+      files beside the document, slug = filename, matched **exactly** — the case-insensitive
+      rule this ADR first carried was built on an engine defect, fixed in `v0.2.2`.
 - [ ] **Does R0 ship include expansion?** Either R0 waits for the engine release that carries
       the resolver seam, or it ships with `#include` validated but left verbatim in the
       preview. Everything else in R0 is unaffected either way (spec §9, §10).
@@ -46,14 +44,6 @@ M0 is reused whole; the GUI (M1–M2) and the LLM loop (M4) are independent; M3/
 interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spec §9); M4 and
 the managed tier are later releases.
 
-- [ ] **Engine — the `#include` resolver seam** (in progress in the engine; gates neither M0
-      nor M1/M2). The engine resolves and Studio hands it a `TSpIncludeResolver` over the
-      template set — confirmed on the engine side 2026-07-25, matching ADR 0003.
-      `SpExtractDirectives` stays what it is for: the fragment prelude, macro values and
-      jump-to-directive in the panel, and the closure walk for per-file validation — it is
-      not an expansion mechanism. **Bump the submodule to `v0.2.2` once it ships**, then wire
-      `MakeResolver` into the render context (one field, no caller-visible change). Until
-      then the preview shows the directive verbatim and Studio simulates nothing.
 - [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderFragment` /
       `RenderBatch` / `ExtractModel` / `HealthReport` over the engine, plus the template set
       and the resolver built on it. Pure Pascal, GUI- and network-free,
@@ -92,14 +82,24 @@ the managed tier are later releases.
         no shape gate: all of that belongs to the render, and reproducing it host-side
         diverges from the family (ADR 0003).
 
-      **Landed so far** (2026-07-25) — the render path: `TSpxContext` (locale, runtime
-      variables, RNG mode and seed), `SpxContext` / `SpxSeededContext`, `SpxRenderSample`
-      and `SpxRenderBatch` returning `TSpxVariant` records that carry their seed. 30 checks
-      green in both builds, with two control runs behind them: dropping `PostProcess := True`
-      fails four of them, and unseeding the batch fails three of the four
-      reproduce-from-its-seed checks (the fourth matched by chance on a four-option template,
-      which is why there are four). Still to come: `ExtractModel`, `RenderFragment` and
-      `HealthReport` with the closure walk.
+      **Landed so far** (2026-07-25):
+
+      - *the render path* — `TSpxContext` (locale, runtime variables, template set, RNG mode
+        and seed), `SpxContext` / `SpxSeededContext`, `SpxRenderSample`, and `SpxRenderBatch`
+        returning `TSpxVariant` records that carry their seed. Control runs: dropping
+        `PostProcess := True` fails four checks, and unseeding the batch fails three of the
+        four reproduce-from-its-seed checks (the fourth matched by chance on a four-option
+        template, which is why there are four).
+      - *include resolution through the engine's seam* — `TSpxTemplateSet` (`slug → text`,
+        built by the host) and `TSpxSetResolver` over it, handed to
+        `TSpContext.IncludeResolver` per render. Pins the semantics Studio's preview claim
+        rests on: resolution, exact-case targets, unknown → empty, no set → verbatim, the
+        child not seeing the parent's macros but inheriting the runtime context, nesting, a
+        cycle unwinding to empty, and a batch resolving and still reproducing from its seed.
+        Control run: never passing the resolver fails 8 checks.
+
+      41 checks, green in both builds on the `v0.3.0` pin. Still to come: `ExtractModel`,
+      `RenderFragment` and `HealthReport` with the closure walk.
       - **One engine thread, warmed at startup.** The engine's post-process builds a lazy
         global (`GAbbrevs`) with no synchronisation, so two first renders on two threads
         race; and post-process is 0.7 s on a 237 KB template, too slow for the UI thread on
@@ -181,6 +181,16 @@ theoretical:
 - [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
 - [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
       0002 and 0001 (2026-07-23).
+- [x] **Engine bumped to `v0.3.0`, and `#include` resolution is wired** (2026-07-25). The
+      engine grew the family's resolver seam ([engine ADR 0004](../engine/docs/decisions/0004-include-resolver-seam.md)):
+      `TSpContext.IncludeResolver`, an abstract class the host subclasses, plus
+      `MaxIncludeDepth` where 0 selects the family's 20. Studio's side is `TSpxTemplateSet`
+      and `TSpxSetResolver` — the lookup and nothing else. The same tag range also made
+      target comparison **exact** (`v0.2.2`), which reversed this project's slug rule: it had
+      been written case-insensitive on the strength of a `TStringList.IndexOf` default that
+      was itself the defect. Studio now matches slugs against its own map and never through a
+      file open, because on NTFS the filesystem would resolve the wrong case and the preview
+      would disagree with every other engine about the same document.
 - [x] **Engine bumped to `v0.2.1`** (2026-07-25). `#include` is recognised the way the rest
       of the family recognises it: five shapes the engine used to accept as includes are
       plain text again, and since `include.unknown-target` is an `error` that was a

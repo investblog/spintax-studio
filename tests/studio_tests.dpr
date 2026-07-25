@@ -316,6 +316,111 @@ begin
   end;
 end;
 
+{ ── 4. editor-core: #include through the engine's resolver seam ───────────── }
+
+{ Studio owns the lookup, the engine owns the semantics (engine ADR 0004). These pin the
+  semantics Studio's design depends on -- not because the engine is doubted, but because
+  the whole preview claim rests on them, and a host that got them wrong is exactly how this
+  seam came to exist. }
+procedure TestIncludeResolution;
+var
+  set1, v: TStrMap;
+  batch: TSpxVariantList;
+begin
+  set1 := Vars(['frag', 'Привет']);
+  try
+    Check('include/resolves-from-the-set',
+          SpxRenderSample('#include "frag"', SpxSeededContext('ru', nil, 1, set1)),
+          'Привет');
+
+    { An unknown target is empty, leniently -- never an error and never the directive text.
+      The user hears about it from SpValidate against the set's slugs, not from the render. }
+    Check('include/unknown-target-is-empty',
+          SpxRenderSample('#include "missing"', SpxSeededContext('ru', nil, 1, set1)), '');
+
+    { Targets match EXACTLY, as they do everywhere in the family since engine v0.2.2. On
+      NTFS a filesystem lookup would have opened `frag.spintax` here and the preview would
+      then disagree with every other engine about the same document. }
+    Check('include/target-case-is-exact',
+          SpxRenderSample('#include "Frag"', SpxSeededContext('ru', nil, 1, set1)), '');
+
+    { No set, no resolution: the line survives verbatim, which is the engine's no-resolver
+      behaviour and the reference's. }
+    Check('include/no-set-leaves-it-verbatim',
+          SpxRenderSample('#include "frag"', SpxSeededContext('ru', nil, 1)),
+          '#include "frag"');
+  finally
+    set1.Free;
+  end;
+
+  { The child is a document of its own: it inherits the runtime context but NOT the parent's
+    macros. Splicing the child's source into the parent -- the design this project nearly
+    shipped -- would have resolved %x% here and produced 'A'. }
+  set1 := Vars(['child', 'ребёнок видит: %x%']);
+  try
+    { The blank line the stripped #set leaves behind is trimmed by the post-process, which
+      ends in a trim -- hence no leading LF in the expectation. }
+    Check('include/child-does-not-see-parent-macros',
+          SpxRenderSample('#set %x% = A'#10'#include "child"',
+                          SpxSeededContext('ru', nil, 1, set1)),
+          'Ребёнок видит: %x%');
+  finally
+    set1.Free;
+  end;
+
+  v := Vars(['brand', 'Акме']);
+  set1 := Vars(['child', 'бренд: %brand%']);
+  try
+    Check('include/child-inherits-the-runtime-context',
+          SpxRenderSample('#include "child"', SpxSeededContext('ru', v, 1, set1)),
+          'Бренд: Акме');
+  finally
+    set1.Free; v.Free;
+  end;
+
+  { Nested includes resolve; a cycle unwinds to empty rather than hanging or raising.
+    Note the child's own include is LINE-ANCHORED: `A#include "b"` would be plain text,
+    the family rule the engine narrowed to in v0.2.1 -- the first draft of this test got
+    that wrong and the suite said so. }
+  set1 := Vars(['a', 'A'#10'#include "b"', 'b', 'B']);
+  try
+    Check('include/nested-resolves',
+          SpxRenderSample('#include "a"', SpxSeededContext('ru', nil, 1, set1)), 'A'#10'B');
+  finally
+    set1.Free;
+  end;
+  set1 := Vars(['a', 'A'#10'#include "b"', 'b', 'B'#10'#include "a"']);
+  try
+    Check('include/cycle-unwinds-to-empty',
+          SpxRenderSample('#include "a"', SpxSeededContext('ru', nil, 1, set1)),
+          'A'#10'B');
+  finally
+    set1.Free;
+  end;
+
+  { Export renders through the same context, so a batch resolves too -- and each variant
+    still regenerates from its recorded seed. }
+  set1 := Vars(['frag', '{красный|синий}']);
+  try
+    batch := SpxRenderBatch('цвет:'#10'#include "frag"', SpxContext('ru', nil, set1), 3, 77);
+    try
+      CheckTrue('include/batch-resolves', batch.Count = 3);
+      { Substrings without their first letter: the post-process capitalizes after a line
+        break, so the child's word arrives as 'Красный' or 'Синий'. }
+      CheckTrue('include/batch-variant-has-the-child',
+                (Pos('расный', batch[0].Text) > 0) or (Pos('иний', batch[0].Text) > 0));
+      Check('include/batch-variant-reproduces',
+            SpxRenderSample('цвет:'#10'#include "frag"',
+                            SpxSeededContext('ru', nil, batch[2].Seed, set1)),
+            batch[2].Text);
+    finally
+      batch.Free;
+    end;
+  finally
+    set1.Free;
+  end;
+end;
+
 begin
   SpxInitHost;
   {$IFDEF FPC}
@@ -325,6 +430,7 @@ begin
   TestHostContract;
   TestEngineBaseline;
   TestRenderPath;
+  TestIncludeResolution;
 
   Writeln(Format('studio tests: %d checks, %d failed', [Checks, Failures]));
   if Failures > 0 then ExitCode := 1;
