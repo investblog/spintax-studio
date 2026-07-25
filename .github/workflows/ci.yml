@@ -81,6 +81,27 @@ jobs:
         shell: bash
         run: ./tests/studio_tests_checked
 
+  # The window is built on its own leg, because it needs Lazarus (LCL + SynEdit) where the
+  # rest needs only fpc, and because it is Windows the product ships on. The console suite
+  # above already gates the engine thread's logic -- what this leg adds is proof that the
+  # form, the package dependencies and lazbuild still agree.
+  gui:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Lazarus
+        run: choco install lazarus -y --no-progress
+
+      - name: Build the application
+        shell: bash
+        run: |
+          export PATH="/c/lazarus:$PATH"
+          lazbuild gui/SpintaxStudio.lpi
+          test -f spintax-studio.exe
+
   # build.sh drives every consumer's first five minutes with this repository, so it is
   # gated like source rather than trusted.
   shellcheck:

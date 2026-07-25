@@ -28,9 +28,11 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       `TSpIncludeResolver` and expands nothing itself. A set is the flat folder of `*.spintax`
       files beside the document, slug = filename, matched **exactly** — the case-insensitive
       rule this ADR first carried was built on an engine defect, fixed in `v0.2.2`.
-- [ ] **Target architecture for the shipped `.exe`** — x86_64 (the Store target) with i386
-      kept in the CI matrix as the engine does, or something else. Settle when `build.sh`
-      lands; the installed FPC 3.2.2 cross-builds both (`ppcrossx64`, verified 2026-07-25).
+- [x] **Target architecture — x86_64** (2026-07-26). Settled by installing Lazarus: its
+      bundled FPC 3.2.2 targets `x86_64-win64`, so `lazbuild` produces the Store-shaped
+      binary with no cross-compiler juggling. The console suite still builds with whatever
+      `fpc` is on PATH (i386 locally, whatever CI has), which is the point of keeping
+      editor-core GUI-free.
 - [ ] **Thesaurus for the synonym feature** — a local base (which one?) or LLM-only. (M4)
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
@@ -103,14 +105,32 @@ the managed tier are later releases.
         case-insensitive default reintroducing inside Studio the very bug the engine fixed in
         `v0.2.2`; every fix has a control run behind it.
 
-      101 checks, green in both builds.
       - **One engine thread, warmed at startup.** The engine's post-process builds a lazy
         global (`GAbbrevs`) with no synchronisation, so two first renders on two threads
         race; and post-process is 0.7 s on a 237 KB template, too slow for the UI thread on
         every debounce. editor-core therefore keeps no state of its own — a single worker can
-        own every engine call, "latest wins" (spec §5).
+        own every engine call, "latest wins" (spec §5). The worker itself arrived with M1.
+
+      The suite stood at 101 checks, green in both builds, when M0 closed.
 - [ ] **M1 — GUI shell.** Two panes, SynEdit + a spintax highlighter, live preview, bracket
       matching, validity indicator. The DeepL skeleton.
+
+      **Landed so far** (2026-07-26): Lazarus 4.8 installed; `gui/` holds the application —
+      `SpintaxStudio.lpr`, `SpxMainForm` (top strip with locale / seed / reroll / copy, a
+      SynEdit pane, a preview pane, a status bar) and `SpxEngineThread`. Forms are built in
+      code rather than from `.lfm`, so the project builds headless and reviews as text
+      (spec §6). `build.sh` builds the app when lazbuild is present and says so when it is
+      not; CI grew a Windows leg that installs Lazarus and runs lazbuild.
+
+      The **engine thread** is the part that is logic rather than layout, and it is gated by
+      the console suite like everything else: one worker owns every engine call, warms the
+      engine's lazy global before the first request, and replaces queued work instead of
+      accumulating it. Seven checks, including fifty edits posted faster than fifty renders
+      can run — the superseded ones must be dropped, not walked through one stale preview at
+      a time.
+
+      Still to come: the spintax highlighter (the tmLanguage rules in `vscode-spintax` are
+      the grammar), bracket matching, and the panels of M2.
 - [ ] **M2 — panels.** Variables (`SpExtract` + `SpExtractDirectives` for the values),
       diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`
       positions (engine ≥ `v0.2.0` — bumped in Pre-M0, not here), partial preview of a

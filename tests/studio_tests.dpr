@@ -26,10 +26,11 @@ program studio_tests;
 uses
   SysUtils, Classes, Generics.Collections,
   {$IFDEF FPC}
-  Spintax, SpxStudio;
+  Spintax, SpxStudio, SpxEngineThread;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
-  SpxStudio in '..\src\SpxStudio.pas';
+  SpxStudio in '..\src\SpxStudio.pas',
+  SpxEngineThread in '..\gui\SpxEngineThread.pas';
   {$ENDIF}
 
 var
@@ -992,6 +993,117 @@ begin
   end;
 end;
 
+{ ── 6. the engine thread (GUI layer, but the part that is logic) ─────────── }
+
+type
+  { Collects what the worker delivers. The form does the same thing with a status bar. }
+  TThreadProbe = class
+  public
+    Delivered: Integer;
+    LastId: Int64;
+    Last: TSpxJobResult;
+    procedure Done(const Res: TSpxJobResult);
+  end;
+
+procedure TThreadProbe.Done(const Res: TSpxJobResult);
+begin
+  Inc(Delivered);
+  LastId := Res.Id;
+  Last := Res;
+end;
+
+{ Pump Synchronize until the worker has delivered `wantId`, or give up. A console program
+  has no message loop, so the main thread has to run the queue itself -- CheckSynchronize is
+  what the LCL does for the form. }
+function PumpUntil(probe: TThreadProbe; wantId: Int64; timeoutMs: Integer): Boolean;
+var waited: Integer;
+begin
+  waited := 0;
+  while (probe.LastId < wantId) and (waited < timeoutMs) do
+  begin
+    CheckSynchronize(10);
+    Inc(waited, 10);
+  end;
+  Result := probe.LastId >= wantId;
+end;
+
+procedure TestEngineThread;
+var
+  probe: TThreadProbe;
+  th: TSpxEngineThread;
+  job: TSpxJob;
+  i: Integer;
+begin
+  probe := TThreadProbe.Create;
+  th := TSpxEngineThread.Create(probe.Done);
+  try
+    { One job, one answer, and it is the same text the same context produces on this thread:
+      the worker is a place to run the engine, not a second implementation of it. }
+    job.Id := 1;
+    job.Text := 'вариант: {a|b|c|d}';
+    job.Locale := 'ru';
+    job.Seeded := True;
+    job.Seed := 42;
+    th.Post(job);
+    CheckTrue('thread/delivers-a-result', PumpUntil(probe, 1, 5000));
+    Check('thread/result-matches-a-direct-render', probe.Last.Preview,
+          SpxRenderSample(job.Text, SpxSeededContext('ru', nil, 42)));
+
+    { The status bar's numbers come from the same worker. }
+    job.Id := 2;
+    job.Text := 'сломано]';
+    th.Post(job);
+    CheckTrue('thread/delivers-the-second', PumpUntil(probe, 2, 5000));
+    CheckTrue('thread/reports-the-error-count', probe.Last.Errors = 1);
+
+    { LATEST WINS. Fifty edits arrive faster than fifty renders can run, so the queue holds
+      one job and the rest are replaced unrendered. Without that, a fast typist would build
+      a backlog the UI then walks through one stale preview at a time. }
+    probe.Delivered := 0;
+    for i := 3 to 52 do
+    begin
+      job.Id := i;
+      job.Text := 'правка ' + IntToStr(i) + ': {a|b}';
+      th.Post(job);
+    end;
+    CheckTrue('thread/latest-job-arrives', PumpUntil(probe, 52, 5000));
+    CheckTrue('thread/superseded-jobs-are-dropped', probe.Delivered < 50);
+    { Without the first letter: post-process capitalizes the opening word. }
+    CheckTrue('thread/last-answer-is-the-last-edit',
+              Pos('равка 52:', probe.Last.Preview) > 0);
+  finally
+    th.Shutdown;
+    th.WaitFor;
+    th.Free;
+    probe.Free;
+  end;
+
+  { Shutting down WHILE a render is in flight. The worker may be inside Synchronize, which
+    waits for the main thread to service the queue -- and the main thread is the one calling
+    WaitFor. If that ever deadlocks, this check does not fail, it HANGS, and the CI timeout
+    is the failure. Kept for exactly that reason: the alternative is discovering it when a
+    user closes the window on a big document. }
+  probe := TThreadProbe.Create;
+  th := TSpxEngineThread.Create(probe.Done);
+  try
+    job.Id := 1;
+    job.Locale := 'ru';
+    job.Seeded := True;
+    job.Seed := 1;
+    job.Text := '';
+    for i := 1 to 400 do
+      job.Text := job.Text + 'строка ' + IntToStr(i) + ': {а|б|в} [x|y|z] %v'
+                  + IntToStr(i) + '%' + LineEnding;
+    th.Post(job);
+    th.Shutdown;
+    th.WaitFor;
+    CheckTrue('thread/shutdown-during-a-render-does-not-hang', True);
+  finally
+    th.Free;
+    probe.Free;
+  end;
+end;
+
 begin
   SpxInitHost;
   {$IFDEF FPC}
@@ -1003,6 +1115,7 @@ begin
   TestRenderPath;
   TestIncludeResolution;
   TestAnalysisPath;
+  TestEngineThread;
 
   Writeln(Format('studio tests: %d checks, %d failed', [Checks, Failures]));
   if Failures > 0 then ExitCode := 1;

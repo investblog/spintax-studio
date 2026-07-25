@@ -20,14 +20,29 @@ fi
 # producing a DIFFERENT result from the same sources.
 rm -rf lib
 mkdir -p lib
-fpc -Mdelphi -Fusrc -Fuengine/src -FUlib -O2 tests/studio_tests.dpr -otests/studio_tests
+fpc -Mdelphi -Fusrc -Fugui -Fuengine/src -FUlib -O2 tests/studio_tests.dpr -otests/studio_tests
 
 # Second build with overflow and range checks ON (-Co -Cr), into its own unit dir so it
 # cannot poison the optimised one. This reproduces Delphi's Debug configuration, which is
 # how an EIntOverflow in the engine's mulberry32 mixer once reached a released tree: FPC's
 # default build wraps silently, Delphi's Debug build raises.
 mkdir -p lib/checked
-fpc -Mdelphi -Co -Cr -Fusrc -Fuengine/src -FUlib/checked tests/studio_tests.dpr \
+fpc -Mdelphi -Co -Cr -Fusrc -Fugui -Fuengine/src -FUlib/checked tests/studio_tests.dpr \
   -otests/studio_tests_checked
 
-echo "built: tests/studio_tests(+checked)"
+# The GUI needs Lazarus (LCL + SynEdit), which plain fpc cannot see. It is built when
+# lazbuild is around and skipped -- loudly -- when it is not: editor-core and its suite are
+# complete without a window, so a contributor without Lazarus should still get a green
+# build.sh rather than a wall of "Can't find unit Forms".
+lazbuild_exe=""
+for candidate in lazbuild /c/lazarus/lazbuild.exe "$LAZARUS_DIR/lazbuild"; do
+  if command -v "$candidate" >/dev/null 2>&1; then lazbuild_exe="$candidate"; break; fi
+done
+
+if [ -n "$lazbuild_exe" ]; then
+  "$lazbuild_exe" gui/SpintaxStudio.lpi >/dev/null
+  echo "built: tests/studio_tests(+checked), spintax-studio"
+else
+  echo "built: tests/studio_tests(+checked)"
+  echo "note: lazbuild not found - the GUI was skipped (install Lazarus to build the app)" >&2
+fi
