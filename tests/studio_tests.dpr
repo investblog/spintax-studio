@@ -160,6 +160,18 @@ begin
     dirs.Free;
   end;
 
+  { v0.2.1 narrowed #include to the family's anchor: anything after the quoted target makes
+    the line plain text, not an include. Studio's design builds on the family rule (ADR
+    0003), and on the older tag this line was an include AND an include.unknown-target
+    error — a template the rest of the family calls valid. A submodule moved back before
+    that tag has to be noticed here rather than in a user's red status bar. }
+  dirs := SpExtractDirectives('#include "a" "b"');
+  try
+    CheckTrue('engine/include-rule-is-family-anchored', dirs.Count = 0);
+  finally
+    dirs.Free;
+  end;
+
   { The four-argument SpValidate. Studio must pass BOTH sets: a variable the user defined
     in the panel is not undefined, and the warning must not redden the status (spec §4.3). }
   kv := TStringList.Create;

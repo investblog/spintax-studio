@@ -46,13 +46,12 @@ M0 is reused whole; the GUI (M1–M2) and the LLM loop (M4) are independent; M3/
 interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spec §9); M4 and
 the managed tier are later releases.
 
-- [ ] **Engine — the `#include` resolver seam** (next engine release; gates neither M0 nor
-      M1/M2). `spintax-win` is the only port in the family whose render has no
+- [ ] **Engine — the `#include` resolver seam** (in progress in the engine; gates neither M0
+      nor M1/M2). `spintax-win` is the only port in the family whose render has no
       `ref → text | null` callback, so Studio cannot resolve includes without diverging from
-      every other engine. The same commit narrows the engine's `#include` rule to the family
-      anchor — the looser rule moves *verdicts*, which are parity-REQUIRED, and it is already
-      an open item in the engine's own backlog. Until it ships, the preview shows the
-      directive verbatim (spec §4.2) and Studio simulates nothing.
+      every other engine (ADR 0003). Until it ships, the preview shows the directive verbatim
+      (spec §4.2) and Studio simulates nothing. The rule narrowing that was going to ride
+      with it landed separately in `v0.2.1`.
 - [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderFragment` /
       `RenderBatch` / `ExtractModel` / `HealthReport` over the engine, plus the template set
       and the resolver built on it. Pure Pascal, GUI- and network-free,
@@ -171,6 +170,16 @@ theoretical:
 - [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
 - [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
       0002 and 0001 (2026-07-23).
+- [x] **Engine bumped to `v0.2.1`** (2026-07-25). `#include` is recognised the way the rest
+      of the family recognises it: five shapes the engine used to accept as includes are
+      plain text again, and since `include.unknown-target` is an `error` that was a
+      verdict-level parity defect. **Studio's minimum engine is now `v0.2.1`** — on `v0.2.0`
+      the diagnostics panel would redden templates the family calls valid. All 14
+      `studio_tests` checks passed unchanged across the bump, which is exactly what the
+      baseline tripwires are for. The tag also surfaced an engine divergence Studio must not
+      compensate for: directive values are right-trimmed with PHP's charset (VT and NUL
+      included) where the reference strips only spaces, tabs and one `\r`, so the variables
+      panel and the prelude take `TSpDirective.Value` verbatim (spec §7).
 - [x] **Pre-M0 (b) — the scaffolding is in, and it gates** (2026-07-25). `build.sh` (clean
       unit cache, an optimised build and a `-Co -Cr` checked one, a clear error when
       `engine/` is empty), CI on ubuntu + windows with `submodules: recursive` plus a
