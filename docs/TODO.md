@@ -10,18 +10,31 @@ project: spintax-studio
 The single list of open work. Full design in [spec.md](spec.md); this is the sequence and
 the decisions still owed.
 
-## Decisions to settle first (spec §10)
+## Open decisions (spec §10)
 
-The two that gate M0/M1 are settled; the rest are M3/M4-level and can wait.
+Everything that gates M0/M1 is settled. What is left is not one tier: the architecture
+question lands with Pre-M0 (b), the Partner Center account type before the first submission
+(see *Publish prep*), the rest at M3/M4.
 
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
       at `engine/`, pinned to tag `v0.1.0`. Clone with `--recurse-submodules`.
+- [x] **`#include` resolution + the on-disk template set**
+      ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25). The
+      engine renders the directive verbatim — resolution is a host duty — so editor-core
+      expands it **by the occurrence spans the engine reports**, and a set is the flat folder
+      of `*.spintax` files beside the document (slug = filename, matched case-insensitively,
+      which is what the engine's own `knownIncludes` check does; a case-collision inside one
+      set is a workspace error, not a coin toss). Not an M3/M4 question after all: until it is
+      settled the preview shows a raw directive and `knownIncludes` has nothing to be built
+      from.
+- [ ] **Target architecture for the shipped `.exe`** — x86_64 (the Store target) with i386
+      kept in the CI matrix as the engine does, or something else. Settle when `build.sh`
+      lands; the installed FPC 3.2.2 cross-builds both (`ppcrossx64`, verified 2026-07-25).
 - [ ] **Thesaurus for the synonym feature** — a local base (which one?) or LLM-only. (M4)
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
-- [ ] **On-disk "template set" format** — feeds `#include` resolution and `knownIncludes`.
 
 ## Milestones (spec §9)
 
@@ -29,12 +42,31 @@ M0 is reused whole; the GUI (M1–M2) and the LLM loop (M4) are independent; M3/
 interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spec §9); M4 and
 the managed tier are later releases.
 
-- [ ] **Pre-M0 — bump the engine submodule to `v0.2.0`** once `spintax-win` is tagged.
-      Diagnostic positions (`TSpDiag.Line/Column/…`) exist only from v0.2.0, and M0's
-      `HealthReport` already carries them — so bump before M0 touches positions, not at M2,
-      or M0 is written against an API the `v0.1.0` pin lacks (spec §9).
-- [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderBatch` /
-      `ExtractModel` / `HealthReport` over the engine. Pure Pascal, GUI- and network-free,
+- [ ] **Pre-M0 (a) — release the engine as `v0.2.0`, then bump the submodule.** Two additive
+      public-API pieces ride that tag: `TSpDiag` positions (already on the engine's `main`)
+      and `SpExtractDirectives` (still to write, spec §4.2) — every `#set` / `#def` /
+      `#include` the renderer sees, each with its source span (the `TSpDiag` position
+      contract), its source text and, for macros, its value. Three M0 consumers need it and
+      none of them can be served by `SpExtract`:
+      - the **include resolver** substitutes occurrences by span. A target *list* is not
+        enough — it is deduplicated, so the same slug commented out and live is one entry
+        (measured), and expanding both leaks the commented copy's text plus a stray `#/`,
+        because comments do not nest. A fragment that documents itself is all it takes.
+      - the **fragment preview** needs the `#set`/`#def` prelude, which the engine parses
+        only after stripping comments and across five line terminators;
+      - the **variables panel** needs macro *values*, which `SpExtract` does not return.
+
+      Bump as soon as the tag exists, not at M2, or M0 is written against an API the `v0.1.0`
+      pin lacks (spec §9).
+- [ ] **Pre-M0 (b) — repo scaffolding for Pascal code.** `build.sh` in the engine's shape (a
+      clean unit dir, build the test binary, a warnings-are-errors pass with `-Sew -vm4046`),
+      CI on ubuntu + windows with `submodules: recursive`, `.gitignore` for `lib/`, built
+      binaries and Lazarus artefacts, and the `quality-pascal` chain + git hooks (pre-commit /
+      pre-push run the build and the tests) — the deployment the charter defers until M0
+      brings real code, recorded in `.agents/REGISTRY.md`.
+- [ ] **M0 — editor-core (`SpxStudio.pas`).** `ExpandIncludes` / `RenderSample` /
+      `RenderFragment` / `RenderBatch` / `ExtractModel` / `HealthReport` over the engine.
+      Pure Pascal, GUI- and network-free,
       fully tested — verifiable without a window. The layer both the GUI and the LLM loop
       hang off. **This is where the Studio-context ↔ pure-engine boundary lives**, and the
       review pinned four contracts M0 must carry (spec §§4.2–4.6, 5):
@@ -47,6 +79,26 @@ the managed tier are later releases.
       - diagnostics are **consumed with their `TSpDiag` positions** (`Line`/`Column`/`End*`,
         engine ≥ `v0.2.0`) — Studio does NOT reimplement the validator scan; `Line = 0`
         means unknown → panel-only, no squiggle, and positions never alter the verdict.
+
+      Three more contracts, from measuring the engine on 2026-07-25:
+      - **`#include` expansion is a render-path step only, and it goes by span** (ADR 0003).
+        Every render goes through `ExpandIncludes`, which substitutes the occurrences
+        `SpExtractDirectives` reports, last one first; validation stays on the *unexpanded*
+        document, because a position inside substituted text has nowhere to point in the
+        editor. The set arrives as an in-memory `slug → text` map — editor-core does no I/O,
+        so M0's tests need no filesystem.
+      - **Validation covers the include closure.** Every file the document pulls in is
+        validated separately, in its own coordinates, grouped by file, with
+        `knownVariables` = runtime vars ∪ all `#set`/`#def` names in the closure and
+        `knownIncludes` = the set's slugs. Without the closure a document is green while the
+        export degrades on a broken fragment; without the union a fragment using a parent's
+        macro reports a false `variable.undefined` (measured). Any `error` anywhere in the
+        closure makes the verdict red.
+      - **One engine thread, warmed at startup.** The engine's post-process builds a lazy
+        global (`GAbbrevs`) with no synchronisation, so two first renders on two threads
+        race; and post-process is 0.7 s on a 237 KB template, too slow for the UI thread on
+        every debounce. editor-core therefore keeps no state of its own — a single worker can
+        own every engine call, "latest wins" (spec §5).
 - [ ] **M1 — GUI shell.** Two panes, SynEdit + a spintax highlighter, live preview, bracket
       matching, validity indicator. The DeepL skeleton.
 - [ ] **M2 — panels.** Variables (`SpExtract`), diagnostics (`SpValidate`) with squiggles
@@ -114,3 +166,13 @@ theoretical:
 - [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
 - [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
       0002 and 0001 (2026-07-23).
+- [x] **`#include` and the template set settled** as [ADR 0003](decisions/0003-include-resolution-and-template-set.md)
+      (2026-07-25), after measuring the engine rather than assuming: the directive survives
+      render verbatim and slugs match case-insensitively. The first draft let Studio find the
+      lines itself and leaned on `SpExtract`'s target list to skip commented-out includes;
+      review pushed back, and the measurement agreed — the list is deduplicated, so it cannot
+      separate a commented occurrence from a live one, and expanding both leaks text and a
+      stray `#/` (comments do not nest). The contract is now occurrence-level, which is what
+      pulled `SpExtractDirectives` into the `v0.2.0` scope. The same session pinned closure
+      validation, the single-engine-thread rule and the slug-collision rule into spec
+      §4.2 / §4.3 / §5 / §7 / §8.
