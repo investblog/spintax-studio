@@ -1,5 +1,8 @@
 # Spintax Studio
 
+[![CI](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A native Windows editor for spintax templates, in the shape of a translator: two panes,
 your template on the left, a live render on the right. The engine that decides what comes
 out — and whether the template is even valid — is [`spintax-win`](https://github.com/investblog/spintax-win),
@@ -7,9 +10,24 @@ the same one published for JavaScript, PHP and Python, embedded in-process. On t
 live preview, real validation with diagnostics, and an authoring loop where an LLM writes
 a template, the engine checks it, and the model repairs what the engine rejects.
 
-> **Status: design.** This repository is the spec being brought to a buildable state. No
-> application code yet — the source of truth is [`docs/spec.md`](docs/spec.md), and the
-> open decisions are tracked in [`docs/TODO.md`](docs/TODO.md).
+> **Status: design, with the gates already standing.** The source of truth is
+> [`docs/spec.md`](docs/spec.md) and the open decisions are in
+> [`docs/TODO.md`](docs/TODO.md). There is no application yet: the Pascal here is the host
+> contract the engine cannot fulfil for its caller, plus the build, tests and CI that will
+> hold the editor-core when it lands.
+
+## Building
+
+```sh
+git clone --recurse-submodules https://github.com/investblog/spintax-studio.git
+cd spintax-studio
+sh ./build.sh          # needs Free Pascal 3.2.2+
+./tests/studio_tests
+```
+
+The engine is a git submodule pinned to a released tag
+([ADR 0001](docs/decisions/0001-engine-as-submodule.md)); a plain clone needs
+`git submodule update --init` before the build finds `unit Spintax`.
 
 ## Principles
 

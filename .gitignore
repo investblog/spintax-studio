@@ -55,8 +55,12 @@ __recovery/
 ppas.bat
 ppas.sh
 
-# built binaries — a source repo tracks no executable
+# built binaries — a source repo tracks no executable. A blanket *.exe first, then the
+# extensionless targets: fpc honours -o literally, so on Windows too the binary has no
+# suffix and *.exe would sail right past it.
 *.exe
+tests/studio_tests
+tests/studio_tests_checked
 
 # Lazarus / Delphi per-user session state — machine-local, never shared
 *.lps

@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# No release job yet: there is no application to ship (spec §9 — M0 is editor-core, M1 is
+# the first window). When there is, it follows the engine's model — tag-driven, gated by
+# everything below, and only on an explicit command.
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows is the product's platform, Linux is the cheap early signal. Both legs
+        # earn their keep: the two things most likely to break in this stack are the
+        # byte-string codepage and the line terminator, and they are platform-bound.
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The engine is a submodule pinned to a tag (ADR 0001). Without this the build
+          # fails on a missing unit, which is a confusing way to say "no engine".
+          submodules: recursive
+
+      - name: Install Free Pascal (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fpc
+
+      - name: Install Free Pascal (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install freepascal -y --no-progress
+          # choco does not put fpc on PATH for the current step's shell.
+          echo "C:\tools\freepascal\bin\i386-win32" >> $env:GITHUB_PATH
+          # ...and it ships no usable fpc.cfg, so the compiler runs but finds no units
+          # beyond the RTL core: the engine's CI first failed on "Can't find unit
+          # Generics.Collections", which lives in units/$fpctarget/rtl-generics and is
+          # reached through the wildcard unit paths a generated config provides.
+          & "C:\tools\freepascal\bin\i386-win32\fpcmkcfg.exe" `
+            -d "basepath=C:\tools\freepascal" `
+            -o "C:\tools\freepascal\bin\i386-win32\fpc.cfg"
+
+      - name: Compiler version
+        shell: bash
+        run: fpc -iV
+
+      - name: Build
+        shell: bash
+        run: sh ./build.sh
+
+      # Warnings are fatal in this stack: FPC compiles an uninitialised function result or
+      # a shadowed variable with only a warning, and those are exactly the defects this
+      # kind of code produces. -vm4046 drops the single warning FPC's own generics RTL
+      # raises from TDictionary; without it -Sew fails on code we do not own. Suppress that
+      # number only — never a warning from src/ or tests/.
+      - name: Warnings are errors
+        shell: bash
+        run: |
+          mkdir -p lib/.syntax-check
+          for f in src/*.pas tests/*.dpr; do
+            fpc -Mdelphi -Sew -vw -vm4046 -Fusrc -Fuengine/src -FUlib/.syntax-check -Cn "$f"
+          done
+
+      # Studio's own assertions: the host contract (codepage, PostProcess) and the engine
+      # baseline the submodule pin is supposed to provide. The engine's golden corpus is
+      # NOT run here — it is the engine's acceptance suite, referenced and never vendored
+      # (engine decision 0001), and it is gated in the engine's own CI on every push.
+      - name: Studio tests
+        shell: bash
+        run: ./tests/studio_tests
+
+      # The same assertions with overflow and range checks on, mirroring Delphi's Debug
+      # configuration. FPC's default build wraps silently.
+      - name: Studio tests with overflow checks
+        shell: bash
+        run: ./tests/studio_tests_checked
+
+  # build.sh drives every consumer's first five minutes with this repository, so it is
+  # gated like source rather than trusted.
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Lint shell scripts
+        run: |
+          sudo apt-get update && sudo apt-get install -y shellcheck
+          shellcheck build.sh

@@ -53,12 +53,6 @@ the managed tier are later releases.
       anchor — the looser rule moves *verdicts*, which are parity-REQUIRED, and it is already
       an open item in the engine's own backlog. Until it ships, the preview shows the
       directive verbatim (spec §4.2) and Studio simulates nothing.
-- [ ] **Pre-M0 (b) — repo scaffolding for Pascal code.** `build.sh` in the engine's shape (a
-      clean unit dir, build the test binary, a warnings-are-errors pass with `-Sew -vm4046`),
-      CI on ubuntu + windows with `submodules: recursive`, `.gitignore` for `lib/`, built
-      binaries and Lazarus artefacts, and the `quality-pascal` chain + git hooks (pre-commit /
-      pre-push run the build and the tests) — the deployment the charter defers until M0
-      brings real code, recorded in `.agents/REGISTRY.md`.
 - [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderFragment` /
       `RenderBatch` / `ExtractModel` / `HealthReport` over the engine, plus the template set
       and the resolver built on it. Pure Pascal, GUI- and network-free,
@@ -177,6 +171,22 @@ theoretical:
 - [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
 - [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
       0002 and 0001 (2026-07-23).
+- [x] **Pre-M0 (b) — the scaffolding is in, and it gates** (2026-07-25). `build.sh` (clean
+      unit cache, an optimised build and a `-Co -Cr` checked one, a clear error when
+      `engine/` is empty), CI on ubuntu + windows with `submodules: recursive` plus a
+      shellcheck job, `.gitignore` for the extensionless fpc targets, and the
+      `quality-pascal` chain with both git hooks installed — the whole deployment recorded
+      in `.agents/REGISTRY.md`, including why the gate now resolves `fpc` itself (it had
+      been silently skipping the compile step on this machine) and why Studio runs no
+      corpus step.
+
+      The first Pascal came with it, kept to what makes the gate real rather than to M0's
+      surface: `src/SpxStudio.pas` carries `SpxInitHost` (the codepage duty, spec §7), and
+      `tests/studio_tests.dpr` holds 14 checks — the host contract (codepage, Cyrillic
+      round-trip, `PostProcess` default and effect) plus tripwires on the engine baseline
+      the submodule pin is supposed to provide (diagnostic positions, `SpExtractDirectives`,
+      the four-argument `SpValidate`, and `#include` still rendering verbatim, which is what
+      the preview relies on until the resolver seam lands). Green in both builds.
 - [x] **Pre-M0 — engine `v0.2.0` released and the submodule bumped** (2026-07-25). `engine/`
       moved off `v0.1.0` to the tag carrying `TSpDiag` positions and `SpExtractDirectives`;
       the pinned tree compiles clean under `-Sew -vm4046` for `i386-win32`. M0 can be written
