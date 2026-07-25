@@ -21,14 +21,18 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
       at `engine/`, pinned to tag `v0.1.0`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
-      ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25). The
-      engine renders the directive verbatim — resolution is a host duty — so editor-core
-      expands it **by the occurrence spans the engine reports**, and a set is the flat folder
-      of `*.spintax` files beside the document (slug = filename, matched case-insensitively,
-      which is what the engine's own `knownIncludes` check does; a case-collision inside one
-      set is a workspace error, not a coin toss). Not an M3/M4 question after all: until it is
-      settled the preview shows a raw directive and `knownIncludes` has nothing to be built
-      from.
+      ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
+      the same day). The family resolves includes **inside render**, behind a host callback
+      (`@spintax/core`, the Python port, both from the plugin's `for_child_render`), with a
+      child scope, lenient empty on unknown target / cycle / depth, and `maxDepth` 20.
+      `spintax-win` is the only port without that seam, so the seam is the engine's to grow
+      and Studio's job is to supply the resolver — not to expand text, which cannot reproduce
+      those semantics. A set is the flat folder of `*.spintax` files beside the document (slug
+      = filename, matched case-insensitively as the engine's `knownIncludes` check does; a
+      case-collision inside one set is a workspace error, not a coin toss).
+- [ ] **Does R0 ship include expansion?** Either R0 waits for the engine release that carries
+      the resolver seam, or it ships with `#include` validated but left verbatim in the
+      preview. Everything else in R0 is unaffected either way (spec §9, §10).
 - [ ] **Target architecture for the shipped `.exe`** — x86_64 (the Store target) with i386
       kept in the CI matrix as the engine does, or something else. Settle when `build.sh`
       lands; the installed FPC 3.2.2 cross-builds both (`ppcrossx64`, verified 2026-07-25).
@@ -42,31 +46,22 @@ M0 is reused whole; the GUI (M1–M2) and the LLM loop (M4) are independent; M3/
 interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spec §9); M4 and
 the managed tier are later releases.
 
-- [ ] **Pre-M0 (a) — release the engine as `v0.2.0`, then bump the submodule.** Two additive
-      public-API pieces ride that tag, **both already on the engine's `main`**: `TSpDiag`
-      positions and `SpExtractDirectives` (spec §4.2) — every `#set` / `#def` / `#include`
-      the renderer sees, each with its source span (the `TSpDiag` position contract), its
-      source text and, for macros, its value. Three M0 consumers need it and none of them
-      can be served by `SpExtract`:
-      - the **include resolver** substitutes occurrences by span. A target *list* is not
-        enough — it is deduplicated, so the same slug commented out and live is one entry
-        (measured), and expanding both leaks the commented copy's text plus a stray `#/`,
-        because comments do not nest. A fragment that documents itself is all it takes.
-      - the **fragment preview** needs the `#set`/`#def` prelude, which the engine parses
-        only after stripping comments and across five line terminators;
-      - the **variables panel** needs macro *values*, which `SpExtract` does not return.
-
-      Bump as soon as the tag exists, not at M2, or M0 is written against an API the `v0.1.0`
-      pin lacks (spec §9).
+- [ ] **Engine — the `#include` resolver seam** (next engine release; gates neither M0 nor
+      M1/M2). `spintax-win` is the only port in the family whose render has no
+      `ref → text | null` callback, so Studio cannot resolve includes without diverging from
+      every other engine. The same commit narrows the engine's `#include` rule to the family
+      anchor — the looser rule moves *verdicts*, which are parity-REQUIRED, and it is already
+      an open item in the engine's own backlog. Until it ships, the preview shows the
+      directive verbatim (spec §4.2) and Studio simulates nothing.
 - [ ] **Pre-M0 (b) — repo scaffolding for Pascal code.** `build.sh` in the engine's shape (a
       clean unit dir, build the test binary, a warnings-are-errors pass with `-Sew -vm4046`),
       CI on ubuntu + windows with `submodules: recursive`, `.gitignore` for `lib/`, built
       binaries and Lazarus artefacts, and the `quality-pascal` chain + git hooks (pre-commit /
       pre-push run the build and the tests) — the deployment the charter defers until M0
       brings real code, recorded in `.agents/REGISTRY.md`.
-- [ ] **M0 — editor-core (`SpxStudio.pas`).** `ExpandIncludes` / `RenderSample` /
-      `RenderFragment` / `RenderBatch` / `ExtractModel` / `HealthReport` over the engine.
-      Pure Pascal, GUI- and network-free,
+- [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderFragment` /
+      `RenderBatch` / `ExtractModel` / `HealthReport` over the engine, plus the template set
+      and the resolver built on it. Pure Pascal, GUI- and network-free,
       fully tested — verifiable without a window. The layer both the GUI and the LLM loop
       hang off. **This is where the Studio-context ↔ pure-engine boundary lives**, and the
       review pinned four contracts M0 must carry (spec §§4.2–4.6, 5):
@@ -80,29 +75,27 @@ the managed tier are later releases.
         engine ≥ `v0.2.0`) — Studio does NOT reimplement the validator scan; `Line = 0`
         means unknown → panel-only, no squiggle, and positions never alter the verdict.
 
-      Three more contracts, from measuring the engine on 2026-07-25:
-      - **`#include` expansion is a render-path step only, and it goes by span** (ADR 0003).
-        Every render goes through `ExpandIncludes`, which substitutes the occurrences
-        `SpExtractDirectives` reports, last one first; validation stays on the *unexpanded*
-        document, because a position inside substituted text has nowhere to point in the
-        editor. The set arrives as an in-memory `slug → text` map — editor-core does no I/O,
-        so M0's tests need no filesystem.
+      Three more contracts, from measuring the engine and reading the reference on
+      2026-07-25:
+      - **The set is data, and editor-core does no I/O.** It arrives as an in-memory
+        `slug → text` map built by the host from the folder listing, so M0's tests need no
+        filesystem, and the same map becomes the resolver handed to the engine.
       - **Validation covers the include closure.** Every file the document pulls in is
-        validated separately, in its own coordinates, grouped by file, with
-        `knownVariables` = runtime vars ∪ all `#set`/`#def` names in the closure and
-        `knownIncludes` = the set's slugs. Without the closure a document is green while the
-        export degrades on a broken fragment; without the union a fragment using a parent's
-        macro reports a false `variable.undefined` (measured). Any `error` anywhere in the
-        closure makes the verdict red. Cache per file text: validation cost grows
-        super-linearly with directive count (engine measurement: ~28 ms at 400 directives,
-        ~245 ms at 1600), so only the edited file may revalidate on a keystroke.
-      - **Expand only what has the reference shape.** The engine recognises `#include` wider
-        than `spintax-js`/PHP/Python do (`#includes "x"`, `#include"x"`, `#include "x" junk`,
-        `#include ""`, `#include "a" "b"`), and misses `#include` + newline + `"x"` which the
-        reference accepts — a known engine defect with its own fix pending. M0 gates every
-        occurrence on `^[ \t]*#include\s+"([^"]+)"\s*$` over the reported line, and **writes
-        its tests against that reference rule**, never against the engine's current width, so
-        the gate turns into a no-op when the engine narrows (ADR 0003).
+        validated separately, in its own coordinates, grouped by file, with `knownIncludes` =
+        the set's slugs and `knownVariables` **per the child scope**: a document gets its
+        runtime variables, an included file gets those plus its own `#set`/`#def` and *not*
+        the parent's, because the parent's macros are genuinely out of scope for it (ADR
+        0003). Without the closure a document is green while the export degrades on a broken
+        fragment; with the parent's names mixed in, a true `variable.undefined` would be
+        silenced. Any `error` anywhere in the closure makes the verdict red. Cache per file
+        text: validation cost grows super-linearly with directive count (engine measurement:
+        ~28 ms at 400 directives, ~245 ms at 1600), so only the edited file may revalidate on
+        a keystroke.
+      - **No include expansion in editor-core.** The set is loaded, its slugs feed
+        `knownIncludes`, and a `slug → text` resolver is handed to the engine once the engine
+        has the seam — nothing more. No substitution by span, no depth or cycle bookkeeping,
+        no shape gate: all of that belongs to the render, and reproducing it host-side
+        diverges from the family (ADR 0003).
       - **One engine thread, warmed at startup.** The engine's post-process builds a lazy
         global (`GAbbrevs`) with no synchronisation, so two first renders on two threads
         race; and post-process is 0.7 s on a 237 KB template, too slow for the UI thread on
@@ -184,6 +177,18 @@ theoretical:
 - [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
 - [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
       0002 and 0001 (2026-07-23).
+- [x] **Pre-M0 — engine `v0.2.0` released and the submodule bumped** (2026-07-25). `engine/`
+      moved off `v0.1.0` to the tag carrying `TSpDiag` positions and `SpExtractDirectives`;
+      the pinned tree compiles clean under `-Sew -vm4046` for `i386-win32`. M0 can be written
+      against both additions.
+- [x] **ADR 0003 revised the same day it was written** (2026-07-25): the resolver moved from
+      Studio into the engine. Reading `@spintax/core` (`internal/render.ts:91,106`) and the
+      Python port (`_render.py:603`) after the first version showed the family resolves
+      includes inside render behind a host callback, with a child scope that excludes the
+      parent's `#set`, lenient empty on unknown/cycle/depth, cycles by ref string and
+      `maxDepth` 20 — none of which a text-level pre-pass can reproduce, and one of which
+      (child scope) had already produced a wrong `knownVariables` rule here. Studio's span
+      substitution, shape gate, depth and cycle rules were dropped with it.
 - [x] **`#include` and the template set settled** as [ADR 0003](decisions/0003-include-resolution-and-template-set.md)
       (2026-07-25), after measuring the engine rather than assuming: the directive survives
       render verbatim and slugs match case-insensitively. The first draft let Studio find the
