@@ -24,6 +24,10 @@ program studio_tests;
 {$APPTYPE CONSOLE}
 
 uses
+  { First, and before anything that might pull in the RTL's threading: without it a TThread
+    on Unix fails at run time with "This binary has no thread support compiled in". The GUI
+    entry point does the same; the suite needs it because it exercises the engine worker. }
+  {$IFDEF UNIX}cthreads,{$ENDIF}
   SysUtils, Classes, Generics.Collections,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxEngineThread;

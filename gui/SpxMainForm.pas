@@ -199,8 +199,16 @@ end;
 procedure TSpxMainForm.JobDone(const Res: TSpxJobResult);
 var s: string;
 begin
-  { Latest wins on this side too: a slower job that finished after a newer one must not
-    overwrite the newer answer. }
+  { One worker renders one job at a time and delivers in the order it ran them, so an OLDER
+    answer cannot arrive after a newer one. This comparison is that invariant written down,
+    not a policy -- if a second worker ever appears, it starts earning its keep.
+
+    The policy question it resembles has a different answer, on purpose. When job 5 was
+    already rendering as job 6 arrived, job 5's result IS delivered and IS shown, even though
+    the editor has moved on: a preview that lags one edit behind is worth more than one that
+    freezes for as long as the user keeps typing on a big document. What keeps that lag to a
+    single render instead of a queue is the worker dropping SUPERSEDED jobs before running
+    them (SpxEngineThread), which the suite checks. }
   if Res.Id < FLastShown then Exit;
   FLastShown := Res.Id;
 

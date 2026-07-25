@@ -7,6 +7,25 @@
 # hold", which is exactly what the hooks and CI gate.
 set -e
 
+# Neither installer on Windows puts fpc on PATH, and dying with "fpc: command not found" next
+# to a perfectly good Lazarus is a bad first five minutes. Look where the compiler actually
+# lives -- the same resolution the git gate uses, so both agree on which one runs. On Linux
+# and macOS fpc is already on PATH and this loop does nothing.
+if ! command -v fpc >/dev/null 2>&1; then
+  for dir in "${AGENTS_FPC:-}" /c/FPC/*/bin/* /c/lazarus/fpc/*/bin/*; do
+    if [ -x "$dir/fpc" ] || [ -x "$dir/fpc.exe" ]; then
+      PATH="$dir:$PATH"
+      export PATH
+      break
+    fi
+  done
+fi
+
+if ! command -v fpc >/dev/null 2>&1; then
+  echo "fpc not found - install Free Pascal, or point AGENTS_FPC at its bin directory" >&2
+  exit 1
+fi
+
 # The engine is a submodule pinned to a tag (ADR 0001). A clone without --recurse-submodules
 # leaves engine/ empty, and the compiler error for that ("Can't find unit Spintax") points
 # nowhere near the cause.
