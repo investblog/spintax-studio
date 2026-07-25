@@ -172,6 +172,30 @@ begin
     dirs.Free;
   end;
 
+  { engine v0.3.2, two fixes Studio can see. An include match may span line terminators, and
+    the scans used to retry the line starts it had swallowed -- finding a PHANTOM second
+    include, which the closure walk would then chase and validate. }
+  dirs := SpExtractDirectives('#include "a'#10'#include "'#10'b"');
+  try
+    CheckTrue('engine/no-phantom-second-include', dirs.Count = 1);
+  finally
+    dirs.Free;
+  end;
+
+  { ...and a CRLF-terminated include reported a span ending BETWEEN the CR and the LF, which
+    the editor line model rounds forward to the next line, with a stray CR left in Text.
+    The panel points at these positions and the fragment prelude re-emits that text. }
+  dirs := SpExtractDirectives('#include "frag"'#13#10'после');
+  try
+    CheckTrue('engine/crlf-include-is-one-directive', dirs.Count = 1);
+    if dirs.Count = 1 then
+      Check('engine/crlf-include-span-stops-before-the-terminator',
+            Format('%s@%d:%d..%d:%d', [dirs[0].Text, dirs[0].Line, dirs[0].Column,
+              dirs[0].EndLine, dirs[0].EndColumn]), '#include "frag"@1:1..1:16');
+  finally
+    dirs.Free;
+  end;
+
   { The four-argument SpValidate. Studio must pass BOTH sets: a variable the user defined
     in the panel is not undefined, and the warning must not redden the status (spec §4.3). }
   kv := TStringList.Create;
@@ -545,6 +569,13 @@ begin
         SpxRenderFragment('#set %a% = 1'#10'#set %a% = 2', '%a%',
                           SpxSeededContext('ru', nil, 1)), '2');
 
+  { A CRLF document produces the same fragment as an LF one. This guards THIS layer's use of
+    `TSpDirective.Text` (the line without its terminator), not the engine -- the engine's own
+    CRLF fix is pinned in the baseline group. }
+  Check('fragment/prelude-survives-crlf',
+        SpxRenderFragment('#set %brand% = Акме'#13#10'текст', '%brand% рулит',
+                          SpxSeededContext('ru', nil, 1)), 'Акме рулит');
+
   { The other half of "document scope": the runtime context reaches the fragment too. }
   v := Vars(['brand', 'Акме']);
   try
@@ -579,6 +610,13 @@ begin
   finally
     v.Free;
   end;
+
+  { engine v0.3.1/v0.3.2 narrowed the directive-value trim to the reference's, and Studio
+    shows the result in two places: this panel and the right pane. A trailing NUL is part of
+    the value now (it was trimmed away before), so the panel must not "clean" it -- that
+    would be the same drift from our side. }
+  Check('model/value-is-trimmed-the-reference-way',
+        ModelVars('#set %x% = A'#0, SpxContext('ru', nil)), 'set:x=A'#0'@1:1');
 
   { Duplicate definitions stay two rows: the engine calls that definition.duplicate-name,
     and a panel that showed one row would hide half the error. }

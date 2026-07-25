@@ -28,9 +28,6 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       `TSpIncludeResolver` and expands nothing itself. A set is the flat folder of `*.spintax`
       files beside the document, slug = filename, matched **exactly** — the case-insensitive
       rule this ADR first carried was built on an engine defect, fixed in `v0.2.2`.
-- [ ] **Does R0 ship include expansion?** Either R0 waits for the engine release that carries
-      the resolver seam, or it ships with `#include` validated but left verbatim in the
-      preview. Everything else in R0 is unaffected either way (spec §9, §10).
 - [ ] **Target architecture for the shipped `.exe`** — x86_64 (the Store target) with i386
       kept in the CI matrix as the engine does, or something else. Settle when `build.sh`
       lands; the installed FPC 3.2.2 cross-builds both (`ppcrossx64`, verified 2026-07-25).
@@ -73,9 +70,9 @@ the managed tier are later releases.
         0003). Without the closure a document is green while the export degrades on a broken
         fragment; with the parent's names mixed in, a true `variable.undefined` would be
         silenced. Any `error` anywhere in the closure makes the verdict red. Cache per file
-        text: validation cost grows super-linearly with directive count (engine measurement:
-        ~28 ms at 400 directives, ~245 ms at 1600), so only the edited file may revalidate on
-        a keystroke.
+        text: `SpValidate` is still quadratic in `#set`/`#def` count (measured on the
+        `v0.3.2` engine: 17.6 / 253 / 3982 ms at 400 / 1600 / 6400 definitions, and paid once
+        per file in the closure), so only the edited file may revalidate on a keystroke.
       - **No include expansion in editor-core.** The set is loaded, its slugs feed
         `knownIncludes`, and a `slug → text` resolver is handed to the engine once the engine
         has the seam — nothing more. No substitution by span, no depth or cycle bookkeeping,
@@ -98,8 +95,15 @@ the managed tier are later releases.
         cycle unwinding to empty, and a batch resolving and still reproducing from its seed.
         Control run: never passing the resolver fails 8 checks.
 
-      41 checks, green in both builds on the `v0.3.0` pin. Still to come: `ExtractModel`,
-      `RenderFragment` and `HealthReport` with the closure walk.
+      - *the analysis path* — `SpxRenderFragment` (the document's `#set`/`#def` prelude plus
+        the selection), `SpxExtractModel` (the variables and includes panel) and
+        `SpxHealthReport` (the include closure validated file by file, plus health probes on
+        fixed seeds and Studio's own notes with positions). Two review passes before the
+        commit found nine defects between them, including `TStringList.IndexOf`'s
+        case-insensitive default reintroducing inside Studio the very bug the engine fixed in
+        `v0.2.2`; every fix has a control run behind it.
+
+      101 checks, green in both builds.
       - **One engine thread, warmed at startup.** The engine's post-process builds a lazy
         global (`GAbbrevs`) with no synchronisation, so two first renders on two threads
         race; and post-process is 0.7 s on a 237 KB template, too slow for the UI thread on
@@ -181,6 +185,17 @@ theoretical:
 - [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
 - [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
       0002 and 0001 (2026-07-23).
+- [x] **Engine bumped to `v0.3.2`** (2026-07-26). Three fixes land, two of them visible
+      through calls Studio makes and now pinned as baseline tripwires: an include match that
+      spans line terminators no longer leaves a **phantom second include** for the closure
+      walk to chase, and a CRLF-terminated include no longer reports a span that crosses into
+      the next line with a stray `CR` in `Text` — the panel points at those positions and the
+      fragment prelude re-emits that text. The third closed the directive-value rtrim
+      divergence, so the spec's "shown as reported, we do not normalise" note keeps its rule
+      and loses its caveat. **`SpExtract`/`SpValidate` are linear now**: the ~245 ms at 1600
+      directives is gone, so debounce stays as politeness to typing and battery rather than
+      as the thing standing between the user and a freeze — and the caller-side validation
+      cache is no longer urgent.
 - [x] **Engine bumped to `v0.3.0`, and `#include` resolution is wired** (2026-07-25). The
       engine grew the family's resolver seam ([engine ADR 0004](../engine/docs/decisions/0004-include-resolver-seam.md)):
       `TSpContext.IncludeResolver`, an abstract class the host subclasses, plus
