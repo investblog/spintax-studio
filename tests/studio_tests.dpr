@@ -196,6 +196,126 @@ begin
         RenderFirst('#include "frag"'#10'после', False), '#include "frag"'#10'после');
 end;
 
+{ ── 3. editor-core: the render path ──────────────────────────────────────── }
+
+{ A runtime variable map, the shape the panel will hand editor-core. Caller frees. }
+function Vars(const pairs: array of string): TStrMap;
+var i: Integer;
+begin
+  Result := TStrMap.Create;
+  i := 0;
+  while i + 1 <= High(pairs) do
+  begin
+    Result.AddOrSetValue(pairs[i], pairs[i + 1]);
+    Inc(i, 2);
+  end;
+end;
+
+procedure TestRenderPath;
+var
+  v: TStrMap;
+  ctx: TSpxContext;
+  batch: TSpxVariantList;
+  seen: TStringList;
+  i: Integer;
+  seeds, got: string;
+begin
+  { PostProcess is the layer's job, not the caller's: nobody mentioned it here, and the
+    cosmetic stage still ran. Left to Default(TSpContext) it would be False and the right
+    pane would drift from every engine that ships the text (spec §7). }
+  ctx := SpxSeededContext('ru', nil, 1);
+  Check('render/postprocess-is-always-on', SpxRenderSample('привет. мир', ctx),
+        'Привет. Мир');
+
+  { A pinned seed is what makes a preview hold still while an edit is compared against it. }
+  ctx := SpxSeededContext('ru', nil, 7);
+  Check('render/seeded-is-reproducible',
+        SpxRenderSample('вариант: {a|b|c|d|e|f|g|h}', ctx),
+        SpxRenderSample('вариант: {a|b|c|d|e|f|g|h}', ctx));
+
+  { ...and the seed has to actually reach the generator. Asserted as "32 seeds do not all
+    agree" rather than "seed 1 differs from seed 2": the second form would pin one engine's
+    RNG mapping, and cross-engine RNG parity is an explicit non-goal. Eight options over 32
+    draws makes a false failure a 1-in-8^31 event. }
+  seen := TStringList.Create;
+  try
+    seen.Duplicates := dupIgnore;
+    seen.Sorted := True;
+    for i := 1 to 32 do
+      seen.Add(SpxRenderSample('выбор: {a|b|c|d|e|f|g|h}', SpxSeededContext('ru', nil, i)));
+    CheckTrue('render/seed-changes-the-draw', seen.Count > 1);
+  finally
+    seen.Free;
+  end;
+
+  { Random mode passes no generator at all, and the engine builds its own -- the analogue
+    of the reference rendering without a seed. Only the shape is assertable. }
+  got := SpxRenderSample('вариант: {a|b}', SpxContext('ru', nil));
+  CheckTrue('render/random-mode-picks-an-option',
+            (got = 'Вариант: a') or (got = 'Вариант: b'));
+
+  { Runtime values reach the engine, and their keys are matched case-insensitively -- the
+    panel should not have to lower-case what the user typed. }
+  v := Vars(['brand', 'Акме']);
+  try
+    Check('render/vars-reach-the-engine',
+          SpxRenderSample('%brand%', SpxSeededContext('ru', v, 1)), 'Акме');
+  finally
+    v.Free;
+  end;
+  v := Vars(['BRAND', 'Акме']);
+  try
+    Check('render/vars-key-is-case-insensitive',
+          SpxRenderSample('%brand%', SpxSeededContext('ru', v, 1)), 'Акме');
+  finally
+    v.Free;
+  end;
+
+  { Locale flows through to the plural buckets: three forms for ru, two for en. }
+  v := Vars(['n', '2']);
+  try
+    Check('render/locale-ru-plural',
+          SpxRenderSample('штук: {plural %n%: товар|товара|товаров}',
+                          SpxSeededContext('ru', v, 1)), 'Штук: товара');
+    Check('render/locale-en-plural',
+          SpxRenderSample('files: {plural %n%: file|files}',
+                          SpxSeededContext('en', v, 1)), 'Files: files');
+  finally
+    v.Free;
+  end;
+
+  { seed_i = SeedBase + i, recorded on the variant. }
+  batch := SpxRenderBatch('вариант: {a|b|c|d}', SpxContext('ru', nil), 4, 1000);
+  try
+    CheckTrue('batch/count', batch.Count = 4);
+    seeds := '';
+    for i := 0 to batch.Count - 1 do
+    begin
+      if i > 0 then seeds := seeds + ',';
+      seeds := seeds + IntToStr(batch[i].Seed);
+    end;
+    Check('batch/seed-derivation', seeds, '1000,1001,1002,1003');
+
+    { The export promise: a recorded seed regenerates its row byte for byte, given the same
+      engine tag and the same context (spec §4.6). Note the batch was asked for from a
+      RANDOM-mode context and still seeded every variant -- a set that cannot be
+      regenerated is not an export. }
+    for i := 0 to batch.Count - 1 do
+      Check('batch/variant-' + IntToStr(i) + '-reproduces-from-its-seed',
+            SpxRenderSample('вариант: {a|b|c|d}', SpxSeededContext('ru', nil, batch[i].Seed)),
+            batch[i].Text);
+  finally
+    batch.Free;
+  end;
+
+  batch := SpxRenderBatch('x', SpxContext('ru', nil), 0, 1);
+  try
+    CheckTrue('batch/count-zero-is-empty', batch.Count = 0);
+  finally
+    batch.Free;
+  end;
+end;
+
 begin
   SpxInitHost;
   {$IFDEF FPC}
@@ -204,6 +324,7 @@ begin
 
   TestHostContract;
   TestEngineBaseline;
+  TestRenderPath;
 
   Writeln(Format('studio tests: %d checks, %d failed', [Checks, Failures]));
   if Failures > 0 then ExitCode := 1;

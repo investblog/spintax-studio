@@ -47,11 +47,13 @@ interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spe
 the managed tier are later releases.
 
 - [ ] **Engine — the `#include` resolver seam** (in progress in the engine; gates neither M0
-      nor M1/M2). `spintax-win` is the only port in the family whose render has no
-      `ref → text | null` callback, so Studio cannot resolve includes without diverging from
-      every other engine (ADR 0003). Until it ships, the preview shows the directive verbatim
-      (spec §4.2) and Studio simulates nothing. The rule narrowing that was going to ride
-      with it landed separately in `v0.2.1`.
+      nor M1/M2). The engine resolves and Studio hands it a `TSpIncludeResolver` over the
+      template set — confirmed on the engine side 2026-07-25, matching ADR 0003.
+      `SpExtractDirectives` stays what it is for: the fragment prelude, macro values and
+      jump-to-directive in the panel, and the closure walk for per-file validation — it is
+      not an expansion mechanism. **Bump the submodule to `v0.2.2` once it ships**, then wire
+      `MakeResolver` into the render context (one field, no caller-visible change). Until
+      then the preview shows the directive verbatim and Studio simulates nothing.
 - [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderFragment` /
       `RenderBatch` / `ExtractModel` / `HealthReport` over the engine, plus the template set
       and the resolver built on it. Pure Pascal, GUI- and network-free,
@@ -89,6 +91,15 @@ the managed tier are later releases.
         has the seam — nothing more. No substitution by span, no depth or cycle bookkeeping,
         no shape gate: all of that belongs to the render, and reproducing it host-side
         diverges from the family (ADR 0003).
+
+      **Landed so far** (2026-07-25) — the render path: `TSpxContext` (locale, runtime
+      variables, RNG mode and seed), `SpxContext` / `SpxSeededContext`, `SpxRenderSample`
+      and `SpxRenderBatch` returning `TSpxVariant` records that carry their seed. 30 checks
+      green in both builds, with two control runs behind them: dropping `PostProcess := True`
+      fails four of them, and unseeding the batch fails three of the four
+      reproduce-from-its-seed checks (the fourth matched by chance on a four-option template,
+      which is why there are four). Still to come: `ExtractModel`, `RenderFragment` and
+      `HealthReport` with the closure walk.
       - **One engine thread, warmed at startup.** The engine's post-process builds a lazy
         global (`GAbbrevs`) with no synchronisation, so two first renders on two threads
         race; and post-process is 0.7 s on a 237 KB template, too slow for the UI thread on
