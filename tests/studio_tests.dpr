@@ -1796,6 +1796,15 @@ begin
             'spx-files-' + IntToStr(GetProcessID);
 end;
 
+{ Paths joined the platform's way. This suite runs on Windows AND on ubuntu in CI, where a
+  hardcoded backslash is not a separator at all: the files land beside the folder with a
+  backslash in their names, the scan finds nothing, and the failure reads as "the loader is
+  broken" rather than "the test is". }
+function InDir(const D, Name: string): string;
+begin
+  Result := IncludeTrailingPathDelimiter(D) + Name;
+end;
+
 procedure WipeFolder(const Dir: string);
 var sr: TSearchRec; base: string;
 begin
@@ -1839,7 +1848,8 @@ begin
   Check('files/normalize-touches-nothing-else', SpxNormalizeEol('Ёжик, «ёлка» — тире', #13#10),
         'Ёжик, «ёлка» — тире');
 
-  Check('files/slug-keeps-case', SpxSlugOf('C:\work\Intro.spintax'), 'Intro');
+  Check('files/slug-keeps-case',
+        SpxSlugOf('work' + PathDelim + 'Intro.spintax'), 'Intro');
   Check('files/slug-of-a-dotted-name', SpxSlugOf('intro.v2.spintax'), 'intro.v2');
   CheckTrue('files/ext-is-case-insensitive', SpxIsTemplateFile('X.SPINTAX'));
   { The 8.3 alias makes a `*.spintax` mask match this one; the filter must not. }
@@ -1854,24 +1864,24 @@ begin
     { Round trip, including the two things an editor most easily breaks: a file with no
       trailing terminator, and non-ASCII text. }
     s := 'Ёжик'#10'вторая строка без хвоста';
-    SpxWriteTextFile(dir + '\rt.spintax', s);
-    Check('files/round-trip-is-byte-identical', SpxReadTextFile(dir + '\rt.spintax'), s);
+    SpxWriteTextFile(InDir(dir, 'rt.spintax'), s);
+    Check('files/round-trip-is-byte-identical', SpxReadTextFile(InDir(dir, 'rt.spintax')), s);
 
-    SpxWriteTextFile(dir + '\bom.spintax', #$EF#$BB#$BF + 'после метки');
-    Check('files/bom-is-stripped-on-read', SpxReadTextFile(dir + '\bom.spintax'),
+    SpxWriteTextFile(InDir(dir, 'bom.spintax'), #$EF#$BB#$BF + 'после метки');
+    Check('files/bom-is-stripped-on-read', SpxReadTextFile(InDir(dir, 'bom.spintax')),
           'после метки');
     { And never written: the family's other engines read these files, and a BOM is a stray
       character to them. }
-    SpxWriteTextFile(dir + '\nobom.spintax', 'чистый');
-    Check('files/no-bom-is-added-on-write', SpxReadTextFile(dir + '\nobom.spintax'), 'чистый');
+    SpxWriteTextFile(InDir(dir, 'nobom.spintax'), 'чистый');
+    Check('files/no-bom-is-added-on-write', SpxReadTextFile(InDir(dir, 'nobom.spintax')), 'чистый');
 
     WipeFolder(dir);
     ForceDirectories(dir);
-    SpxWriteTextFile(dir + '\Intro.spintax', 'вступление {a|b}');
-    SpxWriteTextFile(dir + '\frag.spintax', 'ФРАГМЕНТ');
-    SpxWriteTextFile(dir + '\notes.txt', 'not a template');
-    SpxWriteTextFile(dir + '\lookalike.spintaxbackup', 'not a template either');
-    ForceDirectories(dir + '\sub.spintax');   { a DIRECTORY named like a member }
+    SpxWriteTextFile(InDir(dir, 'Intro.spintax'), 'вступление {a|b}');
+    SpxWriteTextFile(InDir(dir, 'frag.spintax'), 'ФРАГМЕНТ');
+    SpxWriteTextFile(InDir(dir, 'notes.txt'), 'not a template');
+    SpxWriteTextFile(InDir(dir, 'lookalike.spintaxbackup'), 'not a template either');
+    ForceDirectories(InDir(dir, 'sub.spintax'));   { a DIRECTORY named like a member }
 
     tset := SpxLoadTemplateSet(dir);
     try
