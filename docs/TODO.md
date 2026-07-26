@@ -147,6 +147,14 @@ the managed tier are later releases.
       would have flipped the comment flag), and the adapter never called
       `SetAttributesOnChange`, so a future settings pane would not have repainted.
 
+      A second external review (2026-07-26) found two more, both confirmed by measuring the
+      engine rather than by reading: a directive after a comment that opened AND closed on
+      its own line was drawn as plain text (the anchor was tried once, before the scan, so a
+      line starting with a comment never got a second look), and `#include`'s gap was
+      narrower than the family's. Both fixed, with the differential that found them now in
+      the suite; the third finding — the build printing one gui/ warning — was the intended
+      behaviour and is recorded as a known risk below.
+
       **Bracket matching landed** (2026-07-26). The rule is `SpxMatchBracket` in
       `src/SpxTokens.pas` — pure, one forward pass, gated by 18 checks including a round
       trip over every bracket in the demo template. It exists because SynEdit's own matcher
@@ -246,6 +254,13 @@ the managed tier are later releases.
       3. write-back goes through SynEdit's own edit API so undo and the caret behave, and the
          panel re-derives from the text after every change (`SpExtractDirectives` is linear).
 
+      **Measured before it can surprise the panel** (2026-07-26): a directive's `Column` is
+      where its CONSUMED text begins, and indentation is part of that — `  #set %a% = 1`
+      reports column 1, not 3, while `/# c #/#set %a% = 1` reports 8, because the comment is
+      not part of what the directive consumed. Self-consistent, but it means "jump to the
+      directive" lands at the line start rather than on the keyword unless the panel adjusts,
+      and a span rewrite must not assume the span begins at the `#`.
+
       **Refuse to guess:** anything not round-trippable — a directive inside a comment,
       spacing the row cannot reproduce — is a read-only row that says "edit in the text".
       Changing `#set` ↔ `#def` is an explicit action with a word about what it changes, never
@@ -260,6 +275,19 @@ the managed tier are later releases.
       grammars colour the `<br>` and the engine acts on it (`extractTrailingSep`), but
       `SpxTokens` leaves it as text. A missing colour, not a wrong one, which is why it did
       not block M1.
+- [ ] **Highlighter gap — an include target on the following line.** The family's anchor
+      allows `[ \t\n\r\f\x0B]+` between `#include` and its target, so the target may begin on
+      the next line; measured, the engine reports `include(frag)` for `#include`+LF+`"frag"`.
+      The scanner colours only the same-line members (space, tab, VT, FF) and leaves the rest
+      plain, because painting the keyword would mean claiming a directive before knowing
+      whether a quoted target ever arrives — a wrong colour, which is the worse error here.
+      Closing it needs a continuation flag in `TSpxScanState` (bit 18 is free) and a rule for
+      un-painting when the target never comes. Pinned by
+      `scan/include-target-on-the-next-line-is-a-known-gap`.
+- [ ] **Known dependency risk — `SynEditWrappedView` is marked experimental** by Lazarus, and
+      `TLazSynEditLineWrapPlugin` comes from it. The build prints that warning on every run on
+      purpose: it is the one gui/ warning there is, it is true, and hiding it would hide the
+      day the API changes. Revisit if wrapping ever misbehaves after a Lazarus upgrade.
 - [ ] **M2 — panels.** Variables (`SpExtract` + `SpExtractDirectives` for the values),
       diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`
       positions (engine ≥ `v0.2.0` — bumped in Pre-M0, not here), partial preview of a

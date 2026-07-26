@@ -13,6 +13,14 @@
  * Token classes follow the family's own grammar -- the same ones `vscode-spintax` and
  * `sublime-spintax` colour -- so a template looks like itself in every editor.
  *
+ * ONE KNOWN GAP, and it is deliberate. The include anchor lets `[ \t\n\r\f\x0B]+` sit
+ * between `#include` and its target, so the target may begin on the FOLLOWING line; the
+ * engine resolves that, and this scanner leaves it plain text. Colouring it would mean
+ * painting the keyword before knowing whether a quoted target ever arrives, and a wrong
+ * colour is worse here than a missing one: this file's job is to never claim a construct
+ * the engine does not see. The same-line members of that class (space, tab, VT, FF) are
+ * matched. Measured, not assumed -- the differential lives in the suite.
+ *
  * STATE BETWEEN LINES is a comment flag and a nesting depth, and that is the whole reason
  * unbounded nesting is not a problem here: depth is an integer, not a stack, so a template
  * nested three hundred deep costs one more increment rather than one more frame. Whether a
@@ -328,7 +336,14 @@ var i, n: Integer;
 begin
   Result := 0;
   n := Length(Line);
-  if (Copy(Line, p, 9) = '#include ') or (Copy(Line, p, 9) = '#include'#9) then
+  { The family's include anchor allows `[ \t\n\r\f\x0B]+` between the keyword and its
+    target, which is WIDER than the gap anywhere else in the language -- measured against
+    the engine, `#include`+VT+`"frag"` and `#include`+FF+`"frag"` resolve, while `#set`+VT
+    is not a directive at all. So the wide class is spelled out here and nowhere else.
+    The newline members of that class are a KNOWN GAP: a target on the following line is an
+    include to the engine and plain text to this scanner (see the unit header). }
+  if (Copy(Line, p, 8) = '#include') and (p + 8 <= n) and
+     (Line[p + 8] in [' ', #9, #11, #12]) then
     Exit(8);   { the target's own shape is gated by the quote rule below }
 
   if (Copy(Line, p, 5) = '#set ') or (Copy(Line, p, 5) = '#set'#9) or
@@ -375,6 +390,27 @@ var
     if Kind <> sptComment then State.LineEmpty := False;
   end;
 
+  { A directive is anchored to the LOGICAL line -- the one that survives comment removal,
+    because the engine scans comment-stripped text (SpExtractDirectives). So it is tried
+    twice: at the head of the line, and again the moment a comment closes mid-line, while
+    nothing but comments and blanks has been seen. Measured against the engine:
+    `/# c #/#set %a% = 1` IS set(a), and so is `  /# c #/ #set %a% = 1`, while
+    `text /# c #/#set %a% = 1` is not a directive on either side. }
+  procedure TryDirectiveHead;
+  var q, klen: Integer;
+  begin
+    if not State.LineEmpty then Exit;
+    q := p;
+    while (q <= n) and ((Line[q] = ' ') or (Line[q] = #9)) do Inc(q);
+    if (q > n) or (Line[q] <> '#') then Exit;
+    klen := DirectiveKeywordLength(Line, q);
+    if klen = 0 then Exit;
+    FlushText(q);
+    Mark(sptDirective, q, klen);
+    p := q + klen;
+    runStart := p;
+  end;
+
   procedure Push;
   begin
     if State.Depth < SPX_MAX_DEPTH then Inc(State.Depth);
@@ -412,20 +448,7 @@ begin
     end;
   end;
 
-  { A directive is line-anchored -- against the logical line, which is what survives comment
-    removal, so this may sit after a comment that closed mid-line and still be one. }
-  while (p <= n) and ((Line[p] = ' ') or (Line[p] = #9)) do Inc(p);
-  if State.LineEmpty and (p <= n) and (Line[p] = '#') then
-  begin
-    len := DirectiveKeywordLength(Line, p);
-    if len > 0 then
-    begin
-      FlushText(p);
-      Mark(sptDirective, p, len);
-      p := p + len;
-      runStart := p;
-    end;
-  end;
+  TryDirectiveHead;
   p := runStart;
 
   while p <= n do
@@ -451,6 +474,10 @@ begin
             p := n + 1;
           end;
           runStart := p;
+          { The comment is gone from the logical line, so what follows may still be its
+            head. Harmless when the comment ran to the end of the line: there is nothing
+            left to test. }
+          TryDirectiveHead;
           Continue;
         end;
       '%':

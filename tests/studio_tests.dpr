@@ -1128,6 +1128,41 @@ begin
         Scan('конец #/ #set %x% = 1', st),
         'comment(конец #/)0 text( )0 dir(#set)0 text( )0 var(%x%)0 text( = 1)0');
 
+  { The same rule when the comment OPENS AND CLOSES on the directive's own line. This one
+    was missed: the anchor was tried once, before the scan, so a line beginning with a
+    comment never got a second look and a real directive was drawn as text. Both cases were
+    measured against SpExtractDirectives -- the engine reports set(x) for each. }
+  Check('scan/set-after-a-comment-on-the-same-line',
+        ScanOne('/# c #/#set %x% = 1'),
+        'comment(/# c #/)0 dir(#set)0 text( )0 var(%x%)0 text( = 1)0');
+  Check('scan/set-after-an-indented-comment-on-the-same-line',
+        ScanOne('  /# c #/ #set %x% = 1'),
+        'text(  )0 comment(/# c #/)0 text( )0 dir(#set)0 text( )0 var(%x%)0 text( = 1)0');
+  { And the half that must NOT move: text first, and the engine defines nothing. }
+  Check('scan/set-after-text-and-a-comment-on-one-line-is-text',
+        ScanOne('текст /# c #/#set %x% = 1'),
+        'text(текст )0 comment(/# c #/)0 text(#set )0 var(%x%)0 text( = 1)0');
+
+  { The include anchor's gap is `[ \t\n\r\f\x0B]+`, wider than anywhere else in the
+    language. Measured: the engine resolves all four same-line members. }
+  Check('scan/include-gap-vertical-tab', ScanOne('#include'#11'"frag"'),
+        'dir(#include)0 text('#11')0 str("frag")0');
+  Check('scan/include-gap-form-feed', ScanOne('#include'#12'"frag"'),
+        'dir(#include)0 text('#12')0 str("frag")0');
+  { The newline members of that same class are the unit's ONE known gap: the engine reads
+    this as include(frag), and the scanner deliberately leaves it plain rather than paint a
+    keyword before knowing whether a target ever follows. Pinned so the boundary is visible
+    and cannot move by accident. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Check('scan/include-target-on-the-next-line-is-a-known-gap',
+        Scan('#include', st), 'text(#include)0');
+
+  { The wide gap belongs to #include alone. For #set/#def the engine rejects a vertical tab
+    outright -- measured, it reports no directive -- so the colouring must not be generous
+    here either. }
+  Check('scan/set-gap-stays-space-or-tab', ScanOne('#set'#11'%x% = 1'),
+        'text(#set'#11')0 var(%x%)0 text( = 1)0');
+
   { A keyword alone is not a directive: `#set brand = Acme` (no percent signs) is literal
     text to the engine, and it is the likeliest directive typo there is. }
   Check('scan/set-without-a-macro-name-is-text', ScanOne('#set brand = Акме'),
