@@ -3,7 +3,7 @@
  *
  * It is the walkthrough from spintax.net, kept here verbatim because it exercises nearly
  * the whole surface in one document: `#set` and `#def` macros, a value-driven conditional,
- * locale-aware plurals, permutations with `<config>` and with a trailing separator, nested
+ * locale-aware plurals, permutations with and without size bounds, nested
  * enumerations, and ordinary HTML around all of it.
  *
  * One text, two jobs. The window opens on something that demonstrates the product rather
@@ -40,13 +40,13 @@ begin
     LF +
     '<p>Spintax {(spin syntax)|— "spin syntax" —} is %OwnLang% for {producing|generating} many ' +
     '%Unique% variations of a text from %Source%. You write one template that encodes every ' +
-    'choice — [<minsize=4;maxsize=4;sep=", ";lastsep=", and "> alternatives|orderings|conditions|variables] ' +
+    'choice — [<sep=", ";lastsep=", and "> alternatives|orderings|conditions|variables] ' +
     '— and the %Engine% expands it into %N% of %Unique% variants. {Every variation is one you ' +
     'defined|You define every variation}, so the output stays {on-brand and correct|accurate ' +
     'and on-brand} rather than a probabilistic guess.</p>' + LF +
     '<p>The {modern|AI-era} workflow {pairs|combines} a {language model|large language model} ' +
     'with that template logic. {?ai?Have an AI draft the richly varied template once|Write one ' +
-    'richly varied template by hand}; the %Engine% then renders unlimited unique variants ' +
+    'richly varied template by hand}; the %Engine% then renders {unlimited|endless} variants ' +
     '{locally|on your own hardware}, deterministically, and at near-zero cost.</p>' + LF +
     '<p>With spintax you {roll out|publish} %Unique% content across [<minsize=1;maxsize=3;sep=", ";lastsep=", or "> ' +
     '%pages% {plural %pages%: page|pages}|dozens of sites|many locales] — unique by construction, ' +
@@ -56,7 +56,7 @@ begin
     'locale-aware plural agreement|reusable includes|a post-processing pass for spacing and ' +
     'capitalisation].</p>' + LF +
     '<p>And it {runs wherever you do|works anywhere you deploy}: four {independent|standalone}, ' +
-    'open-source implementations — for [<minsize=4;maxsize=4;sep=", ";lastsep=", and "> ' +
+    'open-source implementations — for [<sep=", ";lastsep=", and "> ' +
     'JavaScript|PHP|Python|Object Pascal] — all held to one shared corpus so a template renders ' +
     'identically on every one.</p>';
 end;
