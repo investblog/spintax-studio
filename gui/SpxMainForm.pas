@@ -16,7 +16,8 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Clipbrd, Graphics,
   SynEdit, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
-  SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup, SpxDemo;
+  SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup, SpxPreviewPane,
+  SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -32,7 +33,7 @@ type
     FHighlighter: TSpxSynHighlighter;
     FErrorMarkup: TSpxDiagMarkup;
     FWarnMarkup: TSpxDiagMarkup;
-    FPreview: TMemo;
+    FPreview: TSpxPreviewPane;
     FStatus: TStatusBar;
     FDebounce: TTimer;
     FEngine: TSpxEngineThread;
@@ -171,15 +172,11 @@ begin
   FSplit.Align := alLeft;
   FSplit.Left := FEditor.Width + 1;
 
-  FPreview := TMemo.Create(Self);
+  { Two views of the same output -- the page and the HTML it is -- with the switch and the
+    size guard owned by the pane itself (SpxPreviewPane, ADR 0004). }
+  FPreview := TSpxPreviewPane.Create(Self);
   FPreview.Parent := Self;
   FPreview.Align := alClient;
-  FPreview.ReadOnly := True;
-  FPreview.ScrollBars := ssAutoVertical;
-  FPreview.WordWrap := True;
-  FPreview.Font.Name := 'Segoe UI';
-  FPreview.Font.Size := 11;
-  FPreview.Color := clWindow;
 
   FDebounce := TTimer.Create(Self);
   FDebounce.Enabled := False;
@@ -216,7 +213,9 @@ end;
 
 procedure TSpxMainForm.CopyClicked(Sender: TObject);
 begin
-  Clipboard.AsText := FPreview.Text;
+  { The output itself, whichever view is on screen: Copy means "give me what the engine
+    produced", not "give me what this widget happens to show". }
+  Clipboard.AsText := FPreview.Content;
 end;
 
 procedure TSpxMainForm.RequestRender;
@@ -247,7 +246,7 @@ begin
   if Res.Id < FLastShown then Exit;
   FLastShown := Res.Id;
 
-  FPreview.Text := Res.Preview;
+  FPreview.SetContent(Res.Preview);
   FErrorMarkup.SetMarks(Res.Marks);
   FWarnMarkup.SetMarks(Res.Marks);
   FEditor.Invalidate;

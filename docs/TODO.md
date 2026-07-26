@@ -161,6 +161,25 @@ the managed tier are later releases.
       and the wiring compiles, but nothing here can see a window — the colours on screen
       need a human eye once.
 
+      **Squiggles landed** (2026-07-26). `SpxDocumentMarks` (editor-core) turns the report
+      into spans and `gui/SpxDiagMarkup.pas` draws them: a red wave under an error, amber
+      under a warning, on the engine's own positions and under the text, so the highlighter's
+      colours survive. Three rules it carries: only the open document is underlined (a
+      fragment's positions are coordinates in another buffer), `Line = 0` is not drawn at all
+      — the engine admitted it could not locate the finding, and the panel is the honest place
+      for it — and `End* = 0` marks one character rather than a guessed extent.
+
+      **The preview became two views** (2026-07-26): «Страница» renders the output as a page
+      through `TIpHtmlPanel`, «Исходник» keeps the text-with-tags view. Verbatim in both, and
+      the page waits for a click above 16 KB of output because IPro's layout is quadratic —
+      [ADR 0004](decisions/0004-html-preview-page-and-source.md), where the numbers are.
+      `gui/SpxPreviewPane.pas` owns the switch and the guard; the form just hands it a string.
+
+      Two real bugs fell out of using it. The window closed without the process ending
+      (`Application.CreateForm`, not a hand-built form: LCL terminates only for
+      `Application.MainForm`), and the app opened on locale `ru` against an English demo,
+      which is a genuine `plural.arity` error — it now opens on the demo's language.
+
       Still to come: the panels of M2.
 
 - [ ] **M2 — the variables panel is an EDITOR, with a plain ↔ structured toggle**

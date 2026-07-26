@@ -28,6 +28,9 @@
         <PackageName Value="SynEdit"/>
       </Item>
       <Item>
+        <PackageName Value="TurboPowerIPro"/>
+      </Item>
+      <Item>
         <PackageName Value="LCL"/>
       </Item>
     </RequiredPackages>
@@ -54,6 +57,10 @@
       </Unit>
       <Unit>
         <Filename Value="SpxDiagMarkup.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="SpxPreviewPane.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>

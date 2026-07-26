@@ -1,0 +1,176 @@
+(*
+ * SpxPreviewPane -- the right half: the engine's output as a page, or as the HTML it is.
+ *
+ * Two views of one string, and the string is passed to both VERBATIM. The page is not
+ * wrapped in an <html> document of our own: TurboPower IPro never assigns FDocCharset, so
+ * it reads its input as UTF-8 -- exactly what the engine hands over -- and a wrapper would
+ * only hide from the author that their template emits no <body> (ADR 0004).
+ *
+ * Why two views at all: the page answers "how does it look", the source answers "what
+ * markup came out". Neither answers the other. A broken tag renders as slightly-off layout
+ * that the eye slides over, and prose full of tags cannot be read as prose.
+ *
+ * The size guard is the one piece of policy here. IPro's parse is flat (~11 ms at any
+ * size) but its first layout is quadratic: 35 ms at 1.5 KB, 255 ms at 23 KB, 3.4 s at
+ * 86 KB, 12.9 s at 172 KB -- measured, ADR 0004. Below the limit the page follows every
+ * debounce tick; above it the page would freeze the window mid-keystroke, so it waits for
+ * the user to ask.
+ *)
+unit SpxPreviewPane;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, IpHtml;
+
+const
+  { 16 KB is ~150 ms of layout on this machine -- still invisible between keystrokes, and
+    an order of magnitude past a normal page (the demo renders to about 2 KB). }
+  SPX_PAGE_AUTO_LIMIT = 16 * 1024;
+
+type
+  TSpxPreviewPane = class(TPanel)
+  private
+    FHead: TPanel;
+    FAsPage: TRadioButton;
+    FAsSource: TRadioButton;
+    FStale: TPanel;
+    FStaleText: TLabel;
+    FDraw: TButton;
+    FPage: TIpHtmlPanel;
+    FSource: TMemo;
+    FContent: string;     // what the engine last produced
+    FShown: string;       // what the page is currently displaying
+    FHasShown: Boolean;
+    procedure ModeChanged(Sender: TObject);
+    procedure DrawClicked(Sender: TObject);
+    procedure DrawPage;
+    procedure Sync;
+  public
+    constructor Create(AOwner: TComponent); override;
+    { The engine's output. Cheap to call on every debounce tick: the view that is hidden
+      does no work, and the page redraws only when the text actually changed. }
+    procedure SetContent(const AHtml: string);
+    property Content: string read FContent;
+  end;
+
+implementation
+
+constructor TSpxPreviewPane.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  BevelOuter := bvNone;
+
+  FHead := TPanel.Create(Self);
+  FHead.Parent := Self;
+  FHead.Align := alTop;
+  FHead.Height := 28;
+  FHead.BevelOuter := bvNone;
+
+  FAsPage := TRadioButton.Create(Self);
+  FAsPage.Parent := FHead;
+  FAsPage.Caption := 'Страница';
+  FAsPage.SetBounds(8, 4, 90, 20);
+  FAsPage.Checked := True;
+  FAsPage.OnChange := @ModeChanged;
+
+  FAsSource := TRadioButton.Create(Self);
+  FAsSource.Parent := FHead;
+  FAsSource.Caption := 'Исходник';
+  FAsSource.SetBounds(104, 4, 90, 20);
+  FAsSource.OnChange := @ModeChanged;
+
+  { Shown only when the output is too large to redraw on its own. It sits above the page
+    rather than replacing it: the last drawing stays readable while it is out of date. }
+  FStale := TPanel.Create(Self);
+  FStale.Parent := Self;
+  FStale.Align := alTop;
+  FStale.Height := 30;
+  FStale.BevelOuter := bvNone;
+  FStale.Color := $00E1F0FF;
+  FStale.Visible := False;
+
+  FStaleText := TLabel.Create(Self);
+  FStaleText.Parent := FStale;
+  FStaleText.SetBounds(8, 8, 400, 16);
+
+  FDraw := TButton.Create(Self);
+  FDraw.Parent := FStale;
+  FDraw.Caption := 'Показать';
+  FDraw.SetBounds(420, 3, 90, 24);
+  FDraw.OnClick := @DrawClicked;
+
+  FPage := TIpHtmlPanel.Create(Self);
+  FPage.Parent := Self;
+  FPage.Align := alClient;
+  FPage.Color := clWindow;
+  FPage.BgColor := clWindow;
+
+  FSource := TMemo.Create(Self);
+  FSource.Parent := Self;
+  FSource.Align := alClient;
+  FSource.ReadOnly := True;
+  FSource.ScrollBars := ssAutoVertical;
+  FSource.WordWrap := True;
+  FSource.Font.Name := 'Segoe UI';
+  FSource.Font.Size := 11;
+  FSource.Color := clWindow;
+  FSource.Visible := False;
+end;
+
+procedure TSpxPreviewPane.SetContent(const AHtml: string);
+begin
+  FContent := AHtml;
+  Sync;
+end;
+
+procedure TSpxPreviewPane.ModeChanged(Sender: TObject);
+begin
+  Sync;
+end;
+
+procedure TSpxPreviewPane.DrawClicked(Sender: TObject);
+begin
+  DrawPage;
+end;
+
+procedure TSpxPreviewPane.DrawPage;
+begin
+  { The same text twice is the common case while the user types elsewhere in the settings;
+    redrawing it would cost the full layout for no change on screen. }
+  if FHasShown and (FShown = FContent) then
+  begin
+    FStale.Visible := False;
+    Exit;
+  end;
+  FPage.SetHtmlFromStr(FContent);
+  FShown := FContent;
+  FHasShown := True;
+  FStale.Visible := False;
+end;
+
+procedure TSpxPreviewPane.Sync;
+begin
+  FPage.Visible := FAsPage.Checked;
+  FSource.Visible := not FAsPage.Checked;
+
+  if not FAsPage.Checked then
+  begin
+    FStale.Visible := False;
+    if FSource.Text <> FContent then FSource.Text := FContent;
+    Exit;
+  end;
+
+  if Length(FContent) <= SPX_PAGE_AUTO_LIMIT then
+    DrawPage
+  else
+  begin
+    FStaleText.Caption := Format('Вывод %d КБ — страница не обновляется сама',
+      [Length(FContent) div 1024]);
+    FStale.Visible := (not FHasShown) or (FShown <> FContent);
+  end;
+end;
+
+end.
