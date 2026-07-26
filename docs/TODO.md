@@ -273,9 +273,28 @@ the managed tier are later releases.
          44 checks. Mutation runs confirm they bite — the span guard, code-point columns, the
          value's trailing blanks, the name splice, the deletion widening and the tab handling
          each fail exactly the checks that name them.
-      2. the panel: two groups, the toggle on Definitions, rows in the playground's shape.
+      2. ~~the panel: two groups, rows in the playground's shape~~ *done 2026-07-27 (PR 4).*
+         The bottom strip became tabbed — Диагностика | Переменные — rather than taking more
+         room from the template. Definitions show kind, name and value and jump to their line
+         on click; the session group is editable end to end (panel → job → `TSpxContext.Vars`
+         → render and `knownVariables`), so a `%name%` with a value stops being reported
+         undefined. Every row carries `DirIndex`, the occurrence index the edit functions
+         take, and the suite checks that the two orders agree rather than trusting them to.
+         The session store is pruned by `SpxKeepRuntime` in editor-core (gated): a value for
+         a name the document has since DEFINED would otherwise go on suppressing a warning
+         that macro no longer earns.
+         **Not done here:** the plain ↔ structured toggle. The playground needs a plain
+         textarea because it has no document; ours is the editor on the left, and a second
+         editable copy of the same lines is a second source of truth. Revisit only if using
+         it proves otherwise.
+         **Unverified by me: the panel on screen.** The layout is built in code and compiles,
+         the rules behind it are gated, but nothing here can see a window — and raising the
+         user's windows at 2am to photograph one is not verification worth having.
       3. write-back goes through SynEdit's own edit API so undo and the caret behave, and the
          panel re-derives from the text after every change (`SpExtractDirectives` is linear).
+         Still open, and it is why the definitions group is read-only: assigning a whole new
+         document into SynEdit would throw away the undo history and move the caret, which is
+         worse than waiting one PR.
 
       **Measured before it can surprise the panel** (2026-07-26): a directive's `Column` is
       where its CONSUMED text begins, and indentation is part of that — `  #set %a% = 1`

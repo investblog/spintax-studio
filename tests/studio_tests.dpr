@@ -1516,6 +1516,32 @@ begin
     CheckTrue('thread/delivers-the-second', PumpUntil(probe, 2, 5000));
     CheckTrue('thread/reports-the-error-count', probe.Last.Errors = 1);
 
+    { The variables panel's whole round trip, which nothing gated until a review pointed at
+      it: a session value crosses into the job, becomes the context's Vars, and comes back
+      as BOTH a substituted preview and a name the validator no longer calls undefined. }
+    job.Id := 3;
+    job.Text := '<p>%city%</p>';
+    job.Vars := nil;
+    th.Post(job);
+    CheckTrue('thread/delivers-the-third', PumpUntil(probe, 3, 5000));
+    CheckTrue('thread/an-unsupplied-name-is-a-warning', probe.Last.Warnings = 1);
+    CheckTrue('thread/and-renders-verbatim', Pos('%city%', probe.Last.Preview) > 0);
+
+    job.Id := 4;
+    SetLength(job.Vars, 1);
+    job.Vars[0].Name := 'city';
+    job.Vars[0].Value := 'Тверь';
+    th.Post(job);
+    CheckTrue('thread/delivers-the-fourth', PumpUntil(probe, 4, 5000));
+    CheckTrue('thread/a-session-value-silences-the-warning', probe.Last.Warnings = 0);
+    CheckTrue('thread/and-is-substituted', Pos('Тверь', probe.Last.Preview) > 0);
+    { And it comes back in the model the panel draws from. }
+    CheckTrue('thread/the-model-comes-back', Length(probe.Last.Vars) = 1);
+    if Length(probe.Last.Vars) = 1 then
+      Check('thread/the-model-carries-the-session-value',
+            probe.Last.Vars[0].Name + '=' + probe.Last.Vars[0].Value, 'city=Тверь');
+    job.Vars := nil;
+
     { LATEST WINS. Fifty edits arrive faster than fifty renders can run, so the queue holds
       one job and the rest are replaced unrendered. Without that, a fast typist would build
       a backlog the UI then walks through one stale preview at a time. }
@@ -1967,6 +1993,108 @@ begin
   CheckTrue('offset/a-lone-cr-ends-a-line', SpxDocOffset('ab'#13, 2, 1) = 4);
 end;
 
+{ ── 8bc. the model's link back to the document ───────────────────────────── }
+
+procedure TestModelDirIndex;
+var
+  m: TSpxModel;
+  doc, edited: string;
+  i, seen: Integer;
+begin
+  { A panel row must know WHICH occurrence it stands for. Matching by name cannot do it --
+    duplicates are kept on purpose, because two definitions of one name is what the engine
+    calls definition.duplicate-name and a panel that showed one row would hide half of it. }
+  doc := '#set %a% = 1'#10'#include "frag"'#10'#def %b% = 2'#10'#set %a% = 3'#10'%runtime%';
+  m := SpxExtractModel(doc, SpxContext('ru', nil));
+  try
+    CheckTrue('model/three-macros-and-one-runtime', m.Vars.Count = 4);
+    CheckTrue('model/the-include-is-its-own-list', m.Includes.Count = 1);
+    { Occurrence order is the engine's: the include is number 1, so the #def is number 2. }
+    Check('model/dir-index-of-each-macro',
+          Format('%d,%d,%d', [m.Vars[0].DirIndex, m.Vars[1].DirIndex, m.Vars[2].DirIndex]),
+          '0,2,3');
+    CheckTrue('model/the-include-carries-its-index', m.Includes[0].DirIndex = 1);
+
+    { A runtime variable has no directive at all, and says so rather than pointing at one. }
+    seen := -2;
+    for i := 0 to m.Vars.Count - 1 do
+      if m.Vars[i].Kind = spxVarRuntime then seen := m.Vars[i].DirIndex;
+    CheckTrue('model/a-runtime-variable-has-no-directive', seen = -1);
+
+    { THE point of the field: the index it reports is the one the edit functions take. This
+      is the check that fails if the two orders ever drift apart. }
+    CheckTrue('model/the-index-is-the-one-the-editors-take',
+              SpxSetDirectiveValue(doc, m.Vars[2].DirIndex, '99', edited));
+    Check('model/and-it-edited-the-right-occurrence', DirSig(edited),
+          'set:a=1;include:frag=;def:b=2;set:a=99;');
+  finally
+    m.Free;
+  end;
+end;
+
+{ ── 8bd. the session's values, pruned ────────────────────────────────────── }
+
+function Pairs(const NamesAndValues: array of string): TSpxVarPairs;
+var i: Integer;
+begin
+  Result := nil;
+  SetLength(Result, Length(NamesAndValues) div 2);
+  for i := 0 to High(Result) do
+  begin
+    Result[i].Name := NamesAndValues[i * 2];
+    Result[i].Value := NamesAndValues[i * 2 + 1];
+  end;
+end;
+
+function PairSig(const P: TSpxVarPairs): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 0 to High(P) do Result := Result + P[i].Name + '=' + P[i].Value + ';';
+  if Result = '' then Result := '<none>';
+end;
+
+procedure TestKeepRuntime;
+var
+  m: TSpxModel;
+  vars: TSpxVarInfos;
+  i: Integer;
+begin
+  { The model of a document that DEFINES brand and REFERENCES city. }
+  m := SpxExtractModel('#set %brand% = Акме'#10'<p>%brand% в %city%</p>', SpxContext('ru', nil));
+  try
+    SetLength(vars, m.Vars.Count);
+    for i := 0 to m.Vars.Count - 1 do vars[i] := m.Vars[i];
+  finally
+    m.Free;
+  end;
+
+  { A value for a name the document references and nothing defines survives. }
+  Check('runtime/keeps-a-value-for-a-referenced-name',
+        PairSig(SpxKeepRuntime(vars, Pairs(['city', 'Тверь']))), 'city=Тверь;');
+
+  { A value for a name the document DEFINES is a ghost: sending it would suppress a
+    variable.undefined the macro no longer earns. }
+  Check('runtime/drops-a-value-for-a-defined-name',
+        PairSig(SpxKeepRuntime(vars, Pairs(['brand', 'Другое']))), '<none>');
+
+  { And so is a value for a name the document does not mention at all. }
+  Check('runtime/drops-a-value-nothing-references',
+        PairSig(SpxKeepRuntime(vars, Pairs(['nowhere', 'x']))), '<none>');
+
+  { The engine matches runtime names case-insensitively and keys them lower-cased, so a
+    value typed as CITY belongs to %city% -- and comes back in the spelling the next render
+    will match. }
+  Check('runtime/matches-case-insensitively-and-returns-the-model-spelling',
+        PairSig(SpxKeepRuntime(vars, Pairs(['CITY', 'Тверь']))), 'city=Тверь;');
+
+  { One value per name, and the mixture of live and dead entries keeps its order. }
+  Check('runtime/one-value-per-name',
+        PairSig(SpxKeepRuntime(vars, Pairs(['city', 'первое', 'city', 'второе']))),
+        'city=первое;');
+  Check('runtime/empty-session', PairSig(SpxKeepRuntime(vars, nil)), '<none>');
+end;
+
 { ── 8c. the validation cache ─────────────────────────────────────────────── }
 
 { Everything the caller can observe about a report, in one string: what a cached round must
@@ -2265,6 +2393,8 @@ begin
   TestDiagMarks;
   TestPanelRows;
   TestDirectiveEditing;
+  TestModelDirIndex;
+  TestKeepRuntime;
   TestValidationCache;
   TestFileLayer;
   TestEngineThread;

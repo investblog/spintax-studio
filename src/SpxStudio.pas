@@ -94,7 +94,22 @@ type
     Kind: TSpxVarKind;
     Value: string;
     Line, Column: Integer;
+    { Which occurrence this row is, in `SpExtractDirectives` order -- the index the edit
+      functions take. -1 for a runtime variable, which has no directive to edit: its value
+      lives in the session, not in the document. Carried here so a panel row never has to
+      re-derive it by matching names, which duplicates would make ambiguous anyway. }
+    DirIndex: Integer;
   end;
+  { Flattened for the trip across a thread boundary, where a TList would need an owner on
+    both ends of a queue that throws jobs away. }
+  TSpxVarInfos = array of TSpxVarInfo;
+
+  { A name and a value, the shape the panel hands session values back in. }
+  TSpxVarPair = record
+    Name: string;
+    Value: string;
+  end;
+  TSpxVarPairs = array of TSpxVarPair;
 
   { One `#include` OCCURRENCE, so "jump to the directive" has somewhere to go and two
     includes of one target stay two rows. Known is measured against the template set, with
@@ -103,6 +118,7 @@ type
     Target: string;
     Known: Boolean;
     Line, Column: Integer;
+    DirIndex: Integer;     // the occurrence, as in TSpxVarInfo
   end;
 
   TSpxModel = class
@@ -244,6 +260,22 @@ function SpxRenderFragment(const Doc, Fragment: string; const Ctx: TSpxContext):
   from `SpExtractDirectives` -- values and positions included -- and the runtime variables
   are what the document references and nothing defines. Caller frees. }
 function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
+
+{ The session's values, filtered to the names that are STILL runtime variables -- referenced
+  by the document and defined by nothing in it.
+
+  A panel keeps what the user typed across renders, and that store has to be pruned or it
+  accumulates ghosts: a value for a name the document has since DEFINED would go on being
+  sent as a runtime variable, silently suppressing the `variable.undefined` warning for a
+  macro that no longer needs it; a value for a name no longer referenced at all would travel
+  with every job forever.
+
+  Names come back in the model's spelling -- lower-cased, the way the engine keys them --
+  because that is what the next render will match against, and the session may hold `BRAND`
+  where the document says `%brand%`. The comparison is ASCII-case-insensitive for the same
+  reason. }
+function SpxKeepRuntime(const Vars: TSpxVarInfos;
+  const Session: TSpxVarPairs): TSpxVarPairs;
 
 { ── editing a directive where it sits (spec §4.4) ────────────────────────── }
 
@@ -837,6 +869,7 @@ begin
           incInfo.Known := (Ctx.Templates <> nil) and Ctx.Templates.ContainsKey(dirs[i].Name);
           incInfo.Line := dirs[i].Line;
           incInfo.Column := dirs[i].Column;
+          incInfo.DirIndex := i;
           Result.Includes.Add(incInfo);
         end
         else
@@ -846,6 +879,7 @@ begin
           v.Value := dirs[i].Value;
           v.Line := dirs[i].Line;
           v.Column := dirs[i].Column;
+          v.DirIndex := i;
           Result.Vars.Add(v);
           { Duplicates are kept: two definitions of one name is what the engine calls
             definition.duplicate-name, and a panel that silently showed one row would hide
@@ -866,6 +900,7 @@ begin
           v.Name := ex.Refs[i];
           v.Kind := spxVarRuntime;
           if not runtimeVals.TryGetValue(v.Name, v.Value) then v.Value := '';
+          v.DirIndex := -1;   { nothing in the document to edit: this value is the session's }
           v.Line := 0;
           v.Column := 0;
           Result.Vars.Add(v);
@@ -977,6 +1012,33 @@ begin
   n.Line := Line;
   n.Column := Column;
   Report.Notes.Add(n);
+end;
+
+function SpxKeepRuntime(const Vars: TSpxVarInfos;
+  const Session: TSpxVarPairs): TSpxVarPairs;
+var
+  i, j, n: Integer;
+  wanted: string;
+begin
+  Result := nil;
+  SetLength(Result, Length(Session));
+  n := 0;
+  for i := 0 to High(Vars) do
+  begin
+    if Vars[i].Kind <> spxVarRuntime then Continue;
+    for j := 0 to High(Session) do
+    begin
+      { ASCII folding is the right one: the engine scans references and directive names with
+        an ASCII word rule, so a non-ASCII session name can never match a model name. }
+      wanted := LowerCase(Session[j].Name);
+      if wanted <> Vars[i].Name then Continue;
+      Result[n].Name := Vars[i].Name;      { the model's spelling: what the render matches }
+      Result[n].Value := Session[j].Value;
+      Inc(n);
+      Break;                               { one value per name; the first wins }
+    end;
+  end;
+  SetLength(Result, n);
 end;
 
 { ── editing a directive where it sits ────────────────────────────────────── }

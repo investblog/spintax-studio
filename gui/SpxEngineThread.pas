@@ -24,7 +24,11 @@ uses
   Classes, SysUtils, SyncObjs, Spintax, SpxStudio, SpxFiles;
 
 type
-  { What the form asks for. A plain record: it crosses the thread boundary by value, so
+  { TSpxVarPairs (what the panel sends) and TSpxVarInfos (what it receives) are declared in
+    editor-core beside the record they carry, so the panel does not have to know this unit
+    exists to speak about them.
+
+    What the form asks for. A plain record: it crosses the thread boundary by value, so
     there is nothing to own and nothing to free on either side.
 
     Note what is NOT here: the template set. Only the FOLDER crosses, as a string, and the
@@ -45,6 +49,10 @@ type
     DocSlug: string;
     { Re-read the folder even when it has not changed -- after a save, or on request. }
     ReloadSet: Boolean;
+    { Values the user typed into the panel for variables the document references and nothing
+      defines. They are the session's, never the document's: they feed the render context and
+      knownVariables, so a `%name%` with a value stops being reported as undefined. }
+    Vars: TSpxVarPairs;
   end;
 
   TSpxJobResult = record
@@ -60,6 +68,9 @@ type
     { Every finding there is, including the ones no squiggle can show: an error inside an
       included file, and a finding the engine could not place. }
     Rows: TSpxPanelRows;
+    { The variables panel: every macro the document defines, with the occurrence it lives at,
+      and every name it references that nothing defines. }
+    Vars: TSpxVarInfos;
   end;
 
   TSpxJobDone = procedure(const Res: TSpxJobResult) of object;
@@ -180,28 +191,55 @@ procedure TSpxEngineThread.Run(const Job: TSpxJob);
 var
   ctx: TSpxContext;
   report: TSpxReport;
+  model: TSpxModel;
+  vars: TStrMap;
   started: TDateTime;
+  i: Integer;
 begin
   started := Now;
   SyncSet(Job);
-  if Job.Seeded then ctx := SpxSeededContext(Job.Locale, nil, Job.Seed, FSet)
-  else ctx := SpxContext(Job.Locale, nil, FSet);
 
-  FResult := Default(TSpxJobResult);
-  FResult.Id := Job.Id;
-  FResult.Preview := SpxRenderSample(Job.Text, ctx);
-
-  { Probes = 0: the interactive path already has its one render, and the health flags are
-    the panel's business (M2), not the status bar's. }
-  report := SpxHealthReport(Job.Text, ctx, 0, Job.DocSlug, FCache);
+  { The session's values, rebuilt per job and owned right here: editor-core never frees a
+    map it was handed, and the job that carried these may already have been superseded. }
+  vars := nil;
+  if Length(Job.Vars) > 0 then
+  begin
+    vars := TStrMap.Create;
+    for i := 0 to High(Job.Vars) do
+      if Job.Vars[i].Name <> '' then
+        vars.AddOrSetValue(Job.Vars[i].Name, Job.Vars[i].Value);
+  end;
   try
-    FResult.Errors := report.Errors;
-    FResult.Warnings := report.Warnings;
-    FResult.Notes := report.Notes.Count;
-    FResult.Marks := SpxDocumentMarks(report);
-    FResult.Rows := SpxPanelRows(report);
+    if Job.Seeded then ctx := SpxSeededContext(Job.Locale, vars, Job.Seed, FSet)
+    else ctx := SpxContext(Job.Locale, vars, FSet);
+
+    FResult := Default(TSpxJobResult);
+    FResult.Id := Job.Id;
+    FResult.Preview := SpxRenderSample(Job.Text, ctx);
+
+    { Probes = 0: the interactive path already has its one render, and the health flags are
+      the panel's business (M2), not the status bar's. }
+    report := SpxHealthReport(Job.Text, ctx, 0, Job.DocSlug, FCache);
+    try
+      FResult.Errors := report.Errors;
+      FResult.Warnings := report.Warnings;
+      FResult.Notes := report.Notes.Count;
+      FResult.Marks := SpxDocumentMarks(report);
+      FResult.Rows := SpxPanelRows(report);
+    finally
+      report.Free;
+    end;
+
+    { The panel's model, flattened out of the object editor-core returns. }
+    model := SpxExtractModel(Job.Text, ctx);
+    try
+      SetLength(FResult.Vars, model.Vars.Count);
+      for i := 0 to model.Vars.Count - 1 do FResult.Vars[i] := model.Vars[i];
+    finally
+      model.Free;
+    end;
   finally
-    report.Free;
+    vars.Free;
   end;
   FResult.Elapsed := Round((Now - started) * 24 * 60 * 60 * 1000);
 end;
