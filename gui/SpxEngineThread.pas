@@ -21,17 +21,30 @@ unit SpxEngineThread;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, Spintax, SpxStudio;
+  Classes, SysUtils, SyncObjs, Spintax, SpxStudio, SpxFiles;
 
 type
   { What the form asks for. A plain record: it crosses the thread boundary by value, so
-    there is nothing to own and nothing to free on either side. }
+    there is nothing to own and nothing to free on either side.
+
+    Note what is NOT here: the template set. Only the FOLDER crosses, as a string, and the
+    worker owns the map it builds from it. That keeps a mutable object out of the boundary
+    entirely -- with latest-wins replacing queued jobs, a set travelling by reference would
+    need an owner at both ends -- and it puts the directory scan off the UI thread. }
   TSpxJob = record
     Id: Int64;
     Text: string;
     Locale: string;
     Seeded: Boolean;
     Seed: LongWord;
+    { The folder the document lives in, '' while it has never been saved. Empty means no
+      resolver, which is the engine's own behaviour: every `#include` stays verbatim. }
+    SetFolder: string;
+    { The document's own slug, so the closure walk does not validate the open buffer a
+      second time through its saved copy (SpxHealthReport). }
+    DocSlug: string;
+    { Re-read the folder even when it has not changed -- after a save, or on request. }
+    ReloadSet: Boolean;
   end;
 
   TSpxJobResult = record
@@ -56,8 +69,11 @@ type
     FHasPending: Boolean;
     FResult: TSpxJobResult;
     FOnDone: TSpxJobDone;
+    FSet: TSpxTemplateSet;                // owned here, touched only on this thread
+    FSetFolder: string;
     procedure Deliver;                    // main thread, via Synchronize
     function TakePending(out Job: TSpxJob): Boolean;
+    procedure SyncSet(const Job: TSpxJob);
     procedure Run(const Job: TSpxJob);
   protected
     procedure Execute; override;
@@ -83,6 +99,7 @@ end;
 destructor TSpxEngineThread.Destroy;
 begin
   inherited Destroy;         // waits for Execute to leave
+  FSet.Free;                 // safe here: the only thread that touched it has ended
   FWake.Free;
   FLock.Free;
 end;
@@ -133,6 +150,21 @@ begin
   if Assigned(FOnDone) then FOnDone(FResult);
 end;
 
+{ The set is re-read when the document moved to another folder, and when the caller says so
+  -- after a save, or from the menu. It is NOT re-read per keystroke: a directory scan plus
+  every fragment's bytes on every debounce tick would be paid for nothing, since the files
+  only change when something outside this window changes them. The cost of that choice is
+  named where the user can see it: a fragment edited in another program shows up after
+  "Перечитать набор". }
+procedure TSpxEngineThread.SyncSet(const Job: TSpxJob);
+begin
+  if (not Job.ReloadSet) and (Job.SetFolder = FSetFolder) and
+     ((FSet <> nil) = (Job.SetFolder <> '')) then Exit;
+  FreeAndNil(FSet);
+  FSetFolder := Job.SetFolder;
+  if FSetFolder <> '' then FSet := SpxLoadTemplateSet(FSetFolder);
+end;
+
 procedure TSpxEngineThread.Run(const Job: TSpxJob);
 var
   ctx: TSpxContext;
@@ -140,8 +172,9 @@ var
   started: TDateTime;
 begin
   started := Now;
-  if Job.Seeded then ctx := SpxSeededContext(Job.Locale, nil, Job.Seed)
-  else ctx := SpxContext(Job.Locale, nil);
+  SyncSet(Job);
+  if Job.Seeded then ctx := SpxSeededContext(Job.Locale, nil, Job.Seed, FSet)
+  else ctx := SpxContext(Job.Locale, nil, FSet);
 
   FResult := Default(TSpxJobResult);
   FResult.Id := Job.Id;
@@ -149,7 +182,7 @@ begin
 
   { Probes = 0: the interactive path already has its one render, and the health flags are
     the panel's business (M2), not the status bar's. }
-  report := SpxHealthReport(Job.Text, ctx, 0);
+  report := SpxHealthReport(Job.Text, ctx, 0, Job.DocSlug);
   try
     FResult.Errors := report.Errors;
     FResult.Warnings := report.Warnings;

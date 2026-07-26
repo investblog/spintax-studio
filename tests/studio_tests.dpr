@@ -30,12 +30,13 @@ uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
   SysUtils, Classes, Generics.Collections,
   {$IFDEF FPC}
-  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxEngineThread;
+  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxFiles, SpxEngineThread;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
   SpxTokens in '..\src\SpxTokens.pas',
   SpxDemo in '..\src\SpxDemo.pas',
+  SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas';
   {$ENDIF}
 
@@ -1528,6 +1529,126 @@ begin
   end;
 end;
 
+{ ── 9. the host's file layer ─────────────────────────────────────────────── }
+
+function TempFolder: string;
+begin
+  Result := IncludeTrailingPathDelimiter(GetTempDir(False)) +
+            'spx-files-' + IntToStr(GetProcessID);
+end;
+
+procedure WipeFolder(const Dir: string);
+var sr: TSearchRec; base: string;
+begin
+  if not DirectoryExists(Dir) then Exit;
+  base := IncludeTrailingPathDelimiter(Dir);
+  if FindFirst(base + '*', faAnyFile, sr) = 0 then
+  try
+    repeat
+      if (sr.Name = '.') or (sr.Name = '..') then Continue;
+      if (sr.Attr and faDirectory) <> 0 then RemoveDir(base + sr.Name)
+      else DeleteFile(base + sr.Name);
+    until FindNext(sr) <> 0;
+  finally
+    FindClose(sr);
+  end;
+  RemoveDir(Dir);
+end;
+
+procedure TestFileLayer;
+var
+  dir, s: string;
+  tset: TSpxTemplateSet;
+  ctx: TSpxContext;
+begin
+  { The pure rules first: they decide what a file MEANS, and they are the ones a call site
+    would otherwise re-invent. }
+  Check('files/eol-detects-crlf', SpxDetectEol('a'#13#10'b'), #13#10);
+  Check('files/eol-detects-lf', SpxDetectEol('a'#10'b'), #10);
+  Check('files/eol-detects-cr', SpxDetectEol('a'#13'b'), #13);
+  { A lone CR at the very end must not read past the string looking for its LF. }
+  Check('files/eol-cr-at-end', SpxDetectEol('a'#13), #13);
+  Check('files/eol-none-is-lf', SpxDetectEol('one line, no terminator'), SPX_DEFAULT_EOL);
+
+  CheckTrue('files/ends-with-eol', SpxEndsWithEol('a'#10));
+  CheckTrue('files/no-trailing-eol', not SpxEndsWithEol('a'));
+  CheckTrue('files/empty-has-no-eol', not SpxEndsWithEol(''));
+
+  Check('files/normalize-mixed-to-lf', SpxNormalizeEol('a'#13#10'b'#13'c'#10'd', #10),
+        'a'#10'b'#10'c'#10'd');
+  Check('files/normalize-to-crlf', SpxNormalizeEol('a'#10'b', #13#10), 'a'#13#10'b');
+  Check('files/normalize-touches-nothing-else', SpxNormalizeEol('Ёжик, «ёлка» — тире', #13#10),
+        'Ёжик, «ёлка» — тире');
+
+  Check('files/slug-keeps-case', SpxSlugOf('C:\work\Intro.spintax'), 'Intro');
+  Check('files/slug-of-a-dotted-name', SpxSlugOf('intro.v2.spintax'), 'intro.v2');
+  CheckTrue('files/ext-is-case-insensitive', SpxIsTemplateFile('X.SPINTAX'));
+  { The 8.3 alias makes a `*.spintax` mask match this one; the filter must not. }
+  CheckTrue('files/ext-not-a-longer-lookalike', not SpxIsTemplateFile('notes.spintaxbackup'));
+  CheckTrue('files/ext-not-txt', not SpxIsTemplateFile('notes.txt'));
+
+  { Then the bytes, against a real folder: mocking a filesystem would test the mock. }
+  dir := TempFolder;
+  WipeFolder(dir);
+  ForceDirectories(dir);
+  try
+    { Round trip, including the two things an editor most easily breaks: a file with no
+      trailing terminator, and non-ASCII text. }
+    s := 'Ёжик'#10'вторая строка без хвоста';
+    SpxWriteTextFile(dir + '\rt.spintax', s);
+    Check('files/round-trip-is-byte-identical', SpxReadTextFile(dir + '\rt.spintax'), s);
+
+    SpxWriteTextFile(dir + '\bom.spintax', #$EF#$BB#$BF + 'после метки');
+    Check('files/bom-is-stripped-on-read', SpxReadTextFile(dir + '\bom.spintax'),
+          'после метки');
+    { And never written: the family's other engines read these files, and a BOM is a stray
+      character to them. }
+    SpxWriteTextFile(dir + '\nobom.spintax', 'чистый');
+    Check('files/no-bom-is-added-on-write', SpxReadTextFile(dir + '\nobom.spintax'), 'чистый');
+
+    WipeFolder(dir);
+    ForceDirectories(dir);
+    SpxWriteTextFile(dir + '\Intro.spintax', 'вступление {a|b}');
+    SpxWriteTextFile(dir + '\frag.spintax', 'ФРАГМЕНТ');
+    SpxWriteTextFile(dir + '\notes.txt', 'not a template');
+    SpxWriteTextFile(dir + '\lookalike.spintaxbackup', 'not a template either');
+    ForceDirectories(dir + '\sub.spintax');   { a DIRECTORY named like a member }
+
+    tset := SpxLoadTemplateSet(dir);
+    try
+      CheckTrue('files/set-has-exactly-the-templates', tset.Count = 2);
+      CheckTrue('files/set-keeps-the-name-case', tset.ContainsKey('Intro'));
+      { The rule the whole ADR turns on: a slug is compared exactly, so the filesystem's
+        idea of case cannot make the preview disagree with the other engines. }
+      CheckTrue('files/set-lookup-is-exact', not tset.ContainsKey('intro'));
+      CheckTrue('files/set-skips-other-extensions', not tset.ContainsKey('notes'));
+      CheckTrue('files/set-skips-longer-lookalikes', not tset.ContainsKey('lookalike'));
+      CheckTrue('files/set-skips-directories', not tset.ContainsKey('sub'));
+      Check('files/set-carries-the-text', tset['frag'], 'ФРАГМЕНТ');
+
+      { The loop closed: folder -> set -> engine. Everything above is a rule about names;
+        this is the only check that proves an #include in a document actually reaches a
+        file on disk. }
+      ctx := SpxContext('en', nil, tset);
+      s := SpxRenderSample('#include "frag"', ctx);
+      CheckTrue('files/include-resolves-from-the-folder', Pos('ФРАГМЕНТ', s) > 0);
+      s := SpxRenderSample('#include "Frag"', ctx);
+      CheckTrue('files/include-target-is-case-exact', Pos('ФРАГМЕНТ', s) = 0);
+    finally
+      tset.Free;
+    end;
+
+    tset := SpxLoadTemplateSet('');
+    try
+      CheckTrue('files/no-folder-is-an-empty-set', tset.Count = 0);
+    finally
+      tset.Free;
+    end;
+  finally
+    WipeFolder(dir);
+  end;
+end;
+
 begin
   SpxInitHost;
   {$IFDEF FPC}
@@ -1543,6 +1664,7 @@ begin
   TestBracketMatching;
   TestDemoTemplate;
   TestDiagMarks;
+  TestFileLayer;
   TestEngineThread;
 
   Writeln(Format('studio tests: %d checks, %d failed', [Checks, Failures]));

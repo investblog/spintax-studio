@@ -14,10 +14,11 @@ unit SpxMainForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Clipbrd, Graphics,
+  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs,
+  Clipbrd, Graphics,
   SynEdit, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup, SpxPreviewPane,
-  SpxDemo;
+  SpxFiles, SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -39,7 +40,28 @@ type
     FEngine: TSpxEngineThread;
     FNextId: Int64;
     FLastShown: Int64;
+    { The document on disk. FPath is '' until it has been saved once, and that is what makes
+      the template set empty and every `#include` verbatim -- the engine's own behaviour
+      without a resolver, not a placeholder. FEol and FTrailingEol are the file's own shape,
+      kept so that saving an edit does not rewrite every line of somebody's git history. }
+    FPath: string;
+    FEol: string;
+    FTrailingEol: Boolean;
+    FReloadSet: Boolean;
     procedure BuildUi;
+    procedure BuildMenu;
+    procedure NewClicked(Sender: TObject);
+    procedure OpenClicked(Sender: TObject);
+    procedure SaveClicked(Sender: TObject);
+    procedure SaveAsClicked(Sender: TObject);
+    procedure ReloadSetClicked(Sender: TObject);
+    procedure ExitClicked(Sender: TObject);
+    procedure FormAsked(Sender: TObject; var CanClose: Boolean);
+    function DocText: string;
+    function SaveDocument(AsNew: Boolean): Boolean;
+    procedure LoadDocument(const APath: string);
+    function AskSave: Boolean;
+    procedure UpdateCaption;
     procedure EditorChanged(Sender: TObject);
     procedure SettingChanged(Sender: TObject);
     procedure DebounceFired(Sender: TObject);
@@ -71,20 +93,28 @@ constructor TSpxMainForm.Create(AOwner: TComponent);
 begin
   { CreateNew, not Create: there is no .lfm resource to load. }
   inherited CreateNew(AOwner);
+  FPath := '';
+  FEol := SPX_DEFAULT_EOL;
+  FTrailingEol := True;
   BuildUi;
+  UpdateCaption;
   FNextId := 0;
   FLastShown := -1;
   FEngine := TSpxEngineThread.Create(@JobDone);
-  RequestRender;
+  { `spintax-studio path\to\file.spintax` -- what a double-click in Explorer sends once the
+    extension is associated, and the only way to open a document without a dialog. }
+  if (ParamCount >= 1) and FileExists(ParamStr(1)) then LoadDocument(ParamStr(1))
+  else RequestRender;
 end;
 
 procedure TSpxMainForm.BuildUi;
 begin
-  Caption := 'Spintax Studio';
   Width := 1100;
   Height := 700;
   Position := poScreenCenter;
   OnClose := @FormClosed;
+  OnCloseQuery := @FormAsked;
+  BuildMenu;
 
   FTop := TPanel.Create(Self);
   FTop.Parent := Self;
@@ -186,12 +216,181 @@ begin
   FDebounce.OnTimer := @DebounceFired;
 end;
 
+procedure TSpxMainForm.BuildMenu;
+
+  function Item(AParent: TMenuItem; const ACaption: string; AKey: Word;
+    AShift: TShiftState; AHandler: TNotifyEvent): TMenuItem;
+  begin
+    Result := TMenuItem.Create(Self);
+    Result.Caption := ACaption;
+    if AKey <> 0 then Result.ShortCut := ShortCut(AKey, AShift);
+    Result.OnClick := AHandler;
+    AParent.Add(Result);
+  end;
+
+var
+  bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
+  fileMenu: TMenuItem;
+begin
+  bar := TMainMenu.Create(Self);
+  fileMenu := TMenuItem.Create(Self);
+  fileMenu.Caption := 'Файл';
+  bar.Items.Add(fileMenu);
+
+  Item(fileMenu, 'Создать', Ord('N'), [ssCtrl], @NewClicked);
+  Item(fileMenu, 'Открыть…', Ord('O'), [ssCtrl], @OpenClicked);
+  Item(fileMenu, 'Сохранить', Ord('S'), [ssCtrl], @SaveClicked);
+  Item(fileMenu, 'Сохранить как…', Ord('S'), [ssCtrl, ssShift], @SaveAsClicked);
+  Item(fileMenu, '-', 0, [], nil);
+  { The set is read when the document is opened or saved, not on every keystroke. A fragment
+    changed by another program is therefore invisible until this is used -- which is why the
+    command exists rather than a silent rescan the user cannot ask for. }
+  Item(fileMenu, 'Перечитать набор', 0, [], @ReloadSetClicked);
+  Item(fileMenu, '-', 0, [], nil);
+  Item(fileMenu, 'Выход', 0, [], @ExitClicked);
+
+  Self.Menu := bar;
+end;
+
+procedure TSpxMainForm.UpdateCaption;
+var shown: string;
+begin
+  if FPath = '' then shown := 'Без имени' else shown := ExtractFileName(FPath);
+  if FEditor.Modified then shown := shown + ' *';
+  Caption := shown + ' — Spintax Studio';
+end;
+
+{ What goes into the file: the buffer with the document's OWN line ending restored, and
+  without the terminator TStrings adds to a last line that never had one. Both halves matter
+  for the same reason -- these files live in the user's git, and an editor that rewrites
+  bytes nobody touched turns a one-word change into a whole-file diff. }
+function TSpxMainForm.DocText: string;
+var tail: Integer;
+begin
+  Result := SpxNormalizeEol(FEditor.Text, FEol);
+  if FTrailingEol then Exit;
+  tail := Length(Result) - Length(FEol) + 1;
+  if (tail >= 1) and (Copy(Result, tail, Length(FEol)) = FEol) then
+    Delete(Result, tail, Length(FEol));
+end;
+
+procedure TSpxMainForm.LoadDocument(const APath: string);
+var s: string;
+begin
+  s := SpxReadTextFile(APath);
+  FPath := APath;
+  FEol := SpxDetectEol(s);
+  FTrailingEol := SpxEndsWithEol(s);
+  FEditor.Text := s;
+  FEditor.Modified := False;
+  FEditor.CaretXY := Point(1, 1);
+  FReloadSet := True;
+  UpdateCaption;
+  RequestRender;
+end;
+
+function TSpxMainForm.SaveDocument(AsNew: Boolean): Boolean;
+var dlg: TSaveDialog;
+begin
+  Result := False;
+  if AsNew or (FPath = '') then
+  begin
+    dlg := TSaveDialog.Create(Self);
+    try
+      dlg.Title := 'Сохранить шаблон';
+      dlg.Filter := 'Шаблоны spintax|*' + SPX_EXT + '|Все файлы|*.*';
+      dlg.DefaultExt := Copy(SPX_EXT, 2, MaxInt);
+      dlg.Options := dlg.Options + [ofOverwritePrompt];
+      if FPath <> '' then dlg.FileName := FPath;
+      if not dlg.Execute then Exit;
+      FPath := dlg.FileName;
+    finally
+      dlg.Free;
+    end;
+  end;
+  SpxWriteTextFile(FPath, DocText);
+  FEditor.Modified := False;
+  { Saved: the folder may now hold a file it did not before, and this document's own saved
+    copy has just changed under whatever else includes it. }
+  FReloadSet := True;
+  UpdateCaption;
+  RequestRender;
+  Result := True;
+end;
+
+function TSpxMainForm.AskSave: Boolean;
+begin
+  Result := True;
+  if not FEditor.Modified then Exit;
+  case MessageDlg('Сохранить изменения?', mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
+    mrYes: Result := SaveDocument(False);
+    mrNo: Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+procedure TSpxMainForm.NewClicked(Sender: TObject);
+begin
+  if not AskSave then Exit;
+  FPath := '';
+  FEol := SPX_DEFAULT_EOL;
+  FTrailingEol := True;
+  FEditor.Text := '';
+  FEditor.Modified := False;
+  FReloadSet := True;
+  UpdateCaption;
+  RequestRender;
+end;
+
+procedure TSpxMainForm.OpenClicked(Sender: TObject);
+var dlg: TOpenDialog;
+begin
+  if not AskSave then Exit;
+  dlg := TOpenDialog.Create(Self);
+  try
+    dlg.Title := 'Открыть шаблон';
+    dlg.Filter := 'Шаблоны spintax|*' + SPX_EXT + '|Все файлы|*.*';
+    dlg.Options := dlg.Options + [ofFileMustExist];
+    if dlg.Execute then LoadDocument(dlg.FileName);
+  finally
+    dlg.Free;
+  end;
+end;
+
+procedure TSpxMainForm.SaveClicked(Sender: TObject);
+begin
+  SaveDocument(False);
+end;
+
+procedure TSpxMainForm.SaveAsClicked(Sender: TObject);
+begin
+  SaveDocument(True);
+end;
+
+procedure TSpxMainForm.ReloadSetClicked(Sender: TObject);
+begin
+  FReloadSet := True;
+  RequestRender;
+end;
+
+procedure TSpxMainForm.ExitClicked(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TSpxMainForm.FormAsked(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := AskSave;
+end;
+
 procedure TSpxMainForm.EditorChanged(Sender: TObject);
 begin
   { Restart the window on every keystroke: the render that matters is the one after the
     user stops. }
   FDebounce.Enabled := False;
   FDebounce.Enabled := True;
+  UpdateCaption;
 end;
 
 procedure TSpxMainForm.SettingChanged(Sender: TObject);
@@ -229,6 +428,23 @@ begin
   job.Locale := FLocale.Text;
   job.Seeded := FSeeded.Checked;
   job.Seed := LongWord(StrToInt64Def(FSeedEdit.Text, 1));
+  { The folder, not the set: the worker owns the map it builds from this. An unsaved
+    document has neither, which leaves every `#include` verbatim -- what the engine does
+    without a resolver, and what the other engines would do with a file that is not there.
+    DocSlug keeps the closure walk from validating this same buffer a second time through
+    its saved copy on disk. }
+  if FPath = '' then
+  begin
+    job.SetFolder := '';
+    job.DocSlug := '';
+  end
+  else
+  begin
+    job.SetFolder := ExtractFilePath(FPath);
+    job.DocSlug := SpxSlugOf(FPath);
+  end;
+  job.ReloadSet := FReloadSet;
+  FReloadSet := False;
   FEngine.Post(job);
 end;
 

@@ -180,6 +180,25 @@ the managed tier are later releases.
       `Application.MainForm`), and the app opened on locale `ru` against an English demo,
       which is a genuine `plural.arity` error — it now opens on the demo's language.
 
+      **The document became a file** (2026-07-26), which the milestones did not list and
+      half of M2 depends on: `gui/SpxFiles.pas` carries the host's rules — bytes in and out
+      with a UTF-8 BOM stripped on read and never written, the file's own line ending and
+      trailing terminator preserved, `.spintax` membership, and the slug taken from the name
+      exactly as the filesystem spells it. 29 checks against a real temp folder, ending with
+      the one that closes the loop: a document that `#include`s a fragment on disk renders it,
+      and the same slug in another case does not.
+
+      The menu (Создать / Открыть / Сохранить / Сохранить как / Перечитать набор), the
+      unsaved-changes guard, the caption with the file name and a dirty marker, and opening a
+      path from the command line came with it. Only the FOLDER crosses the thread boundary —
+      the worker owns the set it builds, so no mutable object travels with a job that
+      latest-wins may replace, and the directory scan stays off the UI thread.
+
+      Verified in the running app, not only in the suite: a prepared folder opened by path
+      renders its fragment inline, the wrong-case include is flagged with a red squiggle and
+      a note, and three files (LF, CRLF, and one with no trailing terminator) came back byte
+      identical after open + save.
+
       Still to come: the panels of M2.
 
 - [ ] **M2 — the variables panel is an EDITOR, with a plain ↔ structured toggle**
