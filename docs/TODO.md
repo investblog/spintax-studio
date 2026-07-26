@@ -147,7 +147,21 @@ the managed tier are later releases.
       would have flipped the comment flag), and the adapter never called
       `SetAttributesOnChange`, so a future settings pane would not have repainted.
 
-      Still to come: bracket matching, and the panels of M2.
+      **Bracket matching landed** (2026-07-26). The rule is `SpxMatchBracket` in
+      `src/SpxTokens.pas` — pure, one forward pass, gated by 18 checks including a round
+      trip over every bracket in the demo template. It exists because SynEdit's own matcher
+      is wrong for this language twice over: it counts parentheses and quotes as brackets
+      (ordinary text in spintax — the demo's "(spin syntax)" would sprout a phantom pair),
+      and it ignores block comments, so it pairs an opener inside one with a closer outside.
+      A mismatched kind is not a pair either: that is `bracket.mismatched`, the validator's
+      finding, and the editor does not draw a pair the engine rejects.
+      `gui/SpxBracketMarkup.pas` is the adapter — it descends from SynEdit's markup and
+      replaces only the pair-finding, so all the painting stays inherited; the built-in
+      instance is disabled. **Unverified by me: the highlight itself.** The logic is tested
+      and the wiring compiles, but nothing here can see a window — the colours on screen
+      need a human eye once.
+
+      Still to come: the panels of M2.
 
 - [ ] **M2 — the variables panel is an EDITOR, with a plain ↔ structured toggle**
       (decided 2026-07-26, after studying the spintax.net playground; the reference

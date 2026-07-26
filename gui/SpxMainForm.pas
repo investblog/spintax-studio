@@ -15,7 +15,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Clipbrd, Graphics,
-  SynEdit, SynEditWrappedView, SpxEngineThread, SpxSynHighlighter, SpxDemo;
+  SynEdit, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
+  SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -52,6 +53,11 @@ var
   MainForm: TSpxMainForm;
 
 implementation
+
+type
+  { The markup manager is protected on TSynEditBase; a descendant declared here reaches it
+    without patching SynEdit. }
+  TSynEditReach = class(TSynEdit);
 
 const
   DEBOUNCE_MS = 200;   // long enough to skip a burst of typing, short enough to feel live
@@ -137,6 +143,14 @@ begin
     editor's own plugin, so the buffer keeps its real lines and every position the engine
     reports still lands where it should. }
   TLazSynEditLineWrapPlugin.Create(FEditor);
+
+  { Bracket matching by spintax rules. SynEdit's own markup counts parentheses and quotes
+    as brackets and ignores block comments, so it is switched off and ours takes its place;
+    the pairing rule itself is `SpxMatchBracket`, gated by the console suite. Reaching the
+    markup manager needs the protected accessor, hence the local descendant. }
+  FEditor.MarkupByClass[TSynEditMarkupBracket].Enabled := False;
+  TSynEditMarkupManager(TSynEditReach(FEditor).MarkupMgr).AddMarkUp(
+    TSpxBracketMarkup.Create(FEditor));
 
   FSplit := TSplitter.Create(Self);
   FSplit.Parent := Self;

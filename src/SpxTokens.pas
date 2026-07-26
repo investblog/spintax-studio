@@ -89,6 +89,23 @@ procedure SpxScanLine(const Line: string; var State: TSpxScanState; Tokens: TSpx
 function SpxPackState(const State: TSpxScanState): PtrInt;
 function SpxUnpackState(Value: PtrInt): TSpxScanState;
 
+{ The partner of the bracket at Offset (1-based, into the whole document), or 0 when there
+  is none. Spec §4.1 asks for the pair under the caret; this is the half that can be tested
+  without a window, and the editor draws what it returns.
+
+  SynEdit ships a matcher and it is wrong for this language in two ways, which is why this
+  exists: it counts parentheses and quotes as brackets -- ordinary text in spintax, so the
+  demo's "(spin syntax)" would sprout a pair that means nothing -- and it knows nothing
+  about block comments, so it happily pairs an opener inside one with a closer outside it.
+
+  A closer of the WRONG kind is not a partner: an opening brace closed by a square bracket
+  returns 0 rather than pointing at it. That shape is what the validator calls
+  bracket.mismatched, and drawing a pair the engine rejects would be the editor arguing
+  with the verdict.
+
+  One forward pass over the text per call, which is what a caret move costs. }
+function SpxMatchBracket(const Text: string; Offset: Integer): Integer;
+
 implementation
 
 function SpxPackState(const State: TSpxScanState): PtrInt;
@@ -103,6 +120,68 @@ begin
   Result.Depth := Value and SPX_DEPTH_MASK;
   Result.InComment := (Value and (1 shl 16)) <> 0;
   Result.LineEmpty := (Value and (1 shl 17)) <> 0;
+end;
+
+function SpxMatchBracket(const Text: string; Offset: Integer): Integer;
+type
+  TOpen = record Pos: Integer; Ch: Char; end;
+var
+  stack: array of TOpen;
+  top, i, n: Integer;
+  c: Char;
+
+  function Partner(Opener, Closer: Char): Boolean;
+  begin
+    Result := ((Opener = '{') and (Closer = '}')) or ((Opener = '[') and (Closer = ']'));
+  end;
+
+begin
+  Result := 0;
+  n := Length(Text);
+  if (Offset < 1) or (Offset > n) then Exit;
+  if not (Text[Offset] in ['{', '}', '[', ']']) then Exit;
+
+  SetLength(stack, 32);
+  top := 0;
+  i := 1;
+  while i <= n do
+  begin
+    { A comment is not code: brackets inside it belong to no pair, and the offset itself
+      being inside one means there is nothing to match. }
+    if (Text[i] = '/') and (i < n) and (Text[i + 1] = '#') then
+    begin
+      Inc(i, 2);
+      while (i < n) and not ((Text[i] = '#') and (Text[i + 1] = '/')) do Inc(i);
+      Inc(i, 2);
+      Continue;
+    end;
+
+    c := Text[i];
+    if (c = '{') or (c = '[') then
+    begin
+      if top = Length(stack) then SetLength(stack, top * 2);
+      stack[top].Pos := i;
+      stack[top].Ch := c;
+      Inc(top);
+    end
+    else if (c = '}') or (c = ']') then
+    begin
+      if top > 0 then
+      begin
+        Dec(top);
+        if Partner(stack[top].Ch, c) then
+        begin
+          if stack[top].Pos = Offset then Exit(i);
+          if i = Offset then Exit(stack[top].Pos);
+        end
+        else if (stack[top].Pos = Offset) or (i = Offset) then
+          Exit(0);   { mismatched kinds: the validator's business, not a pair to draw }
+      end
+      else if i = Offset then
+        Exit(0);     { a closer with nothing open }
+    end;
+    Inc(i);
+  end;
 end;
 
 function IsWordByte(c: Char): Boolean;

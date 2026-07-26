@@ -1243,6 +1243,65 @@ begin
   end;
 end;
 
+{ ── 6b. the bracket under the caret ─────────────────────────────────────── }
+
+procedure TestBracketMatching;
+const
+  PAIRS = '{a|b} [c|d]';
+var
+  i, m: Integer;
+  ok: Boolean;
+  doc: string;
+begin
+  { Both directions, both kinds. }
+  CheckTrue('bracket/open-brace-finds-its-close', SpxMatchBracket(PAIRS, 1) = 5);
+  CheckTrue('bracket/close-brace-finds-its-open', SpxMatchBracket(PAIRS, 5) = 1);
+  CheckTrue('bracket/open-bracket-finds-its-close', SpxMatchBracket(PAIRS, 7) = 11);
+  CheckTrue('bracket/close-bracket-finds-its-open', SpxMatchBracket(PAIRS, 11) = 7);
+
+  { Nesting: the inner pair, not the outer one. }
+  CheckTrue('bracket/inner-pair', SpxMatchBracket('{a{b}c}', 3) = 5);
+  CheckTrue('bracket/outer-pair', SpxMatchBracket('{a{b}c}', 1) = 7);
+
+  { Across lines, because a template is not one line. }
+  CheckTrue('bracket/across-lines', SpxMatchBracket('{a'#10'b}', 1) = 5);
+
+  { What SynEdit's own matcher gets wrong, and why this function exists: a parenthesis and
+    a quote are ordinary text in spintax, and a comment is not code. }
+  CheckTrue('bracket/paren-is-not-a-bracket', SpxMatchBracket('(a|b)', 1) = 0);
+  CheckTrue('bracket/quote-is-not-a-bracket', SpxMatchBracket('"a"', 1) = 0);
+  CheckTrue('bracket/open-inside-a-comment-has-no-partner',
+            SpxMatchBracket('/# { #/ }', 4) = 0);
+  CheckTrue('bracket/close-outside-does-not-reach-into-a-comment',
+            SpxMatchBracket('/# { #/ }', 9) = 0);
+  CheckTrue('bracket/pair-inside-one-comment-is-still-no-pair',
+            SpxMatchBracket('/# {a|b} #/', 4) = 0);
+
+  { A mismatched kind is the validator's finding, not a pair to draw. }
+  CheckTrue('bracket/mismatched-kinds-do-not-pair', SpxMatchBracket('{a]', 1) = 0);
+  CheckTrue('bracket/unclosed-has-no-partner', SpxMatchBracket('{a', 1) = 0);
+  CheckTrue('bracket/unopened-has-no-partner', SpxMatchBracket('a}', 2) = 0);
+
+  { Anything that is not a bracket, and offsets outside the text. }
+  CheckTrue('bracket/not-a-bracket', SpxMatchBracket(PAIRS, 2) = 0);
+  CheckTrue('bracket/offset-past-the-end', SpxMatchBracket(PAIRS, 999) = 0);
+  CheckTrue('bracket/offset-zero', SpxMatchBracket(PAIRS, 0) = 0);
+
+  { The demo document: every bracket in it must find its partner, in both directions. That
+    is a real template rather than a fixture, and it is where an off-by-one would show. }
+  begin
+    doc := SpxDemoTemplate;
+    ok := True;
+    for i := 1 to Length(doc) do
+      if doc[i] in ['{', '}', '[', ']'] then
+      begin
+        m := SpxMatchBracket(doc, i);
+        if (m = 0) or (SpxMatchBracket(doc, m) <> i) then ok := False;
+      end;
+    CheckTrue('bracket/every-pair-in-the-demo-round-trips', ok);
+  end;
+end;
+
 { ── 7. the demo template as a document ───────────────────────────────────── }
 
 procedure TestDemoTemplate;
@@ -1409,6 +1468,7 @@ begin
   TestIncludeResolution;
   TestAnalysisPath;
   TestTokenizer;
+  TestBracketMatching;
   TestDemoTemplate;
   TestEngineThread;
 
