@@ -93,7 +93,12 @@ begin
   FLocale.Parent := FTop;
   FLocale.Style := csDropDownList;
   FLocale.Items.CommaText := 'ru,uk,be,en,de,fr,es,sr,hr,bs';
-  FLocale.ItemIndex := 0;
+  { The locale belongs to the TEMPLATE, not to the UI, so it opens on the demo's language.
+    On `ru` the demo is genuinely invalid -- PluralArity('ru') is 3 and its
+    `{plural %pages%: page|pages}` supplies two forms, which the engine reports as
+    plural.arity at 11:120 -- and an app that opens on an error against its own sample
+    teaches the user to distrust the verdict. }
+  FLocale.ItemIndex := FLocale.Items.IndexOf('en');
   FLocale.SetBounds(8, 7, 70, 24);
   FLocale.OnChange := @SettingChanged;
 
