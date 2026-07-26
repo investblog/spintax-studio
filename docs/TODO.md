@@ -149,6 +149,61 @@ the managed tier are later releases.
 
       Still to come: bracket matching, and the panels of M2.
 
+- [ ] **M2 — the variables panel is an EDITOR, with a plain ↔ structured toggle**
+      (decided 2026-07-26, after studying the spintax.net playground; the reference
+      implementation is `W:\projects\spintax.net\src\client\play.ts`, functions
+      `parseRawVars` / `serializeVars` / `rowsToPairs` / `setMode` / `combinedTemplate`).
+
+      **What the playground does.** Variables live in a box SEPARATE from the template, in
+      two interchangeable views: structured rows `[set|def] [name] [value] [×]`, or a plain
+      textarea holding the same `#set`/`#def` lines. Switching flushes one into the other.
+      The `#set`/`#def` choice is carried through untouched — rewriting one into the other
+      would silently change the semantics (a macro re-rolled at every reference vs a
+      definition rolled once per render). At render time the box is prepended to the
+      template; its names also go in as `knownVariables` so `%refs%` are not flagged.
+
+      **What we take:** the ergonomics, whole. Editing a macro's value in a row beats
+      hunting it inside a long directive line, especially when the value itself is nested
+      spintax, and the kind selector puts the `#set`/`#def` difference in front of the user
+      instead of leaving it invisible.
+
+      **What we do NOT take: the second buffer.** The playground owns both texts and never
+      writes a file. Studio's document is a file on disk that the other engines of the family
+      read, so the directives must live IN it. Our structured view is therefore an editor
+      OVER the document, not a box beside it — which is affordable exactly because
+      `SpExtractDirectives` reports every directive's span, value and consumed line: a row is
+      a view of a span, and editing it rewrites that span alone.
+
+      **Two things that must not merge into one list** (the playground has only the first,
+      because it has no notion of host-supplied render context):
+      - *Definitions* — `#set`/`#def`, text in the document, committed to git, read by other
+        engines;
+      - *Runtime values* — not in the document at all; they feed `TSpxContext.Vars` and
+        `knownVariables` for the preview, and they are per-session.
+      A single flat list would teach the user that typing a value edits their file, which is
+      true for one group and false for the other.
+
+      **The slice, in order:**
+      1. editor-core gains one pure function — roughly
+         `SpxSetDirective(const Doc: string; Index: Integer; Kind, Name, Value: string): string`
+         — which rewrites exactly the span `SpExtractDirectives` reported and leaves every
+         other byte alone. Console-testable, so it lands before any UI: round-trip a
+         document, change one value, change a kind, rename, delete, and prove the rest of the
+         file is byte-identical.
+      2. the panel: two groups, the toggle on Definitions, rows in the playground's shape.
+      3. write-back goes through SynEdit's own edit API so undo and the caret behave, and the
+         panel re-derives from the text after every change (`SpExtractDirectives` is linear).
+
+      **Refuse to guess:** anything not round-trippable — a directive inside a comment,
+      spacing the row cannot reproduce — is a read-only row that says "edit in the text".
+      Changing `#set` ↔ `#def` is an explicit action with a word about what it changes, never
+      a silent normalisation.
+
+      **Risks already named:** two writers over one buffer (the text is the single source of
+      truth, the panel is always derived); spans go stale after every edit (re-derive, do not
+      cache); the value field holds spintax and will eventually want the same colouring
+      (`SpxTokens` can scan a fragment, but that is not M2).
+
 - [ ] **Highlighter gap — the per-element trailing separator.** `[a<br>|b]`: the family's
       grammars colour the `<br>` and the engine acts on it (`extractTrailingSep`), but
       `SpxTokens` leaves it as text. A missing colour, not a wrong one, which is why it did
@@ -202,16 +257,16 @@ Decisions owed **before the relevant submission** (not switchable later):
   third-party purchase API (Stripe/…), prices/terms, cancellation, Partner Center disclosure.
   See spec §10/§11.
 
-## Reported to the engine
+## Reported to the engine, and closed
 
-- [ ] **`[<li>one</li>|<li>two</li>]` — the engine takes `li` as a permutation config.**
-      Measured 2026-07-26 against the pinned `v0.3.2`: it renders `One</li> Li <li>Two</li>`,
-      because `ParsePermConfig` has no HTML guard where `@spintax/core` and the Sublime
-      grammar both carry one (`looksLikeHtmlStartTag`, and the `(?!([A-Za-z][A-Za-z0-9-]*)…)`
-      lookahead), and where this engine's own TRAILING-separator path does (`looksHtml`).
-      Studio's highlighter follows the engine and therefore colours `<li>` as a config —
-      which is how the divergence became visible in the first place. Whichever way it
-      resolves upstream, the tokenizer follows; it is not worked around here.
+- [x] **`[<li>one</li>|…]` was taken as a permutation config** — reported 2026-07-26 from
+      Studio's highlighter, fixed the same day in engine `v0.3.3`, and the tokenizer followed.
+      The engine now carries the family's `looksLikeHtmlStartTag` guard and gates the key
+      form on `(?:minsize|maxsize|sep|lastsep)\s*=` rather than a substring, which also
+      closed two traps Studio had never seen: `[<separator>a|b]` lost its separator word to a
+      `sep` substring match, and `[<xminsize=2>a|b]` executed a `minsize` the template never
+      wrote. `SpxTokens` ports both rules plus the quote-aware `>` scan, with nine cases
+      measured against the engine before being pinned.
 
 ## Non-negotiable, carried from the engine's experience (spec §7)
 

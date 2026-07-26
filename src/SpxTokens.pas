@@ -30,7 +30,7 @@ unit SpxTokens;
 interface
 
 uses
-  Classes, SysUtils, Generics.Collections;
+  Classes, SysUtils, StrUtils, Generics.Collections;
 
 type
   TSpxTokenKind = (
@@ -166,18 +166,79 @@ begin
   if (i <= n) and (Line[i] = ':') then Result := i - p + 1;
 end;
 
-{ `<...>` directly after a `[`: the permutation's config. Anything else after `[` is just
-  content, including an HTML tag, which is why this stops at the first `>` and does not care
-  what is inside. }
+{ Ported from the engine's own gate (ParsePermConfig, v0.3.3), because getting this wrong
+  colours a user's HTML as configuration or their configuration as HTML. Two rules:
+
+    * the closing `>` is found RESPECTING QUOTES, so `<sep="a>b">` is one config whose
+      separator contains a `>`;
+    * a leading HTML START TAG is content, not config -- `<li>…</li>` and `<br/>` stay in
+      the permutation's text. Everything else is config: the key form (`minsize=`, `sep=`…)
+      and the single-separator form (`<->`, `<separator>`, even `<xminsize=2>`) both are.
+
+  ONE APPROXIMATION, and it is bounded: the engine looks for the closing `</name>` in the
+  whole permutation, which may run past this line; a line-at-a-time scan can only look at
+  the rest of THIS line. A multi-line `[<li>…` therefore colours as config where the engine
+  would call it content. The self-closing and same-line cases -- which is how HTML inside a
+  permutation is actually written -- are exact. }
+function LooksLikeHtmlStartTag(const ConfigStr, Remaining: string): Boolean;
+const WS = [' ', #9, #10, #11, #12, #13];   { JS \s restricted to ASCII, as the engine has it }
+var t, nameLow, remLow: string; n, j, k: Integer;
+begin
+  Result := False;
+  t := Trim(ConfigStr);
+  if (t = '') or not (t[1] in ['A'..'Z', 'a'..'z']) then Exit;
+
+  n := 1;
+  while (n < Length(t)) and (t[n + 1] in ['A'..'Z', 'a'..'z', '0'..'9', '-']) do Inc(n);
+  if n < Length(t) then
+  begin
+    if (t[n + 1] = '/') and (n + 1 = Length(t)) then
+      { a bare self-closing tag }
+    else if t[n + 1] in WS then
+    begin
+      { attributes, but a `>` among them means this was never one tag }
+      for j := n + 2 to Length(t) do
+        if t[j] = '>' then Exit;
+    end
+    else
+      Exit;
+  end;
+
+  if t[Length(t)] = '/' then Exit(True);   { self-closing: no partner needed }
+
+  { A start tag counts as HTML only when its closing partner follows. }
+  nameLow := LowerCase(Copy(t, 1, n));
+  remLow := LowerCase(Remaining);
+  k := 1;
+  repeat
+    k := PosEx('</' + nameLow, remLow, k);
+    if k = 0 then Exit;
+    j := k + 2 + Length(nameLow);
+    while (j <= Length(remLow)) and (remLow[j] in WS) do Inc(j);
+    if (j <= Length(remLow)) and (remLow[j] = '>') then Exit(True);
+    Inc(k);
+  until False;
+end;
+
 function PermConfigLength(const Line: string; p: Integer): Integer;
-var i, n: Integer;
+var i, n: Integer; inQuote: Boolean;
 begin
   Result := 0;
   n := Length(Line);
   if (p > n) or (Line[p] <> '<') then Exit;
+
+  inQuote := False;
   i := p + 1;
-  while (i <= n) and (Line[i] <> '>') and (Line[i] <> '<') do Inc(i);
-  if (i <= n) and (Line[i] = '>') then Result := i - p + 1;
+  while i <= n do
+  begin
+    if Line[i] = '"' then inQuote := not inQuote
+    else if (Line[i] = '>') and not inQuote then Break;
+    Inc(i);
+  end;
+  if i > n then Exit;   { no closing '>' on this line }
+
+  if LooksLikeHtmlStartTag(Copy(Line, p + 1, i - p - 1), Copy(Line, i + 1, MaxInt)) then Exit;
+  Result := i - p + 1;
 end;
 
 { The `#set` / `#def` / `#include` head, if this line starts with one. Returns the length of
@@ -388,7 +449,7 @@ begin
           { `[ <minsize=2>a|b]` -- the engine left-trims before parsing the config, so the
             space does not disable it, and neither may the colouring. }
           q := p;
-          while (q <= n) and ((Line[q] = ' ') or (Line[q] = #9)) do Inc(q);
+          while (q <= n) and (Line[q] in [' ', #9, #10, #11, #12, #13]) do Inc(q);
           len := PermConfigLength(Line, q);
           if len > 0 then
           begin

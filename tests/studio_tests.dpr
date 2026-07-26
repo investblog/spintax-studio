@@ -1146,6 +1146,32 @@ begin
   Check('scan/config-after-a-space', ScanOne('[ <minsize=2>a|b]'),
         '[([)1 text( )1 cfg(<minsize=2>)1 text(a)1 |(|)1 text(b)1 ](])1');
 
+  { The config/content boundary, ported from the engine's v0.3.3 gate. Each of these was
+    measured against that engine first: colouring a user's HTML as configuration, or their
+    configuration as HTML, is the one thing this class must not do.
+
+    CONTENT -- a leading HTML start tag stays in the permutation's text: }
+  Check('scan/html-pair-is-not-config', ScanOne('[<li>a</li>|<li>b</li>]'),
+        '[([)1 text(<li>a</li>)1 |(|)1 text(<li>b</li>)1 ](])1');
+  Check('scan/self-closing-tag-is-not-config', ScanOne('[<br/>a|b]'),
+        '[([)1 text(<br/>a)1 |(|)1 text(b)1 ](])1');
+  Check('scan/tag-with-attributes-is-not-config', ScanOne('[<a href="x">one</a>|two]'),
+        '[([)1 text(<a href="x">one</a>)1 |(|)1 text(two)1 ](])1');
+
+  { CONFIG -- the key form, the single-separator form, and the two traps the engine's own
+    review found: a word that merely CONTAINS a key, and a key with a prefix. }
+  Check('scan/word-separator-is-config', ScanOne('[<separator>a|b]'),
+        '[([)1 cfg(<separator>)1 text(a)1 |(|)1 text(b)1 ](])1');
+  Check('scan/prefixed-key-is-a-separator-not-a-key', ScanOne('[<xminsize=2>a|b]'),
+        '[([)1 cfg(<xminsize=2>)1 text(a)1 |(|)1 text(b)1 ](])1');
+  { A tag whose partner never comes is a separator, not markup -- the engine renders `li`
+    between the options. }
+  Check('scan/unpaired-tag-is-config', ScanOne('[<li>a|b]'),
+        '[([)1 cfg(<li>)1 text(a)1 |(|)1 text(b)1 ](])1');
+  { The closing `>` is found respecting quotes, so a separator may contain one. }
+  Check('scan/quoted-gt-inside-config', ScanOne('[<sep="a>b">x|y]'),
+        '[([)1 cfg(<sep="a>b">)1 text(x)1 |(|)1 text(y)1 ](])1');
+
   { Tokens must tile the line exactly: SynEdit paints what it is handed, so a gap leaves
     text unpainted and an overlap corrupts its neighbour. Neither shows up in a check that
     only compares kinds. }
