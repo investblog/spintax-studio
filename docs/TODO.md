@@ -43,7 +43,7 @@ M0 is reused whole; the GUI (M1–M2) and the LLM loop (M4) are independent; M3/
 interchangeable. **R0 (the first Store release) = M0–M3, offline, no AI** (spec §9); M4 and
 the managed tier are later releases.
 
-- [ ] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderFragment` /
+- [x] **M0 — editor-core (`SpxStudio.pas`).** `RenderSample` / `RenderFragment` /
       `RenderBatch` / `ExtractModel` / `HealthReport` over the engine, plus the template set
       and the resolver built on it. Pure Pascal, GUI- and network-free,
       fully tested — verifiable without a window. The layer both the GUI and the LLM loop
@@ -293,6 +293,14 @@ theoretical:
 - [x] Engine wired in as a submodule at `engine/`, pinned to `v0.1.0` (2026-07-23).
 - [x] The two gating decisions settled — Lazarus/LCL and submodule — recorded as ADRs
       0002 and 0001 (2026-07-23).
+- [x] **Engine bumped to `v0.3.3`** (2026-07-26). The permutation-config gate: a leading
+      HTML start tag stays content, and the key form is chosen by
+      `(?:minsize|maxsize|sep|lastsep)\s*=` rather than a substring — which also closed
+      `[<separator>a|b]` losing its separator word and `[<xminsize=2>a|b]` executing a config
+      the template never wrote. No public API moved. `SpxTokens` ports all three rules
+      (guard, key test, quote-aware `>`); a 187-case differential against the engine agrees
+      everywhere, and the one documented gap — a permutation whose closing tag is on a later
+      line — was measured rather than assumed. Corpus grew to 204 cases, engine 200/0/4.
 - [x] **Engine bumped to `v0.3.2`** (2026-07-26). Three fixes land, two of them visible
       through calls Studio makes and now pinned as baseline tripwires: an include match that
       spans line terminators no longer leaves a **phantom second include** for the closure
@@ -300,10 +308,10 @@ theoretical:
       the next line with a stray `CR` in `Text` — the panel points at those positions and the
       fragment prelude re-emits that text. The third closed the directive-value rtrim
       divergence, so the spec's "shown as reported, we do not normalise" note keeps its rule
-      and loses its caveat. **`SpExtract`/`SpValidate` are linear now**: the ~245 ms at 1600
-      directives is gone, so debounce stays as politeness to typing and battery rather than
-      as the thing standing between the user and a freeze — and the caller-side validation
-      cache is no longer urgent.
+      and loses its caveat. **Most paths went linear** — but not the one that mattered: a
+      later measurement found `SpValidate` still quadratic on a `#set`/`#def`-heavy document
+      (17.6 / 253 / 3982 ms at 400 / 1600 / 6400 definitions), which is the engine's own open
+      item. So debounce stays load-bearing and the caller-side cache stays worth doing.
 - [x] **Engine bumped to `v0.3.0`, and `#include` resolution is wired** (2026-07-25). The
       engine grew the family's resolver seam ([engine ADR 0004](../engine/docs/decisions/0004-include-resolver-seam.md)):
       `TSpContext.IncludeResolver`, an abstract class the host subclasses, plus

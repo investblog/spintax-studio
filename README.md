@@ -10,22 +10,25 @@ the same one published for JavaScript, PHP and Python, embedded in-process. On t
 live preview, real validation with diagnostics, and an authoring loop where an LLM writes
 a template, the engine checks it, and the model repairs what the engine rejects.
 
-> **Status: design, with the gates already standing.** The source of truth is
-> [`docs/spec.md`](docs/spec.md) and the open decisions are in
-> [`docs/TODO.md`](docs/TODO.md). There is no application yet: the Pascal here is the host
-> contract the engine cannot fulfil for its caller, plus the build, tests and CI that will
-> hold the editor-core when it lands.
+> **Status: early, and it runs.** The source of truth is [`docs/spec.md`](docs/spec.md) and
+> the open work is in [`docs/TODO.md`](docs/TODO.md). `src/` holds editor-core — the render
+> path, `#include` resolution through the engine's resolver seam, the panel model and the
+> health report — all verifiable without a window. `gui/` holds the two-pane window, the
+> single thread that is allowed to call the engine, and the syntax highlighter. Still to
+> come: bracket matching, the variables and diagnostics panels, export, and the LLM loop.
 
 ## Building
 
 ```sh
 git clone --recurse-submodules https://github.com/investblog/spintax-studio.git
 cd spintax-studio
-sh ./build.sh          # needs Free Pascal 3.2.2+
+sh ./build.sh          # Free Pascal 3.2.2+; builds the app too when Lazarus is present
 ./tests/studio_tests
 ```
 
-The engine is a git submodule pinned to a released tag
+`build.sh` builds the console suite with `fpc` and the application with `lazbuild`, skipping
+the second — and saying so — when Lazarus is not installed: everything except the window is
+verifiable without it. The engine is a git submodule pinned to a released tag
 ([ADR 0001](docs/decisions/0001-engine-as-submodule.md)); a plain clone needs
 `git submodule update --init` before the build finds `unit Spintax`.
 
