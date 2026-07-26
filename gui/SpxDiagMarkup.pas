@@ -29,6 +29,7 @@ type
     { The span this mark covers on ARow, or False when it does not touch that row. }
     function RangeOnRow(const M: TSpxDiagMark; ARow: Integer;
       out AFrom, ATo: Integer): Boolean;
+    function LineText(ALine: Integer): string;
   public
     constructor Create(ASynEdit: TSynEditBase; AErrors: Boolean); reintroduce;
     procedure SetMarks(const AMarks: TSpxDiagMarks);
@@ -55,19 +56,31 @@ begin
   else MarkupInfo.FrameColor := $000080C0;   { amber -- a warning is not a failure }
 end;
 
-procedure TSpxDiagMarkup.SetMarks(const AMarks: TSpxDiagMarks);
-var i, n: Integer;
+function TSpxDiagMarkup.LineText(ALine: Integer): string;
 begin
-  FMarks := nil;
+  if (Lines <> nil) and (ALine >= 1) and (ALine <= Lines.Count) then
+    Result := Lines[ALine - 1]
+  else
+    Result := '';
+end;
+
+procedure TSpxDiagMarkup.SetMarks(const AMarks: TSpxDiagMarks);
+var i, n: Integer; mine: TSpxDiagMarks;
+begin
+  mine := nil;
   n := 0;
   for i := 0 to High(AMarks) do
     if AMarks[i].IsError = FErrors then
     begin
-      if n = Length(FMarks) then SetLength(FMarks, 8 + n * 2);
-      FMarks[n] := AMarks[i];
+      if n = Length(mine) then SetLength(mine, 8 + n * 2);
+      mine[n] := AMarks[i];
       Inc(n);
     end;
-  SetLength(FMarks, n);
+  SetLength(mine, n);
+  { Code points to bytes, once per update rather than per query -- the manager asks about
+    every row it paints. The rule itself lives in editor-core, where the suite can gate it;
+    this class only says WHICH lines to measure against. }
+  FMarks := SpxMarksToBytes(mine, @LineText);
 end;
 
 function TSpxDiagMarkup.RangeOnRow(const M: TSpxDiagMark; ARow: Integer;

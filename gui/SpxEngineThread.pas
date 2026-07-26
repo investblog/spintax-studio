@@ -57,6 +57,9 @@ type
     { The open document's diagnostics as spans, ready to underline. A dynamic array crosses
       the thread boundary by reference count, like the strings beside it. }
     Marks: TSpxDiagMarks;
+    { Every finding there is, including the ones no squiggle can show: an error inside an
+      included file, and a finding the engine could not place. }
+    Rows: TSpxPanelRows;
   end;
 
   TSpxJobDone = procedure(const Res: TSpxJobResult) of object;
@@ -188,6 +191,7 @@ begin
     FResult.Warnings := report.Warnings;
     FResult.Notes := report.Notes.Count;
     FResult.Marks := SpxDocumentMarks(report);
+    FResult.Rows := SpxPanelRows(report);
   finally
     report.Free;
   end;

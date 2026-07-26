@@ -288,7 +288,32 @@ the managed tier are later releases.
       `TLazSynEditLineWrapPlugin` comes from it. The build prints that warning on every run on
       purpose: it is the one gui/ warning there is, it is true, and hiding it would hide the
       day the API changes. Revisit if wrapping ever misbehaves after a Lazarus upgrade.
-- [ ] **M2 — panels.** Variables (`SpExtract` + `SpExtractDirectives` for the values),
+- [ ] **M2 — panels.** *The diagnostics half landed 2026-07-26* (PR 1 of the M2 plan):
+      `SpxPanelRows` turns a report into lines — the document first, then each included file
+      in walk order, by position inside a file with the unlocated findings last — and every
+      row says whose finding it is, the engine's verdict or Studio's note. Wording for the
+      engine's seventeen codes was read off the sites that emit them, and an unknown code
+      shows as itself so a newer engine cannot vanish from the panel. The window lists them
+      under the editor; a click jumps, and a finding in an included file OPENS that file
+      through the same unsaved-changes guard as the menu.
+
+      Two things the live run taught, both now settled: the engine's columns are code points
+      while SynEdit's logical ones are bytes (spec §7 — the jump landed thirteen characters
+      early on a Cyrillic line, and the squiggles had the same defect), and a `%имя%` in
+      Cyrillic is not a variable to anyone — the engine does not warn about it and the
+      tokenizer does not colour it, so a fixture that used one was measuring nothing.
+
+      Still open here: keyboard navigation of the list (the jump is on click, so Up/Down does
+      not move the caret — belongs with the hotkeys slice), and colouring rows by severity.
+
+      And one staleness worth knowing before it confuses somebody: a row's position comes
+      from the worker's cached set, re-read only on open, save and «Перечитать набор», while
+      the jump opens the file from DISK. If a fragment changed under Studio, the row can point
+      past the new file's end; SynEdit clamps to the last line, so the landing is silently
+      wrong rather than loud. The honest fix is to re-read the set when the window regains
+      focus, which is its own slice.
+
+      Variables (`SpExtract` + `SpExtractDirectives` for the values),
       diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`
       positions (engine ≥ `v0.2.0` — bumped in Pre-M0, not here), partial preview of a
       selection, select-and-wrap, hotkeys on every key action. Studio's own lints surface
