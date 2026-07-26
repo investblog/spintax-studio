@@ -75,6 +75,16 @@ the managed tier are later releases.
         text: `SpValidate` is still quadratic in `#set`/`#def` count (measured on the
         `v0.3.2` engine: 17.6 / 253 / 3982 ms at 400 / 1600 / 6400 definitions, and paid once
         per file in the closure), so only the edited file may revalidate on a keystroke.
+        *Done 2026-07-26* (PR 2): `TSpxValidationCache`, created and owned by the worker and
+        handed to `SpxHealthReport`, which without one still validates everything afresh —
+        and the report must be identical either way, which the suite checks. Measured where
+        only the document changes: a 20-fragment set with 300 definitions each goes from
+        **411 ms per keystroke to 14.8 ms**, a 200 KB document from **501 ms to 62 ms**.
+        The review of that PR found the cache's container was not byte-exact —
+        `TStringList` compares through the OS collation, which calls distinct code points
+        equal — so it is a `TDictionary` now, and the closure walk's own lists got
+        `UseLocale := False`; that half was a pre-existing defect that made the walk skip a
+        real fragment. Both gated, the walk one by a check that fails without the fix.
       - **No include expansion in editor-core.** The set is loaded, its slugs feed
         `knownIncludes`, and a `slug → text` resolver is handed to the engine once the engine
         has the seam — nothing more. No substitution by span, no depth or cycle bookkeeping,

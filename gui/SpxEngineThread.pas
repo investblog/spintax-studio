@@ -74,6 +74,12 @@ type
     FOnDone: TSpxJobDone;
     FSet: TSpxTemplateSet;                // owned here, touched only on this thread
     FSetFolder: string;
+    { Per-file validation results, reused across renders. The walk validates every file in
+      the closure on every keystroke while only the open document has changed, and
+      SpValidate is quadratic in the count of #set/#def -- so a folder of fragments makes
+      each keystroke pay for all of them. Owned here for the same reason the set is: this is
+      the thread that knows what changed. }
+    FCache: TSpxValidationCache;
     procedure Deliver;                    // main thread, via Synchronize
     function TakePending(out Job: TSpxJob): Boolean;
     procedure SyncSet(const Job: TSpxJob);
@@ -96,6 +102,7 @@ begin
   FWake := TSimpleEvent.Create;
   FOnDone := AOnDone;
   FHasPending := False;
+  FCache := TSpxValidationCache.Create;   // before the thread starts, so it cannot race
   inherited Create(False);   // start at once: the first thing it does is warm the engine
 end;
 
@@ -103,6 +110,7 @@ destructor TSpxEngineThread.Destroy;
 begin
   inherited Destroy;         // waits for Execute to leave
   FSet.Free;                 // safe here: the only thread that touched it has ended
+  FCache.Free;
   FWake.Free;
   FLock.Free;
 end;
@@ -185,7 +193,7 @@ begin
 
   { Probes = 0: the interactive path already has its one render, and the health flags are
     the panel's business (M2), not the status bar's. }
-  report := SpxHealthReport(Job.Text, ctx, 0, Job.DocSlug);
+  report := SpxHealthReport(Job.Text, ctx, 0, Job.DocSlug, FCache);
   try
     FResult.Errors := report.Errors;
     FResult.Warnings := report.Warnings;
