@@ -59,7 +59,19 @@ for candidate in lazbuild /c/lazarus/lazbuild.exe "$LAZARUS_DIR/lazbuild"; do
 done
 
 if [ -n "$lazbuild_exe" ]; then
-  "$lazbuild_exe" gui/SpintaxStudio.lpi >/dev/null
+  # Quiet on success, loud on failure. lazbuild reports its errors on STDOUT, so redirecting
+  # it to /dev/null turns a real failure -- "Can't create executable" while the app is still
+  # running is the everyday one -- into a bare `exit 2` with nothing to read.
+  # Filtered, because a failing lazbuild prints some ninety lines of Info/Hint bookkeeping
+  # and the one line that says WHY is at the bottom. If nothing matches, dump it all rather
+  # than report a failure with no text.
+  if ! laz_out=$("$lazbuild_exe" gui/SpintaxStudio.lpi 2>&1); then
+    printf '%s\n' "$laz_out" | grep -E 'Error|Fatal' >&2 || printf '%s\n' "$laz_out" >&2
+    exit 1
+  fi
+  # gui/ is the one layer the hook's -Sew pass skips (it cannot see the LCL), so a warning
+  # here has nowhere else to surface. Everything else stays quiet.
+  printf '%s\n' "$laz_out" | grep -E 'Warning|Error' >&2 || true
   echo "built: tests/studio_tests(+checked), spintax-studio"
 else
   echo "built: tests/studio_tests(+checked)"
