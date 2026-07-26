@@ -143,6 +143,17 @@ type
   end;
   TSpxNoteList = TList<TSpxNote>;
 
+  { One diagnostic reduced to what an editor can draw: a span and whether it is fatal.
+    Everything else -- the code, the file, the panel row -- stays in TSpxReport; this is the
+    squiggle layer and nothing more. }
+  TSpxDiagMark = record
+    Line, Col: Integer;
+    EndLine, EndCol: Integer;
+    IsError: Boolean;
+    Code: string;
+  end;
+  TSpxDiagMarks = array of TSpxDiagMark;
+
   { What the diagnostics panel and the repair loop consume (spec §4.3, §5).
 
     Errors/Warnings are counted over the WHOLE include closure, because an export degrades
@@ -231,6 +242,17 @@ function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
   that knows what the user touched. }
 function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
   Probes: Integer; const DocSlug: string = ''): TSpxReport;
+
+{ The OPEN DOCUMENT's diagnostics as spans the editor can underline (spec §4.1).
+
+  Three rules, all of them the spec's:
+    * only the document's own file. A fragment's Line/Column are coordinates in ANOTHER
+      buffer, and drawing them here would underline whatever text happens to sit there;
+    * `Line = 0` means the engine could not locate the finding, honestly. It stays in the
+      panel and gets no squiggle -- Studio does not invent a place;
+    * `End* = 0` means no span was cheap to compute, so the mark is one character wide at
+      the start rather than a guess at the extent. }
+function SpxDocumentMarks(Report: TSpxReport): TSpxDiagMarks;
 
 { Count variants with reproducible seeds: `seed_i = SeedBase + i`, recorded on each variant.
   TMulberry32Rng mixes its seed internally (add-constant, then xorshift-multiply), so
@@ -340,6 +362,41 @@ begin
     v.Text := RenderWith(Tmpl, Ctx, True, v.Seed);
     Result.Add(v);
   end;
+end;
+
+function SpxDocumentMarks(Report: TSpxReport): TSpxDiagMarks;
+var i, j, n: Integer; d: TSpDiag; m: TSpxDiagMark;
+begin
+  Result := nil;
+  n := 0;
+  for i := 0 to Report.Files.Count - 1 do
+  begin
+    if Report.Files[i].Slug <> '' then Continue;
+    for j := 0 to Report.Files[i].Diags.Count - 1 do
+    begin
+      d := Report.Files[i].Diags[j];
+      if d.Line <= 0 then Continue;             { unlocated: panel only }
+      m.Line := d.Line;
+      m.Col := d.Column;
+      m.IsError := d.Severity = 'error';
+      m.Code := d.Code;
+      if (d.EndLine > 0) and ((d.EndLine > d.Line) or (d.EndColumn > d.Column)) then
+      begin
+        m.EndLine := d.EndLine;
+        m.EndCol := d.EndColumn;
+      end
+      else
+      begin
+        m.EndLine := d.Line;
+        m.EndCol := d.Column + 1;               { one character, not a guessed extent }
+      end;
+      if n = Length(Result) then
+        SetLength(Result, 8 + n * 2);
+      Result[n] := m;
+      Inc(n);
+    end;
+  end;
+  SetLength(Result, n);
 end;
 
 { ── the fragment preview ─────────────────────────────────────────────────── }

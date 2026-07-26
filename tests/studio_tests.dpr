@@ -1345,6 +1345,78 @@ begin
   end;
 end;
 
+{ ── 7b. diagnostics as spans the editor can underline ───────────────────── }
+
+function MarksOf(const doc: string; const ctx: TSpxContext): string;
+var r: TSpxReport; m: TSpxDiagMarks; i: Integer; sev: string;
+begin
+  Result := '';
+  r := SpxHealthReport(doc, ctx, 0);
+  try
+    m := SpxDocumentMarks(r);
+    for i := 0 to High(m) do
+    begin
+      if i > 0 then Result := Result + ' | ';
+      if m[i].IsError then sev := 'err' else sev := 'warn';
+      Result := Result + Format('%s:%s@%d:%d..%d:%d',
+        [sev, m[i].Code, m[i].Line, m[i].Col, m[i].EndLine, m[i].EndCol]);
+    end;
+    if Result = '' then Result := '<none>';
+  finally
+    r.Free;
+  end;
+end;
+
+procedure TestDiagMarks;
+var
+  set1: TStrMap;
+  r: TSpxReport;
+  diags: TSpDiagList;
+  d: TSpDiag;
+  m: TSpxDiagMarks;
+begin
+  { The engine's own span, unchanged: this layer reshapes, it never recomputes. }
+  Check('marks/error-span', MarksOf('текст]', SpxContext('ru', nil)),
+        'err:bracket.unexpected-closing@1:6..1:7');
+  Check('marks/warning-span', MarksOf('%brand% рулит', SpxContext('ru', nil)),
+        'warn:variable.undefined@1:1..1:8');
+  Check('marks/clean-document', MarksOf('обычный текст', SpxContext('ru', nil)), '<none>');
+
+  { A FRAGMENT's positions are coordinates in another buffer. Underlining them here would
+    mark whatever text happens to sit at those numbers in the open document. }
+  set1 := Vars(['frag', 'первая'#10'вторая {a|b']);
+  try
+    Check('marks/fragment-diagnostics-stay-out',
+          MarksOf('#include "frag"', SpxContext('ru', nil, set1)), '<none>');
+  finally
+    set1.Free;
+  end;
+
+  { Two rules that need a hand-built report, because the engine rarely produces them:
+    an unlocated diagnostic is panel-only, and a diagnostic without a span gets one
+    character rather than a guess. }
+  r := TSpxReport.Create;
+  try
+    diags := TSpDiagList.Create;
+    d.Code := 'nowhere'; d.Severity := 'error';
+    d.Line := 0; d.Column := 0; d.EndLine := 0; d.EndColumn := 0;
+    diags.Add(d);
+    d.Code := 'point'; d.Severity := 'warning';
+    d.Line := 3; d.Column := 5; d.EndLine := 0; d.EndColumn := 0;
+    diags.Add(d);
+    r.Files.Add(TSpxFileReport.Create('', diags));
+
+    m := SpxDocumentMarks(r);
+    CheckTrue('marks/unlocated-diagnostic-is-not-drawn', Length(m) = 1);
+    if Length(m) = 1 then
+      Check('marks/spanless-diagnostic-gets-one-character',
+            Format('%s@%d:%d..%d:%d', [m[0].Code, m[0].Line, m[0].Col, m[0].EndLine, m[0].EndCol]),
+            'point@3:5..3:6');
+  finally
+    r.Free;
+  end;
+end;
+
 { ── 8. the engine thread (GUI layer, but the part that is logic) ─────────── }
 
 type
@@ -1470,6 +1542,7 @@ begin
   TestTokenizer;
   TestBracketMatching;
   TestDemoTemplate;
+  TestDiagMarks;
   TestEngineThread;
 
   Writeln(Format('studio tests: %d checks, %d failed', [Checks, Failures]));

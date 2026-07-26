@@ -40,7 +40,10 @@ type
     Errors: Integer;
     Warnings: Integer;
     Notes: Integer;
-    Elapsed: Integer;   // milliseconds, for the status bar
+    Elapsed: Integer;      // milliseconds, for the status bar
+    { The open document's diagnostics as spans, ready to underline. A dynamic array crosses
+      the thread boundary by reference count, like the strings beside it. }
+    Marks: TSpxDiagMarks;
   end;
 
   TSpxJobDone = procedure(const Res: TSpxJobResult) of object;
@@ -151,6 +154,7 @@ begin
     FResult.Errors := report.Errors;
     FResult.Warnings := report.Warnings;
     FResult.Notes := report.Notes.Count;
+    FResult.Marks := SpxDocumentMarks(report);
   finally
     report.Free;
   end;

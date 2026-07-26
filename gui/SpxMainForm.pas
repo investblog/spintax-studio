@@ -16,7 +16,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Clipbrd, Graphics,
   SynEdit, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
-  SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDemo;
+  SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup, SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -30,6 +30,8 @@ type
     FSplit: TSplitter;
     FEditor: TSynEdit;
     FHighlighter: TSpxSynHighlighter;
+    FErrorMarkup: TSpxDiagMarkup;
+    FWarnMarkup: TSpxDiagMarkup;
     FPreview: TMemo;
     FStatus: TStatusBar;
     FDebounce: TTimer;
@@ -152,6 +154,13 @@ begin
   TSynEditMarkupManager(TSynEditReach(FEditor).MarkupMgr).AddMarkUp(
     TSpxBracketMarkup.Create(FEditor));
 
+  { Squiggles: red under an error, amber under a warning, on the engine's own spans. One
+    markup per severity, because a markup carries one attribute. }
+  FErrorMarkup := TSpxDiagMarkup.Create(FEditor, True);
+  FWarnMarkup := TSpxDiagMarkup.Create(FEditor, False);
+  TSynEditMarkupManager(TSynEditReach(FEditor).MarkupMgr).AddMarkUp(FErrorMarkup);
+  TSynEditMarkupManager(TSynEditReach(FEditor).MarkupMgr).AddMarkUp(FWarnMarkup);
+
   FSplit := TSplitter.Create(Self);
   FSplit.Parent := Self;
   FSplit.Align := alLeft;
@@ -234,6 +243,9 @@ begin
   FLastShown := Res.Id;
 
   FPreview.Text := Res.Preview;
+  FErrorMarkup.SetMarks(Res.Marks);
+  FWarnMarkup.SetMarks(Res.Marks);
+  FEditor.Invalidate;
 
   if Res.Errors > 0 then s := Format('%d ошибок', [Res.Errors])
   else if Res.Warnings > 0 then s := Format('валидно, %d предупреждений', [Res.Warnings])
