@@ -47,9 +47,11 @@ type
     procedure CopyClicked(Sender: TObject);
     procedure JobDone(const Res: TSpxJobResult);
     procedure RequestRender;
+    procedure StopEngine;
     procedure FormClosed(Sender: TObject; var CloseAction: TCloseAction);
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 var
@@ -95,10 +97,10 @@ begin
   FLocale.Style := csDropDownList;
   FLocale.Items.CommaText := 'ru,uk,be,en,de,fr,es,sr,hr,bs';
   { The locale belongs to the TEMPLATE, not to the UI, so it opens on the demo's language.
-    On `ru` the demo is genuinely invalid -- PluralArity('ru') is 3 and its
-    `{plural %pages%: page|pages}` supplies two forms, which the engine reports as
-    plural.arity at 11:120 -- and an app that opens on an error against its own sample
-    teaches the user to distrust the verdict. }
+    On `ru` the demo is genuinely invalid: PluralArity('ru') is 3 and the demo's plural
+    block carries two forms, which the engine reports as plural.arity at 11:120 -- and an
+    app that opens on an error against its own sample teaches the user to distrust the
+    verdict. }
   FLocale.ItemIndex := FLocale.Items.IndexOf('en');
   FLocale.SetBounds(8, 7, 70, 24);
   FLocale.OnChange := @SettingChanged;
@@ -258,11 +260,34 @@ begin
   FStatus.SimpleText := Format('%s · %d мс', [s, Res.Elapsed]);
 end;
 
-procedure TSpxMainForm.FormClosed(Sender: TObject; var CloseAction: TCloseAction);
+{ Idempotent on purpose. Closing the MAIN form neither hides nor frees it -- LCL only calls
+  Application.Terminate (customform.inc:2148-2175) -- so the window stays on screen while
+  this runs, and the widgetset keeps draining the message queue without checking Terminated
+  inside the drain. A second click on the X, which is exactly what a user does when the
+  first close sits inside WaitFor for the length of an in-flight render, delivers a second
+  WM_CLOSE into this handler. Unguarded it called Shutdown on a nil FEngine; the fault was
+  then swallowed, because ShowException stays quiet once Terminated. Found by review. }
+procedure TSpxMainForm.StopEngine;
 begin
+  if FEngine = nil then Exit;
   FEngine.Shutdown;
   FEngine.WaitFor;
   FreeAndNil(FEngine);
+end;
+
+procedure TSpxMainForm.FormClosed(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  FDebounce.Enabled := False;
+  StopEngine;
+end;
+
+destructor TSpxMainForm.Destroy;
+begin
+  { The worker is a thread, not an owned component, so nothing would free it on a path that
+    reaches the destructor without OnClose. No such path exists today -- this is the form
+    owning what it created rather than trusting one event to fire. }
+  StopEngine;
+  inherited Destroy;
 end;
 
 end.

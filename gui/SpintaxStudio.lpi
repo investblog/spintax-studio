@@ -99,7 +99,7 @@
       </Options>
     </Linking>
     <Other>
-      <CustomOptions Value="-dSPX_GUI"/>
+      <CustomOptions Value="-dSPX_GUI -vm4046"/>
     </Other>
   </CompilerOptions>
 </CONFIG>

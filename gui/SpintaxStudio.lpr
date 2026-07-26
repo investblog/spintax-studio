@@ -1,10 +1,14 @@
 {**
  * Spintax Studio -- the application entry point.
  *
- * Three lines here are load-bearing, and all three are host duties the libraries below
- * cannot perform for their caller: the UTF-8 codepage (or Cyrillic is '?' before the engine
- * sees it, spec §7), RequireDerivedFormResource := False, because this project's forms are
- * built in code and have no .lfm resource to load, and Application.CreateForm -- see below.
+ * Two lines here are load-bearing, and both are host duties the libraries below cannot
+ * perform for their caller: the UTF-8 codepage (or Cyrillic is '?' before the engine sees
+ * it, spec §7) and Application.CreateForm -- see below.
+ *
+ * This project's forms are built in code and have no .lfm to load, which needs no setting
+ * to say so: LCL declares RequireDerivedFormResource False (forms.pp) and reads it only in
+ * TCustomForm.ProcessResource, a path CreateNew never takes. It was stated here until a
+ * review pointed out that it does nothing.
  *}
 program SpintaxStudio;
 
@@ -16,7 +20,6 @@ uses
 
 begin
   SpxInitHost;
-  RequireDerivedFormResource := False;
   Application.Title := 'Spintax Studio';
   Application.Scaled := True;
   Application.Initialize;
