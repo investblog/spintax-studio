@@ -343,6 +343,60 @@ function SpxPreviewFragment(const Sel: TSpxSelection; const Jump: TSpxJumpState;
 function SpxWrapRange(const Sel: TSpxSelection; LeftLen, RightLen: Integer;
   out NewRange: TSpxRange): Boolean;
 
+{ ── what the page view may be handed (ADR 0004, revised) ─────────────────── }
+
+{ Whether output would show as an empty pane. Not `Trim(S) = ''`: the RTL trims bytes up to
+  #32, so a fragment whose whole output is a non-breaking space or one of the separators the
+  engine's own line model counts -- U+2028, U+2029 -- would be called non-empty and announced
+  as "показан фрагмент" over a pane with nothing in it, which is the confusion the caption
+  exists to prevent.
+
+  An entity is NOT blank here: output of `&nbsp;` is output, the source view has it, and
+  saying "nothing came out" would be false. }
+function SpxIsBlankOutput(const S: string): Boolean;
+
+{ Whether the output already opens the document itself -- `<html` or `<body` as its first
+  token, after any leading whitespace, and the tag has to END there (`<htmlfoo` is not one).
+
+  Those two shapes and no others, because those two carry attributes the renderer applies to
+  the whole page: bgcolor, the link colours, a background image. IPro reads them off whichever
+  `<body>` it meets FIRST, so a wrapper in front does not merely nest -- it replaces them with
+  its own, empty set. Measured: `<body bgcolor="#101010" link="#ff0000">` keeps both bare and
+  loses both wrapped, and a `background="bg.png"` goes the same way. }
+function SpxOpensDocument(const AHtml: string): Boolean;
+
+{ The engine's output, in a form the page view can actually display: inside a minimal
+  document unless it already is one.
+
+  IPro's parser wants a document, and does three things to a bare string that a preview must
+  not do (all measured against the real parser, by asking it what tree it built; the tree
+  agrees with the pixels -- every input measured as a black panel builds no BODY node, and
+  every input measured white builds one):
+
+  - A string with no element in it builds nothing, and the panel is then painted BLACK. That
+    covers prose, '', a space, `&nbsp;`, and a comment on its own. Since a template is prose
+    with markup around it, selecting a paragraph to preview hands the renderer exactly that,
+    and the pane went black. Which is what it did.
+  - A string that DOES start with text and then has a tag loses the text: `lead<p>tail</p>`
+    renders as `tail`. Wrapped, both survive. That is the worse failure of the two -- a black
+    rectangle gets reported, a quietly missing first paragraph does not.
+  - An unterminated `<!` makes the parser loop FOREVER (`<p>x</p> <!oops` never returns;
+    killed at 8 s), and it runs on the UI thread. The wrapper's own `>` ends that scan.
+
+  So everything that is not already a document gets wrapped -- and output that IS one is left
+  exactly as it was, because the wrapper would cost it its `<body>` attributes and its head
+  (SpxOpensDocument). That line is where it is for a reason: past the first token none of the
+  three failures above can happen, since a document that opens with `<html`/`<body` has no
+  text in front of its first tag and always builds a body. The one exception it inherits is
+  the parser's `<!` loop, which a document can still walk into -- IPro's defect, unchanged by
+  this either way.
+
+  Not byte-transparent for what it wraps, in two corner cases, both of which beat a black
+  pane: output ending in a bare `<` swallows the wrapper's closing tag and shows it, and prose
+  containing a literal `</body>` is cut there. The SOURCE view shows the engine's output raw
+  either way, which is where "what markup came out" is answered (ADR 0004). }
+function SpxPageDocument(const AHtml: string): string;
+
 { ── editing a directive where it sits (spec §4.4) ────────────────────────── }
 
 { The byte offset of a 1-based (Line, code-point Column) in Doc, over the EDITOR's line
@@ -1160,6 +1214,62 @@ begin
   else
     Inc(NewRange.B.Col, RightLen);
   Result := True;
+end;
+
+{ ── what the page view may be handed ─────────────────────────────────────── }
+
+function SpxIsBlankOutput(const S: string): Boolean;
+var i: Integer;
+begin
+  i := 1;
+  while i <= Length(S) do
+  begin
+    if S[i] <= ' ' then
+      Inc(i)
+    { U+00A0, in UTF-8: C2 A0. }
+    else if (S[i] = #$C2) and (i < Length(S)) and (S[i + 1] = #$A0) then
+      Inc(i, 2)
+    { U+2028 and U+2029: E2 80 A8 / E2 80 A9. }
+    else if (S[i] = #$E2) and (i + 2 <= Length(S)) and (S[i + 1] = #$80) and
+            ((S[i + 2] = #$A8) or (S[i + 2] = #$A9)) then
+      Inc(i, 3)
+    else
+      Exit(False);
+  end;
+  Result := True;
+end;
+
+function SpxOpensDocument(const AHtml: string): Boolean;
+var i: Integer;
+
+  { The keyword, then a boundary -- so `<html>` and `<body bgcolor=…>` count and `<htmlfoo>`
+    does not, which is the same place the renderer's own tokenizer ends a tag name. }
+  function Opens(const Word_: string): Boolean;
+  var k: Integer; c: Char;
+  begin
+    if i + Length(Word_) - 1 > Length(AHtml) then Exit(False);
+    for k := 1 to Length(Word_) do
+      if LowerCase(AHtml[i + k - 1]) <> Word_[k] then Exit(False);
+    k := i + Length(Word_);
+    if k > Length(AHtml) then Exit(True);
+    c := AHtml[k];
+    Result := (c = '>') or (c <= ' ');
+  end;
+
+begin
+  i := 1;
+  while (i <= Length(AHtml)) and (AHtml[i] <= ' ') do Inc(i);
+  Result := Opens('<html') or Opens('<body');
+end;
+
+function SpxPageDocument(const AHtml: string): string;
+begin
+  if SpxOpensDocument(AHtml) then
+    Result := AHtml
+  else
+    { The output goes in untouched: nothing is escaped, normalised or re-ordered, so what the
+      renderer lays out is still what the engine produced. }
+    Result := '<html><body>' + AHtml + '</body></html>';
 end;
 
 { ── editing a directive where it sits ────────────────────────────────────── }
