@@ -245,6 +245,63 @@ function SpxRenderFragment(const Doc, Fragment: string; const Ctx: TSpxContext):
   are what the document references and nothing defines. Caller frees. }
 function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
 
+type
+  { A memo for per-file validation, owned by the CALLER.
+
+    Why it exists: the closure walk validates every file in the set on every render, while
+    only the open document has changed. `SpValidate` is quadratic in the number of
+    `#set`/`#def` definitions -- measured on the v0.3.2 engine at 17.6 / 253 / 3982 ms for
+    400 / 1600 / 6400 definitions -- so a folder of fragments makes a keystroke pay for all
+    of them.
+
+    Why it is not inside editor-core's functions: this layer stays stateless so one worker
+    can own every engine call (spec §5), and deciding what may be reused is the caller's,
+    because the caller is what knows the user touched one file. So the cache is an object
+    the caller creates, hands in, and frees.
+
+    The KEY is everything the answer depends on -- locale, the known-include list, the known
+    variable list, the slug, the text -- because a hit that ignores any of them serves a
+    verdict computed under different rules. Lengths are baked into the key so that no
+    concatenation of two fields can collide with another.
+
+    Entries live one ROUND: whatever a round does not touch is dropped when it ends. That
+    bounds the cache to the current closure and evicts the previous keystroke's document
+    instead of keeping a copy of every text the user has ever typed. Two consequences worth
+    knowing rather than discovering: alternating between two documents that share no
+    fragments hits nothing, because each round evicts the other's entries (harmless while
+    one document is open, worth revisiting if tabs arrive); and the round is a CONVENTION --
+    SpxHealthReport pairs BeginRound with EndRound, and calling Validate outside one simply
+    keeps everything it was given.
+
+    NOT thread-safe, like everything else here: one worker owns the engine and owns this. }
+  TSpxValidationCache = class
+  private
+    { Dictionaries, NOT sorted string lists. TStringList decides identity through
+      DoCompareText, which with CaseSensitive uses AnsiCompareStr -- the OS collation on
+      Windows -- and that calls distinct code points equal: U+082D and U+0B60 compare 0,
+      along with ~900 other pairs in the 3-byte range alone. A cache keyed that way serves
+      one document's verdict for another's, silently, and differently on machines with
+      different collation tables. Measured, and gated by `cache/a-hit-is-byte-exact`.
+      A dictionary compares bytes and hashes the key once instead of collating a whole
+      document per probe. }
+    FEntries: TDictionary<string, TSpDiagList>;   // the lists are owned here
+    FUsed: TDictionary<string, Boolean>;          // keys touched in the current round
+    FHits, FMisses: Integer;
+    function GetCount: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure BeginRound;
+    procedure EndRound;
+    { The file's diagnostics, computed only on a miss. The caller OWNS the returned list --
+      the report it goes into frees it -- so a hit hands back a copy, never the entry. }
+    function Validate(const Slug, Text, Locale: string;
+      KnownIncludes, KnownVars: TStringList): TSpDiagList;
+    property Hits: Integer read FHits;
+    property Misses: Integer read FMisses;
+    property Count: Integer read GetCount;
+  end;
+
 { Diagnostics for the document AND every file it includes, each validated separately in its
   own coordinates (spec §4.3), plus Probes health renders. Caller frees.
 
@@ -263,11 +320,14 @@ function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
   never validated by this walk. Closing it would mean rendering first and re-parsing the
   output, which buys a corner at the price of the whole design.
 
-  No caching here: this layer stays stateless so one worker can own every engine call
-  (spec §5). Deciding what to re-validate on a keystroke is the caller's, which is the layer
-  that knows what the user touched. }
+  No caching STATE here: this layer stays stateless so one worker can own every engine call
+  (spec §5). Deciding what may be reused is the caller's, which is the layer that knows what
+  the user touched -- so it hands in a TSpxValidationCache it owns, or nothing at all and
+  every file is validated afresh. The report is identical either way; that is what the suite
+  checks. }
 function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
-  Probes: Integer; const DocSlug: string = ''): TSpxReport;
+  Probes: Integer; const DocSlug: string = '';
+  Cache: TSpxValidationCache = nil): TSpxReport;
 
 { The OPEN DOCUMENT's diagnostics as spans the editor can underline (spec §4.1).
 
@@ -711,8 +771,11 @@ begin
    try
     defined := TStringList.Create;
     { Macro names are ASCII by the engine's grammar, so the default (case-insensitive)
-      compare would only ever fold names that are already equal -- but say what is meant. }
+      compare would only ever fold names that are already equal -- but say what is meant.
+      UseLocale for the same reason as everywhere else in this unit: CaseSensitive alone
+      leaves the comparison to the OS collation (see SpxHealthReport). }
     defined.CaseSensitive := True;
+    defined.UseLocale := False;
     runtimeVals := TStrMap.Create;
     { The engine keys macros lower-cased and matches runtime names case-insensitively, so
       the panel can show a value the user typed as BRAND against a %brand% reference. }
@@ -872,13 +935,104 @@ begin
   Report.Notes.Add(n);
 end;
 
+{ ── the validation cache ─────────────────────────────────────────────────── }
+
+{ A caller-owned copy. The report frees what it is given, so an entry can never be handed
+  out directly -- one freed report would take the cache with it. }
+function CopyDiags(Src: TSpDiagList): TSpDiagList;
+var i: Integer;
+begin
+  Result := TSpDiagList.Create;
+  for i := 0 to Src.Count - 1 do Result.Add(Src[i]);
+end;
+
+{ Length-prefixed, so no two different tuples can spell one key: without the lengths a slug
+  ending in a digit and a text starting with one could meet in the middle. }
+function KeyPart(const S: string): string;
+begin
+  Result := IntToStr(Length(S)) + ':' + S;
+end;
+
+function ListKey(L: TStringList): string;
+begin
+  if L = nil then Result := '' else Result := L.CommaText;
+end;
+
+constructor TSpxValidationCache.Create;
+begin
+  FEntries := TDictionary<string, TSpDiagList>.Create;
+  FUsed := TDictionary<string, Boolean>.Create;
+end;
+
+destructor TSpxValidationCache.Destroy;
+var pair: TPair<string, TSpDiagList>;
+begin
+  for pair in FEntries do pair.Value.Free;
+  FEntries.Free;
+  FUsed.Free;
+  inherited Destroy;
+end;
+
+function TSpxValidationCache.GetCount: Integer;
+begin
+  Result := FEntries.Count;
+end;
+
+procedure TSpxValidationCache.BeginRound;
+begin
+  FUsed.Clear;
+end;
+
+procedure TSpxValidationCache.EndRound;
+var
+  pair: TPair<string, TSpDiagList>;
+  stale: TList<string>;
+  key: string;
+begin
+  { Collected first: a dictionary must not be modified while it is being enumerated. }
+  stale := TList<string>.Create;
+  try
+    for pair in FEntries do
+      if not FUsed.ContainsKey(pair.Key) then stale.Add(pair.Key);
+    for key in stale do
+    begin
+      FEntries[key].Free;
+      FEntries.Remove(key);
+    end;
+  finally
+    stale.Free;
+  end;
+end;
+
+function TSpxValidationCache.Validate(const Slug, Text, Locale: string;
+  KnownIncludes, KnownVars: TStringList): TSpDiagList;
+var
+  key: string;
+  hit, fresh: TSpDiagList;
+begin
+  key := KeyPart(Locale) + KeyPart(Slug) + KeyPart(ListKey(KnownIncludes)) +
+         KeyPart(ListKey(KnownVars)) + KeyPart(Text);
+  if FEntries.TryGetValue(key, hit) then
+  begin
+    Inc(FHits);
+    FUsed.AddOrSetValue(key, True);
+    Exit(CopyDiags(hit));
+  end;
+  Inc(FMisses);
+  fresh := SpValidate(Text, Locale, KnownIncludes, KnownVars);
+  FEntries.Add(key, fresh);
+  FUsed.AddOrSetValue(key, True);
+  Result := CopyDiags(fresh);
+end;
+
 { Validate ONE file and file its diagnostics under its own slug. Coordinate spaces are never
   merged: a position from a fragment means nothing in the document's buffer. }
 procedure ValidateFile(Report: TSpxReport; const Slug, Text, Locale: string;
-  KnownIncludes, KnownVars: TStringList);
+  KnownIncludes, KnownVars: TStringList; Cache: TSpxValidationCache);
 var diags: TSpDiagList; i: Integer;
 begin
-  diags := SpValidate(Text, Locale, KnownIncludes, KnownVars);
+  if Cache <> nil then diags := Cache.Validate(Slug, Text, Locale, KnownIncludes, KnownVars)
+  else diags := SpValidate(Text, Locale, KnownIncludes, KnownVars);
   try
     for i := 0 to diags.Count - 1 do
       if diags[i].Severity = 'error' then Inc(Report.Errors) else Inc(Report.Warnings);
@@ -896,13 +1050,13 @@ end;
   validated once however many times it is included; Path is what makes a cycle a cycle and a
   diamond merely a second visit. }
 procedure WalkClosure(Report: TSpxReport; const Text, Slug: string; const Ctx: TSpxContext;
-  Visited, Path, KnownIncludes, KnownVars: TStringList);
+  Visited, Path, KnownIncludes, KnownVars: TStringList; Cache: TSpxValidationCache);
 var
   dirs: TSpDirectiveList;
   i, j: Integer;
   target, childText, folded, hint: string;
 begin
-  ValidateFile(Report, Slug, Text, Ctx.Locale, KnownIncludes, KnownVars);
+  ValidateFile(Report, Slug, Text, Ctx.Locale, KnownIncludes, KnownVars, Cache);
   if Ctx.Templates = nil then Exit;
 
   dirs := SpExtractDirectives(Text);
@@ -958,7 +1112,8 @@ begin
       if Visited.IndexOf(target) >= 0 then Continue;
       Visited.Add(target);
       Path.Add(target);
-      WalkClosure(Report, childText, target, Ctx, Visited, Path, KnownIncludes, KnownVars);
+      WalkClosure(Report, childText, target, Ctx, Visited, Path, KnownIncludes, KnownVars,
+                  Cache);
       Path.Delete(Path.Count - 1);
     end;
   finally
@@ -967,7 +1122,7 @@ begin
 end;
 
 function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
-  Probes: Integer; const DocSlug: string = ''): TSpxReport;
+  Probes: Integer; const DocSlug: string = ''; Cache: TSpxValidationCache = nil): TSpxReport;
 var
   knownIncludes, knownVars, visited, path, outputs: TStringList;
   pair: TPair<string, string>;
@@ -993,6 +1148,16 @@ begin
       knownIncludes.CaseSensitive := True;
       visited.CaseSensitive := True;
       path.CaseSensitive := True;
+      { CaseSensitive is NOT exactness. TStringList compares through DoCompareText, which
+        with CaseSensitive picks AnsiCompareStr -- the OS collation on Windows -- and that
+        returns 0 for distinct code points: U+082D and U+0B60 are one key to it, along with
+        roughly nine hundred other pairs in the three-byte range. Two slugs differing only
+        there would make `visited` skip a real fragment, exactly the drift this comment set
+        out to prevent. UseLocale := False is the RTL's own switch to CompareStr, i.e. to
+        bytes. Measured; gated by `closure/two-slugs-the-collation-calls-equal`. }
+      knownIncludes.UseLocale := False;
+      visited.UseLocale := False;
+      path.UseLocale := False;
 
       if Ctx.Templates <> nil then
         for pair in Ctx.Templates do knownIncludes.Add(pair.Key);
@@ -1015,11 +1180,19 @@ begin
       { Both sets go in on every pass. knownVars carries the RUNTIME names only: a file's own
         macros are visible to the validator anyway, and the parent's are not visible to a
         child at render time (ADR 0003). }
-      WalkClosure(Result, Doc, '', Ctx, visited, path, knownIncludes, knownVars);
+      { One health report is one ROUND: whatever the walk does not reach is dropped when it
+        ends, so the cache holds the current closure and not the history of every keystroke. }
+      if Cache <> nil then Cache.BeginRound;
+      try
+        WalkClosure(Result, Doc, '', Ctx, visited, path, knownIncludes, knownVars, Cache);
+      finally
+        if Cache <> nil then Cache.EndRound;
+      end;
 
       { Health probes on fixed seeds, so the same document always reports the same numbers --
         a status bar that flickers between runs teaches the user to ignore it. }
       outputs.CaseSensitive := True;   // 'AA' and 'aa' are two renders, not one
+      outputs.UseLocale := False;      // ...and so are two renders differing by one code point
       outputs.Sorted := True;
       outputs.Duplicates := dupIgnore;
       for i := 1 to Probes do

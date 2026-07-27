@@ -1788,6 +1788,157 @@ begin
   end;
 end;
 
+{ ── 8c. the validation cache ─────────────────────────────────────────────── }
+
+{ Everything the caller can observe about a report, in one string: what a cached round must
+  reproduce exactly. }
+function ReportSig(const Doc: string; const Ctx: TSpxContext;
+  Cache: TSpxValidationCache): string;
+var r: TSpxReport; rows: TSpxPanelRows; i: Integer;
+begin
+  Result := '';
+  r := SpxHealthReport(Doc, Ctx, 0, '', Cache);
+  try
+    rows := SpxPanelRows(r);
+    for i := 0 to High(rows) do
+      Result := Result + Format('%s/%s/%s@%d:%d;',
+        [rows[i].Slug, rows[i].Severity, rows[i].Code, rows[i].Line, rows[i].Column]);
+    Result := Result + Format('|E%d W%d', [r.Errors, r.Warnings]);
+  finally
+    r.Free;
+  end;
+end;
+
+procedure TestValidationCache;
+var
+  tset: TStrMap;
+  runtime: TStrMap;
+  cache: TSpxValidationCache;
+  ctx: TSpxContext;
+  bigger: TStrMap;
+  plain, cached: string;
+  doc, doc2, slugA, slugB: string;
+  hits0, misses0: Integer;
+begin
+  doc := '#include "frag"'#10'#include "other"'#10'{незакрытая';
+  doc2 := '#include "frag"'#10'#include "other"'#10'{незакрытая и правка';
+  tset := Vars(['frag', 'фрагмент {a|b', 'other', 'текст %undefinedName% тут']);
+  cache := TSpxValidationCache.Create;
+  try
+    ctx := SpxContext('ru', nil, tset);
+
+    { THE check. A cache that changes a verdict is worse than a slow one, so the same
+      document is reported identically with and without it -- codes, severities, positions,
+      counts and all. }
+    plain := ReportSig(doc, ctx, nil);
+    cached := ReportSig(doc, ctx, cache);
+    Check('cache/report-is-identical-to-the-uncached-one', cached, plain);
+    CheckTrue('cache/first-round-is-all-misses', (cache.Hits = 0) and (cache.Misses = 3));
+
+    { A second identical round validates nothing at all. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    Check('cache/second-round-still-identical', ReportSig(doc, ctx, cache), plain);
+    CheckTrue('cache/second-round-is-all-hits',
+              (cache.Hits - hits0 = 3) and (cache.Misses - misses0 = 0));
+
+    { A keystroke in the DOCUMENT must not re-validate the fragments -- that is the whole
+      point -- and must still re-validate the document. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    ReportSig(doc2, ctx, cache);
+    CheckTrue('cache/an-edit-revalidates-only-the-edited-file',
+              (cache.Misses - misses0 = 1) and (cache.Hits - hits0 = 2));
+
+    { The verdict depends on the locale, so the locale is part of the key: plural arity and
+      more hang off it, and serving a `ru` answer for an `en` question would be silent. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    ReportSig(doc, SpxContext('en', nil, tset), cache);
+    CheckTrue('cache/locale-is-part-of-the-key', cache.Misses - misses0 = 3);
+
+    { So do the host-supplied variable names: they suppress variable.undefined. Run at the
+      SAME locale as the round before, or the misses prove nothing -- a locale change alone
+      would have caused them, which is how the first version of this check passed while the
+      variable list was absent from the key entirely (found by mutation testing). }
+    ReportSig(doc, ctx, cache);                       { back to `ru`, everything warm }
+    runtime := Vars(['undefinedName', 'значение']);
+    try
+      hits0 := cache.Hits; misses0 := cache.Misses;
+      plain := ReportSig(doc, SpxContext('ru', runtime, tset), nil);
+      cached := ReportSig(doc, SpxContext('ru', runtime, tset), cache);
+      Check('cache/known-variables-are-part-of-the-key', cached, plain);
+      CheckTrue('cache/known-variables-cause-a-miss',
+                (cache.Misses - misses0 = 3) and (cache.Hits - hits0 = 0));
+    finally
+      runtime.Free;
+    end;
+
+    { And the known-INCLUDE list, which decides include.unknown-target. Same document, same
+      locale: only the set grows. }
+    bigger := Vars(['frag', 'фрагмент {a|b', 'other', 'текст %undefinedName% тут',
+                    'third', 'ещё один']);
+    try
+      ReportSig(doc, ctx, cache);
+      hits0 := cache.Hits; misses0 := cache.Misses;
+      ReportSig(doc, SpxContext('ru', nil, bigger), cache);
+      CheckTrue('cache/known-includes-are-part-of-the-key',
+                (cache.Misses - misses0 = 3) and (cache.Hits - hits0 = 0));
+    finally
+      bigger.Free;
+    end;
+
+    { The key's fields cannot run together. Without the length prefixes ('ab' + 'c' and
+      'a' + 'bc' spell one string), the second call would hit the first one's entry. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    cache.Validate('ab', 'c', 'ru', nil, nil).Free;
+    cache.Validate('a', 'bc', 'ru', nil, nil).Free;
+    CheckTrue('cache/key-fields-cannot-run-together',
+              (cache.Misses - misses0 = 2) and (cache.Hits - hits0 = 0));
+
+    { Entries live one round: a fragment the document no longer includes is dropped rather
+      than kept for a text the user may never type again. }
+    ReportSig('#include "frag"'#10'{незакрытая', ctx, cache);
+    CheckTrue('cache/round-drops-what-it-did-not-touch', cache.Count = 2);
+  finally
+    cache.Free;
+    tset.Free;
+  end;
+
+  { A HIT MUST BE BYTE-EXACT, and this is the check that says so. U+082D and U+0B60 are
+    distinct code points that the Windows collation gives equal weight, so a cache keyed
+    through TStringList (whose CaseSensitive comparison is AnsiCompareStr) serves the first
+    document's verdict for the second: one is a known include target, the other is not.
+    Silent, and different on machines with different collation tables -- the exact drift
+    this project bans. Two texts of the same length, so nothing else can tell them apart. }
+  slugA := 'frag' + #$E0#$A0#$AD;
+  slugB := 'frag' + #$E0#$AD#$A0;
+  tset := Vars([slugA, 'известный фрагмент']);
+  cache := TSpxValidationCache.Create;
+  try
+    ctx := SpxContext('ru', nil, tset);
+    plain := ReportSig('#include "' + slugA + '"', ctx, cache);
+    cached := ReportSig('#include "' + slugB + '"', ctx, cache);
+    CheckTrue('cache/a-hit-is-byte-exact', cached <> plain);
+    CheckTrue('cache/the-unknown-target-is-still-reported',
+              Pos('include.unknown-target', cached) > 0);
+  finally
+    cache.Free;
+    tset.Free;
+  end;
+
+  { The same defect one level up, and it predates the cache: the closure walk decides
+    "already visited" with the same fuzzy comparison, so a second fragment whose slug the
+    collation calls equal to the first would be skipped and its errors never reported. }
+  tset := Vars([slugA, 'первый {незакрытый', slugB, 'второй ]лишний']);
+  try
+    plain := ReportSig('#include "' + slugA + '"'#10'#include "' + slugB + '"',
+                       SpxContext('ru', nil, tset), nil);
+    CheckTrue('closure/two-slugs-the-collation-calls-equal',
+              (Pos('bracket.unclosed', plain) > 0) and
+              (Pos('bracket.unexpected-closing', plain) > 0));
+  finally
+    tset.Free;
+  end;
+end;
+
 { ── 9. the host's file layer ─────────────────────────────────────────────── }
 
 function TempFolder: string;
@@ -1934,6 +2085,7 @@ begin
   TestDemoTemplate;
   TestDiagMarks;
   TestPanelRows;
+  TestValidationCache;
   TestFileLayer;
   TestEngineThread;
 
