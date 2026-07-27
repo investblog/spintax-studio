@@ -57,10 +57,10 @@ type
     FRows: TSpxPanelRows;
     FRowSig: string;
     FPendingRow: TSpxPanelRow;
-    { The block a JUMP selected, so the preview does not narrow to it. Going to look at an
-      error must not replace the document's preview with a render of the broken span. }
-    FJumpB, FJumpE: TPoint;
-    FJumpSel: Boolean;
+    { What a jump left behind, so the preview does not narrow to it: going to look at an
+      error must not replace the document's preview with a render of the broken span. The
+      rule that reads this lives in editor-core, where it is gated. }
+    FJump: TSpxJumpState;
     procedure DiagColumn(const ACaption: string; AWidth: Integer);
     procedure DiagClicked(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
@@ -68,6 +68,7 @@ type
     procedure RuntimeChanged(Sender: TObject);
     procedure SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
     procedure WrapSelection(const L, R: string);
+    function CurrentSelection(WithText: Boolean): TSpxSelection;
     procedure WrapBracesClicked(Sender: TObject);
     procedure WrapBracketsClicked(Sender: TObject);
     procedure JumpToPos(Line, Column, EndLine, EndColumn: Integer);
@@ -115,11 +116,6 @@ type
 const
   DEBOUNCE_MS = 200;   // long enough to skip a burst of typing, short enough to feel live
 
-{ TPoint carries no comparison operator here, and the two coordinates are the whole of it. }
-function SamePoint(const A, B: TPoint): Boolean;
-begin
-  Result := (A.X = B.X) and (A.Y = B.Y);
-end;
 
 constructor TSpxMainForm.Create(AOwner: TComponent);
 begin
@@ -457,17 +453,15 @@ begin
   if Line <= 0 then Exit;
   col := SpxByteColumn(LineOf(Line), Column);
   FEditor.LogicalCaretXY := Point(col, Line);
-  FJumpSel := False;
+  FJump.Valid := False;
   if (EndLine >= Line) and (EndColumn > 0) then
   begin
     FEditor.BlockBegin := Point(col, Line);
     FEditor.BlockEnd := Point(SpxByteColumn(LineOf(EndLine), EndColumn), EndLine);
-    { Remembered, because this selection was made by the program to SHOW something, not by
-      the user to preview it. Without this, clicking a finding silently replaces the whole
-      document's preview with a render of the broken span. }
-    FJumpB := FEditor.BlockBegin;
-    FJumpE := FEditor.BlockEnd;
-    FJumpSel := True;
+    { Recorded AFTER the block is set, so the selection event that assignment fires sees the
+      state still invalid and cannot clear what has not been written yet. }
+    FJump.Range := CurrentSelection(False).Range;
+    FJump.Valid := True;
   end;
   FEditor.EnsureCursorPosVisible;
   FEditor.SetFocus;
@@ -489,18 +483,36 @@ begin
     scSelection inside it -- and that path has already asked for its own render. }
   if scTextCleared <= Changes then Exit;
 
-  { A jump's selection stops being the jump's the moment the selection changes to anything
-    else. Without this the flag outlives its meaning: after the user moves away and later
-    selects the SAME span by hand, that manual selection would still be treated as a jump's
-    and refuse to narrow the preview. Cleared here rather than in RequestRender because this
-    is where the change actually happens -- and the jump itself is unaffected, because
-    JumpToPos sets the flag after it sets the block. }
-  if FJumpSel and not (SamePoint(FEditor.BlockBegin, FJumpB) and
-                       SamePoint(FEditor.BlockEnd, FJumpE)) then
-    FJumpSel := False;
+  { The policy decides whether a jump's selection is still the jump's; here only the STATE
+    it returns is kept. Without this call the flag outlives its meaning -- after the user
+    moves away and later selects the same span by hand, that manual selection would still be
+    treated as the jump's -- and this is the moment that sees the difference, which a single
+    look at render time cannot. The selected TEXT is not fetched: dragging fires this
+    continuously and copying a large selection each time would be paid for nothing. }
+  SpxPreviewFragment(CurrentSelection(False), FJump, FJump);
 
   FDebounce.Enabled := False;
   FDebounce.Enabled := True;
+end;
+
+{ SynEdit's selection in editor-core's own terms. WithText is False on the paths that only
+  need the shape: SelText copies the selected text, which on a large selection is a real
+  cost to pay on every drag event. }
+function TSpxMainForm.CurrentSelection(WithText: Boolean): TSpxSelection;
+begin
+  Result.Kind := spxSelNone;
+  Result.Range := SpxRange(SpxPos(0, 0), SpxPos(0, 0));
+  Result.Text := '';
+  if not FEditor.SelAvail then Exit;
+  case FEditor.SelectionMode of
+    smColumn: Result.Kind := spxSelColumn;
+    smLine: Result.Kind := spxSelLine;
+  else
+    Result.Kind := spxSelNormal;
+  end;
+  Result.Range := SpxRange(SpxPos(FEditor.BlockBegin.Y, FEditor.BlockBegin.X),
+                           SpxPos(FEditor.BlockEnd.Y, FEditor.BlockEnd.X));
+  if WithText then Result.Text := FEditor.SelText;
 end;
 
 { Through SelText, which is SynEdit's own edit path: ONE undo step, verified. Building a new
@@ -516,19 +528,15 @@ end;
   preview un-narrows the moment you wrap, and a second wrap -- brackets around what you just
   put in braces -- is a silent no-op. }
 procedure TSpxMainForm.WrapSelection(const L, R: string);
-var b, e: TPoint;
+var after: TSpxRange;
 begin
-  if not FEditor.SelAvail then Exit;
-  if FEditor.SelectionMode <> smNormal then Exit;
-  b := FEditor.BlockBegin;
-  e := FEditor.BlockEnd;
+  { Whether this selection may be wrapped, and where the wrapped text will end up, is
+    arithmetic -- so it lives in editor-core with checks on it. What stays here is the edit
+    itself, because SelText IS SynEdit's edit API and that is what keeps undo to one step. }
+  if not SpxWrapRange(CurrentSelection(False), Length(L), Length(R), after) then Exit;
   FEditor.SelText := L + FEditor.SelText + R;
-  { The opener shifted the start by its own length only on the FIRST line; the end moved by
-    the opener too when the selection was one line, and by the closer either way. }
-  if e.Y = b.Y then Inc(e.X, Length(L) + Length(R))
-  else Inc(e.X, Length(R));
-  FEditor.BlockBegin := b;
-  FEditor.BlockEnd := e;
+  FEditor.BlockBegin := Point(after.A.Col, after.A.Line);
+  FEditor.BlockEnd := Point(after.B.Col, after.B.Line);
 end;
 
 procedure TSpxMainForm.WrapBracesClicked(Sender: TObject);
@@ -752,15 +760,10 @@ begin
   FReloadSet := False;
   job.Vars := FVars.RuntimeValues;
   { A selection previews on its own -- in the document's scope, which is editor-core's job,
-    not ours. Two selections are not the user asking for that: none at all, and the one a
-    jump made to show a finding. Whether a fragment is worth rendering (whitespace is not)
-    is decided by the worker, so the rule sits where the suite can see it. }
-  if FEditor.SelAvail and
-     not (FJumpSel and SamePoint(FEditor.BlockBegin, FJumpB) and
-                       SamePoint(FEditor.BlockEnd, FJumpE)) then
-    job.Fragment := FEditor.SelText          { read once: it copies the selected text }
-  else
-    job.Fragment := '';
+    not ours. WHICH selections count is also editor-core's, and gated there: none at all and
+    the one a jump made to show a finding do not. Whether the fragment is worth rendering
+    (whitespace is not) is the worker's, gated in its turn. }
+  job.Fragment := SpxPreviewFragment(CurrentSelection(True), FJump, FJump);
   FEngine.Post(job);
 end;
 

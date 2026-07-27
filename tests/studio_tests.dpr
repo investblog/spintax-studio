@@ -1933,6 +1933,103 @@ begin
   end;
 end;
 
+{ ── 8ba. what the editor's selection means ───────────────────────────────── }
+
+function Sel(Kind: TSpxSelKind; L1, C1, L2, C2: Integer; const Text: string): TSpxSelection;
+begin
+  Result.Kind := Kind;
+  Result.Range := SpxRange(SpxPos(L1, C1), SpxPos(L2, C2));
+  Result.Text := Text;
+end;
+
+function Jumped(L1, C1, L2, C2: Integer): TSpxJumpState;
+begin
+  Result.Valid := True;
+  Result.Range := SpxRange(SpxPos(L1, C1), SpxPos(L2, C2));
+end;
+
+function NoJump: TSpxJumpState;
+begin
+  Result.Valid := False;
+  Result.Range := SpxRange(SpxPos(0, 0), SpxPos(0, 0));
+end;
+
+function RangeSig(const R: TSpxRange): string;
+begin
+  Result := Format('%d:%d..%d:%d', [R.A.Line, R.A.Col, R.B.Line, R.B.Col]);
+end;
+
+procedure TestSelectionPolicy;
+var
+  st: TSpxJumpState;
+  after: TSpxRange;
+  frag: string;
+begin
+  { Nothing selected: the whole document, and whatever a jump left goes with it. }
+  frag := SpxPreviewFragment(Sel(spxSelNone, 0, 0, 0, 0, ''), Jumped(2, 5, 2, 9), st);
+  Check('policy/no-selection-previews-the-document', frag, '');
+  CheckTrue('policy/no-selection-forgets-the-jump', not st.Valid);
+
+  { A selection the user made previews on its own. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), NoJump, st);
+  Check('policy/a-manual-selection-is-the-fragment', frag, 'кусок');
+  CheckTrue('policy/a-manual-selection-carries-no-jump', not st.Valid);
+
+  { The jump's OWN selection is not the user asking to preview it. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), Jumped(2, 5, 2, 9), st);
+  Check('policy/the-jumps-own-selection-does-not-narrow', frag, '');
+  CheckTrue('policy/and-stays-the-jumps', st.Valid);
+
+  { Move the selection anywhere else and the jump stops being the jump. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 3, 1, 3, 4, 'другое'), Jumped(2, 5, 2, 9), st);
+  Check('policy/a-different-selection-is-the-fragment', frag, 'другое');
+  CheckTrue('policy/and-clears-the-jump', not st.Valid);
+
+  { THE scenario an external review found: after moving away, selecting the SAME span by
+    hand is the user's own selection and must narrow. It works because the state that comes
+    back from the move is threaded into the next call -- one look at render time could not
+    tell these two apart. }
+  SpxPreviewFragment(Sel(spxSelNone, 0, 0, 0, 0, ''), Jumped(2, 5, 2, 9), st);
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), st, st);
+  Check('policy/the-same-range-selected-by-hand-does-narrow', frag, 'кусок');
+
+  { The convention the change-path relies on: without the text the fragment is empty, and
+    the state still updates -- so a caller may skip copying a large selection while dragging. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 3, 1, 3, 4, ''), Jumped(2, 5, 2, 9), st);
+  Check('policy/no-text-means-no-fragment', frag, '');
+  CheckTrue('policy/but-the-state-still-moves', not st.Valid);
+
+  { ── the geometry of a wrap ── }
+
+  { One line: the opener pushes the end along too, so a one-character wrapper on each side of
+    1:3..1:6 ends at column 8. }
+  CheckTrue('wrap/single-line-is-allowed',
+            SpxWrapRange(Sel(spxSelNormal, 1, 3, 1, 6, 'abc'), 1, 1, after));
+  Check('wrap/single-line-range', RangeSig(after), '1:3..1:8');
+
+  { Several lines: the opener sits on the FIRST one, so only the closer moves the end. }
+  CheckTrue('wrap/multi-line-is-allowed',
+            SpxWrapRange(Sel(spxSelNormal, 1, 3, 4, 6, 'a'#10'b'), 1, 1, after));
+  Check('wrap/multi-line-range', RangeSig(after), '1:3..4:7');
+
+  { Column and line selections are refused: SelText round-trips them shape-wise, so the
+    opener would land on the first row and the closer on the last, swallowing text nobody
+    selected. Measured on the real editor before this rule existed. }
+  CheckTrue('wrap/a-column-selection-is-refused',
+            not SpxWrapRange(Sel(spxSelColumn, 1, 3, 3, 6, 'AB'), 1, 1, after));
+  CheckTrue('wrap/a-line-selection-is-refused',
+            not SpxWrapRange(Sel(spxSelLine, 1, 1, 2, 1, 'one'), 1, 1, after));
+  CheckTrue('wrap/no-selection-is-refused',
+            not SpxWrapRange(Sel(spxSelNone, 0, 0, 0, 0, ''), 1, 1, after));
+  { A refusal leaves the range alone rather than returning something half-computed. }
+  Check('wrap/a-refusal-keeps-the-range', RangeSig(after), '0:0..0:0');
+
+  { Wrappers longer than one character, because nothing says they must be one. }
+  CheckTrue('wrap/longer-wrappers',
+            SpxWrapRange(Sel(spxSelNormal, 2, 1, 2, 5, 'text'), 3, 2, after));
+  Check('wrap/longer-wrappers-range', RangeSig(after), '2:1..2:10');
+end;
+
 { ── 8bb. editing a directive where it sits ───────────────────────────────── }
 
 function EditValue(const Doc: string; Idx: Integer; const V: string): string;
@@ -2511,6 +2608,7 @@ begin
   TestDemoTemplate;
   TestDiagMarks;
   TestPanelRows;
+  TestSelectionPolicy;
   TestDirectiveEditing;
   TestModelDirIndex;
   TestKeepRuntime;
