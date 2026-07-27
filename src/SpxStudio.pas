@@ -248,6 +248,14 @@ function SpxRenderSample(const Tmpl: string; const Ctx: TSpxContext): string;
   own list, so a `#set` that only LOOKS like one -- inside a `/# ... #/` comment, or
   malformed -- is not in scope here either.
 
+  Two more divergences, both measured, both inherent to rendering a fragment AS a template:
+    * post-process capitalises the first word of what it is given, so a mid-sentence
+      selection comes back with a capital where the document has none -- selecting `world`
+      out of `hello, world` renders `World`;
+    * a selection taken from INSIDE a comment renders as live text, and a commented-out
+      `#include` inside one actually resolves. The fragment is a template now; the comment
+      that hid it is not in it.
+
   Not byte-identical to the same slice of a full render (fresh draw, `#def` rolled again).
   It is a true preview of what the fragment produces, not a promise of the same bytes. A
   selection taken from the MIDDLE of a line is rendered at a line start, so a line-anchored

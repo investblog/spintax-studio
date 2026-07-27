@@ -53,6 +53,12 @@ type
       defines. They are the session's, never the document's: they feed the render context and
       knownVariables, so a `%name%` with a value stops being reported as undefined. }
     Vars: TSpxVarPairs;
+    { A selection to preview on its own, in the DOCUMENT's scope -- its `#set`/`#def` lines,
+      the runtime context and the locale all still apply (spec §4.2). Empty means the whole
+      document, which is the ordinary case. Only the PREVIEW narrows: diagnostics keep
+      describing the whole file, because selecting a paragraph does not make the errors
+      outside it go away. }
+    Fragment: string;
   end;
 
   TSpxJobResult = record
@@ -62,6 +68,8 @@ type
     Warnings: Integer;
     Notes: Integer;
     Elapsed: Integer;      // milliseconds, for the status bar
+    { True when Preview is a fragment rather than the document, so the pane can say so. }
+    Partial: Boolean;
     { The open document's diagnostics as spans, ready to underline. A dynamic array crosses
       the thread boundary by reference count, like the strings beside it. }
     Marks: TSpxDiagMarks;
@@ -215,7 +223,17 @@ begin
 
     FResult := Default(TSpxJobResult);
     FResult.Id := Job.Id;
-    FResult.Preview := SpxRenderSample(Job.Text, ctx);
+    { A selection renders in the document's scope, not on its own: editor-core prepends the
+      document's directives in source order, so a fragment that references a macro shows what
+      the macro produces rather than the literal `%name%`. }
+    { Whitespace is not a fragment worth narrowing to: it renders to nothing, and an empty
+      right pane under a caption saying "fragment" is indistinguishable from a crash. The
+      test is here rather than in the form so the suite can reach it. }
+    FResult.Partial := Trim(Job.Fragment) <> '';
+    if FResult.Partial then
+      FResult.Preview := SpxRenderFragment(Job.Text, Job.Fragment, ctx)
+    else
+      FResult.Preview := SpxRenderSample(Job.Text, ctx);
 
     { Probes = 0: the interactive path already has its one render, and the health flags are
       the panel's business (M2), not the status bar's. }

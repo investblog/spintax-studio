@@ -364,6 +364,22 @@ the managed tier are later releases.
       wrong rather than loud. The honest fix is to re-read the set when the window regains
       focus, which is its own slice.
 
+      *The rest of M2 landed 2026-07-27 (PR 6):* a selection previews on its own, in the
+      document's scope, with the rule that **only the preview narrows** — diagnostics, marks,
+      panels and the status bar keep describing the whole file, gated by a check where the
+      error outside the selection still counts. Select-and-wrap goes through SynEdit's own
+      edit path (one undo step, verified), refuses column and line selections — where
+      `SelText` round-trips column-wise and would swallow text nobody selected — and restores
+      the block afterwards, without which a second wrap was a silent no-op. Hotkeys live in a
+      «Правка» menu; two shortcut decisions are recorded in the code: the brace wrap avoids
+      Ctrl+Shift+B because that is `ecMatchBracket`, and Ctrl+Shift+C is deliberately taken
+      from `ecColumnSelect`.
+
+      Left as notes, not code: Copy now copies the FRAGMENT while a selection is active
+      (it matches what is on screen, but it is new behaviour for an old button); and
+      `Partial` does double duty in the worker as both the report flag and the branch
+      selector, so the suite cannot tell those two apart.
+
       Variables (`SpExtract` + `SpExtractDirectives` for the values),
       diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`
       positions (engine ≥ `v0.2.0` — bumped in Pre-M0, not here), partial preview of a
