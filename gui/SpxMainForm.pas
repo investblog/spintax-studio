@@ -488,6 +488,17 @@ begin
   { Loading a document reports scTextCleared -- which is a SET, not a flag, and carries
     scSelection inside it -- and that path has already asked for its own render. }
   if scTextCleared <= Changes then Exit;
+
+  { A jump's selection stops being the jump's the moment the selection changes to anything
+    else. Without this the flag outlives its meaning: after the user moves away and later
+    selects the SAME span by hand, that manual selection would still be treated as a jump's
+    and refuse to narrow the preview. Cleared here rather than in RequestRender because this
+    is where the change actually happens -- and the jump itself is unaffected, because
+    JumpToPos sets the flag after it sets the block. }
+  if FJumpSel and not (SamePoint(FEditor.BlockBegin, FJumpB) and
+                       SamePoint(FEditor.BlockEnd, FJumpE)) then
+    FJumpSel := False;
+
   FDebounce.Enabled := False;
   FDebounce.Enabled := True;
 end;
