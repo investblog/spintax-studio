@@ -154,6 +154,32 @@ type
   end;
   TSpxDiagMarks = array of TSpxDiagMark;
 
+  { How a caller hands over one line's text. The seam exists so the code-point-to-byte work
+    can be tested without a window: the editor supplies its own lines, the suite supplies a
+    fixture, and the rule they share lives here. }
+  TSpxLineFetch = function(ALine: Integer): string of object;
+
+  { One line of the diagnostics panel. A row is a squiggle's opposite number: the squiggle
+    can only show findings that HAVE a place in the open document, and this shows every
+    finding there is -- in an included file, or with no position at all (spec §4.3).
+
+    Source is kept because the panel must be able to say whose finding it is. An engine
+    diagnostic is the family's verdict, identical in every implementation; a Studio note is
+    this program's own observation and carries no weight elsewhere. Blurring them would let
+    a note look like a parity failure. }
+  TSpxRowSource = (spxRowEngine, spxRowStudio);
+
+  TSpxPanelRow = record
+    Slug: string;          // the file, '' = the open document
+    Source: TSpxRowSource;
+    Severity: string;      // 'error' | 'warning' | 'note'
+    Code: string;          // the engine's code, or Studio's own note code
+    Text: string;          // what the panel shows a human
+    Line, Column: Integer; // 0 = unlocated: the row exists, the jump does not
+    EndLine, EndColumn: Integer;
+  end;
+  TSpxPanelRows = array of TSpxPanelRow;
+
   { What the diagnostics panel and the repair loop consume (spec §4.3, §5).
 
     Errors/Warnings are counted over the WHOLE include closure, because an export degrades
@@ -253,6 +279,47 @@ function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
     * `End* = 0` means no span was cheap to compute, so the mark is one character wide at
       the start rather than a guess at the extent. }
 function SpxDocumentMarks(Report: TSpxReport): TSpxDiagMarks;
+
+{ THE ONE CONVERSION between the engine's columns and the editor's.
+
+  The engine counts a column in CODE POINTS, and says why in its own header: the number then
+  means the same character under FPC's UTF-8 and under a UTF-16 compiler, and the shared
+  corpus is full of Cyrillic, where a byte column would point into the middle of a letter.
+  SynEdit's logical coordinates are BYTES. Handing one to the other lands the caret in the
+  wrong place on every line that has a non-ASCII character before the finding -- measured in
+  the running app, where a jump to a `{` in code-point column 35 arrived thirteen characters
+  early.
+
+  Walked with the engine's own SpCodePointAt, so both sides agree on what a character is.
+  1-based in and out; a column past the end clamps to just after the last byte, which is
+  where an editor puts a caret at the end of a line. }
+function SpxByteColumn(const Line: string; CodePointCol: Integer): Integer;
+
+{ The same marks with their columns in bytes, for an editor whose logical coordinates are
+  byte offsets. EndCol is converted against the END line's text -- the one detail here worth
+  gating, because converting it against the start line works for every single-line span and
+  fails only on the multi-line ones, which is the definition of a bug that ships. }
+function SpxMarksToBytes(const Marks: TSpxDiagMarks; GetLine: TSpxLineFetch): TSpxDiagMarks;
+
+{ The whole report as panel lines (spec §4.3): every engine diagnostic and every Studio note,
+  in the order a reader wants them -- the open document first, then each included file in the
+  order the closure walk reached it, and inside a file by position with the unlocated ones
+  last, because a row you can jump to is worth more than one you cannot.
+
+  Nothing is dropped and nothing is invented: a finding with no position keeps Line = 0 and
+  the caller must not offer a jump for it. }
+function SpxPanelRows(Report: TSpxReport): TSpxPanelRows;
+
+{ A human's reading of an engine diagnostic code. The engine deliberately ships codes and
+  severities only -- those are the family's parity contract, and a message would be one more
+  thing four implementations must agree on -- so the wording is the host's business.
+
+  An unknown code returns ITSELF rather than a guess or an empty string: a new engine
+  release must show up in the panel as its code, not as a blank line. }
+function SpxDiagText(const Code: string): string;
+
+{ The same for Studio's own notes, which carry their subject rather than a code. }
+function SpxNoteText(const Note: TSpxNote): string;
 
 { Count variants with reproducible seeds: `seed_i = SeedBase + i`, recorded on each variant.
   TMulberry32Rng mixes its seed internally (add-constant, then xorshift-multiply), so
@@ -396,6 +463,198 @@ begin
       Inc(n);
     end;
   end;
+  SetLength(Result, n);
+end;
+
+function SpxByteColumn(const Line: string; CodePointCol: Integer): Integer;
+var i, cp, cpLen: Integer;
+begin
+  if CodePointCol <= 1 then Exit(1);
+  i := 1;
+  cp := 1;
+  while (i <= Length(Line)) and (cp < CodePointCol) do
+  begin
+    SpCodePointAt(Line, i, cpLen);
+    if cpLen < 1 then cpLen := 1;   { malformed byte: step over it rather than spin }
+    Inc(i, cpLen);
+    Inc(cp);
+  end;
+  Result := i;
+end;
+
+function SpxMarksToBytes(const Marks: TSpxDiagMarks; GetLine: TSpxLineFetch): TSpxDiagMarks;
+var i: Integer;
+begin
+  Result := nil;   { -Sew: SetLength on an untouched managed result is a warning here }
+  SetLength(Result, Length(Marks));
+  for i := 0 to High(Marks) do
+  begin
+    Result[i] := Marks[i];
+    Result[i].Col := SpxByteColumn(GetLine(Marks[i].Line), Marks[i].Col);
+    Result[i].EndCol := SpxByteColumn(GetLine(Marks[i].EndLine), Marks[i].EndCol);
+  end;
+end;
+
+function SpxDiagText(const Code: string): string;
+begin
+  { The engine's seventeen codes as of v0.3.3, each read from the site that emits it rather
+    than guessed from its name. The wording states the FINDING and stops there -- the panel
+    reports a verdict four implementations agree on, it does not teach style. }
+  if Code = 'bracket.unclosed' then Result := 'скобка открыта и не закрыта'
+  else if Code = 'bracket.mismatched' then Result := 'скобка закрыта скобкой другого вида'
+  else if Code = 'bracket.unexpected-closing' then Result := 'закрывающая скобка без открывающей'
+  else if Code = 'set.malformed' then Result := 'строка #set написана не по правилу'
+  else if Code = 'def.malformed' then Result := 'строка #def написана не по правилу'
+  else if Code = 'def.include-in-value' then Result := '#include внутри значения определения'
+  else if Code = 'definition.duplicate-name' then Result := 'это имя уже определено выше'
+  else if Code = 'include.unknown-target' then Result := 'такой цели нет в наборе'
+  else if Code = 'variable.undefined' then Result := 'переменная нигде не определена'
+  else if Code = 'variable.self-reference' then Result := 'определение ссылается само на себя'
+  else if Code = 'variable.circular-reference' then Result := 'определения ссылаются по кругу'
+  else if Code = 'plural.arity' then Result := 'форм не столько, сколько требует локаль'
+  else if Code = 'plural.count-macro' then
+    Result := 'счётчик берёт значение из #set, а оно перекатывается при каждой ссылке'
+  else if Code = 'plural.nested-brackets' then Result := 'скобки внутри форм множественного числа'
+  else if Code = 'permutation.unknown-key' then Result := 'неизвестный ключ в настройке перестановки'
+  else if Code = 'permutation.minsize-not-integer' then Result := 'minsize не целое число'
+  else if Code = 'permutation.maxsize-not-integer' then Result := 'maxsize не целое число'
+  else Result := Code;
+end;
+
+function SpxNoteText(const Note: TSpxNote): string;
+begin
+  case Note.Kind of
+    spxNoteCycle:
+      Result := 'вставка "' + Note.Target + '" уже разворачивается выше — движок подставит пустоту';
+    spxNoteTooDeep:
+      Result := 'вставки вложены глубже предела — дальше движок подставит пустоту';
+    spxNoteCaseMismatch:
+      Result := 'цели "' + Note.Target + '" нет, а в наборе есть "' + Note.Hint +
+                '": цели сравниваются точно';
+    spxNoteUnknownTarget:
+      Result := 'цели "' + Note.Target + '" нет в наборе';
+    spxNoteRawSentinel:
+      Result := 'в тексте есть служебный символ U+E000–U+E005: движок удалит его перед разбором';
+  else
+    Result := '';
+  end;
+end;
+
+{ Studio's notes have no engine code, and inventing one that LOOKS like an engine code would
+  be the one confusion this panel exists to prevent. The `note.` prefix says whose it is. }
+function NoteCode(Kind: TSpxNoteKind): string;
+begin
+  case Kind of
+    spxNoteCycle: Result := 'note.cycle';
+    spxNoteTooDeep: Result := 'note.too-deep';
+    spxNoteCaseMismatch: Result := 'note.case-mismatch';
+    spxNoteUnknownTarget: Result := 'note.unknown-target';
+    spxNoteRawSentinel: Result := 'note.raw-sentinel';
+  else
+    Result := 'note';
+  end;
+end;
+
+function SpxPanelRows(Report: TSpxReport): TSpxPanelRows;
+var
+  n: Integer;
+
+  procedure Add(const Row: TSpxPanelRow);
+  begin
+    if n = Length(Result) then SetLength(Result, 8 + n * 2);
+    Result[n] := Row;
+    Inc(n);
+  end;
+
+  { One sortable number per row; an unlocated finding sorts last inside its file. }
+  function Rank(const Row: TSpxPanelRow): Int64;
+  begin
+    if Row.Line <= 0 then Result := High(Int64)
+    else Result := (Int64(Row.Line) shl 32) + Row.Column;
+  end;
+
+  { Insertion sort, and STABLE on purpose: two findings on the same character keep the order
+    the engine reported them in. A file's findings are counted in dozens. }
+  procedure SortFrom(First: Integer);
+  var i, j: Integer; tmp: TSpxPanelRow;
+  begin
+    for i := First + 1 to n - 1 do
+    begin
+      tmp := Result[i];
+      j := i - 1;
+      while (j >= First) and (Rank(Result[j]) > Rank(tmp)) do
+      begin
+        Result[j + 1] := Result[j];
+        Dec(j);
+      end;
+      Result[j + 1] := tmp;
+    end;
+  end;
+
+  function NoteRow(const Note: TSpxNote): TSpxPanelRow;
+  begin
+    Result.Slug := Note.Slug;
+    Result.Source := spxRowStudio;
+    Result.Severity := 'note';
+    Result.Code := NoteCode(Note.Kind);
+    Result.Text := SpxNoteText(Note);
+    Result.Line := Note.Line;
+    Result.Column := Note.Column;
+    Result.EndLine := 0;      { a note marks a place, not a span }
+    Result.EndColumn := 0;
+  end;
+
+var
+  i, j, first: Integer;
+  row: TSpxPanelRow;
+  d: TSpDiag;
+  taken: array of Boolean;   // notes already placed, by index
+begin
+  Result := nil;
+  n := 0;
+  SetLength(taken, Report.Notes.Count);
+
+  for i := 0 to Report.Files.Count - 1 do
+  begin
+    first := n;
+    for j := 0 to Report.Files[i].Diags.Count - 1 do
+    begin
+      d := Report.Files[i].Diags[j];
+      row.Slug := Report.Files[i].Slug;
+      row.Source := spxRowEngine;
+      row.Severity := d.Severity;
+      row.Code := d.Code;
+      row.Text := SpxDiagText(d.Code);
+      row.Line := d.Line;
+      row.Column := d.Column;
+      row.EndLine := d.EndLine;
+      row.EndColumn := d.EndColumn;
+      Add(row);
+    end;
+    { Studio's notes about this same file, so one file reads as one block. Tracked by INDEX,
+      not by slug: two file reports carrying one slug would otherwise emit each of that
+      file's notes twice, and this function's contract is that nothing is dropped and
+      nothing is invented. The walk cannot produce that shape today -- Visited guards it --
+      which is exactly why the guard belongs in the function rather than in an assumption
+      about the caller. Slug comparison is EXACT, as everywhere else. }
+    for j := 0 to Report.Notes.Count - 1 do
+      if (not taken[j]) and (Report.Notes[j].Slug = Report.Files[i].Slug) then
+      begin
+        taken[j] := True;
+        Add(NoteRow(Report.Notes[j]));
+      end;
+    SortFrom(first);
+  end;
+
+  { Anything left over: a note about a file the walk produced no report for. Measured, the
+    current walk never leaves one -- every AddNote site names a file ValidateFile has already
+    filed -- so this is a backstop for a future note that is filed before its file, not a
+    path in use. Dropping such a note would hide the very finding that explains the absence. }
+  first := n;
+  for j := 0 to Report.Notes.Count - 1 do
+    if not taken[j] then Add(NoteRow(Report.Notes[j]));
+  SortFrom(first);
+
   SetLength(Result, n);
 end;
 

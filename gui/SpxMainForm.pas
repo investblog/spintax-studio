@@ -17,8 +17,8 @@ uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs,
   Clipbrd, Graphics,
   SynEdit, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
-  SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup, SpxPreviewPane,
-  SpxFiles, SpxDemo;
+  SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
+  SpxPreviewPane, SpxFiles, SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -48,6 +48,19 @@ type
     FEol: string;
     FTrailingEol: Boolean;
     FReloadSet: Boolean;
+    { The panel and the rows behind it. FRowSig is what the list currently shows, so a
+      keystroke that changes nothing does not rebuild the list under the user's hand. }
+    FDiag: TListView;
+    FDiagSplit: TSplitter;
+    FRows: TSpxPanelRows;
+    FRowSig: string;
+    FPendingRow: TSpxPanelRow;
+    procedure DiagColumn(const ACaption: string; AWidth: Integer);
+    procedure DiagClicked(Sender: TObject);
+    procedure JumpDeferred(Data: PtrInt);
+    procedure ShowRows(const ARows: TSpxPanelRows);
+    procedure JumpTo(Row: TSpxPanelRow);
+    function LineOf(N: Integer): string;
     procedure BuildUi;
     procedure BuildMenu;
     procedure NewClicked(Sender: TObject);
@@ -164,6 +177,27 @@ begin
   FStatus.SimplePanel := True;
   FStatus.SimpleText := 'готов';
 
+  { The panel, created before the two panes so it owns the bottom strip and they divide what
+    is left. It shows what a squiggle cannot: a finding inside an included file, and one the
+    engine could not place at all. }
+  FDiag := TListView.Create(Self);
+  FDiag.Parent := Self;
+  FDiag.Align := alBottom;
+  FDiag.Height := 150;
+  FDiag.ViewStyle := vsReport;
+  FDiag.ReadOnly := True;
+  FDiag.RowSelect := True;
+  FDiag.HideSelection := False;
+  DiagColumn('Уровень', 110);
+  DiagColumn('Файл', 130);
+  DiagColumn('Место', 70);
+  DiagColumn('Сообщение', 640);
+  FDiag.OnClick := @DiagClicked;
+
+  FDiagSplit := TSplitter.Create(Self);
+  FDiagSplit.Parent := Self;
+  FDiagSplit.Align := alBottom;
+
   FEditor := TSynEdit.Create(Self);
   FEditor.Parent := Self;
   FEditor.Align := alLeft;
@@ -250,6 +284,125 @@ begin
   Item(fileMenu, 'Выход', 0, [], @ExitClicked);
 
   Self.Menu := bar;
+end;
+
+procedure TSpxMainForm.DiagColumn(const ACaption: string; AWidth: Integer);
+var col: TListColumn;
+begin
+  col := FDiag.Columns.Add;
+  col.Caption := ACaption;
+  col.Width := AWidth;
+end;
+
+procedure TSpxMainForm.ShowRows(const ARows: TSpxPanelRows);
+var
+  i: Integer;
+  sig, place, level, name_: string;
+  it: TListItem;
+begin
+  { Rebuilding the list on every debounce tick would take the selection out from under a
+    user who is reading it, so the same findings leave it alone.
+
+    The signature carries the TEXT and the whole span, not just the code and the start. An
+    earlier version left the text out, reasoning that it follows from the code -- true for an
+    engine diagnostic, false for a Studio note, whose code is fixed while its wording carries
+    the target: `#include "Frag"` and `#include "Othr"` produce the same code at the same
+    place with different words, and the panel went on naming the file the user had already
+    stopped typing. The span is in for the same reason: a click selects it. }
+  sig := '';
+  for i := 0 to High(ARows) do
+    sig := sig + ARows[i].Slug + '|' + ARows[i].Code + '|' + IntToStr(ARows[i].Line) + '|' +
+           IntToStr(ARows[i].Column) + '|' + IntToStr(ARows[i].EndLine) + '|' +
+           IntToStr(ARows[i].EndColumn) + '|' + ARows[i].Text + #10;
+  if sig = FRowSig then Exit;
+  FRowSig := sig;
+  FRows := ARows;
+
+  FDiag.Items.BeginUpdate;
+  try
+    FDiag.Items.Clear;
+    for i := 0 to High(ARows) do
+    begin
+      if ARows[i].Source = spxRowStudio then level := 'заметка Studio'
+      else if ARows[i].Severity = 'error' then level := 'ошибка'
+      else if ARows[i].Severity = 'warning' then level := 'предупреждение'
+      else level := ARows[i].Severity;
+
+      if ARows[i].Slug = '' then name_ := 'документ' else name_ := ARows[i].Slug;
+      { No place means no jump, and the dash says so rather than showing a 0:0 that looks
+        like a position. }
+      if ARows[i].Line > 0 then place := Format('%d:%d', [ARows[i].Line, ARows[i].Column])
+      else place := '—';
+
+      it := FDiag.Items.Add;
+      it.Caption := level;
+      it.SubItems.Add(name_);
+      it.SubItems.Add(place);
+      it.SubItems.Add(ARows[i].Text);
+    end;
+  finally
+    FDiag.Items.EndUpdate;
+  end;
+end;
+
+procedure TSpxMainForm.DiagClicked(Sender: TObject);
+begin
+  if FDiag.Selected = nil then Exit;
+  if (FDiag.Selected.Index < 0) or (FDiag.Selected.Index > High(FRows)) then Exit;
+  { Deferred out of the click rather than run inside it. Everything the jump may do pumps the
+    message loop -- the save prompt, a file dialog -- and while it pumps, a delivered result
+    rebuilds this list, freeing the very TListItem whose click LCL is still processing. The
+    row is copied into a field first, for the same reason JumpTo takes it by value. }
+  FPendingRow := FRows[FDiag.Selected.Index];
+  Application.QueueAsyncCall(@JumpDeferred, 0);
+end;
+
+procedure TSpxMainForm.JumpDeferred(Data: PtrInt);
+begin
+  JumpTo(FPendingRow);
+end;
+
+{ A row is a jump only when the engine gave it a place: `Line = 0` means it could not, and
+  putting the caret somewhere plausible would be the invention this project keeps refusing.
+  A finding in ANOTHER file opens that file -- through the same unsaved-changes guard as the
+  menu, because it is the same act -- and that is possible only when the document has a
+  folder, which is the same condition that gave it a set at all.
+
+  BY VALUE, not `const`. A const record parameter is a REFERENCE into the caller's array,
+  and everything below can pump the message loop: MessageDlg from AskSave, the file dialogs,
+  LoadDocument. While that loop runs, the worker's Synchronize delivers a result, JobDone
+  reaches ShowRows, and `FRows := ARows` releases the array this row lived in -- after which
+  the reads below are reads of freed memory. The copy costs two string refcounts. }
+procedure TSpxMainForm.JumpTo(Row: TSpxPanelRow);
+var target: string; col: Integer;
+begin
+  if Row.Line <= 0 then Exit;
+  if (Row.Slug <> '') and (Row.Slug <> SpxSlugOf(FPath)) then
+  begin
+    if FPath = '' then Exit;
+    target := ExtractFilePath(FPath) + Row.Slug + SPX_EXT;
+    if not FileExists(target) then Exit;
+    if not AskSave then Exit;
+    LoadDocument(target);
+  end;
+  { Code points to bytes. SynEdit's logical coordinates are byte offsets and the engine's
+    columns are characters, so a line with Cyrillic before the finding lands the caret early
+    -- which is exactly how this was found (SpxByteColumn). }
+  col := SpxByteColumn(LineOf(Row.Line), Row.Column);
+  FEditor.LogicalCaretXY := Point(col, Row.Line);
+  if (Row.EndLine >= Row.Line) and (Row.EndColumn > 0) then
+  begin
+    FEditor.BlockBegin := Point(col, Row.Line);
+    FEditor.BlockEnd := Point(SpxByteColumn(LineOf(Row.EndLine), Row.EndColumn), Row.EndLine);
+  end;
+  FEditor.EnsureCursorPosVisible;
+  FEditor.SetFocus;
+end;
+
+function TSpxMainForm.LineOf(N: Integer): string;
+begin
+  if (N >= 1) and (N <= FEditor.Lines.Count) then Result := FEditor.Lines[N - 1]
+  else Result := '';
 end;
 
 procedure TSpxMainForm.UpdateCaption;
@@ -465,6 +618,7 @@ begin
   FLastShown := Res.Id;
 
   FPreview.SetContent(Res.Preview);
+  ShowRows(Res.Rows);
   FErrorMarkup.SetMarks(Res.Marks);
   FWarnMarkup.SetMarks(Res.Marks);
   FEditor.Invalidate;
@@ -499,6 +653,8 @@ end;
 
 destructor TSpxMainForm.Destroy;
 begin
+  { A jump queued from the panel and not yet run would fire into a freed form. }
+  Application.RemoveAsyncCalls(Self);
   { The worker is a thread, not an owned component, so nothing would free it on a path that
     reaches the destructor without OnClose. No such path exists today -- this is the form
     owning what it created rather than trusting one event to fire. }

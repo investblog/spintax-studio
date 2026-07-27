@@ -1564,12 +1564,245 @@ begin
   end;
 end;
 
+{ ── 8b. the diagnostics panel's rows ─────────────────────────────────────── }
+
+type
+  { Stands in for the editor's lines, so the code-point-to-byte rule can be gated without a
+    window -- the same seam the markup uses. }
+  TLineFixture = class
+  private
+    FLines: TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Add(const S: string);
+    function GetLine(ALine: Integer): string;
+  end;
+
+constructor TLineFixture.Create;
+begin
+  FLines := TStringList.Create;
+end;
+
+destructor TLineFixture.Destroy;
+begin
+  FLines.Free;
+  inherited Destroy;
+end;
+
+procedure TLineFixture.Add(const S: string);
+begin
+  FLines.Add(S);
+end;
+
+function TLineFixture.GetLine(ALine: Integer): string;
+begin
+  if (ALine >= 1) and (ALine <= FLines.Count) then Result := FLines[ALine - 1]
+  else Result := '';
+end;
+
+function RowsOf(const doc: string; const ctx: TSpxContext): string;
+var r: TSpxReport; rows: TSpxPanelRows; i: Integer; src, slug: string;
+begin
+  Result := '';
+  r := SpxHealthReport(doc, ctx, 0);
+  try
+    rows := SpxPanelRows(r);
+    for i := 0 to High(rows) do
+    begin
+      if i > 0 then Result := Result + ' | ';
+      if rows[i].Source = spxRowEngine then src := 'eng' else src := 'spx';
+      if rows[i].Slug = '' then slug := '<doc>' else slug := rows[i].Slug;
+      Result := Result + Format('%s/%s/%s:%s@%d:%d',
+        [slug, src, rows[i].Severity, rows[i].Code, rows[i].Line, rows[i].Column]);
+    end;
+    if Result = '' then Result := '<none>';
+  finally
+    r.Free;
+  end;
+end;
+
+procedure TestPanelRows;
+var
+  set1: TStrMap;
+  r: TSpxReport;
+  diags: TSpDiagList;
+  d: TSpDiag;
+  note: TSpxNote;
+  rows: TSpxPanelRows;
+  fix: TLineFixture;
+  marks: TSpxDiagMarks;
+begin
+  { The engine's columns are CODE POINTS and SynEdit's are BYTES. On an ASCII line the two
+    agree, which is exactly why the mistake survives until someone writes Cyrillic. }
+  CheckTrue('column/ascii-needs-no-conversion', SpxByteColumn('abc def', 5) = 5);
+  { Asserted by MEANING rather than by a number counted in someone's head: the byte column
+    must index the character the engine was pointing at. 'Э','Т','О' are two bytes each. }
+  CheckTrue('column/cyrillic-shifts-the-byte-column',
+            'ЭТО {a|b}'[SpxByteColumn('ЭТО {a|b}', 5)] = '{');
+  CheckTrue('column/first-column-is-one', SpxByteColumn('ЭТО', 1) = 1);
+  CheckTrue('column/zero-and-below-clamp-to-one', SpxByteColumn('ЭТО', 0) = 1);
+  { Past the end is where a caret at the end of the line goes, not an error. }
+  CheckTrue('column/past-the-end-clamps-after-the-last-byte', SpxByteColumn('abc', 99) = 4);
+  CheckTrue('column/empty-line', SpxByteColumn('', 5) = 1);
+  { The line that found the defect in the running app: the engine put the unclosed brace at
+    code point 35, and the caret arrived thirteen characters early. }
+  CheckTrue('column/the-line-that-found-it',
+            '<p>ЭТО ФРАГМЕНТ ИЗ frag.spintax — {первый|второй'[
+              SpxByteColumn('<p>ЭТО ФРАГМЕНТ ИЗ frag.spintax — {первый|второй', 35)] = '{');
+  { A four-byte code point, which is where "code units, not code points" would show: the
+    two-byte Cyrillic and three-byte dash above both survive a walker that is subtly wrong
+    about surrogate-sized characters. }
+  CheckTrue('column/four-byte-code-point',
+            '🙂 текст {a|b}'[SpxByteColumn('🙂 текст {a|b}', 9)] = '{');
+
+  { The marks conversion as the editor uses it, including the detail a single-line fixture
+    cannot catch: EndCol is measured against the END line, not the start line. Here the two
+    lines have different byte layouts, so converting against the wrong one lands mid-letter. }
+  fix := TLineFixture.Create;
+  try
+    fix.Add('abc {x');       { the brace is code point 5, byte 5 }
+    fix.Add('ЭТО}');         { the brace is code point 4, byte 7 }
+    SetLength(marks, 1);
+    marks[0].Line := 1; marks[0].Col := 5;
+    marks[0].EndLine := 2; marks[0].EndCol := 4;
+    marks[0].IsError := True; marks[0].Code := 'span';
+    marks := SpxMarksToBytes(marks, fix.GetLine);
+    CheckTrue('marks/start-column-is-converted-against-its-own-line',
+              fix.GetLine(1)[marks[0].Col] = '{');
+    CheckTrue('marks/end-column-is-converted-against-the-end-line',
+              fix.GetLine(2)[marks[0].EndCol] = '}');
+  finally
+    fix.Free;
+  end;
+
+  Check('rows/document-error', RowsOf('текст]', SpxContext('ru', nil)),
+        '<doc>/eng/error:bracket.unexpected-closing@1:6');
+  Check('rows/clean-document', RowsOf('обычный текст', SpxContext('ru', nil)), '<none>');
+
+  { The difference that justifies the panel: a fragment's finding has no place in the open
+    document, so no squiggle can show it -- and it is exactly the finding a user cannot
+    otherwise explain, because their own file looks clean. }
+  set1 := Vars(['frag', 'первая'#10'вторая {a|b']);
+  try
+    Check('rows/fragment-error-is-listed',
+          RowsOf('#include "frag"', SpxContext('ru', nil, set1)),
+          'frag/eng/error:bracket.unclosed@2:8');
+
+    { A near miss on the target: the engine's verdict AND Studio's note about it, each
+      labelled with whose finding it is.
+
+      The note comes FIRST, and the two positions differ on purpose. The engine's diagnostic
+      points at the slug between the quotes (column 11); the note is about the include
+      OCCURRENCE, and an occurrence's column is where its consumed text begins -- the line
+      start, indentation included -- which is the engine's own convention for directives,
+      measured. Each is faithful to what it describes, so the panel sorts them apart by one
+      line's worth of column and that is correct rather than tidy. }
+    Check('rows/engine-verdict-and-studio-note-together',
+          RowsOf('#include "Frag"', SpxContext('ru', nil, set1)),
+          '<doc>/spx/note:note.case-mismatch@1:1 | ' +
+          '<doc>/eng/error:include.unknown-target@1:11');
+  finally
+    set1.Free;
+  end;
+
+  { Wording comes from the code, and an unknown code is shown as itself -- a newer engine
+    must appear in the panel, not vanish from it. }
+  CheckTrue('rows/known-code-reads-as-text',
+            SpxDiagText('plural.arity') <> 'plural.arity');
+  Check('rows/unknown-code-falls-back-to-itself',
+        SpxDiagText('something.new-in-v9'), 'something.new-in-v9');
+  { And a note says what it is about, not just that it happened. }
+  note.Kind := spxNoteCaseMismatch;
+  note.Target := 'Intro';
+  note.Hint := 'intro';
+  CheckTrue('rows/note-text-carries-both-names',
+            (Pos('Intro', SpxNoteText(note)) > 0) and (Pos('intro', SpxNoteText(note)) > 0));
+
+  { Ordering, on a hand-built report because the engine will not produce this shape on
+    demand: inside a file, by position, with the unlocated finding last -- a row you can
+    jump to is worth more than one you cannot. }
+  r := TSpxReport.Create;
+  try
+    diags := TSpDiagList.Create;
+    d.Code := 'later'; d.Severity := 'error';
+    d.Line := 5; d.Column := 2; d.EndLine := 5; d.EndColumn := 3;
+    diags.Add(d);
+    d.Code := 'nowhere'; d.Severity := 'error';
+    d.Line := 0; d.Column := 0; d.EndLine := 0; d.EndColumn := 0;
+    diags.Add(d);
+    d.Code := 'earlier'; d.Severity := 'warning';
+    d.Line := 1; d.Column := 9; d.EndLine := 1; d.EndColumn := 10;
+    diags.Add(d);
+    r.Files.Add(TSpxFileReport.Create('', diags));
+
+    { A note about a file the walk never reported on: it must not be dropped, because it is
+      the finding that explains why that file is missing. }
+    note.Kind := spxNoteUnknownTarget;
+    note.Slug := 'ghost';
+    note.Target := 'ghost';
+    note.Hint := '';
+    note.Line := 0;
+    note.Column := 0;
+    r.Notes.Add(note);
+
+    rows := SpxPanelRows(r);
+    CheckTrue('rows/nothing-is-dropped', Length(rows) = 4);
+    if Length(rows) = 4 then
+    begin
+      Check('rows/sorted-by-position-unlocated-last',
+            rows[0].Code + ',' + rows[1].Code + ',' + rows[2].Code,
+            'earlier,later,nowhere');
+      Check('rows/note-for-a-file-with-no-report-survives', rows[3].Code, 'note.unknown-target');
+    end;
+  finally
+    r.Free;
+  end;
+
+  { The sort is PER FILE, and only a fixture with findings in two files can say so: the
+    document's finding sits later in its own buffer than the fragment's does in its, so one
+    global sort by position would put the fragment first and quietly destroy the documented
+    order -- document first, then each file in walk order. Without this check, replacing
+    SortFrom(first) with SortFrom(0) passed everything. }
+  r := TSpxReport.Create;
+  try
+    diags := TSpDiagList.Create;
+    d.Code := 'in-the-document'; d.Severity := 'error';
+    d.Line := 2; d.Column := 10; d.EndLine := 2; d.EndColumn := 11;
+    diags.Add(d);
+    r.Files.Add(TSpxFileReport.Create('', diags));
+
+    diags := TSpDiagList.Create;
+    d.Code := 'in-the-fragment'; d.Severity := 'error';
+    d.Line := 1; d.Column := 8; d.EndLine := 1; d.EndColumn := 9;
+    diags.Add(d);
+    r.Files.Add(TSpxFileReport.Create('frag', diags));
+
+    rows := SpxPanelRows(r);
+    CheckTrue('rows/two-files-two-rows', Length(rows) = 2);
+    if Length(rows) = 2 then
+      Check('rows/files-keep-walk-order-across-positions',
+            rows[0].Code + ',' + rows[1].Code, 'in-the-document,in-the-fragment');
+  finally
+    r.Free;
+  end;
+end;
+
 { ── 9. the host's file layer ─────────────────────────────────────────────── }
 
 function TempFolder: string;
 begin
   Result := IncludeTrailingPathDelimiter(GetTempDir(False)) +
             'spx-files-' + IntToStr(GetProcessID);
+end;
+
+{ Paths joined the platform's way. This suite runs on Windows AND on ubuntu in CI, where a
+  hardcoded backslash is not a separator at all: the files land beside the folder with a
+  backslash in their names, the scan finds nothing, and the failure reads as "the loader is
+  broken" rather than "the test is". }
+function InDir(const D, Name: string): string;
+begin
+  Result := IncludeTrailingPathDelimiter(D) + Name;
 end;
 
 procedure WipeFolder(const Dir: string);
@@ -1615,7 +1848,8 @@ begin
   Check('files/normalize-touches-nothing-else', SpxNormalizeEol('Ёжик, «ёлка» — тире', #13#10),
         'Ёжик, «ёлка» — тире');
 
-  Check('files/slug-keeps-case', SpxSlugOf('C:\work\Intro.spintax'), 'Intro');
+  Check('files/slug-keeps-case',
+        SpxSlugOf('work' + PathDelim + 'Intro.spintax'), 'Intro');
   Check('files/slug-of-a-dotted-name', SpxSlugOf('intro.v2.spintax'), 'intro.v2');
   CheckTrue('files/ext-is-case-insensitive', SpxIsTemplateFile('X.SPINTAX'));
   { The 8.3 alias makes a `*.spintax` mask match this one; the filter must not. }
@@ -1630,24 +1864,24 @@ begin
     { Round trip, including the two things an editor most easily breaks: a file with no
       trailing terminator, and non-ASCII text. }
     s := 'Ёжик'#10'вторая строка без хвоста';
-    SpxWriteTextFile(dir + '\rt.spintax', s);
-    Check('files/round-trip-is-byte-identical', SpxReadTextFile(dir + '\rt.spintax'), s);
+    SpxWriteTextFile(InDir(dir, 'rt.spintax'), s);
+    Check('files/round-trip-is-byte-identical', SpxReadTextFile(InDir(dir, 'rt.spintax')), s);
 
-    SpxWriteTextFile(dir + '\bom.spintax', #$EF#$BB#$BF + 'после метки');
-    Check('files/bom-is-stripped-on-read', SpxReadTextFile(dir + '\bom.spintax'),
+    SpxWriteTextFile(InDir(dir, 'bom.spintax'), #$EF#$BB#$BF + 'после метки');
+    Check('files/bom-is-stripped-on-read', SpxReadTextFile(InDir(dir, 'bom.spintax')),
           'после метки');
     { And never written: the family's other engines read these files, and a BOM is a stray
       character to them. }
-    SpxWriteTextFile(dir + '\nobom.spintax', 'чистый');
-    Check('files/no-bom-is-added-on-write', SpxReadTextFile(dir + '\nobom.spintax'), 'чистый');
+    SpxWriteTextFile(InDir(dir, 'nobom.spintax'), 'чистый');
+    Check('files/no-bom-is-added-on-write', SpxReadTextFile(InDir(dir, 'nobom.spintax')), 'чистый');
 
     WipeFolder(dir);
     ForceDirectories(dir);
-    SpxWriteTextFile(dir + '\Intro.spintax', 'вступление {a|b}');
-    SpxWriteTextFile(dir + '\frag.spintax', 'ФРАГМЕНТ');
-    SpxWriteTextFile(dir + '\notes.txt', 'not a template');
-    SpxWriteTextFile(dir + '\lookalike.spintaxbackup', 'not a template either');
-    ForceDirectories(dir + '\sub.spintax');   { a DIRECTORY named like a member }
+    SpxWriteTextFile(InDir(dir, 'Intro.spintax'), 'вступление {a|b}');
+    SpxWriteTextFile(InDir(dir, 'frag.spintax'), 'ФРАГМЕНТ');
+    SpxWriteTextFile(InDir(dir, 'notes.txt'), 'not a template');
+    SpxWriteTextFile(InDir(dir, 'lookalike.spintaxbackup'), 'not a template either');
+    ForceDirectories(InDir(dir, 'sub.spintax'));   { a DIRECTORY named like a member }
 
     tset := SpxLoadTemplateSet(dir);
     try
@@ -1699,6 +1933,7 @@ begin
   TestBracketMatching;
   TestDemoTemplate;
   TestDiagMarks;
+  TestPanelRows;
   TestFileLayer;
   TestEngineThread;
 
