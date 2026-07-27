@@ -28,15 +28,18 @@ uses
     on Unix fails at run time with "This binary has no thread support compiled in". The GUI
     entry point does the same; the suite needs it because it exercises the engine worker. }
   {$IFDEF UNIX}cthreads,{$ENDIF}
-  SysUtils, Classes, Generics.Collections,
+  { zipper for reading an exported .xlsx back apart -- the writer is only worth as much as
+    the check that opens what it wrote. }
+  SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
-  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxFiles, SpxEngineThread;
+  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxExport, SpxFiles, SpxEngineThread;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
   SpxTokens in '..\src\SpxTokens.pas',
   SpxDemo in '..\src\SpxDemo.pas',
   SpxDedupe in '..\src\SpxDedupe.pas',
+  SpxExport in '..\src\SpxExport.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas';
   {$ENDIF}
@@ -2841,7 +2844,7 @@ begin
   end;
 end;
 
-{ ── 9. the host's file layer ─────────────────────────────────────────────── }
+{ ── temp folders, shared by the two sections that write real files ───────── }
 
 function TempFolder: string;
 begin
@@ -2858,6 +2861,9 @@ begin
   Result := IncludeTrailingPathDelimiter(D) + Name;
 end;
 
+{ RECURSIVE, which it was not: RemoveDir fails silently on a folder that still has anything
+  in it, so an unzipped OOXML tree (xl/worksheets/, xl/_rels/, _rels/) survived every run and
+  %TEMP% collected one per process id, forever. }
 procedure WipeFolder(const Dir: string);
 var sr: TSearchRec; base: string;
 begin
@@ -2867,7 +2873,7 @@ begin
   try
     repeat
       if (sr.Name = '.') or (sr.Name = '..') then Continue;
-      if (sr.Attr and faDirectory) <> 0 then RemoveDir(base + sr.Name)
+      if (sr.Attr and faDirectory) <> 0 then WipeFolder(base + sr.Name)
       else DeleteFile(base + sr.Name);
     until FindNext(sr) <> 0;
   finally
@@ -2875,6 +2881,322 @@ begin
   end;
   RemoveDir(Dir);
 end;
+
+{ ── 8e. writing a set out ─────────────────────────────────────────────────── }
+
+{ An exported part, PARSED rather than searched. A substring check cannot tell a well-formed
+  document from one no reader will open, and both defects this suite now gates -- a quote in
+  the sheet name, a byte that is not UTF-8 in a cell -- produce text that `Pos` is perfectly
+  happy with. Returns '' when the XML is well-formed, or the parser's complaint. }
+function XmlError(const Path: string): string;
+var doc: TXMLDocument; ms: TStringStream;
+begin
+  Result := '';
+  doc := nil;
+  ms := TStringStream.Create(SpxReadTextFile(Path));
+  try
+    try
+      ReadXMLFile(doc, ms);
+    except
+      on E: Exception do Result := E.ClassName + ': ' + E.Message;
+    end;
+  finally
+    doc.Free;
+    ms.Free;
+  end;
+end;
+
+{ The text of the first `<v>` in a row, i.e. what a numeric cell carries. Empty when the row
+  has no numeric cell at all, which is the state this suite is checking against. }
+function FirstNumericCell(const SheetXml: string): string;
+var p, q: Integer;
+begin
+  Result := '';
+  p := Pos('<v>', SheetXml);
+  if p = 0 then Exit;
+  q := PosEx('</v>', SheetXml, p);
+  if q = 0 then Exit;
+  Result := Copy(SheetXml, p + 3, q - p - 3);
+end;
+
+{ Every writer here is checked by reading the file BACK, including the .xlsx: it is unzipped,
+  its parts are PARSED, and the sheet is inspected. A writer tested only by "the call
+  returned True" is a writer that has never been read by anything. }
+procedure TestExport;
+var
+  dir, path, s: string;
+  list: TSpxVariantList;
+  v: TSpxVariant;
+  opts: TSpxTxtOpts;
+  rep: TSpxExportReport;
+  txt: TStringList;
+  unzip: TUnZipper;
+  ok: Boolean;
+  bad, empty: TSpxVariantList;
+begin
+  { ── the escaping, which is the part with no second chance: an invalid character makes the
+    file invalid rather than damaged ── }
+  Check('xml/ampersand', SpxXmlText('a & b'), 'a &amp; b');
+  Check('xml/angles', SpxXmlText('<p>x</p>'), '&lt;p&gt;x&lt;/p&gt;');
+  { A quote needs no escape in a text node, and escaping it would show up in the cell. }
+  Check('xml/quotes-are-text', SpxXmlText('"тут" и ''там'''), '"тут" и ''там''');
+  { Tab and LF are written literally -- XML allows them and leaves them alone. CR is the one
+    that cannot be, see below. }
+  Check('xml/tab-and-lf-survive-literally', SpxXmlText('a'#9'b'#10'c'), 'a'#9'b'#10'c');
+  { The rest have no escape at all -- dropped, not encoded. }
+  Check('xml/a-nul-is-dropped', SpxXmlText('a'#0'b'), 'ab');
+  Check('xml/other-controls-are-dropped', SpxXmlText('a'#1#7#11#12#27'b'), 'ab');
+  { UTF-8 goes through as bytes; the engine's own sentinels are private-use and legal. }
+  Check('xml/utf8-passes', SpxXmlText('привет'), 'привет');
+  Check('xml/a-sentinel-passes', SpxXmlText('a'#$EE#$80#$80'b'), 'a'#$EE#$80#$80'b');
+
+  { A CARRIAGE RETURN IS A REFERENCE, not a raw byte: XML normalises a literal CR to LF on
+    the way back, so writing it raw silently rewrites the cell -- and Windows templates are
+    full of CRLF. }
+  Check('xml/cr-becomes-a-reference', SpxXmlText('a'#13#10'b'), 'a&#13;'#10'b');
+  Check('xml/a-lone-cr-too', SpxXmlText('a'#13'b'), 'a&#13;b');
+
+  { BYTES THAT ARE NOT UTF-8 ARE DROPPED. The file layer reads bytes and transcodes nothing,
+    so a template saved in a legacy Windows codepage arrives here as invalid UTF-8 -- and one
+    such byte makes a workbook that nothing will open. This is "привет" in CP-1251. }
+  Check('xml/legacy-bytes-are-dropped', SpxXmlText('a'#$EF#$F0#$E8#$E2#$E5#$F2'b'), 'ab');
+  Check('xml/a-lone-continuation-byte-is-dropped', SpxXmlText('a'#$80'b'), 'ab');
+  Check('xml/a-truncated-sequence-is-dropped', SpxXmlText('a'#$D0), 'a');
+  { An overlong encoding is invalid UTF-8 and the classic way to smuggle a forbidden
+    character past a filter that only looks at the first byte. }
+  Check('xml/an-overlong-encoding-is-dropped', SpxXmlText('a'#$C0#$AF'b'), 'ab');
+  { Legal UTF-8, but characters XML forbids. }
+  Check('xml/uffff-is-dropped', SpxXmlText('a'#$EF#$BF#$BF'b'), 'ab');
+  Check('xml/a-surrogate-half-is-dropped', SpxXmlText('a'#$ED#$A0#$80'b'), 'ab');
+  { Four-byte sequences are ordinary text. }
+  Check('xml/an-emoji-passes', SpxXmlText('a'#$F0#$9F#$99#$82'b'), 'a'#$F0#$9F#$99#$82'b');
+
+  { ── and the ATTRIBUTE escaper, which needs more than the text one ── }
+
+  { A quote ends an attribute. The sheet name went through the text escaper at first, so a
+    sheet called `Акция "Лето"` produced a workbook no parser would open -- verified against
+    fcl-xml, which rejects it outright. }
+  Check('xmlattr/a-quote-is-escaped', SpxXmlAttr('Акция "Лето"'),
+        'Акция &quot;Лето&quot;');
+  { Tab and the line endings are normalised to spaces inside an attribute unless written as
+    references, so "as given" needs them written out. }
+  Check('xmlattr/tab-and-breaks-become-references', SpxXmlAttr('a'#9'b'#10'c'#13'd'),
+        'a&#9;b&#10;c&#13;d');
+  Check('xmlattr/angles-and-ampersand-too', SpxXmlAttr('a<b>&c'), 'a&lt;b&gt;&amp;c');
+
+  dir := TempFolder + '-export';
+  WipeFolder(dir);
+  CreateDir(dir);
+  list := TSpxVariantList.Create;
+  try
+    v.Seed := 10; v.Text := 'первый вариант';                       list.Add(v);
+    v.Seed := 11; v.Text := 'второй'#10'в двух строках';            list.Add(v);
+    v.Seed := 12; v.Text := '<p>третий</p> с & и "кавычками"';      list.Add(v);
+
+    { ── .txt ── }
+
+    opts := SpxDefaultTxtOpts;
+    path := InDir(dir, 'plain.txt');
+    CheckTrue('txt/writes', SpxWriteTxt(path, list, opts, rep));
+    txt := TStringList.Create;
+    try
+      txt.LoadFromFile(path);
+      { One line per variant is the format's promise, and the multi-line one is why the
+        report has to say what it did. }
+      CheckTrue('txt/one-line-per-variant', txt.Count = 3);
+      Check('txt/first-line', txt[0], 'первый вариант');
+      Check('txt/the-multiline-one-was-folded', txt[1], 'второй в двух строках');
+      CheckTrue('txt/and-the-report-says-so', rep.Collapsed = 1);
+      CheckTrue('txt/written-counts-them-all', rep.Written = 3);
+    finally
+      txt.Free;
+    end;
+
+    { The seed travels with the text when asked, because a line nobody can regenerate is a
+      line nobody can fix. }
+    opts.WithSeed := True;
+    path := InDir(dir, 'seeded.txt');
+    CheckTrue('txt/writes-with-seed', SpxWriteTxt(path, list, opts, rep));
+    txt := TStringList.Create;
+    try
+      txt.LoadFromFile(path);
+      Check('txt/seed-prefixes-the-line', txt[0], '10'#9'первый вариант');
+    finally
+      txt.Free;
+    end;
+
+    { Refusing is the other honest answer, and it must leave NO file rather than a partial
+      one that looks like the export. }
+    opts := SpxDefaultTxtOpts;
+    opts.Breaks := spxTxtRefuse;
+    path := InDir(dir, 'refused.txt');
+    CheckTrue('txt/refuses-a-multiline-variant', not SpxWriteTxt(path, list, opts, rep));
+    CheckTrue('txt/and-says-why', rep.Refused);
+    CheckTrue('txt/and-leaves-no-file', not FileExists(path));
+
+    { ── one file per variant ── }
+
+    CheckTrue('perfile/writes', SpxWritePerFile(dir, 'v-', '.html', list, rep));
+    CheckTrue('perfile/one-per-variant', rep.Written = 3);
+    { Named by SEED, not by index: the name says what regenerates the file. }
+    CheckTrue('perfile/named-by-seed', FileExists(InDir(dir, 'v-11.html')));
+    txt := TStringList.Create;
+    try
+      txt.LoadFromFile(InDir(dir, 'v-11.html'));
+      { And here the line break is KEPT -- this is the format that can hold it. }
+      CheckTrue('perfile/keeps-the-line-break', txt.Count = 2);
+    finally
+      txt.Free;
+    end;
+    { A missing folder is refused rather than created behind the author's back. }
+    CheckTrue('perfile/refuses-a-missing-folder',
+              not SpxWritePerFile(InDir(dir, 'no-such-folder'), 'v-', '.txt', list, rep));
+
+    { ── .xlsx, read back by unzipping it ── }
+
+    path := InDir(dir, 'set.xlsx');
+    CheckTrue('xlsx/writes', SpxWriteXlsx(path, 'Варианты', list, rep));
+    CheckTrue('xlsx/file-exists', FileExists(path));
+
+    ok := False;
+    unzip := TUnZipper.Create;
+    try
+      unzip.FileName := path;
+      unzip.OutputPath := InDir(dir, 'unzipped');
+      CreateDir(unzip.OutputPath);
+      unzip.UnZipAllFiles;
+      ok := True;
+    except
+      { A zip that will not open is the one failure mode that needs no interpretation. }
+      on E: Exception do ok := False;
+    end;
+    unzip.Free;
+    CheckTrue('xlsx/is-a-readable-zip', ok);
+
+    { The five parts a spreadsheet reader looks for. }
+    CheckTrue('xlsx/has-content-types',
+              FileExists(InDir(InDir(dir, 'unzipped'), '[Content_Types].xml')));
+    CheckTrue('xlsx/has-a-workbook',
+              FileExists(InDir(InDir(InDir(dir, 'unzipped'), 'xl'), 'workbook.xml')));
+    CheckTrue('xlsx/has-a-sheet',
+              FileExists(InDir(InDir(InDir(InDir(dir, 'unzipped'), 'xl'), 'worksheets'),
+                               'sheet1.xml')));
+
+    { Read VERBATIM, not through a TStringList: that one splits on the line breaks and rejoins
+      with the platform's, so the #10 the writer put INSIDE a cell would come back as CRLF and
+      the assertion below would fail for a reason that has nothing to do with the writer.
+      (It did, on the first run.) }
+    s := SpxReadTextFile(InDir(InDir(InDir(InDir(dir, 'unzipped'), 'xl'), 'worksheets'),
+                               'sheet1.xml'));
+    begin
+      CheckTrue('xlsx/carries-the-seeds', (Pos('>10<', s) > 0) and (Pos('>12<', s) > 0));
+      CheckTrue('xlsx/carries-the-text', Pos('первый вариант', s) > 0);
+      { Markup arrives ESCAPED, not stripped: the cell shows the tags the engine produced. }
+      CheckTrue('xlsx/escapes-markup', Pos('&lt;p&gt;третий&lt;/p&gt;', s) > 0);
+      CheckTrue('xlsx/escapes-the-ampersand', Pos('&amp;', s) > 0);
+      { The line break inside a variant is KEPT -- a cell holds it, which is what makes this
+        the lossless format of the three. }
+      CheckTrue('xlsx/keeps-a-line-break-in-a-cell', Pos('второй'#10'в двух строках', s) > 0);
+      { Spaces at the edges of a cell are the author's, so the text node says so. }
+      CheckTrue('xlsx/preserves-space', Pos('xml:space="preserve"', s) > 0);
+      { The seed is a NUMBER. Written as a string, a spreadsheet sorts 10 before 9 and Excel
+        flags every cell as a number stored as text -- so the check is the cell TYPE, not the
+        digits, which a string cell would match just as well. }
+      Check('xlsx/the-seed-is-a-number', FirstNumericCell(s), '10');
+      CheckTrue('xlsx/and-not-a-string-cell', Pos('<is><t xml:space="preserve">10<', s) = 0);
+    end;
+
+    { PARSED, not searched. Both defects this section gates produce text a substring check is
+      perfectly happy with. }
+    Check('xlsx/the-sheet-part-is-well-formed',
+          XmlError(InDir(InDir(InDir(InDir(dir, 'unzipped'), 'xl'), 'worksheets'),
+                         'sheet1.xml')), '');
+    Check('xlsx/the-workbook-part-is-well-formed',
+          XmlError(InDir(InDir(InDir(dir, 'unzipped'), 'xl'), 'workbook.xml')), '');
+    Check('xlsx/the-content-types-part-is-well-formed',
+          XmlError(InDir(InDir(dir, 'unzipped'), '[Content_Types].xml')), '');
+
+    s := SpxReadTextFile(InDir(InDir(InDir(dir, 'unzipped'), 'xl'), 'workbook.xml'));
+    CheckTrue('xlsx/the-sheet-name-is-written-as-given', Pos('name="Варианты"', s) > 0);
+
+    { ── the two shapes that used to produce a file nothing opens ── }
+
+    { A sheet name with a quote in it, and a cell holding bytes that are not UTF-8. Written,
+      unzipped, and PARSED -- the first version of this writer produced well-formed-looking
+      text in both cases and a workbook no reader would accept. }
+    bad := TSpxVariantList.Create;
+    try
+      v.Seed := 1; v.Text := 'легальный текст';                       bad.Add(v);
+      { "привет" in CP-1251, i.e. what an untranscoded legacy template hands over. }
+      v.Seed := 2; v.Text := 'a'#$EF#$F0#$E8#$E2#$E5#$F2'b';          bad.Add(v);
+      v.Seed := 3; v.Text := 'строка'#13#10'с CRLF';                  bad.Add(v);
+      path := InDir(dir, 'hostile.xlsx');
+      CheckTrue('xlsx/writes-a-hostile-set', SpxWriteXlsx(path, 'Акция "Лето"', bad, rep));
+
+      WipeFolder(InDir(dir, 'unzipped2'));
+      CreateDir(InDir(dir, 'unzipped2'));
+      unzip := TUnZipper.Create;
+      try
+        unzip.FileName := path;
+        unzip.OutputPath := InDir(dir, 'unzipped2');
+        unzip.UnZipAllFiles;
+      finally
+        unzip.Free;
+      end;
+
+      Check('xlsx/a-quoted-sheet-name-still-parses',
+            XmlError(InDir(InDir(InDir(dir, 'unzipped2'), 'xl'), 'workbook.xml')), '');
+      Check('xlsx/legacy-bytes-in-a-cell-still-parse',
+            XmlError(InDir(InDir(InDir(InDir(dir, 'unzipped2'), 'xl'), 'worksheets'),
+                           'sheet1.xml')), '');
+      s := SpxReadTextFile(InDir(InDir(InDir(dir, 'unzipped2'), 'xl'), 'workbook.xml'));
+      CheckTrue('xlsx/the-quote-is-escaped-not-dropped', Pos('&quot;Лето&quot;', s) > 0);
+      { A CR survives as a reference, so the cell comes back with the break the engine
+        produced rather than one the parser invented. }
+      s := SpxReadTextFile(InDir(InDir(InDir(InDir(dir, 'unzipped2'), 'xl'), 'worksheets'),
+                                 'sheet1.xml'));
+      CheckTrue('xlsx/a-cr-survives-as-a-reference', Pos('&#13;', s) > 0);
+    finally
+      bad.Free;
+    end;
+
+    { An illegal tab name is repaired rather than passed on: Excel forbids these characters
+      and openpyxl refuses the workbook outright. }
+    CheckTrue('xlsx/an-illegal-sheet-name-is-repaired',
+              SpxWriteXlsx(InDir(dir, 'named.xlsx'), 'a[b]c/d', list, rep));
+
+    { ── names that are not names ── }
+
+    { A prefix of `..\` wrote the export OUTSIDE the folder it was given, and on Windows a
+      colon put the text into an alternate data stream behind a zero-byte file. Both measured
+      before this guard existed. }
+    CheckTrue('perfile/a-traversing-prefix-is-neutralised',
+              SpxWritePerFile(dir, '..' + PathDelim + 'escaped-', '.txt', list, rep));
+    CheckTrue('perfile/and-nothing-landed-outside-the-folder',
+              not FileExists(InDir(ExtractFileDir(dir), 'escaped-10.txt')));
+    CheckTrue('perfile/a-colon-prefix-is-neutralised',
+              SpxWritePerFile(dir, 'a:b', '.txt', list, rep));
+    CheckTrue('perfile/and-the-file-is-a-real-file',
+              FileExists(InDir(dir, 'a_b10.txt')));
+
+    { Nothing to write is not an error -- the tab will offer export before anything has been
+      generated. }
+    empty := TSpxVariantList.Create;
+    try
+      CheckTrue('export/an-empty-set-is-not-an-error',
+                SpxWriteXlsx(InDir(dir, 'empty.xlsx'), 'x', empty, rep));
+      Check('export/an-empty-xlsx-is-still-well-formed-once-unzipped',
+            BoolToStr(FileExists(InDir(dir, 'empty.xlsx')), 'y', 'n'), 'y');
+    finally
+      empty.Free;
+    end;
+  finally
+    list.Free;
+    WipeFolder(dir);
+  end;
+end;
+
+{ ── 9. the host's file layer ─────────────────────────────────────────────── }
 
 procedure TestFileLayer;
 var
@@ -2994,6 +3316,7 @@ begin
   TestKeepRuntime;
   TestValidationCache;
   TestDedupe;
+  TestExport;
   TestFileLayer;
   TestEngineThread;
 
