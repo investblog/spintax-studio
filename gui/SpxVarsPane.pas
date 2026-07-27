@@ -105,15 +105,20 @@ begin
     side it is aligned to, and with the label as a bare sibling that could be the label --
     17 pixels against a minimum drag of 30, i.e. a splitter that does nothing. One container
     removes the question. }
+  { Same rule as the form's bottom strips: bottom-aligned siblings stack by their Top, so it
+    is stated rather than left to creation order -- the box below, the splitter above it. }
   FRuntimeBox := TPanel.Create(Self);
   FRuntimeBox.Parent := Self;
+  FRuntimeBox.Top := 20000;
   FRuntimeBox.Align := alBottom;
-  FRuntimeBox.Height := 130;
+  FRuntimeBox.Height := 110;
   FRuntimeBox.BevelOuter := bvNone;
 
   FSplit := TSplitter.Create(Self);
   FSplit.Parent := Self;
+  FSplit.Top := 10000;
   FSplit.Align := alBottom;
+  FSplit.MinSize := 60;   { neither group may be dragged out of existence }
 
   FRuntime := TStringGrid.Create(Self);
   FRuntime.Parent := FRuntimeBox;

@@ -44,6 +44,7 @@ type
     FSource: TMemo;
     FContent: string;     // what the engine last produced
     FShown: string;       // what the page is currently displaying
+    FShownSource: string; // what was last PUT INTO the memo
     FHasShown: Boolean;
     procedure ModeChanged(Sender: TObject);
     procedure DrawClicked(Sender: TObject);
@@ -204,7 +205,18 @@ begin
   if not FAsPage.Checked then
   begin
     FStale.Visible := False;
-    if FSource.Text <> FContent then FSource.Text := FContent;
+    { Compared against what was PUT IN, never against what the control gives back. A native
+      memo returns its text with the platform's line endings, and the engine's output has
+      bare LFs -- so `FSource.Text <> FContent` was true on every single delivery, the memo
+      was refilled on every debounce tick, and the view snapped back to the top each time.
+      On a document that takes half a second to render, that made the source view unreadable
+      past its first line -- which in a template beginning with `&nbsp;` looked exactly like
+      a source view that had failed to generate. }
+    if FShownSource <> FContent then
+    begin
+      FSource.Text := FContent;
+      FShownSource := FContent;
+    end;
     Exit;
   end;
 

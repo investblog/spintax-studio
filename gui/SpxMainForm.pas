@@ -194,8 +194,14 @@ begin
   FCopy.SetBounds(314, 6, 80, 26);
   FCopy.OnClick := @CopyClicked;
 
+  { The three bottom-aligned strips are ordered by their Top, not by the order they are
+    created in -- larger Top sits closer to the bottom edge -- so the order is stated
+    instead of hoped for. Without it the status bar came out ABOVE the tab strip, and the
+    splitter had no unambiguous neighbour to resize, which is why the bottom would not
+    stretch. }
   FStatus := TStatusBar.Create(Self);
   FStatus.Parent := Self;
+  FStatus.Top := 30000;
   FStatus.SimplePanel := True;
   FStatus.SimpleText := 'готов';
 
@@ -204,8 +210,11 @@ begin
     editor, and every strip added to it is taken from the template. }
   FBottom := TPageControl.Create(Self);
   FBottom.Parent := Self;
+  FBottom.Top := 20000;
   FBottom.Align := alBottom;
-  FBottom.Height := 170;
+  { Two grids and their headings need more than 170: at that height the definitions list had
+    no room left at all. The splitter above takes it from here. }
+  FBottom.Height := 240;
   sheetDiag := FBottom.AddTabSheet;
   sheetDiag.Caption := 'Диагностика';
   sheetVars := FBottom.AddTabSheet;
@@ -236,7 +245,9 @@ begin
 
   FDiagSplit := TSplitter.Create(Self);
   FDiagSplit.Parent := Self;
+  FDiagSplit.Top := 10000;        { above the tab strip: see the note on FStatus }
   FDiagSplit.Align := alBottom;
+  FDiagSplit.MinSize := 80;       { neither the panes nor the strip may be dragged to nothing }
 
   FEditor := TSynEdit.Create(Self);
   FEditor.Parent := Self;
