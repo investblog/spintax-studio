@@ -167,7 +167,9 @@ begin
     sptPipe:        Result := FPipeAttr;
     sptCondHead:    Result := FCondAttr;
     sptPluralHead:  Result := FPluralAttr;
-    sptPermConfig:  Result := FConfigAttr;
+    { A trailing separator is configuration for one element, so it wears the config colour:
+      the user is looking at the same kind of thing in both places. }
+    sptPermConfig, sptTrailingSep: Result := FConfigAttr;
     sptBraceOpen, sptBraceClose, sptBracketOpen, sptBracketClose:
       { Depth is 1-based for a bracket, so the outermost pair gets shade 0. }
       if t.Depth > 0 then Result := FNestAttr[(t.Depth - 1) mod 4]
