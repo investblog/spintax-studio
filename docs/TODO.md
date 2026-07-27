@@ -313,10 +313,19 @@ the managed tier are later releases.
       cache); the value field holds spintax and will eventually want the same colouring
       (`SpxTokens` can scan a fragment, but that is not M2).
 
-- [ ] **Highlighter gap — the per-element trailing separator.** `[a<br>|b]`: the family's
-      grammars colour the `<br>` and the engine acts on it (`extractTrailingSep`), but
-      `SpxTokens` leaves it as text. A missing colour, not a wrong one, which is why it did
-      not block M1.
+- [x] **Highlighter gap — the per-element trailing separator.** *Done 2026-07-27 (PR 5).*
+      `[a<br>|b]`: the engine takes that `<br>` as the separator placed before the next
+      element, and it now wears the config colour. The rule was measured through the engine
+      rather than read off the grammar, because it is not obvious: `<br>` and `<, >` ARE
+      separators while `<br/>`, `<br />`, `</b>` and `<span class="x">` are not — the HTML
+      guard trips on a leading or trailing slash, or a tag name followed by whitespace. So is
+      position: before the closing bracket it belongs to the last element and stays text, only
+      the last one in an element counts, and inside a brace group the pipe is not a
+      permutation boundary at all.
+      **Known gap, pinned by a check:** a permutation opened on an EARLIER line does not get
+      the colour. Telling "directly inside a permutation" from "inside a group" needs the
+      kinds of the open brackets, and what crosses a line is a depth — an integer, not a
+      stack, which is what makes deep nesting free. Kinds are tracked for one line only.
 - [ ] **Highlighter gap — an include target on the following line.** The family's anchor
       allows `[ \t\n\r\f\x0B]+` between `#include` and its target, so the target may begin on
       the next line; measured, the engine reports `include(frag)` for `#include`+LF+`"frag"`.

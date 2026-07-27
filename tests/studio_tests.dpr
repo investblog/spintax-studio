@@ -1004,7 +1004,8 @@ end;
 
 function Scan(const line: string; var st: TSpxScanState): string;
 const KIND: array[TSpxTokenKind] of string =
-  ('text', 'comment', 'dir', 'str', 'var', '{', '}', '[', ']', '|', 'cond', 'plural', 'cfg');
+  ('text', 'comment', 'dir', 'str', 'var', '{', '}', '[', ']', '|', 'cond', 'plural', 'cfg',
+   'tsep');
 var toks: TSpxTokenList; i: Integer;
 begin
   toks := TSpxTokenList.Create;
@@ -1176,6 +1177,86 @@ begin
         '{({)1 text(?1x?да)1 |(|)1 text(нет)1 }(})1');
   Check('scan/empty-conditional-name-is-an-enumeration', ScanOne('{??да}'),
         '{({)1 text(??да)1 }(})1');
+
+  { The per-element trailing separator: `<...>` ending a permutation element, which the
+    engine takes as the separator placed before the NEXT element. Every case below was
+    rendered through the engine first -- the rule is subtle enough that reading the grammar
+    would not have settled it. }
+  Check('scan/trailing-separator', ScanOne('[a<br>|b]'),
+        '[([)1 text(a)1 tsep(<br>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/one-letter-is-still-a-separator', ScanOne('[a<b>|b]'),
+        '[([)1 text(a)1 tsep(<b>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/punctuation-is-a-separator', ScanOne('[a<, >|b]'),
+        '[([)1 text(a)1 tsep(<, >)1 |(|)1 text(b)1 ](])1');
+  { The HTML guard, all three of its branches: a leading slash, a trailing slash, and a tag
+    name followed by whitespace. The engine renders each of these as text. }
+  Check('scan/self-closing-tag-is-text', ScanOne('[a<br/>|b]'),
+        '[([)1 text(a<br/>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/spaced-self-closing-is-text', ScanOne('[a<br />|b]'),
+        '[([)1 text(a<br />)1 |(|)1 text(b)1 ](])1');
+  Check('scan/closing-tag-is-text', ScanOne('[a</b>|b]'),
+        '[([)1 text(a</b>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/tag-with-an-attribute-is-text', ScanOne('[a<span class="x">|b]'),
+        '[([)1 text(a<span class="x">)1 |(|)1 text(b)1 ](])1');
+  { Position decides as much as shape: before the closing bracket it belongs to the LAST
+    element and stays text; only the last one in an element is the separator; and inside a
+    brace group the pipe is not a permutation boundary at all. }
+  Check('scan/before-the-close-is-text', ScanOne('[a|b<br>]'),
+        '[([)1 text(a)1 |(|)1 text(b<br>)1 ](])1');
+  Check('scan/only-the-last-tag-in-an-element', ScanOne('[a<b>c<br>|d]'),
+        '[([)1 text(a<b>c)1 tsep(<br>)1 |(|)1 text(d)1 ](])1');
+  Check('scan/inside-a-brace-group-is-text', ScanOne('[{x<br>|y}|d]'),
+        '[([)1 {({)2 text(x<br>)2 |(|)2 text(y)2 }(})2 |(|)1 text(d)1 ](])1');
+  Check('scan/blanks-before-the-pipe', ScanOne('[a<br>  |b]'),
+        '[([)1 text(a)1 tsep(<br>)1 text(  )1 |(|)1 text(b)1 ](])1');
+
+  { STRUCTURE INSIDE THE CANDIDATE. The engine cuts a permutation into parts first --
+    SplitTopLevel, signed brace and bracket counters, a split only where both are zero -- and
+    looks for a trailing separator afterwards. So a candidate that swallows a top-level `|`,
+    or the `]` that actually closes the permutation, is not a separator at all: the part
+    ended before it. Painting one would claim a construct the engine does not see AND hide
+    the characters carrying the structure -- in `[A<]>|B]` the bracket matcher still pairs
+    that `]` with the opening one, so the two halves of the editor would disagree on one
+    screen. Every line here was rendered through the engine first. }
+  CheckTrue('scan/a-top-level-pipe-inside-is-not-a-separator',
+            Pos('tsep(', ScanOne('[a< | >|b]')) = 0);
+  CheckTrue('scan/the-closing-bracket-inside-is-not-a-separator',
+            Pos('tsep(', ScanOne('[A<]>|B]')) = 0);
+  CheckTrue('scan/an-unclosed-bracket-inside', Pos('tsep(', ScanOne('[A<[>|B]')) = 0);
+  CheckTrue('scan/an-unmatched-brace-inside', Pos('tsep(', ScanOne('[A<}s>|B]')) = 0);
+  CheckTrue('scan/an-unclosed-brace-inside', Pos('tsep(', ScanOne('[A<s{r>|B]')) = 0);
+  { The permutation ended at that `]`, so what follows is outside it. }
+  CheckTrue('scan/after-the-permutation-already-closed',
+            Pos('tsep(', ScanOne('[A{B]C<br>|D]')) = 0);
+
+  { The `<` guard is what makes a forward scan reproduce the engine's backward one: the
+    separator is the LAST `<...>` of the element. }
+  Check('scan/only-the-last-open-angle-counts', ScanOne('[a<x<br>|c]'),
+        '[([)1 text(a<x)1 tsep(<br>)1 |(|)1 text(c)1 ](])1');
+  { An empty one is still a separator to the engine -- an empty separator. }
+  Check('scan/an-empty-separator', ScanOne('[A<>|B]'),
+        '[([)1 text(A)1 tsep(<>)1 |(|)1 text(B)1 ](])1');
+  { A tag name must START with a letter for the HTML guard to fire. }
+  Check('scan/a-digit-first-is-not-a-tag-name', ScanOne('[a<1 x>|b]'),
+        '[([)1 text(a)1 tsep(<1 x>)1 |(|)1 text(b)1 ](])1');
+  { The blanks before the pipe are the engine's rtrim class: tab and vertical tab count. }
+  Check('scan/a-tab-before-the-pipe', ScanOne('[a<br>'#9'|b]'),
+        '[([)1 text(a)1 tsep(<br>)1 text('#9')1 |(|)1 text(b)1 ](])1');
+  Check('scan/a-vertical-tab-before-the-pipe', ScanOne('[a<br>'#11'|b]'),
+        '[([)1 text(a)1 tsep(<br>)1 text('#11')1 |(|)1 text(b)1 ](])1');
+  { And a brace group that CLOSES before the separator leaves the split level where it was,
+    so the separator after it is real. }
+  Check('scan/after-a-closed-brace-group', ScanOne('[{x|y}<br>|d]'),
+        '[([)1 {({)2 text(x)2 |(|)2 text(y)2 }(})2 tsep(<br>)1 |(|)1 text(d)1 ](])1');
+
+  { The known gap, pinned so it cannot move by accident: the kinds of open brackets are
+    tracked for one line only -- what crosses a line is a depth, which is what makes deep
+    nesting free -- so a permutation opened earlier does not colour its separators. A
+    missing colour, never a wrong one. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('[a', st);
+  Check('scan/a-permutation-opened-on-an-earlier-line-is-a-known-gap',
+        Scan('<br>|b]', st), 'text(<br>)1 |(|)1 text(b)1 ](])1');
 
   { The engine left-trims a permutation config, so a space before it does not turn it off
     and must not turn the colour off either. }
