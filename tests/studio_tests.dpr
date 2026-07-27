@@ -2030,6 +2030,57 @@ begin
   Check('wrap/longer-wrappers-range', RangeSig(after), '2:1..2:10');
 end;
 
+{ ── 8bc. what the page view may be handed ────────────────────────────────── }
+
+{ How the renderer behaves -- black on a document with no element, text before the first tag
+  dropped, an unterminated `<!` looping forever -- is measured against the real parser and
+  cannot be re-measured here; there is no window in this suite and no dependency on IPro.
+  What the suite gates is the contract that follows from those measurements: whatever the
+  page view is handed, it is a DOCUMENT, and the engine's output inside it is untouched. }
+procedure TestPageDocument;
+begin
+  { Every output is a document -- that is the whole point, and the case that black came
+    from is just one of these. }
+  Check('page/prose-becomes-a-document', SpxPageDocument('просто текст'),
+        '<html><body>просто текст</body></html>');
+  Check('page/empty-becomes-a-document', SpxPageDocument(''),
+        '<html><body></body></html>');
+  Check('page/an-entity-becomes-a-document', SpxPageDocument('&nbsp;'),
+        '<html><body>&nbsp;</body></html>');
+  Check('page/a-comment-becomes-a-document', SpxPageDocument('<!-- ничего -->'),
+        '<html><body><!-- ничего --></body></html>');
+
+  { Markup is not a special case any more. It used to be passed bare, and that is what lost
+    the text in front of it. }
+  Check('page/a-fragment-is-wrapped-too', SpxPageDocument('раз<br>два'),
+        '<html><body>раз<br>два</body></html>');
+  Check('page/a-whole-document-is-wrapped-too',
+        SpxPageDocument('<html><body><h3>Заголовок</h3></body></html>'),
+        '<html><body><html><body><h3>Заголовок</h3></body></html></body></html>');
+
+  { Nothing is escaped or normalised on the way through: a comparison keeps its `<`, and the
+    newlines of a multi-line fragment stay where the engine put them. }
+  Check('page/a-comparison-keeps-its-bracket', SpxPageDocument('5 < 6'),
+        '<html><body>5 < 6</body></html>');
+  Check('page/lines-are-kept', SpxPageDocument('раз'#10'два'),
+        '<html><body>раз'#10'два</body></html>');
+
+  { ── and what counts as "this fragment shows nothing" ── }
+  CheckTrue('blank/empty', SpxIsBlankOutput(''));
+  CheckTrue('blank/spaces-and-newlines', SpxIsBlankOutput('  '#13#10' '#9));
+  { The ones Trim would have missed: a non-breaking space, and the two separators the
+    engine's own line model counts as line ends. }
+  CheckTrue('blank/a-non-breaking-space', SpxIsBlankOutput(#$C2#$A0));
+  CheckTrue('blank/u2028', SpxIsBlankOutput(#$E2#$80#$A8));
+  CheckTrue('blank/u2029-among-spaces', SpxIsBlankOutput(' '#$E2#$80#$A9' '));
+  { An entity is output: the source view shows it, so claiming nothing came out would lie. }
+  CheckTrue('blank/an-entity-is-not-blank', not SpxIsBlankOutput('&nbsp;'));
+  CheckTrue('blank/text-is-not-blank', not SpxIsBlankOutput(' текст '));
+  { A truncated UTF-8 lead byte is not whitespace and must not be read past the end. }
+  CheckTrue('blank/a-lone-lead-byte-is-not-blank', not SpxIsBlankOutput(#$C2));
+  CheckTrue('blank/a-cut-separator-is-not-blank', not SpxIsBlankOutput(#$E2#$80));
+end;
+
 { ── 8bb. editing a directive where it sits ───────────────────────────────── }
 
 function EditValue(const Doc: string; Idx: Integer; const V: string): string;
@@ -2609,6 +2660,7 @@ begin
   TestDiagMarks;
   TestPanelRows;
   TestSelectionPolicy;
+  TestPageDocument;
   TestDirectiveEditing;
   TestModelDirIndex;
   TestKeepRuntime;

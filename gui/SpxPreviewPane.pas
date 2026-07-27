@@ -1,10 +1,12 @@
 (*
  * SpxPreviewPane -- the right half: the engine's output as a page, or as the HTML it is.
  *
- * Two views of one string, and the string is passed to both VERBATIM. The page is not
- * wrapped in an <html> document of our own: TurboPower IPro never assigns FDocCharset, so
- * it reads its input as UTF-8 -- exactly what the engine hands over -- and a wrapper would
- * only hide from the author that their template emits no <body> (ADR 0004).
+ * Two views of one string. The SOURCE view gets it VERBATIM -- that is the view that answers
+ * "what markup came out". The PAGE view gets it inside a minimal <html><body> document
+ * (SpxPageDocument): IPro's parser wants a document, and a bare string is variously painted
+ * black, shortened by the text in front of its first tag, or -- on an unterminated `<!` --
+ * never finished at all. Nothing is hidden by that: the wrapper adds no charset, no styling
+ * and no content, and the raw output is one click away (ADR 0004, revised).
  *
  * Why two views at all: the page answers "how does it look", the source answers "what
  * markup came out". Neither answers the other. A broken tag renders as slightly-off layout
@@ -23,7 +25,7 @@ unit SpxPreviewPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, IpHtml;
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, IpHtml, SpxStudio;
 
 const
   { 16 KB is ~150 ms of layout on this machine -- still invisible between keystrokes, and
@@ -164,8 +166,12 @@ begin
   FPartial.Visible := APartial;
   { A selection CAN render to nothing -- a directive-only line, or one that opens a comment.
     The pane says which of the two empty panes this is, because otherwise the user is looking
-    at a blank right half with no way to tell it from a failure. }
-  if APartial and (AHtml = '') then
+    at a blank right half with no way to tell it from a failure.
+
+    "Nothing" is rarely the empty string -- a selected line renders to its own trailing
+    newline -- and rarely only ASCII space either, which is why the test is the core's and
+    not Trim's. }
+  if APartial and SpxIsBlankOutput(AHtml) then
     FPartial.Caption := 'фрагмент ничего не выводит'
   else
     FPartial.Caption := 'показан фрагмент';
@@ -191,7 +197,11 @@ begin
     FStale.Visible := False;
     Exit;
   end;
-  FPage.SetHtmlFromStr(FContent);
+  { SpxPageDocument, never the raw string: the renderer needs a document, and a bare one goes
+    black, loses the text before the first tag, or hangs on an unterminated `<!` (the
+    measurements are with the function). FShown tracks the RAW output, so the redraw check
+    above still compares what the engine produced, not what was wrapped around it. }
+  FPage.SetHtmlFromStr(SpxPageDocument(FContent));
   FShown := FContent;
   FHasShown := True;
   FStale.Visible := False;
