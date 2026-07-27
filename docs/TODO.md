@@ -380,6 +380,16 @@ the managed tier are later releases.
       `Partial` does double duty in the worker as both the report flag and the branch
       selector, so the suite cannot tell those two apart.
 
+      *Followed by PR 7*, which moved the two rules that were living in the form under the
+      suite: `SpxPreviewFragment` (which selections narrow the preview, and what a jump's
+      selection becomes) and `SpxWrapRange` (whether a selection may be wrapped and where the
+      wrapped text ends up). Both take editor-core's own `TSpxPos`/`TSpxRange`/`TSpxSelKind`
+      rather than `TPoint` and `TSynSelectionMode` — the form adapts SynEdit into them and
+      back, and keeps only the edit itself, because `SelText :=` IS SynEdit's edit API and is
+      what holds undo to one step. What remains untested in `gui/` is layout and wiring; the
+      arithmetic and the policy are gated, including the "select the same span by hand after
+      a jump" case an external review found.
+
       Variables (`SpExtract` + `SpExtractDirectives` for the values),
       diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`
       positions (engine ≥ `v0.2.0` — bumped in Pre-M0, not here), partial preview of a

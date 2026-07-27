@@ -285,6 +285,64 @@ function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
 function SpxKeepRuntime(const Vars: TSpxVarInfos;
   const Session: TSpxVarPairs): TSpxVarPairs;
 
+{ ── what the editor's selection means (spec §4.2) ────────────────────────── }
+
+type
+  { A position the editor understands: a 1-based line and a BYTE column, which is what
+    SynEdit's logical coordinates are. Deliberately not TPoint, and deliberately not
+    TSynSelectionMode below: editor-core knows nothing about the LCL, and that is exactly
+    what lets the console suite reach the two rules in this section. The form adapts
+    SynEdit -> here -> SynEdit and does nothing else with them. }
+  TSpxPos = record
+    Line, Col: Integer;
+  end;
+
+  TSpxRange = record
+    A, B: TSpxPos;
+  end;
+
+  { Column and line selections are named because they are REFUSED for wrapping: SelText
+    round-trips them shape-wise, so an opener lands on the first row and a closer on the
+    last, swallowing text nobody selected (measured). }
+  TSpxSelKind = (spxSelNone, spxSelNormal, spxSelColumn, spxSelLine);
+
+  TSpxSelection = record
+    Kind: TSpxSelKind;
+    Range: TSpxRange;
+    Text: string;
+  end;
+
+  { What a jump left behind. A jump selects a span to SHOW it, which is not the user asking
+    to preview that span. }
+  TSpxJumpState = record
+    Valid: Boolean;
+    Range: TSpxRange;
+  end;
+
+function SpxPos(Line, Col: Integer): TSpxPos;
+function SpxRange(const A, B: TSpxPos): TSpxRange;
+
+{ The fragment to preview -- '' meaning "the whole document" -- and what the jump state
+  becomes.
+
+  Pure, and meant to be called at BOTH moments that matter: when the selection changes, and
+  when a render is assembled. Twice, because the state alone cannot tell "the jump's
+  selection is still untouched" from "the user has just selected exactly that range by
+  hand", and only the selection-change call sees the difference between them. In that call
+  the fragment is ignored and only the new state is kept, which is why a caller may leave
+  Sel.Text empty there rather than pay for a copy of the selected text on every drag. }
+function SpxPreviewFragment(const Sel: TSpxSelection; const Jump: TSpxJumpState;
+  out NewJump: TSpxJumpState): string;
+
+{ Whether this selection can be wrapped, and the range the wrapped text will occupy
+  afterwards -- so the caller can restore the block, without which the preview un-narrows on
+  every wrap and a second wrap is a silent no-op.
+
+  The opener shifts the end only when the end is on the SAME line as the start; the closer
+  always does. }
+function SpxWrapRange(const Sel: TSpxSelection; LeftLen, RightLen: Integer;
+  out NewRange: TSpxRange): Boolean;
+
 { ── editing a directive where it sits (spec §4.4) ────────────────────────── }
 
 { The byte offset of a 1-based (Line, code-point Column) in Doc, over the EDITOR's line
@@ -1047,6 +1105,61 @@ begin
     end;
   end;
   SetLength(Result, n);
+end;
+
+{ ── what the editor's selection means ────────────────────────────────────── }
+
+function SpxPos(Line, Col: Integer): TSpxPos;
+begin
+  Result.Line := Line;
+  Result.Col := Col;
+end;
+
+function SpxRange(const A, B: TSpxPos): TSpxRange;
+begin
+  Result.A := A;
+  Result.B := B;
+end;
+
+function SamePos(const A, B: TSpxPos): Boolean;
+begin
+  Result := (A.Line = B.Line) and (A.Col = B.Col);
+end;
+
+function SameRange(const A, B: TSpxRange): Boolean;
+begin
+  Result := SamePos(A.A, B.A) and SamePos(A.B, B.B);
+end;
+
+function SpxPreviewFragment(const Sel: TSpxSelection; const Jump: TSpxJumpState;
+  out NewJump: TSpxJumpState): string;
+begin
+  NewJump := Jump;
+  { Nothing selected: whatever a jump left is gone with it, so selecting that same span by
+    hand afterwards is the user's own selection and does narrow the preview. }
+  if Sel.Kind = spxSelNone then
+  begin
+    NewJump.Valid := False;
+    Exit('');
+  end;
+  { Still exactly what the jump selected: it was made to show a finding, not to preview it. }
+  if Jump.Valid and SameRange(Sel.Range, Jump.Range) then Exit('');
+  NewJump.Valid := False;
+  Result := Sel.Text;
+end;
+
+function SpxWrapRange(const Sel: TSpxSelection; LeftLen, RightLen: Integer;
+  out NewRange: TSpxRange): Boolean;
+begin
+  NewRange := Sel.Range;
+  Result := False;
+  if Sel.Kind <> spxSelNormal then Exit;
+  if (LeftLen < 0) or (RightLen < 0) then Exit;
+  if NewRange.B.Line = NewRange.A.Line then
+    Inc(NewRange.B.Col, LeftLen + RightLen)
+  else
+    Inc(NewRange.B.Col, RightLen);
+  Result := True;
 end;
 
 { ── editing a directive where it sits ────────────────────────────────────── }
