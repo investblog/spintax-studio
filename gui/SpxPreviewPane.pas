@@ -44,11 +44,14 @@ type
     FSource: TMemo;
     FContent: string;     // what the engine last produced
     FShown: string;       // what the page is currently displaying
+    FShownSource: string; // what was last PUT INTO the memo
     FHasShown: Boolean;
     procedure ModeChanged(Sender: TObject);
     procedure DrawClicked(Sender: TObject);
     procedure DrawPage;
     procedure Sync;
+  protected
+    procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
     { The engine's output. Cheap to call on every debounce tick: the view that is hidden
@@ -91,7 +94,11 @@ begin
     a word about it looks like a preview that lost the rest. }
   FPartial := TLabel.Create(Self);
   FPartial.Parent := FHead;
-  FPartial.SetBounds(212, 6, 300, 18);
+  FPartial.Left := 212;
+  FPartial.Top := 6;
+  { AutoSize, not a fixed width: the caption changes with the state, and a label sized for
+    one wording clips the other. }
+  FPartial.AutoSize := True;
   FPartial.Visible := False;
 
   { Shown only when the output is too large to redraw on its own. It sits above the page
@@ -130,6 +137,25 @@ begin
   FSource.Font.Size := 11;
   FSource.Color := clWindow;
   FSource.Visible := False;
+end;
+
+{ THE STRIPE. TIpHtmlCustomPanel.EraseBackground is deliberately EMPTY -- it paints its own
+  content and skips the erase to avoid flicker -- and it has no resize handler of its own. So
+  when the pane widens, the band that has just been exposed keeps whatever pixels were there
+  before: dragging the splitter left left a grey stripe standing between the editor and the
+  page, which reads as a broken layout and is not one. Invalidate makes the panel repaint the
+  whole of itself, the new band included. }
+procedure TSpxPreviewPane.Resize;
+var i: Integer;
+begin
+  inherited Resize;
+  if (FPage = nil) or not FPage.Visible then Exit;
+  FPage.Invalidate;
+  { The rendering is done by an internal CHILD of that panel, and a parent's invalidation
+    does not reach a clipped child -- so the children are invalidated too, by shape rather
+    than by name, which keeps this free of IPro's internals. }
+  for i := 0 to FPage.ControlCount - 1 do
+    if FPage.Controls[i] is TWinControl then TWinControl(FPage.Controls[i]).Invalidate;
 end;
 
 procedure TSpxPreviewPane.SetContent(const AHtml: string; APartial: Boolean = False);
@@ -179,7 +205,18 @@ begin
   if not FAsPage.Checked then
   begin
     FStale.Visible := False;
-    if FSource.Text <> FContent then FSource.Text := FContent;
+    { Compared against what was PUT IN, never against what the control gives back. A native
+      memo returns its text with the platform's line endings, and the engine's output has
+      bare LFs -- so `FSource.Text <> FContent` was true on every single delivery, the memo
+      was refilled on every debounce tick, and the view snapped back to the top each time.
+      On a document that takes half a second to render, that made the source view unreadable
+      past its first line -- which in a template beginning with `&nbsp;` looked exactly like
+      a source view that had failed to generate. }
+    if FShownSource <> FContent then
+    begin
+      FSource.Text := FContent;
+      FShownSource := FContent;
+    end;
     Exit;
   end;
 

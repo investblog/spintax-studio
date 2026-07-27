@@ -46,6 +46,9 @@ type
     procedure DefsClicked(Sender: TObject);
     procedure RuntimeEdited(Sender: TObject; ACol, ARow: Integer; const AValue: string);
     function KindName(Kind: TSpxVarKind): string;
+    procedure FitLastColumn(AGrid: TStringGrid);
+  protected
+    procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -102,15 +105,20 @@ begin
     side it is aligned to, and with the label as a bare sibling that could be the label --
     17 pixels against a minimum drag of 30, i.e. a splitter that does nothing. One container
     removes the question. }
+  { Same rule as the form's bottom strips: bottom-aligned siblings stack by their Top, so it
+    is stated rather than left to creation order -- the box below, the splitter above it. }
   FRuntimeBox := TPanel.Create(Self);
   FRuntimeBox.Parent := Self;
+  FRuntimeBox.Top := 20000;
   FRuntimeBox.Align := alBottom;
-  FRuntimeBox.Height := 130;
+  FRuntimeBox.Height := 110;
   FRuntimeBox.BevelOuter := bvNone;
 
   FSplit := TSplitter.Create(Self);
   FSplit.Parent := Self;
+  FSplit.Top := 10000;
   FSplit.Align := alBottom;
+  FSplit.MinSize := 60;   { neither group may be dragged out of existence }
 
   FRuntime := TStringGrid.Create(Self);
   FRuntime.Parent := FRuntimeBox;
@@ -138,6 +146,30 @@ destructor TSpxVarsPane.Destroy;
 begin
   FValues.Free;
   inherited Destroy;
+end;
+
+{ The value column takes whatever the fixed ones leave. A width chosen in pixels is right for
+  exactly one window size: narrower and the column a user actually reads is cut off behind a
+  horizontal scrollbar, wider and the grid ends in a dead strip. }
+procedure TSpxVarsPane.FitLastColumn(AGrid: TStringGrid);
+var used, i, last: Integer;
+begin
+  if AGrid.ColCount < 1 then Exit;
+  last := AGrid.ColCount - 1;
+  used := 0;
+  for i := 0 to last - 1 do used := used + AGrid.ColWidths[i];
+  { A floor, so the column stays usable even when the pane is dragged very narrow. }
+  if AGrid.ClientWidth - used > 120 then
+    AGrid.ColWidths[last] := AGrid.ClientWidth - used
+  else
+    AGrid.ColWidths[last] := 120;
+end;
+
+procedure TSpxVarsPane.Resize;
+begin
+  inherited Resize;
+  if FDefs <> nil then FitLastColumn(FDefs);
+  if FRuntime <> nil then FitLastColumn(FRuntime);
 end;
 
 function TSpxVarsPane.KindName(Kind: TSpxVarKind): string;

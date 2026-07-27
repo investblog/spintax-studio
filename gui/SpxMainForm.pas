@@ -63,6 +63,7 @@ type
     FJump: TSpxJumpState;
     procedure DiagColumn(const ACaption: string; AWidth: Integer);
     procedure DiagClicked(Sender: TObject);
+    procedure DiagResized(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
     procedure VarJump(Line, Column: Integer);
     procedure RuntimeChanged(Sender: TObject);
@@ -141,6 +142,10 @@ var
 begin
   Width := 1100;
   Height := 700;
+  { Below this the panes stop being panes: the bottom strip alone is 170 pixels, and an
+    editor narrower than its own gutter plus a line of text is not an editor. }
+  Constraints.MinWidth := 760;
+  Constraints.MinHeight := 520;
   Position := poScreenCenter;
   OnClose := @FormClosed;
   OnCloseQuery := @FormAsked;
@@ -189,8 +194,14 @@ begin
   FCopy.SetBounds(314, 6, 80, 26);
   FCopy.OnClick := @CopyClicked;
 
+  { The three bottom-aligned strips are ordered by their Top, not by the order they are
+    created in -- larger Top sits closer to the bottom edge -- so the order is stated
+    instead of hoped for. Without it the status bar came out ABOVE the tab strip, and the
+    splitter had no unambiguous neighbour to resize, which is why the bottom would not
+    stretch. }
   FStatus := TStatusBar.Create(Self);
   FStatus.Parent := Self;
+  FStatus.Top := 30000;
   FStatus.SimplePanel := True;
   FStatus.SimpleText := 'готов';
 
@@ -199,8 +210,11 @@ begin
     editor, and every strip added to it is taken from the template. }
   FBottom := TPageControl.Create(Self);
   FBottom.Parent := Self;
+  FBottom.Top := 20000;
   FBottom.Align := alBottom;
-  FBottom.Height := 170;
+  { Two grids and their headings need more than 170: at that height the definitions list had
+    no room left at all. The splitter above takes it from here. }
+  FBottom.Height := 240;
   sheetDiag := FBottom.AddTabSheet;
   sheetDiag.Caption := 'Диагностика';
   sheetVars := FBottom.AddTabSheet;
@@ -220,6 +234,7 @@ begin
   DiagColumn('Место', 70);
   DiagColumn('Сообщение', 640);
   FDiag.OnClick := @DiagClicked;
+  FDiag.OnResize := @DiagResized;
 
   { The variables panel: what the document defines, and what this session supplies. }
   FVars := TSpxVarsPane.Create(Self);
@@ -230,12 +245,17 @@ begin
 
   FDiagSplit := TSplitter.Create(Self);
   FDiagSplit.Parent := Self;
+  FDiagSplit.Top := 10000;        { above the tab strip: see the note on FStatus }
   FDiagSplit.Align := alBottom;
+  FDiagSplit.MinSize := 80;       { neither the panes nor the strip may be dragged to nothing }
 
   FEditor := TSynEdit.Create(Self);
   FEditor.Parent := Self;
   FEditor.Align := alLeft;
-  FEditor.Width := 540;
+  { A PROPORTION, not a pixel count. 540 was right for the window this was written at and
+    for nobody else's screen; the two panes are meant to be comparable, and the user moves
+    the splitter from there. }
+  FEditor.Width := (ClientWidth * 48) div 100;
   FEditor.Font.Name := 'Consolas';
   FEditor.Font.Size := 11;
   FEditor.Gutter.Visible := True;
@@ -252,6 +272,37 @@ begin
     editor's own plugin, so the buffer keeps its real lines and every position the engine
     reports still lands where it should. }
   TLazSynEditLineWrapPlugin.Create(FEditor);
+  { ...but wrapping does not retract the horizontal scrollbar, and SynEdit's default is
+    ssBoth: the bar sat at the foot of a view that has nowhere sideways to go, and dragging it
+    slid the wrapped text off to the left until only the tail ends of the lines were visible,
+    with blank pane beside them. Measured on the real form: WS_HSCROLL present with ssBoth,
+    absent with this.
+
+    It settles a second oddity for free -- the plain wheel is remapped to HORIZONTAL scrolling
+    whenever the horizontal bar is visible and the vertical one is not (synedit.pp ~3470), so
+    in a document shorter than a page the wheel scrolled sideways. No bar, no remap. }
+  FEditor.ScrollBars := ssAutoVertical;
+  { Dropping the bar removes the way IN; dropping eoScrollPastEol removes the STATE, and only
+    that makes the artifact impossible rather than merely hard to reach -- a horizontal tilt
+    wheel, a touchpad swipe and a drag-select out of the pane all still call SetLeftChar, and
+    with no bar left there would be nothing to come back with.
+
+    The travel was never the document's: it is MaxLeftChar = 1024, admitted unconditionally by
+    the default eoScrollPastEol. Measured ceiling 969 columns for the demo AND for a
+    13-character document alike; with the option gone, CurrentMaxLeftChar falls back to
+    LengthOfLongestLine + 1, which the wrap plugin keeps at the wrap column -- measured
+    ceiling 1, both documents, every route clamped.
+
+    Its price is the caret, and it is the right price here: the caret can no longer be put
+    BEYOND the end of a line, but it still reaches the position after the last character
+    (measured: EOL+1 stands, EOL+50 snaps back to it), which is where every exclusive End
+    position the app computes lands. Clicking past the end of a paragraph landing at the end
+    of the paragraph is what a prose editor does anyway.
+
+    And no 80-column rule -- a code editor's convention, drawn here as a line standing in the
+    middle of wrapped prose. The switch is this OPTION, not RightEdge := 0: SetRightEdge has
+    no zero case, so a zero would merely move the line to the start of the text. }
+  FEditor.Options := FEditor.Options - [eoScrollPastEol] + [eoHideRightMargin];
 
   { Bracket matching by spintax rules. SynEdit's own markup counts parentheses and quotes
     as brackets and ignores block comments, so it is switched off and ours takes its place;
@@ -398,6 +449,21 @@ begin
   finally
     FDiag.Items.EndUpdate;
   end;
+end;
+
+{ The message column takes what the fixed ones leave, which is the only width that is right
+  at more than one window size: narrower and the text a user reads is behind a horizontal
+  scrollbar, wider and the list ends in a dead strip. }
+procedure TSpxMainForm.DiagResized(Sender: TObject);
+var used, i, last, room: Integer;
+begin
+  last := FDiag.Columns.Count - 1;
+  if last < 1 then Exit;
+  used := 0;
+  for i := 0 to last - 1 do used := used + FDiag.Columns[i].Width;
+  room := FDiag.ClientWidth - used - 4;   { a hair for the frame }
+  if room < 160 then room := 160;
+  FDiag.Columns[last].Width := room;
 end;
 
 procedure TSpxMainForm.DiagClicked(Sender: TObject);
