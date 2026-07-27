@@ -415,15 +415,21 @@ the managed tier are later releases.
       here too, labelled as ours rather than the engine's: a raw U+E000–U+E005 sentinel in
       the document, an include cycle, a depth-limit hit, a slug collision in the set, and an
       `#include` the engine accepts but the family reference renders as text.
-- [ ] **M3 — export.** Generate N with distinct seeds, shingle dedup, `.xlsx` / `.txt` /
-      per-file. Core dedup landed 2026-07-28 (`src/SpxDedupe.pas`).
+- [x] **M3 — export** (2026-07-28, PRs #10–#12). Generate N with distinct seeds, shingle
+      dedup, `.xlsx` / `.txt` / per-file.
 
-      **The wiring PR has to treat a batch as a long job, not a call.** With the default
-      budget one `SpxGenerateUnique` runs up to N + 2N renders on the single engine worker,
-      with nothing to look at meanwhile: measured, a 30 KB template at N = 200 against a
-      threshold-thin document took 402 renders and 60.9 s inside one call, and N = 1000 at
-      74 ms a render is minutes. So the export tab needs progress and a cancel, and it must
-      not block the preview's worker the way a debounced render does.
+      `src/SpxDedupe.pas` — shingles, the overlap measure, the retry budget and the
+      requested/generated/dropped/tried report; the threshold default is measured rather
+      than borrowed (0.75, in the band between a varied template's 0.56 and a one-word
+      spin's 0.79). `src/SpxExport.pas` — the three writers, with `.xlsx` written directly
+      as minimal OpenXML over the RTL's `zipper` ([ADR 0005](decisions/0005-xlsx-minimal-openxml.md)).
+      `gui/SpxVariantsPane.pas` + the batch mode on the engine worker — **a batch is a long
+      job, not a call**: up to N + 2N renders (measured 61 s at N = 200), so it runs on the
+      one engine thread ONE VARIANT PER TURN, with the interactive queue checked between
+      renders, progress per variant and a cancel that is answered by the next step.
+
+      Still open, from the GTW notes above: the count of possible variants and a length
+      filter on generation.
 - [ ] **M4 — LLM loop.** `TLlmProvider` + adapters + `TAuthoringLoop` (Generate / Verify /
       Fix), the authoring-prompt as system, a local model via localhost, synonyms through
       the same layer. Keys local, zero telemetry.
