@@ -416,7 +416,14 @@ the managed tier are later releases.
       the document, an include cycle, a depth-limit hit, a slug collision in the set, and an
       `#include` the engine accepts but the family reference renders as text.
 - [ ] **M3 — export.** Generate N with distinct seeds, shingle dedup, `.xlsx` / `.txt` /
-      per-file.
+      per-file. Core dedup landed 2026-07-28 (`src/SpxDedupe.pas`).
+
+      **The wiring PR has to treat a batch as a long job, not a call.** With the default
+      budget one `SpxGenerateUnique` runs up to N + 2N renders on the single engine worker,
+      with nothing to look at meanwhile: measured, a 30 KB template at N = 200 against a
+      threshold-thin document took 402 renders and 60.9 s inside one call, and N = 1000 at
+      74 ms a render is minutes. So the export tab needs progress and a cancel, and it must
+      not block the preview's worker the way a debounced render does.
 - [ ] **M4 — LLM loop.** `TLlmProvider` + adapters + `TAuthoringLoop` (Generate / Verify /
       Fix), the authoring-prompt as system, a local model via localhost, synonyms through
       the same layer. Keys local, zero telemetry.

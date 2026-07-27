@@ -672,6 +672,23 @@ begin
   Result := RenderWith(Tmpl, Ctx, Ctx.RngMode = spxSeeded, Ctx.Seed);
 end;
 
+{ The derivation, in its own guarded region. LongWord arithmetic wraps at the top of the
+  range, which is the intended behaviour -- the seed is an identifier for regenerating a row,
+  not a counter -- but a build with overflow checks on raises on it instead, and the comment
+  saying "wraps" was not enough: the checked twin of the suite proved it the day a test
+  finally started a batch at $FFFFFFFE. Lifted around this one line, restored to whatever the
+  build had. }
+{$IFOPT Q+}{$DEFINE SPX_Q_WAS_ON}{$Q-}{$ENDIF}
+{$IFOPT R+}{$DEFINE SPX_R_WAS_ON}{$R-}{$ENDIF}
+
+function SeedAt(SeedBase: LongWord; I: Integer): LongWord;
+begin
+  Result := SeedBase + LongWord(I);
+end;
+
+{$IFDEF SPX_R_WAS_ON}{$R+}{$UNDEF SPX_R_WAS_ON}{$ENDIF}
+{$IFDEF SPX_Q_WAS_ON}{$Q+}{$UNDEF SPX_Q_WAS_ON}{$ENDIF}
+
 function SpxRenderBatch(const Tmpl: string; const Ctx: TSpxContext;
   Count: Integer; SeedBase: LongWord): TSpxVariantList;
 var i: Integer; v: TSpxVariant;
@@ -679,9 +696,7 @@ begin
   Result := TSpxVariantList.Create;
   for i := 0 to Count - 1 do
   begin
-    { LongWord arithmetic wraps, which is the intended behaviour at the top of the range:
-      the seed is an identifier for regenerating a row, not a counter to overflow. }
-    v.Seed := SeedBase + LongWord(i);
+    v.Seed := SeedAt(SeedBase, i);
     v.Text := RenderWith(Tmpl, Ctx, True, v.Seed);
     Result.Add(v);
   end;

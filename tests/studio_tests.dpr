@@ -30,12 +30,13 @@ uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
   SysUtils, Classes, Generics.Collections,
   {$IFDEF FPC}
-  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxFiles, SpxEngineThread;
+  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxFiles, SpxEngineThread;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
   SpxTokens in '..\src\SpxTokens.pas',
   SpxDemo in '..\src\SpxDemo.pas',
+  SpxDedupe in '..\src\SpxDedupe.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas';
   {$ENDIF}
@@ -2543,6 +2544,303 @@ begin
   end;
 end;
 
+{ ── 8d. near-duplicates, and a batch that avoids them ────────────────────── }
+
+function SimOf(const A, B: string; K: Integer): Double;
+begin
+  Result := SpxSimilarity(SpxShingles(A, K), SpxShingles(B, K));
+end;
+
+{ A paragraph-sized text with one word swappable -- the length a real variant has, which is
+  what the default threshold is calibrated for. One changed word then moves four shingles out
+  of a hundred, instead of four out of nine.
+
+  The filler VARIES from sentence to sentence, and it has to: shingles are deduplicated, so
+  repeating one sentence eight times adds no mass to the fingerprint at all. Written the
+  obvious way first, it made a hundred-word text weigh the same as a twelve-word one -- and
+  the assertion below then failed for a reason that had nothing to do with the measure. }
+function Para(const Verb: string): string;
+var i: Integer;
+begin
+  Result := 'the quick brown fox ' + Verb + ' over the lazy dog';
+  for i := 1 to 8 do
+    Result := Result + Format(' in section %d the report notes that field %d stayed quiet ' +
+                              'until the %dth morning of the survey', [i, i, i]);
+end;
+
+{ A signature of what came back, so a set can be asserted whole rather than field by
+  field. }
+function BatchSig(const R: TSpxBatchReport): string;
+begin
+  { R.Tried, not NextSeed - SeedBase: the subtraction is the same number only until the seed
+    range wraps, and then it raises under -Cr. The report carries the count for that reason. }
+  Result := Format('req=%d gen=%d drop=%d tried=%d%s',
+    [R.Requested, R.Generated, R.Dropped, R.Tried,
+     BoolToStr(R.Exhausted, ' exhausted', '')]);
+end;
+
+{ The invariant the whole unit is for, asserted directly instead of through counts: no two
+  variants that came back are within the threshold of each other. }
+function NoTwoAreClose(L: TSpxVariantList; const Opts: TSpxDedupeOpts): Boolean;
+var i, j: Integer; fps: array of TSpxHashes;
+begin
+  SetLength(fps, L.Count);
+  for i := 0 to L.Count - 1 do fps[i] := SpxShingles(L[i].Text, Opts.ShingleSize);
+  for i := 0 to L.Count - 1 do
+    for j := 0 to i - 1 do
+      if SpxSimilarity(fps[i], fps[j]) >= Opts.Threshold then Exit(False);
+  Result := True;
+end;
+
+procedure TestDedupe;
+var
+  fp: TSpxHashes;
+  ctx: TSpxContext;
+  rep: TSpxBatchReport;
+  opts: TSpxDedupeOpts;
+  list, uniq: TSpxVariantList;
+  v: TSpxVariant;
+  i, dropped: Integer;
+begin
+  { ── the fingerprint ── }
+
+  { Four words, k=3: two shingles, and they are what the sliding window says they are. }
+  fp := SpxShingles('one two three four', 3);
+  CheckTrue('shingle/two-shingles-from-four-words', Length(fp) = 2);
+  { Shorter than k is one shingle, not none -- otherwise every short variant would have an
+    empty fingerprint and compare equal to every other. }
+  fp := SpxShingles('one two', 5);
+  CheckTrue('shingle/a-short-text-is-one-shingle', Length(fp) = 1);
+  fp := SpxShingles('', 4);
+  CheckTrue('shingle/nothing-has-no-fingerprint', Length(fp) = 0);
+  fp := SpxShingles('   '#10#9, 4);
+  CheckTrue('shingle/whitespace-has-no-fingerprint', Length(fp) = 0);
+  { A repeated phrase counts once, or a text that says the same thing twice would inflate
+    its own overlap with everything. }
+  { Six words, k=2: five shingles, but only two distinct ones. }
+  fp := SpxShingles('раз два раз два раз два', 2);
+  CheckTrue('shingle/a-repeated-phrase-counts-once', Length(fp) = 2);
+  { Whitespace between words is not part of the words. }
+  CheckTrue('shingle/spacing-does-not-matter',
+            SimOf('one two three', 'one   two'#10'three', 2) = 1.0);
+  CheckTrue('shingle/ascii-case-folds', SimOf('One Two Three', 'one two three', 2) = 1.0);
+  { AND CYRILLIC CASE FOLDS, which an ASCII-only fold got wrong -- it scored this pair 0.00.
+    Not academic: Studio renders with PostProcess on, so the engine re-cases the word after a
+    sentence end, and an alternation that moves that boundary changes the case of the next
+    word. Understated similarity lets near-duplicates through, so this is the direction of
+    error that matters. }
+  CheckTrue('shingle/cyrillic-case-folds-too',
+            SimOf('Привет Мир Друг Сосед', 'привет мир друг сосед', 2) = 1.0);
+  { The shape the engine's capitalisation actually produces: one word re-cased mid-text. }
+  CheckTrue('shingle/one-recased-word-does-not-split-a-text',
+            SimOf('тарифы меняются с первого числа новая цена уже указана',
+                  'тарифы меняются с первого числа Новая цена уже указана', 4) = 1.0);
+  { Folding is the engine's own table, so anything it upper-cases, this folds. }
+  CheckTrue('shingle/folding-follows-the-engine',
+            SimOf('ÉCOLE ÜBER ŽIVOT', 'école über život', 2) = 1.0);
+
+  { ── the measure ── }
+
+  CheckTrue('sim/identical-is-one', SimOf('a b c d e', 'a b c d e', 3) = 1.0);
+  CheckTrue('sim/nothing-shared-is-zero',
+            SimOf('раз два три четыре', 'five six seven eight', 3) = 0.0);
+  CheckTrue('sim/two-empties-are-identical', SimOf('', '', 3) = 1.0);
+  CheckTrue('sim/empty-against-text-shares-nothing', SimOf('', 'a b c', 3) = 0.0);
+  { THE case the unit exists for: a paragraph with one word changed. Exact comparison calls
+    these two texts unique; to a reader they are one text, and the default threshold agrees
+    -- 0.87, measured, so the second one is dropped. }
+  CheckTrue('sim/one-word-in-a-paragraph-is-still-the-same-text',
+            SimOf(Para('jumps'), Para('leaps'), 4) > SpxDefaultDedupeOpts.Threshold);
+  { And the SAME edit in a short text is not the same text: four of nine shingles change,
+    which is a third of a sentence rather than a word in a paragraph. The measure is
+    length-relative on purpose, and this is the pair that says so -- a threshold that drops
+    the paragraph above must not also drop these two. }
+  CheckTrue('sim/the-same-edit-in-a-sentence-is-a-difference',
+            SimOf('the quick brown fox jumps over the lazy dog',
+                  'the quick brown fox leaps over the lazy dog', 4)
+            < SpxDefaultDedupeOpts.Threshold);
+  { And a genuinely different paragraph is nowhere near. }
+  CheckTrue('sim/a-different-text-is-not',
+            SimOf(Para('jumps'),
+                  'наши новые тарифы вступают в силу с первого числа каждого месяца', 4)
+            < 0.1);
+
+  { ── the batch ── }
+
+  ctx := SpxContext('en', nil, nil);
+  opts := SpxDefaultDedupeOpts;
+
+  { A template with exactly two outcomes, asked for five. Two come back, the rest are
+    duplicates, and the report says so rather than leaving a short list to explain itself. }
+  uniq := SpxGenerateUnique('{раз|два}', ctx, 5, 1, opts, rep);
+  try
+    CheckTrue('batch/a-thin-template-yields-what-it-has', uniq.Count = 2);
+    CheckTrue('batch/and-says-it-ran-out', rep.Exhausted);
+    Check('batch/the-report-adds-up', IntToStr(rep.Generated + rep.Dropped),
+          IntToStr(rep.Tried));
+    { The seeds are still the ones the plain derivation would have used. }
+    CheckTrue('batch/and-the-seed-span-matches-what-was-tried',
+              rep.NextSeed - rep.SeedBase = LongWord(rep.Tried));
+  finally
+    uniq.Free;
+  end;
+
+  { Asked for none: no renders, no seeds spent, nothing claimed. }
+  uniq := SpxGenerateUnique('{раз|два}', ctx, 0, 7, opts, rep);
+  try
+    CheckTrue('batch/zero-asks-for-nothing', uniq.Count = 0);
+    Check('batch/zero-spends-no-seeds', BatchSig(rep), 'req=0 gen=0 drop=0 tried=0');
+  finally
+    uniq.Free;
+  end;
+
+  { The budget is a bound on RENDERS, not on drops: N seeds for the set plus the budget for
+    replacements, so a budget of zero means "try exactly N and keep what is unique among
+    them". The first version stopped at the first duplicate instead -- which contradicted its
+    own documentation, and threw away variants the first N seeds did contain. }
+  opts.RetryBudget := 0;
+  uniq := SpxGenerateUnique('всегда одно и то же', ctx, 4, 1, opts, rep);
+  try
+    CheckTrue('batch/no-budget-still-tries-the-whole-request', uniq.Count = 1);
+    Check('batch/no-budget-spends-exactly-n-seeds', BatchSig(rep),
+          'req=4 gen=1 drop=3 tried=4 exhausted');
+  finally
+    uniq.Free;
+  end;
+
+  { And with a template that HAS a second outcome inside those N seeds, no budget still finds
+    it -- the case the old loop lost. }
+  opts.RetryBudget := 0;
+  uniq := SpxGenerateUnique('{alpha beta gamma delta|epsilon zeta eta theta}', ctx, 8, 1,
+                            opts, rep);
+  try
+    CheckTrue('batch/no-budget-finds-what-the-first-n-seeds-hold', uniq.Count = 2);
+  finally
+    uniq.Free;
+  end;
+
+  { Seeds are the ones a plain batch would have used, and every variant keeps its own -- the
+    set stays reproducible one variant at a time even after replacements. }
+  opts := SpxDefaultDedupeOpts;
+  uniq := SpxGenerateUnique('{a|b|c|d|e|f|g|h}', ctx, 3, 100, opts, rep);
+  try
+    { Asserted before anything conditional on the count, so an empty batch fails here rather
+      than passing every check below it vacuously. }
+    CheckTrue('batch/the-set-is-not-empty', uniq.Count = 3);
+    CheckTrue('batch/seeds-start-where-asked', uniq[0].Seed = 100);
+    for i := 0 to uniq.Count - 1 do
+      CheckTrue('batch/every-variant-carries-a-seed-in-range',
+                (uniq[i].Seed >= 100) and (uniq[i].Seed < rep.NextSeed));
+    CheckTrue('batch/the-next-batch-continues', rep.NextSeed >= 100 + LongWord(uniq.Count));
+    { THE invariant, asserted directly rather than inferred from counts. }
+    CheckTrue('batch/no-two-kept-variants-are-close', NoTwoAreClose(uniq, opts));
+  finally
+    uniq.Free;
+  end;
+
+  { ── the settings are clamped rather than obeyed into nonsense ── }
+
+  { A shingle size below one is meaningless; it becomes one word per shingle. }
+  opts := SpxDefaultDedupeOpts;
+  opts.ShingleSize := 0;
+  CheckTrue('opts/a-zero-shingle-size-still-fingerprints',
+            Length(SpxShingles('раз два три', 0)) = 3);
+  { A threshold of zero would call every pair a duplicate and return one variant whatever the
+    template; refusing it is kinder than obeying it. }
+  opts.Threshold := 0;
+  uniq := SpxGenerateUnique('{a|b|c|d|e|f|g|h}', ctx, 3, 1, opts, rep);
+  try
+    CheckTrue('opts/a-zero-threshold-does-not-collapse-the-set', uniq.Count >= 1);
+  finally
+    uniq.Free;
+  end;
+  { Above one it is clamped to one, which is "identical fingerprints only". }
+  opts := SpxDefaultDedupeOpts;
+  opts.Threshold := 5;
+  uniq := SpxGenerateUnique('{a|b|c|d|e|f|g|h}', ctx, 3, 1, opts, rep);
+  try
+    CheckTrue('opts/a-threshold-above-one-is-clamped', uniq.Count = 3);
+  finally
+    uniq.Free;
+  end;
+
+  { The top of the seed range. LongWord wrapping is the intended behaviour here -- a seed is
+    an identifier for regenerating one row, not a counter -- but "intended" has to be proved
+    by the CHECKED twin of this suite, which is where an EIntOverflow would surface. It
+    already surfaced once in this unit, in the hash. }
+  opts := SpxDefaultDedupeOpts;
+  uniq := SpxGenerateUnique('{a|b|c|d}', ctx, 3, $FFFFFFFE, opts, rep);
+  try
+    CheckTrue('batch/seeds-wrap-at-the-top-of-the-range', uniq.Count >= 1);
+    CheckTrue('batch/and-the-wrapped-seeds-are-recorded',
+              (uniq.Count < 2) or (uniq[1].Seed = $FFFFFFFF));
+  finally
+    uniq.Free;
+  end;
+
+  { The plain batch has the same derivation and had never been asked to cross the top: it
+    raised too, under the same checked build, and for the same reason. }
+  list := SpxRenderBatch('{a|b}', ctx, 4, $FFFFFFFE);
+  try
+    CheckTrue('batch/a-plain-batch-crosses-the-top-too', list.Count = 4);
+    CheckTrue('batch/and-wraps-to-zero', list[2].Seed = 0);
+    CheckTrue('batch/and-keeps-going', list[3].Seed = 1);
+  finally
+    list.Free;
+  end;
+
+  { ── the same filter over a set that already exists ── }
+
+  list := TSpxVariantList.Create;
+  try
+    { Variant-sized texts, because that is what the threshold is for -- the same four texts
+      as sentences would all be "different enough" and prove nothing. }
+    v.Seed := 1; v.Text := Para('jumps');
+    list.Add(v);
+    v.Seed := 2; v.Text := Para('leaps');                          { one word changed }
+    list.Add(v);
+    v.Seed := 3; v.Text := 'наши тарифы меняются с первого числа каждого месяца';
+    list.Add(v);
+    v.Seed := 4; v.Text := Para('jumps');                          { exact copy }
+    list.Add(v);
+
+    uniq := SpxDedupeList(list, SpxDefaultDedupeOpts, dropped);
+    try
+      CheckTrue('list/keeps-the-two-that-differ', uniq.Count = 2);
+      CheckTrue('list/drops-the-near-copy-and-the-exact-one', dropped = 2);
+      { The FIRST of a group survives, so the set keeps its earliest seeds. }
+      CheckTrue('list/keeps-the-first-of-a-group', uniq[0].Seed = 1);
+      CheckTrue('list/and-the-input-is-left-alone', list.Count = 4);
+    finally
+      uniq.Free;
+    end;
+
+    { A threshold of 1.0 is the closest this gets to exact comparison: the near-copy
+      survives, the exact one does not. }
+    opts := SpxDefaultDedupeOpts;
+    opts.Threshold := 1.0;
+    uniq := SpxDedupeList(list, opts, dropped);
+    try
+      CheckTrue('list/threshold-one-keeps-the-near-copy', uniq.Count = 3);
+      CheckTrue('list/threshold-one-still-drops-an-identical-text', dropped = 1);
+    finally
+      uniq.Free;
+    end;
+  finally
+    list.Free;
+  end;
+
+  { Nothing to filter is not an error: the export tab will call this before the user has
+    generated anything. }
+  uniq := SpxDedupeList(nil, SpxDefaultDedupeOpts, dropped);
+  try
+    CheckTrue('list/nil-is-an-empty-result', uniq.Count = 0);
+    CheckTrue('list/nil-drops-nothing', dropped = 0);
+  finally
+    uniq.Free;
+  end;
+end;
+
 { ── 9. the host's file layer ─────────────────────────────────────────────── }
 
 function TempFolder: string;
@@ -2695,6 +2993,7 @@ begin
   TestModelDirIndex;
   TestKeepRuntime;
   TestValidationCache;
+  TestDedupe;
   TestFileLayer;
   TestEngineThread;
 
