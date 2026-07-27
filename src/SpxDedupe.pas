@@ -80,6 +80,17 @@ type
     Exhausted: Boolean;
   end;
 
+{ The options with their clamps applied, and the budget resolved for a request of Count --
+  exported because a caller driving the loop itself (the export tab, through the engine
+  thread) has to compute the same limit from the same rule, and a second copy of "twice the
+  request unless it overflows" is one copy too many. }
+function SpxResolveDedupeOpts(const Opts: TSpxDedupeOpts; Count: Integer): TSpxDedupeOpts;
+
+{ The next seed. A LongWord wraps at the top of the range, which is the intended behaviour --
+  a seed identifies a row, it does not count anything -- but the arithmetic raises in a build
+  with overflow checks on unless it is done here, inside the guarded region. }
+function SpxNextSeed(Seed: LongWord): LongWord;
+
 { 4-word shingles, 0.75, and a budget of twice the request.
 
   The threshold is measured, not borrowed. Pairwise similarity over a plain batch of 20:
@@ -121,6 +132,29 @@ function SpxShingles(const Text: string; Size: Integer): TSpxHashes;
 { Jaccard overlap of two fingerprints: |A and B| / |A or B|, 0..1. Two empty texts are
   identical (1.0); one empty against a non-empty one shares nothing (0.0). }
 function SpxSimilarity(const A, B: TSpxHashes): Double;
+
+type
+  { The same rule, one variant at a time.
+
+    SpxGenerateUnique renders its whole set inside one call, which is right for a script and
+    wrong for a window: with the default budget that is up to 3N renders on the single engine
+    thread, measured at 61 seconds for N = 200, with nothing to show and no way to stop. The
+    export tab drives the loop itself -- render a seed, offer it here, repeat -- so it can
+    report progress, take a cancel, and let an interactive render in between.
+
+    Holds fingerprints, not texts: the caller keeps whatever it accepted. }
+  TSpxUniqueSet = class
+  private
+    FOpts: TSpxDedupeOpts;
+    FKept: array of TSpxHashes;
+    FCount: Integer;
+  public
+    constructor Create(const AOpts: TSpxDedupeOpts);
+    { True when the text is far enough from everything kept so far, and then it is remembered
+      as kept. False means it was a near-duplicate and nothing changed. }
+    function Accept(const Text: string): Boolean;
+    property Count: Integer read FCount;
+  end;
 
 { N variants no two of which are within the threshold of each other.
 
@@ -375,13 +409,42 @@ begin
   end;
 end;
 
+function SpxResolveDedupeOpts(const Opts: TSpxDedupeOpts; Count: Integer): TSpxDedupeOpts;
+begin
+  Result := ResolveOpts(Opts, Count);
+end;
+
+function SpxNextSeed(Seed: LongWord): LongWord;
+begin
+  Result := StepSeed(Seed);
+end;
+
+constructor TSpxUniqueSet.Create(const AOpts: TSpxDedupeOpts);
+begin
+  inherited Create;
+  { Resolved with a count of zero: the budget belongs to the caller's loop here, not to this
+    object, and the clamps on size and threshold are what matter. }
+  FOpts := ResolveOpts(AOpts, 0);
+  FCount := 0;
+end;
+
+function TSpxUniqueSet.Accept(const Text: string): Boolean;
+var fp: TSpxHashes;
+begin
+  fp := SpxShingles(Text, FOpts.ShingleSize);
+  Result := not TooCloseToAny(fp, FKept, FCount, FOpts.Threshold);
+  if not Result then Exit;
+  if FCount >= Length(FKept) then SetLength(FKept, (FCount + 1) * 2);
+  FKept[FCount] := fp;
+  Inc(FCount);
+end;
+
 function SpxGenerateUnique(const Tmpl: string; const Ctx: TSpxContext; Count: Integer;
   SeedBase: LongWord; const Opts: TSpxDedupeOpts;
   out Report: TSpxBatchReport): TSpxVariantList;
 var
   o: TSpxDedupeOpts;
-  kept: array of TSpxHashes;
-  fp: TSpxHashes;
+  uniq: TSpxUniqueSet;
   v: TSpxVariant;
   batch: TSpxVariantList;
   seed: LongWord;
@@ -399,37 +462,38 @@ begin
   Report.Exhausted := False;
   if Count <= 0 then Exit;
 
-  SetLength(kept, Count);
   seed := SeedBase;
   tried := 0;
   { N seeds for the set, plus the budget for replacing what gets dropped. Bounded here rather
     than per-drop: a drop is not what should stop the loop -- running out of seeds is. }
   spent := Count + o.RetryBudget;
 
-  while (Result.Count < Count) and (tried < spent) do
-  begin
-    { One seed at a time rather than a batch up front: the number of renders needed is not
-      known until the duplicates are counted, and a render is the expensive part. }
-    batch := SpxRenderBatch(Tmpl, Ctx, 1, seed);
-    try
-      if batch.Count = 0 then Break;
-      v := batch[0];
-    finally
-      batch.Free;
-    end;
-    Inc(tried);
-    seed := StepSeed(seed);
-    Report.NextSeed := seed;
-
-    fp := SpxShingles(v.Text, o.ShingleSize);
-    if TooCloseToAny(fp, kept, Result.Count, o.Threshold) then
+  { The rule itself lives in TSpxUniqueSet, so this loop and the window's own loop can never
+    drift apart about what counts as a duplicate. }
+  uniq := TSpxUniqueSet.Create(o);
+  try
+    while (Result.Count < Count) and (tried < spent) do
     begin
-      Inc(Report.Dropped);
-      Continue;
-    end;
+      { One seed at a time rather than a batch up front: the number of renders needed is not
+        known until the duplicates are counted, and a render is the expensive part. }
+      batch := SpxRenderBatch(Tmpl, Ctx, 1, seed);
+      try
+        if batch.Count = 0 then Break;
+        v := batch[0];
+      finally
+        batch.Free;
+      end;
+      Inc(tried);
+      seed := StepSeed(seed);
+      Report.NextSeed := seed;
 
-    kept[Result.Count] := fp;
-    Result.Add(v);
+      if uniq.Accept(v.Text) then
+        Result.Add(v)
+      else
+        Inc(Report.Dropped);
+    end;
+  finally
+    uniq.Free;
   end;
 
   Report.Generated := Result.Count;
@@ -444,25 +508,22 @@ function SpxDedupeList(Variants: TSpxVariantList; const Opts: TSpxDedupeOpts;
   out Dropped: Integer): TSpxVariantList;
 var
   o: TSpxDedupeOpts;
-  kept: array of TSpxHashes;
-  fp: TSpxHashes;
+  uniq: TSpxUniqueSet;
   i: Integer;
 begin
   Result := TSpxVariantList.Create;
   Dropped := 0;
   if Variants = nil then Exit;
   o := ResolveOpts(Opts, Variants.Count);
-  SetLength(kept, Variants.Count);
-  for i := 0 to Variants.Count - 1 do
-  begin
-    fp := SpxShingles(Variants[i].Text, o.ShingleSize);
-    if TooCloseToAny(fp, kept, Result.Count, o.Threshold) then
-    begin
-      Inc(Dropped);
-      Continue;
-    end;
-    kept[Result.Count] := fp;
-    Result.Add(Variants[i]);
+  uniq := TSpxUniqueSet.Create(o);
+  try
+    for i := 0 to Variants.Count - 1 do
+      if uniq.Accept(Variants[i].Text) then
+        Result.Add(Variants[i])
+      else
+        Inc(Dropped);
+  finally
+    uniq.Free;
   end;
 end;
 

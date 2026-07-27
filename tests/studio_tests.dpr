@@ -1547,14 +1547,95 @@ type
     Delivered: Integer;
     LastId: Int64;
     Last: TSpxJobResult;
+    { the batch's side }
+    Steps: Integer;
+    Dones: Integer;
+    Ids: TStringList;
+    LastDoneId: Int64;
+    Kept: TSpxVariantList;
+    BatchDone: Boolean;
+    Cancelled: Boolean;
+    Report: TSpxBatchReport;
+    destructor Destroy; override;
     procedure Done(const Res: TSpxJobResult);
+    procedure Batch(const P: TSpxBatchProgress);
   end;
+
+destructor TThreadProbe.Destroy;
+begin
+  Kept.Free;
+  Ids.Free;
+  inherited Destroy;
+end;
 
 procedure TThreadProbe.Done(const Res: TSpxJobResult);
 begin
   Inc(Delivered);
   LastId := Res.Id;
   Last := Res;
+end;
+
+{ The batch's side of the same worker: every step lands here, on the main thread. }
+procedure TThreadProbe.Batch(const P: TSpxBatchProgress);
+begin
+  Inc(Steps);
+  if Ids = nil then Ids := TStringList.Create;
+  Ids.Add(IntToStr(P.Id));
+  if P.Accepted then
+  begin
+    if Kept = nil then Kept := TSpxVariantList.Create;
+    Kept.Add(P.Variant);
+  end;
+  if P.Done then
+  begin
+    Inc(Dones);
+    BatchDone := True;
+    LastDoneId := P.Id;
+    Cancelled := P.Cancelled;
+    Report := P.Report;
+  end;
+end;
+
+{ Pump until the batch has delivered at least Want steps -- what "the batch is under way"
+  has to mean before anything can be asserted about interleaving. }
+function PumpSteps(probe: TThreadProbe; Want, timeoutMs: Integer): Boolean;
+var waited: Integer;
+begin
+  waited := 0;
+  while (probe.Steps < Want) and (waited < timeoutMs) do
+  begin
+    CheckSynchronize(10);
+    Inc(waited, 10);
+  end;
+  Result := probe.Steps >= Want;
+end;
+
+{ Pump until the batch with this id has ended. Needed because replacing a running batch
+  ends BOTH -- the first Done belongs to the batch that was displaced, and waiting on
+  "any Done" reads its report instead of the one under test. }
+function PumpDone(probe: TThreadProbe; wantId: Int64; timeoutMs: Integer): Boolean;
+var waited: Integer;
+begin
+  waited := 0;
+  while (probe.LastDoneId <> wantId) and (waited < timeoutMs) do
+  begin
+    CheckSynchronize(10);
+    Inc(waited, 10);
+  end;
+  Result := probe.LastDoneId = wantId;
+end;
+
+{ Pump until the batch says it is finished, or give up. }
+function PumpBatch(probe: TThreadProbe; timeoutMs: Integer): Boolean;
+var waited: Integer;
+begin
+  waited := 0;
+  while (not probe.BatchDone) and (waited < timeoutMs) do
+  begin
+    CheckSynchronize(10);
+    Inc(waited, 10);
+  end;
+  Result := probe.BatchDone;
 end;
 
 { Pump Synchronize until the worker has delivered `wantId`, or give up. A console program
@@ -1708,6 +1789,202 @@ begin
     th.WaitFor;
     CheckTrue('thread/shutdown-during-a-render-does-not-hang', True);
   finally
+    th.Free;
+    probe.Free;
+  end;
+end;
+
+{ ── 8f. a batch on the same worker ────────────────────────────────────────── }
+
+procedure TestEngineBatch;
+var
+  probe: TThreadProbe;
+  th: TSpxEngineThread;
+  req: TSpxBatchRequest;
+  job: TSpxJob;
+  expected: string;
+  i, seen, before: Integer;
+begin
+  probe := TThreadProbe.Create;
+  th := TSpxEngineThread.Create(probe.Done);
+  try
+    th.OnBatch := probe.Batch;
+
+    { A set that the template can actually produce, generated one variant at a time. }
+    req := Default(TSpxBatchRequest);
+    req.Id := 1;
+    req.Text := 'вариант {один|два|три|четыре|пять|шесть|семь|восемь}';
+    req.Locale := 'ru';
+    req.Count := 5;
+    req.SeedBase := 1;
+    req.Opts := SpxDefaultDedupeOpts;
+    th.StartBatch(req);
+    CheckTrue('batchthread/finishes', PumpBatch(probe, 15000));
+    CheckTrue('batchthread/delivers-the-whole-set', probe.Kept.Count = 5);
+    CheckTrue('batchthread/says-what-it-did', probe.Report.Generated = 5);
+    CheckTrue('batchthread/was-not-cancelled', not probe.Cancelled);
+    { Every step is reported, not only the accepted ones: the tab shows progress against
+      renders, and a batch that drops half its work would otherwise look stalled. }
+    CheckTrue('batchthread/reports-every-render', probe.Steps >= probe.Report.Tried);
+    { Seeds are the plain derivation, so any row can be regenerated on its own. }
+    CheckTrue('batchthread/seeds-start-at-the-base', probe.Kept[0].Seed = 1);
+    { And the variants really are what the same seed produces here. }
+    Check('batchthread/a-row-matches-a-direct-render', probe.Kept[0].Text,
+          SpxRenderSample(req.Text, SpxSeededContext('ru', nil, probe.Kept[0].Seed)));
+
+    { A thin template cannot fill the request, and the report says so rather than leaving a
+      short list to be interpreted. }
+    probe.BatchDone := False;
+    probe.Kept.Free;
+    probe.Kept := nil;
+    req.Id := 2;
+    req.Text := '{раз|два}';
+    req.Count := 6;
+    th.StartBatch(req);
+    CheckTrue('batchthread/a-thin-template-finishes-too', PumpBatch(probe, 15000));
+    CheckTrue('batchthread/with-what-it-has', probe.Kept.Count = 2);
+    CheckTrue('batchthread/and-says-it-ran-out', probe.Report.Exhausted);
+
+    { THE reason the batch is sliced: a render posted while it runs must still come back,
+      and quickly. Without interleaving this answer would wait for the whole batch.
+
+      The expected text is computed BEFORE the batch starts. Computing it afterwards, as the
+      first version did, calls the engine from this thread while the worker is rendering --
+      breaking, inside the test for that thread, the one rule the thread exists to enforce. }
+    expected := SpxRenderSample('быстрый {a|b}', SpxSeededContext('ru', nil, 7));
+
+    probe.BatchDone := False;
+    probe.Kept.Free;
+    probe.Kept := nil;
+    probe.Steps := 0;
+    req.Id := 3;
+    req.Text := '';
+    for i := 1 to 60 do
+      req.Text := req.Text + 'абзац ' + IntToStr(i) + ' {альфа|бета|гамма} ' + LineEnding;
+    req.Count := 60;
+    th.StartBatch(req);
+
+    { Wait until the batch is DEMONSTRABLY under way. Without this the render was posted
+      before the worker had begun, so it was answered first and the check below passed
+      whether the batch interleaved or not -- measured, 20 runs out of 20. }
+    PumpSteps(probe, 3, 15000);
+    CheckTrue('batchthread/the-batch-is-under-way', probe.Steps >= 3);
+    before := probe.Steps;
+
+    job := Default(TSpxJob);
+    job.Id := 900;
+    job.Text := 'быстрый {a|b}';
+    job.Locale := 'ru';
+    job.Seeded := True;
+    job.Seed := 7;
+    th.Post(job);
+    CheckTrue('batchthread/a-render-posted-during-a-batch-still-answers',
+              PumpUntil(probe, 900, 10000));
+    Check('batchthread/and-answers-correctly', probe.Last.Preview, expected);
+    { Still running when the answer arrived, and it had NOT stalled meanwhile: both, because
+      either one alone is satisfied by a batch that was simply not running. }
+    CheckTrue('batchthread/the-batch-was-still-running', not probe.BatchDone);
+    { And it goes on working afterwards. Pumped rather than asserted on the instant: the
+      render answers in a millisecond and the next variant takes as long as a variant takes,
+      so "did it stop" is a question about the next few steps, not about this one. }
+    PumpSteps(probe, before + 1, 10000);
+    CheckTrue('batchthread/and-kept-working-through-the-render', probe.Steps > before);
+
+    { Cancelling stops it, and the ending is a normal message rather than an abandoned
+      thread: the tab needs the totals for what it did manage. }
+    th.CancelBatch;
+    CheckTrue('batchthread/cancel-ends-it', PumpBatch(probe, 15000));
+    CheckTrue('batchthread/and-says-it-was-cancelled', probe.Cancelled);
+    { A cancelled batch is not an exhausted one -- the template was never given the chance. }
+    CheckTrue('batchthread/cancelled-is-not-exhausted', not probe.Report.Exhausted);
+    seen := probe.Report.Generated;
+    { > 0 because the batch was pumped until it had delivered, not because the cancel
+      happened to be slow. }
+    CheckTrue('batchthread/keeps-what-it-had', (seen > 0) and (seen < 60));
+
+    { Starting a batch while one runs replaces it -- and the replacement must not INHERIT
+      anything. A review reproduced the old code charging the previous batch's variant, seed
+      and text to the new batch's set, all the way into the grid and the export. }
+    probe.BatchDone := False;
+    probe.Kept.Free;
+    probe.Kept := nil;
+    probe.Steps := 0;
+    if probe.Ids <> nil then probe.Ids.Clear;
+    req.Id := 4;
+    req.Text := '';
+    for i := 1 to 40 do
+      req.Text := req.Text + 'длинный абзац ' + IntToStr(i) + ' {альфа|бета|гамма} ' + LineEnding;
+    req.Count := 40;
+    req.SeedBase := 100;
+    th.StartBatch(req);
+    { The batch being replaced has to have STARTED, or this tests the pending slot instead
+      of the running one. }
+    CheckTrue('batchthread/the-batch-to-be-replaced-started', PumpSteps(probe, 2, 15000));
+
+    probe.Kept.Free;
+    probe.Kept := nil;
+    req.Id := 5;
+    req.Text := 'короткий {a|b|c|d|e|f}';
+    req.Count := 3;
+    req.SeedBase := 900;
+    th.StartBatch(req);
+    CheckTrue('batchthread/a-restart-finishes', PumpDone(probe, 5, 15000));
+    { The replaced batch gets its own ending, so a panel waiting on Done is never wedged. }
+    CheckTrue('batchthread/the-replaced-batch-was-ended-too', probe.Dones >= 2);
+    CheckTrue('batchthread/the-second-request-is-the-one-that-ran',
+              probe.Report.Requested = 3);
+    { NOTHING from the first batch is in the second's set: every row carries the new id and
+      a seed from the new base. }
+    CheckTrue('batchthread/no-row-came-from-the-replaced-batch',
+              (probe.Kept <> nil) and (probe.Kept.Count = 3));
+    for i := 0 to probe.Kept.Count - 1 do
+      CheckTrue('batchthread/every-row-belongs-to-the-new-batch',
+                (probe.Kept[i].Seed >= 900) and (probe.Kept[i].Seed < 910));
+    CheckTrue('batchthread/and-the-seeds-start-at-the-new-base', probe.Kept[0].Seed = 900);
+
+    { A request for nothing ends whatever is running, and ends it PROPERLY -- the old code
+      cleared the state without a Done, leaving a panel spinning for the session. }
+    probe.BatchDone := False;
+    probe.Kept.Free;
+    probe.Kept := nil;
+    probe.Steps := 0;
+    req.Id := 6;
+    req.Text := '';
+    for i := 1 to 40 do
+      req.Text := req.Text + 'абзац ' + IntToStr(i) + ' {альфа|бета|гамма} ' + LineEnding;
+    req.Count := 20;
+    req.SeedBase := 1;
+    th.StartBatch(req);
+    { Steps is cumulative across the whole test, so it is reset first -- without that this
+      wait returns instantly, the second request replaces the first before the worker ever
+      saw it, and the sequence under test never happens. }
+    CheckTrue('batchthread/the-batch-to-be-cut-short-started', PumpSteps(probe, 2, 15000));
+    req.Id := 7;
+    req.Count := 0;
+    th.StartBatch(req);
+    CheckTrue('batchthread/a-zero-request-still-ends-the-running-one',
+              PumpDone(probe, 6, 15000));
+    CheckTrue('batchthread/and-nothing-is-left-running', not th.BatchInProgress);
+
+    { Shutdown WHILE a batch runs. Untested until a review pointed at it, and the failure
+      mode is a hang rather than a wrong answer -- which no other check would catch. }
+    probe.BatchDone := False;
+    probe.Kept.Free;
+    probe.Kept := nil;
+    probe.Steps := 0;
+    req.Id := 8;
+    req.Text := '';
+    for i := 1 to 40 do
+      req.Text := req.Text + 'абзац ' + IntToStr(i) + ' {альфа|бета|гамма} ' + LineEnding;
+    req.Count := 200;
+    th.StartBatch(req);
+    CheckTrue('batchthread/the-batch-to-shut-down-on-started', PumpSteps(probe, 2, 15000));
+    th.Shutdown;
+    th.WaitFor;
+    CheckTrue('batchthread/shutdown-during-a-batch-does-not-hang', True);
+  finally
+    th.Shutdown;
+    th.WaitFor;
     th.Free;
     probe.Free;
   end;
@@ -3319,6 +3596,7 @@ begin
   TestExport;
   TestFileLayer;
   TestEngineThread;
+  TestEngineBatch;
 
   Writeln(Format('studio tests: %d checks, %d failed', [Checks, Failures]));
   if Failures > 0 then ExitCode := 1;
