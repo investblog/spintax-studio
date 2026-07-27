@@ -421,6 +421,40 @@ the managed tier are later releases.
       Fix), the authoring-prompt as system, a local model via localhost, synonyms through
       the same layer. Keys local, zero telemetry.
 
+## Taken from GTW, the editor this syntax came from
+
+Not new milestones — ideas from *Generating The Web 2.7*, the tool whose spintax the family
+grew out of, noted where they attach. Recorded 2026-07-28 from two screenshots of it.
+
+- [ ] **A group editor, as a PANEL — not a modal.** (M2, after the core slice below.) GTW's
+      «Мастер формул» is the good part: the group's kind switchable at the top, the variants
+      one per line under it, and for a permutation its config as fields (`minsize`, `maxsize`,
+      `sep`, `lastsep`). Editing `{a|b|c}` inside a long line of prose is the pain it solves.
+      Ours goes in the bottom strip as a third tab beside *Диагностика* / *Переменные*,
+      **not** in a dialog: GTW's wizard carried its own «Предпросмотр» precisely because its
+      main window had none, and a modal here would cover the document and freeze the live
+      preview — the one thing we have that it did not.
+- [ ] **Core slice it needs first:** rewriting the span of a GROUP, the analogue of the
+      existing `SpxSetDirective*` family, with the same read-back validation (the engine
+      re-reads the result, and an edit that would not parse is refused). Gate-able without a
+      window, so it lands as its own PR before any panel.
+- [ ] **Prompt buttons AND a free-form field, in that same panel.** (M4, spec §4.5.) Buttons
+      for the frequent verbs — rewrite, +N variants, shorten, diversify — each a **named
+      prompt template in config**, editable rather than compiled in; plus one free field for
+      everything else. Buttons alone break on the first unusual request; a field alone means
+      typing the same sentence ten times a day. Reserve the space at the bottom of the panel
+      when the panel is built, so M4 does not re-cut the layout.
+- [ ] **Show how many variants the template can produce.** (M3.) GTW puts *«Max возможных
+      вариантов: 241 864 704»* next to *«Сгенерировано: 50»*, which is the number that tells
+      an author whether their template is thin. Honest only while the document has no
+      `#include` and no conditional — decide then whether to show an exact count, a lower
+      bound, or nothing at all in those cases.
+- [ ] **A length filter on generation.** (M3.) GTW generates with *«Длина текста от 50 до
+      Unlimited»*. Cheap next to the render loop and it is a real editorial constraint.
+- Confirms M3's shape rather than adding to it: its *«Удалить похожие»* is our shingle dedup
+  and *«Перемешать»* is the order variants come out in — both belong next to the result list,
+  as buttons over it, not inside a settings dialog.
+
 ## Publish prep — Microsoft Store (spec §11)
 
 Distribution target is the Store via MSIX. Some of these are **constraints on M0/M1** (bake
