@@ -63,6 +63,7 @@ type
     FJump: TSpxJumpState;
     procedure DiagColumn(const ACaption: string; AWidth: Integer);
     procedure DiagClicked(Sender: TObject);
+    procedure DiagResized(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
     procedure VarJump(Line, Column: Integer);
     procedure RuntimeChanged(Sender: TObject);
@@ -141,6 +142,10 @@ var
 begin
   Width := 1100;
   Height := 700;
+  { Below this the panes stop being panes: the bottom strip alone is 170 pixels, and an
+    editor narrower than its own gutter plus a line of text is not an editor. }
+  Constraints.MinWidth := 760;
+  Constraints.MinHeight := 520;
   Position := poScreenCenter;
   OnClose := @FormClosed;
   OnCloseQuery := @FormAsked;
@@ -220,6 +225,7 @@ begin
   DiagColumn('Место', 70);
   DiagColumn('Сообщение', 640);
   FDiag.OnClick := @DiagClicked;
+  FDiag.OnResize := @DiagResized;
 
   { The variables panel: what the document defines, and what this session supplies. }
   FVars := TSpxVarsPane.Create(Self);
@@ -235,7 +241,10 @@ begin
   FEditor := TSynEdit.Create(Self);
   FEditor.Parent := Self;
   FEditor.Align := alLeft;
-  FEditor.Width := 540;
+  { A PROPORTION, not a pixel count. 540 was right for the window this was written at and
+    for nobody else's screen; the two panes are meant to be comparable, and the user moves
+    the splitter from there. }
+  FEditor.Width := (ClientWidth * 48) div 100;
   FEditor.Font.Name := 'Consolas';
   FEditor.Font.Size := 11;
   FEditor.Gutter.Visible := True;
@@ -398,6 +407,21 @@ begin
   finally
     FDiag.Items.EndUpdate;
   end;
+end;
+
+{ The message column takes what the fixed ones leave, which is the only width that is right
+  at more than one window size: narrower and the text a user reads is behind a horizontal
+  scrollbar, wider and the list ends in a dead strip. }
+procedure TSpxMainForm.DiagResized(Sender: TObject);
+var used, i, last, room: Integer;
+begin
+  last := FDiag.Columns.Count - 1;
+  if last < 1 then Exit;
+  used := 0;
+  for i := 0 to last - 1 do used := used + FDiag.Columns[i].Width;
+  room := FDiag.ClientWidth - used - 4;   { a hair for the frame }
+  if room < 160 then room := 160;
+  FDiag.Columns[last].Width := room;
 end;
 
 procedure TSpxMainForm.DiagClicked(Sender: TObject);

@@ -335,6 +335,24 @@ the managed tier are later releases.
       Closing it needs a continuation flag in `TSpxScanState` (bit 18 is free) and a rule for
       un-painting when the target never comes. Pinned by
       `scan/include-target-on-the-next-line-is-a-known-gap`.
+- [x] **Layout that survives a resize** (2026-07-27). Rules this project follows, each of them
+      paid for by something that actually looked broken:
+      - **a control that paints its own content must be repainted when it grows.**
+        `TIpHtmlCustomPanel.EraseBackground` is deliberately empty and it has no resize
+        handler, so the band exposed by dragging the splitter kept its old pixels — a grey
+        stripe standing between the panes. The pane invalidates the page and its internal
+        child on `Resize`; a parent's invalidation does not reach a clipped child;
+      - **the last column takes what the fixed ones leave.** A width in pixels is right at
+        exactly one window size: narrower it hides the text behind a scrollbar, wider it ends
+        in a dead strip. Both the diagnostics list and the two variable grids recompute it;
+      - **proportions, not pixel counts, for the initial split.** The editor starts at 48% of
+        the client width rather than at the 540 px that suited the window this was written on;
+      - **AutoSize for a label whose caption changes**, or it is sized for one wording and
+        clips the other;
+      - **constraints on the form**, so the panes cannot be squeezed into nonsense.
+      **Unverified by me: the stripe itself.** The diagnosis is from IPro's sources, and the
+      fix targets exactly that — but this machine's window would not take a programmatic
+      resize or splitter drag, so the confirmation is a human dragging the splitter left.
 - [ ] **Known dependency risk — `SynEditWrappedView` is marked experimental** by Lazarus, and
       `TLazSynEditLineWrapPlugin` comes from it. The build prints that warning on every run on
       purpose: it is the one gui/ warning there is, it is true, and hiding it would hide the
