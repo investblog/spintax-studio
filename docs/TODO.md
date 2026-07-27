@@ -75,6 +75,16 @@ the managed tier are later releases.
         text: `SpValidate` is still quadratic in `#set`/`#def` count (measured on the
         `v0.3.2` engine: 17.6 / 253 / 3982 ms at 400 / 1600 / 6400 definitions, and paid once
         per file in the closure), so only the edited file may revalidate on a keystroke.
+        *Done 2026-07-26* (PR 2): `TSpxValidationCache`, created and owned by the worker and
+        handed to `SpxHealthReport`, which without one still validates everything afresh —
+        and the report must be identical either way, which the suite checks. Measured where
+        only the document changes: a 20-fragment set with 300 definitions each goes from
+        **411 ms per keystroke to 14.8 ms**, a 200 KB document from **501 ms to 62 ms**.
+        The review of that PR found the cache's container was not byte-exact —
+        `TStringList` compares through the OS collation, which calls distinct code points
+        equal — so it is a `TDictionary` now, and the closure walk's own lists got
+        `UseLocale := False`; that half was a pre-existing defect that made the walk skip a
+        real fragment. Both gated, the walk one by a check that fails without the fix.
       - **No include expansion in editor-core.** The set is loaded, its slugs feed
         `knownIncludes`, and a `slug → text` resolver is handed to the engine once the engine
         has the seam — nothing more. No substitution by span, no depth or cycle bookkeeping,
@@ -244,15 +254,47 @@ the managed tier are later releases.
       true for one group and false for the other.
 
       **The slice, in order:**
-      1. editor-core gains one pure function — roughly
-         `SpxSetDirective(const Doc: string; Index: Integer; Kind, Name, Value: string): string`
-         — which rewrites exactly the span `SpExtractDirectives` reported and leaves every
-         other byte alone. Console-testable, so it lands before any UI: round-trip a
-         document, change one value, change a kind, rename, delete, and prove the rest of the
-         file is byte-identical.
-      2. the panel: two groups, the toggle on Definitions, rows in the playground's shape.
+      1. ~~editor-core gains one pure function —~~ *done 2026-07-26 (PR 3), but as FOUR narrow
+         ones rather than the single `SpxSetDirective(Kind, Name, Value)` sketched here.*
+         Measured reason: the engine reports a macro's name lower-cased and its value
+         trimmed, while the span it gives covers the indentation, the keyword's own spelling
+         and the spacing around `=`. Re-spelling a line from those three fields would rewrite
+         `<TAB>#set  %Brand%=x   ` as `#set %brand% = x` — a formatting change nobody asked
+         for, in a file the user keeps in git. So: `SpxSetDirectiveValue` /
+         `SpxSetDirectiveName` / `SpxSetDirectiveKind` / `SpxDeleteDirective`, each splicing
+         the smallest region that can carry the change, plus `SpxDocOffset` for the position
+         mapping. Each refuses (leaving the document untouched) on a bad index, on a change
+         that does not fit the kind, on a span whose text the renderer did not consume — which
+         is ANY comment inside the directive, because Text is cut from comment-stripped source
+         while the span maps back to the source — and, after the review of this PR, on a
+         result the engine does not read back as asked: a value carrying `/#` used to open a
+         comment that ate the rest of the file, and an empty or spaced name used to turn a
+         definition into body text, both reporting success.
+         44 checks. Mutation runs confirm they bite — the span guard, code-point columns, the
+         value's trailing blanks, the name splice, the deletion widening and the tab handling
+         each fail exactly the checks that name them.
+      2. ~~the panel: two groups, rows in the playground's shape~~ *done 2026-07-27 (PR 4).*
+         The bottom strip became tabbed — Диагностика | Переменные — rather than taking more
+         room from the template. Definitions show kind, name and value and jump to their line
+         on click; the session group is editable end to end (panel → job → `TSpxContext.Vars`
+         → render and `knownVariables`), so a `%name%` with a value stops being reported
+         undefined. Every row carries `DirIndex`, the occurrence index the edit functions
+         take, and the suite checks that the two orders agree rather than trusting them to.
+         The session store is pruned by `SpxKeepRuntime` in editor-core (gated): a value for
+         a name the document has since DEFINED would otherwise go on suppressing a warning
+         that macro no longer earns.
+         **Not done here:** the plain ↔ structured toggle. The playground needs a plain
+         textarea because it has no document; ours is the editor on the left, and a second
+         editable copy of the same lines is a second source of truth. Revisit only if using
+         it proves otherwise.
+         **Unverified by me: the panel on screen.** The layout is built in code and compiles,
+         the rules behind it are gated, but nothing here can see a window — and raising the
+         user's windows at 2am to photograph one is not verification worth having.
       3. write-back goes through SynEdit's own edit API so undo and the caret behave, and the
          panel re-derives from the text after every change (`SpExtractDirectives` is linear).
+         Still open, and it is why the definitions group is read-only: assigning a whole new
+         document into SynEdit would throw away the undo history and move the caret, which is
+         worse than waiting one PR.
 
       **Measured before it can surprise the panel** (2026-07-26): a directive's `Column` is
       where its CONSUMED text begins, and indentation is part of that — `  #set %a% = 1`
@@ -271,10 +313,19 @@ the managed tier are later releases.
       cache); the value field holds spintax and will eventually want the same colouring
       (`SpxTokens` can scan a fragment, but that is not M2).
 
-- [ ] **Highlighter gap — the per-element trailing separator.** `[a<br>|b]`: the family's
-      grammars colour the `<br>` and the engine acts on it (`extractTrailingSep`), but
-      `SpxTokens` leaves it as text. A missing colour, not a wrong one, which is why it did
-      not block M1.
+- [x] **Highlighter gap — the per-element trailing separator.** *Done 2026-07-27 (PR 5).*
+      `[a<br>|b]`: the engine takes that `<br>` as the separator placed before the next
+      element, and it now wears the config colour. The rule was measured through the engine
+      rather than read off the grammar, because it is not obvious: `<br>` and `<, >` ARE
+      separators while `<br/>`, `<br />`, `</b>` and `<span class="x">` are not — the HTML
+      guard trips on a leading or trailing slash, or a tag name followed by whitespace. So is
+      position: before the closing bracket it belongs to the last element and stays text, only
+      the last one in an element counts, and inside a brace group the pipe is not a
+      permutation boundary at all.
+      **Known gap, pinned by a check:** a permutation opened on an EARLIER line does not get
+      the colour. Telling "directly inside a permutation" from "inside a group" needs the
+      kinds of the open brackets, and what crosses a line is a depth — an integer, not a
+      stack, which is what makes deep nesting free. Kinds are tracked for one line only.
 - [ ] **Highlighter gap — an include target on the following line.** The family's anchor
       allows `[ \t\n\r\f\x0B]+` between `#include` and its target, so the target may begin on
       the next line; measured, the engine reports `include(frag)` for `#include`+LF+`"frag"`.
@@ -312,6 +363,32 @@ the managed tier are later releases.
       past the new file's end; SynEdit clamps to the last line, so the landing is silently
       wrong rather than loud. The honest fix is to re-read the set when the window regains
       focus, which is its own slice.
+
+      *The rest of M2 landed 2026-07-27 (PR 6):* a selection previews on its own, in the
+      document's scope, with the rule that **only the preview narrows** — diagnostics, marks,
+      panels and the status bar keep describing the whole file, gated by a check where the
+      error outside the selection still counts. Select-and-wrap goes through SynEdit's own
+      edit path (one undo step, verified), refuses column and line selections — where
+      `SelText` round-trips column-wise and would swallow text nobody selected — and restores
+      the block afterwards, without which a second wrap was a silent no-op. Hotkeys live in a
+      «Правка» menu; two shortcut decisions are recorded in the code: the brace wrap avoids
+      Ctrl+Shift+B because that is `ecMatchBracket`, and Ctrl+Shift+C is deliberately taken
+      from `ecColumnSelect`.
+
+      Left as notes, not code: Copy now copies the FRAGMENT while a selection is active
+      (it matches what is on screen, but it is new behaviour for an old button); and
+      `Partial` does double duty in the worker as both the report flag and the branch
+      selector, so the suite cannot tell those two apart.
+
+      *Followed by PR 7*, which moved the two rules that were living in the form under the
+      suite: `SpxPreviewFragment` (which selections narrow the preview, and what a jump's
+      selection becomes) and `SpxWrapRange` (whether a selection may be wrapped and where the
+      wrapped text ends up). Both take editor-core's own `TSpxPos`/`TSpxRange`/`TSpxSelKind`
+      rather than `TPoint` and `TSynSelectionMode` — the form adapts SynEdit into them and
+      back, and keeps only the edit itself, because `SelText :=` IS SynEdit's edit API and is
+      what holds undo to one step. What remains untested in `gui/` is layout and wiring; the
+      arithmetic and the policy are gated, including the "select the same span by hand after
+      a jump" case an external review found.
 
       Variables (`SpExtract` + `SpExtractDirectives` for the values),
       diagnostics (`SpValidate`) with squiggles and jump-to-error driven by `TSpDiag`

@@ -1004,7 +1004,8 @@ end;
 
 function Scan(const line: string; var st: TSpxScanState): string;
 const KIND: array[TSpxTokenKind] of string =
-  ('text', 'comment', 'dir', 'str', 'var', '{', '}', '[', ']', '|', 'cond', 'plural', 'cfg');
+  ('text', 'comment', 'dir', 'str', 'var', '{', '}', '[', ']', '|', 'cond', 'plural', 'cfg',
+   'tsep');
 var toks: TSpxTokenList; i: Integer;
 begin
   toks := TSpxTokenList.Create;
@@ -1176,6 +1177,86 @@ begin
         '{({)1 text(?1x?да)1 |(|)1 text(нет)1 }(})1');
   Check('scan/empty-conditional-name-is-an-enumeration', ScanOne('{??да}'),
         '{({)1 text(??да)1 }(})1');
+
+  { The per-element trailing separator: `<...>` ending a permutation element, which the
+    engine takes as the separator placed before the NEXT element. Every case below was
+    rendered through the engine first -- the rule is subtle enough that reading the grammar
+    would not have settled it. }
+  Check('scan/trailing-separator', ScanOne('[a<br>|b]'),
+        '[([)1 text(a)1 tsep(<br>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/one-letter-is-still-a-separator', ScanOne('[a<b>|b]'),
+        '[([)1 text(a)1 tsep(<b>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/punctuation-is-a-separator', ScanOne('[a<, >|b]'),
+        '[([)1 text(a)1 tsep(<, >)1 |(|)1 text(b)1 ](])1');
+  { The HTML guard, all three of its branches: a leading slash, a trailing slash, and a tag
+    name followed by whitespace. The engine renders each of these as text. }
+  Check('scan/self-closing-tag-is-text', ScanOne('[a<br/>|b]'),
+        '[([)1 text(a<br/>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/spaced-self-closing-is-text', ScanOne('[a<br />|b]'),
+        '[([)1 text(a<br />)1 |(|)1 text(b)1 ](])1');
+  Check('scan/closing-tag-is-text', ScanOne('[a</b>|b]'),
+        '[([)1 text(a</b>)1 |(|)1 text(b)1 ](])1');
+  Check('scan/tag-with-an-attribute-is-text', ScanOne('[a<span class="x">|b]'),
+        '[([)1 text(a<span class="x">)1 |(|)1 text(b)1 ](])1');
+  { Position decides as much as shape: before the closing bracket it belongs to the LAST
+    element and stays text; only the last one in an element is the separator; and inside a
+    brace group the pipe is not a permutation boundary at all. }
+  Check('scan/before-the-close-is-text', ScanOne('[a|b<br>]'),
+        '[([)1 text(a)1 |(|)1 text(b<br>)1 ](])1');
+  Check('scan/only-the-last-tag-in-an-element', ScanOne('[a<b>c<br>|d]'),
+        '[([)1 text(a<b>c)1 tsep(<br>)1 |(|)1 text(d)1 ](])1');
+  Check('scan/inside-a-brace-group-is-text', ScanOne('[{x<br>|y}|d]'),
+        '[([)1 {({)2 text(x<br>)2 |(|)2 text(y)2 }(})2 |(|)1 text(d)1 ](])1');
+  Check('scan/blanks-before-the-pipe', ScanOne('[a<br>  |b]'),
+        '[([)1 text(a)1 tsep(<br>)1 text(  )1 |(|)1 text(b)1 ](])1');
+
+  { STRUCTURE INSIDE THE CANDIDATE. The engine cuts a permutation into parts first --
+    SplitTopLevel, signed brace and bracket counters, a split only where both are zero -- and
+    looks for a trailing separator afterwards. So a candidate that swallows a top-level `|`,
+    or the `]` that actually closes the permutation, is not a separator at all: the part
+    ended before it. Painting one would claim a construct the engine does not see AND hide
+    the characters carrying the structure -- in `[A<]>|B]` the bracket matcher still pairs
+    that `]` with the opening one, so the two halves of the editor would disagree on one
+    screen. Every line here was rendered through the engine first. }
+  CheckTrue('scan/a-top-level-pipe-inside-is-not-a-separator',
+            Pos('tsep(', ScanOne('[a< | >|b]')) = 0);
+  CheckTrue('scan/the-closing-bracket-inside-is-not-a-separator',
+            Pos('tsep(', ScanOne('[A<]>|B]')) = 0);
+  CheckTrue('scan/an-unclosed-bracket-inside', Pos('tsep(', ScanOne('[A<[>|B]')) = 0);
+  CheckTrue('scan/an-unmatched-brace-inside', Pos('tsep(', ScanOne('[A<}s>|B]')) = 0);
+  CheckTrue('scan/an-unclosed-brace-inside', Pos('tsep(', ScanOne('[A<s{r>|B]')) = 0);
+  { The permutation ended at that `]`, so what follows is outside it. }
+  CheckTrue('scan/after-the-permutation-already-closed',
+            Pos('tsep(', ScanOne('[A{B]C<br>|D]')) = 0);
+
+  { The `<` guard is what makes a forward scan reproduce the engine's backward one: the
+    separator is the LAST `<...>` of the element. }
+  Check('scan/only-the-last-open-angle-counts', ScanOne('[a<x<br>|c]'),
+        '[([)1 text(a<x)1 tsep(<br>)1 |(|)1 text(c)1 ](])1');
+  { An empty one is still a separator to the engine -- an empty separator. }
+  Check('scan/an-empty-separator', ScanOne('[A<>|B]'),
+        '[([)1 text(A)1 tsep(<>)1 |(|)1 text(B)1 ](])1');
+  { A tag name must START with a letter for the HTML guard to fire. }
+  Check('scan/a-digit-first-is-not-a-tag-name', ScanOne('[a<1 x>|b]'),
+        '[([)1 text(a)1 tsep(<1 x>)1 |(|)1 text(b)1 ](])1');
+  { The blanks before the pipe are the engine's rtrim class: tab and vertical tab count. }
+  Check('scan/a-tab-before-the-pipe', ScanOne('[a<br>'#9'|b]'),
+        '[([)1 text(a)1 tsep(<br>)1 text('#9')1 |(|)1 text(b)1 ](])1');
+  Check('scan/a-vertical-tab-before-the-pipe', ScanOne('[a<br>'#11'|b]'),
+        '[([)1 text(a)1 tsep(<br>)1 text('#11')1 |(|)1 text(b)1 ](])1');
+  { And a brace group that CLOSES before the separator leaves the split level where it was,
+    so the separator after it is real. }
+  Check('scan/after-a-closed-brace-group', ScanOne('[{x|y}<br>|d]'),
+        '[([)1 {({)2 text(x)2 |(|)2 text(y)2 }(})2 tsep(<br>)1 |(|)1 text(d)1 ](])1');
+
+  { The known gap, pinned so it cannot move by accident: the kinds of open brackets are
+    tracked for one line only -- what crosses a line is a depth, which is what makes deep
+    nesting free -- so a permutation opened earlier does not colour its separators. A
+    missing colour, never a wrong one. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('[a', st);
+  Check('scan/a-permutation-opened-on-an-earlier-line-is-a-known-gap',
+        Scan('<br>|b]', st), 'text(<br>)1 |(|)1 text(b)1 ](])1');
 
   { The engine left-trims a permutation config, so a space before it does not turn it off
     and must not turn the colour off either. }
@@ -1516,6 +1597,70 @@ begin
     CheckTrue('thread/delivers-the-second', PumpUntil(probe, 2, 5000));
     CheckTrue('thread/reports-the-error-count', probe.Last.Errors = 1);
 
+    { The variables panel's whole round trip, which nothing gated until a review pointed at
+      it: a session value crosses into the job, becomes the context's Vars, and comes back
+      as BOTH a substituted preview and a name the validator no longer calls undefined. }
+    job.Id := 3;
+    job.Text := '<p>%city%</p>';
+    job.Vars := nil;
+    th.Post(job);
+    CheckTrue('thread/delivers-the-third', PumpUntil(probe, 3, 5000));
+    CheckTrue('thread/an-unsupplied-name-is-a-warning', probe.Last.Warnings = 1);
+    CheckTrue('thread/and-renders-verbatim', Pos('%city%', probe.Last.Preview) > 0);
+
+    job.Id := 4;
+    SetLength(job.Vars, 1);
+    job.Vars[0].Name := 'city';
+    job.Vars[0].Value := 'Тверь';
+    th.Post(job);
+    CheckTrue('thread/delivers-the-fourth', PumpUntil(probe, 4, 5000));
+    CheckTrue('thread/a-session-value-silences-the-warning', probe.Last.Warnings = 0);
+    CheckTrue('thread/and-is-substituted', Pos('Тверь', probe.Last.Preview) > 0);
+    { And it comes back in the model the panel draws from. }
+    CheckTrue('thread/the-model-comes-back', Length(probe.Last.Vars) = 1);
+    if Length(probe.Last.Vars) = 1 then
+      Check('thread/the-model-carries-the-session-value',
+            probe.Last.Vars[0].Name + '=' + probe.Last.Vars[0].Value, 'city=Тверь');
+    job.Vars := nil;
+
+    { A SELECTION previews on its own, and two halves of that matter equally: the fragment
+      renders in the DOCUMENT's scope -- so a macro defined outside it still expands -- while
+      the verdict keeps describing the whole file. Selecting a clean paragraph does not make
+      the broken bracket below it go away. }
+    job.Id := 5;
+    job.Text := '#set %greet% = Привет'#10'<p>%greet%, мир</p>'#10'сломано]';
+    job.Fragment := '<p>%greet%, мир</p>';
+    th.Post(job);
+    CheckTrue('thread/delivers-the-fifth', PumpUntil(probe, 5, 5000));
+    CheckTrue('thread/a-fragment-is-flagged-as-partial', probe.Last.Partial);
+    CheckTrue('thread/the-fragment-sees-the-document-scope',
+              Pos('Привет', probe.Last.Preview) > 0);
+    { Without the first letter: post-process capitalises the opening word of a sentence, so
+      the document's `сломано]` renders as `Сломано]` -- and a check written against the
+      lower-case form would pass here for the wrong reason and fail below for the right one. }
+    CheckTrue('thread/and-only-the-fragment-is-rendered',
+              Pos('ломано', probe.Last.Preview) = 0);
+    CheckTrue('thread/the-verdict-still-covers-the-whole-file', probe.Last.Errors = 1);
+
+    { Whitespace is not a fragment: it would render to nothing, and an empty preview under a
+      caption saying "fragment" reads as a crash. }
+    job.Id := 6;
+    job.Fragment := '   '#9;
+    th.Post(job);
+    CheckTrue('thread/delivers-the-sixth', PumpUntil(probe, 6, 5000));
+    CheckTrue('thread/whitespace-is-not-a-fragment', not probe.Last.Partial);
+    CheckTrue('thread/and-the-document-is-previewed-instead',
+              Pos('ломано', probe.Last.Preview) > 0);
+
+    { And without a selection the preview is the document again. }
+    job.Id := 7;
+    job.Fragment := '';
+    th.Post(job);
+    CheckTrue('thread/delivers-the-seventh', PumpUntil(probe, 7, 5000));
+    CheckTrue('thread/no-fragment-is-not-partial', not probe.Last.Partial);
+    CheckTrue('thread/the-whole-document-renders-again',
+              Pos('ломано', probe.Last.Preview) > 0);
+
     { LATEST WINS. Fifty edits arrive faster than fifty renders can run, so the queue holds
       one job and the rest are replaced unrendered. Without that, a fast typist would build
       a backlog the UI then walks through one stale preview at a time. }
@@ -1788,6 +1933,535 @@ begin
   end;
 end;
 
+{ ── 8ba. what the editor's selection means ───────────────────────────────── }
+
+function Sel(Kind: TSpxSelKind; L1, C1, L2, C2: Integer; const Text: string): TSpxSelection;
+begin
+  Result.Kind := Kind;
+  Result.Range := SpxRange(SpxPos(L1, C1), SpxPos(L2, C2));
+  Result.Text := Text;
+end;
+
+function Jumped(L1, C1, L2, C2: Integer): TSpxJumpState;
+begin
+  Result.Valid := True;
+  Result.Range := SpxRange(SpxPos(L1, C1), SpxPos(L2, C2));
+end;
+
+function NoJump: TSpxJumpState;
+begin
+  Result.Valid := False;
+  Result.Range := SpxRange(SpxPos(0, 0), SpxPos(0, 0));
+end;
+
+function RangeSig(const R: TSpxRange): string;
+begin
+  Result := Format('%d:%d..%d:%d', [R.A.Line, R.A.Col, R.B.Line, R.B.Col]);
+end;
+
+procedure TestSelectionPolicy;
+var
+  st: TSpxJumpState;
+  after: TSpxRange;
+  frag: string;
+begin
+  { Nothing selected: the whole document, and whatever a jump left goes with it. }
+  frag := SpxPreviewFragment(Sel(spxSelNone, 0, 0, 0, 0, ''), Jumped(2, 5, 2, 9), st);
+  Check('policy/no-selection-previews-the-document', frag, '');
+  CheckTrue('policy/no-selection-forgets-the-jump', not st.Valid);
+
+  { A selection the user made previews on its own. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), NoJump, st);
+  Check('policy/a-manual-selection-is-the-fragment', frag, 'кусок');
+  CheckTrue('policy/a-manual-selection-carries-no-jump', not st.Valid);
+
+  { The jump's OWN selection is not the user asking to preview it. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), Jumped(2, 5, 2, 9), st);
+  Check('policy/the-jumps-own-selection-does-not-narrow', frag, '');
+  CheckTrue('policy/and-stays-the-jumps', st.Valid);
+
+  { Move the selection anywhere else and the jump stops being the jump. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 3, 1, 3, 4, 'другое'), Jumped(2, 5, 2, 9), st);
+  Check('policy/a-different-selection-is-the-fragment', frag, 'другое');
+  CheckTrue('policy/and-clears-the-jump', not st.Valid);
+
+  { THE scenario an external review found: after moving away, selecting the SAME span by
+    hand is the user's own selection and must narrow. It works because the state that comes
+    back from the move is threaded into the next call -- one look at render time could not
+    tell these two apart. }
+  SpxPreviewFragment(Sel(spxSelNone, 0, 0, 0, 0, ''), Jumped(2, 5, 2, 9), st);
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), st, st);
+  Check('policy/the-same-range-selected-by-hand-does-narrow', frag, 'кусок');
+
+  { The convention the change-path relies on: without the text the fragment is empty, and
+    the state still updates -- so a caller may skip copying a large selection while dragging. }
+  frag := SpxPreviewFragment(Sel(spxSelNormal, 3, 1, 3, 4, ''), Jumped(2, 5, 2, 9), st);
+  Check('policy/no-text-means-no-fragment', frag, '');
+  CheckTrue('policy/but-the-state-still-moves', not st.Valid);
+
+  { ── the geometry of a wrap ── }
+
+  { One line: the opener pushes the end along too, so a one-character wrapper on each side of
+    1:3..1:6 ends at column 8. }
+  CheckTrue('wrap/single-line-is-allowed',
+            SpxWrapRange(Sel(spxSelNormal, 1, 3, 1, 6, 'abc'), 1, 1, after));
+  Check('wrap/single-line-range', RangeSig(after), '1:3..1:8');
+
+  { Several lines: the opener sits on the FIRST one, so only the closer moves the end. }
+  CheckTrue('wrap/multi-line-is-allowed',
+            SpxWrapRange(Sel(spxSelNormal, 1, 3, 4, 6, 'a'#10'b'), 1, 1, after));
+  Check('wrap/multi-line-range', RangeSig(after), '1:3..4:7');
+
+  { Column and line selections are refused: SelText round-trips them shape-wise, so the
+    opener would land on the first row and the closer on the last, swallowing text nobody
+    selected. Measured on the real editor before this rule existed. }
+  CheckTrue('wrap/a-column-selection-is-refused',
+            not SpxWrapRange(Sel(spxSelColumn, 1, 3, 3, 6, 'AB'), 1, 1, after));
+  CheckTrue('wrap/a-line-selection-is-refused',
+            not SpxWrapRange(Sel(spxSelLine, 1, 1, 2, 1, 'one'), 1, 1, after));
+  CheckTrue('wrap/no-selection-is-refused',
+            not SpxWrapRange(Sel(spxSelNone, 0, 0, 0, 0, ''), 1, 1, after));
+  { A refusal leaves the range alone rather than returning something half-computed. }
+  Check('wrap/a-refusal-keeps-the-range', RangeSig(after), '0:0..0:0');
+
+  { Wrappers longer than one character, because nothing says they must be one. }
+  CheckTrue('wrap/longer-wrappers',
+            SpxWrapRange(Sel(spxSelNormal, 2, 1, 2, 5, 'text'), 3, 2, after));
+  Check('wrap/longer-wrappers-range', RangeSig(after), '2:1..2:10');
+end;
+
+{ ── 8bb. editing a directive where it sits ───────────────────────────────── }
+
+function EditValue(const Doc: string; Idx: Integer; const V: string): string;
+begin
+  if not SpxSetDirectiveValue(Doc, Idx, V, Result) then Result := '<refused>';
+end;
+
+function EditName(const Doc: string; Idx: Integer; const N: string): string;
+begin
+  if not SpxSetDirectiveName(Doc, Idx, N, Result) then Result := '<refused>';
+end;
+
+function EditKind(const Doc: string; Idx: Integer; const K: string): string;
+begin
+  if not SpxSetDirectiveKind(Doc, Idx, K, Result) then Result := '<refused>';
+end;
+
+function DropDirective(const Doc: string; Idx: Integer): string;
+begin
+  if not SpxDeleteDirective(Doc, Idx, Result) then Result := '<refused>';
+end;
+
+{ What the ENGINE reads back from a document -- the only opinion that matters about whether
+  an edit produced the directive it promised. }
+function DirSig(const Doc: string): string;
+var dirs: TSpDirectiveList; i: Integer;
+begin
+  Result := '';
+  dirs := SpExtractDirectives(Doc);
+  try
+    for i := 0 to dirs.Count - 1 do
+      Result := Result + Format('%s:%s=%s;', [dirs[i].Kind, dirs[i].Name, dirs[i].Value]);
+  finally
+    dirs.Free;
+  end;
+end;
+
+procedure TestDirectiveEditing;
+var doc, out_: string;
+begin
+  { Setting a value to what it already is must not move one byte. This is the check that
+    catches a rewrite that "only" normalises formatting. }
+  doc := '   #set  %Brand%   =   Акме   ' + '/# хвостовой #/'#10'<p>%Brand%</p>';
+  Check('edit/value-round-trip', EditValue(doc, 0, 'Акме'), doc);
+
+  { A real edit touches the value and nothing else: indentation, the doubled spaces, the
+    name's own case and the trailing comment all survive. }
+  Check('edit/value-preserves-everything-around-it', EditValue(doc, 0, 'Новое'),
+        '   #set  %Brand%   =   Новое   ' + '/# хвостовой #/'#10'<p>%Brand%</p>');
+  Check('edit/the-engine-reads-back-the-new-value', DirSig(EditValue(doc, 0, 'Новое')),
+        'set:brand=Новое;');
+
+  { Line endings are the document's, not ours. }
+  doc := '#set %x% = A'#13#10'#def %y% = B'#13#10'текст';
+  Check('edit/crlf-survives-an-edit', EditValue(doc, 1, 'Б'),
+        '#set %x% = A'#13#10'#def %y% = Б'#13#10'текст');
+
+  { Two directives on ONE editor line, split by U+2028: editing the second must leave the
+    first alone -- this is where a byte offset computed on the wrong line model goes wrong. }
+  doc := '#set %x% = A'#$E2#$80#$A8'#set %y% = B'#10'хвост';
+  Check('edit/u2028-second-directive', EditValue(doc, 1, 'Б'),
+        '#set %x% = A'#$E2#$80#$A8'#set %y% = Б'#10'хвост');
+  Check('edit/u2028-both-still-read-back', DirSig(EditValue(doc, 1, 'Б')),
+        'set:x=A;set:y=Б;');
+
+  { Cyrillic before the directive on its line: code-point columns, byte offsets. }
+  doc := '/# примечание #/#set %x% = A'#10'текст';
+  Check('edit/cyrillic-before-the-directive', EditValue(doc, 0, 'Б'),
+        '/# примечание #/#set %x% = Б'#10'текст');
+
+  { The name, and only the name. }
+  doc := '#set %old% = значение'#10'%old%';
+  Check('edit/name-changes-only-the-name', EditName(doc, 0, 'renamed'),
+        '#set %renamed% = значение'#10'%old%');
+  { A macro name is ASCII by the family's grammar (`%\w+%`), so a Cyrillic one is not a name
+    at all: the engine would stop seeing a directive there and the line would become body
+    text. Refused -- and this check exists because the first version of the test above asked
+    for exactly that rename and the read-back caught it. }
+  Check('edit/a-cyrillic-name-is-refused', EditName(doc, 0, 'новое'), '<refused>');
+
+  { #set and #def differ by three bytes and by when the value is rolled -- an explicit act,
+    never a silent normalisation. }
+  doc := '   #set %x% = {a|b}'#10;
+  Check('edit/kind-set-to-def', EditKind(doc, 0, 'def'), '   #def %x% = {a|b}'#10);
+  Check('edit/kind-already-so-is-a-no-op', EditKind(doc, 0, 'set'), doc);
+
+  { An include is not a macro: it has no value, and it does not become one by swapping four
+    characters. }
+  doc := '#include "frag"'#10;
+  Check('edit/include-has-no-value', EditValue(doc, 0, 'что-то'), '<refused>');
+  Check('edit/include-is-not-a-macro-kind', EditKind(doc, 0, 'set'), '<refused>');
+  { Its target, though, is a name. }
+  Check('edit/include-target-is-editable', EditName(doc, 0, 'другой'),
+        '#include "другой"'#10);
+
+  { Deleting takes the line with it -- an empty line where a definition used to be is not
+    what the user asked for. }
+  doc := '#set %a% = 1'#10'#set %b% = 2'#10'текст';
+  Check('edit/delete-takes-the-line', DropDirective(doc, 0), '#set %b% = 2'#10'текст');
+  Check('edit/delete-the-last-of-them', DropDirective(doc, 1), '#set %a% = 1'#10'текст');
+
+  { ...but a line with a comment on it has something else to say, so the line stays. }
+  doc := '/# зачем #/#set %a% = 1'#10'текст';
+  Check('edit/delete-keeps-a-line-that-carries-a-comment', DropDirective(doc, 0),
+        '/# зачем #/'#10'текст');
+
+  { The refusal that matters: a comment INSIDE the directive swallowed the terminator, so
+    the span carries text the renderer never consumed. Rewriting it would delete the
+    comment, and the panel shows such a row read-only instead. }
+  doc := '#set %x% = A /# c'#10'still #/ хвост'#10'текст';
+  Check('edit/refuses-a-comment-that-swallowed-the-terminator', EditValue(doc, 0, 'Б'),
+        '<refused>');
+  Check('edit/refuses-to-delete-it-too', DropDirective(doc, 0), '<refused>');
+
+  { Out of range is refused, not clamped: silently editing a different directive is worse
+    than doing nothing. }
+  doc := '#set %x% = A'#10;
+  Check('edit/index-past-the-end', EditValue(doc, 7, 'Б'), '<refused>');
+  Check('edit/negative-index', EditValue(doc, -1, 'Б'), '<refused>');
+  CheckTrue('edit/a-refusal-leaves-the-document-alone',
+            (not SpxSetDirectiveValue(doc, 7, 'Б', out_)) and (out_ = doc));
+
+  { An empty value is a value: `#set %x% = ` defines an empty macro, and the engine agrees. }
+  doc := '#set %x% = A'#10;
+  Check('edit/value-can-be-emptied', EditValue(doc, 0, ''), '#set %x% = '#10);
+  Check('edit/the-engine-reads-the-empty-value', DirSig(EditValue(doc, 0, '')), 'set:x=;');
+
+  { THE WRITTEN TEXT IS NOT TRUSTED. Each of these spliced happily and reported success
+    until the edit was read back through the engine. The first is the worst: an unterminated
+    comment swallows the rest of the file, and the render collapses to nothing. }
+  doc := '#set %x% = A'#10'корпус текста'#10'%x% и ещё'#10;
+  Check('edit/a-value-that-opens-a-comment', EditValue(doc, 0, 'A /# oops'), '<refused>');
+  Check('edit/a-value-with-a-line-break', EditValue(doc, 0, 'один'#10'два'), '<refused>');
+  Check('edit/a-value-with-a-carriage-return', EditValue(doc, 0, 'один'#13'два'), '<refused>');
+  Check('edit/an-empty-name', EditName(doc, 0, ''), '<refused>');
+  Check('edit/a-name-with-a-space', EditName(doc, 0, 'a b'), '<refused>');
+  Check('edit/a-name-with-a-percent', EditName(doc, 0, 'a%b'), '<refused>');
+  doc := '#include "frag"'#10;
+  Check('edit/an-empty-include-target', EditName(doc, 0, ''), '<refused>');
+  Check('edit/an-include-target-with-a-quote', EditName(doc, 0, 'a"b'), '<refused>');
+
+  { A comment inside the directive is refused even when it closes on the same line: Text
+    comes from comment-stripped source, the span from the source, so rewriting the span
+    would delete a comment the author wrote. }
+  doc := '#set %x% = A /# заметка #/ B'#10;
+  Check('edit/refuses-an-inner-comment-that-closes', EditValue(doc, 0, 'C'), '<refused>');
+
+  { Tabs are whitespace too -- in the indentation the kind edit steps over, and in the blank
+    remainder deletion widens across. }
+  doc := #9'#set %x% = A'#10;
+  Check('edit/kind-on-a-tab-indented-directive', EditKind(doc, 0, 'def'), #9'#def %x% = A'#10);
+  doc := #9'#set %a% = 1'#9#10'текст';
+  Check('edit/delete-widens-over-tabs', DropDirective(doc, 0), 'текст');
+
+  { CRLF deletion takes both bytes of the terminator, not just the LF. }
+  doc := '#set %a% = 1'#13#10'#set %b% = 2'#13#10'текст';
+  Check('edit/delete-takes-a-crlf-line', DropDirective(doc, 0), '#set %b% = 2'#13#10'текст');
+
+  { An #include's span is greedy to the end of its line, so it already carries a terminator.
+    Deleting it must not take a SECOND one -- these two shapes have to behave the same. }
+  doc := '#include "a"'#10#10'после'#10;
+  Check('edit/delete-an-include-keeps-the-blank-line', DropDirective(doc, 0), #10'после'#10);
+  doc := '#set %a% = 1'#10#10'после'#10;
+  Check('edit/delete-a-set-keeps-the-blank-line', DropDirective(doc, 0), #10'после'#10);
+
+  { SpxDocOffset is public and its contract is its own, so it is checked directly rather
+    than only through the edits above. }
+  doc := 'ab'#10'cdef'#10'ghij';
+  CheckTrue('offset/first-byte', SpxDocOffset(doc, 1, 1) = 1);
+  CheckTrue('offset/start-of-the-second-line', SpxDocOffset(doc, 2, 1) = 4);
+  { A column past the end of a SHORT line stops at that line's end -- it does not walk on
+    into the next one. }
+  CheckTrue('offset/column-past-the-line-stops-there', SpxDocOffset(doc, 1, 9) = 3);
+  CheckTrue('offset/line-past-the-end-clamps', SpxDocOffset(doc, 99, 1) = Length(doc) + 1);
+  CheckTrue('offset/line-below-one', SpxDocOffset(doc, 0, 5) = 1);
+  CheckTrue('offset/crlf-is-one-line-break', SpxDocOffset('ab'#13#10'cd', 2, 1) = 5);
+  CheckTrue('offset/a-lone-cr-ends-a-line', SpxDocOffset('ab'#13, 2, 1) = 4);
+end;
+
+{ ── 8bc. the model's link back to the document ───────────────────────────── }
+
+procedure TestModelDirIndex;
+var
+  m: TSpxModel;
+  doc, edited: string;
+  i, seen: Integer;
+begin
+  { A panel row must know WHICH occurrence it stands for. Matching by name cannot do it --
+    duplicates are kept on purpose, because two definitions of one name is what the engine
+    calls definition.duplicate-name and a panel that showed one row would hide half of it. }
+  doc := '#set %a% = 1'#10'#include "frag"'#10'#def %b% = 2'#10'#set %a% = 3'#10'%runtime%';
+  m := SpxExtractModel(doc, SpxContext('ru', nil));
+  try
+    CheckTrue('model/three-macros-and-one-runtime', m.Vars.Count = 4);
+    CheckTrue('model/the-include-is-its-own-list', m.Includes.Count = 1);
+    { Occurrence order is the engine's: the include is number 1, so the #def is number 2. }
+    Check('model/dir-index-of-each-macro',
+          Format('%d,%d,%d', [m.Vars[0].DirIndex, m.Vars[1].DirIndex, m.Vars[2].DirIndex]),
+          '0,2,3');
+    CheckTrue('model/the-include-carries-its-index', m.Includes[0].DirIndex = 1);
+
+    { A runtime variable has no directive at all, and says so rather than pointing at one. }
+    seen := -2;
+    for i := 0 to m.Vars.Count - 1 do
+      if m.Vars[i].Kind = spxVarRuntime then seen := m.Vars[i].DirIndex;
+    CheckTrue('model/a-runtime-variable-has-no-directive', seen = -1);
+
+    { THE point of the field: the index it reports is the one the edit functions take. This
+      is the check that fails if the two orders ever drift apart. }
+    CheckTrue('model/the-index-is-the-one-the-editors-take',
+              SpxSetDirectiveValue(doc, m.Vars[2].DirIndex, '99', edited));
+    Check('model/and-it-edited-the-right-occurrence', DirSig(edited),
+          'set:a=1;include:frag=;def:b=2;set:a=99;');
+  finally
+    m.Free;
+  end;
+end;
+
+{ ── 8bd. the session's values, pruned ────────────────────────────────────── }
+
+function Pairs(const NamesAndValues: array of string): TSpxVarPairs;
+var i: Integer;
+begin
+  Result := nil;
+  SetLength(Result, Length(NamesAndValues) div 2);
+  for i := 0 to High(Result) do
+  begin
+    Result[i].Name := NamesAndValues[i * 2];
+    Result[i].Value := NamesAndValues[i * 2 + 1];
+  end;
+end;
+
+function PairSig(const P: TSpxVarPairs): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 0 to High(P) do Result := Result + P[i].Name + '=' + P[i].Value + ';';
+  if Result = '' then Result := '<none>';
+end;
+
+procedure TestKeepRuntime;
+var
+  m: TSpxModel;
+  vars: TSpxVarInfos;
+  i: Integer;
+begin
+  { The model of a document that DEFINES brand and REFERENCES city. }
+  m := SpxExtractModel('#set %brand% = Акме'#10'<p>%brand% в %city%</p>', SpxContext('ru', nil));
+  try
+    SetLength(vars, m.Vars.Count);
+    for i := 0 to m.Vars.Count - 1 do vars[i] := m.Vars[i];
+  finally
+    m.Free;
+  end;
+
+  { A value for a name the document references and nothing defines survives. }
+  Check('runtime/keeps-a-value-for-a-referenced-name',
+        PairSig(SpxKeepRuntime(vars, Pairs(['city', 'Тверь']))), 'city=Тверь;');
+
+  { A value for a name the document DEFINES is a ghost: sending it would suppress a
+    variable.undefined the macro no longer earns. }
+  Check('runtime/drops-a-value-for-a-defined-name',
+        PairSig(SpxKeepRuntime(vars, Pairs(['brand', 'Другое']))), '<none>');
+
+  { And so is a value for a name the document does not mention at all. }
+  Check('runtime/drops-a-value-nothing-references',
+        PairSig(SpxKeepRuntime(vars, Pairs(['nowhere', 'x']))), '<none>');
+
+  { The engine matches runtime names case-insensitively and keys them lower-cased, so a
+    value typed as CITY belongs to %city% -- and comes back in the spelling the next render
+    will match. }
+  Check('runtime/matches-case-insensitively-and-returns-the-model-spelling',
+        PairSig(SpxKeepRuntime(vars, Pairs(['CITY', 'Тверь']))), 'city=Тверь;');
+
+  { One value per name, and the mixture of live and dead entries keeps its order. }
+  Check('runtime/one-value-per-name',
+        PairSig(SpxKeepRuntime(vars, Pairs(['city', 'первое', 'city', 'второе']))),
+        'city=первое;');
+  Check('runtime/empty-session', PairSig(SpxKeepRuntime(vars, nil)), '<none>');
+end;
+
+{ ── 8c. the validation cache ─────────────────────────────────────────────── }
+
+{ Everything the caller can observe about a report, in one string: what a cached round must
+  reproduce exactly. }
+function ReportSig(const Doc: string; const Ctx: TSpxContext;
+  Cache: TSpxValidationCache): string;
+var r: TSpxReport; rows: TSpxPanelRows; i: Integer;
+begin
+  Result := '';
+  r := SpxHealthReport(Doc, Ctx, 0, '', Cache);
+  try
+    rows := SpxPanelRows(r);
+    for i := 0 to High(rows) do
+      Result := Result + Format('%s/%s/%s@%d:%d;',
+        [rows[i].Slug, rows[i].Severity, rows[i].Code, rows[i].Line, rows[i].Column]);
+    Result := Result + Format('|E%d W%d', [r.Errors, r.Warnings]);
+  finally
+    r.Free;
+  end;
+end;
+
+procedure TestValidationCache;
+var
+  tset: TStrMap;
+  runtime: TStrMap;
+  cache: TSpxValidationCache;
+  ctx: TSpxContext;
+  bigger: TStrMap;
+  plain, cached: string;
+  doc, doc2, slugA, slugB: string;
+  hits0, misses0: Integer;
+begin
+  doc := '#include "frag"'#10'#include "other"'#10'{незакрытая';
+  doc2 := '#include "frag"'#10'#include "other"'#10'{незакрытая и правка';
+  tset := Vars(['frag', 'фрагмент {a|b', 'other', 'текст %undefinedName% тут']);
+  cache := TSpxValidationCache.Create;
+  try
+    ctx := SpxContext('ru', nil, tset);
+
+    { THE check. A cache that changes a verdict is worse than a slow one, so the same
+      document is reported identically with and without it -- codes, severities, positions,
+      counts and all. }
+    plain := ReportSig(doc, ctx, nil);
+    cached := ReportSig(doc, ctx, cache);
+    Check('cache/report-is-identical-to-the-uncached-one', cached, plain);
+    CheckTrue('cache/first-round-is-all-misses', (cache.Hits = 0) and (cache.Misses = 3));
+
+    { A second identical round validates nothing at all. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    Check('cache/second-round-still-identical', ReportSig(doc, ctx, cache), plain);
+    CheckTrue('cache/second-round-is-all-hits',
+              (cache.Hits - hits0 = 3) and (cache.Misses - misses0 = 0));
+
+    { A keystroke in the DOCUMENT must not re-validate the fragments -- that is the whole
+      point -- and must still re-validate the document. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    ReportSig(doc2, ctx, cache);
+    CheckTrue('cache/an-edit-revalidates-only-the-edited-file',
+              (cache.Misses - misses0 = 1) and (cache.Hits - hits0 = 2));
+
+    { The verdict depends on the locale, so the locale is part of the key: plural arity and
+      more hang off it, and serving a `ru` answer for an `en` question would be silent. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    ReportSig(doc, SpxContext('en', nil, tset), cache);
+    CheckTrue('cache/locale-is-part-of-the-key', cache.Misses - misses0 = 3);
+
+    { So do the host-supplied variable names: they suppress variable.undefined. Run at the
+      SAME locale as the round before, or the misses prove nothing -- a locale change alone
+      would have caused them, which is how the first version of this check passed while the
+      variable list was absent from the key entirely (found by mutation testing). }
+    ReportSig(doc, ctx, cache);                       { back to `ru`, everything warm }
+    runtime := Vars(['undefinedName', 'значение']);
+    try
+      hits0 := cache.Hits; misses0 := cache.Misses;
+      plain := ReportSig(doc, SpxContext('ru', runtime, tset), nil);
+      cached := ReportSig(doc, SpxContext('ru', runtime, tset), cache);
+      Check('cache/known-variables-are-part-of-the-key', cached, plain);
+      CheckTrue('cache/known-variables-cause-a-miss',
+                (cache.Misses - misses0 = 3) and (cache.Hits - hits0 = 0));
+    finally
+      runtime.Free;
+    end;
+
+    { And the known-INCLUDE list, which decides include.unknown-target. Same document, same
+      locale: only the set grows. }
+    bigger := Vars(['frag', 'фрагмент {a|b', 'other', 'текст %undefinedName% тут',
+                    'third', 'ещё один']);
+    try
+      ReportSig(doc, ctx, cache);
+      hits0 := cache.Hits; misses0 := cache.Misses;
+      ReportSig(doc, SpxContext('ru', nil, bigger), cache);
+      CheckTrue('cache/known-includes-are-part-of-the-key',
+                (cache.Misses - misses0 = 3) and (cache.Hits - hits0 = 0));
+    finally
+      bigger.Free;
+    end;
+
+    { The key's fields cannot run together. Without the length prefixes ('ab' + 'c' and
+      'a' + 'bc' spell one string), the second call would hit the first one's entry. }
+    hits0 := cache.Hits; misses0 := cache.Misses;
+    cache.Validate('ab', 'c', 'ru', nil, nil).Free;
+    cache.Validate('a', 'bc', 'ru', nil, nil).Free;
+    CheckTrue('cache/key-fields-cannot-run-together',
+              (cache.Misses - misses0 = 2) and (cache.Hits - hits0 = 0));
+
+    { Entries live one round: a fragment the document no longer includes is dropped rather
+      than kept for a text the user may never type again. }
+    ReportSig('#include "frag"'#10'{незакрытая', ctx, cache);
+    CheckTrue('cache/round-drops-what-it-did-not-touch', cache.Count = 2);
+  finally
+    cache.Free;
+    tset.Free;
+  end;
+
+  { A HIT MUST BE BYTE-EXACT, and this is the check that says so. U+082D and U+0B60 are
+    distinct code points that the Windows collation gives equal weight, so a cache keyed
+    through TStringList (whose CaseSensitive comparison is AnsiCompareStr) serves the first
+    document's verdict for the second: one is a known include target, the other is not.
+    Silent, and different on machines with different collation tables -- the exact drift
+    this project bans. Two texts of the same length, so nothing else can tell them apart. }
+  slugA := 'frag' + #$E0#$A0#$AD;
+  slugB := 'frag' + #$E0#$AD#$A0;
+  tset := Vars([slugA, 'известный фрагмент']);
+  cache := TSpxValidationCache.Create;
+  try
+    ctx := SpxContext('ru', nil, tset);
+    plain := ReportSig('#include "' + slugA + '"', ctx, cache);
+    cached := ReportSig('#include "' + slugB + '"', ctx, cache);
+    CheckTrue('cache/a-hit-is-byte-exact', cached <> plain);
+    CheckTrue('cache/the-unknown-target-is-still-reported',
+              Pos('include.unknown-target', cached) > 0);
+  finally
+    cache.Free;
+    tset.Free;
+  end;
+
+  { The same defect one level up, and it predates the cache: the closure walk decides
+    "already visited" with the same fuzzy comparison, so a second fragment whose slug the
+    collation calls equal to the first would be skipped and its errors never reported. }
+  tset := Vars([slugA, 'первый {незакрытый', slugB, 'второй ]лишний']);
+  try
+    plain := ReportSig('#include "' + slugA + '"'#10'#include "' + slugB + '"',
+                       SpxContext('ru', nil, tset), nil);
+    CheckTrue('closure/two-slugs-the-collation-calls-equal',
+              (Pos('bracket.unclosed', plain) > 0) and
+              (Pos('bracket.unexpected-closing', plain) > 0));
+  finally
+    tset.Free;
+  end;
+end;
+
 { ── 9. the host's file layer ─────────────────────────────────────────────── }
 
 function TempFolder: string;
@@ -1934,6 +2608,11 @@ begin
   TestDemoTemplate;
   TestDiagMarks;
   TestPanelRows;
+  TestSelectionPolicy;
+  TestDirectiveEditing;
+  TestModelDirIndex;
+  TestKeepRuntime;
+  TestValidationCache;
   TestFileLayer;
   TestEngineThread;
 

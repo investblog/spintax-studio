@@ -94,7 +94,22 @@ type
     Kind: TSpxVarKind;
     Value: string;
     Line, Column: Integer;
+    { Which occurrence this row is, in `SpExtractDirectives` order -- the index the edit
+      functions take. -1 for a runtime variable, which has no directive to edit: its value
+      lives in the session, not in the document. Carried here so a panel row never has to
+      re-derive it by matching names, which duplicates would make ambiguous anyway. }
+    DirIndex: Integer;
   end;
+  { Flattened for the trip across a thread boundary, where a TList would need an owner on
+    both ends of a queue that throws jobs away. }
+  TSpxVarInfos = array of TSpxVarInfo;
+
+  { A name and a value, the shape the panel hands session values back in. }
+  TSpxVarPair = record
+    Name: string;
+    Value: string;
+  end;
+  TSpxVarPairs = array of TSpxVarPair;
 
   { One `#include` OCCURRENCE, so "jump to the directive" has somewhere to go and two
     includes of one target stay two rows. Known is measured against the template set, with
@@ -103,6 +118,7 @@ type
     Target: string;
     Known: Boolean;
     Line, Column: Integer;
+    DirIndex: Integer;     // the occurrence, as in TSpxVarInfo
   end;
 
   TSpxModel = class
@@ -232,6 +248,14 @@ function SpxRenderSample(const Tmpl: string; const Ctx: TSpxContext): string;
   own list, so a `#set` that only LOOKS like one -- inside a `/# ... #/` comment, or
   malformed -- is not in scope here either.
 
+  Two more divergences, both measured, both inherent to rendering a fragment AS a template:
+    * post-process capitalises the first word of what it is given, so a mid-sentence
+      selection comes back with a capital where the document has none -- selecting `world`
+      out of `hello, world` renders `World`;
+    * a selection taken from INSIDE a comment renders as live text, and a commented-out
+      `#include` inside one actually resolves. The fragment is a template now; the comment
+      that hid it is not in it.
+
   Not byte-identical to the same slice of a full render (fresh draw, `#def` rolled again).
   It is a true preview of what the fragment produces, not a promise of the same bytes. A
   selection taken from the MIDDLE of a line is rendered at a line start, so a line-anchored
@@ -244,6 +268,181 @@ function SpxRenderFragment(const Doc, Fragment: string; const Ctx: TSpxContext):
   from `SpExtractDirectives` -- values and positions included -- and the runtime variables
   are what the document references and nothing defines. Caller frees. }
 function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
+
+{ The session's values, filtered to the names that are STILL runtime variables -- referenced
+  by the document and defined by nothing in it.
+
+  A panel keeps what the user typed across renders, and that store has to be pruned or it
+  accumulates ghosts: a value for a name the document has since DEFINED would go on being
+  sent as a runtime variable, silently suppressing the `variable.undefined` warning for a
+  macro that no longer needs it; a value for a name no longer referenced at all would travel
+  with every job forever.
+
+  Names come back in the model's spelling -- lower-cased, the way the engine keys them --
+  because that is what the next render will match against, and the session may hold `BRAND`
+  where the document says `%brand%`. The comparison is ASCII-case-insensitive for the same
+  reason. }
+function SpxKeepRuntime(const Vars: TSpxVarInfos;
+  const Session: TSpxVarPairs): TSpxVarPairs;
+
+{ ── what the editor's selection means (spec §4.2) ────────────────────────── }
+
+type
+  { A position the editor understands: a 1-based line and a BYTE column, which is what
+    SynEdit's logical coordinates are. Deliberately not TPoint, and deliberately not
+    TSynSelectionMode below: editor-core knows nothing about the LCL, and that is exactly
+    what lets the console suite reach the two rules in this section. The form adapts
+    SynEdit -> here -> SynEdit and does nothing else with them. }
+  TSpxPos = record
+    Line, Col: Integer;
+  end;
+
+  TSpxRange = record
+    A, B: TSpxPos;
+  end;
+
+  { Column and line selections are named because they are REFUSED for wrapping: SelText
+    round-trips them shape-wise, so an opener lands on the first row and a closer on the
+    last, swallowing text nobody selected (measured). }
+  TSpxSelKind = (spxSelNone, spxSelNormal, spxSelColumn, spxSelLine);
+
+  TSpxSelection = record
+    Kind: TSpxSelKind;
+    Range: TSpxRange;
+    Text: string;
+  end;
+
+  { What a jump left behind. A jump selects a span to SHOW it, which is not the user asking
+    to preview that span. }
+  TSpxJumpState = record
+    Valid: Boolean;
+    Range: TSpxRange;
+  end;
+
+function SpxPos(Line, Col: Integer): TSpxPos;
+function SpxRange(const A, B: TSpxPos): TSpxRange;
+
+{ The fragment to preview -- '' meaning "the whole document" -- and what the jump state
+  becomes.
+
+  Pure, and meant to be called at BOTH moments that matter: when the selection changes, and
+  when a render is assembled. Twice, because the state alone cannot tell "the jump's
+  selection is still untouched" from "the user has just selected exactly that range by
+  hand", and only the selection-change call sees the difference between them. In that call
+  the fragment is ignored and only the new state is kept, which is why a caller may leave
+  Sel.Text empty there rather than pay for a copy of the selected text on every drag. }
+function SpxPreviewFragment(const Sel: TSpxSelection; const Jump: TSpxJumpState;
+  out NewJump: TSpxJumpState): string;
+
+{ Whether this selection can be wrapped, and the range the wrapped text will occupy
+  afterwards -- so the caller can restore the block, without which the preview un-narrows on
+  every wrap and a second wrap is a silent no-op.
+
+  The opener shifts the end only when the end is on the SAME line as the start; the closer
+  always does. }
+function SpxWrapRange(const Sel: TSpxSelection; LeftLen, RightLen: Integer;
+  out NewRange: TSpxRange): Boolean;
+
+{ ── editing a directive where it sits (spec §4.4) ────────────────────────── }
+
+{ The byte offset of a 1-based (Line, code-point Column) in Doc, over the EDITOR's line
+  model -- LF, CR and CRLF each end a line -- which is the model `TSpDiag` and
+  `TSpDirective` positions use. NOT the five terminators directives themselves split on:
+  two directives separated by U+2028 are two directives on ONE line, and their columns
+  continue across it. Clamps to Length(Doc) + 1. }
+function SpxDocOffset(const Doc: string; Line, Column: Integer): Integer;
+
+{ The edits the variables panel needs, each rewriting the SMALLEST region that can carry the
+  change and leaving every other byte of the document alone. Index selects an occurrence in
+  `SpExtractDirectives` order.
+
+  Why not one "re-spell this directive" call, which is what the backlog sketched: the engine
+  reports a macro's name LOWER-CASED and its value TRIMMED, and the span it gives covers the
+  indentation, the keyword's own spelling and the spacing around `=`. Re-emitting the line
+  from those three fields would quietly rewrite `<TAB>#set  %Brand%=x   ` as
+  `#set %brand% = x` -- a formatting change nobody asked for, in a file the user keeps in
+  git. Splicing one region cannot do that.
+
+  Each returns False and leaves NewDoc = Doc when the edit cannot be made byte-safely:
+    * the index is out of range;
+    * the occurrence's span does not equal the text the renderer consumed. That is ANY
+      comment inside the directive, not only one that swallowed the line's terminator: the
+      engine cuts Text from comment-stripped source while the span maps back to the source,
+      so `#set %x% = A /# c #/ B` differs in the two and rewriting the span would delete the
+      comment. Such a row is read-only in the panel;
+    * the change does not fit the kind: an `#include` has no value, and `#set` cannot become
+      `#include` by swapping four characters;
+    * the RESULT would not say what was asked. The written text is not trusted: a value
+      carrying `/#` opens a comment that eats the rest of the file, one carrying a line break
+      ends the directive early, an empty or spaced name is no directive at all. Every edit is
+      read back with `SpExtractDirectives` and refused unless the engine agrees. }
+function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
+  out NewDoc: string): Boolean;
+function SpxSetDirectiveName(const Doc: string; Index: Integer; const Name: string;
+  out NewDoc: string): Boolean;
+function SpxSetDirectiveKind(const Doc: string; Index: Integer; const Kind: string;
+  out NewDoc: string): Boolean;
+
+{ Removes the occurrence, and the line with it when nothing else was on that line. A head or
+  tail comment IS something else, so those lines stay. }
+function SpxDeleteDirective(const Doc: string; Index: Integer; out NewDoc: string): Boolean;
+
+type
+  { A memo for per-file validation, owned by the CALLER.
+
+    Why it exists: the closure walk validates every file in the set on every render, while
+    only the open document has changed. `SpValidate` is quadratic in the number of
+    `#set`/`#def` definitions -- measured on the v0.3.2 engine at 17.6 / 253 / 3982 ms for
+    400 / 1600 / 6400 definitions -- so a folder of fragments makes a keystroke pay for all
+    of them.
+
+    Why it is not inside editor-core's functions: this layer stays stateless so one worker
+    can own every engine call (spec §5), and deciding what may be reused is the caller's,
+    because the caller is what knows the user touched one file. So the cache is an object
+    the caller creates, hands in, and frees.
+
+    The KEY is everything the answer depends on -- locale, the known-include list, the known
+    variable list, the slug, the text -- because a hit that ignores any of them serves a
+    verdict computed under different rules. Lengths are baked into the key so that no
+    concatenation of two fields can collide with another.
+
+    Entries live one ROUND: whatever a round does not touch is dropped when it ends. That
+    bounds the cache to the current closure and evicts the previous keystroke's document
+    instead of keeping a copy of every text the user has ever typed. Two consequences worth
+    knowing rather than discovering: alternating between two documents that share no
+    fragments hits nothing, because each round evicts the other's entries (harmless while
+    one document is open, worth revisiting if tabs arrive); and the round is a CONVENTION --
+    SpxHealthReport pairs BeginRound with EndRound, and calling Validate outside one simply
+    keeps everything it was given.
+
+    NOT thread-safe, like everything else here: one worker owns the engine and owns this. }
+  TSpxValidationCache = class
+  private
+    { Dictionaries, NOT sorted string lists. TStringList decides identity through
+      DoCompareText, which with CaseSensitive uses AnsiCompareStr -- the OS collation on
+      Windows -- and that calls distinct code points equal: U+082D and U+0B60 compare 0,
+      along with ~900 other pairs in the 3-byte range alone. A cache keyed that way serves
+      one document's verdict for another's, silently, and differently on machines with
+      different collation tables. Measured, and gated by `cache/a-hit-is-byte-exact`.
+      A dictionary compares bytes and hashes the key once instead of collating a whole
+      document per probe. }
+    FEntries: TDictionary<string, TSpDiagList>;   // the lists are owned here
+    FUsed: TDictionary<string, Boolean>;          // keys touched in the current round
+    FHits, FMisses: Integer;
+    function GetCount: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure BeginRound;
+    procedure EndRound;
+    { The file's diagnostics, computed only on a miss. The caller OWNS the returned list --
+      the report it goes into frees it -- so a hit hands back a copy, never the entry. }
+    function Validate(const Slug, Text, Locale: string;
+      KnownIncludes, KnownVars: TStringList): TSpDiagList;
+    property Hits: Integer read FHits;
+    property Misses: Integer read FMisses;
+    property Count: Integer read GetCount;
+  end;
 
 { Diagnostics for the document AND every file it includes, each validated separately in its
   own coordinates (spec §4.3), plus Probes health renders. Caller frees.
@@ -263,11 +462,14 @@ function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
   never validated by this walk. Closing it would mean rendering first and re-parsing the
   output, which buys a corner at the price of the whole design.
 
-  No caching here: this layer stays stateless so one worker can own every engine call
-  (spec §5). Deciding what to re-validate on a keystroke is the caller's, which is the layer
-  that knows what the user touched. }
+  No caching STATE here: this layer stays stateless so one worker can own every engine call
+  (spec §5). Deciding what may be reused is the caller's, which is the layer that knows what
+  the user touched -- so it hands in a TSpxValidationCache it owns, or nothing at all and
+  every file is validated afresh. The report is identical either way; that is what the suite
+  checks. }
 function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
-  Probes: Integer; const DocSlug: string = ''): TSpxReport;
+  Probes: Integer; const DocSlug: string = '';
+  Cache: TSpxValidationCache = nil): TSpxReport;
 
 { The OPEN DOCUMENT's diagnostics as spans the editor can underline (spec §4.1).
 
@@ -711,8 +913,11 @@ begin
    try
     defined := TStringList.Create;
     { Macro names are ASCII by the engine's grammar, so the default (case-insensitive)
-      compare would only ever fold names that are already equal -- but say what is meant. }
+      compare would only ever fold names that are already equal -- but say what is meant.
+      UseLocale for the same reason as everywhere else in this unit: CaseSensitive alone
+      leaves the comparison to the OS collation (see SpxHealthReport). }
     defined.CaseSensitive := True;
+    defined.UseLocale := False;
     runtimeVals := TStrMap.Create;
     { The engine keys macros lower-cased and matches runtime names case-insensitively, so
       the panel can show a value the user typed as BRAND against a %brand% reference. }
@@ -730,6 +935,7 @@ begin
           incInfo.Known := (Ctx.Templates <> nil) and Ctx.Templates.ContainsKey(dirs[i].Name);
           incInfo.Line := dirs[i].Line;
           incInfo.Column := dirs[i].Column;
+          incInfo.DirIndex := i;
           Result.Includes.Add(incInfo);
         end
         else
@@ -739,6 +945,7 @@ begin
           v.Value := dirs[i].Value;
           v.Line := dirs[i].Line;
           v.Column := dirs[i].Column;
+          v.DirIndex := i;
           Result.Vars.Add(v);
           { Duplicates are kept: two definitions of one name is what the engine calls
             definition.duplicate-name, and a panel that silently showed one row would hide
@@ -759,6 +966,7 @@ begin
           v.Name := ex.Refs[i];
           v.Kind := spxVarRuntime;
           if not runtimeVals.TryGetValue(v.Name, v.Value) then v.Value := '';
+          v.DirIndex := -1;   { nothing in the document to edit: this value is the session's }
           v.Line := 0;
           v.Column := 0;
           Result.Vars.Add(v);
@@ -872,13 +1080,445 @@ begin
   Report.Notes.Add(n);
 end;
 
+function SpxKeepRuntime(const Vars: TSpxVarInfos;
+  const Session: TSpxVarPairs): TSpxVarPairs;
+var
+  i, j, n: Integer;
+  wanted: string;
+begin
+  Result := nil;
+  SetLength(Result, Length(Session));
+  n := 0;
+  for i := 0 to High(Vars) do
+  begin
+    if Vars[i].Kind <> spxVarRuntime then Continue;
+    for j := 0 to High(Session) do
+    begin
+      { ASCII folding is the right one: the engine scans references and directive names with
+        an ASCII word rule, so a non-ASCII session name can never match a model name. }
+      wanted := LowerCase(Session[j].Name);
+      if wanted <> Vars[i].Name then Continue;
+      Result[n].Name := Vars[i].Name;      { the model's spelling: what the render matches }
+      Result[n].Value := Session[j].Value;
+      Inc(n);
+      Break;                               { one value per name; the first wins }
+    end;
+  end;
+  SetLength(Result, n);
+end;
+
+{ ── what the editor's selection means ────────────────────────────────────── }
+
+function SpxPos(Line, Col: Integer): TSpxPos;
+begin
+  Result.Line := Line;
+  Result.Col := Col;
+end;
+
+function SpxRange(const A, B: TSpxPos): TSpxRange;
+begin
+  Result.A := A;
+  Result.B := B;
+end;
+
+function SamePos(const A, B: TSpxPos): Boolean;
+begin
+  Result := (A.Line = B.Line) and (A.Col = B.Col);
+end;
+
+function SameRange(const A, B: TSpxRange): Boolean;
+begin
+  Result := SamePos(A.A, B.A) and SamePos(A.B, B.B);
+end;
+
+function SpxPreviewFragment(const Sel: TSpxSelection; const Jump: TSpxJumpState;
+  out NewJump: TSpxJumpState): string;
+begin
+  NewJump := Jump;
+  { Nothing selected: whatever a jump left is gone with it, so selecting that same span by
+    hand afterwards is the user's own selection and does narrow the preview. }
+  if Sel.Kind = spxSelNone then
+  begin
+    NewJump.Valid := False;
+    Exit('');
+  end;
+  { Still exactly what the jump selected: it was made to show a finding, not to preview it. }
+  if Jump.Valid and SameRange(Sel.Range, Jump.Range) then Exit('');
+  NewJump.Valid := False;
+  Result := Sel.Text;
+end;
+
+function SpxWrapRange(const Sel: TSpxSelection; LeftLen, RightLen: Integer;
+  out NewRange: TSpxRange): Boolean;
+begin
+  NewRange := Sel.Range;
+  Result := False;
+  if Sel.Kind <> spxSelNormal then Exit;
+  if (LeftLen < 0) or (RightLen < 0) then Exit;
+  if NewRange.B.Line = NewRange.A.Line then
+    Inc(NewRange.B.Col, LeftLen + RightLen)
+  else
+    Inc(NewRange.B.Col, RightLen);
+  Result := True;
+end;
+
+{ ── editing a directive where it sits ────────────────────────────────────── }
+
+function SpxDocOffset(const Doc: string; Line, Column: Integer): Integer;
+var i, j, ln: Integer;
+begin
+  if Line < 1 then Exit(1);
+  i := 1;
+  ln := 1;
+  { The EDITOR's three terminators, not the directive splitter's five: a U+2028 between two
+    directives does not start a new line for a position. }
+  while (i <= Length(Doc)) and (ln < Line) do
+  begin
+    if Doc[i] = #13 then
+    begin
+      if (i < Length(Doc)) and (Doc[i + 1] = #10) then Inc(i);
+      Inc(ln);
+    end
+    else if Doc[i] = #10 then Inc(ln);
+    Inc(i);
+  end;
+  { Only this LINE's bytes go to the column walker. Handing it the rest of the document
+    would let a column past the end of a short line walk into the following ones -- and
+    count a CRLF as two columns while doing it, which is not even the editor's line model.
+    Unreachable from the engine's own coordinates, which never overshoot, but this is public
+    and a caret at the end of a line is an everyday coordinate. }
+  j := i;
+  while (j <= Length(Doc)) and (Doc[j] <> #10) and (Doc[j] <> #13) do Inc(j);
+  Result := i + SpxByteColumn(Copy(Doc, i, j - i), Column) - 1;
+  if Result > Length(Doc) + 1 then Result := Length(Doc) + 1;
+end;
+
+function AllBlank(const S: string): Boolean;
+var i: Integer;
+begin
+  for i := 1 to Length(S) do
+    if (S[i] <> ' ') and (S[i] <> #9) then Exit(False);
+  Result := True;
+end;
+
+function IndexOfChar(const S: string; C: Char; From: Integer): Integer;
+begin
+  Result := From;
+  if Result < 1 then Result := 1;
+  while (Result <= Length(S)) and (S[Result] <> C) do Inc(Result);
+  if Result > Length(S) then Result := 0;
+end;
+
+{ The directive's own start inside its span: the first byte that is not indentation. }
+function HeadPos(const S: string): Integer;
+begin
+  Result := 1;
+  while (Result <= Length(S)) and ((S[Result] = ' ') or (S[Result] = #9)) do Inc(Result);
+end;
+
+{ The NAME's own bytes -- between the percent signs, or inside the quotes for an include --
+  as a half-open span [NA, NB) in S. }
+function NameSpan(const S, Kind: string; out NA, NB: Integer): Boolean;
+var open_, close_: Integer; mark: Char;
+begin
+  NA := 0; NB := 0;
+  if Kind = 'include' then mark := '"' else mark := '%';
+  open_ := IndexOfChar(S, mark, HeadPos(S));
+  if open_ = 0 then Exit(False);
+  close_ := IndexOfChar(S, mark, open_ + 1);
+  if close_ = 0 then Exit(False);
+  NA := open_ + 1;
+  NB := close_;
+  Result := True;
+end;
+
+{ The VALUE's own bytes as a half-open span: after the `=` that follows the name, blanks
+  skipped, through the last non-blank. Trailing blanks are left where they are -- a tail
+  comment sits behind them, and the span stops before it. }
+function ValueSpan(const S: string; From: Integer; out VA, VB: Integer): Boolean;
+var p, e: Integer;
+begin
+  VA := 0; VB := 0;
+  p := IndexOfChar(S, '=', From);
+  if p = 0 then Exit(False);
+  Inc(p);
+  while (p <= Length(S)) and ((S[p] = ' ') or (S[p] = #9)) do Inc(p);
+  e := Length(S);
+  while (e >= p) and ((S[e] = ' ') or (S[e] = #9)) do Dec(e);
+  VA := p;
+  VB := e + 1;
+  Result := True;
+end;
+
+{ One occurrence resolved to a byte span, and False when rewriting it would not be safe. }
+function DirectiveSpan(const Doc: string; Index: Integer; out D: TSpDirective;
+  out A, B: Integer; out Covered: string): Boolean;
+var dirs: TSpDirectiveList; found: Boolean;
+begin
+  Result := False;
+  A := 0; B := 0; Covered := '';
+  D := Default(TSpDirective);
+  if Index < 0 then Exit;
+  found := False;
+  dirs := SpExtractDirectives(Doc);
+  try
+    if Index < dirs.Count then
+    begin
+      D := dirs[Index];
+      found := True;
+    end;
+  finally
+    dirs.Free;
+  end;
+  if not found then Exit;
+  A := SpxDocOffset(Doc, D.Line, D.Column);
+  B := SpxDocOffset(Doc, D.EndLine, D.EndColumn);
+  if (A < 1) or (B < A) then Exit;
+  Covered := Copy(Doc, A, B - A);
+  { The span IS what the renderer consumed -- except when a comment sits inside the
+    directive. Text is cut from comment-stripped source; the span maps back to the source and
+    therefore carries the comment. That covers `#set %x% = A /# c #/ B` as much as the case
+    where the comment swallowed the terminator, and rewriting either would delete a comment
+    the author wrote. Refused, both. }
+  Result := Covered = D.Text;
+end;
+
+function Splice(const Doc: string; A, B: Integer; const S: string): string;
+begin
+  Result := Copy(Doc, 1, A - 1) + S + Copy(Doc, B, MaxInt);
+end;
+
+{ Does the document we just produced still say what the caller asked for? Asked of the
+  ENGINE, because the caller's string is an open door: `A /# oops` opens a comment nobody
+  closes and the rest of the file stops being template at all; a line break in a value ends
+  the directive early and leaves the remainder as body text; an empty or spaced name is no
+  directive to the grammar. Every one of those used to splice happily and report success.
+
+  Cheap enough: an edit is a user action, not a keystroke, and the panel re-derives from the
+  document afterwards anyway. }
+function DirectiveCount(const Doc: string): Integer;
+var dirs: TSpDirectiveList;
+begin
+  dirs := SpExtractDirectives(Doc);
+  try
+    Result := dirs.Count;
+  finally
+    dirs.Free;
+  end;
+end;
+
+function EditAccepted(const NewDoc: string; Index: Integer;
+  const Kind, Name, Value: string): Boolean;
+var dirs: TSpDirectiveList; d: TSpDirective; found: Boolean;
+begin
+  d := Default(TSpDirective);
+  found := False;
+  dirs := SpExtractDirectives(NewDoc);
+  try
+    if (Index >= 0) and (Index < dirs.Count) then
+    begin
+      d := dirs[Index];
+      found := True;
+    end;
+  finally
+    dirs.Free;
+  end;
+  Result := found and (d.Kind = Kind) and (d.Name = Name) and (d.Value = Value);
+end;
+
+function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
+  out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, na, nb, va, vb: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+  if d.Kind = 'include' then Exit;              { an include carries a target, not a value }
+  if not NameSpan(covered, d.Kind, na, nb) then Exit;
+  if not ValueSpan(covered, nb, va, vb) then Exit;
+  NewDoc := Splice(Doc, a + va - 1, a + vb - 1, Value);
+  { The engine trims a value as the renderer does, so that is what it will read back. }
+  Result := EditAccepted(NewDoc, Index, d.Kind, d.Name, Trim(Value));
+  if not Result then NewDoc := Doc;
+end;
+
+function SpxSetDirectiveName(const Doc: string; Index: Integer; const Name: string;
+  out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, na, nb: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+  if not NameSpan(covered, d.Kind, na, nb) then Exit;
+  NewDoc := Splice(Doc, a + na - 1, a + nb - 1, Name);
+  { A macro's name comes back lower-cased -- that is how the engine keys them -- while an
+    include target is a host identifier and comes back verbatim. }
+  if d.Kind = 'include' then
+    Result := EditAccepted(NewDoc, Index, d.Kind, Name, d.Value)
+  else
+    Result := EditAccepted(NewDoc, Index, d.Kind, LowerCase(Name), d.Value);
+  if not Result then NewDoc := Doc;
+end;
+
+function SpxSetDirectiveKind(const Doc: string; Index: Integer; const Kind: string;
+  out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, h: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  { `#set` and `#def` are the same shape and the same length, so one is the other with three
+    bytes changed. `#include` is a different construct with a different payload, and turning
+    a macro into one -- or back -- is not a substitution this function will pretend to make. }
+  if (Kind <> 'set') and (Kind <> 'def') then Exit;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+  if (d.Kind <> 'set') and (d.Kind <> 'def') then Exit;
+  if d.Kind = Kind then Exit(True);             { already so; the document is untouched }
+  h := HeadPos(covered);
+  if h + 3 > Length(covered) then Exit;
+  NewDoc := Splice(Doc, a + h, a + h + 3, Kind);
+  Result := EditAccepted(NewDoc, Index, Kind, d.Name, d.Value);
+  if not Result then NewDoc := Doc;
+end;
+
+function SpxDeleteDirective(const Doc: string; Index: Integer; out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, ls, le: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+
+  { Widen to the whole line when the directive was alone on it -- otherwise removing the
+    span leaves an empty line where a definition used to be. A head or a tail comment counts
+    as company, and then only the directive goes. }
+  ls := a;
+  while (ls > 1) and (Doc[ls - 1] <> #10) and (Doc[ls - 1] <> #13) do Dec(ls);
+  le := b;
+  while (le <= Length(Doc)) and (Doc[le] <> #10) and (Doc[le] <> #13) do Inc(le);
+
+  if AllBlank(Copy(Doc, ls, a - ls)) and AllBlank(Copy(Doc, b, le - b)) then
+  begin
+    { Take the terminator too, or an empty line is left where a definition used to be --
+      UNLESS the span already ends on one. An `#include`'s span is greedy to the end of its
+      line (the family anchor ends `[ \t\n\r\f\x0B]*$`), so it carries its terminator
+      already, and taking another would swallow the following BLANK line -- which deleting a
+      `#set` in the same position does not do. Measured. }
+    if (b > 1) and ((Doc[b - 1] = #10) or (Doc[b - 1] = #13)) then
+      { the span brought its own terminator }
+    else if (le <= Length(Doc)) and (Doc[le] = #13) then
+    begin
+      Inc(le);
+      if (le <= Length(Doc)) and (Doc[le] = #10) then Inc(le);
+    end
+    else if (le <= Length(Doc)) and (Doc[le] = #10) then
+      Inc(le);
+    NewDoc := Splice(Doc, ls, le, '');
+  end
+  else
+    NewDoc := Splice(Doc, a, b, '');
+  { One occurrence gone, and only one: a deletion that broke the file would change the count
+    by something else. }
+  Result := DirectiveCount(NewDoc) = DirectiveCount(Doc) - 1;
+  if not Result then NewDoc := Doc;
+end;
+
+{ ── the validation cache ─────────────────────────────────────────────────── }
+
+{ A caller-owned copy. The report frees what it is given, so an entry can never be handed
+  out directly -- one freed report would take the cache with it. }
+function CopyDiags(Src: TSpDiagList): TSpDiagList;
+var i: Integer;
+begin
+  Result := TSpDiagList.Create;
+  for i := 0 to Src.Count - 1 do Result.Add(Src[i]);
+end;
+
+{ Length-prefixed, so no two different tuples can spell one key: without the lengths a slug
+  ending in a digit and a text starting with one could meet in the middle. }
+function KeyPart(const S: string): string;
+begin
+  Result := IntToStr(Length(S)) + ':' + S;
+end;
+
+function ListKey(L: TStringList): string;
+begin
+  if L = nil then Result := '' else Result := L.CommaText;
+end;
+
+constructor TSpxValidationCache.Create;
+begin
+  FEntries := TDictionary<string, TSpDiagList>.Create;
+  FUsed := TDictionary<string, Boolean>.Create;
+end;
+
+destructor TSpxValidationCache.Destroy;
+var pair: TPair<string, TSpDiagList>;
+begin
+  for pair in FEntries do pair.Value.Free;
+  FEntries.Free;
+  FUsed.Free;
+  inherited Destroy;
+end;
+
+function TSpxValidationCache.GetCount: Integer;
+begin
+  Result := FEntries.Count;
+end;
+
+procedure TSpxValidationCache.BeginRound;
+begin
+  FUsed.Clear;
+end;
+
+procedure TSpxValidationCache.EndRound;
+var
+  pair: TPair<string, TSpDiagList>;
+  stale: TList<string>;
+  key: string;
+begin
+  { Collected first: a dictionary must not be modified while it is being enumerated. }
+  stale := TList<string>.Create;
+  try
+    for pair in FEntries do
+      if not FUsed.ContainsKey(pair.Key) then stale.Add(pair.Key);
+    for key in stale do
+    begin
+      FEntries[key].Free;
+      FEntries.Remove(key);
+    end;
+  finally
+    stale.Free;
+  end;
+end;
+
+function TSpxValidationCache.Validate(const Slug, Text, Locale: string;
+  KnownIncludes, KnownVars: TStringList): TSpDiagList;
+var
+  key: string;
+  hit, fresh: TSpDiagList;
+begin
+  key := KeyPart(Locale) + KeyPart(Slug) + KeyPart(ListKey(KnownIncludes)) +
+         KeyPart(ListKey(KnownVars)) + KeyPart(Text);
+  if FEntries.TryGetValue(key, hit) then
+  begin
+    Inc(FHits);
+    FUsed.AddOrSetValue(key, True);
+    Exit(CopyDiags(hit));
+  end;
+  Inc(FMisses);
+  fresh := SpValidate(Text, Locale, KnownIncludes, KnownVars);
+  FEntries.Add(key, fresh);
+  FUsed.AddOrSetValue(key, True);
+  Result := CopyDiags(fresh);
+end;
+
 { Validate ONE file and file its diagnostics under its own slug. Coordinate spaces are never
   merged: a position from a fragment means nothing in the document's buffer. }
 procedure ValidateFile(Report: TSpxReport; const Slug, Text, Locale: string;
-  KnownIncludes, KnownVars: TStringList);
+  KnownIncludes, KnownVars: TStringList; Cache: TSpxValidationCache);
 var diags: TSpDiagList; i: Integer;
 begin
-  diags := SpValidate(Text, Locale, KnownIncludes, KnownVars);
+  if Cache <> nil then diags := Cache.Validate(Slug, Text, Locale, KnownIncludes, KnownVars)
+  else diags := SpValidate(Text, Locale, KnownIncludes, KnownVars);
   try
     for i := 0 to diags.Count - 1 do
       if diags[i].Severity = 'error' then Inc(Report.Errors) else Inc(Report.Warnings);
@@ -896,13 +1536,13 @@ end;
   validated once however many times it is included; Path is what makes a cycle a cycle and a
   diamond merely a second visit. }
 procedure WalkClosure(Report: TSpxReport; const Text, Slug: string; const Ctx: TSpxContext;
-  Visited, Path, KnownIncludes, KnownVars: TStringList);
+  Visited, Path, KnownIncludes, KnownVars: TStringList; Cache: TSpxValidationCache);
 var
   dirs: TSpDirectiveList;
   i, j: Integer;
   target, childText, folded, hint: string;
 begin
-  ValidateFile(Report, Slug, Text, Ctx.Locale, KnownIncludes, KnownVars);
+  ValidateFile(Report, Slug, Text, Ctx.Locale, KnownIncludes, KnownVars, Cache);
   if Ctx.Templates = nil then Exit;
 
   dirs := SpExtractDirectives(Text);
@@ -958,7 +1598,8 @@ begin
       if Visited.IndexOf(target) >= 0 then Continue;
       Visited.Add(target);
       Path.Add(target);
-      WalkClosure(Report, childText, target, Ctx, Visited, Path, KnownIncludes, KnownVars);
+      WalkClosure(Report, childText, target, Ctx, Visited, Path, KnownIncludes, KnownVars,
+                  Cache);
       Path.Delete(Path.Count - 1);
     end;
   finally
@@ -967,7 +1608,7 @@ begin
 end;
 
 function SpxHealthReport(const Doc: string; const Ctx: TSpxContext;
-  Probes: Integer; const DocSlug: string = ''): TSpxReport;
+  Probes: Integer; const DocSlug: string = ''; Cache: TSpxValidationCache = nil): TSpxReport;
 var
   knownIncludes, knownVars, visited, path, outputs: TStringList;
   pair: TPair<string, string>;
@@ -993,6 +1634,16 @@ begin
       knownIncludes.CaseSensitive := True;
       visited.CaseSensitive := True;
       path.CaseSensitive := True;
+      { CaseSensitive is NOT exactness. TStringList compares through DoCompareText, which
+        with CaseSensitive picks AnsiCompareStr -- the OS collation on Windows -- and that
+        returns 0 for distinct code points: U+082D and U+0B60 are one key to it, along with
+        roughly nine hundred other pairs in the three-byte range. Two slugs differing only
+        there would make `visited` skip a real fragment, exactly the drift this comment set
+        out to prevent. UseLocale := False is the RTL's own switch to CompareStr, i.e. to
+        bytes. Measured; gated by `closure/two-slugs-the-collation-calls-equal`. }
+      knownIncludes.UseLocale := False;
+      visited.UseLocale := False;
+      path.UseLocale := False;
 
       if Ctx.Templates <> nil then
         for pair in Ctx.Templates do knownIncludes.Add(pair.Key);
@@ -1015,11 +1666,19 @@ begin
       { Both sets go in on every pass. knownVars carries the RUNTIME names only: a file's own
         macros are visible to the validator anyway, and the parent's are not visible to a
         child at render time (ADR 0003). }
-      WalkClosure(Result, Doc, '', Ctx, visited, path, knownIncludes, knownVars);
+      { One health report is one ROUND: whatever the walk does not reach is dropped when it
+        ends, so the cache holds the current closure and not the history of every keystroke. }
+      if Cache <> nil then Cache.BeginRound;
+      try
+        WalkClosure(Result, Doc, '', Ctx, visited, path, knownIncludes, knownVars, Cache);
+      finally
+        if Cache <> nil then Cache.EndRound;
+      end;
 
       { Health probes on fixed seeds, so the same document always reports the same numbers --
         a status bar that flickers between runs teaches the user to ignore it. }
       outputs.CaseSensitive := True;   // 'AA' and 'aa' are two renders, not one
+      outputs.UseLocale := False;      // ...and so are two renders differing by one code point
       outputs.Sorted := True;
       outputs.Duplicates := dupIgnore;
       for i := 1 to Probes do

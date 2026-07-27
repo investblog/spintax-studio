@@ -16,9 +16,9 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs,
   Clipbrd, Graphics,
-  SynEdit, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
+  SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxPreviewPane, SpxFiles, SpxDemo;
+  SpxPreviewPane, SpxVarsPane, SpxFiles, SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -50,14 +50,28 @@ type
     FReloadSet: Boolean;
     { The panel and the rows behind it. FRowSig is what the list currently shows, so a
       keystroke that changes nothing does not rebuild the list under the user's hand. }
+    FBottom: TPageControl;
     FDiag: TListView;
+    FVars: TSpxVarsPane;
     FDiagSplit: TSplitter;
     FRows: TSpxPanelRows;
     FRowSig: string;
     FPendingRow: TSpxPanelRow;
+    { What a jump left behind, so the preview does not narrow to it: going to look at an
+      error must not replace the document's preview with a render of the broken span. The
+      rule that reads this lives in editor-core, where it is gated. }
+    FJump: TSpxJumpState;
     procedure DiagColumn(const ACaption: string; AWidth: Integer);
     procedure DiagClicked(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
+    procedure VarJump(Line, Column: Integer);
+    procedure RuntimeChanged(Sender: TObject);
+    procedure SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
+    procedure WrapSelection(const L, R: string);
+    function CurrentSelection(WithText: Boolean): TSpxSelection;
+    procedure WrapBracesClicked(Sender: TObject);
+    procedure WrapBracketsClicked(Sender: TObject);
+    procedure JumpToPos(Line, Column, EndLine, EndColumn: Integer);
     procedure ShowRows(const ARows: TSpxPanelRows);
     procedure JumpTo(Row: TSpxPanelRow);
     function LineOf(N: Integer): string;
@@ -102,6 +116,7 @@ type
 const
   DEBOUNCE_MS = 200;   // long enough to skip a burst of typing, short enough to feel live
 
+
 constructor TSpxMainForm.Create(AOwner: TComponent);
 begin
   { CreateNew, not Create: there is no .lfm resource to load. }
@@ -121,6 +136,8 @@ begin
 end;
 
 procedure TSpxMainForm.BuildUi;
+var
+  sheetDiag, sheetVars: TTabSheet;
 begin
   Width := 1100;
   Height := 700;
@@ -177,13 +194,23 @@ begin
   FStatus.SimplePanel := True;
   FStatus.SimpleText := 'готов';
 
-  { The panel, created before the two panes so it owns the bottom strip and they divide what
-    is left. It shows what a squiggle cannot: a finding inside an included file, and one the
-    engine could not place at all. }
+  { The bottom strip, created before the two panes so it owns that space and they divide
+    what is left. Two tabs rather than two more panels: the window is already a two-pane
+    editor, and every strip added to it is taken from the template. }
+  FBottom := TPageControl.Create(Self);
+  FBottom.Parent := Self;
+  FBottom.Align := alBottom;
+  FBottom.Height := 170;
+  sheetDiag := FBottom.AddTabSheet;
+  sheetDiag.Caption := 'Диагностика';
+  sheetVars := FBottom.AddTabSheet;
+  sheetVars.Caption := 'Переменные';
+
+  { What a squiggle cannot show: a finding inside an included file, and one the engine could
+    not place at all. }
   FDiag := TListView.Create(Self);
-  FDiag.Parent := Self;
-  FDiag.Align := alBottom;
-  FDiag.Height := 150;
+  FDiag.Parent := sheetDiag;
+  FDiag.Align := alClient;
   FDiag.ViewStyle := vsReport;
   FDiag.ReadOnly := True;
   FDiag.RowSelect := True;
@@ -193,6 +220,13 @@ begin
   DiagColumn('Место', 70);
   DiagColumn('Сообщение', 640);
   FDiag.OnClick := @DiagClicked;
+
+  { The variables panel: what the document defines, and what this session supplies. }
+  FVars := TSpxVarsPane.Create(Self);
+  FVars.Parent := sheetVars;
+  FVars.Align := alClient;
+  FVars.OnJump := @VarJump;
+  FVars.OnRuntimeChanged := @RuntimeChanged;
 
   FDiagSplit := TSplitter.Create(Self);
   FDiagSplit.Parent := Self;
@@ -212,6 +246,7 @@ begin
   FEditor.Highlighter := FHighlighter;
   FEditor.Text := SpxDemoTemplate;
   FEditor.OnChange := @EditorChanged;
+  FEditor.OnStatusChange := @SelectionChanged;
   { The demo's paragraphs run past 500 characters, and a template pane that opens on
     one-eighth of a line teaches the user to scroll rather than to read. Wrapping is the
     editor's own plugin, so the buffer keeps its real lines and every position the engine
@@ -264,7 +299,7 @@ procedure TSpxMainForm.BuildMenu;
 
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
-  fileMenu: TMenuItem;
+  fileMenu, editMenu: TMenuItem;
 begin
   bar := TMainMenu.Create(Self);
   fileMenu := TMenuItem.Create(Self);
@@ -282,6 +317,26 @@ begin
   Item(fileMenu, 'Перечитать набор', 0, [], @ReloadSetClicked);
   Item(fileMenu, '-', 0, [], nil);
   Item(fileMenu, 'Выход', 0, [], @ExitClicked);
+
+  { Every key action gets a place in a menu, not only a shortcut: a hotkey nobody can find
+    is a hotkey nobody uses. }
+  editMenu := TMenuItem.Create(Self);
+  editMenu.Caption := 'Правка';
+  bar.Items.Add(editMenu);
+  { A menu shortcut is checked BEFORE the key reaches the control, so one that collides with
+    an editor command takes that command away silently. SynEdit's own Ctrl+Shift table is
+    Y, Z, N, C, L, B; the two decisions here are recorded rather than stumbled into:
+      * NOT Ctrl+Shift+B for the brace wrap -- that is ecMatchBracket, jump to the matching
+        bracket, and taking it away in an editor for a bracket-heavy language would be
+        actively wrong. Ctrl+Shift+G instead;
+      * Ctrl+Shift+C IS taken, from ecColumnSelect. Copying the result is the everyday act
+        here and the combination is what a user expects for it, while column select remains
+        on Alt+drag and Alt+Shift+arrows. }
+  Item(editMenu, 'Обернуть выделение в {…}', Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked);
+  Item(editMenu, 'Обернуть выделение в […]', Ord('P'), [ssCtrl, ssShift], @WrapBracketsClicked);
+  Item(editMenu, '-', 0, [], nil);
+  Item(editMenu, 'Показать другой вариант', Ord('R'), [ssCtrl], @RerollClicked);
+  Item(editMenu, 'Скопировать результат', Ord('C'), [ssCtrl, ssShift], @CopyClicked);
 
   Self.Menu := bar;
 end;
@@ -374,7 +429,7 @@ end;
   reaches ShowRows, and `FRows := ARows` releases the array this row lived in -- after which
   the reads below are reads of freed memory. The copy costs two string refcounts. }
 procedure TSpxMainForm.JumpTo(Row: TSpxPanelRow);
-var target: string; col: Integer;
+var target: string;
 begin
   if Row.Line <= 0 then Exit;
   if (Row.Slug <> '') and (Row.Slug <> SpxSlugOf(FPath)) then
@@ -385,18 +440,123 @@ begin
     if not AskSave then Exit;
     LoadDocument(target);
   end;
-  { Code points to bytes. SynEdit's logical coordinates are byte offsets and the engine's
-    columns are characters, so a line with Cyrillic before the finding lands the caret early
-    -- which is exactly how this was found (SpxByteColumn). }
-  col := SpxByteColumn(LineOf(Row.Line), Row.Column);
-  FEditor.LogicalCaretXY := Point(col, Row.Line);
-  if (Row.EndLine >= Row.Line) and (Row.EndColumn > 0) then
+  JumpToPos(Row.Line, Row.Column, Row.EndLine, Row.EndColumn);
+end;
+
+{ The caret, and a selection when there is a span. Shared by the diagnostics panel and the
+  variables panel, because "go where the engine said" is one act with one conversion in it:
+  code points to bytes, since SynEdit's logical coordinates are byte offsets while the
+  engine counts characters. }
+procedure TSpxMainForm.JumpToPos(Line, Column, EndLine, EndColumn: Integer);
+var col: Integer;
+begin
+  if Line <= 0 then Exit;
+  col := SpxByteColumn(LineOf(Line), Column);
+  FEditor.LogicalCaretXY := Point(col, Line);
+  FJump.Valid := False;
+  if (EndLine >= Line) and (EndColumn > 0) then
   begin
-    FEditor.BlockBegin := Point(col, Row.Line);
-    FEditor.BlockEnd := Point(SpxByteColumn(LineOf(Row.EndLine), Row.EndColumn), Row.EndLine);
+    FEditor.BlockBegin := Point(col, Line);
+    FEditor.BlockEnd := Point(SpxByteColumn(LineOf(EndLine), EndColumn), EndLine);
+    { Recorded AFTER the block is set, so the selection event that assignment fires sees the
+      state still invalid and cannot clear what has not been written yet. }
+    FJump.Range := CurrentSelection(False).Range;
+    FJump.Valid := True;
   end;
   FEditor.EnsureCursorPosVisible;
   FEditor.SetFocus;
+end;
+
+{ A definition row has a place but no span -- the engine reports where the directive starts,
+  and its own column convention puts that at the line's beginning. }
+procedure TSpxMainForm.VarJump(Line, Column: Integer);
+begin
+  JumpToPos(Line, Column, 0, 0);
+end;
+
+{ A selection is a setting like the locale or the seed: it changes what the preview shows.
+  Through the debounce, because dragging a selection fires this continuously. }
+procedure TSpxMainForm.SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
+begin
+  if not (scSelection in Changes) then Exit;
+  { Loading a document reports scTextCleared -- which is a SET, not a flag, and carries
+    scSelection inside it -- and that path has already asked for its own render. }
+  if scTextCleared <= Changes then Exit;
+
+  { The policy decides whether a jump's selection is still the jump's; here only the STATE
+    it returns is kept. Without this call the flag outlives its meaning -- after the user
+    moves away and later selects the same span by hand, that manual selection would still be
+    treated as the jump's -- and this is the moment that sees the difference, which a single
+    look at render time cannot. The selected TEXT is not fetched: dragging fires this
+    continuously and copying a large selection each time would be paid for nothing. }
+  SpxPreviewFragment(CurrentSelection(False), FJump, FJump);
+
+  FDebounce.Enabled := False;
+  FDebounce.Enabled := True;
+end;
+
+{ SynEdit's selection in editor-core's own terms. WithText is False on the paths that only
+  need the shape: SelText copies the selected text, which on a large selection is a real
+  cost to pay on every drag event. }
+function TSpxMainForm.CurrentSelection(WithText: Boolean): TSpxSelection;
+begin
+  Result.Kind := spxSelNone;
+  Result.Range := SpxRange(SpxPos(0, 0), SpxPos(0, 0));
+  Result.Text := '';
+  if not FEditor.SelAvail then Exit;
+  case FEditor.SelectionMode of
+    smColumn: Result.Kind := spxSelColumn;
+    smLine: Result.Kind := spxSelLine;
+  else
+    Result.Kind := spxSelNormal;
+  end;
+  Result.Range := SpxRange(SpxPos(FEditor.BlockBegin.Y, FEditor.BlockBegin.X),
+                           SpxPos(FEditor.BlockEnd.Y, FEditor.BlockEnd.X));
+  if WithText then Result.Text := FEditor.SelText;
+end;
+
+{ Through SelText, which is SynEdit's own edit path: ONE undo step, verified. Building a new
+  document string and assigning it would throw the undo history away.
+
+  NORMAL selections only. In column mode SelText returns the rows joined and SetSelText pastes
+  them back column-wise, so the opener lands on the first row and the closer on the last --
+  wrapping three columns of `AB`/`CD`/`EF` produces a group that swallows the text on either
+  side of them, which the user never selected. A line selection has the same shape one line
+  down. Measured; refused rather than half-handled.
+
+  And the block is restored afterwards, because SetSelText clears it: without this the
+  preview un-narrows the moment you wrap, and a second wrap -- brackets around what you just
+  put in braces -- is a silent no-op. }
+procedure TSpxMainForm.WrapSelection(const L, R: string);
+var after: TSpxRange;
+begin
+  { Whether this selection may be wrapped, and where the wrapped text will end up, is
+    arithmetic -- so it lives in editor-core with checks on it. What stays here is the edit
+    itself, because SelText IS SynEdit's edit API and that is what keeps undo to one step. }
+  if not SpxWrapRange(CurrentSelection(False), Length(L), Length(R), after) then Exit;
+  FEditor.SelText := L + FEditor.SelText + R;
+  FEditor.BlockBegin := Point(after.A.Col, after.A.Line);
+  FEditor.BlockEnd := Point(after.B.Col, after.B.Line);
+end;
+
+procedure TSpxMainForm.WrapBracesClicked(Sender: TObject);
+begin
+  WrapSelection('{', '}');
+end;
+
+procedure TSpxMainForm.WrapBracketsClicked(Sender: TObject);
+begin
+  WrapSelection('[', ']');
+end;
+
+procedure TSpxMainForm.RuntimeChanged(Sender: TObject);
+begin
+  { Through the debounce, not straight to a render: the grid reports every CHARACTER typed
+    into a value, and a session value is part of the validation cache's key -- so each one
+    would re-validate every file in the closure, which is the exact cost the cache exists to
+    remove. }
+  FDebounce.Enabled := False;
+  FDebounce.Enabled := True;
 end;
 
 function TSpxMainForm.LineOf(N: Integer): string;
@@ -598,6 +758,12 @@ begin
   end;
   job.ReloadSet := FReloadSet;
   FReloadSet := False;
+  job.Vars := FVars.RuntimeValues;
+  { A selection previews on its own -- in the document's scope, which is editor-core's job,
+    not ours. WHICH selections count is also editor-core's, and gated there: none at all and
+    the one a jump made to show a finding do not. Whether the fragment is worth rendering
+    (whitespace is not) is the worker's, gated in its turn. }
+  job.Fragment := SpxPreviewFragment(CurrentSelection(True), FJump, FJump);
   FEngine.Post(job);
 end;
 
@@ -617,8 +783,9 @@ begin
   if Res.Id < FLastShown then Exit;
   FLastShown := Res.Id;
 
-  FPreview.SetContent(Res.Preview);
+  FPreview.SetContent(Res.Preview, Res.Partial);
   ShowRows(Res.Rows);
+  FVars.SetModel(Res.Vars);
   FErrorMarkup.SetMarks(Res.Marks);
   FWarnMarkup.SetMarks(Res.Marks);
   FEditor.Invalidate;

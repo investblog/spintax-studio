@@ -54,7 +54,8 @@ type
     sptPipe,          // | between options
     sptCondHead,      // ?name? or ?!name? right after {
     sptPluralHead,    // plural %n%: -- keyword, count and colon
-    sptPermConfig     // <minsize=2;sep=", "> right after [
+    sptPermConfig,    // <minsize=2;sep=", "> right after [
+    sptTrailingSep    // <br> ending a permutation element: the separator before the next
   );
 
   { Everything the next line needs to know. Packed into an integer for SynEdit's range
@@ -221,6 +222,88 @@ begin
   if (i > p + 1) and (i <= n) and (Line[i] = '%') then Result := i - p + 1;
 end;
 
+{ A per-element trailing separator: the `<...>` that ends a permutation element, which the
+  engine takes as the separator to place before the NEXT element. Returns its length,
+  brackets included, or 0.
+
+  The rule is the engine's, measured against it rather than read off a grammar:
+    * it must be followed -- blanks skipped -- by a `|`. A `<...>` before the closing `]`
+      belongs to the LAST element, and the engine leaves it as text;
+    * its inner text must not look like HTML: starting or ending with `/`, or a tag name
+      followed by whitespace.
+  So `<br>` and `<, >` ARE separators, while `<br/>`, `<br />`, `</b>` and
+  `<span class="x">` are not -- which is exactly what the engine renders. }
+{ The engine's blank class for trimming a part and its separator: space, tab, LF, CR, NUL and
+  VERTICAL TAB -- and not form feed. Pascal's Trim takes everything <= #32, which differs on
+  exactly those edges, so the class is spelled out here as DirectiveKeywordLength spells out
+  its own. }
+function IsSepBlank(c: Char): Boolean;
+begin
+  Result := (c = ' ') or (c = #9) or (c = #10) or (c = #13) or (c = #0) or (c = #11);
+end;
+
+function SepTrim(const S: string): string;
+var a, b: Integer;
+begin
+  a := 1;
+  b := Length(S);
+  while (a <= b) and IsSepBlank(S[a]) do Inc(a);
+  while (b >= a) and IsSepBlank(S[b]) do Dec(b);
+  Result := Copy(S, a, b - a + 1);
+end;
+
+function TrailingSepLength(const Line: string; p: Integer): Integer;
+var i, n, q, braces, brackets: Integer; inner: string;
+begin
+  Result := 0;
+  n := Length(Line);
+  if (p > n) or (Line[p] <> '<') then Exit;
+
+  { Walk to the closing `>`, and refuse the moment the candidate contains something that
+    would have ENDED THE PART before this `<` ever came up. The engine splits a permutation
+    into parts first -- SplitTopLevel, signed brace and bracket counters, a split only where
+    both are zero -- and looks for a trailing separator afterwards. A forward scan that
+    ignores that paints a construct the engine does not see, and worse, swallows the very
+    characters that carry the structure: the top-level `|` in `[a< | >|b]` (three options to
+    the engine, no separator) and the `]` that actually closes the permutation in
+    `[A<]>|B]`. Measured against the engine on both. }
+  braces := 0;
+  brackets := 0;
+  i := p + 1;
+  while i <= n do
+  begin
+    case Line[i] of
+      '>': if (braces = 0) and (brackets = 0) then Break else Exit;
+      '<': Exit;                      { the separator is the LAST `<...>`, not this one }
+      '|': if (braces = 0) and (brackets = 0) then Exit;
+      '{': Inc(braces);
+      '}': begin Dec(braces); if braces < 0 then Exit; end;
+      '[': Inc(brackets);
+      ']': begin Dec(brackets); if brackets < 0 then Exit; end;
+    end;
+    Inc(i);
+  end;
+  if (i > n) or (Line[i] <> '>') then Exit;
+
+  inner := SepTrim(Copy(Line, p + 1, i - p - 1));
+  if (inner <> '') and ((inner[1] = '/') or (inner[Length(inner)] = '/')) then Exit;
+  { `^[A-Za-z][A-Za-z0-9]*\s` -- a tag name followed by whitespace. The engine's class HERE
+    is the narrower one, four characters, and that is not the same class as the trim above. }
+  if (Length(inner) >= 2) and (inner[1] in ['A'..'Z', 'a'..'z']) then
+  begin
+    q := 2;
+    while (q <= Length(inner)) and (inner[q] in ['A'..'Z', 'a'..'z', '0'..'9']) do Inc(q);
+    if (q <= Length(inner)) and (inner[q] in [' ', #9, #10, #13]) then Exit;
+  end;
+
+  { And the `|` that makes this element not the last one. The engine reaches it by rtrimming
+    the part, so its blank class applies. }
+  q := i + 1;
+  while (q <= n) and IsSepBlank(Line[q]) do Inc(q);
+  if (q > n) or (Line[q] <> '|') then Exit;
+  Result := i - p + 1;
+end;
+
 { `?name?` or `?!name?` directly after a `{`. }
 function CondHeadLength(const Line: string; p: Integer): Integer;
 var i, n: Integer;
@@ -364,6 +447,16 @@ end;
 procedure SpxScanLine(const Line: string; var State: TSpxScanState; Tokens: TSpxTokenList);
 var
   p, n, runStart, len, q: Integer;
+  { The SPLIT level, counted the way the engine's SplitTopLevel counts it, for this line
+    only: a signed brace depth, and one frame per `[` open on this line remembering the brace
+    depth it was opened at. A trailing separator belongs to the innermost permutation at its
+    own split level -- frame present AND the brace depth back where that frame started --
+    which is what tells a separator in a permutation from the same text inside a brace group
+    nested in one, where the pipe is not a part boundary at all.
+    Line-local on purpose: what crosses a line stays a depth, which is what makes unbounded
+    nesting free. }
+  braceDepth, permTop: Integer;
+  permFrames: array of Integer;
 
   procedure FlushText(upTo: Integer);
   var i: Integer;
@@ -425,6 +518,9 @@ begin
   n := Length(Line);
   p := 1;
   runStart := 1;
+  braceDepth := 0;
+  permTop := 0;
+  SetLength(permFrames, 8);
 
   { A source line that does not continue a comment starts a new LOGICAL line; one that does
     continues the old one, because the newline inside a comment is removed with it. }
@@ -514,6 +610,7 @@ begin
         begin
           FlushText(p);
           Push;
+          Inc(braceDepth);
           Mark(sptBraceOpen, p, 1);
           Inc(p);
           runStart := p;
@@ -541,14 +638,39 @@ begin
           FlushText(p);
           Mark(sptBraceClose, p, 1);
           Pop;
+          { Signed, like the engine's own counter: an unmatched closer takes it below zero,
+            and a pipe at a negative level is not a part boundary. }
+          Dec(braceDepth);
           Inc(p);
           runStart := p;
           Continue;
+        end;
+      '<':
+        { A trailing separator is a permutation's construct, so it is only coloured when the
+          innermost bracket still open is a square one -- inside a brace group the engine
+          leaves the same text alone, measured. Kinds are tracked for THIS LINE only: the state carried
+          between lines is a depth, not a stack of kinds, and that is what keeps unbounded
+          nesting free. So a permutation opened on an earlier line does not get this colour
+          -- a missing colour, never a wrong one (see the unit header). }
+        if (permTop > 0) and (braceDepth = permFrames[permTop - 1]) then
+        begin
+          len := TrailingSepLength(Line, p);
+          if len > 0 then
+          begin
+            FlushText(p);
+            Mark(sptTrailingSep, p, len);
+            p := p + len;
+            runStart := p;
+            Continue;
+          end;
         end;
       '[':
         begin
           FlushText(p);
           Push;
+          if permTop = Length(permFrames) then SetLength(permFrames, permTop * 2);
+          permFrames[permTop] := braceDepth;
+          Inc(permTop);
           Mark(sptBracketOpen, p, 1);
           Inc(p);
           runStart := p;
@@ -571,6 +693,7 @@ begin
           FlushText(p);
           Mark(sptBracketClose, p, 1);
           Pop;
+          if permTop > 0 then Dec(permTop);
           Inc(p);
           runStart := p;
           Continue;
