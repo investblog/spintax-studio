@@ -245,6 +245,50 @@ function SpxRenderFragment(const Doc, Fragment: string; const Ctx: TSpxContext):
   are what the document references and nothing defines. Caller frees. }
 function SpxExtractModel(const Tmpl: string; const Ctx: TSpxContext): TSpxModel;
 
+{ ── editing a directive where it sits (spec §4.4) ────────────────────────── }
+
+{ The byte offset of a 1-based (Line, code-point Column) in Doc, over the EDITOR's line
+  model -- LF, CR and CRLF each end a line -- which is the model `TSpDiag` and
+  `TSpDirective` positions use. NOT the five terminators directives themselves split on:
+  two directives separated by U+2028 are two directives on ONE line, and their columns
+  continue across it. Clamps to Length(Doc) + 1. }
+function SpxDocOffset(const Doc: string; Line, Column: Integer): Integer;
+
+{ The edits the variables panel needs, each rewriting the SMALLEST region that can carry the
+  change and leaving every other byte of the document alone. Index selects an occurrence in
+  `SpExtractDirectives` order.
+
+  Why not one "re-spell this directive" call, which is what the backlog sketched: the engine
+  reports a macro's name LOWER-CASED and its value TRIMMED, and the span it gives covers the
+  indentation, the keyword's own spelling and the spacing around `=`. Re-emitting the line
+  from those three fields would quietly rewrite `<TAB>#set  %Brand%=x   ` as
+  `#set %brand% = x` -- a formatting change nobody asked for, in a file the user keeps in
+  git. Splicing one region cannot do that.
+
+  Each returns False and leaves NewDoc = Doc when the edit cannot be made byte-safely:
+    * the index is out of range;
+    * the occurrence's span does not equal the text the renderer consumed. That is ANY
+      comment inside the directive, not only one that swallowed the line's terminator: the
+      engine cuts Text from comment-stripped source while the span maps back to the source,
+      so `#set %x% = A /# c #/ B` differs in the two and rewriting the span would delete the
+      comment. Such a row is read-only in the panel;
+    * the change does not fit the kind: an `#include` has no value, and `#set` cannot become
+      `#include` by swapping four characters;
+    * the RESULT would not say what was asked. The written text is not trusted: a value
+      carrying `/#` opens a comment that eats the rest of the file, one carrying a line break
+      ends the directive early, an empty or spaced name is no directive at all. Every edit is
+      read back with `SpExtractDirectives` and refused unless the engine agrees. }
+function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
+  out NewDoc: string): Boolean;
+function SpxSetDirectiveName(const Doc: string; Index: Integer; const Name: string;
+  out NewDoc: string): Boolean;
+function SpxSetDirectiveKind(const Doc: string; Index: Integer; const Kind: string;
+  out NewDoc: string): Boolean;
+
+{ Removes the occurrence, and the line with it when nothing else was on that line. A head or
+  tail comment IS something else, so those lines stay. }
+function SpxDeleteDirective(const Doc: string; Index: Integer; out NewDoc: string): Boolean;
+
 type
   { A memo for per-file validation, owned by the CALLER.
 
@@ -933,6 +977,265 @@ begin
   n.Line := Line;
   n.Column := Column;
   Report.Notes.Add(n);
+end;
+
+{ ── editing a directive where it sits ────────────────────────────────────── }
+
+function SpxDocOffset(const Doc: string; Line, Column: Integer): Integer;
+var i, j, ln: Integer;
+begin
+  if Line < 1 then Exit(1);
+  i := 1;
+  ln := 1;
+  { The EDITOR's three terminators, not the directive splitter's five: a U+2028 between two
+    directives does not start a new line for a position. }
+  while (i <= Length(Doc)) and (ln < Line) do
+  begin
+    if Doc[i] = #13 then
+    begin
+      if (i < Length(Doc)) and (Doc[i + 1] = #10) then Inc(i);
+      Inc(ln);
+    end
+    else if Doc[i] = #10 then Inc(ln);
+    Inc(i);
+  end;
+  { Only this LINE's bytes go to the column walker. Handing it the rest of the document
+    would let a column past the end of a short line walk into the following ones -- and
+    count a CRLF as two columns while doing it, which is not even the editor's line model.
+    Unreachable from the engine's own coordinates, which never overshoot, but this is public
+    and a caret at the end of a line is an everyday coordinate. }
+  j := i;
+  while (j <= Length(Doc)) and (Doc[j] <> #10) and (Doc[j] <> #13) do Inc(j);
+  Result := i + SpxByteColumn(Copy(Doc, i, j - i), Column) - 1;
+  if Result > Length(Doc) + 1 then Result := Length(Doc) + 1;
+end;
+
+function AllBlank(const S: string): Boolean;
+var i: Integer;
+begin
+  for i := 1 to Length(S) do
+    if (S[i] <> ' ') and (S[i] <> #9) then Exit(False);
+  Result := True;
+end;
+
+function IndexOfChar(const S: string; C: Char; From: Integer): Integer;
+begin
+  Result := From;
+  if Result < 1 then Result := 1;
+  while (Result <= Length(S)) and (S[Result] <> C) do Inc(Result);
+  if Result > Length(S) then Result := 0;
+end;
+
+{ The directive's own start inside its span: the first byte that is not indentation. }
+function HeadPos(const S: string): Integer;
+begin
+  Result := 1;
+  while (Result <= Length(S)) and ((S[Result] = ' ') or (S[Result] = #9)) do Inc(Result);
+end;
+
+{ The NAME's own bytes -- between the percent signs, or inside the quotes for an include --
+  as a half-open span [NA, NB) in S. }
+function NameSpan(const S, Kind: string; out NA, NB: Integer): Boolean;
+var open_, close_: Integer; mark: Char;
+begin
+  NA := 0; NB := 0;
+  if Kind = 'include' then mark := '"' else mark := '%';
+  open_ := IndexOfChar(S, mark, HeadPos(S));
+  if open_ = 0 then Exit(False);
+  close_ := IndexOfChar(S, mark, open_ + 1);
+  if close_ = 0 then Exit(False);
+  NA := open_ + 1;
+  NB := close_;
+  Result := True;
+end;
+
+{ The VALUE's own bytes as a half-open span: after the `=` that follows the name, blanks
+  skipped, through the last non-blank. Trailing blanks are left where they are -- a tail
+  comment sits behind them, and the span stops before it. }
+function ValueSpan(const S: string; From: Integer; out VA, VB: Integer): Boolean;
+var p, e: Integer;
+begin
+  VA := 0; VB := 0;
+  p := IndexOfChar(S, '=', From);
+  if p = 0 then Exit(False);
+  Inc(p);
+  while (p <= Length(S)) and ((S[p] = ' ') or (S[p] = #9)) do Inc(p);
+  e := Length(S);
+  while (e >= p) and ((S[e] = ' ') or (S[e] = #9)) do Dec(e);
+  VA := p;
+  VB := e + 1;
+  Result := True;
+end;
+
+{ One occurrence resolved to a byte span, and False when rewriting it would not be safe. }
+function DirectiveSpan(const Doc: string; Index: Integer; out D: TSpDirective;
+  out A, B: Integer; out Covered: string): Boolean;
+var dirs: TSpDirectiveList; found: Boolean;
+begin
+  Result := False;
+  A := 0; B := 0; Covered := '';
+  D := Default(TSpDirective);
+  if Index < 0 then Exit;
+  found := False;
+  dirs := SpExtractDirectives(Doc);
+  try
+    if Index < dirs.Count then
+    begin
+      D := dirs[Index];
+      found := True;
+    end;
+  finally
+    dirs.Free;
+  end;
+  if not found then Exit;
+  A := SpxDocOffset(Doc, D.Line, D.Column);
+  B := SpxDocOffset(Doc, D.EndLine, D.EndColumn);
+  if (A < 1) or (B < A) then Exit;
+  Covered := Copy(Doc, A, B - A);
+  { The span IS what the renderer consumed -- except when a comment sits inside the
+    directive. Text is cut from comment-stripped source; the span maps back to the source and
+    therefore carries the comment. That covers `#set %x% = A /# c #/ B` as much as the case
+    where the comment swallowed the terminator, and rewriting either would delete a comment
+    the author wrote. Refused, both. }
+  Result := Covered = D.Text;
+end;
+
+function Splice(const Doc: string; A, B: Integer; const S: string): string;
+begin
+  Result := Copy(Doc, 1, A - 1) + S + Copy(Doc, B, MaxInt);
+end;
+
+{ Does the document we just produced still say what the caller asked for? Asked of the
+  ENGINE, because the caller's string is an open door: `A /# oops` opens a comment nobody
+  closes and the rest of the file stops being template at all; a line break in a value ends
+  the directive early and leaves the remainder as body text; an empty or spaced name is no
+  directive to the grammar. Every one of those used to splice happily and report success.
+
+  Cheap enough: an edit is a user action, not a keystroke, and the panel re-derives from the
+  document afterwards anyway. }
+function DirectiveCount(const Doc: string): Integer;
+var dirs: TSpDirectiveList;
+begin
+  dirs := SpExtractDirectives(Doc);
+  try
+    Result := dirs.Count;
+  finally
+    dirs.Free;
+  end;
+end;
+
+function EditAccepted(const NewDoc: string; Index: Integer;
+  const Kind, Name, Value: string): Boolean;
+var dirs: TSpDirectiveList; d: TSpDirective; found: Boolean;
+begin
+  d := Default(TSpDirective);
+  found := False;
+  dirs := SpExtractDirectives(NewDoc);
+  try
+    if (Index >= 0) and (Index < dirs.Count) then
+    begin
+      d := dirs[Index];
+      found := True;
+    end;
+  finally
+    dirs.Free;
+  end;
+  Result := found and (d.Kind = Kind) and (d.Name = Name) and (d.Value = Value);
+end;
+
+function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
+  out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, na, nb, va, vb: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+  if d.Kind = 'include' then Exit;              { an include carries a target, not a value }
+  if not NameSpan(covered, d.Kind, na, nb) then Exit;
+  if not ValueSpan(covered, nb, va, vb) then Exit;
+  NewDoc := Splice(Doc, a + va - 1, a + vb - 1, Value);
+  { The engine trims a value as the renderer does, so that is what it will read back. }
+  Result := EditAccepted(NewDoc, Index, d.Kind, d.Name, Trim(Value));
+  if not Result then NewDoc := Doc;
+end;
+
+function SpxSetDirectiveName(const Doc: string; Index: Integer; const Name: string;
+  out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, na, nb: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+  if not NameSpan(covered, d.Kind, na, nb) then Exit;
+  NewDoc := Splice(Doc, a + na - 1, a + nb - 1, Name);
+  { A macro's name comes back lower-cased -- that is how the engine keys them -- while an
+    include target is a host identifier and comes back verbatim. }
+  if d.Kind = 'include' then
+    Result := EditAccepted(NewDoc, Index, d.Kind, Name, d.Value)
+  else
+    Result := EditAccepted(NewDoc, Index, d.Kind, LowerCase(Name), d.Value);
+  if not Result then NewDoc := Doc;
+end;
+
+function SpxSetDirectiveKind(const Doc: string; Index: Integer; const Kind: string;
+  out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, h: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  { `#set` and `#def` are the same shape and the same length, so one is the other with three
+    bytes changed. `#include` is a different construct with a different payload, and turning
+    a macro into one -- or back -- is not a substitution this function will pretend to make. }
+  if (Kind <> 'set') and (Kind <> 'def') then Exit;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+  if (d.Kind <> 'set') and (d.Kind <> 'def') then Exit;
+  if d.Kind = Kind then Exit(True);             { already so; the document is untouched }
+  h := HeadPos(covered);
+  if h + 3 > Length(covered) then Exit;
+  NewDoc := Splice(Doc, a + h, a + h + 3, Kind);
+  Result := EditAccepted(NewDoc, Index, Kind, d.Name, d.Value);
+  if not Result then NewDoc := Doc;
+end;
+
+function SpxDeleteDirective(const Doc: string; Index: Integer; out NewDoc: string): Boolean;
+var d: TSpDirective; a, b, ls, le: Integer; covered: string;
+begin
+  NewDoc := Doc;
+  Result := False;
+  if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
+
+  { Widen to the whole line when the directive was alone on it -- otherwise removing the
+    span leaves an empty line where a definition used to be. A head or a tail comment counts
+    as company, and then only the directive goes. }
+  ls := a;
+  while (ls > 1) and (Doc[ls - 1] <> #10) and (Doc[ls - 1] <> #13) do Dec(ls);
+  le := b;
+  while (le <= Length(Doc)) and (Doc[le] <> #10) and (Doc[le] <> #13) do Inc(le);
+
+  if AllBlank(Copy(Doc, ls, a - ls)) and AllBlank(Copy(Doc, b, le - b)) then
+  begin
+    { Take the terminator too, or an empty line is left where a definition used to be --
+      UNLESS the span already ends on one. An `#include`'s span is greedy to the end of its
+      line (the family anchor ends `[ \t\n\r\f\x0B]*$`), so it carries its terminator
+      already, and taking another would swallow the following BLANK line -- which deleting a
+      `#set` in the same position does not do. Measured. }
+    if (b > 1) and ((Doc[b - 1] = #10) or (Doc[b - 1] = #13)) then
+      { the span brought its own terminator }
+    else if (le <= Length(Doc)) and (Doc[le] = #13) then
+    begin
+      Inc(le);
+      if (le <= Length(Doc)) and (Doc[le] = #10) then Inc(le);
+    end
+    else if (le <= Length(Doc)) and (Doc[le] = #10) then
+      Inc(le);
+    NewDoc := Splice(Doc, ls, le, '');
+  end
+  else
+    NewDoc := Splice(Doc, a, b, '');
+  { One occurrence gone, and only one: a deletion that broke the file would change the count
+    by something else. }
+  Result := DirectiveCount(NewDoc) = DirectiveCount(Doc) - 1;
+  if not Result then NewDoc := Doc;
 end;
 
 { ── the validation cache ─────────────────────────────────────────────────── }

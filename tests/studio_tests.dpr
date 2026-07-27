@@ -1788,6 +1788,185 @@ begin
   end;
 end;
 
+{ ── 8bb. editing a directive where it sits ───────────────────────────────── }
+
+function EditValue(const Doc: string; Idx: Integer; const V: string): string;
+begin
+  if not SpxSetDirectiveValue(Doc, Idx, V, Result) then Result := '<refused>';
+end;
+
+function EditName(const Doc: string; Idx: Integer; const N: string): string;
+begin
+  if not SpxSetDirectiveName(Doc, Idx, N, Result) then Result := '<refused>';
+end;
+
+function EditKind(const Doc: string; Idx: Integer; const K: string): string;
+begin
+  if not SpxSetDirectiveKind(Doc, Idx, K, Result) then Result := '<refused>';
+end;
+
+function DropDirective(const Doc: string; Idx: Integer): string;
+begin
+  if not SpxDeleteDirective(Doc, Idx, Result) then Result := '<refused>';
+end;
+
+{ What the ENGINE reads back from a document -- the only opinion that matters about whether
+  an edit produced the directive it promised. }
+function DirSig(const Doc: string): string;
+var dirs: TSpDirectiveList; i: Integer;
+begin
+  Result := '';
+  dirs := SpExtractDirectives(Doc);
+  try
+    for i := 0 to dirs.Count - 1 do
+      Result := Result + Format('%s:%s=%s;', [dirs[i].Kind, dirs[i].Name, dirs[i].Value]);
+  finally
+    dirs.Free;
+  end;
+end;
+
+procedure TestDirectiveEditing;
+var doc, out_: string;
+begin
+  { Setting a value to what it already is must not move one byte. This is the check that
+    catches a rewrite that "only" normalises formatting. }
+  doc := '   #set  %Brand%   =   Акме   ' + '/# хвостовой #/'#10'<p>%Brand%</p>';
+  Check('edit/value-round-trip', EditValue(doc, 0, 'Акме'), doc);
+
+  { A real edit touches the value and nothing else: indentation, the doubled spaces, the
+    name's own case and the trailing comment all survive. }
+  Check('edit/value-preserves-everything-around-it', EditValue(doc, 0, 'Новое'),
+        '   #set  %Brand%   =   Новое   ' + '/# хвостовой #/'#10'<p>%Brand%</p>');
+  Check('edit/the-engine-reads-back-the-new-value', DirSig(EditValue(doc, 0, 'Новое')),
+        'set:brand=Новое;');
+
+  { Line endings are the document's, not ours. }
+  doc := '#set %x% = A'#13#10'#def %y% = B'#13#10'текст';
+  Check('edit/crlf-survives-an-edit', EditValue(doc, 1, 'Б'),
+        '#set %x% = A'#13#10'#def %y% = Б'#13#10'текст');
+
+  { Two directives on ONE editor line, split by U+2028: editing the second must leave the
+    first alone -- this is where a byte offset computed on the wrong line model goes wrong. }
+  doc := '#set %x% = A'#$E2#$80#$A8'#set %y% = B'#10'хвост';
+  Check('edit/u2028-second-directive', EditValue(doc, 1, 'Б'),
+        '#set %x% = A'#$E2#$80#$A8'#set %y% = Б'#10'хвост');
+  Check('edit/u2028-both-still-read-back', DirSig(EditValue(doc, 1, 'Б')),
+        'set:x=A;set:y=Б;');
+
+  { Cyrillic before the directive on its line: code-point columns, byte offsets. }
+  doc := '/# примечание #/#set %x% = A'#10'текст';
+  Check('edit/cyrillic-before-the-directive', EditValue(doc, 0, 'Б'),
+        '/# примечание #/#set %x% = Б'#10'текст');
+
+  { The name, and only the name. }
+  doc := '#set %old% = значение'#10'%old%';
+  Check('edit/name-changes-only-the-name', EditName(doc, 0, 'renamed'),
+        '#set %renamed% = значение'#10'%old%');
+  { A macro name is ASCII by the family's grammar (`%\w+%`), so a Cyrillic one is not a name
+    at all: the engine would stop seeing a directive there and the line would become body
+    text. Refused -- and this check exists because the first version of the test above asked
+    for exactly that rename and the read-back caught it. }
+  Check('edit/a-cyrillic-name-is-refused', EditName(doc, 0, 'новое'), '<refused>');
+
+  { #set and #def differ by three bytes and by when the value is rolled -- an explicit act,
+    never a silent normalisation. }
+  doc := '   #set %x% = {a|b}'#10;
+  Check('edit/kind-set-to-def', EditKind(doc, 0, 'def'), '   #def %x% = {a|b}'#10);
+  Check('edit/kind-already-so-is-a-no-op', EditKind(doc, 0, 'set'), doc);
+
+  { An include is not a macro: it has no value, and it does not become one by swapping four
+    characters. }
+  doc := '#include "frag"'#10;
+  Check('edit/include-has-no-value', EditValue(doc, 0, 'что-то'), '<refused>');
+  Check('edit/include-is-not-a-macro-kind', EditKind(doc, 0, 'set'), '<refused>');
+  { Its target, though, is a name. }
+  Check('edit/include-target-is-editable', EditName(doc, 0, 'другой'),
+        '#include "другой"'#10);
+
+  { Deleting takes the line with it -- an empty line where a definition used to be is not
+    what the user asked for. }
+  doc := '#set %a% = 1'#10'#set %b% = 2'#10'текст';
+  Check('edit/delete-takes-the-line', DropDirective(doc, 0), '#set %b% = 2'#10'текст');
+  Check('edit/delete-the-last-of-them', DropDirective(doc, 1), '#set %a% = 1'#10'текст');
+
+  { ...but a line with a comment on it has something else to say, so the line stays. }
+  doc := '/# зачем #/#set %a% = 1'#10'текст';
+  Check('edit/delete-keeps-a-line-that-carries-a-comment', DropDirective(doc, 0),
+        '/# зачем #/'#10'текст');
+
+  { The refusal that matters: a comment INSIDE the directive swallowed the terminator, so
+    the span carries text the renderer never consumed. Rewriting it would delete the
+    comment, and the panel shows such a row read-only instead. }
+  doc := '#set %x% = A /# c'#10'still #/ хвост'#10'текст';
+  Check('edit/refuses-a-comment-that-swallowed-the-terminator', EditValue(doc, 0, 'Б'),
+        '<refused>');
+  Check('edit/refuses-to-delete-it-too', DropDirective(doc, 0), '<refused>');
+
+  { Out of range is refused, not clamped: silently editing a different directive is worse
+    than doing nothing. }
+  doc := '#set %x% = A'#10;
+  Check('edit/index-past-the-end', EditValue(doc, 7, 'Б'), '<refused>');
+  Check('edit/negative-index', EditValue(doc, -1, 'Б'), '<refused>');
+  CheckTrue('edit/a-refusal-leaves-the-document-alone',
+            (not SpxSetDirectiveValue(doc, 7, 'Б', out_)) and (out_ = doc));
+
+  { An empty value is a value: `#set %x% = ` defines an empty macro, and the engine agrees. }
+  doc := '#set %x% = A'#10;
+  Check('edit/value-can-be-emptied', EditValue(doc, 0, ''), '#set %x% = '#10);
+  Check('edit/the-engine-reads-the-empty-value', DirSig(EditValue(doc, 0, '')), 'set:x=;');
+
+  { THE WRITTEN TEXT IS NOT TRUSTED. Each of these spliced happily and reported success
+    until the edit was read back through the engine. The first is the worst: an unterminated
+    comment swallows the rest of the file, and the render collapses to nothing. }
+  doc := '#set %x% = A'#10'корпус текста'#10'%x% и ещё'#10;
+  Check('edit/a-value-that-opens-a-comment', EditValue(doc, 0, 'A /# oops'), '<refused>');
+  Check('edit/a-value-with-a-line-break', EditValue(doc, 0, 'один'#10'два'), '<refused>');
+  Check('edit/a-value-with-a-carriage-return', EditValue(doc, 0, 'один'#13'два'), '<refused>');
+  Check('edit/an-empty-name', EditName(doc, 0, ''), '<refused>');
+  Check('edit/a-name-with-a-space', EditName(doc, 0, 'a b'), '<refused>');
+  Check('edit/a-name-with-a-percent', EditName(doc, 0, 'a%b'), '<refused>');
+  doc := '#include "frag"'#10;
+  Check('edit/an-empty-include-target', EditName(doc, 0, ''), '<refused>');
+  Check('edit/an-include-target-with-a-quote', EditName(doc, 0, 'a"b'), '<refused>');
+
+  { A comment inside the directive is refused even when it closes on the same line: Text
+    comes from comment-stripped source, the span from the source, so rewriting the span
+    would delete a comment the author wrote. }
+  doc := '#set %x% = A /# заметка #/ B'#10;
+  Check('edit/refuses-an-inner-comment-that-closes', EditValue(doc, 0, 'C'), '<refused>');
+
+  { Tabs are whitespace too -- in the indentation the kind edit steps over, and in the blank
+    remainder deletion widens across. }
+  doc := #9'#set %x% = A'#10;
+  Check('edit/kind-on-a-tab-indented-directive', EditKind(doc, 0, 'def'), #9'#def %x% = A'#10);
+  doc := #9'#set %a% = 1'#9#10'текст';
+  Check('edit/delete-widens-over-tabs', DropDirective(doc, 0), 'текст');
+
+  { CRLF deletion takes both bytes of the terminator, not just the LF. }
+  doc := '#set %a% = 1'#13#10'#set %b% = 2'#13#10'текст';
+  Check('edit/delete-takes-a-crlf-line', DropDirective(doc, 0), '#set %b% = 2'#13#10'текст');
+
+  { An #include's span is greedy to the end of its line, so it already carries a terminator.
+    Deleting it must not take a SECOND one -- these two shapes have to behave the same. }
+  doc := '#include "a"'#10#10'после'#10;
+  Check('edit/delete-an-include-keeps-the-blank-line', DropDirective(doc, 0), #10'после'#10);
+  doc := '#set %a% = 1'#10#10'после'#10;
+  Check('edit/delete-a-set-keeps-the-blank-line', DropDirective(doc, 0), #10'после'#10);
+
+  { SpxDocOffset is public and its contract is its own, so it is checked directly rather
+    than only through the edits above. }
+  doc := 'ab'#10'cdef'#10'ghij';
+  CheckTrue('offset/first-byte', SpxDocOffset(doc, 1, 1) = 1);
+  CheckTrue('offset/start-of-the-second-line', SpxDocOffset(doc, 2, 1) = 4);
+  { A column past the end of a SHORT line stops at that line's end -- it does not walk on
+    into the next one. }
+  CheckTrue('offset/column-past-the-line-stops-there', SpxDocOffset(doc, 1, 9) = 3);
+  CheckTrue('offset/line-past-the-end-clamps', SpxDocOffset(doc, 99, 1) = Length(doc) + 1);
+  CheckTrue('offset/line-below-one', SpxDocOffset(doc, 0, 5) = 1);
+  CheckTrue('offset/crlf-is-one-line-break', SpxDocOffset('ab'#13#10'cd', 2, 1) = 5);
+  CheckTrue('offset/a-lone-cr-ends-a-line', SpxDocOffset('ab'#13, 2, 1) = 4);
+end;
+
 { ── 8c. the validation cache ─────────────────────────────────────────────── }
 
 { Everything the caller can observe about a report, in one string: what a cached round must
@@ -2085,6 +2264,7 @@ begin
   TestDemoTemplate;
   TestDiagMarks;
   TestPanelRows;
+  TestDirectiveEditing;
   TestValidationCache;
   TestFileLayer;
   TestEngineThread;

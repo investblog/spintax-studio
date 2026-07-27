@@ -254,12 +254,25 @@ the managed tier are later releases.
       true for one group and false for the other.
 
       **The slice, in order:**
-      1. editor-core gains one pure function — roughly
-         `SpxSetDirective(const Doc: string; Index: Integer; Kind, Name, Value: string): string`
-         — which rewrites exactly the span `SpExtractDirectives` reported and leaves every
-         other byte alone. Console-testable, so it lands before any UI: round-trip a
-         document, change one value, change a kind, rename, delete, and prove the rest of the
-         file is byte-identical.
+      1. ~~editor-core gains one pure function —~~ *done 2026-07-26 (PR 3), but as FOUR narrow
+         ones rather than the single `SpxSetDirective(Kind, Name, Value)` sketched here.*
+         Measured reason: the engine reports a macro's name lower-cased and its value
+         trimmed, while the span it gives covers the indentation, the keyword's own spelling
+         and the spacing around `=`. Re-spelling a line from those three fields would rewrite
+         `<TAB>#set  %Brand%=x   ` as `#set %brand% = x` — a formatting change nobody asked
+         for, in a file the user keeps in git. So: `SpxSetDirectiveValue` /
+         `SpxSetDirectiveName` / `SpxSetDirectiveKind` / `SpxDeleteDirective`, each splicing
+         the smallest region that can carry the change, plus `SpxDocOffset` for the position
+         mapping. Each refuses (leaving the document untouched) on a bad index, on a change
+         that does not fit the kind, on a span whose text the renderer did not consume — which
+         is ANY comment inside the directive, because Text is cut from comment-stripped source
+         while the span maps back to the source — and, after the review of this PR, on a
+         result the engine does not read back as asked: a value carrying `/#` used to open a
+         comment that ate the rest of the file, and an empty or spaced name used to turn a
+         definition into body text, both reporting success.
+         44 checks. Mutation runs confirm they bite — the span guard, code-point columns, the
+         value's trailing blanks, the name splice, the deletion widening and the tab handling
+         each fail exactly the checks that name them.
       2. the panel: two groups, the toggle on Definitions, rows in the playground's shape.
       3. write-back goes through SynEdit's own edit API so undo and the caret behave, and the
          panel re-derives from the text after every change (`SpExtractDirectives` is linear).
