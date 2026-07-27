@@ -272,6 +272,37 @@ begin
     editor's own plugin, so the buffer keeps its real lines and every position the engine
     reports still lands where it should. }
   TLazSynEditLineWrapPlugin.Create(FEditor);
+  { ...but wrapping does not retract the horizontal scrollbar, and SynEdit's default is
+    ssBoth: the bar sat at the foot of a view that has nowhere sideways to go, and dragging it
+    slid the wrapped text off to the left until only the tail ends of the lines were visible,
+    with blank pane beside them. Measured on the real form: WS_HSCROLL present with ssBoth,
+    absent with this.
+
+    It settles a second oddity for free -- the plain wheel is remapped to HORIZONTAL scrolling
+    whenever the horizontal bar is visible and the vertical one is not (synedit.pp ~3470), so
+    in a document shorter than a page the wheel scrolled sideways. No bar, no remap. }
+  FEditor.ScrollBars := ssAutoVertical;
+  { Dropping the bar removes the way IN; dropping eoScrollPastEol removes the STATE, and only
+    that makes the artifact impossible rather than merely hard to reach -- a horizontal tilt
+    wheel, a touchpad swipe and a drag-select out of the pane all still call SetLeftChar, and
+    with no bar left there would be nothing to come back with.
+
+    The travel was never the document's: it is MaxLeftChar = 1024, admitted unconditionally by
+    the default eoScrollPastEol. Measured ceiling 969 columns for the demo AND for a
+    13-character document alike; with the option gone, CurrentMaxLeftChar falls back to
+    LengthOfLongestLine + 1, which the wrap plugin keeps at the wrap column -- measured
+    ceiling 1, both documents, every route clamped.
+
+    Its price is the caret, and it is the right price here: the caret can no longer be put
+    BEYOND the end of a line, but it still reaches the position after the last character
+    (measured: EOL+1 stands, EOL+50 snaps back to it), which is where every exclusive End
+    position the app computes lands. Clicking past the end of a paragraph landing at the end
+    of the paragraph is what a prose editor does anyway.
+
+    And no 80-column rule -- a code editor's convention, drawn here as a line standing in the
+    middle of wrapped prose. The switch is this OPTION, not RightEdge := 0: SetRightEdge has
+    no zero case, so a zero would merely move the line to the start of the text. }
+  FEditor.Options := FEditor.Options - [eoScrollPastEol] + [eoHideRightMargin];
 
   { Bracket matching by spintax rules. SynEdit's own markup counts parentheses and quotes
     as brackets and ignores block comments, so it is switched off and ours takes its place;
