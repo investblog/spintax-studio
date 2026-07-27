@@ -355,8 +355,18 @@ function SpxWrapRange(const Sel: TSpxSelection; LeftLen, RightLen: Integer;
   saying "nothing came out" would be false. }
 function SpxIsBlankOutput(const S: string): Boolean;
 
+{ Whether the output already opens the document itself -- `<html` or `<body` as its first
+  token, after any leading whitespace, and the tag has to END there (`<htmlfoo` is not one).
+
+  Those two shapes and no others, because those two carry attributes the renderer applies to
+  the whole page: bgcolor, the link colours, a background image. IPro reads them off whichever
+  `<body>` it meets FIRST, so a wrapper in front does not merely nest -- it replaces them with
+  its own, empty set. Measured: `<body bgcolor="#101010" link="#ff0000">` keeps both bare and
+  loses both wrapped, and a `background="bg.png"` goes the same way. }
+function SpxOpensDocument(const AHtml: string): Boolean;
+
 { The engine's output, in a form the page view can actually display: inside a minimal
-  document, always.
+  document unless it already is one.
 
   IPro's parser wants a document, and does three things to a bare string that a preview must
   not do (all measured against the real parser, by asking it what tree it built; the tree
@@ -373,16 +383,18 @@ function SpxIsBlankOutput(const S: string): Boolean;
   - An unterminated `<!` makes the parser loop FOREVER (`<p>x</p> <!oops` never returns;
     killed at 8 s), and it runs on the UI thread. The wrapper's own `>` ends that scan.
 
-  So the wrapper is unconditional. Wrapping something that is already a document was measured
-  not to change what it renders -- a full `<html><body>` page, a bare `<body>`, a fragment
-  with an unclosed tag all build the same tree wrapped as they do bare -- so there is nothing
-  to be gained by trying to be clever about when to apply it, and a rule that guesses would
-  have to agree with IPro's tokenizer about what a tag is. It doesn't have to now.
+  So everything that is not already a document gets wrapped -- and output that IS one is left
+  exactly as it was, because the wrapper would cost it its `<body>` attributes and its head
+  (SpxOpensDocument). That line is where it is for a reason: past the first token none of the
+  three failures above can happen, since a document that opens with `<html`/`<body` has no
+  text in front of its first tag and always builds a body. The one exception it inherits is
+  the parser's `<!` loop, which a document can still walk into -- IPro's defect, unchanged by
+  this either way.
 
-  Not byte-transparent in two corner cases, both of which beat a black pane: output ending in
-  a bare `<` swallows the wrapper's closing tag and shows it, and prose containing a literal
-  `</body>` is cut there. The SOURCE view shows the engine's output raw either way, which is
-  where "what markup came out" is answered (ADR 0004). }
+  Not byte-transparent for what it wraps, in two corner cases, both of which beat a black
+  pane: output ending in a bare `<` swallows the wrapper's closing tag and shows it, and prose
+  containing a literal `</body>` is cut there. The SOURCE view shows the engine's output raw
+  either way, which is where "what markup came out" is answered (ADR 0004). }
 function SpxPageDocument(const AHtml: string): string;
 
 { ── editing a directive where it sits (spec §4.4) ────────────────────────── }
@@ -1227,11 +1239,37 @@ begin
   Result := True;
 end;
 
+function SpxOpensDocument(const AHtml: string): Boolean;
+var i: Integer;
+
+  { The keyword, then a boundary -- so `<html>` and `<body bgcolor=…>` count and `<htmlfoo>`
+    does not, which is the same place the renderer's own tokenizer ends a tag name. }
+  function Opens(const Word_: string): Boolean;
+  var k: Integer; c: Char;
+  begin
+    if i + Length(Word_) - 1 > Length(AHtml) then Exit(False);
+    for k := 1 to Length(Word_) do
+      if LowerCase(AHtml[i + k - 1]) <> Word_[k] then Exit(False);
+    k := i + Length(Word_);
+    if k > Length(AHtml) then Exit(True);
+    c := AHtml[k];
+    Result := (c = '>') or (c <= ' ');
+  end;
+
+begin
+  i := 1;
+  while (i <= Length(AHtml)) and (AHtml[i] <= ' ') do Inc(i);
+  Result := Opens('<html') or Opens('<body');
+end;
+
 function SpxPageDocument(const AHtml: string): string;
 begin
-  { The output goes in untouched: nothing is escaped, normalised or re-ordered, so what the
-    renderer lays out is still what the engine produced. }
-  Result := '<html><body>' + AHtml + '</body></html>';
+  if SpxOpensDocument(AHtml) then
+    Result := AHtml
+  else
+    { The output goes in untouched: nothing is escaped, normalised or re-ordered, so what the
+      renderer lays out is still what the engine produced. }
+    Result := '<html><body>' + AHtml + '</body></html>';
 end;
 
 { ── editing a directive where it sits ────────────────────────────────────── }

@@ -2030,13 +2030,17 @@ begin
   Check('wrap/longer-wrappers-range', RangeSig(after), '2:1..2:10');
 end;
 
-{ ── 8bc. what the page view may be handed ────────────────────────────────── }
+{ ── 8baa. what the page view may be handed ───────────────────────────────── }
 
 { How the renderer behaves -- black on a document with no element, text before the first tag
-  dropped, an unterminated `<!` looping forever -- is measured against the real parser and
-  cannot be re-measured here; there is no window in this suite and no dependency on IPro.
-  What the suite gates is the contract that follows from those measurements: whatever the
-  page view is handed, it is a DOCUMENT, and the engine's output inside it is untouched. }
+  dropped, an unterminated `<!` looping forever, `<body>` attributes read off the first body
+  it meets -- is measured against the real parser and cannot be re-measured here; there is no
+  window in this suite and no dependency on IPro.
+
+  So what is gated is the FUNCTION those measurements produced: what it wraps, what it leaves
+  alone, and that the text inside comes through untouched. Not the call site -- nothing here
+  would fail if the pane went back to handing the renderer a raw string; the guard against
+  that is the comment sitting on the call. }
 procedure TestPageDocument;
 begin
   { Every output is a document -- that is the whole point, and the case that black came
@@ -2050,13 +2054,39 @@ begin
   Check('page/a-comment-becomes-a-document', SpxPageDocument('<!-- ничего -->'),
         '<html><body><!-- ничего --></body></html>');
 
-  { Markup is not a special case any more. It used to be passed bare, and that is what lost
-    the text in front of it. }
+  { A fragment WITH markup is wrapped too -- being passed bare is what lost the text in front
+    of the first tag. }
   Check('page/a-fragment-is-wrapped-too', SpxPageDocument('раз<br>два'),
         '<html><body>раз<br>два</body></html>');
-  Check('page/a-whole-document-is-wrapped-too',
-        SpxPageDocument('<html><body><h3>Заголовок</h3></body></html>'),
-        '<html><body><html><body><h3>Заголовок</h3></body></html></body></html>');
+
+  { ── but output that already opens a document is left alone ── }
+
+  { Because the wrapper's own <body> would be the one the renderer reads attributes off, and
+    the document's would be dropped: measured, bgcolor and link survive bare and are gone
+    wrapped. }
+  Check('page/a-whole-document-is-untouched',
+        SpxPageDocument('<html><body bgcolor="#101010"><h3>Заголовок</h3></body></html>'),
+        '<html><body bgcolor="#101010"><h3>Заголовок</h3></body></html>');
+  Check('page/a-bare-body-is-untouched',
+        SpxPageDocument('<body background="bg.png">текст</body>'),
+        '<body background="bg.png">текст</body>');
+  { Case and leading whitespace are the author's business, not a different shape. }
+  CheckTrue('page/opens-uppercase', SpxOpensDocument('<HTML><BODY>x</BODY></HTML>'));
+  CheckTrue('page/opens-after-a-newline', SpxOpensDocument(#10'  <html>x</html>'));
+  CheckTrue('page/opens-with-attributes', SpxOpensDocument('<body bgcolor="#fff">x'));
+  { The tag has to end where the keyword does. }
+  CheckTrue('page/htmlfoo-does-not-open', not SpxOpensDocument('<htmlfoo>x'));
+  CheckTrue('page/bodyguard-does-not-open', not SpxOpensDocument('<bodyguard>x'));
+  { And everything the fix is for stays a fragment. }
+  CheckTrue('page/prose-does-not-open', not SpxOpensDocument('просто проза'));
+  CheckTrue('page/a-paragraph-does-not-open', not SpxOpensDocument('<p>текст</p>'));
+  CheckTrue('page/empty-does-not-open', not SpxOpensDocument(''));
+  CheckTrue('page/whitespace-only-does-not-open', not SpxOpensDocument('   '#10));
+  { A doctype in front is not the shape this recognises: it gets wrapped, which costs a
+    styled body its colours but keeps every failure above impossible. Stated so the next
+    reader knows it was a choice. }
+  CheckTrue('page/a-doctype-prefix-does-not-open',
+            not SpxOpensDocument('<!DOCTYPE html><html><body>x</body></html>'));
 
   { Nothing is escaped or normalised on the way through: a comparison keeps its `<`, and the
     newlines of a multi-line fragment stay where the engine put them. }

@@ -168,9 +168,11 @@ begin
     The pane says which of the two empty panes this is, because otherwise the user is looking
     at a blank right half with no way to tell it from a failure.
 
-    "Nothing" is rarely the empty string -- a selected line renders to its own trailing
-    newline -- and rarely only ASCII space either, which is why the test is the core's and
-    not Trim's. }
+    "Nothing" is rarely the empty string: the common case is a selected line rendering to its
+    own trailing newline, which Trim would have caught too. The core's test is here for the
+    tail Trim misses -- a non-breaking space, U+2028, U+2029. It answers "are these bytes
+    invisible", which is not quite "the pane looks empty": markup that draws nothing, say a
+    lone `<br>`, still counts as output here. }
   if APartial and SpxIsBlankOutput(AHtml) then
     FPartial.Caption := 'фрагмент ничего не выводит'
   else
@@ -200,7 +202,9 @@ begin
   { SpxPageDocument, never the raw string: the renderer needs a document, and a bare one goes
     black, loses the text before the first tag, or hangs on an unterminated `<!` (the
     measurements are with the function). FShown tracks the RAW output, so the redraw check
-    above still compares what the engine produced, not what was wrapped around it. }
+    above still compares what the engine produced, not what was wrapped around it -- which
+    holds only while SpxPageDocument is a pure function of that string. Give it a setting, a
+    theme or a charset one day and FShown stops being a valid key for what is on screen. }
   FPage.SetHtmlFromStr(SpxPageDocument(FContent));
   FShown := FContent;
   FHasShown := True;
