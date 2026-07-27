@@ -18,7 +18,7 @@ uses
   Clipbrd, Graphics,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxPreviewPane, SpxVarsPane, SpxFiles, SpxDemo;
+  SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo;
 
 type
   TSpxMainForm = class(TForm)
@@ -53,6 +53,7 @@ type
     FBottom: TPageControl;
     FDiag: TListView;
     FVars: TSpxVarsPane;
+    FSet: TSpxVariantsPane;
     FDiagSplit: TSplitter;
     FRows: TSpxPanelRows;
     FRowSig: string;
@@ -97,6 +98,13 @@ type
     procedure CopyClicked(Sender: TObject);
     procedure JobDone(const Res: TSpxJobResult);
     procedure RequestRender;
+    { The batch: the panel asks, the form fills in what only it knows, the worker runs it one
+      variant at a time and reports back here. }
+    procedure StartBatch(Count: Integer; SeedBase: LongWord; const Opts: TSpxDedupeOpts);
+    procedure CancelBatch(Sender: TObject);
+    procedure StopBatchForDocument;
+    procedure BatchProgress(const P: TSpxBatchProgress);
+    procedure ShowVariant(const AText: string);
     procedure StopEngine;
     procedure FormClosed(Sender: TObject; var CloseAction: TCloseAction);
   public
@@ -130,6 +138,8 @@ begin
   FNextId := 0;
   FLastShown := -1;
   FEngine := TSpxEngineThread.Create(@JobDone);
+  { Only now: BuildUi has run, so the panel exists, and so does the thread. }
+  FEngine.OnBatch := @BatchProgress;
   { `spintax-studio path\to\file.spintax` -- what a double-click in Explorer sends once the
     extension is associated, and the only way to open a document without a dialog. }
   if (ParamCount >= 1) and FileExists(ParamStr(1)) then LoadDocument(ParamStr(1))
@@ -138,7 +148,7 @@ end;
 
 procedure TSpxMainForm.BuildUi;
 var
-  sheetDiag, sheetVars: TTabSheet;
+  sheetDiag, sheetVars, sheetSet: TTabSheet;
 begin
   Width := 1100;
   Height := 700;
@@ -219,6 +229,8 @@ begin
   sheetDiag.Caption := 'Диагностика';
   sheetVars := FBottom.AddTabSheet;
   sheetVars.Caption := 'Переменные';
+  sheetSet := FBottom.AddTabSheet;
+  sheetSet.Caption := 'Варианты';
 
   { What a squiggle cannot show: a finding inside an included file, and one the engine could
     not place at all. }
@@ -242,6 +254,19 @@ begin
   FVars.Align := alClient;
   FVars.OnJump := @VarJump;
   FVars.OnRuntimeChanged := @RuntimeChanged;
+
+  { The batch and its export. The panel owns N, the seed and the dedup settings; the document,
+    the locale and the session values are the form's, so it is the form that assembles the
+    request -- the same split the render path already uses. }
+  FSet := TSpxVariantsPane.Create(Self);
+  FSet.Parent := sheetSet;
+  FSet.Align := alClient;
+  FSet.OnGenerate := @StartBatch;
+  FSet.OnCancelBatch := @CancelBatch;
+  FSet.OnShowVariant := @ShowVariant;
+  { The worker's own event is NOT hooked here: BuildUi runs before the engine exists, and
+    the first version of this line dereferenced nil at startup -- an access violation before
+    the window ever appeared. It is set in the constructor, right after the thread. }
 
   FDiagSplit := TSplitter.Create(Self);
   FDiagSplit.Parent := Self;
@@ -656,6 +681,7 @@ end;
 procedure TSpxMainForm.LoadDocument(const APath: string);
 var s: string;
 begin
+  StopBatchForDocument;
   s := SpxReadTextFile(APath);
   FPath := APath;
   FEol := SpxDetectEol(s);
@@ -712,6 +738,7 @@ end;
 procedure TSpxMainForm.NewClicked(Sender: TObject);
 begin
   if not AskSave then Exit;
+  StopBatchForDocument;
   FPath := '';
   FEol := SPX_DEFAULT_EOL;
   FTrailingEol := True;
@@ -749,6 +776,7 @@ end;
 
 procedure TSpxMainForm.ReloadSetClicked(Sender: TObject);
 begin
+  StopBatchForDocument;
   FReloadSet := True;
   RequestRender;
 end;
@@ -770,6 +798,10 @@ begin
   FDebounce.Enabled := False;
   FDebounce.Enabled := True;
   UpdateCaption;
+  { A generated set belongs to the text that produced it. Editing does not throw it away --
+    its seeds still name those texts, and the author may be exporting it -- but it stops
+    being a set of THIS document, and the panel says so. }
+  if FSet <> nil then FSet.MarkStale;
 end;
 
 procedure TSpxMainForm.SettingChanged(Sender: TObject);
@@ -831,6 +863,63 @@ begin
     (whitespace is not) is the worker's, gated in its turn. }
   job.Fragment := SpxPreviewFragment(CurrentSelection(True), FJump, FJump);
   FEngine.Post(job);
+end;
+
+procedure TSpxMainForm.StartBatch(Count: Integer; SeedBase: LongWord;
+  const Opts: TSpxDedupeOpts);
+var req: TSpxBatchRequest;
+begin
+  Inc(FNextId);
+  req := Default(TSpxBatchRequest);
+  req.Id := FNextId;
+  req.Text := FEditor.Text;
+  req.Locale := FLocale.Text;
+  { The same context the preview renders in, minus the preview's own seed: a batch derives
+    its seeds from the base the panel gives it. The set folder and the slug come along so
+    `#include` resolves for a batch exactly as it does for a render -- an export that
+    disagreed with the pane above it about a fragment would be worse than useless. }
+  if FPath = '' then
+  begin
+    req.SetFolder := '';
+    req.DocSlug := '';
+  end
+  else
+  begin
+    req.SetFolder := ExtractFilePath(FPath);
+    req.DocSlug := SpxSlugOf(FPath);
+  end;
+  req.Vars := FVars.RuntimeValues;
+  req.Count := Count;
+  req.SeedBase := SeedBase;
+  req.Opts := Opts;
+  FEngine.StartBatch(req);
+end;
+
+procedure TSpxMainForm.CancelBatch(Sender: TObject);
+begin
+  FEngine.CancelBatch;
+end;
+
+{ A batch belongs to ONE state of the document and of the folder beside it. Replacing either
+  half-way through would leave a set whose first rows resolved their `#include`s against the
+  old fragments and the rest against the new -- one file, two documents, and seeds that no
+  longer reproduce the early rows. So the run is stopped, and the panel says it was. }
+procedure TSpxMainForm.StopBatchForDocument;
+begin
+  if (FEngine <> nil) and FEngine.BatchInProgress then FEngine.CancelBatch;
+end;
+
+procedure TSpxMainForm.BatchProgress(const P: TSpxBatchProgress);
+begin
+  FSet.BatchProgress(P);
+end;
+
+{ A row from the set, shown in the right pane. It is a finished text, not a template, so it
+  goes to the pane as it is -- the preview's own render path would spin it again and show
+  something else. }
+procedure TSpxMainForm.ShowVariant(const AText: string);
+begin
+  FPreview.SetContent(AText, False);
 end;
 
 procedure TSpxMainForm.JobDone(const Res: TSpxJobResult);
