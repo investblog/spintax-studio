@@ -16,7 +16,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs,
   Clipbrd, Graphics,
-  SynEdit, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
+  SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxPreviewPane, SpxVarsPane, SpxFiles, SpxDemo;
 
@@ -57,11 +57,19 @@ type
     FRows: TSpxPanelRows;
     FRowSig: string;
     FPendingRow: TSpxPanelRow;
+    { The block a JUMP selected, so the preview does not narrow to it. Going to look at an
+      error must not replace the document's preview with a render of the broken span. }
+    FJumpB, FJumpE: TPoint;
+    FJumpSel: Boolean;
     procedure DiagColumn(const ACaption: string; AWidth: Integer);
     procedure DiagClicked(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
     procedure VarJump(Line, Column: Integer);
     procedure RuntimeChanged(Sender: TObject);
+    procedure SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
+    procedure WrapSelection(const L, R: string);
+    procedure WrapBracesClicked(Sender: TObject);
+    procedure WrapBracketsClicked(Sender: TObject);
     procedure JumpToPos(Line, Column, EndLine, EndColumn: Integer);
     procedure ShowRows(const ARows: TSpxPanelRows);
     procedure JumpTo(Row: TSpxPanelRow);
@@ -106,6 +114,12 @@ type
 
 const
   DEBOUNCE_MS = 200;   // long enough to skip a burst of typing, short enough to feel live
+
+{ TPoint carries no comparison operator here, and the two coordinates are the whole of it. }
+function SamePoint(const A, B: TPoint): Boolean;
+begin
+  Result := (A.X = B.X) and (A.Y = B.Y);
+end;
 
 constructor TSpxMainForm.Create(AOwner: TComponent);
 begin
@@ -236,6 +250,7 @@ begin
   FEditor.Highlighter := FHighlighter;
   FEditor.Text := SpxDemoTemplate;
   FEditor.OnChange := @EditorChanged;
+  FEditor.OnStatusChange := @SelectionChanged;
   { The demo's paragraphs run past 500 characters, and a template pane that opens on
     one-eighth of a line teaches the user to scroll rather than to read. Wrapping is the
     editor's own plugin, so the buffer keeps its real lines and every position the engine
@@ -288,7 +303,7 @@ procedure TSpxMainForm.BuildMenu;
 
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
-  fileMenu: TMenuItem;
+  fileMenu, editMenu: TMenuItem;
 begin
   bar := TMainMenu.Create(Self);
   fileMenu := TMenuItem.Create(Self);
@@ -306,6 +321,26 @@ begin
   Item(fileMenu, 'Перечитать набор', 0, [], @ReloadSetClicked);
   Item(fileMenu, '-', 0, [], nil);
   Item(fileMenu, 'Выход', 0, [], @ExitClicked);
+
+  { Every key action gets a place in a menu, not only a shortcut: a hotkey nobody can find
+    is a hotkey nobody uses. }
+  editMenu := TMenuItem.Create(Self);
+  editMenu.Caption := 'Правка';
+  bar.Items.Add(editMenu);
+  { A menu shortcut is checked BEFORE the key reaches the control, so one that collides with
+    an editor command takes that command away silently. SynEdit's own Ctrl+Shift table is
+    Y, Z, N, C, L, B; the two decisions here are recorded rather than stumbled into:
+      * NOT Ctrl+Shift+B for the brace wrap -- that is ecMatchBracket, jump to the matching
+        bracket, and taking it away in an editor for a bracket-heavy language would be
+        actively wrong. Ctrl+Shift+G instead;
+      * Ctrl+Shift+C IS taken, from ecColumnSelect. Copying the result is the everyday act
+        here and the combination is what a user expects for it, while column select remains
+        on Alt+drag and Alt+Shift+arrows. }
+  Item(editMenu, 'Обернуть выделение в {…}', Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked);
+  Item(editMenu, 'Обернуть выделение в […]', Ord('P'), [ssCtrl, ssShift], @WrapBracketsClicked);
+  Item(editMenu, '-', 0, [], nil);
+  Item(editMenu, 'Показать другой вариант', Ord('R'), [ssCtrl], @RerollClicked);
+  Item(editMenu, 'Скопировать результат', Ord('C'), [ssCtrl, ssShift], @CopyClicked);
 
   Self.Menu := bar;
 end;
@@ -422,10 +457,17 @@ begin
   if Line <= 0 then Exit;
   col := SpxByteColumn(LineOf(Line), Column);
   FEditor.LogicalCaretXY := Point(col, Line);
+  FJumpSel := False;
   if (EndLine >= Line) and (EndColumn > 0) then
   begin
     FEditor.BlockBegin := Point(col, Line);
     FEditor.BlockEnd := Point(SpxByteColumn(LineOf(EndLine), EndColumn), EndLine);
+    { Remembered, because this selection was made by the program to SHOW something, not by
+      the user to preview it. Without this, clicking a finding silently replaces the whole
+      document's preview with a render of the broken span. }
+    FJumpB := FEditor.BlockBegin;
+    FJumpE := FEditor.BlockEnd;
+    FJumpSel := True;
   end;
   FEditor.EnsureCursorPosVisible;
   FEditor.SetFocus;
@@ -436,6 +478,56 @@ end;
 procedure TSpxMainForm.VarJump(Line, Column: Integer);
 begin
   JumpToPos(Line, Column, 0, 0);
+end;
+
+{ A selection is a setting like the locale or the seed: it changes what the preview shows.
+  Through the debounce, because dragging a selection fires this continuously. }
+procedure TSpxMainForm.SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
+begin
+  if not (scSelection in Changes) then Exit;
+  { Loading a document reports scTextCleared -- which is a SET, not a flag, and carries
+    scSelection inside it -- and that path has already asked for its own render. }
+  if scTextCleared <= Changes then Exit;
+  FDebounce.Enabled := False;
+  FDebounce.Enabled := True;
+end;
+
+{ Through SelText, which is SynEdit's own edit path: ONE undo step, verified. Building a new
+  document string and assigning it would throw the undo history away.
+
+  NORMAL selections only. In column mode SelText returns the rows joined and SetSelText pastes
+  them back column-wise, so the opener lands on the first row and the closer on the last --
+  wrapping three columns of `AB`/`CD`/`EF` produces a group that swallows the text on either
+  side of them, which the user never selected. A line selection has the same shape one line
+  down. Measured; refused rather than half-handled.
+
+  And the block is restored afterwards, because SetSelText clears it: without this the
+  preview un-narrows the moment you wrap, and a second wrap -- brackets around what you just
+  put in braces -- is a silent no-op. }
+procedure TSpxMainForm.WrapSelection(const L, R: string);
+var b, e: TPoint;
+begin
+  if not FEditor.SelAvail then Exit;
+  if FEditor.SelectionMode <> smNormal then Exit;
+  b := FEditor.BlockBegin;
+  e := FEditor.BlockEnd;
+  FEditor.SelText := L + FEditor.SelText + R;
+  { The opener shifted the start by its own length only on the FIRST line; the end moved by
+    the opener too when the selection was one line, and by the closer either way. }
+  if e.Y = b.Y then Inc(e.X, Length(L) + Length(R))
+  else Inc(e.X, Length(R));
+  FEditor.BlockBegin := b;
+  FEditor.BlockEnd := e;
+end;
+
+procedure TSpxMainForm.WrapBracesClicked(Sender: TObject);
+begin
+  WrapSelection('{', '}');
+end;
+
+procedure TSpxMainForm.WrapBracketsClicked(Sender: TObject);
+begin
+  WrapSelection('[', ']');
 end;
 
 procedure TSpxMainForm.RuntimeChanged(Sender: TObject);
@@ -648,6 +740,16 @@ begin
   job.ReloadSet := FReloadSet;
   FReloadSet := False;
   job.Vars := FVars.RuntimeValues;
+  { A selection previews on its own -- in the document's scope, which is editor-core's job,
+    not ours. Two selections are not the user asking for that: none at all, and the one a
+    jump made to show a finding. Whether a fragment is worth rendering (whitespace is not)
+    is decided by the worker, so the rule sits where the suite can see it. }
+  if FEditor.SelAvail and
+     not (FJumpSel and SamePoint(FEditor.BlockBegin, FJumpB) and
+                       SamePoint(FEditor.BlockEnd, FJumpE)) then
+    job.Fragment := FEditor.SelText          { read once: it copies the selected text }
+  else
+    job.Fragment := '';
   FEngine.Post(job);
 end;
 
@@ -667,7 +769,7 @@ begin
   if Res.Id < FLastShown then Exit;
   FLastShown := Res.Id;
 
-  FPreview.SetContent(Res.Preview);
+  FPreview.SetContent(Res.Preview, Res.Partial);
   ShowRows(Res.Rows);
   FVars.SetModel(Res.Vars);
   FErrorMarkup.SetMarks(Res.Marks);

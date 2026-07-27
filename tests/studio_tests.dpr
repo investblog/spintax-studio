@@ -1623,6 +1623,44 @@ begin
             probe.Last.Vars[0].Name + '=' + probe.Last.Vars[0].Value, 'city=Тверь');
     job.Vars := nil;
 
+    { A SELECTION previews on its own, and two halves of that matter equally: the fragment
+      renders in the DOCUMENT's scope -- so a macro defined outside it still expands -- while
+      the verdict keeps describing the whole file. Selecting a clean paragraph does not make
+      the broken bracket below it go away. }
+    job.Id := 5;
+    job.Text := '#set %greet% = Привет'#10'<p>%greet%, мир</p>'#10'сломано]';
+    job.Fragment := '<p>%greet%, мир</p>';
+    th.Post(job);
+    CheckTrue('thread/delivers-the-fifth', PumpUntil(probe, 5, 5000));
+    CheckTrue('thread/a-fragment-is-flagged-as-partial', probe.Last.Partial);
+    CheckTrue('thread/the-fragment-sees-the-document-scope',
+              Pos('Привет', probe.Last.Preview) > 0);
+    { Without the first letter: post-process capitalises the opening word of a sentence, so
+      the document's `сломано]` renders as `Сломано]` -- and a check written against the
+      lower-case form would pass here for the wrong reason and fail below for the right one. }
+    CheckTrue('thread/and-only-the-fragment-is-rendered',
+              Pos('ломано', probe.Last.Preview) = 0);
+    CheckTrue('thread/the-verdict-still-covers-the-whole-file', probe.Last.Errors = 1);
+
+    { Whitespace is not a fragment: it would render to nothing, and an empty preview under a
+      caption saying "fragment" reads as a crash. }
+    job.Id := 6;
+    job.Fragment := '   '#9;
+    th.Post(job);
+    CheckTrue('thread/delivers-the-sixth', PumpUntil(probe, 6, 5000));
+    CheckTrue('thread/whitespace-is-not-a-fragment', not probe.Last.Partial);
+    CheckTrue('thread/and-the-document-is-previewed-instead',
+              Pos('ломано', probe.Last.Preview) > 0);
+
+    { And without a selection the preview is the document again. }
+    job.Id := 7;
+    job.Fragment := '';
+    th.Post(job);
+    CheckTrue('thread/delivers-the-seventh', PumpUntil(probe, 7, 5000));
+    CheckTrue('thread/no-fragment-is-not-partial', not probe.Last.Partial);
+    CheckTrue('thread/the-whole-document-renders-again',
+              Pos('ломано', probe.Last.Preview) > 0);
+
     { LATEST WINS. Fifty edits arrive faster than fifty renders can run, so the queue holds
       one job and the rest are replaced unrendered. Without that, a fast typist would build
       a backlog the UI then walks through one stale preview at a time. }

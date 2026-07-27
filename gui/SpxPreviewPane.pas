@@ -34,6 +34,7 @@ type
   TSpxPreviewPane = class(TPanel)
   private
     FHead: TPanel;
+    FPartial: TLabel;
     FAsPage: TRadioButton;
     FAsSource: TRadioButton;
     FStale: TPanel;
@@ -51,8 +52,12 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     { The engine's output. Cheap to call on every debounce tick: the view that is hidden
-      does no work, and the page redraws only when the text actually changed. }
-    procedure SetContent(const AHtml: string);
+      does no work, and the page redraws only when the text actually changed.
+
+      APartial says this is a SELECTION rendered on its own. It is said out loud, because a
+      preview that quietly shows one paragraph of a document looks like a preview that lost
+      the rest of it. }
+    procedure SetContent(const AHtml: string; APartial: Boolean = False);
     property Content: string read FContent;
   end;
 
@@ -81,6 +86,13 @@ begin
   FAsSource.Caption := 'Исходник';
   FAsSource.SetBounds(104, 4, 90, 20);
   FAsSource.OnChange := @ModeChanged;
+
+  { Said out loud, and only when true: a preview showing one paragraph of a document without
+    a word about it looks like a preview that lost the rest. }
+  FPartial := TLabel.Create(Self);
+  FPartial.Parent := FHead;
+  FPartial.SetBounds(212, 6, 300, 18);
+  FPartial.Visible := False;
 
   { Shown only when the output is too large to redraw on its own. It sits above the page
     rather than replacing it: the last drawing stays readable while it is out of date. }
@@ -120,9 +132,17 @@ begin
   FSource.Visible := False;
 end;
 
-procedure TSpxPreviewPane.SetContent(const AHtml: string);
+procedure TSpxPreviewPane.SetContent(const AHtml: string; APartial: Boolean = False);
 begin
   FContent := AHtml;
+  FPartial.Visible := APartial;
+  { A selection CAN render to nothing -- a directive-only line, or one that opens a comment.
+    The pane says which of the two empty panes this is, because otherwise the user is looking
+    at a blank right half with no way to tell it from a failure. }
+  if APartial and (AHtml = '') then
+    FPartial.Caption := 'фрагмент ничего не выводит'
+  else
+    FPartial.Caption := 'показан фрагмент';
   Sync;
 end;
 
