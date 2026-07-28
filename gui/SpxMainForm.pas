@@ -38,10 +38,10 @@ type
     FPartial: TLabel;
     FSplit: TSplitter;
     FLeft: TPanel;
-    { The find bar: hidden until Ctrl+F, and it belongs to the template -- the thing being
-      searched -- which is why it lives inside the editor's side rather than across the
-      window. }
-    FFind: TPanel;
+    { Search lives in the LEFT half of the top strip -- the half over the editor, because the
+      template is what is searched. It used to be a row of its own above the editor, which
+      cost the editor a line every time it opened while the strip above sat half empty
+      holding controls that belong to the output. }
     FFindText: TEdit;
     FFindCount: TLabel;
     FFindCase: TCheckBox;
@@ -121,7 +121,8 @@ type
     function LineOf(N: Integer): string;
     procedure BuildUi;
     procedure BuildFindBar;
-    procedure LayoutFindBar;
+    procedure LayoutTopStrip;
+    procedure TopStripResized(Sender: TObject);
     procedure BuildMenu;
     procedure ShowFindBar;
     procedure HideFindBar;
@@ -151,7 +152,6 @@ type
     procedure RerollClicked(Sender: TObject);
     procedure CopyClicked(Sender: TObject);
     procedure PreviewModeChanged(Sender: TObject);
-    procedure LayoutPreviewSwitch;
     procedure SayPartial(const AHtml: string; APartial: Boolean);
     procedure JobDone(const Res: TSpxJobResult);
     procedure RequestRender;
@@ -198,6 +198,8 @@ begin
   UpdateCaption;
   FNextId := 0;
   FLastShown := -1;
+  { The strip is laid out once, here, with every control it positions in existence. }
+  LayoutTopStrip;
   FEngine := TSpxEngineThread.Create(@JobDone);
   { Only now: BuildUi has run, so the panel exists, and so does the thread. }
   FEngine.OnBatch := @BatchProgress;
@@ -227,6 +229,7 @@ begin
   FTop.Align := alTop;
   FTop.Height := Px(Self, 38);
   FTop.BevelOuter := bvNone;
+  FTop.OnResize := @TopStripResized;
 
   FLocale := TComboBox.Create(Self);
   FLocale.Parent := FTop;
@@ -267,22 +270,18 @@ begin
   FPartial := TLabel.Create(Self);
   FPartial.Parent := FTop;
   FPartial.AutoSize := True;
-  FPartial.Anchors := [akTop, akRight];
   FPartial.Visible := False;
 
   FAsPage := TRadioButton.Create(Self);
   FAsPage.Parent := FTop;
   FAsPage.Caption := 'Страница';
   FAsPage.Checked := True;
-  FAsPage.Anchors := [akTop, akRight];
   FAsPage.OnChange := @PreviewModeChanged;
 
   FAsSource := TRadioButton.Create(Self);
   FAsSource.Parent := FTop;
   FAsSource.Caption := 'Исходник';
-  FAsSource.Anchors := [akTop, akRight];
   FAsSource.OnChange := @PreviewModeChanged;
-  LayoutPreviewSwitch;
   FCopy.OnClick := @CopyClicked;
 
   { The three bottom-aligned strips are ordered by their Top, not by the order they are
@@ -457,35 +456,28 @@ end;
   searched and a permanent row would cost the editor a line of text for nothing. }
 procedure TSpxMainForm.BuildFindBar;
 begin
-  FFind := TPanel.Create(Self);
-  FFind.Parent := FLeft;
-  FFind.Align := alTop;
-  FFind.Height := Px(Self, 30);
-  FFind.BevelOuter := bvNone;
-  FFind.Visible := False;
-
   FFindText := TEdit.Create(Self);
-  FFindText.Parent := FFind;
-  FFindText.SetBounds(Px(Self, 6), Px(Self, 3), Px(Self, 220), Px(Self, 24));
+  FFindText.Parent := FTop;
+  FFindText.Visible := False;
   FFindText.OnChange := @FindTextChanged;
   FFindText.OnKeyDown := @FindKeyDown;
 
   FFindPrev := TButton.Create(Self);
-  FFindPrev.Parent := FFind;
-  FFindPrev.SetBounds(Px(Self, 232), Px(Self, 3), Px(Self, 34), Px(Self, 24));
+  FFindPrev.Parent := FTop;
+  FFindPrev.Visible := False;
   FFindPrev.Caption := '<';
   FFindPrev.OnClick := @FindPrevClicked;
 
   FFindNext := TButton.Create(Self);
-  FFindNext.Parent := FFind;
-  FFindNext.SetBounds(Px(Self, 268), Px(Self, 3), Px(Self, 34), Px(Self, 24));
+  FFindNext.Parent := FTop;
+  FFindNext.Visible := False;
   FFindNext.Caption := '>';
   FFindNext.OnClick := @FindNextClicked;
 
   FFindCase := TCheckBox.Create(Self);
-  FFindCase.Parent := FFind;
-  FFindCase.SetBounds(Px(Self, 310), Px(Self, 6), Px(Self, 130), Px(Self, 20));
-  FFindCase.Caption := 'Учитывать регистр';
+  FFindCase.Parent := FTop;
+  FFindCase.Visible := False;
+  FFindCase.Caption := 'Регистр';
   FFindCase.OnChange := @FindTextChanged;
   FFindCase.OnKeyDown := @FindKeyDown;
 
@@ -497,31 +489,107 @@ begin
     close button as soon as the user favours the preview -- and it is the counter, the one
     thing here that carries information, that would be the first to disappear. }
   FFindCount := TLabel.Create(Self);
-  FFindCount.Parent := FFind;
-  FFindCount.Anchors := [akTop, akRight];
-  FFindCount.Alignment := taRightJustify;
+  FFindCount.Parent := FTop;
+  FFindCount.Visible := False;
 
   FFindClose := TButton.Create(Self);
-  FFindClose.Parent := FFind;
-  FFindClose.Anchors := [akTop, akRight];
+  FFindClose.Parent := FTop;
+  FFindClose.Visible := False;
   FFindClose.Caption := 'x';
   FFindClose.OnClick := @FindCloseClicked;
   FFindClose.OnKeyDown := @FindKeyDown;
   FFindPrev.OnKeyDown := @FindKeyDown;
   FFindNext.OnKeyDown := @FindKeyDown;
-  LayoutFindBar;
 end;
 
-{ The right-hand group placed once, then held there by the anchors -- the same treatment the
-  preview's switch gets in the top strip. }
-procedure TSpxMainForm.LayoutFindBar;
-var right_: Integer;
+{ THE TOP STRIP, laid out from both edges.
+
+  Its two halves mean different things, which is the whole point of the arrangement: the LEFT
+  belongs to the template -- searching it -- and the RIGHT to the output -- the language it
+  renders in, the seed, another variant, copying the result, and which of the two views is
+  shown. Before this, everything sat on the left and search had to open a row of its own,
+  taking a line from the editor while the strip above it was half empty.
+
+  Positions are computed rather than anchored because the right group is a chain: each
+  control sits to the left of the one after it, and the caption widths differ per language.
+  The find field takes whatever is left between the two groups, so the strip survives a
+  narrow window instead of overlapping. }
+procedure TSpxMainForm.TopStripResized(Sender: TObject);
 begin
-  if FFind = nil then Exit;
-  right_ := FFind.ClientWidth - Px(Self, 6);
-  FFindClose.SetBounds(right_ - Px(Self, 28), Px(Self, 3), Px(Self, 28), Px(Self, 24));
-  FFindCount.SetBounds(FFindClose.Left - Px(Self, 180) - Px(Self, 8), Px(Self, 8),
-                       Px(Self, 180), Px(Self, 16));
+  LayoutTopStrip;
+end;
+
+procedure TSpxMainForm.LayoutTopStrip;
+var right_, leftEnd, x, y, fieldW, fixed: Integer;
+
+  procedure PlaceRight(C: TControl; W, H, Y: Integer);
+  begin
+    Dec(right_, W);
+    C.SetBounds(right_, Y, W, H);
+    Dec(right_, Px(Self, 8));
+  end;
+
+begin
+  { A HALF-BUILT WINDOW IS A NORMAL STATE HERE: this runs during construction, from a resize
+    that fires before the last control exists, and again at the end. Three startup crashes in
+    this project have been exactly this shape -- a layout or an event hookup reaching for
+    something not created yet -- so the guard names every group it touches rather than
+    trusting the order things happen in. }
+  if (FTop = nil) or (FAsSource = nil) or (FLocale = nil) or (FCopy = nil) or
+     (FFindText = nil) then Exit;
+
+  { ── the output's half, from the right edge inwards ── }
+  right_ := FTop.ClientWidth - Px(Self, 12);
+  PlaceRight(FAsSource, Px(Self, 90), Px(Self, 20), Px(Self, 9));
+  PlaceRight(FAsPage, Px(Self, 90), Px(Self, 20), Px(Self, 9));
+  if FPartial.Visible then PlaceRight(FPartial, FPartial.Width, Px(Self, 16), Px(Self, 11));
+  PlaceRight(FCopy, Px(Self, 80), Px(Self, 26), Px(Self, 6));
+  PlaceRight(FReroll, Px(Self, 80), Px(Self, 26), Px(Self, 6));
+  PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
+  PlaceRight(FSeeded, Px(Self, 55), Px(Self, 22), Px(Self, 9));
+  PlaceRight(FLocale, Px(Self, 70), Px(Self, 24), Px(Self, 7));
+  leftEnd := right_;
+
+  { ── the template's half, from the left edge outwards, and only when searching ── }
+  if not FFindText.Visible then
+  begin
+    FTop.Height := Px(Self, 38);
+    Exit;
+  end;
+
+  { Everything except the field has a fixed width, so the field absorbs the difference. When
+    even a usable field will not fit beside the output's half, search takes a SECOND ROW
+    rather than overlapping it -- measured: at 820 wide the two groups ran through each
+    other. The row costs the editor a line, which is exactly what this arrangement avoids at
+    the widths a person actually works at (one row from about 1000 up), and it is still
+    better than controls drawn on top of one another. }
+  fixed := Px(Self, 8 + 34 + 4 + 34 + 8 + 90 + 8 + 110 + 8 + 28);
+  x := Px(Self, 8);
+  if leftEnd - x - fixed >= Px(Self, 140) then
+  begin
+    y := Px(Self, 0);
+    fieldW := leftEnd - x - fixed;
+    FTop.Height := Px(Self, 38);
+  end
+  else
+  begin
+    y := Px(Self, 32);
+    fieldW := FTop.ClientWidth - x - fixed - Px(Self, 8);
+    if fieldW < Px(Self, 90) then fieldW := Px(Self, 90);
+    FTop.Height := Px(Self, 70);
+  end;
+
+  FFindText.SetBounds(x, y + Px(Self, 7), fieldW, Px(Self, 24));
+  Inc(x, fieldW + Px(Self, 8));
+  FFindPrev.SetBounds(x, y + Px(Self, 6), Px(Self, 34), Px(Self, 26));
+  Inc(x, Px(Self, 38));
+  FFindNext.SetBounds(x, y + Px(Self, 6), Px(Self, 34), Px(Self, 26));
+  Inc(x, Px(Self, 42));
+  FFindCase.SetBounds(x, y + Px(Self, 9), Px(Self, 90), Px(Self, 20));
+  Inc(x, Px(Self, 98));
+  FFindCount.SetBounds(x, y + Px(Self, 11), Px(Self, 110), Px(Self, 16));
+  Inc(x, Px(Self, 118));
+  FFindClose.SetBounds(x, y + Px(Self, 6), Px(Self, 28), Px(Self, 26));
 end;
 
 procedure TSpxMainForm.ShowFindBar;
@@ -530,7 +598,13 @@ begin
     macro, press Ctrl+F, and the box already holds it. }
   if (FEditor.SelAvail) and (Pos(LineEnding, FEditor.SelText) = 0) then
     FFindText.Text := FEditor.SelText;
-  FFind.Visible := True;
+  FFindText.Visible := True;
+  FFindPrev.Visible := True;
+  FFindNext.Visible := True;
+  FFindCase.Visible := True;
+  FFindCount.Visible := True;
+  FFindClose.Visible := True;
+  LayoutTopStrip;
   if FFindText.CanSetFocus then
   begin
     FFindText.SetFocus;
@@ -541,7 +615,12 @@ end;
 
 procedure TSpxMainForm.HideFindBar;
 begin
-  FFind.Visible := False;
+  FFindText.Visible := False;
+  FFindPrev.Visible := False;
+  FFindNext.Visible := False;
+  FFindCase.Visible := False;
+  FFindCount.Visible := False;
+  FFindClose.Visible := False;
   FMatches := nil;
   if FEditor.CanSetFocus then FEditor.SetFocus;
 end;
@@ -606,7 +685,7 @@ end;
 procedure TSpxMainForm.FindNextClicked(Sender: TObject);
 begin
   { F3 from the editor, with the bar never opened: open it rather than doing nothing. }
-  if not FFind.Visible then
+  if not FFindText.Visible then
   begin
     ShowFindBar;
     Exit;
@@ -618,7 +697,7 @@ procedure TSpxMainForm.FindPrevClicked(Sender: TObject);
 begin
   { Shift+F3 with the bar closed opens it, like F3 -- the pair should not behave differently
     depending on which half of it you press. }
-  if not FFind.Visible then
+  if not FFindText.Visible then
   begin
     ShowFindBar;
     Exit;
@@ -1124,7 +1203,7 @@ begin
   UpdateCaption;
   { The find list describes the text as it was. Marked rather than rebuilt here: this runs on
     every keystroke. }
-  if (FFind <> nil) and FFind.Visible then FMatchesStale := True;
+  if (FFindText <> nil) and FFindText.Visible then FMatchesStale := True;
   { A generated set belongs to the text that produced it. Editing does not throw it away --
     its seeds still name those texts, and the author may be exporting it -- but it stops
     being a set of THIS document, and the panel says so. }
@@ -1139,7 +1218,7 @@ end;
 procedure TSpxMainForm.DebounceFired(Sender: TObject);
 begin
   { Same tick as the render: the counter follows the document without paying per keystroke. }
-  if (FFind <> nil) and FFind.Visible and FMatchesStale then RefreshMatches;
+  if (FFindText <> nil) and FFindText.Visible and FMatchesStale then RefreshMatches;
   FDebounce.Enabled := False;
   RequestRender;
 end;
@@ -1235,19 +1314,6 @@ begin
   FEngine.StartBatch(req);
 end;
 
-{ Right-aligned by hand once, then held there by the anchors. Written out rather than left
-  to a right-to-left flow layout, because there are three controls and one of them changes
-  width with its caption. }
-procedure TSpxMainForm.LayoutPreviewSwitch;
-var right_: Integer;
-begin
-  right_ := FTop.ClientWidth - 12;
-  FAsSource.SetBounds(right_ - 90, 9, 90, 20);
-  FAsPage.SetBounds(right_ - 186, 9, 90, 20);
-  FPartial.Top := Px(Self, 11);
-  FPartial.Left := FAsPage.Left - FPartial.Width - 12;
-end;
-
 procedure TSpxMainForm.PreviewModeChanged(Sender: TObject);
 begin
   FPreview.SourceMode := FAsSource.Checked;
@@ -1265,7 +1331,7 @@ begin
     FPartial.Caption := 'фрагмент ничего не выводит'
   else
     FPartial.Caption := 'показан фрагмент';
-  LayoutPreviewSwitch;   { the caption changes width, so its left edge moves with it }
+  LayoutTopStrip;   { the caption changes width, so the whole chain shifts with it }
 end;
 
 procedure TSpxMainForm.CancelBatch(Sender: TObject);
