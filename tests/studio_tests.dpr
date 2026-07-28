@@ -2307,6 +2307,36 @@ begin
   frag := SpxPreviewFragment(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), st, st);
   Check('policy/the-same-range-selected-by-hand-does-narrow', frag, 'кусок');
 
+  { ── when a selection change is worth a render at all ── }
+
+  { A jump does not narrow the preview, so two jumps in a row ask for the same thing -- and
+    the second must not restart the render. This is what made stepping through search hits
+    re-render the whole document on every press of Enter. }
+  CheckTrue('ask/a-jump-does-not-narrow',
+            not SpxPreviewAsk(Sel(spxSelNormal, 2, 5, 2, 9, ''), Jumped(2, 5, 2, 9)).Narrowed);
+  CheckTrue('ask/two-different-jumps-ask-for-the-same-thing',
+            SpxPreviewSame(SpxPreviewAsk(Sel(spxSelNormal, 2, 5, 2, 9, ''), Jumped(2, 5, 2, 9)),
+                           SpxPreviewAsk(Sel(spxSelNormal, 7, 1, 7, 4, ''), Jumped(7, 1, 7, 4))));
+  { A selection the user made DOES narrow, and asking for a different span is a different
+    ask. }
+  CheckTrue('ask/a-manual-selection-narrows',
+            SpxPreviewAsk(Sel(spxSelNormal, 2, 5, 2, 9, 'кусок'), NoJump).Narrowed);
+  CheckTrue('ask/a-different-span-is-a-different-ask',
+            not SpxPreviewSame(SpxPreviewAsk(Sel(spxSelNormal, 2, 5, 2, 9, 'a'), NoJump),
+                               SpxPreviewAsk(Sel(spxSelNormal, 3, 1, 3, 6, 'b'), NoJump)));
+  { The same span twice is the same ask -- a re-selection of what is already shown needs no
+    work. }
+  CheckTrue('ask/the-same-span-twice-is-the-same-ask',
+            SpxPreviewSame(SpxPreviewAsk(Sel(spxSelNormal, 2, 5, 2, 9, 'a'), NoJump),
+                           SpxPreviewAsk(Sel(spxSelNormal, 2, 5, 2, 9, 'a'), NoJump)));
+  { And going from a fragment back to the whole document IS a change. }
+  CheckTrue('ask/leaving-a-fragment-is-a-change',
+            not SpxPreviewSame(SpxPreviewAsk(Sel(spxSelNormal, 2, 5, 2, 9, 'a'), NoJump),
+                               SpxPreviewAsk(Sel(spxSelNone, 0, 0, 0, 0, ''), NoJump)));
+  { An empty span is not a fragment however it was made. }
+  CheckTrue('ask/an-empty-span-does-not-narrow',
+            not SpxPreviewAsk(Sel(spxSelNormal, 4, 2, 4, 2, ''), NoJump).Narrowed);
+
   { The convention the change-path relies on: without the text the fragment is empty, and
     the state still updates -- so a caller may skip copying a large selection while dragging. }
   frag := SpxPreviewFragment(Sel(spxSelNormal, 3, 1, 3, 4, ''), Jumped(2, 5, 2, 9), st);
@@ -2342,6 +2372,149 @@ begin
   CheckTrue('wrap/longer-wrappers',
             SpxWrapRange(Sel(spxSelNormal, 2, 1, 2, 5, 'text'), 3, 2, after));
   Check('wrap/longer-wrappers-range', RangeSig(after), '2:1..2:10');
+end;
+
+{ ── 8b0. finding text in the template ─────────────────────────────────────── }
+
+function MatchSig(const M: TSpxMatches): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 0 to High(M) do
+    Result := Result + Format('%d:%d..%d:%d ', [M[i].Line, M[i].Col, M[i].EndLine, M[i].EndCol]);
+  Result := Trim(Result);
+end;
+
+procedure TestFind;
+var m: TSpxMatches; i: Integer; ok: Boolean;
+begin
+  { Positions are the EDITOR's: 1-based lines, 1-based code-point columns, end exclusive --
+    the same model a diagnostic uses, so a match can be selected by the machinery that
+    already exists. }
+  m := SpxFindAll('раз два раз', 'раз', True);
+  Check('find/two-on-one-line', MatchSig(m), '1:1..1:4 1:9..1:12');
+
+  { Code POINTS, not bytes: a Cyrillic line would put every column after the first match in
+    the wrong place if this counted bytes. }
+  m := SpxFindAll('ααα казино', 'казино', True);
+  Check('find/columns-are-code-points', MatchSig(m), '1:5..1:11');
+
+  { Lines are the editor's three terminators. }
+  m := SpxFindAll('раз'#10'два'#13#10'раз'#13'два', 'раз', True);
+  Check('find/across-lines', MatchSig(m), '1:1..1:4 3:1..3:4');
+
+  { ── case ── }
+  m := SpxFindAll('Казино КАЗИНО казино', 'казино', True);
+  Check('find/case-sensitive-finds-one', MatchSig(m), '1:15..1:21');
+  m := SpxFindAll('Казино КАЗИНО казино', 'казино', False);
+  Check('find/case-insensitive-finds-all', MatchSig(m), '1:1..1:7 1:8..1:14 1:15..1:21');
+  { The fold is the engine's own table, so it covers what the engine covers. }
+  m := SpxFindAll('ÉCOLE école', 'École', False);
+  Check('find/folding-follows-the-engine', MatchSig(m), '1:1..1:6 1:7..1:12');
+
+  { Folding must not move a POSITION. A character that changes length when folded (ß -> SS)
+    is the case that breaks a search written the easy way -- fold both strings, then search.
+    Every column after it would be reported one byte too far. }
+  m := SpxFindAll('straße und weg', 'und', False);
+  Check('find/a-folding-character-does-not-shift-positions', MatchSig(m), '1:8..1:11');
+
+  { ── the edges ── }
+  m := SpxFindAll('текст', '', False);
+  CheckTrue('find/an-empty-needle-matches-nothing', Length(m) = 0);
+  m := SpxFindAll('', 'что-то', False);
+  CheckTrue('find/an-empty-text-has-nothing', Length(m) = 0);
+  m := SpxFindAll('раз', 'раз два', False);
+  CheckTrue('find/a-needle-longer-than-the-text', Length(m) = 0);
+  { Overlapping occurrences are occurrences: stepping through `аа` in `ааа` must stop
+    twice. }
+  m := SpxFindAll('ааа', 'аа', True);
+  Check('find/overlapping-matches-count', MatchSig(m), '1:1..1:3 1:2..1:4');
+  { A needle with a line break in it reports the row it really ends on. }
+  m := SpxFindAll('раз'#10'два', 'раз'#10'два', True);
+  Check('find/a-multiline-needle', MatchSig(m), '1:1..2:4');
+  { AND WITH CRLF, which is the case that was wrong: the LF was counted a second time, so a
+    two-line needle reported a row past the end of a two-line document -- a span the editor
+    cannot select. This is the check that would have caught it. }
+  m := SpxFindAll('раз'#13#10'два', 'раз'#13#10'два', True);
+  Check('find/a-multiline-needle-with-crlf', MatchSig(m), '1:1..2:4');
+  m := SpxFindAll('a'#13#10'b', #13#10, True);
+  Check('find/a-needle-that-is-just-a-crlf', MatchSig(m), '1:2..2:1');
+
+  { The property behind both: no match may end past the document. A span the editor cannot
+    select is worse than no match at all. }
+  m := SpxFindAll('раз'#13#10'два'#13#10'три', 'два'#13#10'три', True);
+  CheckTrue('find/no-match-ends-past-the-document', (Length(m) = 1) and (m[0].EndLine = 3));
+
+  { Malformed UTF-8 in either argument is text like any other: it must not hang, read past
+    the end, or match INSIDE a well-formed character. }
+  m := SpxFindAll('аб'#$FF'вг', #$FF, True);
+  CheckTrue('find/a-stray-byte-is-findable', Length(m) = 1);
+  m := SpxFindAll('аб', #$B0, True);
+  CheckTrue('find/a-continuation-byte-does-not-match-inside-a-character', Length(m) = 0);
+
+  { The deliberate limit of folding one code point at a time: an expansion cannot cross the
+    boundary, so `STRASSE` does not find `straße`. The whole-string fold in SpxDedupe DOES
+    call those equal -- the disagreement is the price of a span that is always exactly the
+    needle's length, and it is gated here so it stays a decision rather than a surprise. }
+  m := SpxFindAll('straße', 'STRASSE', False);
+  CheckTrue('find/an-expanding-fold-does-not-match-across-code-points', Length(m) = 0);
+  { What it does do: the same letter in the other case, one code point for one. }
+  m := SpxFindAll('straße', 'STRAßE', False);
+  CheckTrue('find/but-the-same-letter-in-either-case-does', Length(m) = 1);
+
+  { The fast case-folding path is hand-rolled arithmetic for ASCII and Cyrillic, so it is
+    checked against the ENGINE's table for every code point in the ranges it claims. A search
+    that disagreed with the engine about a letter would be a search nobody could explain. }
+  begin
+    { The exact property the shortcut relies on: for every code point it claims, the ENGINE's
+      uppercase IS the single code point the arithmetic produces. That is what makes "folded
+      values differ" a final answer for those, with no table lookup -- and it is a stronger
+      claim than "the fold does not change the engine's answer". }
+    ok := True;
+    for i := 32 to 127 do
+      if SpUpperCodePoint(LongWord(i)) <> SpCodePointToStr(SpxTestFastUpper(LongWord(i))) then
+        ok := False;
+    for i := $400 to $45F do
+      if SpUpperCodePoint(LongWord(i)) <> SpCodePointToStr(SpxTestFastUpper(LongWord(i))) then
+        ok := False;
+    CheckTrue('find/the-fast-fold-is-the-engines-answer-for-what-it-claims', ok);
+    { And outside those ranges it claims nothing: the value comes back untouched, so the
+      table decides. }
+    ok := True;
+    for i := $460 to $50F do
+      if SpxTestFastUpper(LongWord(i)) <> LongWord(i) then ok := False;
+    CheckTrue('find/and-nothing-outside-them', ok);
+  end;
+
+  { ── a byte column back to a code-point one ── }
+
+  { The editor's LOGICAL caret is a byte offset; every position here is a code point. The
+    conversion has to go both ways or a caret handed back to core means something else. }
+  CheckTrue('col/byte-1-is-code-point-1', SpxCodePointColumn('казино', 1) = 1);
+  { `казино` is two bytes per letter: byte 7 is the fourth letter. }
+  CheckTrue('col/mid-string', SpxCodePointColumn('казино', 7) = 4);
+  CheckTrue('col/past-the-end-clamps', SpxCodePointColumn('казино', 999) = 7);
+  CheckTrue('col/round-trips-with-the-other-direction',
+            SpxCodePointColumn('казино', SpxByteColumn('казино', 5)) = 5);
+  CheckTrue('col/an-empty-line', SpxCodePointColumn('', 1) = 1);
+
+  { ── stepping ── }
+  m := SpxFindAll('раз два раз три раз', 'раз', True);
+  { AT-or-after, not strictly after. Opening a document parks the caret at 1:1, so with a
+    strict comparison the first press of Enter landed on the SECOND occurrence whenever the
+    first was at the top of the file -- and the name of this check said the opposite of what
+    it asserted, which is how it stayed that way. }
+  CheckTrue('step/from-the-top-goes-to-the-first', SpxStepMatch(m, 1, 1, False) = 0);
+  { Standing exactly on a match, "next" is that match -- the caller steps by index rather
+    than asking again from where it stands, so this cannot leave anyone stuck. }
+  CheckTrue('step/standing-on-a-match-finds-it', SpxStepMatch(m, 1, 9, False) = 1);
+  CheckTrue('step/forward-from-between-matches', SpxStepMatch(m, 1, 10, False) = 2);
+  { Past the last one it wraps, rather than leaving the user to scroll back by hand. }
+  CheckTrue('step/forward-past-the-end-wraps', SpxStepMatch(m, 1, 99, False) = 0);
+  CheckTrue('step/backwards-from-the-end', SpxStepMatch(m, 1, 99, True) = 2);
+  CheckTrue('step/backwards-past-the-start-wraps', SpxStepMatch(m, 1, 1, True) = 2);
+  m := nil;
+  CheckTrue('step/nothing-to-step-through', SpxStepMatch(m, 1, 1, False) = -1);
 end;
 
 { ── 8baa. what the page view may be handed ───────────────────────────────── }
@@ -3699,6 +3872,7 @@ begin
   TestDiagMarks;
   TestPanelRows;
   TestSelectionPolicy;
+  TestFind;
   TestPageDocument;
   TestDirectiveEditing;
   TestModelDirIndex;
