@@ -15,7 +15,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs,
-  Clipbrd, Graphics,
+  Clipbrd, Graphics, LCLType,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi;
@@ -37,6 +37,28 @@ type
     FAsSource: TRadioButton;
     FPartial: TLabel;
     FSplit: TSplitter;
+    FLeft: TPanel;
+    { The find bar: hidden until Ctrl+F, and it belongs to the template -- the thing being
+      searched -- which is why it lives inside the editor's side rather than across the
+      window. }
+    FFind: TPanel;
+    FFindText: TEdit;
+    FFindCount: TLabel;
+    FFindCase: TCheckBox;
+    FFindPrev: TButton;
+    FFindNext: TButton;
+    FFindClose: TButton;
+    FMatches: TSpxMatches;
+    { WHICH match is showing, remembered rather than derived from the caret. The caret's
+      column is PHYSICAL -- a tab is one code point and up to eight of those columns, a
+      combining mark is one and none -- so deriving the index from it stepped over matches on
+      tab-indented lines and could return the same one twice on a line with combining marks.
+      -1 means "not on one yet", and then the caret decides, converted properly. }
+    FMatchIndex: Integer;
+    { The document changed under an open find bar. The list is rebuilt on the next debounce
+      tick rather than on the keystroke: a rescan is 8-13 ms on a 116 KB template and the
+      user is typing. }
+    FMatchesStale: Boolean;
     FEditor: TSynEdit;
     FHighlighter: TSpxSynHighlighter;
     FErrorMarkup: TSpxDiagMarkup;
@@ -69,6 +91,18 @@ type
       error must not replace the document's preview with a render of the broken span. The
       rule that reads this lives in editor-core, where it is gated. }
     FJump: TSpxJumpState;
+    { What the preview was last ASKED for. A selection change that would produce the same
+      preview does not restart the render: jumping between search hits or diagnostics
+      selects spans that deliberately do not narrow, and re-rendering the whole document for
+      each of them costs 320 ms and a flicker on a 116 KB template -- reported as the search
+      "передёргивая" the preview. }
+    FShownAsk: TSpxPreviewAsk;
+    { Set while a jump is assigning the block. Setting BlockBegin and then BlockEnd fires the
+      selection event TWICE, and at both moments the jump state is deliberately not written
+      yet -- so the half-made selection looks like one the user made, and a render is
+      scheduled before anything can say otherwise. The decision is taken once, at the end of
+      the jump, when the state is true. }
+    FJumping: Boolean;
     procedure DiagColumn(const ACaption: string; AWidth: Integer);
     procedure DiagClicked(Sender: TObject);
     procedure DiagResized(Sender: TObject);
@@ -76,6 +110,7 @@ type
     procedure VarJump(Line, Column: Integer);
     procedure RuntimeChanged(Sender: TObject);
     procedure SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
+    procedure PreviewFollowSelection;
     procedure WrapSelection(const L, R: string);
     function CurrentSelection(WithText: Boolean): TSpxSelection;
     procedure WrapBracesClicked(Sender: TObject);
@@ -85,7 +120,19 @@ type
     procedure JumpTo(Row: TSpxPanelRow);
     function LineOf(N: Integer): string;
     procedure BuildUi;
+    procedure BuildFindBar;
+    procedure LayoutFindBar;
     procedure BuildMenu;
+    procedure ShowFindBar;
+    procedure HideFindBar;
+    procedure FindTextChanged(Sender: TObject);
+    procedure FindNextClicked(Sender: TObject);
+    procedure FindPrevClicked(Sender: TObject);
+    procedure FindCloseClicked(Sender: TObject);
+    procedure FindMenuClicked(Sender: TObject);
+    procedure FindKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure StepToMatch(Backwards: Boolean);
+    procedure RefreshMatches;
     procedure NewClicked(Sender: TObject);
     procedure OpenClicked(Sender: TObject);
     procedure SaveClicked(Sender: TObject);
@@ -120,6 +167,10 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    { How many jobs this window has asked the engine for. Read-only, and out here because
+      "did that action cause a render?" is otherwise unanswerable from outside -- which is
+      exactly the question behind a preview that flickers when it should not. }
+    property JobsPosted: Int64 read FNextId;
   end;
 
 var
@@ -304,13 +355,23 @@ begin
   FDiagSplit.Align := alBottom;
   FDiagSplit.MinSize := Px(Self, 80);       { neither the panes nor the strip may be dragged to nothing }
 
-  FEditor := TSynEdit.Create(Self);
-  FEditor.Parent := Self;
-  FEditor.Align := alLeft;
+  { The editor's SIDE, not the editor alone. The find bar goes above it and the tool rail
+    will go beside it, and both belong to the template rather than to the window -- a bar
+    parented to the form would stretch across the preview as well. }
+  FLeft := TPanel.Create(Self);
+  FLeft.Parent := Self;
+  FLeft.Align := alLeft;
+  FLeft.BevelOuter := bvNone;
   { A PROPORTION, not a pixel count. 540 was right for the window this was written at and
     for nobody else's screen; the two panes are meant to be comparable, and the user moves
     the splitter from there. }
-  FEditor.Width := (ClientWidth * 48) div 100;
+  FLeft.Width := (ClientWidth * 48) div 100;
+
+  BuildFindBar;
+
+  FEditor := TSynEdit.Create(Self);
+  FEditor.Parent := FLeft;
+  FEditor.Align := alClient;
   { Fixed pitch, because a template is markup -- but only the FAMILY is ours. The size
     stays the system's, so a desktop configured for larger text gets a larger editor. }
   SpxApplyMonoFont(FEditor.Font);
@@ -378,7 +439,7 @@ begin
   FSplit := TSplitter.Create(Self);
   FSplit.Parent := Self;
   FSplit.Align := alLeft;
-  FSplit.Left := FEditor.Width + 1;
+  FSplit.Left := FLeft.Width + 1;
 
   { Two views of the same output -- the page and the HTML it is -- with the switch and the
     size guard owned by the pane itself (SpxPreviewPane, ADR 0004). }
@@ -390,6 +451,205 @@ begin
   FDebounce.Enabled := False;
   FDebounce.Interval := DEBOUNCE_MS;
   FDebounce.OnTimer := @DebounceFired;
+end;
+
+{ The find bar. Hidden until asked for, because a template is read far more often than it is
+  searched and a permanent row would cost the editor a line of text for nothing. }
+procedure TSpxMainForm.BuildFindBar;
+begin
+  FFind := TPanel.Create(Self);
+  FFind.Parent := FLeft;
+  FFind.Align := alTop;
+  FFind.Height := Px(Self, 30);
+  FFind.BevelOuter := bvNone;
+  FFind.Visible := False;
+
+  FFindText := TEdit.Create(Self);
+  FFindText.Parent := FFind;
+  FFindText.SetBounds(Px(Self, 6), Px(Self, 3), Px(Self, 220), Px(Self, 24));
+  FFindText.OnChange := @FindTextChanged;
+  FFindText.OnKeyDown := @FindKeyDown;
+
+  FFindPrev := TButton.Create(Self);
+  FFindPrev.Parent := FFind;
+  FFindPrev.SetBounds(Px(Self, 232), Px(Self, 3), Px(Self, 34), Px(Self, 24));
+  FFindPrev.Caption := '<';
+  FFindPrev.OnClick := @FindPrevClicked;
+
+  FFindNext := TButton.Create(Self);
+  FFindNext.Parent := FFind;
+  FFindNext.SetBounds(Px(Self, 268), Px(Self, 3), Px(Self, 34), Px(Self, 24));
+  FFindNext.Caption := '>';
+  FFindNext.OnClick := @FindNextClicked;
+
+  FFindCase := TCheckBox.Create(Self);
+  FFindCase.Parent := FFind;
+  FFindCase.SetBounds(Px(Self, 310), Px(Self, 6), Px(Self, 130), Px(Self, 20));
+  FFindCase.Caption := 'Учитывать регистр';
+  FFindCase.OnChange := @FindTextChanged;
+  FFindCase.OnKeyDown := @FindKeyDown;
+
+  { How many there are, and which one you are on. A search box without a count answers
+    "is it there" and leaves "how many" and "where am I" unanswered.
+
+    ANCHORED RIGHT, with the close button. The bar lives in a container that is 48% of the
+    window and freely resized by the splitter, so absolute offsets put the counter under the
+    close button as soon as the user favours the preview -- and it is the counter, the one
+    thing here that carries information, that would be the first to disappear. }
+  FFindCount := TLabel.Create(Self);
+  FFindCount.Parent := FFind;
+  FFindCount.Anchors := [akTop, akRight];
+  FFindCount.Alignment := taRightJustify;
+
+  FFindClose := TButton.Create(Self);
+  FFindClose.Parent := FFind;
+  FFindClose.Anchors := [akTop, akRight];
+  FFindClose.Caption := 'x';
+  FFindClose.OnClick := @FindCloseClicked;
+  FFindClose.OnKeyDown := @FindKeyDown;
+  FFindPrev.OnKeyDown := @FindKeyDown;
+  FFindNext.OnKeyDown := @FindKeyDown;
+  LayoutFindBar;
+end;
+
+{ The right-hand group placed once, then held there by the anchors -- the same treatment the
+  preview's switch gets in the top strip. }
+procedure TSpxMainForm.LayoutFindBar;
+var right_: Integer;
+begin
+  if FFind = nil then Exit;
+  right_ := FFind.ClientWidth - Px(Self, 6);
+  FFindClose.SetBounds(right_ - Px(Self, 28), Px(Self, 3), Px(Self, 28), Px(Self, 24));
+  FFindCount.SetBounds(FFindClose.Left - Px(Self, 180) - Px(Self, 8), Px(Self, 8),
+                       Px(Self, 180), Px(Self, 16));
+end;
+
+procedure TSpxMainForm.ShowFindBar;
+begin
+  { Opening on the selection is what every editor does and what the hand expects: select a
+    macro, press Ctrl+F, and the box already holds it. }
+  if (FEditor.SelAvail) and (Pos(LineEnding, FEditor.SelText) = 0) then
+    FFindText.Text := FEditor.SelText;
+  FFind.Visible := True;
+  if FFindText.CanSetFocus then
+  begin
+    FFindText.SetFocus;
+    FFindText.SelectAll;
+  end;
+  RefreshMatches;
+end;
+
+procedure TSpxMainForm.HideFindBar;
+begin
+  FFind.Visible := False;
+  FMatches := nil;
+  if FEditor.CanSetFocus then FEditor.SetFocus;
+end;
+
+procedure TSpxMainForm.RefreshMatches;
+var n: Integer;
+begin
+  FMatches := SpxFindAll(FEditor.Text, FFindText.Text, FFindCase.Checked);
+  FMatchesStale := False;
+  FMatchIndex := -1;
+  n := Length(FMatches);
+  if FFindText.Text = '' then FFindCount.Caption := ''
+  else if n = 0 then FFindCount.Caption := 'ничего не найдено'
+  else FFindCount.Caption := Format('совпадений: %d', [n]);
+  FFindPrev.Enabled := n > 0;
+  FFindNext.Enabled := n > 0;
+end;
+
+{ The caret moves to the match and the match is SELECTED, through the same jump the
+  diagnostics panel uses -- so a search result and a diagnostic land the same way. }
+procedure TSpxMainForm.StepToMatch(Backwards: Boolean);
+var idx: Integer; pos_: TPoint;
+begin
+  { The document may have changed since the list was built. }
+  if FMatchesStale then RefreshMatches;
+  if Length(FMatches) = 0 then Exit;
+
+  if FMatchIndex < 0 then
+  begin
+    { The first step starts from the caret -- its LOGICAL column, converted to a code point,
+      because that is the only one of the editor's three column notions that means the same
+      thing as a position in this list. }
+    pos_ := FEditor.LogicalCaretXY;
+    idx := SpxStepMatch(FMatches, pos_.Y,
+                        SpxCodePointColumn(LineOf(pos_.Y), pos_.X), Backwards);
+  end
+  else if Backwards then
+  begin
+    idx := FMatchIndex - 1;
+    if idx < 0 then idx := High(FMatches);
+  end
+  else
+  begin
+    idx := FMatchIndex + 1;
+    if idx > High(FMatches) then idx := 0;
+  end;
+  if idx < 0 then Exit;
+  FMatchIndex := idx;
+  JumpToPos(FMatches[idx].Line, FMatches[idx].Col,
+            FMatches[idx].EndLine, FMatches[idx].EndCol);
+  FFindCount.Caption := Format('%d из %d', [idx + 1, Length(FMatches)]);
+  { The focus stays in the box, so a second Enter steps again rather than typing into the
+    document. }
+  if FFindText.CanSetFocus then FFindText.SetFocus;
+end;
+
+procedure TSpxMainForm.FindTextChanged(Sender: TObject);
+begin
+  RefreshMatches;
+end;
+
+procedure TSpxMainForm.FindNextClicked(Sender: TObject);
+begin
+  { F3 from the editor, with the bar never opened: open it rather than doing nothing. }
+  if not FFind.Visible then
+  begin
+    ShowFindBar;
+    Exit;
+  end;
+  StepToMatch(False);
+end;
+
+procedure TSpxMainForm.FindPrevClicked(Sender: TObject);
+begin
+  { Shift+F3 with the bar closed opens it, like F3 -- the pair should not behave differently
+    depending on which half of it you press. }
+  if not FFind.Visible then
+  begin
+    ShowFindBar;
+    Exit;
+  end;
+  StepToMatch(True);
+end;
+
+procedure TSpxMainForm.FindCloseClicked(Sender: TObject);
+begin
+  HideFindBar;
+end;
+
+procedure TSpxMainForm.FindMenuClicked(Sender: TObject);
+begin
+  ShowFindBar;
+end;
+
+procedure TSpxMainForm.FindKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    VK_RETURN:
+      begin
+        StepToMatch(ssShift in Shift);
+        Key := 0;
+      end;
+    VK_ESCAPE:
+      begin
+        HideFindBar;
+        Key := 0;
+      end;
+  end;
 end;
 
 procedure TSpxMainForm.BuildMenu;
@@ -439,6 +699,13 @@ begin
       * Ctrl+Shift+C IS taken, from ecColumnSelect. Copying the result is the everyday act
         here and the combination is what a user expects for it, while column select remains
         on Alt+drag and Alt+Shift+arrows. }
+  { Ctrl+F and F3 are what the hand reaches for, and both are in the menu because a hotkey
+    nobody can find is a hotkey nobody uses. F3 works from the editor as well as from the
+    box, so stepping does not require going back to the field. }
+  Item(editMenu, 'Найти…', Ord('F'), [ssCtrl], @FindMenuClicked);
+  Item(editMenu, 'Найти далее', VK_F3, [], @FindNextClicked);
+  Item(editMenu, 'Найти назад', VK_F3, [ssShift], @FindPrevClicked);
+  Item(editMenu, '-', 0, [], nil);
   Item(editMenu, 'Обернуть выделение в {…}', Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked);
   Item(editMenu, 'Обернуть выделение в […]', Ord('P'), [ssCtrl, ssShift], @WrapBracketsClicked);
   Item(editMenu, '-', 0, [], nil);
@@ -574,17 +841,25 @@ var col: Integer;
 begin
   if Line <= 0 then Exit;
   col := SpxByteColumn(LineOf(Line), Column);
-  FEditor.LogicalCaretXY := Point(col, Line);
-  FJump.Valid := False;
-  if (EndLine >= Line) and (EndColumn > 0) then
-  begin
-    FEditor.BlockBegin := Point(col, Line);
-    FEditor.BlockEnd := Point(SpxByteColumn(LineOf(EndLine), EndColumn), EndLine);
-    { Recorded AFTER the block is set, so the selection event that assignment fires sees the
-      state still invalid and cannot clear what has not been written yet. }
-    FJump.Range := CurrentSelection(False).Range;
-    FJump.Valid := True;
+  FJumping := True;
+  try
+    FEditor.LogicalCaretXY := Point(col, Line);
+    FJump.Valid := False;
+    if (EndLine >= Line) and (EndColumn > 0) then
+    begin
+      FEditor.BlockBegin := Point(col, Line);
+      FEditor.BlockEnd := Point(SpxByteColumn(LineOf(EndLine), EndColumn), EndLine);
+      { Recorded AFTER the block is set, so the selection event that assignment fires sees
+        the state still invalid and cannot clear what has not been written yet. }
+      FJump.Range := CurrentSelection(False).Range;
+      FJump.Valid := True;
+    end;
+  finally
+    FJumping := False;
   end;
+  { Once, with the state true. A jump that lands where the preview already is asks for
+    nothing; a jump out of a fragment asks for the document back, and that one renders. }
+  PreviewFollowSelection;
   FEditor.EnsureCursorPosVisible;
   FEditor.SetFocus;
 end;
@@ -598,12 +873,14 @@ end;
 
 { A selection is a setting like the locale or the seed: it changes what the preview shows.
   Through the debounce, because dragging a selection fires this continuously. }
-procedure TSpxMainForm.SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
+{ What a selection change means for the preview, in one place: the jump path and the editor
+  path must not disagree about it. }
+procedure TSpxMainForm.PreviewFollowSelection;
+var ask: TSpxPreviewAsk;
 begin
-  if not (scSelection in Changes) then Exit;
-  { Loading a document reports scTextCleared -- which is a SET, not a flag, and carries
-    scSelection inside it -- and that path has already asked for its own render. }
-  if scTextCleared <= Changes then Exit;
+  { What this selection would ask the preview for, computed BEFORE the state is updated so
+    that both use the same input. }
+  ask := SpxPreviewAsk(CurrentSelection(False), FJump);
 
   { The policy decides whether a jump's selection is still the jump's; here only the STATE
     it returns is kept. Without this call the flag outlives its meaning -- after the user
@@ -613,8 +890,24 @@ begin
     continuously and copying a large selection each time would be paid for nothing. }
   SpxPreviewFragment(CurrentSelection(False), FJump, FJump);
 
+  { Nothing about the preview would change, so nothing is re-rendered. This is the whole
+    difference between stepping through search hits smoothly and re-rendering the document
+    under the user on every press of Enter. }
+  if SpxPreviewSame(ask, FShownAsk) then Exit;
+
   FDebounce.Enabled := False;
   FDebounce.Enabled := True;
+end;
+
+procedure TSpxMainForm.SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
+begin
+  if not (scSelection in Changes) then Exit;
+  { A jump is mid-assignment: its own event comes at the end, with the state written. }
+  if FJumping then Exit;
+  { Loading a document reports scTextCleared -- which is a SET, not a flag, and carries
+    scSelection inside it -- and that path has already asked for its own render. }
+  if scTextCleared <= Changes then Exit;
+  PreviewFollowSelection;
 end;
 
 { SynEdit's selection in editor-core's own terms. WithText is False on the paths that only
@@ -829,6 +1122,9 @@ begin
   FDebounce.Enabled := False;
   FDebounce.Enabled := True;
   UpdateCaption;
+  { The find list describes the text as it was. Marked rather than rebuilt here: this runs on
+    every keystroke. }
+  if (FFind <> nil) and FFind.Visible then FMatchesStale := True;
   { A generated set belongs to the text that produced it. Editing does not throw it away --
     its seeds still name those texts, and the author may be exporting it -- but it stops
     being a set of THIS document, and the panel says so. }
@@ -842,6 +1138,8 @@ end;
 
 procedure TSpxMainForm.DebounceFired(Sender: TObject);
 begin
+  { Same tick as the render: the counter follows the document without paying per keystroke. }
+  if (FFind <> nil) and FFind.Visible and FMatchesStale then RefreshMatches;
   FDebounce.Enabled := False;
   RequestRender;
 end;
@@ -898,6 +1196,9 @@ begin
     not ours. WHICH selections count is also editor-core's, and gated there: none at all and
     the one a jump made to show a finding do not. Whether the fragment is worth rendering
     (whitespace is not) is the worker's, gated in its turn. }
+  { Recorded before the call updates the state, so a later selection change compares like
+    with like. }
+  FShownAsk := SpxPreviewAsk(CurrentSelection(False), FJump);
   job.Fragment := SpxPreviewFragment(CurrentSelection(True), FJump, FJump);
   FEngine.Post(job);
 end;

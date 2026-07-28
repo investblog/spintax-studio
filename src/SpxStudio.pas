@@ -334,6 +334,27 @@ function SpxRange(const A, B: TSpxPos): TSpxRange;
 function SpxPreviewFragment(const Sel: TSpxSelection; const Jump: TSpxJumpState;
   out NewJump: TSpxJumpState): string;
 
+type
+  { What the preview is being asked to show, as a comparable value: whether it narrows to a
+    fragment and, if so, to which span. }
+  TSpxPreviewAsk = record
+    Narrowed: Boolean;
+    Range: TSpxRange;
+  end;
+
+{ The same rule SpxPreviewFragment applies, expressed WITHOUT the selected text -- so a
+  caller can ask "would this change the preview?" before deciding to render at all.
+
+  It exists because of what a jump costs. Moving to a search hit or a diagnostic selects the
+  span, the selection event fires, and the render is restarted -- to produce exactly the same
+  preview, since a jump's own selection deliberately does not narrow. On a 116 KB template
+  that is 320 ms of work and a visible flicker for every press of Enter in the find bar. }
+function SpxPreviewAsk(const Sel: TSpxSelection; const Jump: TSpxJumpState): TSpxPreviewAsk;
+
+{ Whether two asks would produce the same preview, and therefore whether a render can be
+  skipped. }
+function SpxPreviewSame(const A, B: TSpxPreviewAsk): Boolean;
+
 { Whether this selection can be wrapped, and the range the wrapped text will occupy
   afterwards -- so the caller can restore the block, without which the preview un-narrows on
   every wrap and a second wrap is a silent no-op.
@@ -396,6 +417,46 @@ function SpxOpensDocument(const AHtml: string): Boolean;
   containing a literal `</body>` is cut there. The SOURCE view shows the engine's output raw
   either way, which is where "what markup came out" is answered (ADR 0004). }
 function SpxPageDocument(const AHtml: string): string;
+
+{ ── finding text in the template ─────────────────────────────────────────── }
+
+type
+  { One occurrence, in the EDITOR's coordinates: 1-based lines, 1-based code-point columns,
+    the end exclusive -- the same model TSpDiag uses, so a match can be jumped to and
+    selected by the machinery that already exists for diagnostics. }
+  TSpxMatch = record
+    Line, Col: Integer;
+    EndLine, EndCol: Integer;
+  end;
+  TSpxMatches = array of TSpxMatch;
+
+{ Every occurrence of Needle in Text, in document order.
+
+  Case folding, when it is asked for, goes through the ENGINE's own table
+  (SpUpperCodePoint) and is applied per code point DURING the comparison -- never by folding
+  the two strings first. Folding first would be simpler and wrong: a few characters change
+  length when folded, so every position after one of them would be reported at the wrong
+  offset, and the editor would select the wrong span.
+
+  An empty needle matches nothing, which is what a search box holds most of the time. }
+function SpxFindAll(const Text, Needle: string; MatchCase: Boolean): TSpxMatches;
+
+{ Which match to show for "next" / "previous", given where the caret is. Returns an index
+  into Matches, or -1 when there are none. Wraps around the ends: a search that stops at the
+  bottom of the file makes the user scroll back by hand, which is what the wrap is for.
+
+  FORWARD IS AT-OR-AFTER, not strictly after. Opening a document parks the caret at 1:1, so
+  a strict comparison made the first press of Enter land on the SECOND occurrence whenever
+  the first one was at the very top -- and the first was then reachable only by wrapping the
+  whole file. Callers that step repeatedly keep their own index rather than asking again from
+  the match they are standing on, so at-or-after cannot leave them stuck. }
+{ The fast case fold, exposed for one reason only: the suite checks it against the
+  engine's own table across the ranges it claims. Hand-rolled arithmetic about letters
+  is allowed here only because that check exists. }
+function SpxTestFastUpper(CP: LongWord): LongWord;
+
+function SpxStepMatch(const Matches: TSpxMatches; Line, Col: Integer;
+  Backwards: Boolean): Integer;
 
 { ── editing a directive where it sits (spec §4.4) ────────────────────────── }
 
@@ -550,6 +611,13 @@ function SpxDocumentMarks(Report: TSpxReport): TSpxDiagMarks;
   1-based in and out; a column past the end clamps to just after the last byte, which is
   where an editor puts a caret at the end of a line. }
 function SpxByteColumn(const Line: string; CodePointCol: Integer): Integer;
+
+{ The other direction: a byte column back to a code-point one. The editor's LOGICAL caret is
+  a byte offset, and every position this unit speaks in is a code point, so a caret handed
+  back to core has to come through here. (Its PHYSICAL column is a third thing again -- a tab
+  is one code point and up to eight physical columns, a combining mark is one code point and
+  none -- and is never the right number to convert.) }
+function SpxCodePointColumn(const Line: string; ByteCol: Integer): Integer;
 
 { The same marks with their columns in bytes, for an editor whose logical coordinates are
   byte offsets. EndCol is converted against the END line's text -- the one detail here worth
@@ -735,6 +803,20 @@ begin
     end;
   end;
   SetLength(Result, n);
+end;
+
+function SpxCodePointColumn(const Line: string; ByteCol: Integer): Integer;
+var i, cpLen: Integer;
+begin
+  Result := 1;
+  if ByteCol <= 1 then Exit;
+  i := 1;
+  while (i < ByteCol) and (i <= Length(Line)) do
+  begin
+    SpCodePointAt(Line, i, cpLen);
+    Inc(i, cpLen);
+    Inc(Result);
+  end;
 end;
 
 function SpxByteColumn(const Line: string; CodePointCol: Integer): Integer;
@@ -1200,6 +1282,27 @@ begin
   Result := SamePos(A.A, B.A) and SamePos(A.B, B.B);
 end;
 
+function SpxPreviewAsk(const Sel: TSpxSelection; const Jump: TSpxJumpState): TSpxPreviewAsk;
+begin
+  Result.Narrowed := False;
+  Result.Range := Sel.Range;
+  if Sel.Kind = spxSelNone then Exit;
+  { A jump's own selection shows a finding; it does not ask for a preview of it. }
+  if Jump.Valid and SameRange(Sel.Range, Jump.Range) then Exit;
+  { An empty span selects nothing, whatever its kind says. }
+  if SameRange(Sel.Range, SpxRange(Sel.Range.A, Sel.Range.A)) then Exit;
+  Result.Narrowed := True;
+end;
+
+function SpxPreviewSame(const A, B: TSpxPreviewAsk): Boolean;
+begin
+  if A.Narrowed <> B.Narrowed then Exit(False);
+  { The span only matters while it IS the preview -- two different jumps both show the whole
+    document, and re-rendering between them is the waste this exists to stop. }
+  if not A.Narrowed then Exit(True);
+  Result := SameRange(A.Range, B.Range);
+end;
+
 function SpxPreviewFragment(const Sel: TSpxSelection; const Jump: TSpxJumpState;
   out NewJump: TSpxJumpState): string;
 begin
@@ -1288,6 +1391,178 @@ begin
 end;
 
 { ── editing a directive where it sits ────────────────────────────────────── }
+
+{ ── finding text in the template ─────────────────────────────────────────── }
+
+{ Are these two code points the same for the search?
+
+  Written to allocate NOTHING in the cases that happen millions of times: equal code points,
+  and two ASCII ones. Only two DIFFERENT non-ASCII code points reach the engine's table,
+  which returns strings. The first version folded both sides to strings on every comparison
+  -- measured at 24-42 ms per keystroke on a 116 KB template, and the box is rescanned on
+  every keystroke.
+
+  What this deliberately does NOT do is fold across a boundary: the engine's table expands a
+  few code points (sharp s -> SS), and a one-to-many fold cannot be compared one code point
+  at a time. So `STRASSE` does not find `straße` here, while SpxDedupe's whole-string fold
+  calls those equal. The disagreement is the price of positions that are always exactly the
+  needle's length -- a search that reports a span of the wrong size selects the wrong text,
+  which is worse than missing an unusual pair. }
+{ Upper case for the two alphabets this app is actually written in, by arithmetic: ASCII, the
+  Cyrillic block, and the `ё`-row above it. Anything else comes back unchanged and the caller
+  falls through to the engine's table.
+
+  It exists because the table is a binary search returning a STRING, and a case-insensitive
+  scan asks for one at every position of the document: 20 ms per keystroke on a 116 KB
+  template, 190 ms on a megabyte. Hand-rolled knowledge is only allowed here because the
+  suite checks it against SpUpperCodePoint for every code point in the ranges it claims --
+  if the engine's table and this ever disagree, a test says so rather than a user. }
+function FastUpper(CP: LongWord): LongWord;
+begin
+  Result := CP;
+  if (CP >= Ord('a')) and (CP <= Ord('z')) then Exit(CP - 32);          { ASCII }
+  if (CP >= $430) and (CP <= $44F) then Exit(CP - 32);                  { а..я }
+  if (CP >= $450) and (CP <= $45F) then Exit(CP - 80);                  { ё and its row }
+end;
+
+function SpxTestFastUpper(CP: LongWord): LongWord;
+begin
+  Result := FastUpper(CP);
+end;
+
+{ Whether FastUpper is the WHOLE answer for this code point -- ASCII and the Cyrillic block,
+  where the engine's own uppercase is exactly the single code point the arithmetic gives
+  (checked by the suite for every one of them). For those, two folded values that differ are
+  two different letters and the table has nothing to add. }
+function FastCovers(CP: LongWord): Boolean;
+begin
+  Result := (CP < 128) or ((CP >= $400) and (CP <= $45F));
+end;
+
+function SameCp(A, B: LongWord; MatchCase: Boolean): Boolean;
+begin
+  if A = B then Exit(True);
+  if MatchCase then Exit(False);
+  A := FastUpper(A);
+  B := FastUpper(B);
+  if A = B then Exit(True);
+  { The early-out that matters: a scan compares mostly DIFFERENT letters, and without this
+    every one of them paid for two binary searches in the engine's table -- 20 ms per
+    keystroke on a 116 KB template, 190 ms on a megabyte, for an answer already known. }
+  if FastCovers(A) and FastCovers(B) then Exit(False);
+  { Everything the arithmetic does not cover -- accented Latin, Greek, the rest of Unicode --
+    still goes through the engine, so the two never disagree about a character. }
+  Result := SpUpperCodePoint(A) = SpUpperCodePoint(B);
+end;
+
+function SpxFindAll(const Text, Needle: string; MatchCase: Boolean): TSpxMatches;
+var
+  i, n, cpLen, line_, col: Integer;
+  cp: LongWord;
+  count_: Integer;
+
+  { Does the needle sit at byte I? Returns its length in bytes, or 0. Compared code point by
+    code point so that folding cannot move any offset. }
+  function MatchAt(Start: Integer; out EndLine, EndCol: Integer): Integer;
+  var
+    ti, ni, tl, nl, el, ec: Integer;
+    tcp, ncp: LongWord;
+  begin
+    Result := 0;
+    ti := Start;
+    ni := 1;
+    el := line_;
+    ec := col;
+    while ni <= Length(Needle) do
+    begin
+      if ti > Length(Text) then Exit(0);
+      tcp := SpCodePointAt(Text, ti, tl);
+      ncp := SpCodePointAt(Needle, ni, nl);
+      if not SameCp(tcp, ncp, MatchCase) then Exit(0);
+      { The end position advances through the match, so a needle containing a line break
+        reports the row it really ends on. CRLF is ONE line ending and both sides step over
+        it together -- the first version left the LF to be counted again, and a two-line
+        needle then reported a row past the end of a two-line document. }
+      if (tcp = 10) or (tcp = 13) then
+      begin
+        if (tcp = 13) and (ti + tl <= Length(Text)) and (Text[ti + tl] = #10) and
+           (ni + nl <= Length(Needle)) and (Needle[ni + nl] = #10) then
+        begin
+          Inc(ti);
+          Inc(ni);
+        end;
+        Inc(el);
+        ec := 1;
+      end
+      else
+        Inc(ec);
+      Inc(ti, tl);
+      Inc(ni, nl);
+    end;
+    EndLine := el;
+    EndCol := ec;
+    Result := ti - Start;
+  end;
+
+begin
+  Result := nil;
+  count_ := 0;
+  if (Text = '') or (Needle = '') then Exit;
+
+  SetLength(Result, 16);
+  line_ := 1;
+  col := 1;
+  i := 1;
+  while i <= Length(Text) do
+  begin
+    n := MatchAt(i, Result[count_].EndLine, Result[count_].EndCol);
+    if n > 0 then
+    begin
+      Result[count_].Line := line_;
+      Result[count_].Col := col;
+      Inc(count_);
+      if count_ >= Length(Result) then SetLength(Result, count_ * 2);
+    end;
+
+    { Advance ONE code point, not one match: overlapping occurrences are occurrences.
+      `аа` in `ааа` is two, and a reader stepping through expects both. }
+    cp := SpCodePointAt(Text, i, cpLen);
+    if cp = 13 then
+    begin
+      Inc(line_);
+      col := 1;
+      if (i + cpLen <= Length(Text)) and (Text[i + cpLen] = #10) then Inc(cpLen);
+    end
+    else if cp = 10 then
+    begin
+      Inc(line_);
+      col := 1;
+    end
+    else
+      Inc(col);
+    Inc(i, cpLen);
+  end;
+  SetLength(Result, count_);
+end;
+
+function SpxStepMatch(const Matches: TSpxMatches; Line, Col: Integer;
+  Backwards: Boolean): Integer;
+var i: Integer;
+begin
+  if Length(Matches) = 0 then Exit(-1);
+  if Backwards then
+  begin
+    for i := High(Matches) downto 0 do
+      if (Matches[i].Line < Line) or
+         ((Matches[i].Line = Line) and (Matches[i].Col < Col)) then Exit(i);
+    { Nothing before the caret: round to the last one. }
+    Exit(High(Matches));
+  end;
+  for i := 0 to High(Matches) do
+    if (Matches[i].Line > Line) or
+       ((Matches[i].Line = Line) and (Matches[i].Col >= Col)) then Exit(i);
+  Result := 0;
+end;
 
 function SpxDocOffset(const Doc: string; Line, Column: Integer): Integer;
 var i, j, ln: Integer;
