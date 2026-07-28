@@ -2880,6 +2880,7 @@ var
   opts: TSpxDedupeOpts;
   list, uniq: TSpxVariantList;
   v: TSpxVariant;
+  dense: string;
   i, dropped: Integer;
 begin
   { ── the fingerprint ── }
@@ -3068,6 +3069,84 @@ begin
   finally
     list.Free;
   end;
+
+  { ── markup is not words ── }
+
+  { THE case this is for: a listing whose tags carry no whitespace. Counting them, the whole
+    document is one "word" and the fingerprint collapses to a single shingle -- measured, and
+    the dedup then reports every variant as unique at any threshold. }
+  dense := '<table>';
+  for i := 1 to 30 do
+    dense := dense + '<tr><td>товар' + IntToStr(i) + '</td><td>в наличии</td></tr>';
+  dense := dense + '</table>';
+  fp := SpxShingles(dense, 4);
+  CheckTrue('markup/a-tagged-listing-still-has-a-fingerprint', Length(fp) > 20);
+  { A tag becomes a SEPARATOR, not nothing: `a</b><b>b` is two words. }
+  CheckTrue('markup/tags-separate-words',
+            SimOf('раз</b><b>два', 'раз два', 1) = 1.0);
+  { And markup adds nothing of its own to the comparison. }
+  CheckTrue('markup/tags-do-not-count-as-content',
+            SimOf('<p>текст письма</p>', 'текст письма', 2) = 1.0);
+  CheckTrue('markup/different-tags-around-the-same-text-are-the-same-text',
+            SimOf('<h1>заголовок статьи</h1>', '<div class="x">заголовок статьи</div>', 2)
+            = 1.0);
+  { A comparison is not a tag: `5 < 6` keeps its bracket instead of swallowing the rest of
+    the sentence, which is what a naive "delete from < to >" does. }
+  CheckTrue('markup/a-comparison-is-not-a-tag',
+            SimOf('пять < шесть и семь > шесть', 'пять < шесть и семь > шесть', 2) = 1.0);
+  fp := SpxShingles('если 5 < 6 то всё хорошо', 1);
+  CheckTrue('markup/and-its-words-survive', Length(fp) = 7);
+  { An unterminated tag at the very end is text, not a tag that ate the tail. }
+  fp := SpxShingles('конец строки <b', 1);
+  CheckTrue('markup/an-unterminated-tag-is-text', Length(fp) = 3);
+
+  { ── the three modes ── }
+
+  list := TSpxVariantList.Create;
+  try
+    v.Seed := 1; v.Text := Para('jumps'); list.Add(v);
+    v.Seed := 2; v.Text := Para('leaps'); list.Add(v);      { near-copy, not identical }
+    v.Seed := 3; v.Text := Para('jumps'); list.Add(v);      { byte-identical to the first }
+
+    { Shingles: the near-copy goes too. }
+    opts := SpxDefaultDedupeOpts;
+    uniq := SpxDedupeList(list, opts, dropped);
+    try
+      CheckTrue('mode/shingles-drop-the-near-copy', uniq.Count = 1);
+    finally
+      uniq.Free;
+    end;
+
+    { Exact: only the literal repeat. This is what GTW's "удаление точных совпадений" does,
+      and it is NOT the same as shingles at 1.0 -- a fingerprint is a set, so a text whose
+      sentences are shuffled has the same fingerprint and different bytes. }
+    opts.Mode := spxDedupeExact;
+    uniq := SpxDedupeList(list, opts, dropped);
+    try
+      CheckTrue('mode/exact-keeps-the-near-copy', uniq.Count = 2);
+      CheckTrue('mode/exact-drops-the-identical-one', dropped = 1);
+    finally
+      uniq.Free;
+    end;
+
+    { Off: everything survives, including the literal repeat. }
+    opts.Mode := spxDedupeOff;
+    uniq := SpxDedupeList(list, opts, dropped);
+    try
+      CheckTrue('mode/off-keeps-everything', uniq.Count = 3);
+      CheckTrue('mode/off-drops-nothing', dropped = 0);
+    finally
+      uniq.Free;
+    end;
+  finally
+    list.Free;
+  end;
+
+  { The distinction the exact mode exists for, stated as a check: same shingles, different
+    bytes. Two texts made of the same sentences in the other order. }
+  CheckTrue('mode/shuffled-sentences-share-a-fingerprint',
+            SimOf('раз два три. четыре пять шесть.', 'четыре пять шесть. раз два три.', 2)
+            > 0.6);
 
   { ── the same filter over a set that already exists ── }
 

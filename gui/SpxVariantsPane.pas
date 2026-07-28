@@ -50,7 +50,7 @@ type
     FProgress: TLabel;
 
     FOpts: TPanel;
-    FDedupe: TCheckBox;
+    FMode: TComboBox;
     FShingleLabel: TLabel;
     FShingle: TSpinEdit;
     FThresholdLabel: TLabel;
@@ -186,35 +186,42 @@ begin
   FOpts.Height := 30;
   FOpts.BevelOuter := bvNone;
 
-  FDedupe := TCheckBox.Create(Self);
-  FDedupe.Parent := FOpts;
-  FDedupe.SetBounds(8, 5, 150, 20);
-  FDedupe.Caption := 'Убирать похожие';
-  FDedupe.Checked := True;
-  FDedupe.OnChange := @DedupeToggled;
+  { Three ways, the same three the tool this syntax came from offers: near-duplicates by
+    shingles, literal repeats only, or nothing. They are genuinely different questions --
+    "is this the same article" and "is this the same bytes" -- and a checkbox could only ask
+    one of them. }
+  FMode := TComboBox.Create(Self);
+  FMode.Parent := FOpts;
+  FMode.Style := csDropDownList;
+  FMode.SetBounds(8, 3, 210, 24);
+  FMode.Items.Add('Убирать похожие');
+  FMode.Items.Add('Только точные совпадения');
+  FMode.Items.Add('Ничего не убирать');
+  FMode.ItemIndex := 0;
+  FMode.OnChange := @DedupeToggled;
 
   FShingleLabel := TLabel.Create(Self);
   FShingleLabel.Parent := FOpts;
-  FShingleLabel.SetBounds(164, 7, 50, 16);
+  FShingleLabel.SetBounds(230, 7, 50, 16);
   FShingleLabel.Caption := 'шингл';
 
   FShingle := TSpinEdit.Create(Self);
   FShingle.Parent := FOpts;
-  FShingle.SetBounds(210, 3, 56, 24);
+  FShingle.SetBounds(276, 3, 56, 24);
   FShingle.MinValue := 1;
   FShingle.MaxValue := 12;
   FShingle.Value := SpxDefaultDedupeOpts.ShingleSize;
 
   FThresholdLabel := TLabel.Create(Self);
   FThresholdLabel.Parent := FOpts;
-  FThresholdLabel.SetBounds(276, 7, 60, 16);
+  FThresholdLabel.SetBounds(342, 7, 60, 16);
   FThresholdLabel.Caption := 'порог';
 
   { A slider rather than a number field: the value is a judgement about how similar is too
     similar, and it is nudged rather than typed. }
   FThreshold := TTrackBar.Create(Self);
   FThreshold.Parent := FOpts;
-  FThreshold.SetBounds(322, 2, 160, 26);
+  FThreshold.SetBounds(388, 2, 150, 26);
   FThreshold.Min := 5;
   FThreshold.Max := 100;
   FThreshold.Position := Round(SpxDefaultDedupeOpts.Threshold * 100);
@@ -224,7 +231,7 @@ begin
 
   FThresholdValue := TLabel.Create(Self);
   FThresholdValue.Parent := FOpts;
-  FThresholdValue.SetBounds(490, 7, 60, 16);
+  FThresholdValue.SetBounds(546, 7, 60, 16);
 
   { ── the set ── }
 
@@ -297,26 +304,32 @@ end;
 function TSpxVariantsPane.Options: TSpxDedupeOpts;
 begin
   Result := SpxDefaultDedupeOpts;
-  Result.ShingleSize := FShingle.Value;
-  { Unchecked means "keep everything": a threshold above 1 can never be reached, since the
-    measure is a ratio -- which is cleaner than a second flag the core would have to know
-    about. }
-  if FDedupe.Checked then
-    Result.Threshold := FThreshold.Position / 100
+  case FMode.ItemIndex of
+    1: Result.Mode := spxDedupeExact;
+    2: Result.Mode := spxDedupeOff;
   else
-    Result.Threshold := 2;
+    Result.Mode := spxDedupeShingles;
+  end;
+  Result.ShingleSize := FShingle.Value;
+  Result.Threshold := FThreshold.Position / 100;
 end;
 
 procedure TSpxVariantsPane.ThresholdChanged(Sender: TObject);
 begin
-  FThresholdValue.Caption := Format('%.2f', [FThreshold.Position / 100]);
+  { A percentage, because that is how the number reads to a person -- "considered the same
+    at 75% overlap" -- and how the tool this came from puts it. }
+  FThresholdValue.Caption := IntToStr(FThreshold.Position) + '%';
 end;
 
 procedure TSpxVariantsPane.DedupeToggled(Sender: TObject);
+var byShingles: Boolean;
 begin
-  FShingle.Enabled := FDedupe.Checked;
-  FThreshold.Enabled := FDedupe.Checked;
-  FThresholdValue.Enabled := FDedupe.Checked;
+  byShingles := FMode.ItemIndex = 0;
+  FShingleLabel.Enabled := byShingles;
+  FShingle.Enabled := byShingles;
+  FThresholdLabel.Enabled := byShingles;
+  FThreshold.Enabled := byShingles;
+  FThresholdValue.Enabled := byShingles;
 end;
 
 procedure TSpxVariantsPane.RandomSeedToggled(Sender: TObject);
@@ -333,9 +346,9 @@ begin
   FCount.Enabled := not FRunning;
   FSeed.Enabled := (not FRunning) and (not FRandomSeed.Checked);
   FRandomSeed.Enabled := not FRunning;
-  FDedupe.Enabled := not FRunning;
-  FShingle.Enabled := (not FRunning) and FDedupe.Checked;
-  FThreshold.Enabled := (not FRunning) and FDedupe.Checked;
+  FMode.Enabled := not FRunning;
+  FShingle.Enabled := (not FRunning) and (FMode.ItemIndex = 0);
+  FThreshold.Enabled := (not FRunning) and (FMode.ItemIndex = 0);
   { Exporting half a set is a real thing to want -- a long batch that is clearly going
     nowhere gets stopped, and what it produced is still a set -- so these stay live while it
     runs. }
