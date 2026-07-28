@@ -29,6 +29,13 @@ type
     FSeedEdit: TEdit;
     FReroll: TButton;
     FCopy: TButton;
+    { The preview's own controls, in the WINDOW's strip rather than in a strip of the pane's
+      own: two panes side by side should start on the same line, and a header inside one of
+      them puts its content a row lower than the other. Anchored right, so they stay in the
+      corner when the window is resized. }
+    FAsPage: TRadioButton;
+    FAsSource: TRadioButton;
+    FPartial: TLabel;
     FSplit: TSplitter;
     FEditor: TSynEdit;
     FHighlighter: TSpxSynHighlighter;
@@ -96,6 +103,9 @@ type
     procedure DebounceFired(Sender: TObject);
     procedure RerollClicked(Sender: TObject);
     procedure CopyClicked(Sender: TObject);
+    procedure PreviewModeChanged(Sender: TObject);
+    procedure LayoutPreviewSwitch;
+    procedure SayPartial(const AHtml: string; APartial: Boolean);
     procedure JobDone(const Res: TSpxJobResult);
     procedure RequestRender;
     { The batch: the panel asks, the form fills in what only it knows, the worker runs it one
@@ -202,6 +212,26 @@ begin
   FCopy.Parent := FTop;
   FCopy.Caption := 'Copy';
   FCopy.SetBounds(314, 6, 80, 26);
+
+  FPartial := TLabel.Create(Self);
+  FPartial.Parent := FTop;
+  FPartial.AutoSize := True;
+  FPartial.Anchors := [akTop, akRight];
+  FPartial.Visible := False;
+
+  FAsPage := TRadioButton.Create(Self);
+  FAsPage.Parent := FTop;
+  FAsPage.Caption := 'Страница';
+  FAsPage.Checked := True;
+  FAsPage.Anchors := [akTop, akRight];
+  FAsPage.OnChange := @PreviewModeChanged;
+
+  FAsSource := TRadioButton.Create(Self);
+  FAsSource.Parent := FTop;
+  FAsSource.Caption := 'Исходник';
+  FAsSource.Anchors := [akTop, akRight];
+  FAsSource.OnChange := @PreviewModeChanged;
+  LayoutPreviewSwitch;
   FCopy.OnClick := @CopyClicked;
 
   { The three bottom-aligned strips are ordered by their Top, not by the order they are
@@ -895,6 +925,39 @@ begin
   FEngine.StartBatch(req);
 end;
 
+{ Right-aligned by hand once, then held there by the anchors. Written out rather than left
+  to a right-to-left flow layout, because there are three controls and one of them changes
+  width with its caption. }
+procedure TSpxMainForm.LayoutPreviewSwitch;
+var right_: Integer;
+begin
+  right_ := FTop.ClientWidth - 12;
+  FAsSource.SetBounds(right_ - 90, 9, 90, 20);
+  FAsPage.SetBounds(right_ - 186, 9, 90, 20);
+  FPartial.Top := 11;
+  FPartial.Left := FAsPage.Left - FPartial.Width - 12;
+end;
+
+procedure TSpxMainForm.PreviewModeChanged(Sender: TObject);
+begin
+  FPreview.SourceMode := FAsSource.Checked;
+end;
+
+{ A selection CAN render to nothing -- a directive-only line, or one that opens a comment --
+  and the two empty panes look identical, so the pane says which of them this is. The test
+  for "nothing" is editor-core's (SpxIsBlankOutput), because "blank" is more than ASCII
+  space: the engine's own line model counts U+2028 and U+2029 too. }
+procedure TSpxMainForm.SayPartial(const AHtml: string; APartial: Boolean);
+begin
+  FPartial.Visible := APartial;
+  if not APartial then Exit;
+  if SpxIsBlankOutput(AHtml) then
+    FPartial.Caption := 'фрагмент ничего не выводит'
+  else
+    FPartial.Caption := 'показан фрагмент';
+  LayoutPreviewSwitch;   { the caption changes width, so its left edge moves with it }
+end;
+
 procedure TSpxMainForm.CancelBatch(Sender: TObject);
 begin
   FEngine.CancelBatch;
@@ -919,7 +982,8 @@ end;
   something else. }
 procedure TSpxMainForm.ShowVariant(const AText: string);
 begin
-  FPreview.SetContent(AText, False);
+  FPreview.SetContent(AText);
+  SayPartial(AText, False);
 end;
 
 procedure TSpxMainForm.JobDone(const Res: TSpxJobResult);
@@ -938,7 +1002,8 @@ begin
   if Res.Id < FLastShown then Exit;
   FLastShown := Res.Id;
 
-  FPreview.SetContent(Res.Preview, Res.Partial);
+  FPreview.SetContent(Res.Preview);
+  SayPartial(Res.Preview, Res.Partial);
   ShowRows(Res.Rows);
   FVars.SetModel(Res.Vars);
   FErrorMarkup.SetMarks(Res.Marks);
