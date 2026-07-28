@@ -35,6 +35,14 @@ type
     exported variant that cannot be regenerated is not reproducible (spec §4.6). }
   TSpxRngMode = (spxRandom, spxSeeded);
 
+  { Which language the product SPEAKS. It lives here, in the GUI-free layer, because the
+    diagnostics panel's wording is built here -- on the worker thread, next to the codes it
+    explains -- and a language enum is not a window. The window's own string table
+    (SpxStrings) uses this same type, so there is one language in the product rather than
+    two that agree by convention. English is the base; anything without a translation falls
+    back to it rather than to a half-translated panel. }
+  TSpxLang = (spxLangEn, spxLangRu);
+
   { The workspace's template set: slug -> text, built by the HOST from a folder listing and
     handed in whole (ADR 0003). editor-core does no I/O, so M0 is testable without a
     filesystem and the folder rules live in the loader.
@@ -612,6 +620,15 @@ function SpxDocumentMarks(Report: TSpxReport): TSpxDiagMarks;
   where an editor puts a caret at the end of a line. }
 function SpxByteColumn(const Line: string; CodePointCol: Integer): Integer;
 
+{ The longest line in Text, in bytes, counting the editor's three line endings.
+
+  Not a curiosity: SynEdit's word-wrap plugin costs roughly the SQUARE of a line's length,
+  measured on this machine at 156 ms for one 100 KB line and 14.5 seconds for one of 1 MB --
+  while the same megabyte in short lines takes 94 ms and the HTML highlighter over it takes
+  32. Rendered output has no obligation to contain a single line break, so the view asks this
+  before deciding whether to wrap at all. }
+function SpxLongestLine(const Text: string): Integer;
+
 { The other direction: a byte column back to a code-point one. The editor's LOGICAL caret is
   a byte offset, and every position this unit speaks in is a code point, so a caret handed
   back to core has to come through here. (Its PHYSICAL column is a third thing again -- a tab
@@ -632,18 +649,27 @@ function SpxMarksToBytes(const Marks: TSpxDiagMarks; GetLine: TSpxLineFetch): TS
 
   Nothing is dropped and nothing is invented: a finding with no position keeps Line = 0 and
   the caller must not offer a jump for it. }
-function SpxPanelRows(Report: TSpxReport): TSpxPanelRows;
+function SpxPanelRows(Report: TSpxReport; Lang: TSpxLang): TSpxPanelRows;
 
 { A human's reading of an engine diagnostic code. The engine deliberately ships codes and
   severities only -- those are the family's parity contract, and a message would be one more
   thing four implementations must agree on -- so the wording is the host's business.
 
   An unknown code returns ITSELF rather than a guess or an empty string: a new engine
-  release must show up in the panel as its code, not as a blank line. }
-function SpxDiagText(const Code: string): string;
+  release must show up in the panel as its code, not as a blank line.
+
+  The language is a PARAMETER rather than a global the window sets, because these rows are
+  built on the engine worker while the window is doing something else, and a diagnostic
+  whose wording depends on when it was rendered is the kind of bug that only shows up in a
+  screenshot. }
+function SpxDiagText(const Code: string; Lang: TSpxLang): string;
+
+{ The language for a document locale, by the engine's own normalisation -- so `RU`, `ru-RU`
+  and `ru` are one language here as they are everywhere else in the family. }
+function SpxLangFor(const Locale: string): TSpxLang;
 
 { The same for Studio's own notes, which carry their subject rather than a code. }
-function SpxNoteText(const Note: TSpxNote): string;
+function SpxNoteText(const Note: TSpxNote; Lang: TSpxLang): string;
 
 { Count variants with reproducible seeds: `seed_i = SeedBase + i`, recorded on each variant.
   TMulberry32Rng mixes its seed internally (add-constant, then xorshift-multiply), so
@@ -835,6 +861,28 @@ begin
   Result := i;
 end;
 
+function SpxLongestLine(const Text: string): Integer;
+var i, run: Integer;
+begin
+  Result := 0;
+  run := 0;
+  i := 1;
+  while i <= Length(Text) do
+  begin
+    if (Text[i] = #13) or (Text[i] = #10) then
+    begin
+      if run > Result then Result := run;
+      run := 0;
+      { CRLF is one ending, not two empty lines. }
+      if (Text[i] = #13) and (i < Length(Text)) and (Text[i + 1] = #10) then Inc(i);
+    end
+    else
+      Inc(run);
+    Inc(i);
+  end;
+  if run > Result then Result := run;
+end;
+
 function SpxMarksToBytes(const Marks: TSpxDiagMarks; GetLine: TSpxLineFetch): TSpxDiagMarks;
 var i: Integer;
 begin
@@ -848,49 +896,103 @@ begin
   end;
 end;
 
-function SpxDiagText(const Code: string): string;
+function SpxLangFor(const Locale: string): TSpxLang;
+begin
+  if NormalizeBaseLang(Locale) = 'ru' then Result := spxLangRu
+  else Result := spxLangEn;
+end;
+
+function SpxDiagText(const Code: string; Lang: TSpxLang): string;
 begin
   { The engine's seventeen codes as of v0.3.3, each read from the site that emits it rather
     than guessed from its name. The wording states the FINDING and stops there -- the panel
-    reports a verdict four implementations agree on, it does not teach style. }
-  if Code = 'bracket.unclosed' then Result := 'скобка открыта и не закрыта'
-  else if Code = 'bracket.mismatched' then Result := 'скобка закрыта скобкой другого вида'
-  else if Code = 'bracket.unexpected-closing' then Result := 'закрывающая скобка без открывающей'
-  else if Code = 'set.malformed' then Result := 'строка #set написана не по правилу'
-  else if Code = 'def.malformed' then Result := 'строка #def написана не по правилу'
-  else if Code = 'def.include-in-value' then Result := '#include внутри значения определения'
-  else if Code = 'definition.duplicate-name' then Result := 'это имя уже определено выше'
-  else if Code = 'include.unknown-target' then Result := 'такой цели нет в наборе'
-  else if Code = 'variable.undefined' then Result := 'переменная нигде не определена'
-  else if Code = 'variable.self-reference' then Result := 'определение ссылается само на себя'
-  else if Code = 'variable.circular-reference' then Result := 'определения ссылаются по кругу'
-  else if Code = 'plural.arity' then Result := 'форм не столько, сколько требует локаль'
-  else if Code = 'plural.count-macro' then
-    Result := 'счётчик берёт значение из #set, а оно перекатывается при каждой ссылке'
-  else if Code = 'plural.nested-brackets' then Result := 'скобки внутри форм множественного числа'
-  else if Code = 'permutation.unknown-key' then Result := 'неизвестный ключ в настройке перестановки'
-  else if Code = 'permutation.minsize-not-integer' then Result := 'minsize не целое число'
-  else if Code = 'permutation.maxsize-not-integer' then Result := 'maxsize не целое число'
-  else Result := Code;
+    reports a verdict four implementations agree on, it does not teach style.
+
+    Paired language by language rather than as two tables, so a code cannot gain a sentence
+    in one language and keep the bare code in the other: the pair is on the screen together
+    and the suite reads both. }
+  if Lang = spxLangRu then
+  begin
+    if Code = 'bracket.unclosed' then Result := 'скобка открыта и не закрыта'
+    else if Code = 'bracket.mismatched' then Result := 'скобка закрыта скобкой другого вида'
+    else if Code = 'bracket.unexpected-closing' then Result := 'закрывающая скобка без открывающей'
+    else if Code = 'set.malformed' then Result := 'строка #set написана не по правилу'
+    else if Code = 'def.malformed' then Result := 'строка #def написана не по правилу'
+    else if Code = 'def.include-in-value' then Result := '#include внутри значения определения'
+    else if Code = 'definition.duplicate-name' then Result := 'это имя уже определено выше'
+    else if Code = 'include.unknown-target' then Result := 'такой цели нет в наборе'
+    else if Code = 'variable.undefined' then Result := 'переменная нигде не определена'
+    else if Code = 'variable.self-reference' then Result := 'определение ссылается само на себя'
+    else if Code = 'variable.circular-reference' then Result := 'определения ссылаются по кругу'
+    else if Code = 'plural.arity' then Result := 'форм не столько, сколько требует локаль'
+    else if Code = 'plural.count-macro' then
+      Result := 'счётчик берёт значение из #set, а оно перекатывается при каждой ссылке'
+    else if Code = 'plural.nested-brackets' then Result := 'скобки внутри форм множественного числа'
+    else if Code = 'permutation.unknown-key' then Result := 'неизвестный ключ в настройке перестановки'
+    else if Code = 'permutation.minsize-not-integer' then Result := 'minsize не целое число'
+    else if Code = 'permutation.maxsize-not-integer' then Result := 'maxsize не целое число'
+    else Result := Code;
+  end
+  else
+  begin
+    if Code = 'bracket.unclosed' then Result := 'a bracket is opened and never closed'
+    else if Code = 'bracket.mismatched' then Result := 'closed by a bracket of another kind'
+    else if Code = 'bracket.unexpected-closing' then Result := 'a closing bracket with nothing open'
+    else if Code = 'set.malformed' then Result := 'this #set line does not follow the rule'
+    else if Code = 'def.malformed' then Result := 'this #def line does not follow the rule'
+    else if Code = 'def.include-in-value' then Result := '#include inside a definition value'
+    else if Code = 'definition.duplicate-name' then Result := 'this name is already defined above'
+    else if Code = 'include.unknown-target' then Result := 'no such target in the set'
+    else if Code = 'variable.undefined' then Result := 'this variable is defined nowhere'
+    else if Code = 'variable.self-reference' then Result := 'the definition refers to itself'
+    else if Code = 'variable.circular-reference' then Result := 'the definitions refer in a circle'
+    else if Code = 'plural.arity' then Result := 'not as many forms as the locale asks for'
+    else if Code = 'plural.count-macro' then
+      Result := 'the count comes from #set, and that rerolls on every reference'
+    else if Code = 'plural.nested-brackets' then Result := 'brackets inside the plural forms'
+    else if Code = 'permutation.unknown-key' then Result := 'unknown key in the permutation config'
+    else if Code = 'permutation.minsize-not-integer' then Result := 'minsize is not a whole number'
+    else if Code = 'permutation.maxsize-not-integer' then Result := 'maxsize is not a whole number'
+    else Result := Code;
+  end;
 end;
 
-function SpxNoteText(const Note: TSpxNote): string;
+function SpxNoteText(const Note: TSpxNote; Lang: TSpxLang): string;
 begin
-  case Note.Kind of
-    spxNoteCycle:
-      Result := 'вставка "' + Note.Target + '" уже разворачивается выше — движок подставит пустоту';
-    spxNoteTooDeep:
-      Result := 'вставки вложены глубже предела — дальше движок подставит пустоту';
-    spxNoteCaseMismatch:
-      Result := 'цели "' + Note.Target + '" нет, а в наборе есть "' + Note.Hint +
-                '": цели сравниваются точно';
-    spxNoteUnknownTarget:
-      Result := 'цели "' + Note.Target + '" нет в наборе';
-    spxNoteRawSentinel:
-      Result := 'в тексте есть служебный символ U+E000–U+E005: движок удалит его перед разбором';
+  if Lang = spxLangRu then
+    case Note.Kind of
+      spxNoteCycle:
+        Result := 'вставка "' + Note.Target + '" уже разворачивается выше — движок подставит пустоту';
+      spxNoteTooDeep:
+        Result := 'вставки вложены глубже предела — дальше движок подставит пустоту';
+      spxNoteCaseMismatch:
+        Result := 'цели "' + Note.Target + '" нет, а в наборе есть "' + Note.Hint +
+                  '": цели сравниваются точно';
+      spxNoteUnknownTarget:
+        Result := 'цели "' + Note.Target + '" нет в наборе';
+      spxNoteRawSentinel:
+        Result := 'в тексте есть служебный символ U+E000–U+E005: движок удалит его перед разбором';
+    else
+      Result := '';
+    end
   else
-    Result := '';
-  end;
+    case Note.Kind of
+      spxNoteCycle:
+        Result := 'the include "' + Note.Target +
+                  '" is already being expanded above — the engine puts nothing here';
+      spxNoteTooDeep:
+        Result := 'includes nested past the limit — from here the engine puts nothing';
+      spxNoteCaseMismatch:
+        Result := 'no target "' + Note.Target + '", though the set has "' + Note.Hint +
+                  '": targets are compared exactly';
+      spxNoteUnknownTarget:
+        Result := 'no target "' + Note.Target + '" in the set';
+      spxNoteRawSentinel:
+        Result := 'the text holds a private-use character U+E000–U+E005: the engine deletes ' +
+                  'it before parsing';
+    else
+      Result := '';
+    end;
 end;
 
 { Studio's notes have no engine code, and inventing one that LOOKS like an engine code would
@@ -908,7 +1010,7 @@ begin
   end;
 end;
 
-function SpxPanelRows(Report: TSpxReport): TSpxPanelRows;
+function SpxPanelRows(Report: TSpxReport; Lang: TSpxLang): TSpxPanelRows;
 var
   n: Integer;
 
@@ -950,7 +1052,7 @@ var
     Result.Source := spxRowStudio;
     Result.Severity := 'note';
     Result.Code := NoteCode(Note.Kind);
-    Result.Text := SpxNoteText(Note);
+    Result.Text := SpxNoteText(Note, Lang);
     Result.Line := Note.Line;
     Result.Column := Note.Column;
     Result.EndLine := 0;      { a note marks a place, not a span }
@@ -977,7 +1079,7 @@ begin
       row.Source := spxRowEngine;
       row.Severity := d.Severity;
       row.Code := d.Code;
-      row.Text := SpxDiagText(d.Code);
+      row.Text := SpxDiagText(d.Code, Lang);
       row.Line := d.Line;
       row.Column := d.Column;
       row.EndLine := d.EndLine;

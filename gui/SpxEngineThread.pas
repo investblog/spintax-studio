@@ -547,7 +547,10 @@ begin
       FResult.Warnings := report.Warnings;
       FResult.Notes := report.Notes.Count;
       FResult.Marks := SpxDocumentMarks(report);
-      FResult.Rows := SpxPanelRows(report);
+      { The document's own locale decides the wording, not whatever the window happens to be
+        showing: the rows are built here, off the UI thread, and a global read across that
+        boundary is exactly the race this worker exists to avoid. }
+      FResult.Rows := SpxPanelRows(report, SpxLangFor(Job.Locale));
     finally
       report.Free;
     end;

@@ -18,7 +18,8 @@ uses
   Clipbrd, Graphics, LCLType,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi;
+  SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
+  SpxStrings;
 
 type
   TSpxMainForm = class(TForm)
@@ -134,6 +135,7 @@ type
     procedure FindKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure StepToMatch(Backwards: Boolean);
     procedure RefreshMatches;
+    procedure ShowMatchCount;
     procedure NewClicked(Sender: TObject);
     procedure OpenClicked(Sender: TObject);
     procedure SaveClicked(Sender: TObject);
@@ -148,6 +150,7 @@ type
     procedure UpdateCaption;
     procedure EditorChanged(Sender: TObject);
     procedure SettingChanged(Sender: TObject);
+    procedure RetranslateUi;
     procedure DebounceFired(Sender: TObject);
     procedure RerollClicked(Sender: TObject);
     procedure CopyClicked(Sender: TObject);
@@ -191,6 +194,10 @@ constructor TSpxMainForm.Create(AOwner: TComponent);
 begin
   { CreateNew, not Create: there is no .lfm resource to load. }
   inherited CreateNew(AOwner);
+  { The window speaks the document's language, so this is decided BEFORE anything is built:
+    every caption is read once, when its control is created. Changing it afterwards needs
+    the captions re-read, which SettingChanged does. }
+  SpxSetUiLang(SpxUiLangFor('en'));   { the language the window opens on -- see FLocale }
   FPath := '';
   FEol := SPX_DEFAULT_EOL;
   FTrailingEol := True;
@@ -246,7 +253,7 @@ begin
 
   FSeeded := TCheckBox.Create(Self);
   FSeeded.Parent := FTop;
-  FSeeded.Caption := 'seed';
+  FSeeded.Caption := Tr(sSeed);
   FSeeded.SetBounds(Px(Self, 90), Px(Self, 9), Px(Self, 55), Px(Self, 22));
   FSeeded.OnChange := @SettingChanged;
 
@@ -258,13 +265,13 @@ begin
 
   FReroll := TButton.Create(Self);
   FReroll.Parent := FTop;
-  FReroll.Caption := 'Reroll';
+  FReroll.Caption := Tr(sReroll);
   FReroll.SetBounds(Px(Self, 228), Px(Self, 6), Px(Self, 80), Px(Self, 26));
   FReroll.OnClick := @RerollClicked;
 
   FCopy := TButton.Create(Self);
   FCopy.Parent := FTop;
-  FCopy.Caption := 'Copy';
+  FCopy.Caption := Tr(sCopy);
   FCopy.SetBounds(Px(Self, 314), Px(Self, 6), Px(Self, 80), Px(Self, 26));
 
   FPartial := TLabel.Create(Self);
@@ -274,13 +281,13 @@ begin
 
   FAsPage := TRadioButton.Create(Self);
   FAsPage.Parent := FTop;
-  FAsPage.Caption := 'Страница';
+  FAsPage.Caption := Tr(sViewPage);
   FAsPage.Checked := True;
   FAsPage.OnChange := @PreviewModeChanged;
 
   FAsSource := TRadioButton.Create(Self);
   FAsSource.Parent := FTop;
-  FAsSource.Caption := 'Исходник';
+  FAsSource.Caption := Tr(sViewSource);
   FAsSource.OnChange := @PreviewModeChanged;
   FCopy.OnClick := @CopyClicked;
 
@@ -293,7 +300,7 @@ begin
   FStatus.Parent := Self;
   FStatus.Top := 30000;
   FStatus.SimplePanel := True;
-  FStatus.SimpleText := 'готов';
+  FStatus.SimpleText := Tr(sStatusReady);
 
   { The bottom strip, created before the two panes so it owns that space and they divide
     what is left. Two tabs rather than two more panels: the window is already a two-pane
@@ -306,11 +313,11 @@ begin
     no room left at all. The splitter above takes it from here. }
   FBottom.Height := Px(Self, 240);
   sheetDiag := FBottom.AddTabSheet;
-  sheetDiag.Caption := 'Диагностика';
+  sheetDiag.Caption := Tr(sTabDiagnostics);
   sheetVars := FBottom.AddTabSheet;
-  sheetVars.Caption := 'Переменные';
+  sheetVars.Caption := Tr(sTabVariables);
   sheetSet := FBottom.AddTabSheet;
-  sheetSet.Caption := 'Варианты';
+  sheetSet.Caption := Tr(sTabVariants);
 
   { What a squiggle cannot show: a finding inside an included file, and one the engine could
     not place at all. }
@@ -321,10 +328,12 @@ begin
   FDiag.ReadOnly := True;
   FDiag.RowSelect := True;
   FDiag.HideSelection := False;
-  DiagColumn('Уровень', 110);
-  DiagColumn('Файл', 130);
-  DiagColumn('Место', 70);
-  DiagColumn('Сообщение', 640);
+  { Px like everything else: these four were raw pixels, so at 150% the font grew and the
+    columns did not -- the level and file columns ellipsised whatever the budget said. }
+  DiagColumn(Tr(sColLevel), Px(Self, 110));
+  DiagColumn(Tr(sColFile), Px(Self, 130));
+  DiagColumn(Tr(sColAt), Px(Self, 70));
+  DiagColumn(Tr(sColMessage), Px(Self, 640));
   FDiag.OnClick := @DiagClicked;
   FDiag.OnResize := @DiagResized;
 
@@ -477,7 +486,7 @@ begin
   FFindCase := TCheckBox.Create(Self);
   FFindCase.Parent := FTop;
   FFindCase.Visible := False;
-  FFindCase.Caption := 'Регистр';
+  FFindCase.Caption := Tr(sFindCase);
   FFindCase.OnChange := @FindTextChanged;
   FFindCase.OnKeyDown := @FindKeyDown;
 
@@ -489,13 +498,16 @@ begin
     close button as soon as the user favours the preview -- and it is the counter, the one
     thing here that carries information, that would be the first to disappear. }
   FFindCount := TLabel.Create(Self);
+  { LayoutTopStrip hands it a width; a label that also sizes itself to its caption would
+    discard that and drift towards the close button. }
+  FFindCount.AutoSize := False;
   FFindCount.Parent := FTop;
   FFindCount.Visible := False;
 
   FFindClose := TButton.Create(Self);
   FFindClose.Parent := FTop;
   FFindClose.Visible := False;
-  FFindClose.Caption := 'x';
+  FFindClose.Caption := Tr(sFindClose);
   FFindClose.OnClick := @FindCloseClicked;
   FFindClose.OnKeyDown := @FindKeyDown;
   FFindPrev.OnKeyDown := @FindKeyDown;
@@ -587,6 +599,9 @@ begin
   Inc(x, Px(Self, 42));
   FFindCase.SetBounds(x, y + Px(Self, 9), Px(Self, 90), Px(Self, 20));
   Inc(x, Px(Self, 98));
+  { 110px, and the captions are written to fit it: widening this by twenty pixels is enough
+    to push a 1100px window -- the default size -- into the two-row strip, which is a worse
+    trade than a compact '12/57'. }
   FFindCount.SetBounds(x, y + Px(Self, 11), Px(Self, 110), Px(Self, 16));
   Inc(x, Px(Self, 118));
   FFindClose.SetBounds(x, y + Px(Self, 6), Px(Self, 28), Px(Self, 26));
@@ -625,6 +640,20 @@ begin
   if FEditor.CanSetFocus then FEditor.SetFocus;
 end;
 
+{ The counter in words. One routine rather than a line at each site, because it is also what
+  a language switch repaints -- and a caption that only three of four sites know how to write
+  is how the strip ends up half-translated. }
+procedure TSpxMainForm.ShowMatchCount;
+begin
+  if (FFindText = nil) or (FFindCount = nil) then Exit;
+  if FFindText.Text = '' then FFindCount.Caption := ''
+  else if Length(FMatches) = 0 then FFindCount.Caption := Tr(sFindNothing)
+  else if FMatchIndex >= 0 then
+    FFindCount.Caption := Format(Tr(sFindPosition), [FMatchIndex + 1, Length(FMatches)])
+  else
+    FFindCount.Caption := Format(Tr(sFindMatches), [Length(FMatches)]);
+end;
+
 procedure TSpxMainForm.RefreshMatches;
 var n: Integer;
 begin
@@ -632,9 +661,7 @@ begin
   FMatchesStale := False;
   FMatchIndex := -1;
   n := Length(FMatches);
-  if FFindText.Text = '' then FFindCount.Caption := ''
-  else if n = 0 then FFindCount.Caption := 'ничего не найдено'
-  else FFindCount.Caption := Format('совпадений: %d', [n]);
+  ShowMatchCount;
   FFindPrev.Enabled := n > 0;
   FFindNext.Enabled := n > 0;
 end;
@@ -671,7 +698,7 @@ begin
   FMatchIndex := idx;
   JumpToPos(FMatches[idx].Line, FMatches[idx].Col,
             FMatches[idx].EndLine, FMatches[idx].EndCol);
-  FFindCount.Caption := Format('%d из %d', [idx + 1, Length(FMatches)]);
+  ShowMatchCount;
   { The focus stays in the box, so a second Enter steps again rather than typing into the
     document. }
   if FFindText.CanSetFocus then FFindText.SetFocus;
@@ -747,27 +774,35 @@ var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
   fileMenu, editMenu: TMenuItem;
 begin
+  { Rebuilt when the language changes, so the previous one is released first -- it is owned
+    by the form and would otherwise pile up one menu per switch. }
+  if Self.Menu <> nil then
+  begin
+    bar := TMainMenu(Self.Menu);
+    Self.Menu := nil;
+    bar.Free;
+  end;
   bar := TMainMenu.Create(Self);
   fileMenu := TMenuItem.Create(Self);
-  fileMenu.Caption := 'Файл';
+  fileMenu.Caption := Tr(sMenuFile);
   bar.Items.Add(fileMenu);
 
-  Item(fileMenu, 'Создать', Ord('N'), [ssCtrl], @NewClicked);
-  Item(fileMenu, 'Открыть…', Ord('O'), [ssCtrl], @OpenClicked);
-  Item(fileMenu, 'Сохранить', Ord('S'), [ssCtrl], @SaveClicked);
-  Item(fileMenu, 'Сохранить как…', Ord('S'), [ssCtrl, ssShift], @SaveAsClicked);
+  Item(fileMenu, Tr(sMenuNew), Ord('N'), [ssCtrl], @NewClicked);
+  Item(fileMenu, Tr(sMenuOpen), Ord('O'), [ssCtrl], @OpenClicked);
+  Item(fileMenu, Tr(sMenuSave), Ord('S'), [ssCtrl], @SaveClicked);
+  Item(fileMenu, Tr(sMenuSaveAs), Ord('S'), [ssCtrl, ssShift], @SaveAsClicked);
   Item(fileMenu, '-', 0, [], nil);
   { The set is read when the document is opened or saved, not on every keystroke. A fragment
     changed by another program is therefore invisible until this is used -- which is why the
     command exists rather than a silent rescan the user cannot ask for. }
-  Item(fileMenu, 'Перечитать набор', 0, [], @ReloadSetClicked);
+  Item(fileMenu, Tr(sMenuReloadSet), 0, [], @ReloadSetClicked);
   Item(fileMenu, '-', 0, [], nil);
-  Item(fileMenu, 'Выход', 0, [], @ExitClicked);
+  Item(fileMenu, Tr(sMenuExit), 0, [], @ExitClicked);
 
   { Every key action gets a place in a menu, not only a shortcut: a hotkey nobody can find
     is a hotkey nobody uses. }
   editMenu := TMenuItem.Create(Self);
-  editMenu.Caption := 'Правка';
+  editMenu.Caption := Tr(sMenuEdit);
   bar.Items.Add(editMenu);
   { A menu shortcut is checked BEFORE the key reaches the control, so one that collides with
     an editor command takes that command away silently. SynEdit's own Ctrl+Shift table is
@@ -781,15 +816,15 @@ begin
   { Ctrl+F and F3 are what the hand reaches for, and both are in the menu because a hotkey
     nobody can find is a hotkey nobody uses. F3 works from the editor as well as from the
     box, so stepping does not require going back to the field. }
-  Item(editMenu, 'Найти…', Ord('F'), [ssCtrl], @FindMenuClicked);
-  Item(editMenu, 'Найти далее', VK_F3, [], @FindNextClicked);
-  Item(editMenu, 'Найти назад', VK_F3, [ssShift], @FindPrevClicked);
+  Item(editMenu, Tr(sMenuFind), Ord('F'), [ssCtrl], @FindMenuClicked);
+  Item(editMenu, Tr(sMenuFindNext), VK_F3, [], @FindNextClicked);
+  Item(editMenu, Tr(sMenuFindPrev), VK_F3, [ssShift], @FindPrevClicked);
   Item(editMenu, '-', 0, [], nil);
-  Item(editMenu, 'Обернуть выделение в {…}', Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked);
-  Item(editMenu, 'Обернуть выделение в […]', Ord('P'), [ssCtrl, ssShift], @WrapBracketsClicked);
+  Item(editMenu, Tr(sMenuWrapBraces), Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked);
+  Item(editMenu, Tr(sMenuWrapBrackets), Ord('P'), [ssCtrl, ssShift], @WrapBracketsClicked);
   Item(editMenu, '-', 0, [], nil);
-  Item(editMenu, 'Показать другой вариант', Ord('R'), [ssCtrl], @RerollClicked);
-  Item(editMenu, 'Скопировать результат', Ord('C'), [ssCtrl, ssShift], @CopyClicked);
+  Item(editMenu, Tr(sMenuReroll), Ord('R'), [ssCtrl], @RerollClicked);
+  Item(editMenu, Tr(sMenuCopyResult), Ord('C'), [ssCtrl, ssShift], @CopyClicked);
 
   Self.Menu := bar;
 end;
@@ -831,12 +866,12 @@ begin
     FDiag.Items.Clear;
     for i := 0 to High(ARows) do
     begin
-      if ARows[i].Source = spxRowStudio then level := 'заметка Studio'
-      else if ARows[i].Severity = 'error' then level := 'ошибка'
-      else if ARows[i].Severity = 'warning' then level := 'предупреждение'
+      if ARows[i].Source = spxRowStudio then level := Tr(sLevelNote)
+      else if ARows[i].Severity = 'error' then level := Tr(sLevelError)
+      else if ARows[i].Severity = 'warning' then level := Tr(sLevelWarning)
       else level := ARows[i].Severity;
 
-      if ARows[i].Slug = '' then name_ := 'документ' else name_ := ARows[i].Slug;
+      if ARows[i].Slug = '' then name_ := Tr(sDocument) else name_ := ARows[i].Slug;
       { No place means no jump, and the dash says so rather than showing a 0:0 that looks
         like a position. }
       if ARows[i].Line > 0 then place := Format('%d:%d', [ARows[i].Line, ARows[i].Column])
@@ -864,7 +899,7 @@ begin
   used := 0;
   for i := 0 to last - 1 do used := used + FDiag.Columns[i].Width;
   room := FDiag.ClientWidth - used - 4;   { a hair for the frame }
-  if room < 160 then room := 160;
+  if room < Px(Self, 160) then room := Px(Self, 160);
   FDiag.Columns[last].Width := room;
 end;
 
@@ -1062,9 +1097,9 @@ end;
 procedure TSpxMainForm.UpdateCaption;
 var shown: string;
 begin
-  if FPath = '' then shown := 'Без имени' else shown := ExtractFileName(FPath);
+  if FPath = '' then shown := Tr(sUntitled) else shown := ExtractFileName(FPath);
   if FEditor.Modified then shown := shown + ' *';
-  Caption := shown + ' — Spintax Studio';
+  Caption := Format(Tr(sWindowTitle), [shown]);
 end;
 
 { What goes into the file: the buffer with the document's OWN line ending restored, and
@@ -1105,8 +1140,8 @@ begin
   begin
     dlg := TSaveDialog.Create(Self);
     try
-      dlg.Title := 'Сохранить шаблон';
-      dlg.Filter := 'Шаблоны spintax|*' + SPX_EXT + '|Все файлы|*.*';
+      dlg.Title := Tr(sSaveTemplate);
+      dlg.Filter := Format(Tr(sFileFilter), [SPX_EXT]);
       dlg.DefaultExt := Copy(SPX_EXT, 2, MaxInt);
       dlg.Options := dlg.Options + [ofOverwritePrompt];
       if FPath <> '' then dlg.FileName := FPath;
@@ -1130,7 +1165,8 @@ function TSpxMainForm.AskSave: Boolean;
 begin
   Result := True;
   if not FEditor.Modified then Exit;
-  case MessageDlg('Сохранить изменения?', mtConfirmation, [mbYes, mbNo, mbCancel], 0) of
+  case MessageDlg(Tr(sUnsavedTitle), Tr(sUnsavedQuestion), mtConfirmation,
+                  [mbYes, mbNo, mbCancel], 0) of
     mrYes: Result := SaveDocument(False);
     mrNo: Result := True;
   else
@@ -1158,8 +1194,8 @@ begin
   if not AskSave then Exit;
   dlg := TOpenDialog.Create(Self);
   try
-    dlg.Title := 'Открыть шаблон';
-    dlg.Filter := 'Шаблоны spintax|*' + SPX_EXT + '|Все файлы|*.*';
+    dlg.Title := Tr(sOpenTemplate);
+    dlg.Filter := Format(Tr(sFileFilter), [SPX_EXT]);
     dlg.Options := dlg.Options + [ofFileMustExist];
     if dlg.Execute then LoadDocument(dlg.FileName);
   finally
@@ -1210,8 +1246,65 @@ begin
   if FSet <> nil then FSet.MarkStale;
 end;
 
-procedure TSpxMainForm.SettingChanged(Sender: TObject);
+{ Every caption that was read at build time, read again. Kept as one list on purpose: a
+  translation that stops following the language does so silently, and the only defence is
+  having one place where the whole window is re-read. }
+procedure TSpxMainForm.RetranslateUi;
 begin
+  { Same guard, and for the same reason, as LayoutTopStrip: three startup crashes in this
+    project have been a handler firing while the window was still being built. The locale box
+    is created before its OnChange is hooked, so this is not reachable today -- and that is
+    exactly the kind of ordering that a later edit breaks silently. }
+  if (FSeeded = nil) or (FBottom = nil) or (FDiag = nil) or (FVars = nil) or
+     (FSet = nil) or (FPreview = nil) then Exit;
+  FSeeded.Caption := Tr(sSeed);
+  FReroll.Caption := Tr(sReroll);
+  FCopy.Caption := Tr(sCopy);
+  FAsPage.Caption := Tr(sViewPage);
+  FAsSource.Caption := Tr(sViewSource);
+  FFindCase.Caption := Tr(sFindCase);
+  FFindClose.Caption := Tr(sFindClose);
+  BuildMenu;
+  if FBottom.PageCount >= 3 then
+  begin
+    FBottom.Pages[0].Caption := Tr(sTabDiagnostics);
+    FBottom.Pages[1].Caption := Tr(sTabVariables);
+    FBottom.Pages[2].Caption := Tr(sTabVariants);
+  end;
+  if FDiag.Columns.Count >= 4 then
+  begin
+    FDiag.Columns[0].Caption := Tr(sColLevel);
+    FDiag.Columns[1].Caption := Tr(sColFile);
+    FDiag.Columns[2].Caption := Tr(sColAt);
+    FDiag.Columns[3].Caption := Tr(sColMessage);
+  end;
+  FVars.Retranslate;
+  FSet.Retranslate;
+  FPreview.Retranslate;
+  { The rows carry their words from the worker, and their first two columns are written here
+    -- so the level and the file name change language at once. The MESSAGE column does not:
+    it was worded by the render that produced it, and it stays in the old language until the
+    next one lands (SettingChanged asks for one immediately, so it is a render, not a
+    session). The signature is cleared because it is what suppresses a rebuild. }
+  FRowSig := '';
+  ShowRows(FRows);
+  { The counter is a sentence too ('matches: 12'), and it is only rewritten when the search
+    runs. Nothing to recount -- the matches stand -- so just repaint the caption. }
+  if (FFindText <> nil) and FFindText.Visible then ShowMatchCount;
+  LayoutTopStrip;
+  UpdateCaption;
+end;
+
+procedure TSpxMainForm.SettingChanged(Sender: TObject);
+var want: TSpxLang;
+begin
+  { The interface follows the document's language. }
+  want := SpxUiLangFor(FLocale.Text);
+  if want <> SpxUiLang then
+  begin
+    SpxSetUiLang(want);
+    RetranslateUi;
+  end;
   RequestRender;
 end;
 
@@ -1328,9 +1421,9 @@ begin
   FPartial.Visible := APartial;
   if not APartial then Exit;
   if SpxIsBlankOutput(AHtml) then
-    FPartial.Caption := 'фрагмент ничего не выводит'
+    FPartial.Caption := Tr(sFragmentEmpty)
   else
-    FPartial.Caption := 'показан фрагмент';
+    FPartial.Caption := Tr(sFragmentShown);
   LayoutTopStrip;   { the caption changes width, so the whole chain shifts with it }
 end;
 
@@ -1386,11 +1479,11 @@ begin
   FWarnMarkup.SetMarks(Res.Marks);
   FEditor.Invalidate;
 
-  if Res.Errors > 0 then s := Format('%d ошибок', [Res.Errors])
-  else if Res.Warnings > 0 then s := Format('валидно, %d предупреждений', [Res.Warnings])
-  else s := 'валидно';
-  if Res.Notes > 0 then s := s + Format(' · %d заметок', [Res.Notes]);
-  FStatus.SimpleText := Format('%s · %d мс', [s, Res.Elapsed]);
+  if Res.Errors > 0 then s := Format(Tr(sStatusErrors), [Res.Errors])
+  else if Res.Warnings > 0 then s := Format(Tr(sStatusWithWarnings), [Res.Warnings])
+  else s := Tr(sStatusValid);
+  if Res.Notes > 0 then s := s + Format(Tr(sStatusNotes), [Res.Notes]);
+  FStatus.SimpleText := Format(Tr(sStatusElapsed), [s, Res.Elapsed]);
 end;
 
 { Idempotent on purpose. Closing the MAIN form neither hides nor frees it -- LCL only calls

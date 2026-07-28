@@ -74,8 +74,9 @@ begin
   { The size is taken from the system rather than left inherited, because SynEdit does not
     inherit it: it pins its own 10 pt, which on a desktop configured for 9 is a percent too
     big and on one configured for 14 is half the size the person asked for. Measured -- the
-    editor came out at 10 while Screen.SystemFont said 9. A control that DOES inherit (the
-    source view) is unaffected: assigning the same number changes nothing. }
+    editor came out at 10 while Screen.SystemFont said 9. Both callers are SynEdits now (the
+    template editor and the source view), so both need this; the sentence that used to be
+    here about a control that inherits described the TMemo the source view no longer is. }
   if Screen.SystemFont.Size > 0 then AFont.Size := Screen.SystemFont.Size;
 
   for i := Low(CANDIDATES) to High(CANDIDATES) do

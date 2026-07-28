@@ -65,8 +65,13 @@ function SpxWritePerFile(const Dir, Prefix, Ext: string; Variants: TSpxVariantLi
 { Two columns -- seed, then variant -- with a header row. Line breaks inside a cell are kept:
   a spreadsheet cell holds them, which is why this format is the lossless one.
 
-  SheetName is what the tab is called; it is written as given (Cyrillic is fine, verified). }
-function SpxWriteXlsx(const Path, SheetName: string; Variants: TSpxVariantList;
+  SheetName is what the tab is called and HeadSeed/HeadText are the two column headings; all
+  three are written as given (Cyrillic is fine, verified). They are parameters rather than
+  literals because the caller is the window, which knows what language the product is
+  speaking -- a workbook whose tab says «Варианты» over columns saying `seed` and `variant`
+  is a translation half-done. }
+function SpxWriteXlsx(const Path, SheetName, HeadSeed, HeadText: string;
+  Variants: TSpxVariantList;
   out Report: TSpxExportReport): Boolean;
 
 { The escaping an XML TEXT NODE needs, and the removal XML 1.0 requires.
@@ -424,7 +429,8 @@ begin
   until Col < 0;
 end;
 
-function SheetXml(const Variants: TSpxVariantList): string;
+function SheetXml(const Variants: TSpxVariantList;
+  const HeadSeed, HeadText: string): string;
 var sb: TStringList; i: Integer; row: string;
 
   function TextCell(Col, Row: Integer; const Text: string): string;
@@ -451,7 +457,7 @@ begin
     sb.Add('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
     sb.Add('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">');
     sb.Add('<sheetData>');
-    sb.Add('<row r="1">' + TextCell(0, 1, 'seed') + TextCell(1, 1, 'variant') + '</row>');
+    sb.Add('<row r="1">' + TextCell(0, 1, HeadSeed) + TextCell(1, 1, HeadText) + '</row>');
     for i := 0 to Variants.Count - 1 do
     begin
       row := Format('<row r="%d">', [i + 2]);
@@ -508,8 +514,8 @@ begin
     '</workbook>';
 end;
 
-function SpxWriteXlsx(const Path, SheetName: string; Variants: TSpxVariantList;
-  out Report: TSpxExportReport): Boolean;
+function SpxWriteXlsx(const Path, SheetName, HeadSeed, HeadText: string;
+  Variants: TSpxVariantList; out Report: TSpxExportReport): Boolean;
 var
   zip: TZipper;
   streams: TList;
@@ -546,7 +552,7 @@ begin
     AddPart(PART_ROOT_RELS, XML_ROOT_RELS);
     AddPart(PART_WORKBOOK, WorkbookXml(name_));
     AddPart(PART_WORKBOOK_RELS, XML_WORKBOOK_RELS);
-    AddPart(PART_SHEET, SheetXml(Variants));
+    AddPart(PART_SHEET, SheetXml(Variants, HeadSeed, HeadText));
     try
       zip.ZipAllFiles;
     except

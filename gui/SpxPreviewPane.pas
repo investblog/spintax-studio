@@ -2,7 +2,9 @@
  * SpxPreviewPane -- the right half: the engine's output as a page, or as the HTML it is.
  *
  * Two views of one string. The SOURCE view gets it VERBATIM -- that is the view that answers
- * "what markup came out". The PAGE view gets it inside a minimal <html><body> document
+ * "what markup came out", and it is a read-only editor with SynEdit's HTML highlighter
+ * rather than a plain box, because unhighlighted markup is a wall of angle brackets and this
+ * view exists to be read. The PAGE view gets it inside a minimal <html><body> document
  * (SpxPageDocument): IPro's parser wants a document, and a bare string is variously painted
  * black, shortened by the text in front of its first tag, or -- on an unterminated `<!` --
  * never finished at all. Nothing is hidden by that: the wrapper adds no charset, no styling
@@ -25,12 +27,20 @@ unit SpxPreviewPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, IpHtml, SpxStudio, SpxUi;
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, Menus, IpHtml,
+  SynEdit, SynEditTypes, SynEditWrappedView, SynHighlighterHTML,
+  SpxStudio, SpxUi, SpxStrings;
 
 const
   { 16 KB is ~150 ms of layout on this machine -- still invisible between keystrokes, and
     an order of magnitude past a normal page (the demo renders to about 2 KB). }
   SPX_PAGE_AUTO_LIMIT = 16 * 1024;
+
+  { Past this many bytes on ONE line, the source view stops wrapping. The wrap plugin's cost
+    goes as the square of a line's length -- 156 ms at 100 KB, 14 500 ms at 1 MB, measured --
+    so the limit is set where the pause is still a blink: 32 KB is about 17 ms. Total size is
+    not the question, and a megabyte in ordinary lines stays wrapped at 94 ms. }
+  SPX_WRAP_LINE_LIMIT = 32 * 1024;
 
 type
   TSpxPreviewPane = class(TPanel)
@@ -40,12 +50,31 @@ type
     FStaleText: TLabel;
     FDraw: TButton;
     FPage: TIpHtmlPanel;
-    FSource: TMemo;
+    { A read-only editor rather than a plain memo, for one reason: the markup is what this
+      view is FOR, and unhighlighted markup is a wall of angle brackets. SynEdit's own HTML
+      highlighter ships with it, and it colours what the engine actually emits -- tags,
+      attributes, entities, comments -- checked against a real render before it was wired
+      in. }
+    FSource: TSynEdit;
+    FSourceHl: TSynHTMLSyn;
+    { Whether the view currently in place wraps. Not a plugin reference: the plugin cannot be
+      detached, so this is what says a rebuild is needed. }
+    FWrapped: Boolean;
+    { A TMemo is a native EDIT and came with the system's Copy / Select all popup; SynEdit
+      creates none, so right-clicking the source view did nothing at all. Two items, built
+      here rather than borrowed, because they are also two strings to translate. They belong
+      to the PANE so that rebuilding the editor does not take them with it. }
+    FSourceMenu: TPopupMenu;
+    FMenuCopy: TMenuItem;
+    FMenuSelectAll: TMenuItem;
     FContent: string;     // what the engine last produced
     FShown: string;       // what the page is currently displaying
-    FShownSource: string; // what was last PUT INTO the memo
+    FShownSource: string; // what was last PUT INTO the source view
     FHasShown: Boolean;
     procedure SetSourceMode(AValue: Boolean);
+    procedure BuildSourceView(AWrap: Boolean);
+    procedure CopyClicked(Sender: TObject);
+    procedure SelectAllClicked(Sender: TObject);
     procedure DrawClicked(Sender: TObject);
     procedure DrawPage;
     procedure Sync;
@@ -60,6 +89,10 @@ type
       preview that quietly shows one paragraph of a document looks like a preview that lost
       the rest of it. }
     procedure SetContent(const AHtml: string);
+    { Say everything again in the language the window now speaks. The pane owns two
+      sentences and two menu items, and all four are on screen long enough for a language
+      switch to catch them. }
+    procedure Retranslate;
     { Which of the two views is up. The controls that switch it live in the window's top
       strip: the pane is one of two panes, and a header of its own would put its content a
       row lower than the editor beside it. }
@@ -90,7 +123,7 @@ begin
 
   FDraw := TButton.Create(Self);
   FDraw.Parent := FStale;
-  FDraw.Caption := 'Показать';
+  FDraw.Caption := Tr(sShowLarge);
   FDraw.SetBounds(Px(Self, 420), Px(Self, 3), Px(Self, 90), Px(Self, 24));
   FDraw.OnClick := @DrawClicked;
 
@@ -100,17 +133,19 @@ begin
   FPage.Color := clWindow;
   FPage.BgColor := clWindow;
 
-  FSource := TMemo.Create(Self);
-  FSource.Parent := Self;
-  FSource.Align := alClient;
-  FSource.ReadOnly := True;
-  FSource.ScrollBars := ssAutoVertical;
-  FSource.WordWrap := True;
+  FSourceHl := TSynHTMLSyn.Create(Self);
   { The source view shows the markup the engine produced, so it reads like the editor:
     fixed pitch, system size. }
-  SpxApplyMonoFont(FSource.Font);
-  FSource.Color := clWindow;
-  FSource.Visible := False;
+  FSourceMenu := TPopupMenu.Create(Self);
+  FMenuCopy := TMenuItem.Create(FSourceMenu);
+  FMenuCopy.Caption := Tr(sCopy);
+  FMenuCopy.OnClick := @CopyClicked;
+  FSourceMenu.Items.Add(FMenuCopy);
+  FMenuSelectAll := TMenuItem.Create(FSourceMenu);
+  FMenuSelectAll.Caption := Tr(sMenuSelectAll);
+  FMenuSelectAll.OnClick := @SelectAllClicked;
+  FSourceMenu.Items.Add(FMenuSelectAll);
+  BuildSourceView(True);
 end;
 
 { THE STRIPE. TIpHtmlCustomPanel.EraseBackground is deliberately EMPTY -- it paints its own
@@ -171,6 +206,72 @@ begin
   FStale.Visible := False;
 end;
 
+{ The source view, wrapped or not. It is REBUILT rather than reconfigured because SynEdit's
+  wrap plugin cannot be taken off a live editor -- measured, both documented ways: freeing it
+  access-violates on the spot, and detaching it (`Editor := nil`) leaves the editor holding a
+  dead line-mapping view, so the next assignment to Text raises EObjectCheck. Building a
+  fresh editor is a few milliseconds and happens only when a document crosses the line-length
+  limit, which for ordinary output is never.
+
+  Why bother: wrapping a line of a million characters takes fourteen and a half seconds --
+  and the cost is the plugin's alone, since the same text unwrapped is 16 ms and the HTML
+  highlighter over it is 32. A render is not obliged to contain a single line break, so on
+  that shape the view scrolls sideways instead of freezing. The text is all there, which a
+  "too large to show" panel could not say. }
+procedure TSpxPreviewPane.BuildSourceView(AWrap: Boolean);
+begin
+  { The highlighter and the popup menu belong to the PANE, not to the editor, so they outlive
+    this and are simply re-attached. }
+  FreeAndNil(FSource);
+  FSource := TSynEdit.Create(Self);
+  FSource.Parent := Self;
+  FSource.Align := alClient;
+  FSource.ReadOnly := True;
+  FSource.Gutter.Visible := False;
+  FSource.Options := FSource.Options - [eoScrollPastEol] + [eoHideRightMargin];
+  FSource.Highlighter := FSourceHl;
+  FSource.PopupMenu := FSourceMenu;
+  SpxApplyMonoFont(FSource.Font);
+  FSource.Color := clWindow;
+  FSource.Visible := FSourceMode;
+  if AWrap then
+  begin
+    { The same pair as the editor, and for the same measured reason: with wrapping on there is
+      nothing to the right to scroll to, and SynEdit's default ssBoth offers a bar whose range
+      comes from eoScrollPastEol rather than from the text. }
+    TLazSynEditLineWrapPlugin.Create(FSource);
+    FSource.ScrollBars := ssAutoVertical;
+  end
+  else
+    FSource.ScrollBars := ssAutoBoth;
+  FWrapped := AWrap;
+  { A fresh control holds nothing, whatever the old one was showing. }
+  FShownSource := '';
+end;
+
+procedure TSpxPreviewPane.CopyClicked(Sender: TObject);
+begin
+  { Whatever is selected; with nothing selected SynEdit copies the current line, which is
+    what every other editor does. }
+  FSource.CopyToClipboard;
+end;
+
+procedure TSpxPreviewPane.SelectAllClicked(Sender: TObject);
+begin
+  FSource.SelectAll;
+end;
+
+procedure TSpxPreviewPane.Retranslate;
+begin
+  FDraw.Caption := Tr(sShowLarge);
+  FMenuCopy.Caption := Tr(sCopy);
+  FMenuSelectAll.Caption := Tr(sMenuSelectAll);
+  { The line carries a size, so it is rebuilt rather than translated in place -- and only
+    when it is the one on screen, because Sync owns when it appears. }
+  if FStale.Visible then
+    FStaleText.Caption := Format(Tr(sTooLargeToDraw), [Length(FContent) div 1024]);
+end;
+
 procedure TSpxPreviewPane.Sync;
 begin
   FPage.Visible := not FSourceMode;
@@ -180,14 +281,18 @@ begin
   begin
     FStale.Visible := False;
     { Compared against what was PUT IN, never against what the control gives back. A native
-      memo returns its text with the platform's line endings, and the engine's output has
-      bare LFs -- so `FSource.Text <> FContent` was true on every single delivery, the memo
-      was refilled on every debounce tick, and the view snapped back to the top each time.
+      control returns its text with the platform's line endings, and the engine's output has
+      bare LFs -- so `FSource.Text <> FContent` was true on every single delivery, the view
+      was refilled on every debounce tick, and it snapped back to the top each time.
       On a document that takes half a second to render, that made the source view unreadable
       past its first line -- which in a template beginning with `&nbsp;` looked exactly like
       a source view that had failed to generate. }
     if FShownSource <> FContent then
     begin
+      { Decided BEFORE the text goes in: a rebuild afterwards would pay the wrap cost this
+        exists to avoid, and then throw the result away. }
+      if (SpxLongestLine(FContent) <= SPX_WRAP_LINE_LIMIT) <> FWrapped then
+        BuildSourceView(not FWrapped);
       FSource.Text := FContent;
       FShownSource := FContent;
     end;
@@ -198,8 +303,7 @@ begin
     DrawPage
   else
   begin
-    FStaleText.Caption := Format('Вывод %d КБ — страница не обновляется сама',
-      [Length(FContent) div 1024]);
+    FStaleText.Caption := Format(Tr(sTooLargeToDraw), [Length(FContent) div 1024]);
     FStale.Visible := (not FHasShown) or (FShown <> FContent);
   end;
 end;

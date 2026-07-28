@@ -32,7 +32,8 @@ uses
     the check that opens what it wrote. }
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
-  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxExport, SpxFiles, SpxEngineThread;
+  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxExport, SpxFiles, SpxEngineThread,
+  SpxStrings;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -41,7 +42,8 @@ uses
   SpxDedupe in '..\src\SpxDedupe.pas',
   SpxExport in '..\src\SpxExport.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
-  SpxEngineThread in '..\gui\SpxEngineThread.pas';
+  SpxEngineThread in '..\gui\SpxEngineThread.pas',
+  SpxStrings in '..\gui\SpxStrings.pas';
   {$ENDIF}
 
 var
@@ -64,6 +66,11 @@ begin
   Writeln('FAIL ', name);
   Writeln('     want <', Hex(want), '>');
   Writeln('     got  <', Hex(got), '>');
+  { The bytes settle a whitespace bug and nothing else. Most of what this suite compares is
+    now sentences -- a caption that overflowed its budget, a diagnostic in the wrong language
+    -- and reading those as hex is a puzzle nobody should have to solve at a red build. }
+  Writeln('     want "', Copy(want, 1, 200), '"');
+  Writeln('     got  "', Copy(got, 1, 200), '"');
 end;
 
 procedure CheckTrue(const name: string; cond: Boolean);
@@ -2066,7 +2073,7 @@ begin
   Result := '';
   r := SpxHealthReport(doc, ctx, 0);
   try
-    rows := SpxPanelRows(r);
+    rows := SpxPanelRows(r, spxLangRu);
     for i := 0 to High(rows) do
     begin
       if i > 0 then Result := Result + ' | ';
@@ -2168,15 +2175,19 @@ begin
   { Wording comes from the code, and an unknown code is shown as itself -- a newer engine
     must appear in the panel, not vanish from it. }
   CheckTrue('rows/known-code-reads-as-text',
-            SpxDiagText('plural.arity') <> 'plural.arity');
+            SpxDiagText('plural.arity', spxLangEn) <> 'plural.arity');
   Check('rows/unknown-code-falls-back-to-itself',
-        SpxDiagText('something.new-in-v9'), 'something.new-in-v9');
+        SpxDiagText('something.new-in-v9', spxLangEn), 'something.new-in-v9');
   { And a note says what it is about, not just that it happened. }
   note.Kind := spxNoteCaseMismatch;
   note.Target := 'Intro';
   note.Hint := 'intro';
   CheckTrue('rows/note-text-carries-both-names',
-            (Pos('Intro', SpxNoteText(note)) > 0) and (Pos('intro', SpxNoteText(note)) > 0));
+            (Pos('Intro', SpxNoteText(note, spxLangEn)) > 0) and
+            (Pos('intro', SpxNoteText(note, spxLangEn)) > 0));
+  CheckTrue('rows/note-text-carries-both-names-ru',
+            (Pos('Intro', SpxNoteText(note, spxLangRu)) > 0) and
+            (Pos('intro', SpxNoteText(note, spxLangRu)) > 0));
 
   { Ordering, on a hand-built report because the engine will not produce this shape on
     demand: inside a file, by position, with the unlocated finding last -- a row you can
@@ -2205,7 +2216,7 @@ begin
     note.Column := 0;
     r.Notes.Add(note);
 
-    rows := SpxPanelRows(r);
+    rows := SpxPanelRows(r, spxLangRu);
     CheckTrue('rows/nothing-is-dropped', Length(rows) = 4);
     if Length(rows) = 4 then
     begin
@@ -2237,7 +2248,7 @@ begin
     diags.Add(d);
     r.Files.Add(TSpxFileReport.Create('frag', diags));
 
-    rows := SpxPanelRows(r);
+    rows := SpxPanelRows(r, spxLangRu);
     CheckTrue('rows/two-files-two-rows', Length(rows) = 2);
     if Length(rows) = 2 then
       Check('rows/files-keep-walk-order-across-positions',
@@ -2372,6 +2383,189 @@ begin
   CheckTrue('wrap/longer-wrappers',
             SpxWrapRange(Sel(spxSelNormal, 2, 1, 2, 5, 'text'), 3, 2, after));
   Check('wrap/longer-wrappers-range', RangeSig(after), '2:1..2:10');
+end;
+
+{ ── 8az. the words the window says ───────────────────────────────────────── }
+
+{ Length in CODE POINTS, which is what a caption's width is about -- `Сохранить` is nine
+  characters and eighteen bytes, and a budget counted in bytes would reject every Russian
+  string in the table. }
+function CpLength(const S: string): Integer;
+var i, n: Integer;
+begin
+  Result := 0;
+  i := 1;
+  while i <= Length(S) do
+  begin
+    SpCodePointAt(S, i, n);
+    Inc(i, n);
+    Inc(Result);
+  end;
+end;
+
+{ The specifiers a format string carries, in order: '%d of %d' -> 'd,d'. A doubled '%%' is
+  a literal percent sign and no specifier at all, so it is stepped over rather than read. }
+function Specifiers(const S: string): string;
+var i: Integer;
+begin
+  Result := '';
+  i := 1;
+  while i < Length(S) do
+  begin
+    if S[i] <> '%' then
+    begin
+      Inc(i);
+      Continue;
+    end;
+    { An escaped percent consumes BOTH characters and produces nothing. Stepping by three,
+      as this did, walked past a specifier standing right behind one -- '%%%d' recorded
+      nothing at all. }
+    if S[i + 1] <> '%' then Result := Result + S[i + 1] + ',';
+    Inc(i, 2);
+  end;
+end;
+
+procedure TestStrings;
+const
+  { Every code the pinned engine can emit, from its own sources -- the panel's coverage is
+    only as honest as this list, so it is spelled out rather than derived. }
+  ENGINE_CODES: array[0..16] of string = (
+    'bracket.unclosed', 'bracket.mismatched', 'bracket.unexpected-closing',
+    'set.malformed', 'def.malformed', 'def.include-in-value', 'definition.duplicate-name',
+    'include.unknown-target', 'variable.undefined', 'variable.self-reference',
+    'variable.circular-reference', 'plural.arity', 'plural.count-macro',
+    'plural.nested-brackets', 'permutation.unknown-key', 'permutation.minsize-not-integer',
+    'permutation.maxsize-not-integer');
+var
+  id: TSpxStr;
+  lang: TSpxLang;
+  kind: TSpxNoteKind;
+  note: TSpxNote;
+  budget, over, i: Integer;
+  worst, shown: string;
+begin
+  { Every id says something in every language. A blank is worse than an untranslated
+    string: the control simply disappears. }
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+    for id := Low(TSpxStr) to High(TSpxStr) do
+      CheckTrue('strings/nothing-is-blank', SpxStrIn(lang, id) <> '');
+
+  { THE LENGTH CONTRACT. A caption that sits in a computed position has a budget, and every
+    language is held to it -- this is why the base language is the short one: a layout built
+    to fit English does not fit Russian by accident, and without this check the first
+    translation would silently overflow the strip. }
+  over := 0;
+  worst := '';
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+    for id := Low(TSpxStr) to High(TSpxStr) do
+    begin
+      budget := SpxStrBudget(id);
+      { AS RENDERED, not as written: 'matches: %d' is eleven characters and 'matches:
+        128 000' is sixteen, and it is the second one that has to fit the label. Six digits
+        is the widest a count worth reading gets. }
+      shown := StringReplace(SpxStrIn(lang, id), '%d', '999999', [rfReplaceAll]);
+      if (budget > 0) and (CpLength(shown) > budget) then
+      begin
+        Inc(over);
+        if worst = '' then
+          worst := Format('%s (%d > %d)', [shown, CpLength(shown), budget]);
+      end;
+      { And a budgeted string may not carry a %s: its width would then depend on a file name
+        or a folder, and no fixed slot can promise room for one. }
+      if (budget > 0) and (Pos('%s', SpxStrIn(lang, id)) > 0) then
+      begin
+        Inc(over);
+        if worst = '' then worst := SpxStrIn(lang, id) + ' (%s in a budgeted string)';
+      end;
+    end;
+  Check('strings/every-caption-fits-its-budget', IntToStr(over) + ' ' + worst, '0 ');
+
+  { A format string keeps its placeholders in translation, or the text arrives with the
+    numbers missing and no error anywhere. The whole SEQUENCE is compared, not how many of
+    each: '%d of %d' and '%s of %d' have the same number of specifiers and would hand Format
+    a string where it wants an integer -- which is a crash, in the translated build only. }
+  for id := Low(TSpxStr) to High(TSpxStr) do
+    Check('strings/format-placeholders-survive-translation',
+          Specifiers(SpxStrIn(spxLangRu, id)),
+          Specifiers(SpxStrIn(spxLangEn, id)));
+
+  { ANCHORS. Both tables are positional array constants, so a reorder inside TSpxStr with
+    count-preserving edits in the wrong order would move every string one place and no
+    check above would notice: the counts still match and RU still lines up with EN. These
+    pin the two ends and the middle of the enum to what they are supposed to say. }
+  Check('strings/anchor-first-id', SpxStrIn(spxLangEn, sMenuFile), 'File');
+  Check('strings/anchor-first-id-ru', SpxStrIn(spxLangRu, sMenuFile), 'Файл');
+  Check('strings/anchor-middle-id', SpxStrIn(spxLangEn, sGenerate), 'Generate');
+  Check('strings/anchor-last-id', SpxStrIn(spxLangEn, sTooLargeToDraw),
+        'Output is %d KB — the page does not redraw itself');
+  Check('strings/anchor-a-budget', IntToStr(SpxStrBudget(sSeed)), '5');
+  Check('strings/anchor-a-free-string', IntToStr(SpxStrBudget(sMenuFile)), '0');
+
+  { Tr is what every caption in the window actually calls, and nothing here had ever run it:
+    a Tr that ignored the current language would have left all these checks green. }
+  SpxSetUiLang(spxLangRu);
+  CheckTrue('strings/tr-follows-the-current-language', Tr(sSeed) = SpxStrIn(spxLangRu, sSeed));
+  CheckTrue('strings/and-the-getter-agrees', SpxUiLang = spxLangRu);
+  SpxSetUiLang(spxLangEn);
+  CheckTrue('strings/tr-follows-it-back', Tr(sSeed) = SpxStrIn(spxLangEn, sSeed));
+
+  { The window follows the document's language, and only a language it actually has. }
+  CheckTrue('strings/ru-selects-russian', SpxUiLangFor('ru') = spxLangRu);
+  CheckTrue('strings/ru-RU-too', SpxUiLangFor('ru-RU') = spxLangRu);
+  CheckTrue('strings/en-selects-the-base', SpxUiLangFor('en') = spxLangEn);
+  { A language with no translation falls back to the base rather than to a half-empty
+    window. }
+  CheckTrue('strings/an-untranslated-locale-falls-back', SpxUiLangFor('de') = spxLangEn);
+  CheckTrue('strings/and-so-does-nonsense', SpxUiLangFor('') = spxLangEn);
+
+  { The diagnostics panel is the largest body of prose in the window and the one place its
+    words come from editor-core. Every code the engine can emit must read as a sentence in
+    BOTH languages -- a code that is translated in one and bare in the other gives a panel
+    with English headers over Russian rows, which is what this pair of loops exists to
+    prevent. }
+  over := 0;
+  worst := '';
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+    for i := 0 to High(ENGINE_CODES) do
+      if SpxDiagText(ENGINE_CODES[i], lang) = ENGINE_CODES[i] then
+      begin
+        Inc(over);
+        if worst = '' then worst := ENGINE_CODES[i];
+      end;
+  Check('strings/every-engine-code-reads-as-a-sentence', IntToStr(over) + ' ' + worst, '0 ');
+
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+    for kind := Low(TSpxNoteKind) to High(TSpxNoteKind) do
+    begin
+      note.Kind := kind;
+      note.Target := 'Frag';
+      note.Hint := 'frag';
+      CheckTrue('strings/every-note-kind-reads-as-a-sentence',
+                Length(SpxNoteText(note, lang)) > 10);
+    end;
+
+  { The specifier reader itself, since a fault in it would silently pass every string above. }
+  Check('strings/specifiers-in-order', Specifiers('%d of %s'), 'd,s,');
+  Check('strings/specifiers-ignore-an-escaped-percent', Specifiers('100%% done'), '');
+  Check('strings/specifiers-see-past-an-escaped-percent', Specifiers('%%%d'), 'd,');
+  Check('strings/specifiers-of-a-plain-string', Specifiers('nothing here'), '');
+end;
+
+procedure TestLongestLine;
+begin
+  { What the source view asks before deciding to wrap. The number is in bytes and the three
+    editor line endings all end a line. }
+  Check('longest/empty', IntToStr(SpxLongestLine('')), '0');
+  Check('longest/one-line', IntToStr(SpxLongestLine('abcde')), '5');
+  Check('longest/lf', IntToStr(SpxLongestLine('ab' + #10 + 'abcd')), '4');
+  Check('longest/cr', IntToStr(SpxLongestLine('abc' + #13 + 'ab')), '3');
+  { CRLF is ONE ending: counting it as two would report a phantom empty line and, worse,
+    could halve a genuinely long line's measured length. }
+  Check('longest/crlf', IntToStr(SpxLongestLine('abcdef' + #13#10 + 'ab')), '6');
+  Check('longest/trailing-break', IntToStr(SpxLongestLine('abc' + #10)), '3');
+  Check('longest/the-last-line-counts', IntToStr(SpxLongestLine('a' + #10 + 'bbbb')), '4');
+  { Bytes, like every other column this unit hands the editor. }
+  Check('longest/bytes-not-code-points', IntToStr(SpxLongestLine('цена')), '8');
 end;
 
 { ── 8b0. finding text in the template ─────────────────────────────────────── }
@@ -2890,7 +3084,7 @@ begin
   Result := '';
   r := SpxHealthReport(Doc, Ctx, 0, '', Cache);
   try
-    rows := SpxPanelRows(r);
+    rows := SpxPanelRows(r, spxLangRu);
     for i := 0 to High(rows) do
       Result := Result + Format('%s/%s/%s@%d:%d;',
         [rows[i].Slug, rows[i].Severity, rows[i].Code, rows[i].Line, rows[i].Column]);
@@ -3617,7 +3811,7 @@ begin
     { ── .xlsx, read back by unzipping it ── }
 
     path := InDir(dir, 'set.xlsx');
-    CheckTrue('xlsx/writes', SpxWriteXlsx(path, 'Варианты', list, rep));
+    CheckTrue('xlsx/writes', SpxWriteXlsx(path, 'Варианты', 'сид', 'вариант', list, rep));
     CheckTrue('xlsx/file-exists', FileExists(path));
 
     ok := False;
@@ -3652,6 +3846,11 @@ begin
                                'sheet1.xml'));
     begin
       CheckTrue('xlsx/carries-the-seeds', (Pos('>10<', s) > 0) and (Pos('>12<', s) > 0));
+      { The two column headings are the caller's words, in the caller's language: a workbook
+        whose tab says «Варианты» over columns saying `seed` and `variant` is a translation
+        half-done, so they travel with the sheet name rather than being baked in. }
+      CheckTrue('xlsx/heads-the-columns-in-the-callers-language',
+                (Pos('>сид<', s) > 0) and (Pos('>вариант<', s) > 0));
       CheckTrue('xlsx/carries-the-text', Pos('первый вариант', s) > 0);
       { Markup arrives ESCAPED, not stripped: the cell shows the tags the engine produced. }
       CheckTrue('xlsx/escapes-markup', Pos('&lt;p&gt;третий&lt;/p&gt;', s) > 0);
@@ -3693,7 +3892,7 @@ begin
       v.Seed := 2; v.Text := 'a'#$EF#$F0#$E8#$E2#$E5#$F2'b';          bad.Add(v);
       v.Seed := 3; v.Text := 'строка'#13#10'с CRLF';                  bad.Add(v);
       path := InDir(dir, 'hostile.xlsx');
-      CheckTrue('xlsx/writes-a-hostile-set', SpxWriteXlsx(path, 'Акция "Лето"', bad, rep));
+      CheckTrue('xlsx/writes-a-hostile-set', SpxWriteXlsx(path, 'Акция "Лето"', 'сид', 'вариант', bad, rep));
 
       WipeFolder(InDir(dir, 'unzipped2'));
       CreateDir(InDir(dir, 'unzipped2'));
@@ -3725,7 +3924,7 @@ begin
     { An illegal tab name is repaired rather than passed on: Excel forbids these characters
       and openpyxl refuses the workbook outright. }
     CheckTrue('xlsx/an-illegal-sheet-name-is-repaired',
-              SpxWriteXlsx(InDir(dir, 'named.xlsx'), 'a[b]c/d', list, rep));
+              SpxWriteXlsx(InDir(dir, 'named.xlsx'), 'a[b]c/d', 'seed', 'variant', list, rep));
 
     { ── names that are not names ── }
 
@@ -3746,7 +3945,7 @@ begin
     empty := TSpxVariantList.Create;
     try
       CheckTrue('export/an-empty-set-is-not-an-error',
-                SpxWriteXlsx(InDir(dir, 'empty.xlsx'), 'x', empty, rep));
+                SpxWriteXlsx(InDir(dir, 'empty.xlsx'), 'x', 'seed', 'variant', empty, rep));
       Check('export/an-empty-xlsx-is-still-well-formed-once-unzipped',
             BoolToStr(FileExists(InDir(dir, 'empty.xlsx')), 'y', 'n'), 'y');
     finally
@@ -3872,6 +4071,8 @@ begin
   TestDiagMarks;
   TestPanelRows;
   TestSelectionPolicy;
+  TestStrings;
+  TestLongestLine;
   TestFind;
   TestPageDocument;
   TestDirectiveEditing;
