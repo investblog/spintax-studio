@@ -542,6 +542,34 @@ Decisions owed **before the relevant submission** (not switchable later):
   third-party purchase API (Stripe/…), prices/terms, cancellation, Partner Center disclosure.
   See spec §10/§11.
 
+## To report to the engine
+
+- [ ] **A directive after content leaves its LF behind when the line ends CRLF.** Measured
+      2026-07-28, reduced by delta debugging from a real 116 KB template to four lines:
+
+      ```
+      Раз
+                          <- blank
+      #set %a% = 1
+      Два
+      ```
+
+      With LF the directive is consumed whole (`Раз\n\nДва`); normalised to CRLF the output
+      is `Раз\r\n\r\n\nДва` — an extra blank line, one per directive. A directive in the
+      PRELUDE, before any content, is consumed whole either way, which is why every small
+      example agrees and only a real document shows it.
+
+      On the user's template — a hundred and fifty `#set` lines interleaved with `&nbsp;` —
+      that is thirty-five blank lines at the top of the render, and the source view opens on
+      a screenful of nothing. It was reported here twice as "the source view is broken".
+
+      Studio's own part is fixed (the window sends the document with the FILE's endings, not
+      SynEdit's platform ones — `DocText`, gated in the suite). What is left is a question
+      for the engine: the family's directive splitter takes CRLF as ONE terminator, so
+      consuming only the CR looks like the same class of defect as the value rtrim fixed in
+      `v0.3.1`/`v0.3.2`. Needs checking against the JS reference before it is filed as a bug
+      rather than a difference.
+
 ## Reported to the engine, and closed
 
 - [x] **`[<li>one</li>|…]` was taken as a permutation config** — reported 2026-07-26 from

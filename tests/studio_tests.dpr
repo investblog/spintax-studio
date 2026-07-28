@@ -350,6 +350,39 @@ begin
   finally
     batch.Free;
   end;
+
+  { ── THE LINE ENDINGS OF THE DOCUMENT ARE PART OF THE DOCUMENT ──
+
+    A directive line ending in LF disappears whole; the same line ending in CRLF leaves its
+    LF behind, i.e. a blank line. So the same template rendered with the two endings is not
+    the same output, and a host that hands the engine its editor's platform endings previews
+    a file that does not exist.
+
+    Measured the hard way: a 116 KB template with a hundred and fifty `#set` lines, LF on
+    disk, produced one blank line at the top as itself and thirty-five once normalised to
+    CRLF -- and the source view then opened on a screenful of nothing, reported twice as
+    "the source view is broken". The window sends SpxNormalizeEol(editor, the file's ending)
+    because of this. }
+  { A directive in the PRELUDE -- before any content -- is consumed whole, either way. This
+    is why a small example shows nothing: put two directives at the top of a document and the
+    two endings agree. }
+  Check('eol/a-leading-directive-block-is-consumed-lf',
+        SpxRenderSample('#set %a% = 1'#10'#set %b% = 2'#10'Текст',
+                        SpxSeededContext('ru', nil, 1)), 'Текст');
+  Check('eol/a-leading-directive-block-is-consumed-crlf',
+        SpxRenderSample('#set %a% = 1'#13#10'#set %b% = 2'#13#10'Текст',
+                        SpxSeededContext('ru', nil, 1)), 'Текст');
+
+  { A directive AFTER content is where they part company: with LF nothing of it remains, with
+    CRLF its LF does -- one blank line per directive. Reduced by delta debugging from a real
+    116 KB template down to four lines. }
+  Check('eol/a-directive-after-content-leaves-nothing-on-lf',
+        SpxRenderSample('Раз'#10#10'#set %a% = 1'#10'Два', SpxSeededContext('ru', nil, 1)),
+        'Раз'#10#10'Два');
+  Check('eol/but-leaves-a-blank-line-on-crlf',
+        SpxRenderSample(SpxNormalizeEol('Раз'#10#10'#set %a% = 1'#10'Два', #13#10),
+                        SpxSeededContext('ru', nil, 1)),
+        'Раз'#13#10#13#10#10'Два');
 end;
 
 { ── 4. editor-core: #include through the engine's resolver seam ───────────── }
