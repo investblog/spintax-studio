@@ -72,12 +72,22 @@ type
   something to offer an edit for. }
 function SpxGroupAt(const Text: string; Offset: Integer; out Group: TSpxGroup): Boolean;
 
-(* The document with this group's variants replaced. The brackets and the head stay exactly
-   as they were; everything between the head and the closing bracket is rewritten. An empty
-   list writes an empty group -- `{` immediately followed by `}` -- which is legal and renders
-   nothing; refusing it here would be this unit having an opinion about the author's text. *)
+(* The document with this group's variants replaced -- or False and NewDoc = Text when the
+   result would not SAY what was asked. The brackets and the head stay exactly as they were;
+   everything between the head and the closing bracket is rewritten.
+
+   The edit is read back, the same way the `SpxSetDirective*` family reads its own: the group
+   is found again at the same place and must come back with the same kind, the same head, and
+   exactly the variants that were handed in. That is not ceremony -- there is no escape for
+   `|` in this language, so a variant carrying one would silently become two; a variant
+   carrying `}` would end the group early, and one carrying `/#` would open a comment that
+   swallows the rest of the file. All of those parse. None of them says what the panel asked
+   for, and a panel that cannot tell the difference corrupts a document quietly.
+
+   A caller wanting to know WHY was refused should compare what it asked for against what
+   SpxGroupAt returns; this deliberately reports only that the document was left alone. *)
 function SpxSetGroupVariants(const Text: string; const Group: TSpxGroup;
-  const Variants: array of string): string;
+  const Variants: array of string; out NewDoc: string): Boolean;
 
 implementation
 
@@ -296,9 +306,14 @@ begin
 end;
 
 function SpxSetGroupVariants(const Text: string; const Group: TSpxGroup;
-  const Variants: array of string): string;
-var i: Integer; body: string;
+  const Variants: array of string; out NewDoc: string): Boolean;
+var
+  i: Integer;
+  body, candidate: string;
+  back: TSpxGroup;
 begin
+  Result := False;
+  NewDoc := Text;
   body := '';
   for i := 0 to High(Variants) do
   begin
@@ -308,8 +323,19 @@ begin
   { BodyStart, not a length recomputed from the head: the head is a public field, and a panel
     that edits a conditional's flag name would otherwise shift every write by the difference
     in length -- silently, into the first variant. }
-  Result := Copy(Text, 1, Group.BodyStart - 1) + body +
-            Copy(Text, Group.Stop, Length(Text) - Group.Stop + 1);
+  candidate := Copy(Text, 1, Group.BodyStart - 1) + body +
+               Copy(Text, Group.Stop, Length(Text) - Group.Stop + 1);
+
+  { Read it back at the bracket it was written at. }
+  if not SpxGroupAt(candidate, Group.Start, back) then Exit;
+  if (back.Start <> Group.Start) or (back.Kind <> Group.Kind) or
+     (back.Head <> Group.Head) then Exit;
+  if Length(back.Variants) <> Length(Variants) then Exit;
+  for i := 0 to High(Variants) do
+    if back.Variants[i] <> Variants[i] then Exit;
+
+  NewDoc := candidate;
+  Result := True;
 end;
 
 end.

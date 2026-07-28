@@ -540,14 +540,22 @@ grew out of, noted where they attach. Recorded 2026-07-28 from two screenshots o
       «Мастер формул» is the good part: the group's kind switchable at the top, the variants
       one per line under it, and for a permutation its config as fields (`minsize`, `maxsize`,
       `sep`, `lastsep`). Editing `{a|b|c}` inside a long line of prose is the pain it solves.
-      Ours goes in the bottom strip as a third tab beside *Диагностика* / *Переменные*,
-      **not** in a dialog: GTW's wizard carried its own «Предпросмотр» precisely because its
-      main window had none, and a modal here would cover the document and freeze the live
-      preview — the one thing we have that it did not.
-- [ ] **Core slice it needs first:** rewriting the span of a GROUP, the analogue of the
-      existing `SpxSetDirective*` family, with the same read-back validation (the engine
-      re-reads the result, and an edit that would not parse is refused). Gate-able without a
-      window, so it lands as its own PR before any panel.
+      **Ours slides out of the tool rail**, not a dialog and not the bottom strip. The
+      user's own instruction (2026-07-28) put the variables and formula work in the rail, and
+      it is the better place for a second reason: the rail sits beside the editor, so the
+      panel is next to the caret it is editing, while the bottom strip is as far from the
+      text as the window allows. A modal is out for GTW's own reason inverted — its wizard
+      carried its own «Предпросмотр» precisely because its main window had none, and a dialog
+      here would cover the document and freeze the live preview, the one thing we have that
+      it did not.
+- [x] **Core slice it needs first** (2026-07-29, `src/SpxGroups.pas`): `SpxGroupAt` finds the
+      group under the caret and `SpxSetGroupVariants` writes it back — with the read-back the
+      `SpxSetDirective*` family does, so an edit whose RESULT says something other than what
+      was asked is refused and the document is left alone. Measured refusals: a `|` in a
+      variant (it would become two), a `}` (it would end the group early), a `{` (it would
+      open a nested one), `/#` (it would open a comment that eats the file). Every structural
+      question goes to `SpxTokens`, the scanner the highlighter runs, so the group the panel
+      offers to edit is the group the colours describe.
 - [ ] **Prompt buttons AND a free-form field, in that same panel.** (M4, spec §4.5.) Buttons
       for the frequent verbs — rewrite, +N variants, shorten, diversify — each a **named
       prompt template in config**, editable rather than compiled in; plus one free field for

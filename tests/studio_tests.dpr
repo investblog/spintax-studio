@@ -2597,7 +2597,16 @@ function RoundTrip(const Text: string; Offset: Integer): string;
 var g: TSpxGroup;
 begin
   if not SpxGroupAt(Text, Offset, g) then Exit('no group');
-  Result := SpxSetGroupVariants(Text, g, g.Variants);
+  if not SpxSetGroupVariants(Text, g, g.Variants, Result) then Result := 'refused';
+end;
+
+{ The document after an edit, or 'refused' when the write would not say what was asked. }
+function WriteVariants(const Text: string; Offset: Integer;
+  const Variants: array of string): string;
+var g: TSpxGroup;
+begin
+  if not SpxGroupAt(Text, Offset, g) then Exit('no group');
+  if not SpxSetGroupVariants(Text, g, Variants, Result) then Result := 'refused';
 end;
 
 (* THE HELP IS A FIXTURE. Every example in docs/help that carries an arrow is a CLAIM about
@@ -2742,26 +2751,37 @@ begin
 
   { ── writing it back ── }
 
-  CheckTrue('groups/found-for-writing', SpxGroupAt('x {a|b} y', 4, g));
   Check('groups/write-replaces-the-variants',
-        SpxSetGroupVariants('x {a|b} y', g, ['one', 'two', 'three']), 'x {one|two|three} y');
-  Check('groups/write-one-variant',
-        SpxSetGroupVariants('x {a|b} y', g, ['only']), 'x {only} y');
-  Check('groups/write-none-leaves-an-empty-group',
-        SpxSetGroupVariants('x {a|b} y', g, []), 'x {} y');
-
-  CheckTrue('groups/found-a-conditional', SpxGroupAt('{?flag?yes|no}', 9, g));
+        WriteVariants('x {a|b} y', 4, ['one', 'two', 'three']), 'x {one|two|three} y');
+  Check('groups/write-one-variant', WriteVariants('x {a|b} y', 4, ['only']), 'x {only} y');
   Check('groups/write-keeps-the-head',
-        SpxSetGroupVariants('{?flag?yes|no}', g, ['да', 'нет']), '{?flag?да|нет}');
-
-  CheckTrue('groups/found-a-permutation', SpxGroupAt('[<minsize=2>a|b]', 14, g));
+        WriteVariants('{?flag?yes|no}', 9, ['да', 'нет']), '{?flag?да|нет}');
   Check('groups/write-keeps-the-config',
-        SpxSetGroupVariants('[<minsize=2>a|b]', g, ['x', 'y']), '[<minsize=2>x|y]');
-
+        WriteVariants('[<minsize=2>a|b]', 14, ['x', 'y']), '[<minsize=2>x|y]');
   { A nested group survives being written back as part of its variant. }
   CheckTrue('groups/found-an-outer', SpxGroupAt('{a|{b|c}|d}', 2, g));
   Check('groups/write-keeps-a-nested-group',
-        SpxSetGroupVariants('{a|{b|c}|d}', g, g.Variants), '{a|{b|c}|d}');
+        WriteVariants('{a|{b|c}|d}', 2, g.Variants), '{a|{b|c}|d}');
+
+  { ── AND WHAT IT REFUSES. The edit is read back, so a result that parses but says something
+    other than what was asked leaves the document alone. Every one of these parses. ── }
+
+  { There is no escape for `|`, so one inside a variant would silently become two variants. }
+  Check('groups/refuses-a-pipe-in-a-variant',
+        WriteVariants('{a|b}', 2, ['x|y', 'z']), 'refused');
+  (* A closing brace would end the group early and strand the rest. *)
+  Check('groups/refuses-a-closing-brace',
+        WriteVariants('{a|b}', 2, ['x}y', 'z']), 'refused');
+  { An opening brace starts a nested group that swallows the pipe after it. }
+  Check('groups/refuses-an-opening-brace',
+        WriteVariants('{a|b}', 2, ['x{y', 'z']), 'refused');
+  { `/#` opens a comment that eats the closer and everything after it. }
+  Check('groups/refuses-a-comment-opener',
+        WriteVariants('{a|b}', 2, ['x/#y', 'z']), 'refused');
+  { Asking for NO variants is not expressible: an empty group is one empty variant. }
+  Check('groups/refuses-an-empty-list', WriteVariants('{a|b}', 2, []), 'refused');
+  (* An empty variant is fine, though: a choice between nothing and b. *)
+  Check('groups/allows-an-empty-variant', WriteVariants('{a|b}', 2, ['', 'b']), '{|b}');
 
   { ── the invariant, rather than another hand-written expectation ──
 
@@ -2825,11 +2845,7 @@ begin
   Check('groups/offset-past-the-end', GroupSig('{a|b}', 99), 'none');
   Check('groups/empty-text', GroupSig('', 1), 'none');
 
-  { THE CONTRACT the header argues for: there is no escape for `|` in this language, so a
-    variant containing one becomes two variants. Gated so that it changes on purpose. }
-  CheckTrue('groups/found-for-the-pipe-contract', SpxGroupAt('{a|b}', 2, g));
-  Check('groups/a-pipe-in-a-variant-becomes-two',
-        SpxSetGroupVariants('{a|b}', g, ['x|y']), '{x|y}');
+
 end;
 
 procedure TestHtmlScan;
