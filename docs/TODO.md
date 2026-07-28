@@ -434,6 +434,44 @@ the managed tier are later releases.
       Fix), the authoring-prompt as system, a local model via localhost, synonyms through
       the same layer. Keys local, zero telemetry.
 
+## UX plan, agreed 2026-07-28
+
+The reference is DeepL (spec §3), and what is worth taking from it is its discipline rather
+than its palette: ONE row above the panes describing the transformation, per-pane actions at
+that pane's own bottom edge as icons, no frames, equal panes.
+
+Order, and it is an order rather than a list — each step would otherwise be redone by the
+next:
+
+- [x] **1. DPI and the system font** (2026-07-28). The app was not DPI-aware at all: no
+      manifest, so `Application.Scaled` had nothing to work with and Windows would have
+      stretched the window as a bitmap above 100%. `Cascadia Mono` now, at the size the
+      system reports, and every length goes through `Px()` (`gui/SpxUi.pas`).
+- [ ] **2. The chrome, rearranged.** `Copy` belongs at the bottom-right of the pane whose
+      text it copies, not in the top strip beside `Reroll` -- that row is about HOW to
+      render, and mixing "what to do with the result" into it is what makes it read as a
+      developer's toolbar. One language for every caption while we are there.
+- [ ] **3. The tool rail — slide-out, and on the side of what it edits.** DeepL's column
+      holds tools that change the OUTPUT and sits beside the output. Ours would hold
+      variables and the group editor, which change the TEMPLATE — so it belongs on the LEFT,
+      beside the editor. The side is a setting (the user's call, 2026-07-28), which is cheap
+      as long as the layout is built from an alignment constant rather than a hardcoded
+      `alRight`.
+
+      Its content is NOT DeepL's geometry: their column is a menu of switches 280 px wide,
+      ours would hold tables (diagnostics, variables, the variant list). A table in a 280 px
+      column is unreadable, so the rail is the ACCESS -- icons, always in reach -- and the
+      workspace stays where the data fits. A panel that is genuinely narrow by nature (the
+      group editor is a list of variants, one per line) can live in the rail itself.
+- [ ] **4. Icons.** Last on purpose: their sizes depend on where they end up, and under DPI
+      they are needed in several sizes at once. The app icon needs `{$R *.res}` in the .lpr,
+      which was missing entirely until step 1 -- the manifest was generated and never linked.
+
+**The interface will be multilingual**, switched together with the text language. Two things
+follow, and both are constraints on step 2 rather than later work: no layout may be computed
+from a caption's length in Russian (a German caption is a third longer), and the captions
+themselves have to leave the code for a table before there are two of them.
+
 ## Taken from GTW, the editor this syntax came from
 
 Not new milestones — ideas from *Generating The Web 2.7*, the tool whose spintax the family

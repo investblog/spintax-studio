@@ -18,7 +18,7 @@ uses
   Clipbrd, Graphics,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo;
+  SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi;
 
 type
   TSpxMainForm = class(TForm)
@@ -164,8 +164,8 @@ begin
   Height := 700;
   { Below this the panes stop being panes: the bottom strip alone is 170 pixels, and an
     editor narrower than its own gutter plus a line of text is not an editor. }
-  Constraints.MinWidth := 760;
-  Constraints.MinHeight := 520;
+  Constraints.MinWidth := Px(Self, 760);
+  Constraints.MinHeight := Px(Self, 520);
   Position := poScreenCenter;
   OnClose := @FormClosed;
   OnCloseQuery := @FormAsked;
@@ -174,7 +174,7 @@ begin
   FTop := TPanel.Create(Self);
   FTop.Parent := Self;
   FTop.Align := alTop;
-  FTop.Height := 38;
+  FTop.Height := Px(Self, 38);
   FTop.BevelOuter := bvNone;
 
   FLocale := TComboBox.Create(Self);
@@ -187,31 +187,31 @@ begin
     app that opens on an error against its own sample teaches the user to distrust the
     verdict. }
   FLocale.ItemIndex := FLocale.Items.IndexOf('en');
-  FLocale.SetBounds(8, 7, 70, 24);
+  FLocale.SetBounds(Px(Self, 8), Px(Self, 7), Px(Self, 70), Px(Self, 24));
   FLocale.OnChange := @SettingChanged;
 
   FSeeded := TCheckBox.Create(Self);
   FSeeded.Parent := FTop;
   FSeeded.Caption := 'seed';
-  FSeeded.SetBounds(90, 9, 55, 22);
+  FSeeded.SetBounds(Px(Self, 90), Px(Self, 9), Px(Self, 55), Px(Self, 22));
   FSeeded.OnChange := @SettingChanged;
 
   FSeedEdit := TEdit.Create(Self);
   FSeedEdit.Parent := FTop;
   FSeedEdit.Text := '1';
-  FSeedEdit.SetBounds(145, 7, 70, 24);
+  FSeedEdit.SetBounds(Px(Self, 145), Px(Self, 7), Px(Self, 70), Px(Self, 24));
   FSeedEdit.OnChange := @SettingChanged;
 
   FReroll := TButton.Create(Self);
   FReroll.Parent := FTop;
   FReroll.Caption := 'Reroll';
-  FReroll.SetBounds(228, 6, 80, 26);
+  FReroll.SetBounds(Px(Self, 228), Px(Self, 6), Px(Self, 80), Px(Self, 26));
   FReroll.OnClick := @RerollClicked;
 
   FCopy := TButton.Create(Self);
   FCopy.Parent := FTop;
   FCopy.Caption := 'Copy';
-  FCopy.SetBounds(314, 6, 80, 26);
+  FCopy.SetBounds(Px(Self, 314), Px(Self, 6), Px(Self, 80), Px(Self, 26));
 
   FPartial := TLabel.Create(Self);
   FPartial.Parent := FTop;
@@ -254,7 +254,7 @@ begin
   FBottom.Align := alBottom;
   { Two grids and their headings need more than 170: at that height the definitions list had
     no room left at all. The splitter above takes it from here. }
-  FBottom.Height := 240;
+  FBottom.Height := Px(Self, 240);
   sheetDiag := FBottom.AddTabSheet;
   sheetDiag.Caption := 'Диагностика';
   sheetVars := FBottom.AddTabSheet;
@@ -302,7 +302,7 @@ begin
   FDiagSplit.Parent := Self;
   FDiagSplit.Top := 10000;        { above the tab strip: see the note on FStatus }
   FDiagSplit.Align := alBottom;
-  FDiagSplit.MinSize := 80;       { neither the panes nor the strip may be dragged to nothing }
+  FDiagSplit.MinSize := Px(Self, 80);       { neither the panes nor the strip may be dragged to nothing }
 
   FEditor := TSynEdit.Create(Self);
   FEditor.Parent := Self;
@@ -311,8 +311,9 @@ begin
     for nobody else's screen; the two panes are meant to be comparable, and the user moves
     the splitter from there. }
   FEditor.Width := (ClientWidth * 48) div 100;
-  FEditor.Font.Name := 'Consolas';
-  FEditor.Font.Size := 11;
+  { Fixed pitch, because a template is markup -- but only the FAMILY is ours. The size
+    stays the system's, so a desktop configured for larger text gets a larger editor. }
+  SpxApplyMonoFont(FEditor.Font);
   FEditor.Gutter.Visible := True;
   { The walkthrough from spintax.net: it opens on something that demonstrates the product
     -- macros, a conditional, plurals, permutations with config -- rather than a toy, and
@@ -934,7 +935,7 @@ begin
   right_ := FTop.ClientWidth - 12;
   FAsSource.SetBounds(right_ - 90, 9, 90, 20);
   FAsPage.SetBounds(right_ - 186, 9, 90, 20);
-  FPartial.Top := 11;
+  FPartial.Top := Px(Self, 11);
   FPartial.Left := FAsPage.Left - FPartial.Width - 12;
 end;
 
