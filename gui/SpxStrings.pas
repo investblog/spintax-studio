@@ -37,6 +37,9 @@ type
     sMenuFile, sMenuNew, sMenuOpen, sMenuSave, sMenuSaveAs, sMenuReloadSet, sMenuExit,
     sMenuEdit, sMenuFind, sMenuFindNext, sMenuFindPrev,
     sMenuView, sRailLeft, sRailRight,
+    { the group editor that slides out of the rail }
+    sRailFaceGroup, sTabGroup, sGroupNone, sGroupApply, sGroupRefused, sGroupMultiline,
+    sGroupChoice, sGroupConditional, sGroupPlural, sGroupPermutation,
     { one or two characters on a rail button until icons arrive (step 4) }
     sRailFaceDiag, sRailFaceVars, sRailFaceSet,
     sMenuWrapBraces, sMenuWrapBrackets, sMenuReroll, sMenuCopyResult, sMenuSelectAll,
@@ -113,6 +116,12 @@ const
       'File', 'New', 'Open…', 'Save', 'Save as…', 'Reload set', 'Exit',
       'Edit', 'Find…', 'Find next', 'Find previous',
       'View', 'Tools on the left', 'Tools on the right',
+      'G', 'Group under the caret',
+      'The caret is not inside a group.', 'Apply',
+      'Refused: the result would say something other than this list — a variant cannot ' +
+        'carry | } { or /#.',
+      'A variant here contains a line break, so this group is shown but not edited.',
+      'Choice', 'Conditional', 'Plural', 'Permutation',
       'D', 'V', 'S',
       'Wrap in {…}', 'Wrap in […]', 'Show another variant', 'Copy the result',
       'Select all',
@@ -163,6 +172,12 @@ const
       'Выход',
       'Правка', 'Найти…', 'Найти далее', 'Найти назад',
       'Вид', 'Инструменты слева', 'Инструменты справа',
+      'Г', 'Группа под курсором',
+      'Курсор не внутри группы.', 'Применить',
+      'Отказано: результат сказал бы не то, что в этом списке — вариант не может нести ' +
+        '| } { или /#.',
+      'В одном из вариантов перевод строки, поэтому группа показана, но не редактируется.',
+      'Выбор', 'Условие', 'Множественное число', 'Перестановка',
       'Д', 'П', 'В',
       'Обернуть в {…}', 'Обернуть в […]', 'Показать другой вариант', 'Копировать результат',
       'Выделить всё',
@@ -229,6 +244,10 @@ const
     0, 0, 0, 0,
     { the View menu, then the rail: a button's face is 36px, so two characters and no more }
     0, 0, 0,
+    { the group editor: a face, a name, and the panel's own sentences -- the panel is 300px
+      wide and its labels wrap, so only the kind names are held to a width }
+    2, 0, 0, 0, 0, 0,
+    20, 20, 20, 20,
     2, 2, 2,
     0, 0, 0, 0, 0,
 

@@ -18,7 +18,7 @@ uses
   Clipbrd, Graphics, LCLType,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxToolRail,
+  SpxToolRail, SpxGroupPane, SpxGroups,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrings;
 
@@ -48,6 +48,13 @@ type
       construction: the rail takes its edge, this takes what is left, and there is no
       ordering question to lose. }
     FBody: TPanel;
+    { One aligned control per level, always: FOuter holds the slide-out and the body, the
+      form holds the rail and FOuter. Two siblings aligned to the same edge are ordered by
+      LCL and not by us -- that cost an afternoon once already. }
+    FOuter: TPanel;
+    FSlide: TSpxGroupPane;
+    { The caret moves in bursts; the group under it is looked up once the burst stops. }
+    FCaretTimer: TTimer;
     FLeft: TPanel;
     { Search lives in the LEFT half of the top strip -- the half over the editor, because the
       template is what is searched. It used to be a row of its own above the editor, which
@@ -152,6 +159,14 @@ type
     procedure RailLeftClicked(Sender: TObject);
     procedure RailRightClicked(Sender: TObject);
     procedure BuildRail;
+    procedure RailGroupClicked(Sender: TObject);
+    procedure CaretSettled(Sender: TObject);
+    procedure EditorStatus(Sender: TObject; Changes: TSynStatusChanges);
+    procedure GroupApplied(BodyStart, Stop: Integer; const Body: string);
+    { The caret's byte offset into FEditor.Text, and the way back. The two must agree, which
+      is why both live here rather than being computed at their call sites. }
+    function CaretOffset: Integer;
+    function OffsetToPoint(AOffset: Integer): TPoint;
     procedure NewClicked(Sender: TObject);
     procedure OpenClicked(Sender: TObject);
     procedure SaveClicked(Sender: TObject);
@@ -252,8 +267,24 @@ begin
     rail opened between the editor and the preview whether it was created first, re-aligned,
     or moved to index 0 -- so the layout is arranged to have no such pair at all. }
   BuildRail;
+
+  FOuter := TPanel.Create(Self);
+  FOuter.Parent := Self;
+  FOuter.Align := alClient;
+  FOuter.BevelOuter := bvNone;
+
+  { The group editor, hidden until its tool is pressed. It PUSHES rather than covers: the
+    panel edits the template, and covering the text you are editing is the thing a dialog
+    does wrong. }
+  FSlide := TSpxGroupPane.Create(Self);
+  FSlide.Parent := FOuter;
+  FSlide.Align := alLeft;
+  FSlide.Width := Px(Self, SPX_SLIDE_W);
+  FSlide.Visible := False;
+  FSlide.OnApply := @GroupApplied;
+
   FBody := TPanel.Create(Self);
-  FBody.Parent := Self;
+  FBody.Parent := FOuter;
   FBody.Align := alClient;
   FBody.BevelOuter := bvNone;
 
@@ -489,6 +520,12 @@ begin
   FDebounce.Enabled := False;
   FDebounce.Interval := DEBOUNCE_MS;
   FDebounce.OnTimer := @DebounceFired;
+
+  FCaretTimer := TTimer.Create(Self);
+  FCaretTimer.Enabled := False;
+  FCaretTimer.Interval := 120;
+  FCaretTimer.OnTimer := @CaretSettled;
+  FEditor.OnStatusChange := @EditorStatus;
 
 end;
 
@@ -799,6 +836,83 @@ begin
   FRail.AddTool(Tr(sRailFaceDiag), Tr(sTabDiagnostics), @RailDiagClicked);
   FRail.AddTool(Tr(sRailFaceVars), Tr(sTabVariables), @RailVarsClicked);
   FRail.AddTool(Tr(sRailFaceSet), Tr(sTabVariants), @RailSetClicked);
+  { The one tool that is not access but WORKSPACE: a group's variants are a list, one short
+    line each, which is exactly what fits beside the editor. }
+  FRail.AddTool(Tr(sRailFaceGroup), Tr(sTabGroup), @RailGroupClicked);
+end;
+
+procedure TSpxMainForm.RailGroupClicked(Sender: TObject);
+begin
+  FSlide.Visible := not FSlide.Visible;
+  if FSlide.Visible then
+  begin
+    { It opens on whatever the caret is already in, rather than staying blank until the next
+      keypress. }
+    FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
+    FSlide.Retranslate;
+  end;
+end;
+
+{ The caret's position as a byte offset into FEditor.Text. LogicalCaretXY, not CaretXY: the
+  first is a byte column and the second is a PHYSICAL one, and a tab or a Cyrillic character
+  makes them differ -- the editor-core positions are bytes throughout. }
+function TSpxMainForm.CaretOffset: Integer;
+var i, n: Integer; p: TPoint;
+begin
+  p := FEditor.LogicalCaretXY;
+  Result := 1;
+  n := FEditor.Lines.Count;
+  for i := 0 to p.Y - 2 do
+  begin
+    if i >= n then Break;
+    Inc(Result, Length(FEditor.Lines[i]) + Length(LineEnding));
+  end;
+  Inc(Result, p.X - 1);
+end;
+
+function TSpxMainForm.OffsetToPoint(AOffset: Integer): TPoint;
+var i, at_, len: Integer;
+begin
+  at_ := 1;
+  for i := 0 to FEditor.Lines.Count - 1 do
+  begin
+    len := Length(FEditor.Lines[i]) + Length(LineEnding);
+    if AOffset < at_ + len then
+    begin
+      Result := Point(AOffset - at_ + 1, i + 1);
+      Exit;
+    end;
+    Inc(at_, len);
+  end;
+  Result := Point(1, FEditor.Lines.Count);
+end;
+
+procedure TSpxMainForm.EditorStatus(Sender: TObject; Changes: TSynStatusChanges);
+begin
+  if not FSlide.Visible then Exit;
+  if Changes * [scCaretX, scCaretY] = [] then Exit;
+  { Restarted on every move, so a run of arrow keys costs one lookup rather than twenty. }
+  FCaretTimer.Enabled := False;
+  FCaretTimer.Enabled := True;
+end;
+
+procedure TSpxMainForm.CaretSettled(Sender: TObject);
+begin
+  FCaretTimer.Enabled := False;
+  if FSlide.Visible then FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
+end;
+
+{ The panel asked for a span to be replaced. It goes through the EDITOR rather than through
+  the document text, so the change joins the undo history and the caret survives it. }
+procedure TSpxMainForm.GroupApplied(BodyStart, Stop: Integer; const Body: string);
+begin
+  FEditor.BeginUndoBlock;
+  try
+    FEditor.TextBetweenPoints[OffsetToPoint(BodyStart), OffsetToPoint(Stop)] := Body;
+  finally
+    FEditor.EndUndoBlock;
+  end;
+  FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
 end;
 
 procedure TSpxMainForm.RailDiagClicked(Sender: TObject);
@@ -1372,7 +1486,9 @@ begin
     FRail.SetTool(0, Tr(sRailFaceDiag), Tr(sTabDiagnostics));
     FRail.SetTool(1, Tr(sRailFaceVars), Tr(sTabVariables));
     FRail.SetTool(2, Tr(sRailFaceSet), Tr(sTabVariants));
+    FRail.SetTool(3, Tr(sRailFaceGroup), Tr(sTabGroup));
   end;
+  FSlide.Retranslate;
   { The rows carry their words from the worker, and their first two columns are written here
     -- so the level and the file name change language at once. The MESSAGE column does not:
     it was worded by the render that produced it, and it stays in the old language until the
