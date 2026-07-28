@@ -28,7 +28,7 @@ interface
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, ComCtrls, Grids, Spin, Dialogs,
   Graphics, FileUtil,
-  Spintax, SpxStudio, SpxDedupe, SpxExport, SpxEngineThread, SpxUi;
+  Spintax, SpxStudio, SpxDedupe, SpxExport, SpxEngineThread, SpxUi, SpxStrings;
 
 type
   { What the panel needs from the form to start a batch. The form owns the document, the
@@ -69,6 +69,10 @@ type
     FVariants: TSpxVariantList;
     FReport: TSpxBatchReport;
     FRunning: Boolean;
+    { Which sentence the progress line is showing. Without it a language switch cannot
+      rebuild that line, and 'останавливаю…' would sit in an English window until the batch
+      reported back. }
+    FStopping: Boolean;
     FStale: Boolean;
     FStalePending: Boolean;
     FOnGenerate: TSpxGenerateEvent;
@@ -87,11 +91,20 @@ type
     procedure AddRow(const V: TSpxVariant);
     procedure UpdateButtons;
     procedure SayProgress;
+    { The status line and its hint in one move. They must not drift apart: the hint exists
+      because the longest report outgrows the row even stretched, so a hint left over from an
+      earlier run is a tooltip that describes a set the user has already replaced. }
+    procedure SetStatus(const AText: string);
     procedure SayReport(ACancelled: Boolean);
     function Options: TSpxDedupeOpts;
     procedure FitGrid;
   protected
     procedure Resize; override;
+    { Hang each field's caption off the field itself. A label parked at a coordinate fits
+      exactly one language: 'shingle' is wider than 'шингл', 'Count' narrower than
+      'Сколько', and the first translation to disagree with the number overlaps the box it
+      names. Measured and placed instead, so any language lands right. }
+    procedure PlaceLabels;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -99,6 +112,8 @@ type
     procedure BatchProgress(const P: TSpxBatchProgress);
     { The document changed under a set that is already generated. }
     procedure MarkStale;
+    { Every caption re-read, after the interface language changes. }
+    procedure Retranslate;
     property OnGenerate: TSpxGenerateEvent read FOnGenerate write FOnGenerate;
     property OnCancelBatch: TNotifyEvent read FOnCancel write FOnCancel;
     property OnShowVariant: TSpxShowVariantEvent read FOnShowVariant write FOnShowVariant;
@@ -130,7 +145,7 @@ begin
   FCountLabel := TLabel.Create(Self);
   FCountLabel.Parent := FTop;
   FCountLabel.SetBounds(Px(Self, 8), Px(Self, 8), Px(Self, 60), Px(Self, 16));
-  FCountLabel.Caption := 'Сколько';
+  FCountLabel.Caption := Tr(sHowMany);
 
   FCount := TSpinEdit.Create(Self);
   FCount.Parent := FTop;
@@ -142,7 +157,7 @@ begin
   FSeedLabel := TLabel.Create(Self);
   FSeedLabel.Parent := FTop;
   FSeedLabel.SetBounds(Px(Self, 146), Px(Self, 8), Px(Self, 30), Px(Self, 16));
-  FSeedLabel.Caption := 'сид';
+  FSeedLabel.Caption := Tr(sSeedShort);
 
   FSeed := TSpinEdit.Create(Self);
   FSeed.Parent := FTop;
@@ -156,25 +171,29 @@ begin
   FRandomSeed := TCheckBox.Create(Self);
   FRandomSeed.Parent := FTop;
   FRandomSeed.SetBounds(Px(Self, 270), Px(Self, 6), Px(Self, 90), Px(Self, 20));
-  FRandomSeed.Caption := 'случайный';
+  FRandomSeed.Caption := Tr(sRandomSeed);
   FRandomSeed.OnChange := @RandomSeedToggled;
 
   FGo := TButton.Create(Self);
   FGo.Parent := FTop;
   FGo.SetBounds(Px(Self, 368), Px(Self, 4), Px(Self, 110), Px(Self, 24));
-  FGo.Caption := 'Сгенерировать';
+  FGo.Caption := Tr(sGenerate);
   FGo.OnClick := @GoClicked;
 
   FStop := TButton.Create(Self);
   FStop.Parent := FTop;
   FStop.SetBounds(Px(Self, 484), Px(Self, 4), Px(Self, 80), Px(Self, 24));
-  FStop.Caption := 'Стоп';
+  FStop.Caption := Tr(sStop);
   FStop.Enabled := False;
   FStop.OnClick := @StopClicked;
 
   FProgress := TLabel.Create(Self);
   FProgress.Parent := FTop;
   FProgress.SetBounds(Px(Self, 576), Px(Self, 8), Px(Self, 400), Px(Self, 16));
+  { Same reason as the status line below: Resize owns its width, so it must not also size
+    itself to its caption -- LCL raises ELayoutException when the two pull against each
+    other. }
+  FProgress.AutoSize := False;
   FProgress.Caption := '';
 
   { ── how close is too close ── }
@@ -194,16 +213,16 @@ begin
   FMode.Parent := FOpts;
   FMode.Style := csDropDownList;
   FMode.SetBounds(Px(Self, 8), Px(Self, 3), Px(Self, 210), Px(Self, 24));
-  FMode.Items.Add('Убирать похожие');
-  FMode.Items.Add('Только точные совпадения');
-  FMode.Items.Add('Ничего не убирать');
+  FMode.Items.Add(Tr(sDropSimilar));
+  FMode.Items.Add(Tr(sExactOnly));
+  FMode.Items.Add(Tr(sKeepAll));
   FMode.ItemIndex := 0;
   FMode.OnChange := @DedupeToggled;
 
   FShingleLabel := TLabel.Create(Self);
   FShingleLabel.Parent := FOpts;
   FShingleLabel.SetBounds(Px(Self, 230), Px(Self, 7), Px(Self, 50), Px(Self, 16));
-  FShingleLabel.Caption := 'шингл';
+  FShingleLabel.Caption := Tr(sShingle);
 
   FShingle := TSpinEdit.Create(Self);
   FShingle.Parent := FOpts;
@@ -215,7 +234,7 @@ begin
   FThresholdLabel := TLabel.Create(Self);
   FThresholdLabel.Parent := FOpts;
   FThresholdLabel.SetBounds(Px(Self, 342), Px(Self, 7), Px(Self, 60), Px(Self, 16));
-  FThresholdLabel.Caption := 'порог';
+  FThresholdLabel.Caption := Tr(sThreshold);
 
   { A slider rather than a number field: the value is a judgement about how similar is too
     similar, and it is nudged rather than typed. }
@@ -242,10 +261,10 @@ begin
   FGrid.FixedRows := 1;
   FGrid.FixedCols := 0;
   FGrid.ColCount := 4;
-  FGrid.Cells[COL_NO, 0] := '#';
-  FGrid.Cells[COL_SEED, 0] := 'сид';
-  FGrid.Cells[COL_LEN, 0] := 'длина';
-  FGrid.Cells[COL_TEXT, 0] := 'текст';
+  FGrid.Cells[COL_NO, 0] := Tr(sColNo);
+  FGrid.Cells[COL_SEED, 0] := Tr(sColSeed);
+  FGrid.Cells[COL_LEN, 0] := Tr(sColLength);
+  FGrid.Cells[COL_TEXT, 0] := Tr(sColText);
   FGrid.ColWidths[COL_NO] := Px(Self, 50);
   FGrid.ColWidths[COL_SEED] := Px(Self, 90);
   FGrid.ColWidths[COL_LEN] := Px(Self, 70);
@@ -264,35 +283,87 @@ begin
   FToXlsx := TButton.Create(Self);
   FToXlsx.Parent := FBottom;
   FToXlsx.SetBounds(Px(Self, 8), Px(Self, 5), Px(Self, 110), Px(Self, 24));
-  FToXlsx.Caption := 'В .xlsx';
+  FToXlsx.Caption := Tr(sToXlsx);
   FToXlsx.OnClick := @ExportXlsx;
 
   FToTxt := TButton.Create(Self);
   FToTxt.Parent := FBottom;
   FToTxt.SetBounds(Px(Self, 124), Px(Self, 5), Px(Self, 110), Px(Self, 24));
-  FToTxt.Caption := 'В .txt';
+  FToTxt.Caption := Tr(sToTxt);
   FToTxt.OnClick := @ExportTxt;
 
   FToFiles := TButton.Create(Self);
   FToFiles.Parent := FBottom;
   FToFiles.SetBounds(Px(Self, 240), Px(Self, 5), Px(Self, 150), Px(Self, 24));
-  FToFiles.Caption := 'По файлу на текст';
+  FToFiles.Caption := Tr(sToFiles);
   FToFiles.OnClick := @ExportFiles;
 
   FWithSeed := TCheckBox.Create(Self);
   FWithSeed.Parent := FBottom;
   FWithSeed.SetBounds(Px(Self, 400), Px(Self, 7), Px(Self, 140), Px(Self, 20));
-  FWithSeed.Caption := 'сид в .txt';
+  FWithSeed.Caption := Tr(sSeedInTxt);
 
   FStatus := TLabel.Create(Self);
   FStatus.Parent := FBottom;
   FStatus.SetBounds(Px(Self, 552), Px(Self, 9), Px(Self, 500), Px(Self, 16));
-  FStatus.Caption := 'ничего не сгенерировано';
+  { Sized by the row, not by the text: Resize gives it the rest of the row, and a label that
+    also sizes itself to its caption fights that -- LCL detects the two pulling against each
+    other and raises ELayoutException on the next resize. }
+  FStatus.AutoSize := False;
+  SetStatus(Tr(sNothingGenerated));
 
   ThresholdChanged(nil);
   DedupeToggled(nil);
   RandomSeedToggled(nil);
   UpdateButtons;
+end;
+
+procedure TSpxVariantsPane.Retranslate;
+var idx: Integer;
+begin
+  FCountLabel.Caption := Tr(sHowMany);
+  FSeedLabel.Caption := Tr(sSeedShort);
+  FRandomSeed.Caption := Tr(sRandomSeed);
+  FGo.Caption := Tr(sGenerate);
+  FStop.Caption := Tr(sStop);
+  { The chosen mode survives the rename: it is an index, and the list is rebuilt in the same
+    order. }
+  idx := FMode.ItemIndex;
+  FMode.Items.Clear;
+  FMode.Items.Add(Tr(sDropSimilar));
+  FMode.Items.Add(Tr(sExactOnly));
+  FMode.Items.Add(Tr(sKeepAll));
+  FMode.ItemIndex := idx;
+  FShingleLabel.Caption := Tr(sShingle);
+  FThresholdLabel.Caption := Tr(sThreshold);
+  { The captions just changed width; where they sit follows from that. }
+  PlaceLabels;
+  FGrid.Cells[COL_NO, 0] := Tr(sColNo);
+  FGrid.Cells[COL_SEED, 0] := Tr(sColSeed);
+  FGrid.Cells[COL_LEN, 0] := Tr(sColLength);
+  FGrid.Cells[COL_TEXT, 0] := Tr(sColText);
+  FToXlsx.Caption := Tr(sToXlsx);
+  FToTxt.Caption := Tr(sToTxt);
+  FToFiles.Caption := Tr(sToFiles);
+  FWithSeed.Caption := Tr(sSeedInTxt);
+  { The progress line is one of three sentences, and which one is state rather than text --
+    hence FStopping. Without this the line stays in the previous language: during a run the
+    next variant repaints it, but after Stop nothing does until the batch reports back. }
+  if FRunning then
+  begin
+    if FStopping then FProgress.Caption := Tr(sStopping)
+    else if FReport.Tried > 0 then SayProgress
+    else FProgress.Caption := Tr(sWorking);
+  end;
+
+  { Only the idle line is rewritten. A run in flight says 'working…' with a count behind it,
+    and translating the panel is no reason to tell the user nothing has been generated while
+    variants are landing in the grid.
+
+    A FINISHED run's report keeps the language it was written in, and that is a real gap
+    rather than a decision: re-running SayReport would need the cancelled flag, which the
+    pane does not keep. It costs one stale line until the next run. }
+  if (FVariants.Count = 0) and (not FRunning) then SetStatus(Tr(sNothingGenerated));
 end;
 
 destructor TSpxVariantsPane.Destroy;
@@ -377,16 +448,18 @@ begin
   FGrid.RowCount := 1;
   FStale := False;
   FRunning := True;
+  FStopping := False;
   UpdateButtons;
-  FProgress.Caption := 'идёт…';
-  FStatus.Caption := '';
+  FProgress.Caption := Tr(sWorking);
+  SetStatus('');
   FOnGenerate(FCount.Value, seed, Options);
 end;
 
 procedure TSpxVariantsPane.StopClicked(Sender: TObject);
 begin
   if not FRunning then Exit;
-  FProgress.Caption := 'останавливаю…';
+  FStopping := True;
+  FProgress.Caption := Tr(sStopping);
   if Assigned(FOnCancel) then FOnCancel(Self);
 end;
 
@@ -408,26 +481,32 @@ begin
   FGrid.Cells[COL_TEXT, r] := line;
 end;
 
+procedure TSpxVariantsPane.SetStatus(const AText: string);
+begin
+  FStatus.Caption := AText;
+  FStatus.Hint := AText;
+  FStatus.ShowHint := AText <> '';
+end;
+
 procedure TSpxVariantsPane.SayProgress;
 begin
-  FProgress.Caption := Format('%d из %d, отброшено %d, рендеров %d',
+  FProgress.Caption := Format(Tr(sProgress),
     [FReport.Generated, FReport.Requested, FReport.Dropped, FReport.Tried]);
 end;
 
 procedure TSpxVariantsPane.SayReport(ACancelled: Boolean);
 begin
   if ACancelled then
-    FStatus.Caption := Format('остановлено: %d вариантов, отброшено %d, рендеров %d',
-      [FReport.Generated, FReport.Dropped, FReport.Tried])
+    SetStatus(Format(Tr(sReportStopped),
+      [FReport.Generated, FReport.Dropped, FReport.Tried]))
   else if FReport.Exhausted then
     { The sentence that matters: a short set is the template's variety talking, not a
       failure of the run. }
-    FStatus.Caption := Format(
-      'получилось %d из %d — шаблон не даёт больше при этом пороге (отброшено %d, рендеров %d)',
-      [FReport.Generated, FReport.Requested, FReport.Dropped, FReport.Tried])
+    SetStatus(Format(Tr(sReportExhausted),
+      [FReport.Generated, FReport.Requested, FReport.Dropped, FReport.Tried]))
   else
-    FStatus.Caption := Format('%d вариантов, отброшено %d, рендеров %d, следующий сид %d',
-      [FReport.Generated, FReport.Dropped, FReport.Tried, FReport.NextSeed]);
+    SetStatus(Format(Tr(sReportDone),
+      [FReport.Generated, FReport.Dropped, FReport.Tried, FReport.NextSeed]));
 end;
 
 procedure TSpxVariantsPane.BatchProgress(const P: TSpxBatchProgress);
@@ -469,7 +548,9 @@ begin
   FStale := True;
   { Said, not acted on: the set is still the author's, and its seeds still name the texts
     that produced it. }
-  FStatus.Caption := 'документ изменился — набор от прежнего текста; ' + FStatus.Caption;
+  { Warning plus report is the longest line this pane can produce, and the only one that
+    outgrows the row even stretched -- SetStatus keeps the whole of it in the hint. }
+  SetStatus(Tr(sStaleSet) + FStatus.Caption);
 end;
 
 procedure TSpxVariantsPane.RowClicked(Sender: TObject);
@@ -486,16 +567,17 @@ begin
   if FVariants.Count = 0 then Exit;
   dlg := TSaveDialog.Create(Self);
   try
-    dlg.Title := 'Экспорт в .xlsx';
-    dlg.Filter := 'Книга Excel|*.xlsx';
+    dlg.Title := Tr(sExportXlsx);
+    dlg.Filter := Tr(sExcelFilter);
     dlg.DefaultExt := 'xlsx';
     dlg.Options := dlg.Options + [ofOverwritePrompt];
     if not dlg.Execute then Exit;
-    if SpxWriteXlsx(dlg.FileName, 'Варианты', FVariants, rep) then
-      FStatus.Caption := Format('записано %d строк в %s',
-        [rep.Written, ExtractFileName(dlg.FileName)])
+    if SpxWriteXlsx(dlg.FileName, Tr(sSheetName), Tr(sColSheetSeed), Tr(sColSheetText),
+                    FVariants, rep) then
+      SetStatus(Format(Tr(sWroteRows),
+        [rep.Written, ExtractFileName(dlg.FileName)]))
     else
-      FStatus.Caption := 'не удалось записать файл';
+      SetStatus(Tr(sWriteFailed));
   finally
     dlg.Free;
   end;
@@ -507,24 +589,23 @@ begin
   if FVariants.Count = 0 then Exit;
   dlg := TSaveDialog.Create(Self);
   try
-    dlg.Title := 'Экспорт в .txt';
-    dlg.Filter := 'Текст|*.txt';
+    dlg.Title := Tr(sExportTxt);
+    dlg.Filter := Tr(sTextFilter);
     dlg.DefaultExt := 'txt';
     dlg.Options := dlg.Options + [ofOverwritePrompt];
     if not dlg.Execute then Exit;
     opts := SpxDefaultTxtOpts;
     opts.WithSeed := FWithSeed.Checked;
     if not SpxWriteTxt(dlg.FileName, FVariants, opts, rep) then
-      FStatus.Caption := 'не удалось записать файл'
+      SetStatus(Tr(sWriteFailed))
     else if rep.Collapsed > 0 then
       { The one lossy thing any of these writers does, so it is said every time it happens
         rather than left for the author to notice in the file. }
-      FStatus.Caption := Format(
-        'записано %d строк; у %d вариантов переводы строк заменены пробелами — ' +
-        'для дословности берите .xlsx или «по файлу»', [rep.Written, rep.Collapsed])
+      SetStatus(Format(Tr(sWroteRowsCollapsed),
+        [rep.Written, rep.Collapsed]))
     else
-      FStatus.Caption := Format('записано %d строк в %s',
-        [rep.Written, ExtractFileName(dlg.FileName)]);
+      SetStatus(Format(Tr(sWroteRows),
+        [rep.Written, ExtractFileName(dlg.FileName)]));
   finally
     dlg.Free;
   end;
@@ -535,11 +616,11 @@ var dir: string; rep: TSpxExportReport;
 begin
   if FVariants.Count = 0 then Exit;
   dir := '';
-  if not SelectDirectory('Куда положить файлы', '', dir) then Exit;
+  if not SelectDirectory(Tr(sChooseFolder), '', dir) then Exit;
   if SpxWritePerFile(dir, 'v-', '.html', FVariants, rep) then
-    FStatus.Caption := Format('записано %d файлов в %s', [rep.Written, dir])
+    SetStatus(Format(Tr(sWroteFiles), [rep.Written, dir]))
   else
-    FStatus.Caption := Format('записано %d файлов, дальше не удалось', [rep.Written]);
+    SetStatus(Format(Tr(sWroteFilesPartial), [rep.Written]));
 end;
 
 { The text column takes whatever the fixed ones leave -- the same rule the variables panel
@@ -555,10 +636,68 @@ begin
     FGrid.ColWidths[COL_TEXT] := Px(Self, 200);
 end;
 
+procedure TSpxVariantsPane.PlaceLabels;
+var
+  ruler: TBitmap;
+
+  { The label's own size, measured rather than requested. Two roads not taken, both by
+    measurement: `AutoSize := True` is a no-op (TLabel is born with it) and leaves Width at
+    whatever the previous caption needed, so labels landed a language behind -- 'limit' at
+    x=322 under a spin box spanning 276..332; and `AdjustSize` re-enters the parent's layout,
+    which from Resize is `ELayoutException: TControl.AdjustSize loop detected` at startup.
+    An off-screen bitmap has no layout to disturb and needs no window handle. }
+  procedure Fit(ALabel: TLabel);
+  begin
+    ALabel.AutoSize := False;
+    ruler.Canvas.Font.Assign(ALabel.Font);
+    ALabel.Width := ruler.Canvas.TextWidth(ALabel.Caption);
+  end;
+
+  procedure Hang(ALabel: TLabel; ACtl: TControl);
+  begin
+    Fit(ALabel);
+    ALabel.Left := ACtl.Left - ALabel.Width - Px(Self, 6);
+  end;
+
+begin
+  ruler := TBitmap.Create;
+  try
+    { The first label stays flush with the panel's left edge -- there is nothing to its left
+      to push against, and a gap there would read as a missing control. Its budget is what
+      keeps it out of the spin box. }
+    Fit(FCountLabel);
+    Hang(FSeedLabel, FSeed);
+    Hang(FShingleLabel, FShingle);
+    Hang(FThresholdLabel, FThreshold);
+  finally
+    ruler.Free;
+  end;
+end;
+
 procedure TSpxVariantsPane.Resize;
+var w: Integer;
 begin
   inherited Resize;
   if FGrid <> nil then FitGrid;
+  { Here rather than in the constructor: a control measures its caption only once it has a
+    parent, and in the constructor the pane itself has none. }
+  if FThresholdLabel <> nil then PlaceLabels;
+  { Both lines are sentences with four numbers in them, and in Russian each is half again as
+    long as the box it was given. They take the rest of their row instead. }
+  if (FProgress <> nil) and (FTop <> nil) then
+  begin
+    w := FTop.ClientWidth - FProgress.Left - Px(Self, 8);
+    if w < Px(Self, 40) then w := Px(Self, 40);
+    FProgress.Width := w;
+  end;
+  if (FStatus <> nil) and (FBottom <> nil) then
+  begin
+    w := FBottom.ClientWidth - FStatus.Left - Px(Self, 8);
+    { A pane narrower than the export row leaves nothing for the status; it keeps a sliver
+      rather than a negative width, which no widgetset owes us an answer for. }
+    if w < Px(Self, 40) then w := Px(Self, 40);
+    FStatus.Width := w;
+  end;
 end;
 
 end.

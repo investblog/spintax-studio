@@ -24,7 +24,7 @@ unit SpxVarsPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, SpxStudio, SpxUi;
+  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, SpxStudio, SpxUi, SpxStrings;
 
 type
   TSpxJumpEvent = procedure(Line, Column: Integer) of object;
@@ -56,6 +56,8 @@ type
       arrives on every keystroke, and a grid that forgot the session on each of them would
       be unusable. }
     procedure SetModel(const AVars: TSpxVarInfos);
+    { Every caption re-read, after the interface language changes. }
+    procedure Retranslate;
     { What the next job should carry. Only names the document actually references are sent:
       a value left over from a variable the user has since defined is not a runtime value
       any more. }
@@ -80,7 +82,7 @@ begin
   FDefsLabel := TLabel.Create(Self);
   FDefsLabel.Parent := Self;
   FDefsLabel.Align := alTop;
-  FDefsLabel.Caption := ' Определения — живут в документе';
+  FDefsLabel.Caption := Tr(sVarsDefinitions);
 
   FDefs := TStringGrid.Create(Self);
   FDefs.Parent := Self;
@@ -88,9 +90,9 @@ begin
   FDefs.RowCount := 1;
   FDefs.FixedRows := 1;
   FDefs.ColCount := 3;
-  FDefs.Cells[0, 0] := 'Вид';
-  FDefs.Cells[1, 0] := 'Имя';
-  FDefs.Cells[2, 0] := 'Значение';
+  FDefs.Cells[0, 0] := Tr(sColKind);
+  FDefs.Cells[1, 0] := Tr(sColName);
+  FDefs.Cells[2, 0] := Tr(sColValue);
   FDefs.ColWidths[0] := Px(Self, 60);
   FDefs.ColWidths[1] := Px(Self, 140);
   FDefs.ColWidths[2] := Px(Self, 600);
@@ -126,8 +128,8 @@ begin
   FRuntime.RowCount := 1;
   FRuntime.FixedRows := 1;
   FRuntime.ColCount := 2;
-  FRuntime.Cells[0, 0] := 'Имя';
-  FRuntime.Cells[1, 0] := 'Значение';
+  FRuntime.Cells[0, 0] := Tr(sColName);
+  FRuntime.Cells[1, 0] := Tr(sColValue);
   FRuntime.ColWidths[0] := Px(Self, 140);
   FRuntime.ColWidths[1] := Px(Self, 660);
   { Column 0 stays FIXED here, and that is load-bearing: it is what keeps the name column
@@ -139,7 +141,18 @@ begin
   FRuntimeLabel := TLabel.Create(Self);
   FRuntimeLabel.Parent := FRuntimeBox;
   FRuntimeLabel.Align := alTop;
-  FRuntimeLabel.Caption := ' Значения на сессию — в документ не пишутся';
+  FRuntimeLabel.Caption := Tr(sVarsSession);
+end;
+
+procedure TSpxVarsPane.Retranslate;
+begin
+  FDefsLabel.Caption := Tr(sVarsDefinitions);
+  FRuntimeLabel.Caption := Tr(sVarsSession);
+  FDefs.Cells[0, 0] := Tr(sColKind);
+  FDefs.Cells[1, 0] := Tr(sColName);
+  FDefs.Cells[2, 0] := Tr(sColValue);
+  FRuntime.Cells[0, 0] := Tr(sColName);
+  FRuntime.Cells[1, 0] := Tr(sColValue);
 end;
 
 destructor TSpxVarsPane.Destroy;
