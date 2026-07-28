@@ -32,8 +32,8 @@ uses
     the check that opens what it wrote. }
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
-  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan, SpxFiles,
-  SpxEngineThread, SpxStrings;
+  Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
+  SpxFiles, SpxEngineThread, SpxStrings;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -42,6 +42,7 @@ uses
   SpxDedupe in '..\src\SpxDedupe.pas',
   SpxExport in '..\src\SpxExport.pas',
   SpxHtmlScan in '..\src\SpxHtmlScan.pas',
+  SpxGroups in '..\src\SpxGroups.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxStrings in '..\gui\SpxStrings.pas';
@@ -2579,6 +2580,165 @@ begin
   end;
 end;
 
+{ The group under the caret, as text: kind, head and variants separated by a bar that cannot
+  be confused with the language's own. }
+function GroupSig(const Text: string; Offset: Integer): string;
+const KINDS: array[TSpxGroupKind] of string = ('choice', 'cond', 'plural', 'perm');
+var g: TSpxGroup; i: Integer;
+begin
+  if not SpxGroupAt(Text, Offset, g) then Exit('none');
+  Result := Format('%s %d..%d [%s]', [KINDS[g.Kind], g.Start, g.Stop, g.Head]);
+  for i := 0 to High(g.Variants) do Result := Result + ' <' + g.Variants[i] + '>';
+end;
+
+{ The document with the group at Offset rewritten with its own variants. Must equal the
+  document it started from -- see the checks that use it. }
+function RoundTrip(const Text: string; Offset: Integer): string;
+var g: TSpxGroup;
+begin
+  if not SpxGroupAt(Text, Offset, g) then Exit('no group');
+  Result := SpxSetGroupVariants(Text, g, g.Variants);
+end;
+
+procedure TestGroups;
+var g: TSpxGroup;
+begin
+  { The everyday one, and every position that counts as being in it: inside, on the opening
+    bracket, on the closing one. }
+  Check('groups/plain-choice', GroupSig('{a|b}', 2), 'choice 1..5 [] <a> <b>');
+  Check('groups/caret-on-the-opener', GroupSig('{a|b}', 1), 'choice 1..5 [] <a> <b>');
+  Check('groups/caret-on-the-closer', GroupSig('{a|b}', 5), 'choice 1..5 [] <a> <b>');
+  Check('groups/caret-outside', GroupSig('x {a|b} y', 1), 'none');
+  Check('groups/no-group-at-all', GroupSig('just prose', 3), 'none');
+
+  { Nesting. The caret decides which group is offered, and a nested one stays VERBATIM inside
+    its variant -- rewriting the outer group must not flatten the inner. }
+  Check('groups/outer-of-a-nest',
+        GroupSig('{a|{b|c}|d}', 2), 'choice 1..11 [] <a> <{b|c}> <d>');
+  Check('groups/inner-of-a-nest',
+        GroupSig('{a|{b|c}|d}', 5), 'choice 4..8 [] <b> <c>');
+
+  { The three heads. Each is kept whole and none of them is a variant. }
+  Check('groups/conditional',
+        GroupSig('{?flag?yes|no}', 9), 'cond 1..14 [?flag?] <yes> <no>');
+  { The plural head carries the count and the colon; the forms after it are the variants, and
+    the locale decides how many there should be (the engine's plural.arity says when there
+    are not). }
+  Check('groups/plural', GroupSig('{plural %n%: one|few|many}', 16),
+        'plural 1..26 [plural %n%:] < one> <few> <many>');
+  Check('groups/permutation', GroupSig('[a|b|c]', 3), 'perm 1..7 [] <a> <b> <c>');
+  Check('groups/permutation-with-config',
+        GroupSig('[<minsize=2>a|b]', 14), 'perm 1..16 [<minsize=2>] <a> <b>');
+
+  { Brackets the validator has already refused are not editable groups. }
+  Check('groups/mismatched-kinds', GroupSig('{a]', 2), 'none');
+  Check('groups/unclosed', GroupSig('{a|b', 2), 'none');
+  { A comment is not code -- the scanner says so, and this asks the scanner. }
+  Check('groups/inside-a-comment', GroupSig('x /# {a|b} #/ y', 8), 'none');
+
+  { A group that spans lines keeps the line ending inside the variant it belongs to. }
+  Check('groups/across-a-line', GroupSig('{a|'#10'b}', 2), 'choice 1..6 [] <a> <'#10'b>');
+  { An empty group is one empty variant, not none -- a brace closed immediately is legal and
+    renders nothing. }
+  Check('groups/empty-group', GroupSig('{}', 1), 'choice 1..2 [] <>');
+
+  { Bytes, not code points: the offsets are what SynEdit hands over. }
+  { Six Cyrillic letters are twelve bytes, so the closing brace is at 23 and not at 13. }
+  Check('groups/cyrillic', GroupSig('{привет|пока}', 4),
+        'choice 1..23 [] <привет> <пока>');
+
+  { ── writing it back ── }
+
+  CheckTrue('groups/found-for-writing', SpxGroupAt('x {a|b} y', 4, g));
+  Check('groups/write-replaces-the-variants',
+        SpxSetGroupVariants('x {a|b} y', g, ['one', 'two', 'three']), 'x {one|two|three} y');
+  Check('groups/write-one-variant',
+        SpxSetGroupVariants('x {a|b} y', g, ['only']), 'x {only} y');
+  Check('groups/write-none-leaves-an-empty-group',
+        SpxSetGroupVariants('x {a|b} y', g, []), 'x {} y');
+
+  CheckTrue('groups/found-a-conditional', SpxGroupAt('{?flag?yes|no}', 9, g));
+  Check('groups/write-keeps-the-head',
+        SpxSetGroupVariants('{?flag?yes|no}', g, ['да', 'нет']), '{?flag?да|нет}');
+
+  CheckTrue('groups/found-a-permutation', SpxGroupAt('[<minsize=2>a|b]', 14, g));
+  Check('groups/write-keeps-the-config',
+        SpxSetGroupVariants('[<minsize=2>a|b]', g, ['x', 'y']), '[<minsize=2>x|y]');
+
+  { A nested group survives being written back as part of its variant. }
+  CheckTrue('groups/found-an-outer', SpxGroupAt('{a|{b|c}|d}', 2, g));
+  Check('groups/write-keeps-a-nested-group',
+        SpxSetGroupVariants('{a|{b|c}|d}', g, g.Variants), '{a|{b|c}|d}');
+
+  { ── the invariant, rather than another hand-written expectation ──
+
+    Writing a group's OWN variants back must reproduce the document byte for byte. It is the
+    one check that gates the whole class the body-start belongs to: a head that is read from
+    one position and written at another passes every hand-written case that reads and writes
+    consistently, and fails this. }
+  Check('groups/roundtrip-choice', RoundTrip('x {a|b} y', 4), 'x {a|b} y');
+  Check('groups/roundtrip-conditional', RoundTrip('{?flag?yes|no}', 9), '{?flag?yes|no}');
+  Check('groups/roundtrip-plural', RoundTrip('{plural %n%: one|few}', 16),
+        '{plural %n%: one|few}');
+  Check('groups/roundtrip-permutation', RoundTrip('[a|b|c]', 3), '[a|b|c]');
+  Check('groups/roundtrip-config', RoundTrip('[<minsize=2>a|b]', 14), '[<minsize=2>a|b]');
+  { The config with a blank before it: the scanner skips that blank on purpose, and reading
+    the head at a fixed offset used to miss it and DELETE the config on write. }
+  Check('groups/roundtrip-config-after-a-blank', RoundTrip('[ <minsize=2>a|b]', 15),
+        '[ <minsize=2>a|b]');
+  Check('groups/roundtrip-nested', RoundTrip('{a|{b|c}|d}', 2), '{a|{b|c}|d}');
+  Check('groups/roundtrip-across-lines', RoundTrip('{a|'#13#10'b}', 2), '{a|'#13#10'b}');
+  Check('groups/roundtrip-cyrillic', RoundTrip('{привет|пока}', 4), '{привет|пока}');
+  Check('groups/roundtrip-empty', RoundTrip('{}', 1), '{}');
+
+  { ── what the review found, pinned ── }
+
+  (* A closer of the WRONG kind pops its opener, as the engine does -- and the pair that
+     closes afterwards is NOT a group. Measured on the engine: `{x|{a]b}|y}` renders as
+     literal text and reports bracket.mismatched AND bracket.unexpected-closing. Offering an
+     edit there rewrote the span 1..8 and left the rest of the line stranded behind it. *)
+  Check('groups/mismatch-inside-a-pair', GroupSig('{x|{a]b}|y}', 2), 'none');
+  Check('groups/mismatch-the-other-way-round', GroupSig('{x|[a}b]|y}', 2), 'none');
+
+  { The head is read where the SCANNER puts it, blanks and all. }
+  Check('groups/config-after-a-blank', GroupSig('[ <minsize=2>a|b]', 15),
+        'perm 1..17 [<minsize=2>] <a> <b>');
+
+  (* A span read in isolation is truncated at the closing bracket, and the scanner's html-ish
+     lookahead reads to the end of the LINE -- so an isolated scan called `<li>` a permutation
+    config where the document scan calls it prose. Replaying over the document's own lines is
+    what keeps the panel and the colours in agreement. *)
+  Check('groups/html-looking-text-after-the-group', GroupSig('[<li>a|b]</li>', 6),
+        'perm 1..9 [] <<li>a> <b>');
+
+  (* A comment INSIDE a group hides a brace from the scanner, so the group ends where the
+     scanner says and not at the first `}` a naive reader would find. *)
+  Check('groups/comment-inside-a-group', GroupSig('{a /# } #/ |b}', 2),
+        'choice 1..14 [] <a /# } #/ > <b>');
+  (* The braces in an #include target are inside a string token, so they open nothing. *)
+  Check('groups/braces-in-an-include-target',
+        GroupSig('#include "{a|b}"', 13), 'none');
+  { A permutation element's trailing separator is part of the element, verbatim. }
+  Check('groups/trailing-separator', GroupSig('[a<br>|b]', 3),
+        'perm 1..9 [] <a<br>> <b>');
+
+  { Line endings: all three of the editor's, since each has its own branch. }
+  Check('groups/across-a-crlf', GroupSig('{a|'#13#10'b}', 2), 'choice 1..7 [] <a> <'#13#10'b>');
+  Check('groups/across-a-lone-cr', GroupSig('{a|'#13'b}', 2), 'choice 1..6 [] <a> <'#13'b>');
+
+  { Offsets no caret can produce, because a panel will produce them anyway. }
+  Check('groups/offset-zero', GroupSig('{a|b}', 0), 'none');
+  Check('groups/offset-negative', GroupSig('{a|b}', -5), 'none');
+  Check('groups/offset-past-the-end', GroupSig('{a|b}', 99), 'none');
+  Check('groups/empty-text', GroupSig('', 1), 'none');
+
+  { THE CONTRACT the header argues for: there is no escape for `|` in this language, so a
+    variant containing one becomes two variants. Gated so that it changes on purpose. }
+  CheckTrue('groups/found-for-the-pipe-contract', SpxGroupAt('{a|b}', 2, g));
+  Check('groups/a-pipe-in-a-variant-becomes-two',
+        SpxSetGroupVariants('{a|b}', g, ['x|y']), '{x|y}');
+end;
+
 procedure TestHtmlScan;
 begin
   { Where SynEdit's HTML highlighter is wrong about the output. It opens a tag at EVERY `<`,
@@ -4191,6 +4351,7 @@ begin
   TestStrings;
   TestLongestLine;
   TestHtmlScan;
+  TestGroups;
   TestFind;
   TestPageDocument;
   TestDirectiveEditing;
