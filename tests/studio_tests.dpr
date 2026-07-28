@@ -2600,6 +2600,99 @@ begin
   Result := SpxSetGroupVariants(Text, g, g.Variants);
 end;
 
+(* THE HELP IS A FIXTURE. Every example in docs/help that carries an arrow is a CLAIM about
+   what the engine does, and a claim in this project is checked. The suite reads the document
+   itself rather than a copy of it, so a sentence edited in the help and nowhere else fails
+   the build instead of quietly becoming untrue.
+
+   Only single-line examples are read automatically -- the arrow says where the document ends
+   and the expected output begins. The few multi-line ones are gated by hand below, and the
+   count assertion at the end is what stops examples from silently disappearing. *)
+procedure TestHelpExamples;
+const
+  ARROW = #$E2#$86#$92;      { → }
+  ELLIPSIS = #$E2#$80#$A6;   { … marks an output too long to print in full }
+  RETURN_ = #$E2#$8F#$8E;    { ⏎ stands for a line break in an expected output }
+  DOC = 'docs/help/ru/diagnostics.md';
+var
+  line, want, doc_, got: string;
+  lines: TStringList;
+  set_: TSpxTemplateSet;
+  ctx: TSpxContext;
+  i, p, checked: Integer;
+  inFence, skip: Boolean;
+begin
+  if not FileExists(DOC) then
+  begin
+    CheckTrue('help/the document is where the suite expects it', False);
+    Exit;
+  end;
+  set_ := TSpxTemplateSet.Create;
+  lines := TStringList.Create;
+  try
+    { the same set the examples talk about }
+    set_.AddOrSetValue('frag', 'фрагмент');
+    set_.AddOrSetValue('loop', '#include "loop"');
+    set_.AddOrSetValue('Intro', 'вступление');
+    ctx := SpxSeededContext('ru', nil, 7, set_);
+
+    lines.Text := SpxReadTextFile(DOC);
+    checked := 0;
+    inFence := False;
+    doc_ := '';
+    skip := False;
+    for i := 0 to lines.Count - 1 do
+    begin
+      line := lines[i];
+      if Copy(Trim(line), 1, 3) = '```' then
+      begin
+        inFence := not inFence;
+        doc_ := '';
+        skip := False;
+        Continue;
+      end;
+      if not inFence then Continue;
+      { a blank line separates one example from the next }
+      if Trim(line) = '' then
+      begin
+        doc_ := '';
+        skip := False;
+        Continue;
+      end;
+      p := Pos(ARROW, line);
+      if p = 0 then
+      begin
+        { another line of the same document }
+        if doc_ <> '' then doc_ := doc_ + #10;
+        doc_ := doc_ + TrimRight(line);
+        Continue;
+      end;
+      want := Trim(Copy(line, p + Length(ARROW), MaxInt));
+      line := TrimRight(Copy(line, 1, p - 1));
+      if doc_ <> '' then doc_ := doc_ + #10 + line else doc_ := line;
+      { a note after the output, set off by three spaces, is prose and not part of it }
+      p := Pos('   ', want);
+      if p > 0 then want := TrimRight(Copy(want, 1, p - 1));
+      if want = '(пусто)' then want := '';
+      want := StringReplace(want, ' ' + RETURN_ + ' ', #10, [rfReplaceAll]);
+      skip := (Pos(ELLIPSIS, want) > 0) or (Pos(ELLIPSIS, doc_) > 0);
+      if not skip then
+      begin
+        got := SpxRenderSample(doc_, ctx);
+        Check('help/example: ' + StringReplace(doc_, #10, ' / ', [rfReplaceAll]), got, want);
+        Inc(checked);
+      end;
+      doc_ := '';
+      skip := False;
+    end;
+    { A document that lost its examples would otherwise pass this test perfectly. }
+    CheckTrue('help/the document still carries its examples', checked >= 15);
+  finally
+    lines.Free;
+    set_.Free;
+  end;
+end;
+
 procedure TestGroups;
 var g: TSpxGroup;
 begin
@@ -4352,6 +4445,7 @@ begin
   TestLongestLine;
   TestHtmlScan;
   TestGroups;
+  TestHelpExamples;
   TestFind;
   TestPageDocument;
   TestDirectiveEditing;
