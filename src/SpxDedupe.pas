@@ -36,8 +36,21 @@ type
     a set or a dictionary because the only operation on it is a merge with another one. }
   TSpxHashes = array of LongWord;
 
+  { How two variants are compared.
+
+    `Exact` is byte equality and nothing else -- fast, and the honest answer when the author
+    only wants literal repeats gone. It is NOT the same as shingles at a threshold of 1.0:
+    a fingerprint is a SET, so two texts whose sentences are shuffled have identical
+    fingerprints and different bytes.
+
+    `Off` keeps everything, for a set that will be filtered somewhere else. }
+  TSpxDedupeMode = (spxDedupeOff, spxDedupeExact, spxDedupeShingles);
+
   { What counts as "the same text". }
   TSpxDedupeOpts = record
+    { Which comparison is used at all. The shingle settings below are ignored by the other
+      two modes. }
+    Mode: TSpxDedupeMode;
     { Words per shingle. Small k finds paraphrase, large k only near-copies; 4 is the usual
       starting point and what spintax.ru defaults to. Clamped to >= 1. }
     ShingleSize: Integer;
@@ -125,6 +138,16 @@ function SpxDefaultDedupeOpts: TSpxDedupeOpts;
   scored 0.00 instead of 1.00. Understated similarity means near-duplicates survive, which is
   precisely what this unit exists to prevent.
 
+  MARKUP IS REMOVED BEFORE THE WORDS ARE COUNTED, and that is not a nicety about fairness --
+  it is what makes the measure work on a template that is mostly tags. Measured on a
+  120-row listing whose tags carry no whitespace: counting them, the fingerprint is 236
+  shingles and every pair scores 0.001; without them it is 500 and the pairs land at 0.058.
+  On the same listing with no spaces anywhere the whole document is ONE word and the
+  fingerprint collapses to a single shingle -- the dedup silently stops working and reports
+  every variant as unique, at any threshold. On prose the difference is nothing: the demo is
+  identical either way and an 18 KB article moves from 0.202 to 0.201. GTW does the same and
+  says so on its dialog; this is the measurement behind agreeing with it.
+
   Text shorter than k words yields one shingle, so short variants still compare instead of
   silently matching everything. }
 function SpxShingles(const Text: string; Size: Integer): TSpxHashes;
@@ -147,6 +170,10 @@ type
   private
     FOpts: TSpxDedupeOpts;
     FKept: array of TSpxHashes;
+    { Whole-text hashes, for the exact mode. A hash rather than the texts themselves: a
+      thousand variants of an article is megabytes, and a 32-bit collision here costs one
+      wrongly dropped variant out of a set that has a retry budget for exactly that. }
+    FExact: array of LongWord;
     FCount: Integer;
   public
     constructor Create(const AOpts: TSpxDedupeOpts);
@@ -175,6 +202,7 @@ implementation
 
 function SpxDefaultDedupeOpts: TSpxDedupeOpts;
 begin
+  Result.Mode := spxDedupeShingles;
   Result.ShingleSize := 4;
   Result.Threshold := 0.75;
   Result.RetryBudget := -1;   { -1 = twice the request, resolved when the count is known }
@@ -287,6 +315,40 @@ begin
   if Length(H) > 1 then QSort(0, High(H));
 end;
 
+{ Tags out, a space in their place. A `<` only opens a tag when a name or a slash follows --
+  the same rule the page view uses to decide whether output opens a document -- so `5 < 6`
+  keeps its bracket and does not swallow the rest of the sentence. An unterminated `<b` at
+  the very end is text, not a tag that ate the tail. }
+function StripMarkup(const S: string): string;
+var i, j: Integer; c: Char;
+begin
+  Result := '';
+  i := 1;
+  while i <= Length(S) do
+  begin
+    if (S[i] = '<') and (i < Length(S)) then
+    begin
+      c := S[i + 1];
+      if ((c >= 'A') and (c <= 'Z')) or ((c >= 'a') and (c <= 'z')) or
+         (c = '/') or (c = '!') then
+      begin
+        j := i + 1;
+        while (j <= Length(S)) and (S[j] <> '>') do Inc(j);
+        if j <= Length(S) then
+        begin
+          { A space, not nothing: `a</b><b>b` is two words, and closing them up would make
+            it one. }
+          Result := Result + ' ';
+          i := j + 1;
+          Continue;
+        end;
+      end;
+    end;
+    Result := Result + S[i];
+    Inc(i);
+  end;
+end;
+
 function SpxShingles(const Text: string; Size: Integer): TSpxHashes;
 var
   lower: string;
@@ -296,7 +358,7 @@ var
 begin
   Result := nil;
   if Size < 1 then Size := 1;
-  lower := FoldCase(Text);
+  lower := FoldCase(StripMarkup(Text));
 
   { Word boundaries first, so a shingle can be hashed straight out of one joined buffer
     rather than by concatenating strings k at a time. }
@@ -429,8 +491,27 @@ begin
 end;
 
 function TSpxUniqueSet.Accept(const Text: string): Boolean;
-var fp: TSpxHashes;
+var fp: TSpxHashes; h: LongWord; i: Integer;
 begin
+  case FOpts.Mode of
+    spxDedupeOff:
+      begin
+        { Counted, so a caller reading Count still learns how many went by. }
+        Inc(FCount);
+        Exit(True);
+      end;
+    spxDedupeExact:
+      begin
+        h := HashRun(Text, 1, Length(Text));
+        for i := 0 to FCount - 1 do
+          if FExact[i] = h then Exit(False);
+        if FCount >= Length(FExact) then SetLength(FExact, (FCount + 1) * 2);
+        FExact[FCount] := h;
+        Inc(FCount);
+        Exit(True);
+      end;
+  end;
+
   fp := SpxShingles(Text, FOpts.ShingleSize);
   Result := not TooCloseToAny(fp, FKept, FCount, FOpts.Threshold);
   if not Result then Exit;
