@@ -35,10 +35,7 @@ const
 type
   TSpxPreviewPane = class(TPanel)
   private
-    FHead: TPanel;
-    FPartial: TLabel;
-    FAsPage: TRadioButton;
-    FAsSource: TRadioButton;
+    FSourceMode: Boolean;
     FStale: TPanel;
     FStaleText: TLabel;
     FDraw: TButton;
@@ -48,7 +45,7 @@ type
     FShown: string;       // what the page is currently displaying
     FShownSource: string; // what was last PUT INTO the memo
     FHasShown: Boolean;
-    procedure ModeChanged(Sender: TObject);
+    procedure SetSourceMode(AValue: Boolean);
     procedure DrawClicked(Sender: TObject);
     procedure DrawPage;
     procedure Sync;
@@ -62,7 +59,11 @@ type
       APartial says this is a SELECTION rendered on its own. It is said out loud, because a
       preview that quietly shows one paragraph of a document looks like a preview that lost
       the rest of it. }
-    procedure SetContent(const AHtml: string; APartial: Boolean = False);
+    procedure SetContent(const AHtml: string);
+    { Which of the two views is up. The controls that switch it live in the window's top
+      strip: the pane is one of two panes, and a header of its own would put its content a
+      row lower than the editor beside it. }
+    property SourceMode: Boolean read FSourceMode write SetSourceMode;
     property Content: string read FContent;
   end;
 
@@ -72,36 +73,6 @@ constructor TSpxPreviewPane.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   BevelOuter := bvNone;
-
-  FHead := TPanel.Create(Self);
-  FHead.Parent := Self;
-  FHead.Align := alTop;
-  FHead.Height := 28;
-  FHead.BevelOuter := bvNone;
-
-  FAsPage := TRadioButton.Create(Self);
-  FAsPage.Parent := FHead;
-  FAsPage.Caption := 'Страница';
-  FAsPage.SetBounds(8, 4, 90, 20);
-  FAsPage.Checked := True;
-  FAsPage.OnChange := @ModeChanged;
-
-  FAsSource := TRadioButton.Create(Self);
-  FAsSource.Parent := FHead;
-  FAsSource.Caption := 'Исходник';
-  FAsSource.SetBounds(104, 4, 90, 20);
-  FAsSource.OnChange := @ModeChanged;
-
-  { Said out loud, and only when true: a preview showing one paragraph of a document without
-    a word about it looks like a preview that lost the rest. }
-  FPartial := TLabel.Create(Self);
-  FPartial.Parent := FHead;
-  FPartial.Left := 212;
-  FPartial.Top := 6;
-  { AutoSize, not a fixed width: the caption changes with the state, and a label sized for
-    one wording clips the other. }
-  FPartial.AutoSize := True;
-  FPartial.Visible := False;
 
   { Shown only when the output is too large to redraw on its own. It sits above the page
     rather than replacing it: the last drawing stays readable while it is out of date. }
@@ -160,28 +131,16 @@ begin
     if FPage.Controls[i] is TWinControl then TWinControl(FPage.Controls[i]).Invalidate;
 end;
 
-procedure TSpxPreviewPane.SetContent(const AHtml: string; APartial: Boolean = False);
+procedure TSpxPreviewPane.SetContent(const AHtml: string);
 begin
   FContent := AHtml;
-  FPartial.Visible := APartial;
-  { A selection CAN render to nothing -- a directive-only line, or one that opens a comment.
-    The pane says which of the two empty panes this is, because otherwise the user is looking
-    at a blank right half with no way to tell it from a failure.
-
-    "Nothing" is rarely the empty string: the common case is a selected line rendering to its
-    own trailing newline, which Trim would have caught too. The core's test is here for the
-    tail Trim misses -- a non-breaking space, U+2028, U+2029. It answers "are these bytes
-    invisible", which is not quite "the pane looks empty": markup that draws nothing, say a
-    lone `<br>`, still counts as output here. }
-  if APartial and SpxIsBlankOutput(AHtml) then
-    FPartial.Caption := 'фрагмент ничего не выводит'
-  else
-    FPartial.Caption := 'показан фрагмент';
   Sync;
 end;
 
-procedure TSpxPreviewPane.ModeChanged(Sender: TObject);
+procedure TSpxPreviewPane.SetSourceMode(AValue: Boolean);
 begin
+  if FSourceMode = AValue then Exit;
+  FSourceMode := AValue;
   Sync;
 end;
 
@@ -213,10 +172,10 @@ end;
 
 procedure TSpxPreviewPane.Sync;
 begin
-  FPage.Visible := FAsPage.Checked;
-  FSource.Visible := not FAsPage.Checked;
+  FPage.Visible := not FSourceMode;
+  FSource.Visible := FSourceMode;
 
-  if not FAsPage.Checked then
+  if FSourceMode then
   begin
     FStale.Visible := False;
     { Compared against what was PUT IN, never against what the control gives back. A native
