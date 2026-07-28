@@ -25,7 +25,7 @@ unit SpxPreviewPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, IpHtml, SpxStudio;
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, IpHtml, SpxStudio, SpxUi;
 
 const
   { 16 KB is ~150 ms of layout on this machine -- still invisible between keystrokes, and
@@ -79,19 +79,19 @@ begin
   FStale := TPanel.Create(Self);
   FStale.Parent := Self;
   FStale.Align := alTop;
-  FStale.Height := 30;
+  FStale.Height := Px(Self, 30);
   FStale.BevelOuter := bvNone;
   FStale.Color := $00E1F0FF;
   FStale.Visible := False;
 
   FStaleText := TLabel.Create(Self);
   FStaleText.Parent := FStale;
-  FStaleText.SetBounds(8, 8, 400, 16);
+  FStaleText.SetBounds(Px(Self, 8), Px(Self, 8), Px(Self, 400), Px(Self, 16));
 
   FDraw := TButton.Create(Self);
   FDraw.Parent := FStale;
   FDraw.Caption := 'Показать';
-  FDraw.SetBounds(420, 3, 90, 24);
+  FDraw.SetBounds(Px(Self, 420), Px(Self, 3), Px(Self, 90), Px(Self, 24));
   FDraw.OnClick := @DrawClicked;
 
   FPage := TIpHtmlPanel.Create(Self);
@@ -106,8 +106,9 @@ begin
   FSource.ReadOnly := True;
   FSource.ScrollBars := ssAutoVertical;
   FSource.WordWrap := True;
-  FSource.Font.Name := 'Segoe UI';
-  FSource.Font.Size := 11;
+  { The source view shows the markup the engine produced, so it reads like the editor:
+    fixed pitch, system size. }
+  SpxApplyMonoFont(FSource.Font);
   FSource.Color := clWindow;
   FSource.Visible := False;
 end;

@@ -18,6 +18,14 @@ uses
   {$IFDEF UNIX}cthreads,{$ENDIF}
   Interfaces, Forms, SpxStudio, SpxMainForm;
 
+{ The project's resource, and it was missing. Lazarus generates SpintaxStudio.res on every
+  build -- the Windows manifest lives in it, and the application icon will -- but nothing
+  links it into the executable without this line. Measured rather than assumed: the .res
+  carried `dpiAware` and the .exe carried no manifest at all, so Windows treated a
+  "DPI-aware" application as legacy and would have stretched it as a bitmap on any display
+  above 100%. }
+{$R *.res}
+
 begin
   SpxInitHost;
   Application.Title := 'Spintax Studio';

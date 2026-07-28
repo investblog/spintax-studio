@@ -24,7 +24,7 @@ unit SpxVarsPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, SpxStudio;
+  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, SpxStudio, SpxUi;
 
 type
   TSpxJumpEvent = procedure(Line, Column: Integer) of object;
@@ -91,9 +91,9 @@ begin
   FDefs.Cells[0, 0] := 'Вид';
   FDefs.Cells[1, 0] := 'Имя';
   FDefs.Cells[2, 0] := 'Значение';
-  FDefs.ColWidths[0] := 60;
-  FDefs.ColWidths[1] := 140;
-  FDefs.ColWidths[2] := 600;
+  FDefs.ColWidths[0] := Px(Self, 60);
+  FDefs.ColWidths[1] := Px(Self, 140);
+  FDefs.ColWidths[2] := Px(Self, 600);
   { Column 0 carries data -- the kind -- so it must not be a FIXED column, which is what a
     grid defaults to. LCL treats a click in the fixed zone as a header click and suppresses
     OnClick entirely, so a third of every row would have been dead to click-to-jump. }
@@ -111,14 +111,14 @@ begin
   FRuntimeBox.Parent := Self;
   FRuntimeBox.Top := 20000;
   FRuntimeBox.Align := alBottom;
-  FRuntimeBox.Height := 110;
+  FRuntimeBox.Height := Px(Self, 110);
   FRuntimeBox.BevelOuter := bvNone;
 
   FSplit := TSplitter.Create(Self);
   FSplit.Parent := Self;
   FSplit.Top := 10000;
   FSplit.Align := alBottom;
-  FSplit.MinSize := 60;   { neither group may be dragged out of existence }
+  FSplit.MinSize := Px(Self, 60);   { neither group may be dragged out of existence }
 
   FRuntime := TStringGrid.Create(Self);
   FRuntime.Parent := FRuntimeBox;
@@ -128,8 +128,8 @@ begin
   FRuntime.ColCount := 2;
   FRuntime.Cells[0, 0] := 'Имя';
   FRuntime.Cells[1, 0] := 'Значение';
-  FRuntime.ColWidths[0] := 140;
-  FRuntime.ColWidths[1] := 660;
+  FRuntime.ColWidths[0] := Px(Self, 140);
+  FRuntime.ColWidths[1] := Px(Self, 660);
   { Column 0 stays FIXED here, and that is load-bearing: it is what keeps the name column
     read-only while goEditing is on. RuntimeEdited keys off that cell, so an editable name
     would file a value under a name the model never had. }
@@ -162,7 +162,7 @@ begin
   if AGrid.ClientWidth - used > 120 then
     AGrid.ColWidths[last] := AGrid.ClientWidth - used
   else
-    AGrid.ColWidths[last] := 120;
+    AGrid.ColWidths[last] := Px(Self, 120);
 end;
 
 procedure TSpxVarsPane.Resize;

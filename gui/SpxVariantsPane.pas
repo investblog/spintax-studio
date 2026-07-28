@@ -28,7 +28,7 @@ interface
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, ComCtrls, Grids, Spin, Dialogs,
   Graphics, FileUtil,
-  Spintax, SpxStudio, SpxDedupe, SpxExport, SpxEngineThread;
+  Spintax, SpxStudio, SpxDedupe, SpxExport, SpxEngineThread, SpxUi;
 
 type
   { What the panel needs from the form to start a batch. The form owns the document, the
@@ -124,29 +124,29 @@ begin
   FTop := TPanel.Create(Self);
   FTop.Parent := Self;
   FTop.Align := alTop;
-  FTop.Height := 32;
+  FTop.Height := Px(Self, 32);
   FTop.BevelOuter := bvNone;
 
   FCountLabel := TLabel.Create(Self);
   FCountLabel.Parent := FTop;
-  FCountLabel.SetBounds(8, 8, 60, 16);
+  FCountLabel.SetBounds(Px(Self, 8), Px(Self, 8), Px(Self, 60), Px(Self, 16));
   FCountLabel.Caption := 'Сколько';
 
   FCount := TSpinEdit.Create(Self);
   FCount.Parent := FTop;
-  FCount.SetBounds(64, 4, 70, 24);
+  FCount.SetBounds(Px(Self, 64), Px(Self, 4), Px(Self, 70), Px(Self, 24));
   FCount.MinValue := 1;
   FCount.MaxValue := 100000;
   FCount.Value := 20;
 
   FSeedLabel := TLabel.Create(Self);
   FSeedLabel.Parent := FTop;
-  FSeedLabel.SetBounds(146, 8, 30, 16);
+  FSeedLabel.SetBounds(Px(Self, 146), Px(Self, 8), Px(Self, 30), Px(Self, 16));
   FSeedLabel.Caption := 'сид';
 
   FSeed := TSpinEdit.Create(Self);
   FSeed.Parent := FTop;
-  FSeed.SetBounds(172, 4, 90, 24);
+  FSeed.SetBounds(Px(Self, 172), Px(Self, 4), Px(Self, 90), Px(Self, 24));
   FSeed.MinValue := 0;
   FSeed.MaxValue := MaxInt;
   FSeed.Value := 1;
@@ -155,26 +155,26 @@ begin
     used, because a batch nobody can regenerate is a batch nobody can fix. }
   FRandomSeed := TCheckBox.Create(Self);
   FRandomSeed.Parent := FTop;
-  FRandomSeed.SetBounds(270, 6, 90, 20);
+  FRandomSeed.SetBounds(Px(Self, 270), Px(Self, 6), Px(Self, 90), Px(Self, 20));
   FRandomSeed.Caption := 'случайный';
   FRandomSeed.OnChange := @RandomSeedToggled;
 
   FGo := TButton.Create(Self);
   FGo.Parent := FTop;
-  FGo.SetBounds(368, 4, 110, 24);
+  FGo.SetBounds(Px(Self, 368), Px(Self, 4), Px(Self, 110), Px(Self, 24));
   FGo.Caption := 'Сгенерировать';
   FGo.OnClick := @GoClicked;
 
   FStop := TButton.Create(Self);
   FStop.Parent := FTop;
-  FStop.SetBounds(484, 4, 80, 24);
+  FStop.SetBounds(Px(Self, 484), Px(Self, 4), Px(Self, 80), Px(Self, 24));
   FStop.Caption := 'Стоп';
   FStop.Enabled := False;
   FStop.OnClick := @StopClicked;
 
   FProgress := TLabel.Create(Self);
   FProgress.Parent := FTop;
-  FProgress.SetBounds(576, 8, 400, 16);
+  FProgress.SetBounds(Px(Self, 576), Px(Self, 8), Px(Self, 400), Px(Self, 16));
   FProgress.Caption := '';
 
   { ── how close is too close ── }
@@ -182,8 +182,8 @@ begin
   FOpts := TPanel.Create(Self);
   FOpts.Parent := Self;
   FOpts.Align := alTop;
-  FOpts.Top := 100;
-  FOpts.Height := 30;
+  FOpts.Top := Px(Self, 100);
+  FOpts.Height := Px(Self, 30);
   FOpts.BevelOuter := bvNone;
 
   { Three ways, the same three the tool this syntax came from offers: near-duplicates by
@@ -193,7 +193,7 @@ begin
   FMode := TComboBox.Create(Self);
   FMode.Parent := FOpts;
   FMode.Style := csDropDownList;
-  FMode.SetBounds(8, 3, 210, 24);
+  FMode.SetBounds(Px(Self, 8), Px(Self, 3), Px(Self, 210), Px(Self, 24));
   FMode.Items.Add('Убирать похожие');
   FMode.Items.Add('Только точные совпадения');
   FMode.Items.Add('Ничего не убирать');
@@ -202,26 +202,26 @@ begin
 
   FShingleLabel := TLabel.Create(Self);
   FShingleLabel.Parent := FOpts;
-  FShingleLabel.SetBounds(230, 7, 50, 16);
+  FShingleLabel.SetBounds(Px(Self, 230), Px(Self, 7), Px(Self, 50), Px(Self, 16));
   FShingleLabel.Caption := 'шингл';
 
   FShingle := TSpinEdit.Create(Self);
   FShingle.Parent := FOpts;
-  FShingle.SetBounds(276, 3, 56, 24);
+  FShingle.SetBounds(Px(Self, 276), Px(Self, 3), Px(Self, 56), Px(Self, 24));
   FShingle.MinValue := 1;
   FShingle.MaxValue := 12;
   FShingle.Value := SpxDefaultDedupeOpts.ShingleSize;
 
   FThresholdLabel := TLabel.Create(Self);
   FThresholdLabel.Parent := FOpts;
-  FThresholdLabel.SetBounds(342, 7, 60, 16);
+  FThresholdLabel.SetBounds(Px(Self, 342), Px(Self, 7), Px(Self, 60), Px(Self, 16));
   FThresholdLabel.Caption := 'порог';
 
   { A slider rather than a number field: the value is a judgement about how similar is too
     similar, and it is nudged rather than typed. }
   FThreshold := TTrackBar.Create(Self);
   FThreshold.Parent := FOpts;
-  FThreshold.SetBounds(388, 2, 150, 26);
+  FThreshold.SetBounds(Px(Self, 388), Px(Self, 2), Px(Self, 150), Px(Self, 26));
   FThreshold.Min := 5;
   FThreshold.Max := 100;
   FThreshold.Position := Round(SpxDefaultDedupeOpts.Threshold * 100);
@@ -231,7 +231,7 @@ begin
 
   FThresholdValue := TLabel.Create(Self);
   FThresholdValue.Parent := FOpts;
-  FThresholdValue.SetBounds(546, 7, 60, 16);
+  FThresholdValue.SetBounds(Px(Self, 546), Px(Self, 7), Px(Self, 60), Px(Self, 16));
 
   { ── the set ── }
 
@@ -246,10 +246,10 @@ begin
   FGrid.Cells[COL_SEED, 0] := 'сид';
   FGrid.Cells[COL_LEN, 0] := 'длина';
   FGrid.Cells[COL_TEXT, 0] := 'текст';
-  FGrid.ColWidths[COL_NO] := 50;
-  FGrid.ColWidths[COL_SEED] := 90;
-  FGrid.ColWidths[COL_LEN] := 70;
-  FGrid.ColWidths[COL_TEXT] := 600;
+  FGrid.ColWidths[COL_NO] := Px(Self, 50);
+  FGrid.ColWidths[COL_SEED] := Px(Self, 90);
+  FGrid.ColWidths[COL_LEN] := Px(Self, 70);
+  FGrid.ColWidths[COL_TEXT] := Px(Self, 600);
   FGrid.Options := FGrid.Options + [goRowSelect] - [goEditing, goRangeSelect];
   FGrid.OnClick := @RowClicked;
 
@@ -258,35 +258,35 @@ begin
   FBottom := TPanel.Create(Self);
   FBottom.Parent := Self;
   FBottom.Align := alBottom;
-  FBottom.Height := 34;
+  FBottom.Height := Px(Self, 34);
   FBottom.BevelOuter := bvNone;
 
   FToXlsx := TButton.Create(Self);
   FToXlsx.Parent := FBottom;
-  FToXlsx.SetBounds(8, 5, 110, 24);
+  FToXlsx.SetBounds(Px(Self, 8), Px(Self, 5), Px(Self, 110), Px(Self, 24));
   FToXlsx.Caption := 'В .xlsx';
   FToXlsx.OnClick := @ExportXlsx;
 
   FToTxt := TButton.Create(Self);
   FToTxt.Parent := FBottom;
-  FToTxt.SetBounds(124, 5, 110, 24);
+  FToTxt.SetBounds(Px(Self, 124), Px(Self, 5), Px(Self, 110), Px(Self, 24));
   FToTxt.Caption := 'В .txt';
   FToTxt.OnClick := @ExportTxt;
 
   FToFiles := TButton.Create(Self);
   FToFiles.Parent := FBottom;
-  FToFiles.SetBounds(240, 5, 150, 24);
+  FToFiles.SetBounds(Px(Self, 240), Px(Self, 5), Px(Self, 150), Px(Self, 24));
   FToFiles.Caption := 'По файлу на текст';
   FToFiles.OnClick := @ExportFiles;
 
   FWithSeed := TCheckBox.Create(Self);
   FWithSeed.Parent := FBottom;
-  FWithSeed.SetBounds(400, 7, 140, 20);
+  FWithSeed.SetBounds(Px(Self, 400), Px(Self, 7), Px(Self, 140), Px(Self, 20));
   FWithSeed.Caption := 'сид в .txt';
 
   FStatus := TLabel.Create(Self);
   FStatus.Parent := FBottom;
-  FStatus.SetBounds(552, 9, 500, 16);
+  FStatus.SetBounds(Px(Self, 552), Px(Self, 9), Px(Self, 500), Px(Self, 16));
   FStatus.Caption := 'ничего не сгенерировано';
 
   ThresholdChanged(nil);
@@ -552,7 +552,7 @@ begin
   if FGrid.ClientWidth - used > 200 then
     FGrid.ColWidths[COL_TEXT] := FGrid.ClientWidth - used
   else
-    FGrid.ColWidths[COL_TEXT] := 200;
+    FGrid.ColWidths[COL_TEXT] := Px(Self, 200);
 end;
 
 procedure TSpxVariantsPane.Resize;
