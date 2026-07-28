@@ -32,8 +32,8 @@ uses
     the check that opens what it wrote. }
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
-  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxExport, SpxFiles, SpxEngineThread,
-  SpxStrings;
+  Spintax, SpxStudio, SpxTokens, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan, SpxFiles,
+  SpxEngineThread, SpxStrings;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -41,6 +41,7 @@ uses
   SpxDemo in '..\src\SpxDemo.pas',
   SpxDedupe in '..\src\SpxDedupe.pas',
   SpxExport in '..\src\SpxExport.pas',
+  SpxHtmlScan in '..\src\SpxHtmlScan.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxStrings in '..\gui\SpxStrings.pas';
@@ -2551,6 +2552,122 @@ begin
   Check('strings/specifiers-of-a-plain-string', Specifiers('nothing here'), '');
 end;
 
+{ Spans as text, so a wrong one is readable rather than inferred. }
+function SpanSig(const S: TSpxSpans): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 0 to High(S) do
+    Result := Result + Format('%d:%d..%d:%d ',
+      [S[i].Line, S[i].Col, S[i].EndLine, S[i].EndCol]);
+  Result := Trim(Result);
+end;
+
+{ Ordered by start, non-overlapping, and every span well-formed. The markup's bisect assumes
+  all three; nothing else would notice if the scanner stopped delivering them. }
+function SpansAreOrdered(const S: TSpxSpans): Boolean;
+var i: Integer;
+begin
+  Result := True;
+  for i := 0 to High(S) do
+  begin
+    if (S[i].EndLine < S[i].Line) or
+       ((S[i].EndLine = S[i].Line) and (S[i].EndCol <= S[i].Col)) then Exit(False);
+    if i > 0 then
+      if (S[i].Line < S[i - 1].EndLine) or
+         ((S[i].Line = S[i - 1].EndLine) and (S[i].Col < S[i - 1].EndCol)) then Exit(False);
+  end;
+end;
+
+procedure TestHtmlScan;
+begin
+  { Where SynEdit's HTML highlighter is wrong about the output. It opens a tag at EVERY `<`,
+    so a comparison in prose turns the rest of the paragraph into attribute colours; the rest
+    of the family, and every browser, opens a tag only when a letter, `/`, `!` or `?`
+    follows. These are the runs to paint back. }
+  Check('htmlscan/clean-html-has-nothing-to-fix',
+        SpanSig(SpxHtmlPhantomTags('<p class="x">Text.</p>')), '');
+  { A `>` inside a quoted attribute value does not end the tag, so it starts nothing. }
+  Check('htmlscan/gt-inside-a-value',
+        SpanSig(SpxHtmlPhantomTags('<a title="1>2">t</a>')), '');
+  Check('htmlscan/empty', SpanSig(SpxHtmlPhantomTags('')), '');
+  Check('htmlscan/prose-without-tags', SpanSig(SpxHtmlPhantomTags('just prose')), '');
+
+  { The everyday case, and the one that settles the rule. The run goes THROUGH the closing
+    `</p>`, because the highlighter does not recognise it: in a tag's parameter range IdentProc
+    stops on `[#0..#32, '=', '"', '>']` and `<` is not in that set, so `rub.</p` arrives as a
+    single identifier token. Measured; an earlier version stopped at the `<` and left those
+    four characters coloured as an attribute name. }
+  Check('htmlscan/bare-lt-in-prose',
+        SpanSig(SpxHtmlPhantomTags('<p>a < 100 rub.</p>')), '1:6..1:20');
+  { A tag AT A TOKEN BOUNDARY is recognised, so the run stops before it and its colours stay. }
+  Check('htmlscan/stops-at-a-tag-that-follows-a-space',
+        SpanSig(SpxHtmlPhantomTags('a < b <p>c')), '1:3..1:7');
+  { With no `>` for three lines the highlighter takes all three; so does the run. }
+  Check('htmlscan/crosses-lines',
+        SpanSig(SpxHtmlPhantomTags('a < b'#10'two'#10'three'#10'<p>x</p>')), '1:3..4:1');
+  Check('htmlscan/crlf-is-one-ending',
+        SpanSig(SpxHtmlPhantomTags('a < b'#13#10'<p>x</p>')), '1:3..2:1');
+  Check('htmlscan/lone-cr-is-a-line-too',
+        SpanSig(SpxHtmlPhantomTags('a < b'#13'<p>x</p>')), '1:3..2:1');
+  Check('htmlscan/lt-at-the-very-end', SpanSig(SpxHtmlPhantomTags('price <')), '1:7..1:8');
+  { The `>` that lets the highlighter out is part of the wrongly-coloured run. }
+  Check('htmlscan/closed-by-a-later-gt',
+        SpanSig(SpxHtmlPhantomTags('a < b > c')), '1:3..1:8');
+  Check('htmlscan/two-of-them',
+        SpanSig(SpxHtmlPhantomTags('a < b > c < d > e')), '1:3..1:8 1:11..1:16');
+
+  { An `&` ends it too: AmpersandProc sets fRange := rsText whatever range it was called in,
+    so from there the highlighter is right again. Running past it would repaint the entity --
+    which is green and bold in this scheme, and this project's demo template opens with one. }
+  Check('htmlscan/an-ampersand-ends-the-run',
+        SpanSig(SpxHtmlPhantomTags('a < b & c > d')), '1:3..1:7');
+  Check('htmlscan/an-entity-keeps-its-colour',
+        SpanSig(SpxHtmlPhantomTags('price < 100 &nbsp; rub')), '1:7..1:13');
+
+  { Constructs the highlighter reads as ONE token are none of this unit's business. Each has
+    its own terminator, and stopping at the first `>` -- as this used to -- drops the scan
+    back inside them and invents a phantom there. }
+  Check('htmlscan/a-comment-with-a-gt-inside',
+        SpanSig(SpxHtmlPhantomTags('<!-- if a > b then c < d -->')), '');
+  Check('htmlscan/cdata-with-a-gt-inside',
+        SpanSig(SpxHtmlPhantomTags('<![CDATA[ a > b < c ]]>')), '');
+  Check('htmlscan/an-asp-block-is-deliberate',
+        SpanSig(SpxHtmlPhantomTags('<% if a > b %>')), '');
+  Check('htmlscan/php-is-an-ordinary-tag-to-it',
+        SpanSig(SpxHtmlPhantomTags('<?php echo "x" ?>')), '');
+
+  { An apostrophe is NOT a string to this highlighter -- only `"` is mapped to StringProc --
+    and treating it as one used to swallow the rest of the document, silently turning the
+    whole feature off for any output with `don't` in a comment. }
+  Check('htmlscan/an-apostrophe-is-not-a-quote',
+        SpanSig(SpxHtmlPhantomTags('<!-- don''t edit --><p>a < b</p>')), '1:25..1:32');
+  { And an unterminated `"` ends at the line, as StringProc does. }
+  Check('htmlscan/an-unterminated-quote-stops-at-the-line',
+        SpanSig(SpxHtmlPhantomTags('<a title="oops'#10'a < b'#10'<p>x</p>')), '2:3..3:1');
+  { The documented limitation, pinned so it changes on purpose rather than by accident: a
+    quoted value inside a PHANTOM tag is not modelled. }
+  Check('htmlscan/a-quoted-value-inside-a-phantom-is-not-modelled',
+        SpanSig(SpxHtmlPhantomTags('a < b="x>y" c')), '1:3..1:10');
+
+  { What opens a tag and what does not -- ASCII letters only, exactly as HTML5 says. }
+  Check('htmlscan/a-digit-does-not', SpanSig(SpxHtmlPhantomTags('<5')), '1:1..1:3');
+  Check('htmlscan/a-slash-does', SpanSig(SpxHtmlPhantomTags('</p>')), '');
+  Check('htmlscan/a-bang-does', SpanSig(SpxHtmlPhantomTags('<!-- c -->')), '');
+  { A Cyrillic letter opens nothing in any browser either -- and it is two BYTES, which is
+    what the editor's columns count. }
+  Check('htmlscan/a-cyrillic-letter-does-not', SpanSig(SpxHtmlPhantomTags('<р')), '1:1..1:4');
+  Check('htmlscan/columns-are-bytes',
+        SpanSig(SpxHtmlPhantomTags('ЦЕНА < 5')), '1:10..1:13');
+
+  { THE INVARIANT THE MARKUP RESTS ON. It bisects the span array, which is only sound if the
+    spans come out ordered and non-overlapping -- so that is asserted here rather than assumed
+    over there, on the nastiest input this file has. }
+  CheckTrue('htmlscan/spans-are-ordered-and-do-not-overlap',
+            SpansAreOrdered(SpxHtmlPhantomTags(
+              '<p>a < b</p>'#13#10'<!-- don''t > --> c < d & e'#10'<a href="x<y">z < 5')));
+end;
+
 procedure TestLongestLine;
 begin
   { What the source view asks before deciding to wrap. The number is in bytes and the three
@@ -4073,6 +4190,7 @@ begin
   TestSelectionPolicy;
   TestStrings;
   TestLongestLine;
+  TestHtmlScan;
   TestFind;
   TestPageDocument;
   TestDirectiveEditing;
