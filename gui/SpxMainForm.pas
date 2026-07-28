@@ -866,7 +866,13 @@ var job: TSpxJob;
 begin
   Inc(FNextId);
   job.Id := FNextId;
-  job.Text := FEditor.Text;
+  { DocText, not FEditor.Text: SynEdit joins its lines with the PLATFORM's ending, so on
+    Windows the engine was handed a CRLF copy of a file that is LF on disk -- and the two do
+    not render the same. A directive line ending in CRLF leaves its LF behind, one blank line
+    per directive: measured on a real 116 KB template with a hundred and fifty `#set`s, one
+    blank line as the file is, thirty-five once normalised to CRLF, and the source view then
+    opens on a screenful of nothing. The preview must show what the FILE produces. }
+  job.Text := DocText;
   job.Locale := FLocale.Text;
   job.Seeded := FSeeded.Checked;
   job.Seed := LongWord(StrToInt64Def(FSeedEdit.Text, 1));
@@ -903,7 +909,9 @@ begin
   Inc(FNextId);
   req := Default(TSpxBatchRequest);
   req.Id := FNextId;
-  req.Text := FEditor.Text;
+  { The same document the preview renders, for the same reason -- an export whose line
+    endings differ from the file's is an export of a different template. }
+  req.Text := DocText;
   req.Locale := FLocale.Text;
   { The same context the preview renders in, minus the preview's own seed: a batch derives
     its seeds from the base the panel gives it. The set folder and the slug come along so
