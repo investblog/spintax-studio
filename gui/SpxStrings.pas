@@ -36,6 +36,9 @@ type
     { ── menus ── }
     sMenuFile, sMenuNew, sMenuOpen, sMenuSave, sMenuSaveAs, sMenuReloadSet, sMenuExit,
     sMenuEdit, sMenuFind, sMenuFindNext, sMenuFindPrev,
+    sMenuView, sRailLeft, sRailRight,
+    { one or two characters on a rail button until icons arrive (step 4) }
+    sRailFaceDiag, sRailFaceVars, sRailFaceSet,
     sMenuWrapBraces, sMenuWrapBrackets, sMenuReroll, sMenuCopyResult, sMenuSelectAll,
 
     { ── the top strip: the output's half ── }
@@ -109,6 +112,8 @@ const
     (
       'File', 'New', 'Open…', 'Save', 'Save as…', 'Reload set', 'Exit',
       'Edit', 'Find…', 'Find next', 'Find previous',
+      'View', 'Tools on the left', 'Tools on the right',
+      'D', 'V', 'S',
       'Wrap in {…}', 'Wrap in […]', 'Show another variant', 'Copy the result',
       'Select all',
 
@@ -157,6 +162,8 @@ const
       'Файл', 'Создать', 'Открыть…', 'Сохранить', 'Сохранить как…', 'Перечитать набор',
       'Выход',
       'Правка', 'Найти…', 'Найти далее', 'Найти назад',
+      'Вид', 'Инструменты слева', 'Инструменты справа',
+      'Д', 'П', 'В',
       'Обернуть в {…}', 'Обернуть в […]', 'Показать другой вариант', 'Копировать результат',
       'Выделить всё',
 
@@ -220,6 +227,9 @@ const
     { menus -- a menu grows to fit its longest item }
     0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0,
+    { the View menu, then the rail: a button's face is 36px, so two characters and no more }
+    0, 0, 0,
+    2, 2, 2,
     0, 0, 0, 0, 0,
 
     { top strip, output half: the seed box 55px and the two views 90px are check/radio

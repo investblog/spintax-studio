@@ -18,6 +18,7 @@ uses
   Clipbrd, Graphics, LCLType,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
+  SpxToolRail,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrings;
 
@@ -38,6 +39,15 @@ type
     FAsSource: TRadioButton;
     FPartial: TLabel;
     FSplit: TSplitter;
+    { The tools' strip. It is the window's, not the editor's pane's: a user who moves it to
+      the right expects it at the window's edge, the way every side bar behaves. }
+    FRail: TSpxToolRail;
+    { Everything that is not the rail. Two controls aligned to the same edge are ordered by
+      LCL and not by us -- measured: created first, re-aligned, even moved to index 0, the
+      rail still opened between the editor and the preview. A container settles it by
+      construction: the rail takes its edge, this takes what is left, and there is no
+      ordering question to lose. }
+    FBody: TPanel;
     FLeft: TPanel;
     { Search lives in the LEFT half of the top strip -- the half over the editor, because the
       template is what is searched. It used to be a row of its own above the editor, which
@@ -136,6 +146,12 @@ type
     procedure StepToMatch(Backwards: Boolean);
     procedure RefreshMatches;
     procedure ShowMatchCount;
+    procedure RailDiagClicked(Sender: TObject);
+    procedure RailVarsClicked(Sender: TObject);
+    procedure RailSetClicked(Sender: TObject);
+    procedure RailLeftClicked(Sender: TObject);
+    procedure RailRightClicked(Sender: TObject);
+    procedure BuildRail;
     procedure NewClicked(Sender: TObject);
     procedure OpenClicked(Sender: TObject);
     procedure SaveClicked(Sender: TObject);
@@ -229,10 +245,24 @@ begin
   Position := poScreenCenter;
   OnClose := @FormClosed;
   OnCloseQuery := @FormAsked;
+
+  { FIRST, both of them, and before anything that has to sit inside. The rail takes its edge
+    of the window; the body takes what is left; everything else is built into the body. Two
+    controls aligned to the same edge are ordered by LCL rather than by us -- measured, the
+    rail opened between the editor and the preview whether it was created first, re-aligned,
+    or moved to index 0 -- so the layout is arranged to have no such pair at all. }
+  BuildRail;
+  FBody := TPanel.Create(Self);
+  FBody.Parent := Self;
+  FBody.Align := alClient;
+  FBody.BevelOuter := bvNone;
+
+  { The menu is built after the rail because its View section shows which side the rail is
+    on. }
   BuildMenu;
 
   FTop := TPanel.Create(Self);
-  FTop.Parent := Self;
+  FTop.Parent := FBody;
   FTop.Align := alTop;
   FTop.Height := Px(Self, 38);
   FTop.BevelOuter := bvNone;
@@ -297,7 +327,7 @@ begin
     splitter had no unambiguous neighbour to resize, which is why the bottom would not
     stretch. }
   FStatus := TStatusBar.Create(Self);
-  FStatus.Parent := Self;
+  FStatus.Parent := FBody;
   FStatus.Top := 30000;
   FStatus.SimplePanel := True;
   FStatus.SimpleText := Tr(sStatusReady);
@@ -306,7 +336,7 @@ begin
     what is left. Two tabs rather than two more panels: the window is already a two-pane
     editor, and every strip added to it is taken from the template. }
   FBottom := TPageControl.Create(Self);
-  FBottom.Parent := Self;
+  FBottom.Parent := FBody;
   FBottom.Top := 20000;
   FBottom.Align := alBottom;
   { Two grids and their headings need more than 170: at that height the definitions list had
@@ -358,16 +388,16 @@ begin
     the window ever appeared. It is set in the constructor, right after the thread. }
 
   FDiagSplit := TSplitter.Create(Self);
-  FDiagSplit.Parent := Self;
+  FDiagSplit.Parent := FBody;
   FDiagSplit.Top := 10000;        { above the tab strip: see the note on FStatus }
   FDiagSplit.Align := alBottom;
   FDiagSplit.MinSize := Px(Self, 80);       { neither the panes nor the strip may be dragged to nothing }
 
-  { The editor's SIDE, not the editor alone. The find bar goes above it and the tool rail
-    will go beside it, and both belong to the template rather than to the window -- a bar
-    parented to the form would stretch across the preview as well. }
+  { The editor's SIDE, not the editor alone. The find bar goes above it, and both belong to
+    the template rather than to the window -- a bar parented to the form would stretch across
+    the preview as well. }
   FLeft := TPanel.Create(Self);
-  FLeft.Parent := Self;
+  FLeft.Parent := FBody;
   FLeft.Align := alLeft;
   FLeft.BevelOuter := bvNone;
   { A PROPORTION, not a pixel count. 540 was right for the window this was written at and
@@ -445,20 +475,21 @@ begin
   TSynEditMarkupManager(TSynEditReach(FEditor).MarkupMgr).AddMarkUp(FWarnMarkup);
 
   FSplit := TSplitter.Create(Self);
-  FSplit.Parent := Self;
+  FSplit.Parent := FBody;
   FSplit.Align := alLeft;
   FSplit.Left := FLeft.Width + 1;
 
   { Two views of the same output -- the page and the HTML it is -- with the switch and the
     size guard owned by the pane itself (SpxPreviewPane, ADR 0004). }
   FPreview := TSpxPreviewPane.Create(Self);
-  FPreview.Parent := Self;
+  FPreview.Parent := FBody;
   FPreview.Align := alClient;
 
   FDebounce := TTimer.Create(Self);
   FDebounce.Enabled := False;
   FDebounce.Interval := DEBOUNCE_MS;
   FDebounce.OnTimer := @DebounceFired;
+
 end;
 
 { The find bar. Hidden until asked for, because a template is read far more often than it is
@@ -758,6 +789,45 @@ begin
   end;
 end;
 
+{ The strip of tools. Three of them today, all of them ACCESS: they raise the panel where the
+  data fits rather than trying to hold a table in forty-four pixels. The group editor, whose
+  content is a list and therefore does fit, will live in the rail itself. }
+procedure TSpxMainForm.BuildRail;
+begin
+  FRail := TSpxToolRail.Create(Self);
+  FRail.Parent := Self;
+  FRail.AddTool(Tr(sRailFaceDiag), Tr(sTabDiagnostics), @RailDiagClicked);
+  FRail.AddTool(Tr(sRailFaceVars), Tr(sTabVariables), @RailVarsClicked);
+  FRail.AddTool(Tr(sRailFaceSet), Tr(sTabVariants), @RailSetClicked);
+end;
+
+procedure TSpxMainForm.RailDiagClicked(Sender: TObject);
+begin
+  if FBottom.PageCount >= 1 then FBottom.PageIndex := 0;
+end;
+
+procedure TSpxMainForm.RailVarsClicked(Sender: TObject);
+begin
+  if FBottom.PageCount >= 2 then FBottom.PageIndex := 1;
+end;
+
+procedure TSpxMainForm.RailSetClicked(Sender: TObject);
+begin
+  if FBottom.PageCount >= 3 then FBottom.PageIndex := 2;
+end;
+
+procedure TSpxMainForm.RailLeftClicked(Sender: TObject);
+begin
+  FRail.Side := spxRailLeft;
+  BuildMenu;   { the tick moves with it }
+end;
+
+procedure TSpxMainForm.RailRightClicked(Sender: TObject);
+begin
+  FRail.Side := spxRailRight;
+  BuildMenu;
+end;
+
 procedure TSpxMainForm.BuildMenu;
 
   function Item(AParent: TMenuItem; const ACaption: string; AKey: Word;
@@ -772,7 +842,7 @@ procedure TSpxMainForm.BuildMenu;
 
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
-  fileMenu, editMenu: TMenuItem;
+  fileMenu, editMenu, viewMenu, sideItem: TMenuItem;
 begin
   { Rebuilt when the language changes, so the previous one is released first -- it is owned
     by the form and would otherwise pile up one menu per switch. }
@@ -825,6 +895,20 @@ begin
   Item(editMenu, '-', 0, [], nil);
   Item(editMenu, Tr(sMenuReroll), Ord('R'), [ssCtrl], @RerollClicked);
   Item(editMenu, Tr(sMenuCopyResult), Ord('C'), [ssCtrl, ssShift], @CopyClicked);
+
+  { Which edge the tools live on. A setting rather than a decision of ours: the rail belongs
+    beside what it edits, and which side of the screen that is depends on the person. It sits
+    in a menu until the app has somewhere to remember settings -- the layout asks the rail for
+    its side either way, so persistence will be one line. }
+  viewMenu := TMenuItem.Create(Self);
+  viewMenu.Caption := Tr(sMenuView);
+  bar.Items.Add(viewMenu);
+  sideItem := Item(viewMenu, Tr(sRailLeft), 0, [], @RailLeftClicked);
+  sideItem.RadioItem := True;
+  sideItem.Checked := (FRail = nil) or (FRail.Side = spxRailLeft);
+  sideItem := Item(viewMenu, Tr(sRailRight), 0, [], @RailRightClicked);
+  sideItem.RadioItem := True;
+  sideItem.Checked := (FRail <> nil) and (FRail.Side = spxRailRight);
 
   Self.Menu := bar;
 end;
@@ -1281,6 +1365,14 @@ begin
   FVars.Retranslate;
   FSet.Retranslate;
   FPreview.Retranslate;
+  { A rail button says its name in a hint and wears a letter until icons arrive; both are
+    translated text. }
+  if FRail <> nil then
+  begin
+    FRail.SetTool(0, Tr(sRailFaceDiag), Tr(sTabDiagnostics));
+    FRail.SetTool(1, Tr(sRailFaceVars), Tr(sTabVariables));
+    FRail.SetTool(2, Tr(sRailFaceSet), Tr(sTabVariants));
+  end;
   { The rows carry their words from the worker, and their first two columns are written here
     -- so the level and the file name change language at once. The MESSAGE column does not:
     it was worded by the render that produced it, and it stays in the old language until the
