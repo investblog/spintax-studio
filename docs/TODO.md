@@ -193,6 +193,17 @@ the managed tier are later releases.
       [ADR 0004](decisions/0004-html-preview-page-and-source.md), where the numbers are.
       `gui/SpxPreviewPane.pas` owns the switch and the guard; the form just hands it a string.
 
+      **The source view got its markup coloured** (2026-07-28), which turned into two more
+      findings. SynEdit's HTML highlighter opens a tag at every `<`, so one `Цена < 100` in
+      the output colours the paragraph after it as attributes and swallows the real `</p>`;
+      the rule the family follows lives in `src/SpxHtmlScan.pas` and `gui/SpxSourceMarkup.pas`
+      paints those runs back — the tokenizer is private and forking 2600 lines of LCL for a
+      colour is not worth it ([ADR 0006](decisions/0006-paint-over-the-html-highlighter.md)).
+      And the wrap plugin costs the square of a line's length — 14.5 s for one line of 1 MB,
+      while the same text unwrapped is 16 ms — so past 32 KB on a line the view is rebuilt
+      without it and scrolls sideways. It has to be REBUILT: the plugin cannot be taken off a
+      live editor, freeing it access-violates and detaching it leaves a dead line-mapping view.
+
       Two real bugs fell out of using it. The window closed without the process ending
       (`Application.CreateForm`, not a hand-built form: LCL terminates only for
       `Application.MainForm`), and the app opened on locale `ru` against an English demo,

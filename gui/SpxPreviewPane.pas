@@ -28,8 +28,8 @@ interface
 
 uses
   Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, Menus, IpHtml,
-  SynEdit, SynEditTypes, SynEditWrappedView, SynHighlighterHTML,
-  SpxStudio, SpxUi, SpxStrings;
+  SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynHighlighterHTML,
+  SpxStudio, SpxUi, SpxStrings, SpxSourceMarkup;
 
 const
   { 16 KB is ~150 ms of layout on this machine -- still invisible between keystrokes, and
@@ -57,6 +57,9 @@ type
       in. }
     FSource: TSynEdit;
     FSourceHl: TSynHTMLSyn;
+    { Paints back what the HTML highlighter mistook for a tag. It belongs to the editor, so
+      it is created with each one and dies with it. }
+    FTextBack: TSpxSourceMarkup;
     { Whether the view currently in place wraps. Not a plugin reference: the plugin cannot be
       detached, so this is what says a rebuild is needed. }
     FWrapped: Boolean;
@@ -101,6 +104,12 @@ type
   end;
 
 implementation
+
+type
+  { The markup manager is protected on TSynEditBase; a descendant declared here reaches it
+    without patching SynEdit -- the same accessor the main form uses for the editor's own
+    markups. }
+  TSynEditReach = class(TSynEdit);
 
 constructor TSpxPreviewPane.Create(AOwner: TComponent);
 begin
@@ -231,6 +240,12 @@ begin
   FSource.Options := FSource.Options - [eoScrollPastEol] + [eoHideRightMargin];
   FSource.Highlighter := FSourceHl;
   FSource.PopupMenu := FSourceMenu;
+  { TSynHTMLSyn opens a tag at every `<`, so one `Цена < 100` in the output colours the rest
+    of the paragraph as attributes. The rule the rest of the family follows is in
+    SpxHtmlPhantomTags; this puts the text colour back over the runs it names. }
+  FTextBack := TSpxSourceMarkup.Create(FSource);
+  FTextBack.SetTextColour(FSourceHl.TextAttri.Foreground);
+  TSynEditMarkupManager(TSynEditReach(FSource).MarkupMgr).AddMarkUp(FTextBack);
   SpxApplyMonoFont(FSource.Font);
   FSource.Color := clWindow;
   FSource.Visible := FSourceMode;
@@ -293,6 +308,7 @@ begin
         exists to avoid, and then throw the result away. }
       if (SpxLongestLine(FContent) <= SPX_WRAP_LINE_LIMIT) <> FWrapped then
         BuildSourceView(not FWrapped);
+      FTextBack.SetText(FContent);
       FSource.Text := FContent;
       FShownSource := FContent;
     end;
