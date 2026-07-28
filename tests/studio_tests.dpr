@@ -2617,6 +2617,79 @@ end;
    Only single-line examples are read automatically -- the arrow says where the document ends
    and the expected output begins. The few multi-line ones are gated by hand below, and the
    count assertion at the end is what stops examples from silently disappearing. *)
+(* A session value the author means LITERALLY. The engine renders a host-supplied value
+   exactly as it renders a `#set` one -- that is the family's contract and the default here,
+   because a production host passes its values raw and the preview has to agree with it. The
+   flag is the author's escape hatch, and what it costs is one call on the way past. *)
+procedure TestSessionValues;
+var
+  p_: TSpxVarPair;
+  vars_: TStrMap;
+  ctx: TSpxContext;
+  session_, kept: TSpxVarPairs;
+  model_: TSpxVarInfos;
+begin
+  p_.Name := 'x';
+  p_.Value := '{дёшево|дорого}';
+
+  p_.Literal := False;
+  Check('session/a template value is handed over as typed',
+        SpxValueForEngine(p_), '{дёшево|дорого}');
+  p_.Literal := True;
+  CheckTrue('session/a literal value is not',
+            SpxValueForEngine(p_) <> '{дёшево|дорого}');
+  { Plain text has nothing to neutralise, so the two are the same string. }
+  p_.Value := 'Москва';
+  Check('session/plain text is untouched either way', SpxValueForEngine(p_), 'Москва');
+
+  { THE FLAG HAS TO SURVIVE THE JOURNEY. It is set on the panel, filtered through
+    SpxKeepRuntime on the way to the job, and read by the worker -- and the first cut of that
+    filter copied the name and the value and dropped this, so the checkbox did nothing at all
+    and nothing said so. }
+  begin
+    SetLength(session_, 1);
+    session_[0].Name := 'price';
+    session_[0].Value := '{дёшево|дорого}';
+    session_[0].Literal := True;
+    SetLength(model_, 1);
+    model_[0].Name := 'price';
+    model_[0].Kind := spxVarRuntime;
+    kept := SpxKeepRuntime(model_, session_);
+    CheckTrue('session/the filter keeps the value', (Length(kept) = 1) and
+              (kept[0].Value = '{дёшево|дорого}'));
+    CheckTrue('session/and the flag with it', (Length(kept) = 1) and kept[0].Literal);
+  end;
+
+  { AND WHAT IT MEANS, through the engine rather than by inspection of the bytes. }
+  vars_ := TStrMap.Create;
+  try
+    p_.Name := 'x';
+    p_.Value := '{дёшево|дорого}';
+
+    p_.Literal := False;
+    vars_.AddOrSetValue('x', SpxValueForEngine(p_));
+    ctx := SpxSeededContext('ru', vars_, 5, nil);
+    CheckTrue('session/without the flag the engine chooses',
+              SpxRenderSample('%x%', ctx) <> '{дёшево|дорого}');
+
+    p_.Literal := True;
+    vars_.AddOrSetValue('x', SpxValueForEngine(p_));
+    ctx := SpxSeededContext('ru', vars_, 5, nil);
+    Check('session/with the flag the braces are text',
+          SpxRenderSample('%x%', ctx), '{дёшево|дорого}');
+
+    { A percent sign in a literal value must not start a variable reference either. }
+    p_.Value := 'скидка %off% сегодня';
+    p_.Literal := True;
+    vars_.AddOrSetValue('x', SpxValueForEngine(p_));
+    ctx := SpxSeededContext('ru', vars_, 5, nil);
+    Check('session/and a percent stays a percent',
+          SpxRenderSample('%x%', ctx), 'Скидка %off% сегодня');
+  finally
+    vars_.Free;
+  end;
+end;
+
 procedure TestHelpExamples;
 const
   ARROW = #$E2#$86#$92;      { → }
@@ -4462,6 +4535,7 @@ begin
   TestHtmlScan;
   TestGroups;
   TestHelpExamples;
+  TestSessionValues;
   TestFind;
   TestPageDocument;
   TestDirectiveEditing;

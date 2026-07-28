@@ -42,6 +42,10 @@ type
     { The tools' strip. It is the window's, not the editor's pane's: a user who moves it to
       the right expects it at the window's edge, the way every side bar behaves. }
     FRail: TSpxToolRail;
+    { The interface's language is the USER'S setting. Tying it to the document's locale was a
+      surprise every time the locale box was touched, so the tie is now one of three choices
+      and the default comes from the machine. }
+    FLangMode: TSpxUiLangMode;
     { Everything that is not the rail. Two controls aligned to the same edge are ordered by
       LCL and not by us -- measured: created first, re-aligned, even moved to index 0, the
       rail still opened between the editor and the preview. A container settles it by
@@ -156,12 +160,15 @@ type
     procedure RailDiagClicked(Sender: TObject);
     procedure RailVarsClicked(Sender: TObject);
     procedure RailSetClicked(Sender: TObject);
+    procedure LangEnClicked(Sender: TObject);
+    procedure LangRuClicked(Sender: TObject);
+    procedure LangFollowClicked(Sender: TObject);
+    procedure ApplyLangMode;
     procedure RailLeftClicked(Sender: TObject);
     procedure RailRightClicked(Sender: TObject);
     procedure BuildRail;
     procedure RailGroupClicked(Sender: TObject);
     procedure CaretSettled(Sender: TObject);
-    procedure EditorStatus(Sender: TObject; Changes: TSynStatusChanges);
     procedure GroupApplied(BodyStart, Stop: Integer; const Body: string);
     { The caret's byte offset into FEditor.Text, and the way back. The two must agree, which
       is why both live here rather than being computed at their call sites. }
@@ -225,10 +232,16 @@ constructor TSpxMainForm.Create(AOwner: TComponent);
 begin
   { CreateNew, not Create: there is no .lfm resource to load. }
   inherited CreateNew(AOwner);
-  { The window speaks the document's language, so this is decided BEFORE anything is built:
-    every caption is read once, when its control is created. Changing it afterwards needs
-    the captions re-read, which SettingChanged does. }
-  SpxSetUiLang(SpxUiLangFor('en'));   { the language the window opens on -- see FLocale }
+  { Decided BEFORE anything is built: every caption is read once, when its control is
+    created, and changing it afterwards needs them all re-read (RetranslateUi).
+
+    The MACHINE's language, not the document's. A desktop application opens in the language
+    of the desktop; whether it then follows the template is the user's setting, and it is not
+    the default -- an interface that changed language because the text did was a surprise
+    every time the locale box was touched. }
+  FLangMode := spxUiEn;
+  if SpxSystemLang = spxLangRu then FLangMode := spxUiRu;
+  SpxSetUiLang(SpxLangForMode(FLangMode, ''));
   FPath := '';
   FEol := SPX_DEFAULT_EOL;
   FTrailingEol := True;
@@ -525,7 +538,6 @@ begin
   FCaretTimer.Enabled := False;
   FCaretTimer.Interval := 120;
   FCaretTimer.OnTimer := @CaretSettled;
-  FEditor.OnStatusChange := @EditorStatus;
 
 end;
 
@@ -887,15 +899,6 @@ begin
   Result := Point(1, FEditor.Lines.Count);
 end;
 
-procedure TSpxMainForm.EditorStatus(Sender: TObject; Changes: TSynStatusChanges);
-begin
-  if not FSlide.Visible then Exit;
-  if Changes * [scCaretX, scCaretY] = [] then Exit;
-  { Restarted on every move, so a run of arrow keys costs one lookup rather than twenty. }
-  FCaretTimer.Enabled := False;
-  FCaretTimer.Enabled := True;
-end;
-
 procedure TSpxMainForm.CaretSettled(Sender: TObject);
 begin
   FCaretTimer.Enabled := False;
@@ -930,6 +933,40 @@ begin
   if FBottom.PageCount >= 3 then FBottom.PageIndex := 2;
 end;
 
+procedure TSpxMainForm.LangEnClicked(Sender: TObject);
+begin
+  FLangMode := spxUiEn;
+  ApplyLangMode;
+end;
+
+procedure TSpxMainForm.LangRuClicked(Sender: TObject);
+begin
+  FLangMode := spxUiRu;
+  ApplyLangMode;
+end;
+
+procedure TSpxMainForm.LangFollowClicked(Sender: TObject);
+begin
+  FLangMode := spxUiFollow;
+  ApplyLangMode;
+end;
+
+{ Resolve the setting and, if that changed anything, say everything again. Called both when
+  the setting changes and when the DOCUMENT's locale does -- the second only matters in
+  follow mode, which is the point of having the mode at all. }
+procedure TSpxMainForm.ApplyLangMode;
+var want: TSpxLang;
+begin
+  want := SpxLangForMode(FLangMode, FLocale.Text);
+  if want <> SpxUiLang then
+  begin
+    SpxSetUiLang(want);
+    RetranslateUi;
+  end
+  else
+    BuildMenu;   { the tick still has to move }
+end;
+
 procedure TSpxMainForm.RailLeftClicked(Sender: TObject);
 begin
   FRail.Side := spxRailLeft;
@@ -956,7 +993,7 @@ procedure TSpxMainForm.BuildMenu;
 
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
-  fileMenu, editMenu, viewMenu, sideItem: TMenuItem;
+  fileMenu, editMenu, viewMenu, langMenu, sideItem: TMenuItem;
 begin
   { Rebuilt when the language changes, so the previous one is released first -- it is owned
     by the form and would otherwise pile up one menu per switch. }
@@ -1023,6 +1060,23 @@ begin
   sideItem := Item(viewMenu, Tr(sRailRight), 0, [], @RailRightClicked);
   sideItem.RadioItem := True;
   sideItem.Checked := (FRail <> nil) and (FRail.Side = spxRailRight);
+
+  { The interface's language, and whether it follows the document's. Three radio items in
+    their own submenu rather than a checkbox, because "follow" is a third state and not the
+    absence of the other two. }
+  Item(viewMenu, '-', 0, [], nil);
+  langMenu := TMenuItem.Create(Self);
+  langMenu.Caption := Tr(sMenuLanguage);
+  viewMenu.Add(langMenu);
+  sideItem := Item(langMenu, Tr(sLangEnglish), 0, [], @LangEnClicked);
+  sideItem.RadioItem := True;
+  sideItem.Checked := FLangMode = spxUiEn;
+  sideItem := Item(langMenu, Tr(sLangRussian), 0, [], @LangRuClicked);
+  sideItem.RadioItem := True;
+  sideItem.Checked := FLangMode = spxUiRu;
+  sideItem := Item(langMenu, Tr(sLangFollow), 0, [], @LangFollowClicked);
+  sideItem.RadioItem := True;
+  sideItem.Checked := FLangMode = spxUiFollow;
 
   Self.Menu := bar;
 end;
@@ -1213,6 +1267,16 @@ end;
 
 procedure TSpxMainForm.SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
 begin
+  { ONE handler, two jobs. SynEdit has a single OnStatusChange, and giving the group editor
+    its own assignment silently took this one away -- the fragment preview stopped following
+    the selection and nothing said so. Whatever is added here next goes in the same way. }
+  if FSlide.Visible and (Changes * [scCaretX, scCaretY] <> []) then
+  begin
+    { Restarted on every move, so a run of arrow keys costs one lookup rather than twenty. }
+    FCaretTimer.Enabled := False;
+    FCaretTimer.Enabled := True;
+  end;
+
   if not (scSelection in Changes) then Exit;
   { A jump is mid-assignment: its own event comes at the end, with the state written. }
   if FJumping then Exit;
@@ -1504,15 +1568,11 @@ begin
 end;
 
 procedure TSpxMainForm.SettingChanged(Sender: TObject);
-var want: TSpxLang;
 begin
-  { The interface follows the document's language. }
-  want := SpxUiLangFor(FLocale.Text);
-  if want <> SpxUiLang then
-  begin
-    SpxSetUiLang(want);
-    RetranslateUi;
-  end;
+  { The document's locale changed. Whether the INTERFACE follows it is the user's setting,
+    and by default it does not: an editor that changes language because the text did was a
+    surprise every time this box was touched. }
+  if FLangMode = spxUiFollow then ApplyLangMode;
   RequestRender;
 end;
 
@@ -1551,6 +1611,7 @@ begin
     blank line as the file is, thirty-five once normalised to CRLF, and the source view then
     opens on a screenful of nothing. The preview must show what the FILE produces. }
   job.Text := DocText;
+  job.UiLang := SpxUiLang;
   job.Locale := FLocale.Text;
   job.Seeded := FSeeded.Checked;
   job.Seed := LongWord(StrToInt64Def(FSeedEdit.Text, 1));

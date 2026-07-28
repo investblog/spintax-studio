@@ -53,6 +53,11 @@ type
       defines. They are the session's, never the document's: they feed the render context and
       knownVariables, so a `%name%` with a value stops being reported as undefined. }
     Vars: TSpxVarPairs;
+    { The language the PANEL will show these rows in. It comes with the job rather than being
+      read from a global on this thread, and it is the INTERFACE's language rather than the
+      document's: the two are separate settings now, and a panel with Russian headers over
+      English findings is what deriving it from the locale produced. }
+    UiLang: TSpxLang;
     { A selection to preview on its own, in the DOCUMENT's scope -- its `#set`/`#def` lines,
       the runtime context and the locale all still apply (spec §4.2). Empty means the whole
       document, which is the ordinary case. Only the PREVIEW narrows: diagnostics keep
@@ -399,7 +404,7 @@ begin
     vars := TStrMap.Create;
     for i := 0 to High(req.Vars) do
       if req.Vars[i].Name <> '' then
-        vars.AddOrSetValue(req.Vars[i].Name, req.Vars[i].Value);
+        vars.AddOrSetValue(req.Vars[i].Name, SpxValueForEngine(req.Vars[i]));
   end;
   try
     ctx := SpxSeededContext(req.Locale, vars, seed, FSet);
@@ -519,7 +524,7 @@ begin
     vars := TStrMap.Create;
     for i := 0 to High(Job.Vars) do
       if Job.Vars[i].Name <> '' then
-        vars.AddOrSetValue(Job.Vars[i].Name, Job.Vars[i].Value);
+        vars.AddOrSetValue(Job.Vars[i].Name, SpxValueForEngine(Job.Vars[i]));
   end;
   try
     if Job.Seeded then ctx := SpxSeededContext(Job.Locale, vars, Job.Seed, FSet)
@@ -550,7 +555,7 @@ begin
       { The document's own locale decides the wording, not whatever the window happens to be
         showing: the rows are built here, off the UI thread, and a global read across that
         boundary is exactly the race this worker exists to avoid. }
-      FResult.Rows := SpxPanelRows(report, SpxLangFor(Job.Locale));
+      FResult.Rows := SpxPanelRows(report, Job.UiLang);
     finally
       report.Free;
     end;

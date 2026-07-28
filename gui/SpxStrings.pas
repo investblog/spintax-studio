@@ -37,6 +37,8 @@ type
     sMenuFile, sMenuNew, sMenuOpen, sMenuSave, sMenuSaveAs, sMenuReloadSet, sMenuExit,
     sMenuEdit, sMenuFind, sMenuFindNext, sMenuFindPrev,
     sMenuView, sRailLeft, sRailRight,
+    { the interface's own language -- tied to the template's only if the user says so }
+    sMenuLanguage, sLangEnglish, sLangRussian, sLangFollow,
     { the group editor that slides out of the rail }
     sRailFaceGroup, sTabGroup, sGroupNone, sGroupApply, sGroupRefused, sGroupMultiline,
     sGroupChoice, sGroupConditional, sGroupPlural, sGroupPermutation,
@@ -59,7 +61,7 @@ type
     sLevelError, sLevelWarning, sLevelNote, sDocument,
 
     { ── the variables panel ── }
-    sVarsDefinitions, sVarsSession, sColKind, sColName, sColValue,
+    sVarsDefinitions, sVarsSession, sColKind, sColName, sColValue, sColLiteral,
 
     { ── the variants panel ── }
     sHowMany, sSeedShort, sRandomSeed, sGenerate, sStop,
@@ -86,13 +88,26 @@ type
   error at best. }
 function Tr(Id: TSpxStr): string;
 
-{ Which language the window speaks. It follows the document's locale, which is what the user
-  asked for: switching a template to Russian switches the interface with it. The obvious
-  cost is that editing a German template in a Russian office gives an English interface --
-  a separate setting can override this later, and the plumbing is ready for it. }
+(* Which language the window speaks. It is the USER'S setting and nothing else's: an
+   interface that changed language because the document did was a surprise every time the
+   locale box was touched, so the tie is now one of the three choices rather than the rule.
+   The default comes from the operating system, which is what a desktop application is
+   expected to do; `spxUiFollow` is the setting that restores the old behaviour for someone
+   who wants it. *)
 procedure SpxSetUiLang(ALang: TSpxLang);
 function SpxUiLang: TSpxLang;
 function SpxUiLangFor(const Locale: string): TSpxLang;
+
+type
+  { English, Russian, or whatever the open document says. }
+  TSpxUiLangMode = (spxUiEn, spxUiRu, spxUiFollow);
+
+{ The language this mode resolves to, given the document's locale. `spxUiFollow` is the only
+  one that looks at it. }
+function SpxLangForMode(AMode: TSpxUiLangMode; const DocLocale: string): TSpxLang;
+
+{ What the machine is set to, mapped onto the two languages this product speaks. }
+function SpxSystemLang: TSpxLang;
 
 { How many code points this id is allowed, or 0 for "as long as it needs". Exposed so the
   suite can check every language against it. }
@@ -104,7 +119,10 @@ function SpxStrIn(ALang: TSpxLang; Id: TSpxStr): string;
 implementation
 
 uses
-  SysUtils, Spintax;
+  { gettext is the RTL's, not the LCL's: this unit is compiled by plain fpc for the console
+    suite as well as by lazbuild for the window, and Translations would be reachable to only
+    one of the two. }
+  SysUtils, gettext, Spintax;
 
 var
   GLang: TSpxLang = spxLangEn;
@@ -116,6 +134,7 @@ const
       'File', 'New', 'Open…', 'Save', 'Save as…', 'Reload set', 'Exit',
       'Edit', 'Find…', 'Find next', 'Find previous',
       'View', 'Tools on the left', 'Tools on the right',
+      'Interface language', 'English', 'Русский', 'Follow the template',
       'G', 'Group under the caret',
       'The caret is not inside a group.', 'Apply',
       'Refused: the result would say something other than this list — a variant cannot ' +
@@ -137,7 +156,7 @@ const
 
       ' Definitions — they live in the document',
       ' Session values — rendered as spintax, never written to the document',
-      'Kind', 'Name', 'Value',
+      'Kind', 'Name', 'Value', 'as text',
 
       'Count', 'seed', 'random', 'Generate', 'Stop',
       'Drop similar', 'Exact duplicates only', 'Keep everything', 'shingle', 'limit',
@@ -172,6 +191,7 @@ const
       'Выход',
       'Правка', 'Найти…', 'Найти далее', 'Найти назад',
       'Вид', 'Инструменты слева', 'Инструменты справа',
+      'Язык интерфейса', 'English', 'Русский', 'Как в шаблоне',
       'Г', 'Группа под курсором',
       'Курсор не внутри группы.', 'Применить',
       'Отказано: результат сказал бы не то, что в этом списке — вариант не может нести ' +
@@ -193,7 +213,7 @@ const
 
       ' Определения — живут в документе',
       ' Значения на сессию — рендерятся как spintax, в документ не пишутся',
-      'Вид', 'Имя', 'Значение',
+      'Вид', 'Имя', 'Значение', 'как текст',
 
       'Сколько', 'сид', 'случайный', 'Сгенерировать', 'Стоп',
       'Убирать похожие', 'Только точные совпадения', 'Ничего не убирать', 'шингл', 'порог',
@@ -242,8 +262,10 @@ const
     { menus -- a menu grows to fit its longest item }
     0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0,
-    { the View menu, then the rail: a button's face is 36px, so two characters and no more }
+    { the View menu, then the language submenu, then the rail: a button's face is 36px, so
+      two characters and no more }
     0, 0, 0,
+    0, 0, 0, 0,
     { the group editor: a face, a name, and the panel's own sentences -- the panel is 300px
       wide and its labels wrap, so only the kind names are held to a width }
     2, 0, 0, 0, 0, 0,
@@ -267,8 +289,9 @@ const
     15, 18, 10, 0,
     14, 14, 14, 18,
 
-    { the variables panel: two headings above full-width grids, then its columns }
-    0, 0, 8, 10, 0,
+    { the variables panel: two headings above full-width grids, then its columns. The
+      literal column is a checkbox with a title above it, and 90px holds ten characters }
+    0, 0, 8, 10, 0, 10,
 
     { the variants panel. The three labels that name a field are hung off that field by
       PlaceLabels, so their room is the gap before it rather than a coordinate. }
@@ -320,6 +343,26 @@ begin
   { editor-core's rule, not a second copy of it: the panel's sentences and the window's
     captions must never disagree about what language a document is in. }
   Result := SpxLangFor(Locale);
+end;
+
+function SpxLangForMode(AMode: TSpxUiLangMode; const DocLocale: string): TSpxLang;
+begin
+  case AMode of
+    spxUiEn: Result := spxLangEn;
+    spxUiRu: Result := spxLangRu;
+  else
+    Result := SpxLangFor(DocLocale);
+  end;
+end;
+
+function SpxSystemLang: TSpxLang;
+var lang, fallback: string;
+begin
+  { The engine's own normalisation over the OS's code, so `ru_RU` and `ru` land in one place
+    the same way a document's locale does. }
+  GetLanguageIDs(lang, fallback);
+  if lang = '' then lang := fallback;
+  Result := SpxLangFor(lang);
 end;
 
 function SpxStrBudget(Id: TSpxStr): Integer;

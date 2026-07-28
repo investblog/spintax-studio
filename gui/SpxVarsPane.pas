@@ -40,11 +40,17 @@ type
     FRows: TSpxVarInfos;          // the definitions, in the order the grid shows them
     FModel: TSpxVarInfos;         // the last model, for filtering what is sent
     FValues: TStringList;         // name -> value, the session's own
+    (* Which of those the author means LITERALLY. Kept beside the values rather than encoded
+       into them, because what the panel shows must stay what was typed: neutralising is not
+       reversible by stripping -- SpStripSentinels takes the marked characters with it, so a
+       round trip through it turns `{a|b}` into `a|b`. *)
+    FLiteral: TStringList;        // name -> '1' for the ones handed over as text
     FSig: string;                 // what the grids currently show
     FOnJump: TSpxJumpEvent;
     FOnRuntimeChanged: TNotifyEvent;
     procedure DefsClicked(Sender: TObject);
     procedure RuntimeEdited(Sender: TObject; ACol, ARow: Integer; const AValue: string);
+    procedure LiteralToggled(Sender: TObject; ACol, ARow: Integer; AState: TCheckboxState);
     function KindName(Kind: TSpxVarKind): string;
     procedure FitLastColumn(AGrid: TStringGrid);
   protected
@@ -73,6 +79,9 @@ begin
   inherited Create(AOwner);
   BevelOuter := bvNone;
   FValues := TStringList.Create;
+  FLiteral := TStringList.Create;
+  FLiteral.CaseSensitive := False;
+  FLiteral.UseLocale := False;
   { Names are ASCII by the engine's grammar and it matches them case-insensitively, so BRAND
     and brand are one value here -- but the comparison is the RTL's byte one, never the OS
     collation (see SpxStudio). }
@@ -127,16 +136,40 @@ begin
   FRuntime.Align := alClient;
   FRuntime.RowCount := 1;
   FRuntime.FixedRows := 1;
-  FRuntime.ColCount := 2;
+  FRuntime.ColCount := 3;
   FRuntime.Cells[0, 0] := Tr(sColName);
   FRuntime.Cells[1, 0] := Tr(sColValue);
+  FRuntime.Cells[2, 0] := Tr(sColLiteral);
   FRuntime.ColWidths[0] := Px(Self, 140);
-  FRuntime.ColWidths[1] := Px(Self, 660);
+  FRuntime.ColWidths[1] := Px(Self, 570);
+  FRuntime.ColWidths[2] := Px(Self, 90);
   { Column 0 stays FIXED here, and that is load-bearing: it is what keeps the name column
     read-only while goEditing is on. RuntimeEdited keys off that cell, so an editable name
     would file a value under a name the model never had. }
   FRuntime.Options := FRuntime.Options + [goEditing, goAlwaysShowEditor] - [goRangeSelect];
   FRuntime.OnSetEditText := @RuntimeEdited;
+  { The third column is a checkbox rather than a word, because it is a yes/no about the value
+    beside it and a word would be one more thing to translate into a column this narrow. }
+  FRuntime.Columns.Add.Title.Caption := Tr(sColName);
+  FRuntime.Columns.Add.Title.Caption := Tr(sColValue);
+  with FRuntime.Columns.Add do
+  begin
+    Title.Caption := Tr(sColLiteral);
+    ButtonStyle := cbsCheckboxColumn;
+    ValueChecked := '1';
+    ValueUnchecked := '';
+  end;
+  { WITH Columns objects LCL sizes the grid as FixedCols + Columns.Count, and the default
+    FixedCols of 1 shifted every data column by one -- measured: the session grid came back
+    with four columns and the name where the code looked for the fixed one. The name stays
+    read-only through the column itself now, which is what the old comment about column 0
+    being fixed was really relying on. }
+  FRuntime.FixedCols := 0;
+  FRuntime.Columns[0].ReadOnly := True;
+  FRuntime.Columns[0].Width := Px(Self, 140);
+  FRuntime.Columns[1].Width := Px(Self, 570);
+  FRuntime.Columns[2].Width := Px(Self, 90);
+  FRuntime.OnCheckboxToggled := @LiteralToggled;
 
   FRuntimeLabel := TLabel.Create(Self);
   FRuntimeLabel.Parent := FRuntimeBox;
@@ -158,6 +191,7 @@ end;
 destructor TSpxVarsPane.Destroy;
 begin
   FValues.Free;
+  FLiteral.Free;
   inherited Destroy;
 end;
 
@@ -235,6 +269,7 @@ begin
         FRuntime.Cells[1, runRow] := FValues.Values[AVars[i].Name]
       else
         FRuntime.Cells[1, runRow] := AVars[i].Value;
+      FRuntime.Cells[2, runRow] := FLiteral.Values[AVars[i].Name];
     end
     else
     begin
@@ -268,10 +303,28 @@ begin
     begin
       all[n].Name := FValues.Names[i];
       all[n].Value := FValues.ValueFromIndex[i];
+      all[n].Literal := FLiteral.Values[FValues.Names[i]] = '1';
       Inc(n);
     end;
   SetLength(all, n);
   Result := SpxKeepRuntime(FModel, all);
+end;
+
+{ The author says this value is text, not a template. Recorded per NAME rather than per row,
+  because the rows are rebuilt from the model on every render and a row index means nothing
+  between two of them. }
+procedure TSpxVarsPane.LiteralToggled(Sender: TObject; ACol, ARow: Integer;
+  AState: TCheckboxState);
+var name_: string;
+begin
+  if (ACol <> 2) or (ARow < 1) then Exit;
+  name_ := FRuntime.Cells[0, ARow];
+  if name_ = '' then Exit;
+  if AState = cbChecked then FLiteral.Values[name_] := '1'
+  else FLiteral.Values[name_] := '';
+  { A value that changes what it MEANS has to reach the engine at once, the same as a value
+    that changes what it says. }
+  if Assigned(FOnRuntimeChanged) then FOnRuntimeChanged(Self);
 end;
 
 procedure TSpxVarsPane.RuntimeEdited(Sender: TObject; ACol, ARow: Integer;

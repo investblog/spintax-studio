@@ -477,9 +477,18 @@ next:
       column is unreadable, so the rail is the ACCESS -- icons, always in reach -- and the
       workspace stays where the data fits. A panel that is genuinely narrow by nature (the
       group editor is a list of variants, one per line) can live in the rail itself.
-- [ ] **4. Icons.** Last on purpose: their sizes depend on where they end up, and under DPI
-      they are needed in several sizes at once. The app icon needs `{$R *.res}` in the .lpr,
-      which was missing entirely until step 1 -- the manifest was generated and never linked.
+- [ ] **4. Icons — from Material Design Icons** (pictogrammers.com/library/mdi, the user's
+      call 2026-07-29, for one visual family across the rail, the panes and the app). Last on
+      purpose: their sizes depend on where they end up, and under DPI they are needed in
+      several sizes at once. The rail's geometry is already settled (44px strip, 36px faces),
+      so this replaces letters with pictures and moves nothing.
+
+      Three things to settle when it lands: the licence is **Apache 2.0**, so a credit has to
+      live somewhere the user can find (About, or the help's front page) and the NOTICE has
+      to travel with the repository; the icons are SVG and LCL wants raster, so they need a
+      build step or a checked-in set at 16/20/24/32/36/48; and the app icon needs
+      `{$R *.res}` in the .lpr, which was missing entirely until step 1 -- the manifest was
+      generated and never linked.
 
 **The interface will be multilingual**, switched together with the text language. Two things
 follow, and both are constraints on step 2 rather than later work: no layout may be computed
@@ -514,7 +523,26 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
 ## Raised by review, not yet built
 
-- [ ] **A session value is a template, and sometimes that is not what the author meant.**
+- [x] **A session value is a template, and sometimes that is not what the author meant**
+      (2026-07-29). The Variables panel's session half gained a third column, «как текст»:
+      ticked, the value goes to the engine through `SpNeutralize` and its braces and percent
+      signs stay characters. Unticked -- the default -- it is a template, because that is what
+      a production host passes and the preview has to agree with it. The neutralising is
+      `SpxValueForEngine` in editor-core, gated both directly and through a render.
+
+      One bug found on the way, and it is the shape worth remembering: `SpxKeepRuntime`, the
+      filter every session value passes on its way to the job, copied the name and the value
+      and silently dropped the new flag -- so the checkbox did nothing and nothing said so.
+      There is a check for that now.
+
+- [x] **The interface's language is its own setting** (2026-07-29, the user's call). It used
+      to follow the document's locale, which meant the whole window changed language whenever
+      the locale box was touched. Now: View → Язык интерфейса → English / Русский / Как в
+      шаблоне, defaulting to the machine's language. The diagnostics rows follow the
+      INTERFACE (the job carries `UiLang`), because Russian headers over English findings was
+      the first thing decoupling produced.
+
+- [ ] **(superseded, kept for the reasoning) A session value is a template.**
       (M2, the Variables panel.) Measured: the engine renders a host-supplied value exactly as
       it renders a `#set` one — `{Rome|Paris}` picks a variant, `%other%` expands, a
       self-reference unwinds to the depth limit and stops. That is the family's contract, and

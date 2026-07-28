@@ -116,6 +116,13 @@ type
   TSpxVarPair = record
     Name: string;
     Value: string;
+    (* LITERAL means the author typed text, not a template. The engine renders a
+       host-supplied value exactly as it renders a `#set` one -- measured: `{a|b}` picks a
+       variant, `%other%` expands -- which is the family's contract and the right default,
+       because a production host passes its values raw and the preview has to agree with it.
+       But an author pasting a price list with a brace in it means the brace, so this says
+       which of the two it is. The neutralising is SpxValueForEngine's job, not the panel's. *)
+    Literal: Boolean;
   end;
   TSpxVarPairs = array of TSpxVarPair;
 
@@ -618,6 +625,16 @@ function SpxDocumentMarks(Report: TSpxReport): TSpxDiagMarks;
   Walked with the engine's own SpCodePointAt, so both sides agree on what a character is.
   1-based in and out; a column past the end clamps to just after the last byte, which is
   where an editor puts a caret at the end of a line. }
+(* The session value as the ENGINE must receive it. A literal one goes through the engine's
+  own SpNeutralize, which marks its structural characters with the private-use sentinels the
+  parser skips and the renderer removes -- measured: `{дёшево|дорого}` handed over neutralised
+  renders as those eight characters and no choice, and the sentinels do not reach the output.
+
+  The value the AUTHOR sees is never this one: neutralising is not reversible by stripping
+  (SpStripSentinels takes the marked characters with it, leaving `a|b` out of `{a|b}`), so the
+  panel keeps what was typed and this is produced on the way past. *)
+function SpxValueForEngine(const Pair: TSpxVarPair): string;
+
 function SpxByteColumn(const Line: string; CodePointCol: Integer): Integer;
 
 { The longest line in Text, in bytes, counting the editor's three line endings.
@@ -859,6 +876,11 @@ begin
     Inc(cp);
   end;
   Result := i;
+end;
+
+function SpxValueForEngine(const Pair: TSpxVarPair): string;
+begin
+  if Pair.Literal then Result := SpNeutralize(Pair.Value) else Result := Pair.Value;
 end;
 
 function SpxLongestLine(const Text: string): Integer;
@@ -1353,6 +1375,9 @@ begin
       if wanted <> Vars[i].Name then Continue;
       Result[n].Name := Vars[i].Name;      { the model's spelling: what the render matches }
       Result[n].Value := Session[j].Value;
+      { And how it is meant. A field added to the record and forgotten HERE is a flag the
+        panel sets and the engine never sees -- which is exactly what happened. }
+      Result[n].Literal := Session[j].Literal;
       Inc(n);
       Break;                               { one value per name; the first wins }
     end;
