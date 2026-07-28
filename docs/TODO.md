@@ -199,6 +199,9 @@ the managed tier are later releases.
       the rule the family follows lives in `src/SpxHtmlScan.pas` and `gui/SpxSourceMarkup.pas`
       paints those runs back — the tokenizer is private and forking 2600 lines of LCL for a
       colour is not worth it ([ADR 0006](decisions/0006-paint-over-the-html-highlighter.md)).
+      **The rule is gated; the painting is not.** The 16 scanner checks run in the suite, but
+      the overlay itself was verified by pixel probe, the same standing gap as the bracket
+      highlighting above — nothing in the suite can see a window.
       And the wrap plugin costs the square of a line's length — 14.5 s for one line of 1 MB,
       while the same text unwrapped is 16 ms — so past 32 KB on a line the view is rebuilt
       without it and scrolls sideways. It has to be REBUILT: the plugin cannot be taken off a
@@ -482,6 +485,25 @@ next:
 follow, and both are constraints on step 2 rather than later work: no layout may be computed
 from a caption's length in Russian (a German caption is a third longer), and the captions
 themselves have to leave the code for a table before there are two of them.
+
+## Raised by review, not yet built
+
+- [ ] **A session value is a template, and sometimes that is not what the author meant.**
+      (M2, the Variables panel.) Measured: the engine renders a host-supplied value exactly as
+      it renders a `#set` one — `{Rome|Paris}` picks a variant, `%other%` expands, a
+      self-reference unwinds to the depth limit and stops. That is the family's contract, and
+      Studio must NOT neutralise it host-side: the preview would then disagree with every
+      other engine on the same document and host values, and the panel's two halves would stop
+      meaning the same thing. The engine's own `variable.self-reference` /
+      `variable.circular-reference` / `plural.count-macro` codes exist because values are
+      templates.
+
+      What is genuinely missing is the author's INTENT. Someone pasting text that happens to
+      contain `{` or `%` gets a preview that mangles it and diagnostics about brackets they
+      never wrote. The answer is a per-value choice in the panel — literal (`SpNeutralize` on
+      the way in, which is what that engine API is for) or spintax — never a silent rule.
+      Raised by an external review 2026-07-28; for now the panel at least says what the values
+      are.
 
 ## Taken from GTW, the editor this syntax came from
 

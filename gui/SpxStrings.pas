@@ -122,7 +122,7 @@ const
       'error', 'warning', 'Studio note', 'document',
 
       ' Definitions — they live in the document',
-      ' Session values — never written to the document',
+      ' Session values — rendered as spintax, never written to the document',
       'Kind', 'Name', 'Value',
 
       'Count', 'seed', 'random', 'Generate', 'Stop',
@@ -170,7 +170,7 @@ const
       'ошибка', 'предупреждение', 'заметка Studio', 'документ',
 
       ' Определения — живут в документе',
-      ' Значения на сессию — в документ не пишутся',
+      ' Значения на сессию — рендерятся как spintax, в документ не пишутся',
       'Вид', 'Имя', 'Значение',
 
       'Сколько', 'сид', 'случайный', 'Сгенерировать', 'Стоп',
