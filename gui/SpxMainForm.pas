@@ -62,6 +62,8 @@ type
     { Guards the save while the window is still being assembled: every Apply below moves a
       control and would otherwise write the file once per control, with half the state. }
     FLoading: Boolean;
+    { A double click on the splitter was seen and is waiting for the drag it started to end. }
+    FSplitEven: Boolean;
     { The flags beside the language names. Owned by the FORM, not by the menu bar: the bar is
       freed and rebuilt on every language switch, and a list that went with it would be one
       more sprite decoded per switch. }
@@ -211,6 +213,9 @@ type
     procedure ThemeDarkClicked(Sender: TObject);
     procedure EditorMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer;
       MousePos: TPoint; var Handled: Boolean);
+    procedure GutterPart(AEditor: TSynEdit; const AClass: string; AVisible: Boolean);
+    procedure SplitEvenly(Sender: TObject);
+    procedure SplitMoved(Sender: TObject);
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
     procedure MenuDiagClicked(Sender: TObject);
     procedure MenuVarsClicked(Sender: TObject);
@@ -287,6 +292,13 @@ type
   { The markup manager is protected on TSynEditBase; a descendant declared here reaches it
     without patching SynEdit. }
   TSynEditReach = class(TSynEdit);
+
+  { TSplitter publishes no OnDblClick and TControl keeps it protected; a descendant is the
+    standard way in, and adds no fields, so the cast is safe. }
+  TSplitterReach = class(TSplitter)
+  public
+    property OnDblClick;
+  end;
 
 const
   DEBOUNCE_MS = 200;   // long enough to skip a burst of typing, short enough to feel live
@@ -547,6 +559,17 @@ begin
   SpxApplyMonoFont(FEditor.Font);
   FEditor.OnMouseWheel := @EditorMouseWheel;
   FEditor.Gutter.Visible := True;
+  { THE GUTTER IS 55 PX WIDE OUT OF THE BOX AND 36 OF THEM SERVE FEATURES THIS APP DOES NOT
+    HAVE. Measured, part by part: marks 24 (bookmarks and breakpoints -- there are none, which
+    is also why Ctrl+0 was free to take), line numbers 15, changes 4, separator 2, code folding
+    10 (a spintax template has nothing to fold, and the highlighter reports no fold ranges).
+    The marks column is what shows as a pale band beside a dark editor: its background is
+    clBtnFace, a SYSTEM colour, so it stays light whatever the theme does.
+
+    Numbers and the change stripe stay. The rest is 36 px given back to the text. }
+  GutterPart(FEditor, 'TSynGutterMarks', False);
+  GutterPart(FEditor, 'TSynGutterCodeFolding', False);
+  GutterPart(FEditor, 'TSynGutterSeparator', False);
   { The walkthrough from spintax.net: it opens on something that demonstrates the product
     -- macros, a conditional, plurals, permutations with config -- rather than a toy, and
     the suite scans and validates the same text (SpxDemo). }
@@ -611,6 +634,14 @@ begin
   FSplit.Parent := FBody;
   FSplit.Align := alLeft;
   FSplit.Left := FLeft.Width + 1;
+  { Double-click divides the two panes evenly -- what a person tries on a splitter, and the
+    only way back to the middle once it has been dragged. TSplitter does not publish
+    OnDblClick (extctrls.pp:437-469) and TControl declares it protected, so it is reached
+    through a descendant, the same way this file already reaches SynEdit's markup manager.
+
+    The click only RAISES A FLAG; the work happens in OnMoved. See SplitMoved. }
+  TSplitterReach(FSplit).OnDblClick := @SplitEvenly;
+  FSplit.OnMoved := @SplitMoved;
 
   { Two views of the same output -- the page and the HTML it is -- with the switch and the
     size guard owned by the pane itself (SpxPreviewPane, ADR 0004). }
@@ -739,6 +770,13 @@ begin
   PlaceRight(FSeeded, Px(Self, 55), Px(Self, 22), Px(Self, 9));
   PlaceRight(FLocale, Px(Self, 70), Px(Self, 24), Px(Self, 7));
   leftEnd := right_;
+
+  { THE SLIDE-OUT STARTS WHERE THE EDITOR DOES. It is a sibling of the body rather than a
+    child of it -- that is what keeps it and the rail off each other's edge -- so nothing
+    aligns it with the panes on its own, and it used to begin a whole top strip higher. The
+    inset is read from the strip rather than repeated as a number, so the second row the
+    search bar takes moves it too. }
+  if FSlide <> nil then FSlide.BorderSpacing.Top := FTop.Height;
 
   { ── the template's half, from the left edge outwards, and only when searching ── }
   if not FFindText.Visible then
@@ -1987,6 +2025,48 @@ begin
   SavePrefs;
 end;
 
+{ A DOUBLE CLICK ARRIVES IN THE MIDDLE OF A DRAG, so this only remembers that it happened.
+  TControl.WMLButtonDBLCLK sends a mouse DOWN before it calls DblClick (control.inc:2591-2604)
+  and the splitter's MouseDown starts a move (customsplitter.inc:609-621); the mouse-up that
+  ends that move computes its offset as "where the pointer is now, less how far the splitter
+  has travelled" (customsplitter.inc:576-587), so anything this handler set is measured as
+  travel and subtracted straight back out.
+
+  QUEUEING IT WAS NOT ENOUGH, and the reason is worth the line: TApplication.Idle drains the
+  async queue BEFORE it waits for the next message (application.inc:470-487), so a queued call
+  runs tens of milliseconds after the click and still long before a human lets go of the
+  button. It only appeared to work because a probe that fires four messages back to back never
+  lets the loop idle between them -- the burst hid the very gap the bug lives in. }
+procedure TSpxMainForm.SplitEvenly(Sender: TObject);
+begin
+  FSplitEven := True;
+end;
+
+{ Show or hide one of SynEdit's gutter parts BY CLASS NAME. The gutter is a list whose order
+  and membership are SynEdit's business, so a part is found rather than indexed -- and a name
+  it does not have is not an error, only a part this build of SynEdit does not ship. }
+procedure TSpxMainForm.GutterPart(AEditor: TSynEdit; const AClass: string; AVisible: Boolean);
+var i: Integer;
+begin
+  for i := 0 to AEditor.Gutter.Parts.Count - 1 do
+    if AEditor.Gutter.Parts[i].ClassName = AClass then
+      AEditor.Gutter.Parts[i].Visible := AVisible;
+end;
+
+{ OnMoved fires at the END of StopSplitterMove -- after FSplitDragging is cleared and after
+  the revert described above (customsplitter.inc:583-588) -- so a width set here is the last
+  word, with no assumption about timing at all. It runs on every drag, hence the flag. }
+procedure TSpxMainForm.SplitMoved(Sender: TObject);
+begin
+  if not FSplitEven then Exit;
+  FSplitEven := False;
+  if (FLeft = nil) or (FBody = nil) or (FSplit = nil) then Exit;
+  { Half the body each, less the splitter between them. Not half the WINDOW: the rail and the
+    slide-out have already taken their share, and the two panes divide what is left of the
+    body they share. }
+  FLeft.Width := (FBody.ClientWidth - FSplit.Width) div 2;
+end;
+
 { ── THE SETTINGS FILE ─────────────────────────────────────────────────────────────────── }
 
 { The window, moved to match what was loaded. The language is already applied (the constructor
@@ -2038,20 +2118,21 @@ end;
 { ── THE EDITOR'S LOOK ──────────────────────────────────────────────────────────────────── }
 
 procedure TSpxMainForm.ApplyTheme;
-var pal: TSpxPalette;
+var pal: TSpxPalette; i: Integer;
 begin
   pal := SpxPalette(FPrefs.Theme);
   FHighlighter.ApplyPalette(pal);
   FEditor.Color := pal.Back;
   FEditor.Font.Color := pal.Text;
   FEditor.Gutter.Color := pal.Gutter;
-  { LineNumberPart, not an index or a name: SynEdit's gutter is a list of parts whose order
-    is its business, and this is the accessor it publishes for the one we mean
-    (syngutter.pp:52). }
-  if FEditor.Gutter.LineNumberPart <> nil then
+  { EVERY PART, not just the numbers. A part left alone keeps its system colour and stays
+    light on a dark page -- which is exactly how the marks column announced itself. The ones
+    this app hides cannot show it, but a part turned on later would, and this is the line that
+    would have to be remembered. }
+  for i := 0 to FEditor.Gutter.Parts.Count - 1 do
   begin
-    FEditor.Gutter.LineNumberPart.MarkupInfo.Background := pal.Gutter;
-    FEditor.Gutter.LineNumberPart.MarkupInfo.Foreground := pal.GutterText;
+    FEditor.Gutter.Parts[i].MarkupInfo.Background := pal.Gutter;
+    FEditor.Gutter.Parts[i].MarkupInfo.Foreground := pal.GutterText;
   end;
   FEditor.SelectedColor.Background := pal.Sel;
   FEditor.SelectedColor.Foreground := pal.SelText;

@@ -36,7 +36,6 @@ type
 
   TSpxGroupPane = class(TPanel)
   private
-    FHead: TPanel;
     FClose: TSpeedButton;
     FWhat: TLabel;
     FList: TMemo;
@@ -84,21 +83,16 @@ begin
   BevelOuter := bvNone;
   Color := clWindow;
 
-  { A ROW OF ITS OWN for the close button, above the heading rather than beside it: the
-    heading wraps -- a permutation's is its whole configuration -- and a label sharing a
-    fixed-height row with a button would have to stop wrapping to fit. }
-  FHead := TPanel.Create(Self);
-  FHead.Parent := Self;
-  FHead.Top := 0;
-  FHead.Align := alTop;
-  FHead.BevelOuter := bvNone;
-  FHead.Color := clWindow;
-  FHead.Height := Px(Self, 26);
-
+  { THE CLOSE BUTTON FLOATS IN THE CORNER rather than taking a row of its own. A row cost
+    26 px above the heading, which put this panel's first line lower than the editor's --
+    every pane in the window is meant to start at the same height. Anchored top-right instead,
+    with the heading given a matching right margin so a long one wraps BEFORE the button
+    instead of under it: that is what keeps the wrapping (a permutation's heading is its whole
+    configuration) and the alignment at the same time. }
   FClose := TSpeedButton.Create(Self);
-  FClose.Parent := FHead;
-  FClose.Align := alRight;
-  FClose.Width := Px(Self, 26);
+  FClose.Parent := Self;
+  FClose.Anchors := [akTop, akRight];
+  FClose.SetBounds(Width - Px(Self, 30), Px(Self, 4), Px(Self, 26), Px(Self, 26));
   FClose.Flat := True;
   FClose.ImageIndex := SPX_ICON_CLOSE;
   FClose.ShowHint := True;
@@ -113,9 +107,11 @@ begin
   { The Top is set BEFORE the alignment and only to order them: LCL sorts controls aligned
     to the same edge by that coordinate, and created-in-order was not enough -- the button
     came out above the list it applies. }
-  FWhat.Top := 50;      { after the close row -- LCL orders alTop siblings by this }
+  FWhat.Top := 0;
   FWhat.Align := alTop;
   FWhat.BorderSpacing.Around := Px(Self, 8);
+  { Room for the button that floats over this row. }
+  FWhat.BorderSpacing.Right := Px(Self, 8 + 30);
   FWhat.WordWrap := True;
 
   { One variant per line, and the editor's own font: these are pieces of the template, and
