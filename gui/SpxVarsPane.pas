@@ -28,6 +28,12 @@ uses
 
 type
   TSpxJumpEvent = procedure(Line, Column: Integer) of object;
+  { A session row has no position to offer -- `SpExtract` returns reference names WITHOUT
+    positions (the engine's own contract), so the model carries Line = 0 for every one of them.
+    The panel therefore asks by NAME and the window finds the place, which it can: the
+    highlighter's scanner already reports `%name%` occurrences with their offsets, and knows
+    which ones are inside a comment. }
+  TSpxFindRefEvent = procedure(const AName: string) of object;
 
   TSpxVarsPane = class(TPanel)
   private
@@ -47,8 +53,11 @@ type
     FLiteral: TStringList;        // name -> '1' for the ones handed over as text
     FSig: string;                 // what the grids currently show
     FOnJump: TSpxJumpEvent;
+    FOnFindRef: TSpxFindRefEvent;
     FOnRuntimeChanged: TNotifyEvent;
     procedure DefsClicked(Sender: TObject);
+    procedure RuntimeClicked(Sender: TObject);
+    procedure RuntimeMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure RuntimeEdited(Sender: TObject; ACol, ARow: Integer; const AValue: string);
     procedure LiteralToggled(Sender: TObject; ACol, ARow: Integer; AState: TCheckboxState);
     function KindName(Kind: TSpxVarKind): string;
@@ -69,6 +78,8 @@ type
       any more. }
     function RuntimeValues: TSpxVarPairs;
     property OnJump: TSpxJumpEvent read FOnJump write FOnJump;
+    { Clicking a session row's NAME asks for the first place the document references it. }
+    property OnFindRef: TSpxFindRefEvent read FOnFindRef write FOnFindRef;
     property OnRuntimeChanged: TNotifyEvent read FOnRuntimeChanged write FOnRuntimeChanged;
   end;
 
@@ -111,6 +122,9 @@ begin
   FDefs.FixedCols := 0;
   FDefs.Options := FDefs.Options + [goRowSelect] - [goEditing, goRangeSelect];
   FDefs.OnClick := @DefsClicked;
+  { Every row here jumps, so the whole grid gets the hand -- the same signal as the session
+    group's name column, for the same action. }
+  FDefs.Cursor := crHandPoint;
 
   { The session group lives in its own panel: a splitter grabs the nearest sibling on the
     side it is aligned to, and with the label as a bare sibling that could be the label --
@@ -170,6 +184,17 @@ begin
   FRuntime.Columns[1].Width := Px(Self, 570);
   FRuntime.Columns[2].Width := Px(Self, 90);
   FRuntime.OnCheckboxToggled := @LiteralToggled;
+  { THE NAME COLUMN JUMPS, THE VALUE COLUMN EDITS -- split by column rather than by a
+    modifier, because the two cells already have different jobs. A session row's name is
+    read-only, so a click on it has nothing else to do; the value beside it must keep starting
+    an edit on the first click, which is why the jump cannot be the plain click for the whole
+    row the way it is in the definitions group. }
+  FRuntime.OnClick := @RuntimeClicked;
+  { THE HINT THAT NEEDS NO WORDS. A name that jumps has to say so before it is clicked, and a
+    hand cursor is how everything else on this desktop says it -- no new caption to translate
+    into fourteen languages, and it points at the ONE column that does it rather than at the
+    group as a whole. }
+  FRuntime.OnMouseMove := @RuntimeMouseMove;
 
   FRuntimeLabel := TLabel.Create(Self);
   FRuntimeLabel.Parent := FRuntimeBox;
@@ -243,8 +268,25 @@ begin
     same way and for the same reason. }
   sig := '';
   for i := 0 to High(AVars) do
-    sig := sig + IntToStr(Ord(AVars[i].Kind)) + '|' + AVars[i].Name + '|' + AVars[i].Value +
-           '|' + IntToStr(AVars[i].Line) + #10;
+    { A SESSION ROW'S VALUE IS NOT PART OF THE SIGNATURE, and leaving it in made the group
+      impossible to type into. The chain: a character reaches RuntimeEdited, which restarts the
+      render debounce; 200 ms later the render lands with a model whose runtime value is the
+      character just typed; the signature therefore differs; the grid is rebuilt; RowCount tears
+      down the cell editor. The next character then arrives at a grid with no open editor, and a
+      grid with goEditing starts a FRESH edit on a character key -- replacing the cell instead of
+      appending to it. Measured, typing `Vulkan` one letter at a time with a human pause:
+      `[V]`, `[u]`, `[l]`, `[k]` -- never `[Vu]`. The value the user was building never existed,
+      which is what "you can type but nothing sticks" looks like from the outside.
+
+      Dropping it loses nothing: the loop below already prefers FValues over the model for a
+      runtime row, precisely because the panel's own store is the newer of the two. The model's
+      runtime value can only ever be '' or what this panel already sent. The NAMES still count,
+      so a variable appearing or disappearing rebuilds as it must. }
+    if AVars[i].Kind = spxVarRuntime then
+      sig := sig + 'R|' + AVars[i].Name + #10
+    else
+      sig := sig + IntToStr(Ord(AVars[i].Kind)) + '|' + AVars[i].Name + '|' + AVars[i].Value +
+             '|' + IntToStr(AVars[i].Line) + #10;
   if sig = FSig then Exit;
   FSig := sig;
 
@@ -347,6 +389,30 @@ begin
   else
     FValues.Values[name_] := AValue;
   if Assigned(FOnRuntimeChanged) then FOnRuntimeChanged(Self);
+end;
+
+{ Only the name column, and only a real row. Col is where the click landed: LCL has already
+  moved the current cell by the time OnClick runs, which is what the definitions group relies
+  on too. }
+procedure TSpxVarsPane.RuntimeClicked(Sender: TObject);
+var name_: string;
+begin
+  if FRuntime.Col <> 0 then Exit;
+  if FRuntime.Row < 1 then Exit;
+  name_ := FRuntime.Cells[0, FRuntime.Row];
+  if name_ = '' then Exit;
+  if Assigned(FOnFindRef) then FOnFindRef(name_);
+end;
+
+{ The hand only over the column that jumps. MouseToCell answers in CELL coordinates, so this
+  does not have to know the column widths -- and it stays right after a column is resized. }
+procedure TSpxVarsPane.RuntimeMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+var col, row: Integer;
+begin
+  FRuntime.MouseToCell(X, Y, col, row);
+  if (col = 0) and (row >= 1) then FRuntime.Cursor := crHandPoint
+  else FRuntime.Cursor := crDefault;
 end;
 
 procedure TSpxVarsPane.DefsClicked(Sender: TObject);

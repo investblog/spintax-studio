@@ -24,7 +24,7 @@ uses
   Buttons,
   Clipbrd, Graphics, LCLType, LCLIntf,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
-  SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
+  SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
@@ -187,6 +187,7 @@ type
     procedure DiagResized(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
     procedure VarJump(Line, Column: Integer);
+    procedure VarFindRef(const AName: string);
     procedure RuntimeChanged(Sender: TObject);
     procedure SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
     procedure PreviewFollowSelection;
@@ -616,6 +617,7 @@ begin
   FVars.Parent := sheetVars;
   FVars.Align := alClient;
   FVars.OnJump := @VarJump;
+  FVars.OnFindRef := @VarFindRef;
   FVars.OnRuntimeChanged := @RuntimeChanged;
 
   { The batch and its export. The panel owns N, the seed and the dedup settings; the document,
@@ -1928,6 +1930,63 @@ end;
 procedure TSpxMainForm.VarJump(Line, Column: Integer);
 begin
   JumpToPos(Line, Column, 0, 0);
+end;
+
+{ THE FIRST PLACE THE DOCUMENT USES A SESSION VARIABLE.
+
+  A session row cannot carry a position: it comes from `SpExtract`, whose contract is names,
+  deduplicated, WITHOUT positions -- so the model says Line = 0 for all of them and the panel
+  has nothing to jump with. It asks by name instead, and this answers.
+
+  THE SCANNER RATHER THAN A SEARCH, and that is the whole point. `Pos('%' + name + '%')` would
+  find the name inside a comment, inside an `#include` target, and inside a `#set` that
+  DEFINES it -- three places where the document does not reference the variable at all. The
+  highlighter's own scanner already tells them apart (`sptVariable` versus `sptComment`), it is
+  the same answer the user can see painted on the line, and it is tested. Reusing it also
+  means a jump can never disagree with the colour under the caret.
+
+  Case-insensitively, because the engine matches names that way: `%CasinoName%` and
+  `%casinoname%` are one variable, and the panel shows the folded name the model gave it. }
+procedure TSpxMainForm.VarFindRef(const AName: string);
+var
+  state: TSpxScanState;
+  toks: TSpxTokenList;
+  i, line, k: Integer;
+  text_, want: string;
+begin
+  if (FEditor = nil) or (AName = '') then Exit;
+  want := LowerCase(AName);
+  state := Default(TSpxScanState);
+  { A fresh line's state must start where the previous one ended -- a comment opened three
+    lines up is still open -- so the whole document is walked in order rather than only the
+    lines that might match. }
+  toks := TSpxTokenList.Create;
+  try
+    for line := 0 to FEditor.Lines.Count - 1 do
+    begin
+      text_ := FEditor.Lines[line];
+      toks.Clear;
+      SpxScanLine(text_, state, toks);
+      for i := 0 to toks.Count - 1 do
+        if toks[i].Kind = sptVariable then
+        begin
+          { The token spans `%name%`; the name is what is between the markers. }
+          k := toks[i].Length;
+          if k < 2 then Continue;
+          if LowerCase(Copy(text_, toks[i].Start + 1, k - 2)) = want then
+          begin
+            { Lines are 1-based for the editor, and the token's Start already is. }
+            JumpToPos(line + 1, toks[i].Start, 0, 0);
+            Exit;
+          end;
+        end;
+    end;
+  finally
+    toks.Free;
+  end;
+  { Nothing found. It can happen honestly -- the panel keeps a value while the user is
+    mid-edit, so a name can outlive its last reference by a debounce -- and a jump to nowhere
+    is better left undone than guessed at. }
 end;
 
 { A selection is a setting like the locale or the seed: it changes what the preview shows.
