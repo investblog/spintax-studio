@@ -188,6 +188,9 @@ type
     procedure JumpDeferred(Data: PtrInt);
     procedure VarJump(Line, Column: Integer);
     procedure VarFindRef(const AName: string);
+    procedure VarSpell(ANames: TStringList);
+    procedure VarDefine(const AName, AValue: string);
+    procedure OpenGroupPane;
     procedure RuntimeChanged(Sender: TObject);
     procedure SelectionChanged(Sender: TObject; Changes: TSynStatusChanges);
     procedure PreviewFollowSelection;
@@ -618,6 +621,8 @@ begin
   FVars.Align := alClient;
   FVars.OnJump := @VarJump;
   FVars.OnFindRef := @VarFindRef;
+  FVars.OnDefine := @VarDefine;
+  FVars.OnSpell := @VarSpell;
   FVars.OnRuntimeChanged := @RuntimeChanged;
 
   { The batch and its export. The panel owns N, the seed and the dedup settings; the document,
@@ -1301,6 +1306,14 @@ begin
     GroupPaneClosed(Sender);
     Exit;
   end;
+  OpenGroupPane;
+end;
+
+{ The panel, OPENED rather than toggled. Ctrl+clicking a variable needs to arrive at an open
+  group editor whether or not it happened to be open already, and the rail's handler is a
+  toggle -- calling it from there would have closed the panel half the time. }
+procedure TSpxMainForm.OpenGroupPane;
+begin
   { Before it is shown, not after: a panel that appears too wide and then snaps is worse than
     one that appears the right size. }
   { Showing the panel changes what the body has, so both clamps must run whatever they last
@@ -1930,6 +1943,97 @@ end;
 procedure TSpxMainForm.VarJump(Line, Column: Integer);
 begin
   JumpToPos(Line, Column, 0, 0);
+end;
+
+{ CTRL+CLICK: STOP SUPPLYING THIS PER SESSION AND WRITE IT INTO THE DOCUMENT.
+
+  A session value is a stopgap -- it dies with the window, it is not in git, and no other engine
+  in the family can see it. A `#set` is the real answer, and it is the only one that silences
+  variable.undefined for good. So this writes the definition, carries the value the user already
+  typed into it, and opens the group editor on it so the next thing they do is add options.
+
+  THE SHAPE IS A ONE-OPTION GROUP, `{value}`, and it was chosen by measurement rather than
+  taste. `{value|}` -- two options, the second empty -- renders NOTHING half the time, which
+  would make the variable look broken the moment it was defined. A bare `value` with no braces
+  renders correctly but gives the group editor nothing to edit. `{value}` is clean to the
+  validator, renders exactly the value, and is a group the editor can extend. An empty `{}` is
+  clean too, which is what an undefined variable with no session value gets.
+
+  AT THE TOP OF THE DOCUMENT, though it need not be: measured, a `#set` BELOW its use still
+  takes effect (`X %brand% Y` then the directive renders `X Vulkan Y`). The top is where the
+  family keeps its prelude, and a definition the author cannot find is a definition they will
+  write twice.
+
+  Through InsertTextAtCaret, so the insertion is ONE undo step and the caret and the syntax
+  highlighting stay consistent -- SynEdit's own edit API is the only way to get that. }
+procedure TSpxMainForm.VarDefine(const AName, AValue: string);
+var line_: string; col: Integer;
+begin
+  if (FEditor = nil) or (AName = '') then Exit;
+  line_ := '#set %' + AName + '% = {' + AValue + '}';
+  { The caret lands INSIDE the braces, because that is what the group editor opens on -- it
+    reads the group at the caret, and a caret on the closing brace is outside the group. }
+  col := Length('#set %' + AName + '% = {') + 1;
+
+  FEditor.BeginUpdate;
+  try
+    FEditor.LogicalCaretXY := Point(1, 1);
+    FEditor.InsertTextAtCaret(line_ + LineEnding);
+  finally
+    FEditor.EndUpdate;
+  end;
+  FEditor.LogicalCaretXY := Point(col, 1);
+
+  { The render is what moves the variable out of the session group and into the definitions
+    one; asking for it directly rather than waiting for the debounce means the panel agrees
+    with the document by the time the user looks at it. }
+  RequestRender;
+  OpenGroupPane;
+end;
+
+{ THE NAMES AS THE DOCUMENT SPELLS THEM, in one pass for all of them.
+
+  The panel can only be told folded names -- the engine keys macros lower-cased -- so it hands
+  over the list it has and this fills in the first spelling found for each. One scan, not one
+  per row: the panel asks only when it rebuilds, and a rebuild is rare, but a scan per row on a
+  document with thirty runtime variables would be thirty walks of the file.
+
+  The scanner again, for the same reason the jump uses it: `%name%` inside a comment is not a
+  reference, and the spelling shown must be one the user can actually find. }
+procedure TSpxMainForm.VarSpell(ANames: TStringList);
+var
+  state: TSpxScanState;
+  toks: TSpxTokenList;
+  i, line, k, at: Integer;
+  text_, raw, key: string;
+begin
+  if (FEditor = nil) or (ANames = nil) or (ANames.Count = 0) then Exit;
+  state := Default(TSpxScanState);
+  toks := TSpxTokenList.Create;
+  try
+    for line := 0 to FEditor.Lines.Count - 1 do
+    begin
+      text_ := FEditor.Lines[line];
+      toks.Clear;
+      SpxScanLine(text_, state, toks);
+      for i := 0 to toks.Count - 1 do
+        if toks[i].Kind = sptVariable then
+        begin
+          k := toks[i].Length;
+          if k < 2 then Continue;
+          raw := Copy(text_, toks[i].Start + 1, k - 2);
+          key := LowerCase(raw);
+          at := ANames.IndexOfName(key);
+          { Only names the panel asked about, and only the FIRST occurrence of each: a document
+            may spell one variable two ways, and the panel needs a single answer. Empty is the
+            marker for "not found yet". }
+          if (at >= 0) and (ANames.ValueFromIndex[at] = '') then
+            ANames.ValueFromIndex[at] := raw;
+        end;
+    end;
+  finally
+    toks.Free;
+  end;
 end;
 
 { THE FIRST PLACE THE DOCUMENT USES A SESSION VARIABLE.

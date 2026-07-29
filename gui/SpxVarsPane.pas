@@ -34,6 +34,16 @@ type
     highlighter's scanner already reports `%name%` occurrences with their offsets, and knows
     which ones are inside a comment. }
   TSpxFindRefEvent = procedure(const AName: string) of object;
+  { Ctrl+click: stop supplying this per session and WRITE IT INTO THE DOCUMENT. A session value
+    dies with the window; a definition is in the file, in git, and read by every engine in the
+    family -- and it is the only thing that silences variable.undefined for good. The value
+    goes with it so the work already typed is not thrown away. }
+  TSpxDefineEvent = procedure(const AName, AValue: string) of object;
+  { The names as the DOCUMENT spells them. The model can only report them folded: the engine
+    keys macros lower-cased and `SpExtract` answers in its own case, so `%CasinoPrefix%` comes
+    back `casinoprefix` and the panel used to show that. The window can tell -- its scanner
+    reads the real text -- so it fills in the spelling for the names it is handed. }
+  TSpxSpellEvent = procedure(ANames: TStringList) of object;
 
   TSpxVarsPane = class(TPanel)
   private
@@ -54,10 +64,18 @@ type
     FSig: string;                 // what the grids currently show
     FOnJump: TSpxJumpEvent;
     FOnFindRef: TSpxFindRefEvent;
+    FOnDefine: TSpxDefineEvent;
+    FOnSpell: TSpxSpellEvent;
+    { What was held down when the click started. OnClick does not carry it, and OnMouseDown
+      runs before the grid has moved its current cell -- so the modifier is caught in the one
+      and used in the other. }
+    FClickShift: TShiftState;
     FOnRuntimeChanged: TNotifyEvent;
     procedure DefsClicked(Sender: TObject);
     procedure RuntimeClicked(Sender: TObject);
     procedure RuntimeMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure RuntimeMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure RuntimeEdited(Sender: TObject; ACol, ARow: Integer; const AValue: string);
     procedure LiteralToggled(Sender: TObject; ACol, ARow: Integer; AState: TCheckboxState);
     function KindName(Kind: TSpxVarKind): string;
@@ -81,6 +99,10 @@ type
     property OnJump: TSpxJumpEvent read FOnJump write FOnJump;
     { Clicking a session row's NAME asks for the first place the document references it. }
     property OnFindRef: TSpxFindRefEvent read FOnFindRef write FOnFindRef;
+    { Ctrl+clicking it asks for a definition in the document instead. }
+    property OnDefine: TSpxDefineEvent read FOnDefine write FOnDefine;
+    { Asked once per rebuild, never per row: the answer costs a document scan. }
+    property OnSpell: TSpxSpellEvent read FOnSpell write FOnSpell;
     property OnRuntimeChanged: TNotifyEvent read FOnRuntimeChanged write FOnRuntimeChanged;
   end;
 
@@ -198,6 +220,7 @@ begin
     into fourteen languages, and it points at the ONE column that does it rather than at the
     group as a whole. }
   FRuntime.OnMouseMove := @RuntimeMouseMove;
+  FRuntime.OnMouseDown := @RuntimeMouseDown;
 
   FRuntimeLabel := TLabel.Create(Self);
   FRuntimeLabel.Parent := FRuntimeBox;
@@ -270,7 +293,8 @@ end;
 procedure TSpxVarsPane.SetModel(const AVars: TSpxVarInfos);
 var
   i, defRow, runRow: Integer;
-  sig: string;
+  sig, shown: string;
+  spell: TStringList;
 begin
   FModel := AVars;
 
@@ -303,6 +327,29 @@ begin
   if sig = FSig then Exit;
   FSig := sig;
 
+  { THE SPELLINGS, once per rebuild. Asked here rather than per row because the answer costs a
+    scan of the document, and asked only on a rebuild because this whole routine exits early
+    when nothing changed. The lower-cased name stays the KEY everywhere -- FValues and FLiteral
+    are case-insensitive, so a row displayed as `CasinoPrefix` still finds the value filed under
+    `casinoprefix` -- and only what is SHOWN follows the document. }
+  spell := TStringList.Create;
+  try
+    spell.CaseSensitive := False;
+    spell.UseLocale := False;
+    for i := 0 to High(AVars) do
+      { `name=` with an EMPTY value, which is the "not found yet" marker the window fills in.
+        Seeding it with the folded name instead would break first-occurrence-wins: a document
+        whose first `%casinoprefix%` is already lower-case would leave the value equal to the
+        key, and a later `%CasinoPrefix%` would then overwrite it. }
+      { BOTH GROUPS. A definition's name is folded by the engine exactly as a reference's is
+        -- `SpExtractDirectives` reports `casinoname` for `#set %CasinoName%` -- and the
+        scanner marks the name inside the directive as a variable too (measured: position 6 of
+        `#set %CasinoName% = {Vul}`), so one pass answers for both. A name that is defined and
+        also referenced gets ONE spelling, the first in the document; two spellings of one
+        variable in two tables would be worse than either. }
+      if spell.IndexOfName(AVars[i].Name) < 0 then spell.Add(AVars[i].Name + '=');
+    if Assigned(FOnSpell) and (spell.Count > 0) then FOnSpell(spell);
+
   FRows := nil;
   SetLength(FRows, Length(AVars));
   defRow := 0;
@@ -317,7 +364,9 @@ begin
     begin
       Inc(runRow);
       FRuntime.RowCount := runRow + 1;
-      FRuntime.Cells[0, runRow] := AVars[i].Name;
+      shown := spell.Values[AVars[i].Name];
+      if shown = '' then shown := AVars[i].Name;
+      FRuntime.Cells[0, runRow] := shown;
       { The model carries the value that was in force for THIS render; the panel's own store
         only differs while a newer render is still in flight. }
       if FValues.IndexOfName(AVars[i].Name) >= 0 then
@@ -331,12 +380,17 @@ begin
       Inc(defRow);
       FDefs.RowCount := defRow + 1;
       FDefs.Cells[0, defRow] := KindName(AVars[i].Kind);
-      FDefs.Cells[1, defRow] := AVars[i].Name;
+      shown := spell.Values[AVars[i].Name];
+      if shown = '' then shown := AVars[i].Name;
+      FDefs.Cells[1, defRow] := shown;
       FDefs.Cells[2, defRow] := AVars[i].Value;
       FRows[defRow - 1] := AVars[i];
     end;
   end;
   SetLength(FRows, defRow);
+  finally
+    spell.Free;
+  end;
 end;
 
 { What the next job should carry: the session's values, filtered to the names the document
@@ -407,6 +461,12 @@ end;
 { Only the name column, and only a real row. Col is where the click landed: LCL has already
   moved the current cell by the time OnClick runs, which is what the definitions group relies
   on too. }
+procedure TSpxVarsPane.RuntimeMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  FClickShift := Shift;
+end;
+
 procedure TSpxVarsPane.RuntimeClicked(Sender: TObject);
 var name_: string;
 begin
@@ -414,6 +474,13 @@ begin
   if FRuntime.Row < 1 then Exit;
   name_ := FRuntime.Cells[0, FRuntime.Row];
   if name_ = '' then Exit;
+  if ssCtrl in FClickShift then
+  begin
+    { The value goes with the name: the point of the action is to keep what the user typed and
+      move it somewhere that survives. }
+    if Assigned(FOnDefine) then FOnDefine(name_, FValues.Values[name_]);
+    Exit;
+  end;
   if Assigned(FOnFindRef) then FOnFindRef(name_);
 end;
 
