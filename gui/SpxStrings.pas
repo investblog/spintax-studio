@@ -111,9 +111,13 @@ const
     0, 0, 0,
     0, 0, 0, 0, 0,
 
-    { top strip, output half: the seed box 55px and the two views 90px are check/radio
-      buttons, Reroll and Copy are 80px buttons }
-    5, 10, 10, 10, 10,
+    { top strip, output half. The seed box is a 55px check box. Reroll and Copy are ICONS
+      now and these two strings are their TOOLTIPS -- a tooltip sizes itself, so a budget
+      there would only forbid a translator the natural phrase ('Neu würfeln', 'Opnieuw
+      rollen') for no gain on screen. The two view names still have one, for the opposite
+      reason: the switch that shows them cannot clip: it WIDENS, and every control to its
+      left shifts along. 10 code points keeps that shift bounded. }
+    5, 0, 0, 10, 10,
     { the fragment captions size themselves and sit between the chain and the switch }
     28, 32,
 

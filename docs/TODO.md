@@ -465,6 +465,20 @@ next:
       text it copies, not in the top strip beside `Reroll` -- that row is about HOW to
       render, and mixing "what to do with the result" into it is what makes it read as a
       developer's toolbar. One language for every caption while we are there.
+
+      **Partly done 2026-07-29** (the user's call: "a modern toggle for the right pane's
+      modes, and consider icons instead of buttons"). The two radio buttons became one
+      segmented switch (`gui/SpxSegmented.pas`): a view mode is ONE setting with two
+      positions, not two settings that happen to be linked, and the control measures its own
+      captions so no language can clip them -- the radios each had a fixed 90 px slot.
+      `Reroll` and `Copy` became icon buttons with their captions as tooltips, which returned
+      about 100 px to a strip that already spills the search field onto a second row at
+      820 px wide. Measured across all fourteen languages at 1100 px: one row, nothing
+      overlapping, the switch asking for 158–192 px.
+
+      **What is still open here is the move itself:** `Copy` is smaller now but still in the
+      top strip. Putting it at the preview pane's own bottom edge needs that pane to grow an
+      action row, which is the part of this step nobody has built yet.
 - [ ] **3. The tool rail — slide-out, and on the side of what it edits.** DeepL's column
       holds tools that change the OUTPUT and sits beside the output. Ours would hold
       variables and the group editor, which change the TEMPLATE — so it belongs on the LEFT,

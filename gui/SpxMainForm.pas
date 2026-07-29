@@ -15,10 +15,11 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs, ImgList,
+  Buttons,
   Clipbrd, Graphics, LCLType,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxToolRail, SpxGroupPane, SpxGroups, SpxIcons, SpxFlags,
+  SpxToolRail, SpxGroupPane, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
 
@@ -29,14 +30,20 @@ type
     FLocale: TComboBox;
     FSeeded: TCheckBox;
     FSeedEdit: TEdit;
-    FReroll: TButton;
-    FCopy: TButton;
+    { Icon buttons, not captioned ones: the strip is finite and these two are the actions a
+      person repeats. The caption they used to carry is their tooltip now, so a translation
+      still has somewhere to land. }
+    FReroll: TSpeedButton;
+    FCopy: TSpeedButton;
     { The preview's own controls, in the WINDOW's strip rather than in a strip of the pane's
       own: two panes side by side should start on the same line, and a header inside one of
       them puts its content a row lower than the other. Anchored right, so they stay in the
       corner when the window is resized. }
-    FAsPage: TRadioButton;
-    FAsSource: TRadioButton;
+    { One switch with two positions, rather than two radios that happen to be linked: a view
+      mode IS one setting. It measures its own captions, so no language can clip them. }
+    FModes: TSpxSegmented;
+    { 16px icons for the top strip -- the rail's list is 24 and a list draws at its own size. }
+    FSmallIcons: TImageList;
     FPartial: TLabel;
     FSplit: TSplitter;
     { The tools' strip. It is the window's, not the editor's pane's: a user who moves it to
@@ -114,6 +121,12 @@ type
     FDiagSplit: TSplitter;
     FRows: TSpxPanelRows;
     FRowSig: string;
+    { What the last render reported, kept as NUMBERS. The status bar and the fragment caption
+      are sentences built from them, and a sentence cannot be retranslated -- so the numbers
+      are what is remembered and the sentence is rebuilt whenever the language changes. }
+    FHaveResult: Boolean;
+    FResErrors, FResWarnings, FResNotes, FResElapsed: Integer;
+    FPartialShown, FPartialEmpty: Boolean;
     FPendingRow: TSpxPanelRow;
     { What a jump left behind, so the preview does not narrow to it: going to look at an
       error must not replace the document's preview with a render of the broken span. The
@@ -153,6 +166,7 @@ type
     procedure TopStripResized(Sender: TObject);
     procedure BuildMenu;
     procedure EnsureFlags;
+    procedure EnsureSmallIcons;
     procedure ShowFindBar;
     procedure HideFindBar;
     procedure FindTextChanged(Sender: TObject);
@@ -174,6 +188,8 @@ type
     procedure RailRightClicked(Sender: TObject);
     procedure BuildRail;
     procedure RailGroupClicked(Sender: TObject);
+    procedure ModePageClicked(Sender: TObject);
+    procedure ModeSourceClicked(Sender: TObject);
     procedure CaretSettled(Sender: TObject);
     procedure GroupApplied(BodyStart, Stop: Integer; const Body: string);
     { The caret's byte offset into FEditor.Text, and the way back. The two must agree, which
@@ -200,6 +216,9 @@ type
     procedure CopyClicked(Sender: TObject);
     procedure PreviewModeChanged(Sender: TObject);
     procedure SayPartial(const AHtml: string; APartial: Boolean);
+    { The two sentences built from a result rather than from the caption table. }
+    procedure ShowStatus;
+    procedure ShowPartial;
     procedure JobDone(const Res: TSpxJobResult);
     procedure RequestRender;
     { The batch: the panel asks, the form fills in what only it knows, the worker runs it one
@@ -358,32 +377,39 @@ begin
   FSeedEdit.SetBounds(Px(Self, 145), Px(Self, 7), Px(Self, 70), Px(Self, 24));
   FSeedEdit.OnChange := @SettingChanged;
 
-  FReroll := TButton.Create(Self);
+  EnsureSmallIcons;
+
+  FReroll := TSpeedButton.Create(Self);
   FReroll.Parent := FTop;
-  FReroll.Caption := Tr(sReroll);
-  FReroll.SetBounds(Px(Self, 228), Px(Self, 6), Px(Self, 80), Px(Self, 26));
+  FReroll.Flat := True;
+  FReroll.Images := FSmallIcons;
+  FReroll.ImageIndex := SPX_ICON_REROLL;
+  FReroll.Hint := Tr(sReroll);
+  FReroll.ShowHint := True;
+  FReroll.SetBounds(Px(Self, 228), Px(Self, 6), Px(Self, 30), Px(Self, 26));
   FReroll.OnClick := @RerollClicked;
 
-  FCopy := TButton.Create(Self);
+  FCopy := TSpeedButton.Create(Self);
   FCopy.Parent := FTop;
-  FCopy.Caption := Tr(sCopy);
-  FCopy.SetBounds(Px(Self, 314), Px(Self, 6), Px(Self, 80), Px(Self, 26));
+  FCopy.Flat := True;
+  FCopy.Images := FSmallIcons;
+  FCopy.ImageIndex := SPX_ICON_COPY;
+  FCopy.Hint := Tr(sCopy);
+  FCopy.ShowHint := True;
+  FCopy.SetBounds(Px(Self, 314), Px(Self, 6), Px(Self, 30), Px(Self, 26));
 
   FPartial := TLabel.Create(Self);
   FPartial.Parent := FTop;
   FPartial.AutoSize := True;
   FPartial.Visible := False;
 
-  FAsPage := TRadioButton.Create(Self);
-  FAsPage.Parent := FTop;
-  FAsPage.Caption := Tr(sViewPage);
-  FAsPage.Checked := True;
-  FAsPage.OnChange := @PreviewModeChanged;
-
-  FAsSource := TRadioButton.Create(Self);
-  FAsSource.Parent := FTop;
-  FAsSource.Caption := Tr(sViewSource);
-  FAsSource.OnChange := @PreviewModeChanged;
+  FModes := TSpxSegmented.Create(Self);
+  FModes.Parent := FTop;
+  FModes.Color := FTop.Color;
+  FModes.Images := FSmallIcons;
+  FModes.Add(Tr(sViewPage), SPX_ICON_PAGE);
+  FModes.Add(Tr(sViewSource), SPX_ICON_SOURCE);
+  FModes.OnChange := @PreviewModeChanged;
   FCopy.OnClick := @CopyClicked;
 
   { The three bottom-aligned strips are ordered by their Top, not by the order they are
@@ -648,16 +674,16 @@ begin
     this project have been exactly this shape -- a layout or an event hookup reaching for
     something not created yet -- so the guard names every group it touches rather than
     trusting the order things happen in. }
-  if (FTop = nil) or (FAsSource = nil) or (FLocale = nil) or (FCopy = nil) or
+  if (FTop = nil) or (FModes = nil) or (FLocale = nil) or (FCopy = nil) or
      (FFindText = nil) then Exit;
 
   { ── the output's half, from the right edge inwards ── }
   right_ := FTop.ClientWidth - Px(Self, 12);
-  PlaceRight(FAsSource, Px(Self, 90), Px(Self, 20), Px(Self, 9));
-  PlaceRight(FAsPage, Px(Self, 90), Px(Self, 20), Px(Self, 9));
+  { The switch asks for what its own captions need; everything else is a fixed slot. }
+  PlaceRight(FModes, FModes.MeasureWidth, Px(Self, 26), Px(Self, 6));
   if FPartial.Visible then PlaceRight(FPartial, FPartial.Width, Px(Self, 16), Px(Self, 11));
-  PlaceRight(FCopy, Px(Self, 80), Px(Self, 26), Px(Self, 6));
-  PlaceRight(FReroll, Px(Self, 80), Px(Self, 26), Px(Self, 6));
+  PlaceRight(FCopy, Px(Self, 30), Px(Self, 26), Px(Self, 6));
+  PlaceRight(FReroll, Px(Self, 30), Px(Self, 26), Px(Self, 6));
   { Skipped rather than placed off-screen, so the controls to its left close the gap -- the
     same way the fragment caption already comes and goes. }
   if FSeedEdit.Visible then PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
@@ -1078,11 +1104,18 @@ begin
   viewMenu := TMenuItem.Create(Self);
   viewMenu.Caption := Tr(sMenuView);
   bar.Items.Add(viewMenu);
+  { GROUP INDEX 1, and it is not decoration. Radio items in one menu with the SAME GroupIndex
+    are ONE choice: TMenuItem.TurnSiblingsOff (menuitem.inc:1724-1736) unchecks every sibling
+    that shares it, and every item defaults to 0. Adding the preview's two modes below cost
+    this pair its tick until they were told apart -- caught by a probe that read the menu back
+    rather than by looking at it. }
   sideItem := Item(viewMenu, Tr(sRailLeft), 0, [], @RailLeftClicked);
   sideItem.RadioItem := True;
+  sideItem.GroupIndex := 1;
   sideItem.Checked := (FRail = nil) or (FRail.Side = spxRailLeft);
   sideItem := Item(viewMenu, Tr(sRailRight), 0, [], @RailRightClicked);
   sideItem.RadioItem := True;
+  sideItem.GroupIndex := 1;
   sideItem.Checked := (FRail <> nil) and (FRail.Side = spxRailRight);
   { The rail's own buttons are TSpeedButtons, and a speed button is a TGraphicControl: no
     handle, so no tab stop and nothing for a screen reader to name. The three panel tools are
@@ -1090,6 +1123,21 @@ begin
     the group editor had no other way in at all once the faces became icons. It has one here. }
   Item(viewMenu, '-', 0, [], nil);
   Item(viewMenu, Tr(sTabGroup), 0, [], @RailGroupClicked);
+  { The preview's mode, for the same reason the group editor is here. The two radio buttons
+    this replaced were real BUTTON windows, which Windows' own accessibility proxy narrates;
+    a custom-drawn control is not, and the win32 widgetset ships no accessibility layer to
+    make up for it. The switch takes the keyboard once focused -- measured, a posted WM_KEYDOWN
+    moves it -- but a menu item is what makes the setting REACHABLE without knowing it is
+    there. }
+  Item(viewMenu, '-', 0, [], nil);
+  sideItem := Item(viewMenu, Tr(sViewPage), 0, [], @ModePageClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 2;      { a different choice from the rail's side -- see above }
+  sideItem.Checked := (FModes = nil) or (FModes.ItemIndex = 0);
+  sideItem := Item(viewMenu, Tr(sViewSource), 0, [], @ModeSourceClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 2;
+  sideItem.Checked := (FModes <> nil) and (FModes.ItemIndex = 1);
 
   { The interface's language, and whether it follows the document's. Three radio items in
     their own submenu rather than a checkbox, because "follow" is a third state and not the
@@ -1137,7 +1185,22 @@ procedure TSpxMainForm.AutoAdjustLayout(AMode: TLayoutAdjustmentPolicy;
 begin
   inherited AutoAdjustLayout(AMode, AFromPPI, AToPPI, AOldFormWidth, ANewFormWidth);
   EnsureFlags;
+  EnsureSmallIcons;
   if FRail <> nil then FRail.Rescale;
+  { The switch's width is its captions', and a caption's width is the display's. }
+  LayoutTopStrip;
+end;
+
+{ The top strip's icons: 16px inside a 26px button at 100%, the same proportion the rail uses
+  at 24-in-36. Refilled rather than rebuilt when the scaling changes, because the buttons and
+  the switch hold a reference to the list (SpxUi.SpxImagesFrom says why at more length). }
+procedure TSpxMainForm.EnsureSmallIcons;
+var size_, len: Integer; p: Pointer;
+begin
+  size_ := SpxIconPickSize(Px(Self, 16));
+  if (FSmallIcons <> nil) and (FSmallIcons.Width = size_) then Exit;
+  p := SpxIconStrip(size_, len);
+  FSmallIcons := SpxImagesFrom(Self, FSmallIcons, p, len, size_, size_, SPX_ICON_COUNT);
 end;
 
 procedure TSpxMainForm.DiagColumn(const ACaption: string; AWidth: Integer);
@@ -1579,10 +1642,12 @@ begin
   if (FSeeded = nil) or (FBottom = nil) or (FDiag = nil) or (FVars = nil) or
      (FSet = nil) or (FPreview = nil) then Exit;
   FSeeded.Caption := Tr(sSeed);
-  FReroll.Caption := Tr(sReroll);
-  FCopy.Caption := Tr(sCopy);
-  FAsPage.Caption := Tr(sViewPage);
-  FAsSource.Caption := Tr(sViewSource);
+  { The two icon buttons say their name in a tooltip now, which is the only part of them a
+    language changes. }
+  FReroll.Hint := Tr(sReroll);
+  FCopy.Hint := Tr(sCopy);
+  FModes.SetCaption(0, Tr(sViewPage));
+  FModes.SetCaption(1, Tr(sViewSource));
   FFindCase.Caption := Tr(sFindCase);
   FFindClose.Caption := Tr(sFindClose);
   BuildMenu;
@@ -1625,6 +1690,18 @@ begin
   if (FFindText <> nil) and FFindText.Visible then ShowMatchCount;
   LayoutTopStrip;
   UpdateCaption;
+  { AND THE TWO SENTENCES THE LAST RENDER LEFT BEHIND. The status bar and the fragment
+    caption are written from the result rather than from a caption table, so they used to sit
+    in the language of the render that produced them -- reported from a screenshot, an English
+    window whose status bar still said "gültig · 23 ms" after a switch from German.
+
+    They are rebuilt from the numbers, NOT by re-rendering. Asking for a render here was the
+    first fix and it was worse than the bug: the seed tick is off by default, so every render
+    draws a fresh variant, and a person who changed the interface language would be shown
+    different text than the one they were reading. Measured -- three switches, three different
+    previews. }
+  ShowStatus;
+  ShowPartial;
 end;
 
 procedure TSpxMainForm.SettingChanged(Sender: TObject);
@@ -1668,6 +1745,11 @@ end;
 procedure TSpxMainForm.RequestRender;
 var job: TSpxJob;
 begin
+  { The window outlives the worker: closing the main form neither hides nor frees it, and the
+    queue goes on draining after StopEngine has freed FEngine -- a shape this file has already
+    been bitten by once, in StopEngine itself. Every caller here is a menu item or a keystroke
+    that stays live in that window. }
+  if FEngine = nil then Exit;
   Inc(FNextId);
   job.Id := FNextId;
   { DocText, not FEditor.Text: SynEdit joins its lines with the PLATFORM's ending, so on
@@ -1744,7 +1826,19 @@ end;
 
 procedure TSpxMainForm.PreviewModeChanged(Sender: TObject);
 begin
-  FPreview.SourceMode := FAsSource.Checked;
+  FPreview.SourceMode := FModes.ItemIndex = 1;
+  { The menu's tick belongs to the switch, wherever the switch was moved from. }
+  BuildMenu;
+end;
+
+procedure TSpxMainForm.ModePageClicked(Sender: TObject);
+begin
+  FModes.ItemIndex := 0;
+end;
+
+procedure TSpxMainForm.ModeSourceClicked(Sender: TObject);
+begin
+  FModes.ItemIndex := 1;
 end;
 
 { A selection CAN render to nothing -- a directive-only line, or one that opens a comment --
@@ -1753,9 +1847,19 @@ end;
   space: the engine's own line model counts U+2028 and U+2029 too. }
 procedure TSpxMainForm.SayPartial(const AHtml: string; APartial: Boolean);
 begin
-  FPartial.Visible := APartial;
-  if not APartial then Exit;
-  if SpxIsBlankOutput(AHtml) then
+  FPartialShown := APartial;
+  { WHICH of the two sentences, not the sentence itself: a language switch rebuilds it from
+    this, the same way the status bar is rebuilt from its numbers. }
+  FPartialEmpty := APartial and SpxIsBlankOutput(AHtml);
+  ShowPartial;
+end;
+
+procedure TSpxMainForm.ShowPartial;
+begin
+  if FPartial = nil then Exit;
+  FPartial.Visible := FPartialShown;
+  if not FPartialShown then Exit;
+  if FPartialEmpty then
     FPartial.Caption := Tr(sFragmentEmpty)
   else
     FPartial.Caption := Tr(sFragmentShown);
@@ -1814,11 +1918,33 @@ begin
   FWarnMarkup.SetMarks(Res.Marks);
   FEditor.Invalidate;
 
-  if Res.Errors > 0 then s := Format(Tr(sStatusErrors), [Res.Errors])
-  else if Res.Warnings > 0 then s := Format(Tr(sStatusWithWarnings), [Res.Warnings])
+  FHaveResult := True;
+  FResErrors := Res.Errors;
+  FResWarnings := Res.Warnings;
+  FResNotes := Res.Notes;
+  FResElapsed := Res.Elapsed;
+  ShowStatus;
+end;
+
+{ The verdict, in the language of the moment. Called by the render that produced the numbers
+  and again by a language switch -- which must NOT re-render to get this sentence: the seed
+  tick is off by default, so every render draws a fresh variant and a person who changed the
+  interface language would be handed different text than the one they were reading. Measured:
+  three switches, three different previews. The numbers are the only thing worth keeping. }
+procedure TSpxMainForm.ShowStatus;
+var s: string;
+begin
+  if FStatus = nil then Exit;
+  if not FHaveResult then
+  begin
+    FStatus.SimpleText := Tr(sStatusReady);
+    Exit;
+  end;
+  if FResErrors > 0 then s := Format(Tr(sStatusErrors), [FResErrors])
+  else if FResWarnings > 0 then s := Format(Tr(sStatusWithWarnings), [FResWarnings])
   else s := Tr(sStatusValid);
-  if Res.Notes > 0 then s := s + Format(Tr(sStatusNotes), [Res.Notes]);
-  FStatus.SimpleText := Format(Tr(sStatusElapsed), [s, Res.Elapsed]);
+  if FResNotes > 0 then s := s + Format(Tr(sStatusNotes), [FResNotes]);
+  FStatus.SimpleText := Format(Tr(sStatusElapsed), [s, FResElapsed]);
 end;
 
 { Idempotent on purpose. Closing the MAIN form neither hides nor frees it -- LCL only calls

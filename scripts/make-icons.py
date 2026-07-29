@@ -36,13 +36,23 @@ ICONS = [
     ('SPX_ICON_VARS', 'variable', 'Variables -- definitions and session values'),
     ('SPX_ICON_SET', 'content-duplicate', 'Variants -- the generated set and its export'),
     ('SPX_ICON_GROUP', 'code-braces', 'the group editor -- {a|b} is what it edits'),
+    # The user's call 2026-07-29, and the right one. A die says "random", which is what
+    # the feature IS, but at 16 px dice-multiple was a blob and dice-5-outline read as a
+    # picture of a die rather than as a button. `sync` says "do it again" -- the thing the
+    # user actually wants from it -- and is the most legible of the five candidates that
+    # were rendered side by side at 16 and 20. `cached` is the same shape rotated and is
+    # one line away if it reads better in place.
+    ('SPX_ICON_REROLL', 'sync', 'Reroll -- another draw of the same template'),
+    ('SPX_ICON_COPY', 'content-copy', 'Copy the result'),
+    ('SPX_ICON_PAGE', 'eye-outline', 'the preview as a rendered page'),
+    ('SPX_ICON_SOURCE', 'code-tags', 'the preview as the source behind it'),
 ]
 
-# 24 is the icon inside the rail's 36 px face at 100%; 30, 36 and 48 are that same icon at the
-# scalings Windows offers (125, 150, 200%), so the strip is CHOSEN rather than stretched. 16 is
-# for a menu, which is the next place icons go. Sizes cost bytes in the exe -- add one when
+# Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that
+# icon at 100/125/150/200%. The top strip's buttons are 26 px and their icon 16, so 16/20/24/32
+# are the same ladder for them -- 24 does double duty. Sizes cost bytes in the exe: add one when
 # something asks for it, rather than in case.
-SIZES = sorted(set([16, 24, 30, 36, 48]))   # sorted: the picker keeps the last that fits
+SIZES = sorted(set([16, 20, 24, 30, 32, 36, 48]))   # sorted: the picker keeps the last that fits
 
 # Dark grey rather than black: the rail is a shade off the window, and pure black on it reads
 # as heavier than the text beside it.
