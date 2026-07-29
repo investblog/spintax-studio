@@ -258,6 +258,32 @@ the managed tier are later releases.
       `SpExtractDirectives` reports every directive's span, value and consumed line: a row is
       a view of a span, and editing it rewrites that span alone.
 
+      **The session half became usable, 2026-07-30.** Three things, all reported or asked for
+      by the user:
+
+      - **A session value could not be typed.** Each character replaced the last — `[V]`,
+        `[u]`, `[l]` — because the value was part of `SetModel`'s signature, so the render it
+        triggered rebuilt the grid and tore down the cell editor, and the next key started a
+        fresh edit. The user read it as "an illusory chance to edit them". A session row's value
+        is out of the signature now; names still count.
+      - **Clicking a name jumps to its first use**, via the HIGHLIGHTER'S scanner rather than a
+        string search: `%name%` inside a comment or as an `#include` target is not a reference.
+        Session rows carry no position of their own — `SpExtract` answers names without them —
+        so the panel asks by name and the window finds the place.
+      - **Ctrl+click writes `#set %name% = {value}` into the document** and opens the group
+        editor on it, carrying the session value in as the first option. **This is the first
+        time the panel writes through to the file**, which is the direction this whole M2 item
+        is going: one undo step, through SynEdit's own edit API. The shape was measured —
+        `{value|}` renders nothing half the time, a bare value gives the group editor nothing to
+        edit.
+
+      Names are shown as the DOCUMENT spells them in both groups now (the engine folds them),
+      from the same single scan.
+
+      **Still open, and it is the bulk of this item:** editing a DEFINITION's value in its row.
+      That needs the span rewriting (`SpExtractDirectives` reports every span) plus the plain ↔
+      structured toggle above.
+
       **Two things that must not merge into one list** (the playground has only the first,
       because it has no notion of host-supplied render context):
       - *Definitions* — `#set`/`#def`, text in the document, committed to git, read by other
@@ -489,6 +515,18 @@ next:
       floor. A second click on the lit tool is the collapse (the user's call over a menu-only
       version); the View menu carries the three names and the keyboard route, and with the
       block collapsed none of them is ticked.
+
+      **The strip's last two controls, 2026-07-30.** The locale selector kept a native combo
+      (chrome stays system-drawn) but its LIST is drawn by hand: `en — English` in the dropdown,
+      the bare tag in the closed box, all ten locales visible instead of eight with a scrollbar.
+      Flags were considered and refused — they already mean the INTERFACE's language in this
+      window's menu, this is the DOCUMENT's, and a flag is a country while `en` is not.
+      Search gained the icon it never had (it was reachable only by Ctrl+F, i.e. only by people
+      who already knew), its close/prev/next became sprite icons at one width, and the bar now
+      ends where the EDITOR does rather than where the output's controls begin — its close
+      button used to sit over the preview. Below the bar's own minimum the editor cannot hold
+      it, and it overflows rather than hiding the match counter: measured at a 30% editor, the
+      second row and 114 px past the edge.
 
       **What is still open here is the move itself:** `Copy` is smaller now but still in the
       top strip. Putting it at the preview pane's own bottom edge needs that pane to grow an
