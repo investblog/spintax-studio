@@ -44,6 +44,11 @@ Thumbs.db
 *.a
 *.compiled
 *.res
+# ...except the app icon's, which is not a compiler product: SpintaxStudio.res is regenerated
+# by lazbuild from the .lpi and belongs here, but SpxAppIcon.res is written by
+# scripts/make-appicon.py and is an INPUT to the build. A clone without it links an exe with
+# no icon, and CI has no Pillow to rebuild it.
+!gui/SpxAppIcon.res
 *.rsj
 *.dcu
 lib/

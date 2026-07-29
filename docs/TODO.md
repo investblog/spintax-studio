@@ -477,18 +477,26 @@ next:
       column is unreadable, so the rail is the ACCESS -- icons, always in reach -- and the
       workspace stays where the data fits. A panel that is genuinely narrow by nature (the
       group editor is a list of variants, one per line) can live in the rail itself.
-- [ ] **4. Icons — from Material Design Icons** (pictogrammers.com/library/mdi, the user's
-      call 2026-07-29, for one visual family across the rail, the panes and the app). Last on
-      purpose: their sizes depend on where they end up, and under DPI they are needed in
-      several sizes at once. The rail's geometry is already settled (44px strip, 36px faces),
-      so this replaces letters with pictures and moves nothing.
+- [x] **4. Icons — from Material Design Icons** (pictogrammers.com/library/mdi, the user's
+      call 2026-07-29). Done 2026-07-29: four glyphs on the rail from a sprite
+      (`scripts/make-icons.py` → `gui/SpxIcons.pas`), fourteen Twemoji flags in the language
+      menu (`scripts/make-flags.py` → `gui/SpxFlags.pas`), and the brand mark as the app icon
+      (`scripts/make-appicon.py` → `gui/SpxAppIcon.res`, its own resource because lazbuild
+      rewrites the project's). The rail's geometry did not move; the faces lost their letters,
+      so a language now changes only a tooltip.
 
-      Three things to settle when it lands: the licence is **Apache 2.0**, so a credit has to
-      live somewhere the user can find (About, or the help's front page) and the NOTICE has
-      to travel with the repository; the icons are SVG and LCL wants raster, so they need a
-      build step or a checked-in set at 16/20/24/32/36/48; and the app icon needs
-      `{$R *.res}` in the .lpr, which was missing entirely until step 1 -- the manifest was
-      generated and never linked.
+      What it settled on the way: the size is CHOSEN from the strips, never scaled, and
+      re-chosen from the FORM's AutoAdjustLayout — a window is built at 96 dpi and told its
+      monitor's afterwards, and LCL assigns the new PixelsPerInch after walking the children,
+      so a child's own hook is one step behind. NOTICE.md now carries the attributions (MDI
+      Apache-2.0, Twemoji CC-BY 4.0) and records why the LGPL of LCL/RTL does not reach an MIT
+      binary.
+
+      Left over, both small: the **About box** does not exist yet, and it is where those two
+      credits have to be readable by a user rather than by an auditor; and the app icon tops
+      out at **128 px** because 180 is the largest raster spintax.net publishes — a 256 for
+      Explorer's largest view and the Store tiles wants a vector export from the brand
+      (`assets/brand/spintax-mark.svg` is kept for it), not an upscale of ours.
 
 **The interface will be multilingual**, switched together with the text language. Two things
 follow, and both are constraints on step 2 rather than later work: no layout may be computed
@@ -611,7 +619,12 @@ Constraints (design into the app from the start):
       via known-folder APIs (`%APPDATA%` / `LocalAppData` / Credential Manager), never next to
       the `.exe` — required for the MSIX container and to avoid elevation (spec §7, §11).
 - [ ] **Stable app identity.** Package name + publisher (must match Partner Center), 4-part
-      MSIX version that only increases, an icon/asset set for Store tiles.
+      MSIX version that only increases, an icon/asset set for Store tiles. The exe's own icon
+      is done (the brand hexagon, 16–128); the Store tiles and anything at 256+ need a vector
+      export from the brand, which nobody has yet.
+- [ ] **About box** — it is the only place a user can read the attributions NOTICE.md records
+      (MDI Apache-2.0, Twemoji CC-BY 4.0), and both licences ask for exactly that in the
+      shipped app. Small, and blocking for the submission rather than for M1.
 - [ ] **Offline baseline is the review keystone.** Editor / validation / render / export must
       work with no key and no network; AI stays opt-in — so a reviewer verifies the product
       without any setup (spec §1, §11).

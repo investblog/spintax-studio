@@ -19,12 +19,18 @@ uses
   Interfaces, Forms, SpxStudio, SpxMainForm;
 
 { The project's resource, and it was missing. Lazarus generates SpintaxStudio.res on every
-  build -- the Windows manifest lives in it, and the application icon will -- but nothing
-  links it into the executable without this line. Measured rather than assumed: the .res
-  carried `dpiAware` and the .exe carried no manifest at all, so Windows treated a
-  "DPI-aware" application as legacy and would have stretched it as a bitmap on any display
-  above 100%. }
+  build -- the Windows manifest lives in it -- but nothing links it into the executable
+  without this line. Measured rather than assumed: the .res carried `dpiAware` and the .exe
+  carried no manifest at all, so Windows treated a "DPI-aware" application as legacy and
+  would have stretched it as a bitmap on any display above 100%. }
 {$R *.res}
+
+{ The icon, in a resource of its OWN rather than in the one above: lazbuild rewrites
+  SpintaxStudio.res from the .lpi whenever the project's resources change, so an icon added
+  there would vanish on somebody's next build. Written by scripts/make-appicon.py from the
+  brand mark in assets/brand; the group is called MAINICON, which is the name LCL looks up
+  for Application.Icon, so the window and the taskbar get it without being told. }
+{$R SpxAppIcon.res}
 
 begin
   SpxInitHost;
