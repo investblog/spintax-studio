@@ -74,7 +74,9 @@ const
 
       'Veće', 'Manje', 'Uobičajena veličina', 'Svijetla', 'Tamna',
 
-      'Podijeli na pola', 'Dvoklik — na pola'
+      'Podijeli na pola', 'Dvoklik — na pola',
+
+      'Font uređivača', 'Automatski'
   );
 
 implementation

@@ -29,7 +29,7 @@ unit SpxUi;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Forms, ImgList;
+  Classes, SysUtils, Controls, Graphics, Forms, ImgList{$IFDEF WINDOWS}, Windows{$ENDIF};
 
 { A length in 96-dpi units, scaled to the control's display. }
 function Px(AControl: TControl; AValue: Integer): Integer;
@@ -47,8 +47,12 @@ function Px(AControl: TControl; AValue: Integer): Integer;
 function SpxImagesFrom(AOwner: TComponent; AList: TImageList; AData: Pointer;
   ALen, ACellW, ACellH, ACount: Integer): TImageList;
 
-{ The fixed-pitch family for the editor and the source view: the first of these the system
-  actually has. The SIZE is deliberately left alone, so it stays the system's.
+{ A fixed-pitch family, in a hurry: the first of these the system has, at the system's size.
+
+  THIS IS NO LONGER THE POLICY -- SpxEditorFont chooses the family by asking whether it can
+  draw the DOCUMENT, and the size is the editor's own. This remains only so an editor is never
+  briefly proportional between its construction and the moment the settings are applied, which
+  is a flash the eye catches.
 
   Ordered by how well they read at small sizes and by coverage: Cascadia ships with Windows
   Terminal and VS, Consolas with Windows itself, DejaVu is the usual Linux answer, Courier
@@ -60,11 +64,22 @@ procedure SpxApplyMonoFont(AFont: TFont);
   again as large on the next launch -- Px would scale a number that had already been scaled. }
 function Un96(AControl: TControl; AValue: Integer): Integer;
 
-{ The editor's point size: the SYSTEM's, plus the steps the user has zoomed. An offset rather
-  than an absolute, because the system size is a setting somebody already made -- a person who
-  runs a large desktop font starts large and zooms from there, instead of being reset to ours.
-  Clamped to what stays readable in a fixed-pitch editor. }
-function SpxEditorFontSize(ASteps: Integer): Integer;
+{ Put the editor's family and size on a font. The family may be empty -- that is the chooser
+  saying nothing on this machine could draw the document -- and then only the size is set and
+  whatever family the control has is kept. }
+procedure SpxApplyEditorFont(AFont: TFont; const AFamily: string; APoints: Integer);
+
+{ Is this family on this machine -- under a name we can ASK for, which is the part that is not
+  obvious. Screen.Fonts alone is not the answer and the menu must not use it either; the body
+  says why at length. }
+function SpxFontInstalled(const AFamily: string): Boolean;
+
+{ Can this family draw this sample on THIS machine: installed, and carrying a glyph for every
+  character. The second half is the one that matters -- Screen.Fonts answers "is it here",
+  not "can it draw Japanese", and the difference is a page of boxes. This is the real probe
+  SpxEditorFont's chooser is handed; it lives here because it needs a device context and that
+  unit deliberately needs nothing. }
+function SpxFontCanDraw(const AFamily, ASample: string): Boolean;
 
 implementation
 
@@ -133,13 +148,170 @@ begin
   Result := (AValue * 96 + ppi div 2) div ppi;
 end;
 
-function SpxEditorFontSize(ASteps: Integer): Integer;
+{$IFDEF WINDOWS}
+const
+  { Without it a missing character comes back as the font's own "not defined" box, which is
+    indistinguishable from a glyph the font really has. }
+  GGI_MARK_NONEXISTING_GLYPHS = 1;
+
+{ FPC's Windows unit does not declare it -- checked -- so it is imported rather than worked
+  around. gdi32, present since Windows 2000. }
+function GetGlyphIndicesW(dc: HDC; lpsz: PWideChar; c: Integer; pgi: PWord;
+  fl: DWORD): DWORD; stdcall; external 'gdi32' name 'GetGlyphIndicesW';
+
+const
+  { A family no machine has. Asking for it realises whatever this machine's font mapper
+    substitutes, which is the only way to recognise a substitution when it happens to a name
+    we actually wanted. }
+  SPX_NO_SUCH_FAMILY = 'Spx No Such Family 9x';
+
+var
+  { Computed once, on the UI thread, the first time anything asks. }
+  GSubstitute: string = '';
+  GSubstituteKnown: Boolean = False;
+
+{ A logical font by name, and the face GDI ACTUALLY realised for it. The two differ exactly
+  when the family is not on the machine -- measured here: DejaVu Sans Mono, Noto Sans Mono,
+  GulimChe and MingLiU all came back `Arial`, while Cascadia Mono, Consolas, MS Gothic and
+  NSimSun came back as themselves. }
+function RealisedFace(const AFamily: string): string;
+var dc: HDC; fnt, old: HFONT; lf: TLogFontW; face: array[0..63] of WideChar;
 begin
-  Result := 10;
-  if Screen.SystemFont.Size > 0 then Result := Screen.SystemFont.Size;
-  Inc(Result, ASteps);
-  if Result < 6 then Result := 6;
-  if Result > 32 then Result := 32;
+  Result := '';
+  FillChar(lf{%H-}, SizeOf(lf), 0);
+  lf.lfHeight := -12;
+  lf.lfCharSet := DEFAULT_CHARSET;
+  if Length(AFamily) >= Length(lf.lfFaceName) then Exit;
+  StringToWideChar(AFamily, @lf.lfFaceName[0], Length(lf.lfFaceName));
+  fnt := CreateFontIndirectW(@lf);
+  if fnt = 0 then Exit;
+  dc := GetDC(0);
+  try
+    old := SelectObject(dc, fnt);
+    try
+      FillChar(face{%H-}, SizeOf(face), 0);
+      if GetTextFaceW(dc, Length(face), @face[0]) > 0 then
+        Result := UTF8Encode(WideString(PWideChar(@face[0])));
+    finally
+      SelectObject(dc, old);
+    end;
+  finally
+    ReleaseDC(0, dc);
+    DeleteObject(fnt);
+  end;
+end;
+
+function SubstituteFace: string;
+begin
+  if not GSubstituteKnown then
+  begin
+    GSubstitute := RealisedFace(SPX_NO_SUCH_FAMILY);
+    GSubstituteKnown := True;
+  end;
+  Result := GSubstitute;
+end;
+{$ENDIF}
+
+function SpxFontInstalled(const AFamily: string): Boolean;
+begin
+  if AFamily = '' then Exit(False);
+  Result := Screen.Fonts.IndexOf(AFamily) >= 0;
+  {$IFDEF WINDOWS}
+  if Result then Exit;
+  { AND THE SECOND QUESTION, because Screen.Fonts answers a narrower one than it looks.
+    LCL builds it from EnumFontFamiliesEx, which reports family names LOCALISED: on a Japanese
+    desktop MS Gothic enumerates as its Japanese name, so IndexOf('MS Gothic') is -1 there and
+    the four CJK families in the cascade would be unreachable on exactly the machines they
+    exist for -- and absent from the View menu too. GDI itself accepts the English name.
+
+    So GDI is asked instead: realise the family, and see whether it gave us that family or
+    substituted. A machine that will not say what it substitutes gets the enumerated answer
+    and nothing worse than today. }
+  if SubstituteFace = '' then Exit;
+  Result := RealisedFace(AFamily) <> SubstituteFace;
+  {$ENDIF}
+end;
+
+procedure SpxApplyEditorFont(AFont: TFont; const AFamily: string; APoints: Integer);
+begin
+  if AFont = nil then Exit;
+  if AFamily <> '' then AFont.Name := AFamily;
+  if APoints > 0 then AFont.Size := APoints;
+end;
+
+function SpxFontCanDraw(const AFamily, ASample: string): Boolean;
+{$IFDEF WINDOWS}
+var
+  dc: HDC;
+  fnt, old: HFONT;
+  wide, ask: WideString;
+  glyphs: array of Word;
+  i: Integer;
+  u: Word;
+  lf: TLogFontW;
+{$ENDIF}
+begin
+  Result := SpxFontInstalled(AFamily);
+  if not Result then Exit;
+  {$IFDEF WINDOWS}
+  if ASample = '' then Exit;
+  wide := UTF8Decode(ASample);
+  if wide = '' then Exit;
+
+  { SURROGATES ARE NOT ASKED ABOUT, and leaving them in was a defect with teeth.
+    GetGlyphIndicesW maps UTF-16 code UNITS, one cmap lookup each, and no font maps a lone
+    surrogate -- so an astral character arrived as two units that both came back "missing" and
+    every candidate was rejected. Measured: one emoji anywhere in a template, and all eight
+    families answered no; the chooser returned '', the editors kept whatever family they had,
+    and a Japanese document went on being drawn in a Latin font. A single emoji in a template
+    is not an edge case in this product.
+
+    Dropping them is the honest answer rather than a workaround: this API cannot speak for
+    astral characters, so they do not get a vote. Nothing is lost by that -- a fixed-pitch
+    editor font has no emoji anyway, and Windows font-links them regardless of what is
+    selected. The characters that DO decide the family are the ones left in. }
+  ask := '';
+  for i := 1 to Length(wide) do
+  begin
+    u := Word(wide[i]);
+    if (u >= $D800) and (u <= $DFFF) then Continue;
+    ask := ask + wide[i];
+  end;
+  { Nothing but astral characters: no evidence either way, and the installed answer stands. }
+  if ask = '' then Exit;
+  wide := ask;
+
+  FillChar(lf{%H-}, SizeOf(lf), 0);
+  lf.lfHeight := -12;
+  lf.lfCharSet := DEFAULT_CHARSET;
+  { A name that does not fit LOGFONT cannot be asked for faithfully -- and cannot be APPLIED
+    faithfully either, since the editor's font would be selected through the same truncated
+    name and Windows would substitute. So it is a no, not a yes: saying yes here would answer
+    for the substitute while naming the candidate. }
+  if Length(AFamily) >= Length(lf.lfFaceName) then Exit(False);
+  StringToWideChar(AFamily, @lf.lfFaceName[0], Length(lf.lfFaceName));
+  fnt := CreateFontIndirectW(@lf);
+  if fnt = 0 then Exit;
+  dc := GetDC(0);
+  try
+    old := SelectObject(dc, fnt);
+    try
+      SetLength(glyphs, Length(wide));
+      if GetGlyphIndicesW(dc, PWideChar(wide), Length(wide), @glyphs[0],
+                          GGI_MARK_NONEXISTING_GLYPHS) = DWORD(GDI_ERROR) then
+        { The call itself failed: say nothing rather than something wrong, and let the
+          installed check stand. }
+        Exit;
+      for i := 0 to High(glyphs) do
+        if glyphs[i] = $FFFF then Exit(False);
+    finally
+      SelectObject(dc, old);
+    end;
+  finally
+    ReleaseDC(0, dc);
+    DeleteObject(fnt);
+  end;
+  {$ENDIF}
 end;
 
 procedure SpxApplyMonoFont(AFont: TFont);

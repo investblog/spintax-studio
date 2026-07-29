@@ -526,6 +526,56 @@ next:
       Explorer's largest view and the Store tiles wants a vector export from the brand
       (`assets/brand/spintax-mark.svg` is kept for it), not an upscale of ours.
 
+- [x] **5. The editor's font is the editor's, not the desktop's** (2026-07-29, the user's
+      specification). The chrome keeps the system font — that rule does not move. The editors
+      are the exception twice: the FAMILY, because a template is markup and markup wants a
+      fixed pitch, and the SIZE, because a desktop configured at 9 pt was configured for
+      captions. Default 12 pt, family `Auto` or named, both remembered; Ctrl+0 returns to the
+      EDITOR's default, not the desktop's. All three SynEdits share one policy (the template,
+      the source view, the group editor's list).
+
+      **`Auto` asks whether a family can draw THIS document, not whether it is installed** —
+      the difference is a page of boxes. Every candidate carries Latin, most carry Cyrillic,
+      almost none carries CJK, and `Screen.Fonts` answers yes to all of them. So the cascade
+      ends in CJK families and each is asked to draw a sample of the document's own
+      characters. Explicitly NOT per-glyph fallback inside one line: one font for the whole
+      document, because that is what SynEdit offers and doing it by hand means owning the
+      measurement of every line.
+
+      Split by [ADR 0007](decisions/0007-windows-first-cross-platform-seams.md): the POLICY is
+      pure (`gui/SpxEditorFont.pas` — cascade, sample, clamp; no LCL, no Windows, driven by
+      the console suite with a fake probe), the PROBE is the platform adapter
+      (`SpxFontCanDraw` / `SpxFontInstalled` in `gui/SpxUi.pas`; Windows uses
+      `GetGlyphIndicesW`, other platforms answer "installed" until a task of their own).
+
+      Three defects a review found here, all confirmed by measurement before fixing, all
+      worth remembering:
+      - **one emoji collapsed the whole cascade.** `GetGlyphIndicesW` maps UTF-16 code
+        *units*; an astral character is two surrogates; no font maps a lone surrogate — so
+        every family answered "cannot draw this", the chooser returned nothing, and a
+        Japanese document went on being drawn in a Latin font. Surrogates are dropped from
+        the probe now: the API cannot speak for them, so they do not vote.
+      - **the sample cost 64 ms per render** on a 1.1 MB Cyrillic template — a `Copy` for
+        every non-ASCII character plus a `Pos` over a growing string. A bitset makes it 3 ms
+        with the same answers, and fixes a membership bug on malformed UTF-8 for free.
+      - **the menu caption could lie about the font in use.** One field was both "the last
+        computation" and "what is on screen"; building the menu advanced it without applying
+        anything. The caption reads `FEditor.Font.Name` now — the control cannot diverge from
+        itself.
+
+      Left over, and NOT blocking R0: the four CJK families are offered only when installed,
+      so on a bare Windows the tail of the cascade is empty — that is correct, but it means a
+      CJK template on a machine without the language pack still gets boxes and nothing says
+      why. A diagnostic ("no installed font can draw this document") is the honest fix.
+
+- [ ] **6. Platform seam debt — `SizeLocaleList`** (opened 2026-07-29 by ADR 0007). The
+      locale combo's dropped width is set with a raw `SendMessage(…, CB_SETDROPPEDWIDTH, …)`
+      inside `gui/SpxMainForm.pas`, which is exactly the shape ADR 0007 forbids: Win32 in a
+      form. Move it behind `SpxSetDropdownWidth(ACombo, APixels)` in `gui/SpxUi.pas`, empty
+      outside Windows (a combo whose list is as wide as the box is poorer, not broken).
+      Recorded as debt rather than fixed silently — a rule with an unrecorded exception from
+      day one is not a rule.
+
 **The interface will be multilingual**, switched together with the text language. Two things
 follow, and both are constraints on step 2 rather than later work: no layout may be computed
 from a caption's length in Russian (a German caption is a third longer), and the captions

@@ -77,7 +77,9 @@ const
 
       'Groter', 'Kleiner', 'Normale grootte', 'Licht', 'Donker',
 
-      'Gelijke breedte', 'Dubbelklik: gelijke breedte'
+      'Gelijke breedte', 'Dubbelklik: gelijke breedte',
+
+      'Editorlettertype', 'Automatisch'
   );
 
 implementation

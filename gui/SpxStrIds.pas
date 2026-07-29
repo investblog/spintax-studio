@@ -79,7 +79,10 @@ type
     sZoomIn, sZoomOut, sZoomReset, sThemeLight, sThemeDark,
 
     { ── the divider between the panes ── }
-    sSplitEven, sSplitEvenHint
+    sSplitEven, sSplitEvenHint,
+
+    { ── the editor's own font ── }
+    sEditorFont, sFontAuto
   );
 
 implementation

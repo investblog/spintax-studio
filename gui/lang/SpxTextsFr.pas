@@ -82,7 +82,9 @@ const
 
       'Plus grand', 'Plus petit', 'Taille normale', 'Clair', 'Sombre',
 
-      'Largeurs égales', 'Double-clic : largeurs égales'
+      'Largeurs égales', 'Double-clic : largeurs égales',
+
+      'Police de l''éditeur', 'Auto'
   );
 
 implementation

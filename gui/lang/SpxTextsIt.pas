@@ -73,7 +73,9 @@ const
 
       'Più grande', 'Più piccolo', 'Dimensione normale', 'Chiaro', 'Scuro',
 
-      'Larghezze uguali', 'Doppio clic: larghezze uguali'
+      'Larghezze uguali', 'Doppio clic: larghezze uguali',
+
+      'Carattere dell''editor', 'Automatico'
   );
 
 implementation

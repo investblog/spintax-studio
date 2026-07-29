@@ -30,7 +30,7 @@ unit SpxSettings;
 interface
 
 uses
-  Classes, SysUtils{$IFDEF WINDOWS}, Windirs{$ENDIF};
+  Classes, SysUtils, SpxEditorFont{$IFDEF WINDOWS}, Windirs{$ENDIF};
 
 type
   { The editor's colours. Only the editor and the source view: the preview shows the user's
@@ -46,10 +46,14 @@ type
     PreviewSource: Boolean;
     { 0..2 for the three panels, or -1 for a collapsed bottom block. }
     Panel: Integer;
-    { STEPS, not points. The editor's size comes from the system font by design (SpxUi says
-      why at length), so this is an offset on top of it: a person who set a large system font
-      still starts large, and the zoom moves from there. }
-    FontStep: Integer;
+    { POINTS, and the editor's own -- not an offset from the desktop's caption font. The
+      editor has its own readability policy now (SpxEditorFont says why), so a size here is
+      an absolute the user chose and Ctrl+0 returns to the EDITOR's default rather than to
+      whatever the desktop is configured for. }
+    FontSize: Integer;
+    { The family the user named, or empty for Auto -- and Auto is not "the first installed"
+      but "the first that can draw this document" (SpxEditorFont). }
+    FontFamily: string;
     Theme: TSpxTheme;
     { How wide the group editor's slide-out is. A variant can be longer than any sensible
       default, and the panel is the one place in this window whose useful width depends on
@@ -58,11 +62,6 @@ type
   end;
 
 const
-  { A step is a point, and the range is what stays readable in a fixed-pitch editor: below
-    about six points a template is unreadable, above twenty it is a poster. }
-  SPX_FONT_STEP_MIN = -4;
-  SPX_FONT_STEP_MAX = 12;
-
   { Narrow enough to leave the editor usable, wide enough for a long variant. The default is
     the width the panel shipped with. }
   SPX_SLIDE_MIN = 200;
@@ -99,7 +98,8 @@ begin
   Result.RailRight := False;
   Result.PreviewSource := False;
   Result.Panel := 0;
-  Result.FontStep := 0;
+  Result.FontSize := SPX_EDITOR_SIZE;
+  Result.FontFamily := '';
   Result.Theme := spxThemeLight;
   Result.SlideWidth := SPX_SLIDE_DEFAULT;
 end;
@@ -179,11 +179,11 @@ begin
       begin
         if TryStrToInt(val, n) then Result.Panel := Clamp(n, -1, 2);
       end
-      else if key = 'font.step' then
+      else if key = 'font.size' then
       begin
-        if TryStrToInt(val, n) then
-          Result.FontStep := Clamp(n, SPX_FONT_STEP_MIN, SPX_FONT_STEP_MAX);
+        if TryStrToInt(val, n) then Result.FontSize := SpxClampEditorSize(n);
       end
+      else if key = 'font.family' then Result.FontFamily := val
       else if key = 'slide.width' then
       begin
         if TryStrToInt(val, n) then
@@ -217,7 +217,8 @@ begin
     lines.Add('rail.right=' + WriteBool(APrefs.RailRight));
     lines.Add('preview.source=' + WriteBool(APrefs.PreviewSource));
     lines.Add('panel=' + IntToStr(APrefs.Panel));
-    lines.Add('font.step=' + IntToStr(APrefs.FontStep));
+    lines.Add('font.size=' + IntToStr(APrefs.FontSize));
+    lines.Add('font.family=' + APrefs.FontFamily);
     lines.Add('slide.width=' + IntToStr(APrefs.SlideWidth));
     if APrefs.Theme = spxThemeDark then lines.Add('theme=dark') else lines.Add('theme=light');
     try

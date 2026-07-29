@@ -166,6 +166,8 @@ const
     { menu items, and a menu grows to fit its longest }
     0, 0, 0, 0, 0,
     { a menu item and a tooltip -- both size themselves }
+    0, 0,
+    { a submenu and its first entry }
     0, 0
   );
 

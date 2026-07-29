@@ -14,13 +14,19 @@ unit SpxMainForm;
 interface
 
 uses
+  { FIRST, and deliberately: a unit later in this list wins a name clash, and Windows brings
+    its own TRect and TBitmap. Named after the LCL it would have quietly replaced TBitmap with
+    a record and TRect with the one StdCtrls' own event type does not use -- both of which the
+    compiler reported, neither of which reads like the cause. It is here only for
+    CB_SETDROPPEDWIDTH. }
+  {$IFDEF WINDOWS}Windows,{$ENDIF}
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs, ImgList,
   Buttons,
-  Clipbrd, Graphics, LCLType,
+  Clipbrd, Graphics, LCLType, LCLIntf,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
-  SpxSettings, SpxTheme,
+  SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
 
@@ -65,6 +71,10 @@ type
     FLoading: Boolean;
     { A double click on the splitter was seen and is waiting for the drag it started to end. }
     FSplitEven: Boolean;
+    { What the last font choice was made from, so typing does not re-probe eight families. }
+    FFontSample: string;
+    FFontManual: string;
+    FFontChosen: string;
     { The room each clamp last saw. A clamp must act when the WINDOW changed size and stay out
       of the way otherwise -- Resize fires for every layout ripple, including the ones a
       splitter drag causes, and re-applying a target then fights the drag pixel by pixel. }
@@ -100,9 +110,15 @@ type
     FFindText: TEdit;
     FFindCount: TLabel;
     FFindCase: TCheckBox;
-    FFindPrev: TButton;
-    FFindNext: TButton;
-    FFindClose: TButton;
+    { Icon buttons like the strip's other two. They give up being focusable, which is the one
+      thing a TButton had over them here -- and it costs nothing, because every action on this
+      bar is on the field's own keyboard: Enter for the next match, Shift+Enter for the one
+      before, Escape to close. }
+    FFindPrev: TSpeedButton;
+    FFindNext: TSpeedButton;
+    FFindClose: TSpeedButton;
+    { Visible only when the bar is NOT, in the place the field takes when it is. }
+    FFindOpen: TSpeedButton;
     FMatches: TSpxMatches;
     { WHICH match is showing, remembered rather than derived from the caret. The caret's
       column is PHYSICAL -- a tab is one code point and up to eight of those columns, a
@@ -186,6 +202,9 @@ type
     procedure BuildFindBar;
     procedure LayoutTopStrip;
     procedure TopStripResized(Sender: TObject);
+    procedure LocaleDrawItem(Control: TWinControl; Index: Integer; ARect: TRect;
+      State: TOwnerDrawState);
+    procedure SizeLocaleList;
     procedure BuildMenu;
     procedure EnsureFlags;
     procedure EnsureSmallIcons;
@@ -195,6 +214,7 @@ type
     procedure FindNextClicked(Sender: TObject);
     procedure FindPrevClicked(Sender: TObject);
     procedure FindCloseClicked(Sender: TObject);
+    procedure FindOpenClicked(Sender: TObject);
     procedure FindMenuClicked(Sender: TObject);
     procedure FindKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure StepToMatch(Backwards: Boolean);
@@ -215,7 +235,13 @@ type
     procedure ApplyPrefs;
     procedure SavePrefs;
     procedure ApplyTheme;
-    procedure ApplyFontStep;
+    { The family AND the size, to every editor in the window at once. Recomputed rather than
+      remembered because the family depends on the DOCUMENT: a template that gains a line of
+      Japanese needs a font that can draw it. }
+    procedure ApplyEditorFont;
+    procedure UpdateEditorFont(const AText: string);
+    function ChosenFamily: string;
+    function ChosenFamilyFor(const AText: string): string;
     procedure ZoomEditor(ASteps: Integer);
     procedure ZoomInClicked(Sender: TObject);
     procedure ZoomOutClicked(Sender: TObject);
@@ -236,6 +262,8 @@ type
     procedure MenuVarsClicked(Sender: TObject);
     procedure MenuSetClicked(Sender: TObject);
     procedure GroupPaneClosed(Sender: TObject);
+    procedure FontAutoClicked(Sender: TObject);
+    procedure FontPicked(Sender: TObject);
     procedure ModePageClicked(Sender: TObject);
     procedure ModeSourceClicked(Sender: TObject);
     procedure CaretSettled(Sender: TObject);
@@ -290,6 +318,8 @@ type
       Px() answer for the display we have just arrived on. }
     procedure AutoAdjustLayout(AMode: TLayoutAdjustmentPolicy;
       const AFromPPI, AToPPI, AOldFormWidth, ANewFormWidth: Integer); override;
+    { The first moment the locale combo has a window to be told how wide to drop. }
+    procedure DoShow; override;
     { A window made narrower must take the room from the panel, not from the panes.
 
       AND THIS FIRES FOR EVERY LAYOUT RIPPLE ANYWHERE IN THE FORM, not only when the window
@@ -461,6 +491,21 @@ begin
   FLocale.ItemIndex := FLocale.Items.IndexOf('en');
   FLocale.SetBounds(Px(Self, 8), Px(Self, 7), Px(Self, 70), Px(Self, 24));
   FLocale.OnChange := @SettingChanged;
+  { The list is drawn by hand for ONE reason: a two-letter tag is not a thing most people can
+    read. `bs` and `sr` and `hr` are three different answers to "which plural rules", and the
+    codes alone make that a guess. So the DROPPED list carries the language's own name beside
+    the tag while the closed box keeps the tag only -- the strip has no room for a name, and
+    the person who is choosing needs it, not the person who has chosen.
+
+    NOT a flag, which was the other proposal and is the wrong symbol here: flags already mean
+    the INTERFACE's language in this window's menu, this is the DOCUMENT's, and the two are
+    deliberately separate settings (that is why "follow the document" exists and is off). A
+    flag is also a country, and `en` is not one. }
+  FLocale.Style := csOwnerDrawFixed;
+  FLocale.OnDrawItem := @LocaleDrawItem;
+  { Every locale visible at once. The default is eight against ten items, which is a scrollbar
+    for the sake of two lines. }
+  FLocale.DropDownCount := FLocale.Items.Count;
 
   FSeeded := TCheckBox.Create(Self);
   FSeeded.Parent := FTop;
@@ -619,6 +664,8 @@ begin
   FEditor.Align := alClient;
   { Fixed pitch, because a template is markup -- but only the FAMILY is ours. The size
     stays the system's, so a desktop configured for larger text gets a larger editor. }
+  { The family and size are set properly by ApplyEditorFont once the settings are read; this
+    is only so the control is never briefly proportional while the window is being built. }
   SpxApplyMonoFont(FEditor.Font);
   FEditor.OnMouseWheel := @EditorMouseWheel;
   FEditor.Gutter.Visible := True;
@@ -747,16 +794,40 @@ begin
   FFindText.OnChange := @FindTextChanged;
   FFindText.OnKeyDown := @FindKeyDown;
 
-  FFindPrev := TButton.Create(Self);
+  { THE ONE THING THAT MAKES SEARCH FINDABLE. It had a shortcut and nothing to click, which
+    means it existed only for people who already knew it existed -- and this is a Store
+    product, where the second kind of user is most of them. It sits at the strip's left
+    because that half belongs to the template, and it stands aside when the bar opens: the
+    field starts exactly where the icon was, so nothing shifts. }
+  FFindOpen := TSpeedButton.Create(Self);
+  FFindOpen.Parent := FTop;
+  FFindOpen.Flat := True;
+  FFindOpen.Images := FSmallIcons;
+  FFindOpen.ImageIndex := SPX_ICON_SEARCH;
+  FFindOpen.Hint := Tr(sMenuFind);
+  FFindOpen.ShowHint := True;
+  FFindOpen.OnClick := @FindOpenClicked;
+
+  { Icons rather than the characters `<` and `>` on plain buttons, which is what these were:
+    two pieces of ASCII between an icon field and an icon close. }
+  FFindPrev := TSpeedButton.Create(Self);
   FFindPrev.Parent := FTop;
+  FFindPrev.Flat := True;
+  FFindPrev.Images := FSmallIcons;
+  FFindPrev.ImageIndex := SPX_ICON_PREV;
+  FFindPrev.Hint := Tr(sMenuFindPrev);
+  FFindPrev.ShowHint := True;
   FFindPrev.Visible := False;
-  FFindPrev.Caption := '<';
   FFindPrev.OnClick := @FindPrevClicked;
 
-  FFindNext := TButton.Create(Self);
+  FFindNext := TSpeedButton.Create(Self);
   FFindNext.Parent := FTop;
+  FFindNext.Flat := True;
+  FFindNext.Images := FSmallIcons;
+  FFindNext.ImageIndex := SPX_ICON_NEXT;
+  FFindNext.Hint := Tr(sMenuFindNext);
+  FFindNext.ShowHint := True;
   FFindNext.Visible := False;
-  FFindNext.Caption := '>';
   FFindNext.OnClick := @FindNextClicked;
 
   FFindCase := TCheckBox.Create(Self);
@@ -780,14 +851,18 @@ begin
   FFindCount.Parent := FTop;
   FFindCount.Visible := False;
 
-  FFindClose := TButton.Create(Self);
+  { The sprite's ✕, not the CHARACTER ✕ on a push button, which is what this was. The group
+    pane's close is the same glyph from the same strip, so the two places a person dismisses
+    something now look like each other. }
+  FFindClose := TSpeedButton.Create(Self);
   FFindClose.Parent := FTop;
+  FFindClose.Flat := True;
+  FFindClose.Images := FSmallIcons;
+  FFindClose.ImageIndex := SPX_ICON_CLOSE;
+  FFindClose.Hint := Tr(sClose);
+  FFindClose.ShowHint := True;
   FFindClose.Visible := False;
-  FFindClose.Caption := Tr(sFindClose);
   FFindClose.OnClick := @FindCloseClicked;
-  FFindClose.OnKeyDown := @FindKeyDown;
-  FFindPrev.OnKeyDown := @FindKeyDown;
-  FFindNext.OnKeyDown := @FindKeyDown;
 end;
 
 { THE TOP STRIP, laid out from both edges.
@@ -807,8 +882,91 @@ begin
   LayoutTopStrip;
 end;
 
+{ The language's own name for a locale tag, or '' when the tag is not one this build has a
+  name for. The round trip is the guard: SpxLangFor falls back to English for anything it does
+  not know (by design -- a half-translated window is worse than an English one), so asking it
+  about `pl` would answer "English" with a straight face. Comparing the code back catches
+  exactly that, and an unnamed tag is then simply shown bare. }
+function SpxLocaleName(const ACode: string): string;
+var lang: TSpxLang;
+begin
+  Result := '';
+  lang := SpxLangFor(ACode);
+  { A plain compare rather than the engine's normalisation, because the tags being named are
+    the combo's own -- bare two-letter codes this window put there. A regional tag would simply
+    go unnamed and be shown bare, which is the same thing an unknown one does. }
+  if SameText(SpxLangCode(lang), ACode) then Result := SpxLangName(lang);
+end;
+
+procedure TSpxMainForm.LocaleDrawItem(Control: TWinControl; Index: Integer;
+  ARect: TRect; State: TOwnerDrawState);
+var cb: TComboBox; code, name_: string; y, x: Integer;
+begin
+  cb := TComboBox(Control);
+  if (Index < 0) or (Index >= cb.Items.Count) then Exit;
+  code := cb.Items[Index];
+  { LCL has already set the brush and the font colour for this row's state -- selected rows
+    arrive with the highlight colours -- so filling is all the background needs. }
+  cb.Canvas.FillRect(ARect);
+  y := ARect.Top + (ARect.Bottom - ARect.Top - cb.Canvas.TextHeight('Ag')) div 2;
+  x := ARect.Left + Px(Self, 3);
+  cb.Canvas.TextOut(x, y, code);
+  { The closed box is the SAME item drawn in a 70px hole: the name goes to the list only, and
+    odComboBoxEdit is how the two calls are told apart. }
+  if odComboBoxEdit in State then Exit;
+  name_ := SpxLocaleName(code);
+  if name_ = '' then Exit;
+  { A fixed column so the names line up under one another rather than following the width of a
+    tag; the tags are all two letters, so this is a column and not a coincidence. }
+  Inc(x, cb.Canvas.TextWidth('nn') + Px(Self, 10));
+  { Secondary, because the TAG is what the setting stores and the name is the gloss -- except
+    on the highlighted row, where grey on the selection colour is what unreadable looks like. }
+  if not (odSelected in State) then cb.Canvas.Font.Color := clGrayText;
+  cb.Canvas.TextOut(x, y, name_);
+end;
+
+{ The dropped list is as wide as its widest line, which the box itself is not: 70px holds a
+  tag and nothing else. Windows sizes the list to the CONTROL unless told otherwise, so the
+  names would arrive clipped -- CB_SETDROPPEDWIDTH is the telling.
+
+  Measured on a bitmap rather than on the combo, for the reason the label trap records: a
+  control's Canvas outside a paint is not a measurement surface, and TComboBox does not offer
+  one at all. }
+procedure TSpxMainForm.SizeLocaleList;
+{$IFDEF WINDOWS}
+var bmp: TBitmap; i, w, wide: Integer; name_: string;
+{$ENDIF}
+begin
+  {$IFDEF WINDOWS}
+  if (FLocale = nil) or not FLocale.HandleAllocated then Exit;
+  bmp := TBitmap.Create;
+  try
+    bmp.Canvas.Font.Assign(FLocale.Font);
+    wide := 0;
+    for i := 0 to FLocale.Items.Count - 1 do
+    begin
+      name_ := SpxLocaleName(FLocale.Items[i]);
+      if name_ = '' then Continue;
+      w := bmp.Canvas.TextWidth('nn') + Px(Self, 10) + bmp.Canvas.TextWidth(name_);
+      if w > wide then wide := w;
+    end;
+    { The padding the rows are drawn with, on both sides, plus room to breathe -- and nothing
+      for a scrollbar, because with DropDownCount at the item count there is not one.
+
+      Measured with the ten locales this ships with: the longest line is Belarusian, and the
+      first attempt left it 4 px from the edge. That is not clipping but it reads as if it
+      were, and the slack costs nothing on a list nobody is short of room for. }
+    if wide > 0 then
+      SendMessage(FLocale.Handle, CB_SETDROPPEDWIDTH,
+                  wide + Px(Self, 3) * 2 + Px(Self, 14), 0);
+  finally
+    bmp.Free;
+  end;
+  {$ENDIF}
+end;
+
 procedure TSpxMainForm.LayoutTopStrip;
-var right_, leftEnd, x, y, fieldW, fixed: Integer;
+var right_, leftEnd, x, y, fieldW, fixed, editorEnd: Integer;
 
   procedure PlaceRight(C: TControl; W, H, Y: Integer);
   begin
@@ -827,6 +985,7 @@ begin
      (FFindText = nil) then Exit;
 
   { ── the output's half, from the right edge inwards ── }
+  editorEnd := 0;
   right_ := FTop.ClientWidth - Px(Self, 12);
   { The switch asks for what its own captions need; everything else is a fixed slot. }
   PlaceRight(FModes, FModes.MeasureWidth, Px(Self, 26), Px(Self, 6));
@@ -850,7 +1009,44 @@ begin
     resizes is a line drawn through the top of the window. }
   if FSlideSplit <> nil then FSlideSplit.BorderSpacing.Top := FTop.Height;
 
-  { ── the template's half, from the left edge outwards, and only when searching ── }
+  { ── the template's half, from the left edge outwards ── }
+
+  { THE BAR BELONGS TO THE EDITOR, so it ends where the editor does. leftEnd alone is where the
+    OUTPUT's controls begin, which on a window whose preview has been widened is far to the
+    right of the pane being searched -- and the close button then sat over the preview, looking
+    like it belonged to it. FLeft and FTop are both children of FBody, so this is one
+    coordinate space and no conversion is needed.
+
+    A floor under it: if the editor has been dragged down to a sliver there is no honest place
+    for the bar, and overflowing is better than a row of controls one pixel wide. }
+  { The sum of everything on the bar except the field, in the order it is placed below:
+    gap, prev, gap, next, gap, case box, gap, counter, gap, close. It has to be READ from that
+    block -- it is what tells the editor's edge how narrow the bar can honestly get. }
+  fixed := Px(Self, 8 + 30 + 4 + 30 + 8 + 90 + 8 + 110 + 8 + 30);
+  if (FLeft <> nil) and (FLeft.Width > 0) then
+  begin
+    editorEnd := FLeft.Left + FLeft.Width;
+    { The floor is the bar's OWN minimum -- its left inset, the narrowest usable field and the
+      fixed parts -- rather than a round number, so the two agree by construction. An editor
+      dragged narrower than this cannot hold the bar at all, and the bar overflows rather than
+      shrinking below the point where the field stops being a field. Measured at a 30% editor:
+      it takes the second row and still ends 114 px into the preview, which is the honest
+      answer -- the alternative is hiding the match counter or the case box, and losing a
+      control is worse than losing an edge. }
+    if editorEnd < Px(Self, 8) + Px(Self, 90) + fixed then
+      editorEnd := Px(Self, 8) + Px(Self, 90) + fixed;
+    if editorEnd < leftEnd then leftEnd := editorEnd;
+  end;
+
+  { The magnifier stands where the field will: same left edge, so opening the bar does not
+    move anything, it replaces it. }
+  if FFindOpen <> nil then
+  begin
+    FFindOpen.Visible := not FFindText.Visible;
+    if FFindOpen.Visible then
+      FFindOpen.SetBounds(Px(Self, 8), Px(Self, 6), Px(Self, 30), Px(Self, 26));
+  end;
+
   if not FFindText.Visible then
   begin
     FTop.Height := Px(Self, 38);
@@ -862,8 +1058,10 @@ begin
     rather than overlapping it -- measured: at 820 wide the two groups ran through each
     other. The row costs the editor a line, which is exactly what this arrangement avoids at
     the widths a person actually works at (one row from about 1000 up), and it is still
-    better than controls drawn on top of one another. }
-  fixed := Px(Self, 8 + 34 + 4 + 34 + 8 + 90 + 8 + 110 + 8 + 28);
+    better than controls drawn on top of one another.
+
+    `fixed` is computed above, where the editor's edge needs it to know how narrow the bar can
+    honestly get. }
   x := Px(Self, 8);
   if leftEnd - x - fixed >= Px(Self, 140) then
   begin
@@ -874,17 +1072,24 @@ begin
   else
   begin
     y := Px(Self, 32);
-    fieldW := FTop.ClientWidth - x - fixed - Px(Self, 8);
+    { A row of its own, so the output's controls are no longer in the way -- but the editor's
+      edge still is, and for the same reason: this bar searches the left pane. }
+    fieldW := FTop.ClientWidth - Px(Self, 8);
+    if (editorEnd > 0) and (editorEnd < fieldW) then fieldW := editorEnd;
+    fieldW := fieldW - x - fixed;
     if fieldW < Px(Self, 90) then fieldW := Px(Self, 90);
     FTop.Height := Px(Self, 70);
   end;
 
   FFindText.SetBounds(x, y + Px(Self, 7), fieldW, Px(Self, 24));
   Inc(x, fieldW + Px(Self, 8));
-  FFindPrev.SetBounds(x, y + Px(Self, 6), Px(Self, 34), Px(Self, 26));
+  { ONE WIDTH FOR ALL FOUR, and the same 30 the strip's other icon buttons use. They were 34,
+    34 and 28 -- the widths the push buttons had when they carried `<`, `>` and `x` -- so
+    turning them into icons left four buttons of three sizes in a row of ten pixels. }
+  FFindPrev.SetBounds(x, y + Px(Self, 6), Px(Self, 30), Px(Self, 26));
+  Inc(x, Px(Self, 34));
+  FFindNext.SetBounds(x, y + Px(Self, 6), Px(Self, 30), Px(Self, 26));
   Inc(x, Px(Self, 38));
-  FFindNext.SetBounds(x, y + Px(Self, 6), Px(Self, 34), Px(Self, 26));
-  Inc(x, Px(Self, 42));
   FFindCase.SetBounds(x, y + Px(Self, 9), Px(Self, 90), Px(Self, 20));
   Inc(x, Px(Self, 98));
   { 110px, and the captions are written to fit it: widening this by twenty pixels is enough
@@ -892,7 +1097,7 @@ begin
     trade than a compact '12/57'. }
   FFindCount.SetBounds(x, y + Px(Self, 11), Px(Self, 110), Px(Self, 16));
   Inc(x, Px(Self, 118));
-  FFindClose.SetBounds(x, y + Px(Self, 6), Px(Self, 28), Px(Self, 26));
+  FFindClose.SetBounds(x, y + Px(Self, 6), Px(Self, 30), Px(Self, 26));
 end;
 
 procedure TSpxMainForm.ShowFindBar;
@@ -925,6 +1130,17 @@ begin
   FFindCount.Visible := False;
   FFindClose.Visible := False;
   FMatches := nil;
+  { AND LAY THE STRIP OUT, which this did not do and which broke two things at once.
+    FFindOpen's visibility is decided in LayoutTopStrip -- it is the inverse of the field's --
+    so without this the magnifier stayed hidden after the first Escape and came back only when
+    something unrelated re-laid the strip: a window resize, a splitter drag, a language
+    switch. The one control that makes search findable disappeared the first time search was
+    closed.
+
+    The second thing is older than this bar's icons: closed from the TWO-ROW state, the strip
+    kept its 70 px and the editor went on paying for an empty second row until the next
+    resize. Same missing call, same line fixes it. }
+  LayoutTopStrip;
   if FEditor.CanSetFocus then FEditor.SetFocus;
 end;
 
@@ -1023,6 +1239,13 @@ end;
 procedure TSpxMainForm.FindCloseClicked(Sender: TObject);
 begin
   HideFindBar;
+end;
+
+procedure TSpxMainForm.FindOpenClicked(Sender: TObject);
+begin
+  { The same door the menu item and Ctrl+F use, so the box arrives holding the selection and
+    focused, exactly as it does from the keyboard. }
+  ShowFindBar;
 end;
 
 procedure TSpxMainForm.FindMenuClicked(Sender: TObject);
@@ -1261,8 +1484,9 @@ procedure TSpxMainForm.BuildMenu;
 
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
-  fileMenu, editMenu, viewMenu, langMenu, sideItem: TMenuItem;
+  fileMenu, editMenu, viewMenu, langMenu, fontMenu, sideItem: TMenuItem;
   lang: TSpxLang;
+  fi: Integer;
   keepHeight: Integer;
 begin
   { THE WINDOW MUST NOT CHANGE SIZE BECAUSE A MENU WAS REPLACED. Detaching one makes Windows
@@ -1392,6 +1616,51 @@ begin
   if (FSmallIcons <> nil) and (SPX_ICON_EVEN < FSmallIcons.Count) then
     FSmallIcons.GetBitmap(SPX_ICON_EVEN, sideItem.Bitmap);
 
+  { THE EDITOR'S FONT, and only the editor's -- the chrome keeps the desktop's. Auto is not
+    "the first installed" but "the first that can draw THIS document", so the entry that is
+    ticked under Auto is worth showing: a person whose template gained a line of Japanese sees
+    the family change and knows why. Only families this machine actually has are offered;
+    naming one it does not have would be a menu item that silently does nothing. }
+  Item(viewMenu, '-', 0, [], nil);
+  fontMenu := TMenuItem.Create(Self);
+  { THE SUBMENU'S OWN CAPTION CARRIES THE FAMILY ACTUALLY IN USE, and it has to: a named
+    family that cannot draw the document falls back, so the ticked entry alone would say
+    Consolas while the screen showed MS Gothic. One level up, the truth.
+
+    READ OFF THE EDITOR rather than computed here, and this is not a shortcut -- it is the fix
+    for a real fault. Asking ChosenFamily made this a SECOND caller of the chooser's memo, and
+    the memo was also what UpdateEditorFont compared against to decide whether to apply: build
+    the menu between a paste and the render it triggers and the memo already held the new
+    answer, so the render found "no change" and applied nothing. The caption then named a font
+    the editors were not using, permanently. A field cannot be both a note of the last
+    computation and a record of what is on screen; the control itself is the second, always.
+
+    It costs nothing, too. ChosenFamily materialises the whole document through DocText --
+    measured at 100 ms of SpxNormalizeEol alone on a 1.4 MB template -- and a rail click, a
+    theme switch and a language change all rebuild this menu. }
+  fontMenu.Caption := Tr(sEditorFont) + ' — ' + FEditor.Font.Name;
+  viewMenu.Add(fontMenu);
+  { The same way the even-panes item carries its glyph: on the item, not through the menu's
+    image list -- that list is the flags, indexed by language. }
+  if (FSmallIcons <> nil) and (SPX_ICON_FONT < FSmallIcons.Count) then
+    FSmallIcons.GetBitmap(SPX_ICON_FONT, fontMenu.Bitmap);
+  sideItem := Item(fontMenu, Tr(sFontAuto), 0, [], @FontAutoClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 5;
+  sideItem.Checked := FPrefs.FontFamily = '';
+  Item(fontMenu, '-', 0, [], nil);
+  { The same predicate the chooser uses, and it has to be: a family the menu offers and the
+    chooser refuses would be a tick that does nothing, and one the chooser can use but the menu
+    hides is a font the user cannot ask for. Not Screen.Fonts -- SpxFontInstalled says why. }
+  for fi := Low(SPX_EDITOR_FONTS) to High(SPX_EDITOR_FONTS) do
+    if SpxFontInstalled(SPX_EDITOR_FONTS[fi]) then
+    begin
+      sideItem := Item(fontMenu, SPX_EDITOR_FONTS[fi], 0, [], @FontPicked);
+      sideItem.RadioItem := True;
+      sideItem.GroupIndex := 5;
+      sideItem.Checked := FPrefs.FontFamily = SPX_EDITOR_FONTS[fi];
+    end;
+
   { The editor's colours. Only the editor and the source view are themed -- the preview shows
     the user's HTML as it will be published, and the window's chrome is drawn by Windows,
     which has no dark mode to offer LCL. }
@@ -1479,6 +1748,18 @@ begin
   if FRail <> nil then FRail.Rescale;
   { The switch's width is its captions', and a caption's width is the display's. }
   LayoutTopStrip;
+  { The dropped list is measured in pixels, so it is measured again on a display that counts
+    them differently. }
+  SizeLocaleList;
+end;
+
+procedure TSpxMainForm.DoShow;
+begin
+  inherited DoShow;
+  { Here rather than in BuildUi: CB_SETDROPPEDWIDTH goes to a window that does not exist until
+    the form is shown, and forcing the handle early to send it sooner would only move the
+    window's creation into the middle of its own construction. }
+  SizeLocaleList;
 end;
 
 { The top strip's icons: 16px inside a 26px button at 100%, the same proportion the rail uses
@@ -1939,7 +2220,22 @@ begin
   FModes.SetCaption(0, Tr(sViewPage));
   FModes.SetCaption(1, Tr(sViewSource));
   FFindCase.Caption := Tr(sFindCase);
-  FFindClose.Caption := Tr(sFindClose);
+  { THE FIND BAR'S FOUR BUTTONS CARRY NO CAPTION AT ALL NOW -- they are icons, so the tooltip
+    is the only text on them and the only thing a language can change. Missing them left the
+    bar in the language it was built in while the rest of the window switched, which is
+    exactly the silent half-translation this routine exists to prevent.
+
+    And `FFindClose.Caption := Tr(sFindClose)` is GONE from here, which is not tidying: it was
+    a leftover from when the close was a TButton, sFindClose is the literal 'x' in every table,
+    and TSpeedButton draws its caption. Measured on the real 28x26 button -- 48 ink pixels with
+    the glyph centred before, 72 spread over twice the columns after -- so one language switch
+    put a stray letter beside the ✕ and shoved the glyph off-centre for the rest of the
+    session. sFindClose stays in the table (a positional array does not lose an entry cheaply)
+    and is now unread, like sLangEnglish beside it. }
+  FFindOpen.Hint := Tr(sMenuFind);
+  FFindPrev.Hint := Tr(sMenuFindPrev);
+  FFindNext.Hint := Tr(sMenuFindNext);
+  FFindClose.Hint := Tr(sClose);
   BuildMenu;
   if FBottom.PageCount >= 3 then
   begin
@@ -2049,6 +2345,8 @@ begin
     blank line as the file is, thirty-five once normalised to CRLF, and the source view then
     opens on a screenful of nothing. The preview must show what the FILE produces. }
   job.Text := DocText;
+  { The family is the document's business, so this is where it is reconsidered. }
+  UpdateEditorFont(job.Text);
   job.UiLang := SpxUiLang;
   job.Locale := FLocale.Text;
   job.Seeded := FSeeded.Checked;
@@ -2213,7 +2511,21 @@ begin
   want := Round((FBody.ClientWidth - FSplit.Width) * FPaneFraction);
   if want > room then want := room;
   if want < Px(Self, SPX_PANE_MIN) then want := Px(Self, SPX_PANE_MIN);
-  if FLeft.Width <> want then FLeft.Width := want;
+  if FLeft.Width <> want then
+  begin
+    FLeft.Width := want;
+    { THE STRIP IS LAID OUT AGAIN BECAUSE THE EDITOR JUST MOVED, and the find bar ends where
+      the editor does. Ordering is the whole point: LayoutTopStrip runs from FTop.OnResize,
+      which fires while the form is resizing -- BEFORE this re-proportions the panes -- so on
+      its own it reads the width the editor had a moment ago. Measured with the bar open,
+      1600 -> 1200 wide: the editor ended at 552 and the close button at 744, a hundred and
+      ninety pixels into the preview. Shrinking only looked correct by accident, because the
+      two-row fallback changes FTop.Height and that fires OnResize a second time.
+
+      This cannot loop: it changes the strip's HEIGHT at most, and the guard above compares
+      the body's WIDTH. }
+    LayoutTopStrip;
+  end;
 end;
 
 { The panel's new width, kept. OnMoved rather than OnChangeBounds: it fires once when the
@@ -2240,6 +2552,9 @@ begin
   if body <= 0 then Exit;
   FLeft.Width := body div 2;
   FPaneFraction := FLeft.Width / body;
+  { The panes moved without a drag -- the even-panes icon or the splitter's double click --
+    and the bar's right edge follows the editor either way. }
+  LayoutTopStrip;
 end;
 
 procedure TSpxMainForm.SplitMoved(Sender: TObject);
@@ -2255,6 +2570,16 @@ begin
   { However it was dragged, this is now the division to keep through a resize. }
   body := FBody.ClientWidth - FSplit.Width;
   if body > 0 then FPaneFraction := FLeft.Width / body;
+  { AND THE FIND BAR, which now ends where the editor does. Nothing else would tell it: the
+    strip is alTop and its WIDTH does not change when the splitter moves, so its OnResize --
+    the only thing that lays the strip out -- never fires for this. Measured: without this the
+    bar kept the bounds it had before the drag, which is the same wrong place the user
+    reported, just arrived at differently.
+
+    At the END of the drag rather than during it, like FPaneFraction above: LayoutTopStrip can
+    change the strip's HEIGHT (the two-row fallback), which resizes the body, which would feed
+    back into a live drag. }
+  LayoutTopStrip;
 end;
 
 { ── THE SETTINGS FILE ─────────────────────────────────────────────────────────────────── }
@@ -2280,7 +2605,7 @@ begin
     ShowPanel(0, False);
   end;
   ApplyTheme;
-  ApplyFontStep;
+  ApplyEditorFont;
   { Follow mode was RESTORED by the constructor and has not been RESOLVED: it means "take the
     language from the document", and only this asks the locale box what the document says.
     Without it the window came back in the language stored last time WITH follow ticked and
@@ -2340,13 +2665,64 @@ begin
   FEditor.Invalidate;
 end;
 
-procedure TSpxMainForm.ApplyFontStep;
-var pt: Integer;
+{ Which family to draw this document in: the one the user named if the machine can honour it,
+  otherwise the first in the cascade that can actually draw what is on screen. Cached against
+  the SAMPLE rather than against the text, so typing does not re-probe eight families -- the
+  sample of a Latin document does not change when a Latin word is added to it. }
+function TSpxMainForm.ChosenFamily: string;
 begin
-  pt := SpxEditorFontSize(FPrefs.FontStep);
-  FEditor.Font.Size := pt;
-  FPreview.ApplyFontSize(pt);
-  if FSlide <> nil then FSlide.ApplyFontSize(pt);
+  Result := ChosenFamilyFor(DocText);
+end;
+
+{ The same question against a copy of the document the caller already has. RequestRender has
+  one; going through DocText there would materialise the whole template a second time on every
+  keystroke burst, which for a megabyte is not free. }
+function TSpxMainForm.ChosenFamilyFor(const AText: string): string;
+var sample: string;
+begin
+  sample := SpxFontSample(AText);
+  if (sample <> FFontSample) or (FPrefs.FontFamily <> FFontManual) then
+  begin
+    FFontSample := sample;
+    FFontManual := FPrefs.FontFamily;
+    FFontChosen := SpxChooseEditorFont(FPrefs.FontFamily, sample, SPX_EDITOR_FONTS,
+                                       @SpxFontCanDraw);
+  end;
+  Result := FFontChosen;
+end;
+
+{ EVERY EDITOR AT ONCE, and only the editors: the chrome keeps the desktop's font. The three
+  are the template, the source view and the group editor's list -- a fourth would join here. }
+{ Called on every render with the text that is about to be rendered: a template that gains a
+  line of Japanese needs a family that can draw it, and nothing else in the window would notice.
+  Costs a scan of the document and, only when the SAMPLE changed, eight probes -- adding a
+  Latin word to a Latin document changes neither. }
+procedure TSpxMainForm.UpdateEditorFont(const AText: string);
+var want: string;
+begin
+  want := ChosenFamilyFor(AText);
+  { AGAINST THE EDITOR, not against the memo the line above just refreshed -- see the menu's
+    caption for what reading the memo here cost. An empty answer means no installed family can
+    draw this document, and then the editors keep what they have: applying '' would change
+    nothing and asking again on every keystroke would only re-probe eight families for it. }
+  if (want <> '') and (want <> FEditor.Font.Name) then
+  begin
+    ApplyEditorFont;
+    { The View menu names the family in use, so it has to be rebuilt when the family moves --
+      otherwise it goes on naming the one the document outgrew. Only on a real change: a
+      document does not change script on most keystrokes. }
+    BuildMenu;
+  end;
+end;
+
+procedure TSpxMainForm.ApplyEditorFont;
+var pt: Integer; family: string;
+begin
+  pt := SpxClampEditorSize(FPrefs.FontSize);
+  family := ChosenFamily;
+  SpxApplyEditorFont(FEditor.Font, family, pt);
+  FPreview.ApplyEditorFont(family, pt);
+  if FSlide <> nil then FSlide.ApplyEditorFont(family, pt);
 end;
 
 { Zoom is the SYSTEM size plus a number of steps, so a person who runs a large desktop font
@@ -2356,17 +2732,12 @@ end;
 procedure TSpxMainForm.ZoomEditor(ASteps: Integer);
 var want: Integer;
 begin
-  want := FPrefs.FontStep + ASteps;
-  if want < SPX_FONT_STEP_MIN then want := SPX_FONT_STEP_MIN;
-  if want > SPX_FONT_STEP_MAX then want := SPX_FONT_STEP_MAX;
-  { THE STEP IS CLAMPED, AND SO IS THE POINT SIZE IT PRODUCES -- and the second clamp is the
-    one a hand feels. With a 9 pt system font, steps -4 and -3 are both 6 pt: taking the step
-    anyway would leave one notch of the wheel doing nothing visible, then two before anything
-    moved back, while the settings file recorded a number that no longer described the screen.
-    A step that changes no size is not taken. }
-  if SpxEditorFontSize(want) = SpxEditorFontSize(FPrefs.FontStep) then Exit;
-  FPrefs.FontStep := want;
-  ApplyFontStep;
+  { POINTS NOW, not steps from the desktop's caption size -- so a notch of the wheel is one
+    point and the number in the settings file is the number on screen. }
+  want := SpxClampEditorSize(FPrefs.FontSize + ASteps);
+  if want = FPrefs.FontSize then Exit;
+  FPrefs.FontSize := want;
+  ApplyEditorFont;
   SavePrefs;
 end;
 
@@ -2380,10 +2751,12 @@ begin
   ZoomEditor(-1);
 end;
 
+{ Back to the EDITOR's default, not to the desktop's caption size: that is the whole point of
+  the editor having a font policy of its own. }
 procedure TSpxMainForm.ZoomResetClicked(Sender: TObject);
 begin
-  FPrefs.FontStep := 0;
-  ApplyFontStep;
+  FPrefs.FontSize := SPX_EDITOR_SIZE;
+  ApplyEditorFont;
   SavePrefs;
 end;
 
@@ -2451,6 +2824,27 @@ begin
     against (wincontrol.inc:3719-3727) -- CanFocus stops at the form and never asks whether
     the form itself can take it. The rest of this file already uses CanSetFocus. }
   if FEditor.CanSetFocus then FEditor.SetFocus;
+end;
+
+{ Auto: the cascade decides, per document. }
+procedure TSpxMainForm.FontAutoClicked(Sender: TObject);
+begin
+  FPrefs.FontFamily := '';
+  ApplyEditorFont;
+  BuildMenu;
+  SavePrefs;
+end;
+
+{ A family the user named. It still goes through the chooser, which will fall back if this
+  machine stops being able to honour it -- an editor drawing boxes is worse than one drawing
+  the second choice. }
+procedure TSpxMainForm.FontPicked(Sender: TObject);
+begin
+  if not (Sender is TMenuItem) then Exit;
+  FPrefs.FontFamily := TMenuItem(Sender).Caption;
+  ApplyEditorFont;
+  BuildMenu;
+  SavePrefs;
 end;
 
 procedure TSpxMainForm.ModePageClicked(Sender: TObject);

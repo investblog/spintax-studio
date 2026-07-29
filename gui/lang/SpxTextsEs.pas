@@ -75,7 +75,9 @@ const
 
       'Más grande', 'Más pequeño', 'Tamaño normal', 'Claro', 'Oscuro',
 
-      'Anchos iguales', 'Doble clic: anchos iguales'
+      'Anchos iguales', 'Doble clic: anchos iguales',
+
+      'Fuente del editor', 'Automática'
   );
 
 implementation

@@ -78,7 +78,9 @@ const
 
       'Zoom in', 'Zoom out', 'Reset zoom', 'Light', 'Dark',
 
-      'Even panes', 'Double-click: even panes'
+      'Even panes', 'Double-click: even panes',
+
+      'Editor font', 'Auto'
   );
 
 implementation

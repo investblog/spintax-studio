@@ -55,6 +55,18 @@ ICONS = [
     # which the user weighed and which means EXCHANGE -- a reader would expect the two panes to
     # trade places, which is a different (and plausible) feature.
     ('SPX_ICON_EVEN', 'arrow-collapse-horizontal', 'divide the two panes evenly'),
+    # The user's call. An A with an italic a reads as TYPEFACE; format-size is "Tт" and
+    # format-letter-case is "Aa", both of which answer a different question.
+    ('SPX_ICON_FONT', 'format-font', 'the editor font submenu'),
+    # The find bar. Search had a shortcut and NOTHING to click -- a feature nobody who did not
+    # already know about Ctrl+F could find. `magnify` is the one glyph every application on
+    # this desktop uses for it, and being unoriginal is the entire point of a search icon.
+    ('SPX_ICON_SEARCH', 'magnify', 'open the find bar'),
+    # Its previous/next. They were the characters `<` and `>` on plain buttons, sitting between
+    # an icon field and an icon close -- half a bar. Chevrons are the same two directions drawn
+    # by the same hand as the rest of the set.
+    ('SPX_ICON_PREV', 'chevron-left', 'the find bar: the match before this one'),
+    ('SPX_ICON_NEXT', 'chevron-right', 'the find bar: the match after this one'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that

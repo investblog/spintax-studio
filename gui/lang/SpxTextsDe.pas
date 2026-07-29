@@ -82,7 +82,9 @@ const
 
       'Größer', 'Kleiner', 'Normale Größe', 'Hell', 'Dunkel',
 
-      'Gleich breit', 'Doppelklick: gleich breit'
+      'Gleich breit', 'Doppelklick: gleich breit',
+
+      'Editor-Schrift', 'Automatisch'
   );
 
 implementation

@@ -68,6 +68,7 @@ type
     FPalette: TSpxPalette;
     FHasPalette: Boolean;
     FPoints: Integer;
+    FFamily: string;
     { Paints back what the HTML highlighter mistook for a tag. It belongs to the editor, so
       it is created with each one and dies with it. }
     FTextBack: TSpxSourceMarkup;
@@ -116,7 +117,7 @@ type
       the user's own HTML as it will be published, and a preview that recolours the work is
       not a preview. }
     procedure ApplyTheme(const APalette: TSpxPalette);
-    procedure ApplyFontSize(APoints: Integer);
+    procedure ApplyEditorFont(const AFamily: string; APoints: Integer);
     property Content: string read FContent;
   end;
 
@@ -272,10 +273,13 @@ begin
   FSource.Invalidate;
 end;
 
-procedure TSpxPreviewPane.ApplyFontSize(APoints: Integer);
+procedure TSpxPreviewPane.ApplyEditorFont(const AFamily: string; APoints: Integer);
 begin
+  { Remembered, because the source editor is rebuilt when wrapping changes and a fresh one
+    knows nothing about either. }
   FPoints := APoints;
-  if (FSource <> nil) and (APoints > 0) then FSource.Font.Size := APoints;
+  FFamily := AFamily;
+  if FSource <> nil then SpxApplyEditorFont(FSource.Font, AFamily, APoints);
 end;
 
 procedure TSpxPreviewPane.SetSourceMode(AValue: Boolean);
@@ -377,7 +381,7 @@ begin
     keeps a wrap rebuild -- which happens on its own, when one output line crosses 32 KB --
     from throwing a dark, zoomed source view back to white at the system size. }
   if FHasPalette then ApplyTheme(FPalette);
-  if FPoints > 0 then FSource.Font.Size := FPoints;
+  SpxApplyEditorFont(FSource.Font, FFamily, FPoints);
 end;
 
 procedure TSpxPreviewPane.CopyClicked(Sender: TObject);

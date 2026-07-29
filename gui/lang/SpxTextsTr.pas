@@ -72,7 +72,9 @@ const
 
       'Büyüt', 'Küçült', 'Normal boyut', 'Açık', 'Koyu',
 
-      'Eşit genişlik', 'Çift tıklama: eşit genişlik'
+      'Eşit genişlik', 'Çift tıklama: eşit genişlik',
+
+      'Düzenleyici yazı tipi', 'Otomatik'
   );
 
 implementation

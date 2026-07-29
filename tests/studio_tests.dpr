@@ -33,7 +33,8 @@ uses
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
-  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings;
+  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
+  SpxEditorFont;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -48,7 +49,8 @@ uses
   SpxStrings in '..\gui\SpxStrings.pas',
   SpxIcons in '..\gui\SpxIcons.pas',
   SpxFlags in '..\gui\SpxFlags.pas',
-  SpxSettings in '..\gui\SpxSettings.pas';
+  SpxSettings in '..\gui\SpxSettings.pas',
+  SpxEditorFont in '..\gui\SpxEditorFont.pas';
   {$ENDIF}
 
 var
@@ -2515,6 +2517,126 @@ end;
    touches the profile of whoever runs it. What is worth checking is not the happy round trip
    -- it is that a file which has been edited by hand, half written, or written by a later
    version cannot stop the program from starting or silently change a setting nobody chose. *)
+(* THE EDITOR'S FONT. The choice is a pure function over a cascade and a callback, so this
+   drives it with a fake that answers from a table -- no fonts, no window, no Windows. What is
+   worth pinning is not that a list is walked in order: it is that "installed" and "can draw
+   this text" are different questions, and that a family the user NAMED is not kept when the
+   machine can no longer honour it. *)
+var
+  FontsHere: string;      { families the fake says are installed, separated by | }
+  CjkHere: string;        { of those, the ones that can draw non-Latin }
+  FontAsked: string;      { every family the chooser asked about, in order }
+
+function FakeProbe(const AFamily, ASample: string): Boolean;
+var needsCjk: Boolean; i: Integer;
+begin
+  FontAsked := FontAsked + AFamily + '|';
+  Result := Pos('|' + AFamily + '|', '|' + FontsHere + '|') > 0;
+  if not Result then Exit;
+  { "CJK" here is any byte above the Latin range -- enough for a table-driven fake. }
+  needsCjk := False;
+  for i := 1 to Length(ASample) do
+    if Ord(ASample[i]) >= $E0 then needsCjk := True;
+  if needsCjk then
+    Result := Pos('|' + AFamily + '|', '|' + CjkHere + '|') > 0;
+end;
+
+procedure TestEditorFont;
+const
+  CASCADE: array[0..3] of string = ('Cascadia Mono', 'Consolas', 'MS Gothic', 'NSimSun');
+  { Two characters above U+FFFF, as their UTF-8 bytes: a grinning face and a CJK extension-B
+    ideograph. Written as bytes rather than as literals so the file's own encoding cannot
+    quietly change what is being tested. }
+  EMOJI = #$F0#$9F#$98#$80;   { U+1F600 }
+  EXT_B = #$F0#$A0#$80#$80;   { U+20000 }
+var s: string;
+begin
+  { ── the sample ── }
+  Check('editorfont/ascii-samples-to-one-letter', SpxFontSample('hello, world!'), 'A');
+  Check('editorfont/nothing-still-samples-to-something', SpxFontSample(''), 'A');
+  { Distinct characters only, and ASCII collapsed -- so a megabyte of prose and a line of it
+    give the same answer. }
+  Check('editorfont/cyrillic-is-deduplicated', SpxFontSample('аа бб аа'), 'A' + 'аб');
+  Check('editorfont/a-long-run-is-still-short',
+        IntToStr(Length(SpxFontSample(StringOfChar('x', 100000) + 'ё'))), '3');
+  { A malformed byte does not hang or eat the rest. }
+  CheckTrue('editorfont/a-stray-byte-does-not-hang',
+            Length(SpxFontSample('ab' + Chr($80) + 'cd')) > 0);
+
+  { A CHARACTER ABOVE U+FFFF IS A CHARACTER. It is sampled, deduplicated and counted like any
+    other -- which sounds too obvious to test until you know what it cost: the Windows probe
+    asks GDI about UTF-16 code units, an astral character is two of them, no font maps a lone
+    surrogate, and so ONE emoji anywhere in a template made every family in the cascade answer
+    "cannot draw this". The chooser returned nothing, the editors kept whatever family they
+    had, and a Japanese document went on being drawn in a Latin one. The probe drops surrogates
+    now; the sampler's side of the contract is that they arrive whole in the first place. }
+  Check('editorfont/an-emoji-is-sampled', SpxFontSample('a' + EMOJI), 'A' + EMOJI);
+  { No 'A' on these two: the letter stands in for ASCII the document HAS, and neither of these
+    documents has any. }
+  Check('editorfont/an-emoji-is-deduplicated', SpxFontSample(EMOJI + EMOJI), EMOJI);
+  Check('editorfont/two-astral-characters-are-two',
+        SpxFontSample(EMOJI + EXT_B), EMOJI + EXT_B);
+
+  { MEMBERSHIP IS BY CHARACTER, not by byte string. The first version cut each character out
+    and searched the answer for it, which on malformed input could match ACROSS a boundary and
+    drop a character it had never seen -- measured on exactly this input, where the third
+    sequence was found inside the first two and lost. The rewrite compares numbers, and it was
+    not made for this: it was made because the search cost 64 ms per render on a 1.1 MB
+    Cyrillic template (3 ms now, same answers). This is the correctness that came with it. }
+  Check('editorfont/malformed-input-loses-nothing',
+        SpxFontSample(#$E3#$E3#$81#$E3#$81#$C3#$E3#$81#$E3),
+        #$E3#$E3#$81#$E3#$81#$C3#$E3#$81#$E3);
+  { A sequence cut off by the end of the buffer stops the walk rather than reading past it. }
+  Check('editorfont/a-truncated-tail-is-dropped', SpxFontSample('abc' + #$E3#$81), 'A');
+
+  { ── the choice ── }
+  FontsHere := 'Consolas|MS Gothic';
+  CjkHere := 'MS Gothic';
+  FontAsked := '';
+  Check('editorfont/skips-what-is-not-installed',
+        SpxChooseEditorFont('', 'A', CASCADE, @FakeProbe), 'Consolas');
+  Check('editorfont/and-asked-in-cascade-order', FontAsked, 'Cascadia Mono|Consolas|');
+
+  { The whole point of probing rather than listing: Consolas IS installed and cannot draw
+    this, so the cascade must walk past it. }
+  Check('editorfont/skips-what-cannot-draw-the-text',
+        SpxChooseEditorFont('', SpxFontSample('日本語'), CASCADE, @FakeProbe), 'MS Gothic');
+
+  { A named family wins ... }
+  Check('editorfont/a-named-family-wins',
+        SpxChooseEditorFont('MS Gothic', 'A', CASCADE, @FakeProbe), 'MS Gothic');
+  { ... but not when the machine cannot honour it any more. }
+  Check('editorfont/a-named-family-that-is-gone-falls-back',
+        SpxChooseEditorFont('Menlo', 'A', CASCADE, @FakeProbe), 'Consolas');
+  Check('editorfont/a-named-family-that-cannot-draw-falls-back',
+        SpxChooseEditorFont('Consolas', SpxFontSample('日本語'), CASCADE, @FakeProbe),
+        'MS Gothic');
+
+  { Nothing acceptable is not a crash and not a wrong answer: it is an empty answer, which
+    the window reads as "leave the font alone". }
+  FontsHere := '';
+  CjkHere := '';
+  Check('editorfont/nothing-installed-gives-nothing',
+        SpxChooseEditorFont('', 'A', CASCADE, @FakeProbe), '');
+  s := SpxChooseEditorFont('', 'A', CASCADE, nil);
+  Check('editorfont/no-probe-gives-nothing', s, '');
+
+  { ── the size ── }
+  Check('editorfont/the-default-is-twelve', IntToStr(SPX_EDITOR_SIZE), '12');
+  { The point of a fixed default: a desktop at 9 pt does not decide how big a template is. }
+  CheckTrue('editorfont/the-default-beats-a-small-desktop-font', SPX_EDITOR_SIZE >= 11);
+  Check('editorfont/a-huge-size-is-clamped',
+        IntToStr(SpxClampEditorSize(999)), IntToStr(SPX_EDITOR_SIZE_MAX));
+  Check('editorfont/a-tiny-size-is-clamped',
+        IntToStr(SpxClampEditorSize(-5)), IntToStr(SPX_EDITOR_SIZE_MIN));
+  Check('editorfont/a-sensible-size-is-left-alone', IntToStr(SpxClampEditorSize(14)), '14');
+
+  { The shipped cascade ends where the comment says it does. }
+  Check('editorfont/the-cascade-starts-with-cascadia', SPX_EDITOR_FONTS[0], 'Cascadia Mono');
+  Check('editorfont/and-ends-with-a-cjk-family',
+        SPX_EDITOR_FONTS[High(SPX_EDITOR_FONTS)], 'MingLiU');
+end;
+
 procedure TestSettings;
 var path: string; p, q: TSpxPrefs; f: TStringList;
 
@@ -2533,7 +2655,8 @@ begin
     p := SpxLoadPrefsFrom(path);
     q := SpxDefaultPrefs;
     CheckTrue('settings/absent-file-gives-the-defaults',
-      (p.Lang = q.Lang) and (p.Panel = q.Panel) and (p.FontStep = q.FontStep) and
+      (p.Lang = q.Lang) and (p.Panel = q.Panel) and (p.FontSize = q.FontSize) and
+      (p.FontFamily = q.FontFamily) and
       (p.Theme = q.Theme) and (p.LangFollow = q.LangFollow) and
       (p.RailRight = q.RailRight) and (p.PreviewSource = q.PreviewSource) and
       (p.SlideWidth = q.SlideWidth));
@@ -2544,7 +2667,8 @@ begin
     p.RailRight := True;
     p.PreviewSource := True;
     p.Panel := 2;
-    p.FontStep := 3;
+    p.FontSize := 15;
+    p.FontFamily := 'Consolas';
     p.Theme := spxThemeDark;
     p.SlideWidth := 420;
     CheckTrue('settings/saving-says-it-worked', SpxSavePrefsTo(path, p));
@@ -2554,7 +2678,8 @@ begin
     CheckTrue('settings/rail-side-survives', q.RailRight);
     CheckTrue('settings/preview-mode-survives', q.PreviewSource);
     Check('settings/panel-survives', IntToStr(q.Panel), '2');
-    Check('settings/font-step-survives', IntToStr(q.FontStep), '3');
+    Check('settings/font-size-survives', IntToStr(q.FontSize), '15');
+    Check('settings/font-family-survives', q.FontFamily, 'Consolas');
     CheckTrue('settings/theme-survives', q.Theme = spxThemeDark);
     Check('settings/slide-width-survives', IntToStr(q.SlideWidth), '420');
 
@@ -2570,20 +2695,27 @@ begin
       IntToStr(SpxLoadPrefsFrom(path).Panel), '0');
     Put('this is not a settings file at all' + LineEnding + '{"json": true}' + LineEnding +
         '=' + LineEnding + '=nokey' + LineEnding + 'nokey');
-    Check('settings/noise-is-the-defaults', IntToStr(SpxLoadPrefsFrom(path).FontStep), '0');
-    Put('panel=banana' + LineEnding + 'font.step=' + LineEnding + 'theme=chartreuse' +
+    Check('settings/noise-is-the-defaults',
+      IntToStr(SpxLoadPrefsFrom(path).FontSize), IntToStr(SPX_EDITOR_SIZE));
+    Put('panel=banana' + LineEnding + 'font.size=' + LineEnding + 'theme=chartreuse' +
         LineEnding + 'rail.right=maybe');
     p := SpxLoadPrefsFrom(path);
     CheckTrue('settings/unreadable-values-fall-back',
-      (p.Panel = 0) and (p.FontStep = 0) and (p.Theme = spxThemeLight) and (not p.RailRight));
+      (p.Panel = 0) and (p.FontSize = SPX_EDITOR_SIZE) and (p.Theme = spxThemeLight) and
+      (not p.RailRight));
 
     { the range is a promise: a hand-edited 999 must not make the editor a poster }
-    Put('font.step=999');
+    Put('font.size=999');
     Check('settings/an-absurd-size-is-clamped',
-      IntToStr(SpxLoadPrefsFrom(path).FontStep), IntToStr(SPX_FONT_STEP_MAX));
-    Put('font.step=-999');
+      IntToStr(SpxLoadPrefsFrom(path).FontSize), IntToStr(SPX_EDITOR_SIZE_MAX));
+    Put('font.size=-999');
     Check('settings/and-clamped-the-other-way',
-      IntToStr(SpxLoadPrefsFrom(path).FontStep), IntToStr(SPX_FONT_STEP_MIN));
+      IntToStr(SpxLoadPrefsFrom(path).FontSize), IntToStr(SPX_EDITOR_SIZE_MIN));
+    { A family is carried verbatim: this unit does not know which families exist, and the
+      chooser already falls back when one cannot be honoured. }
+    Put('font.family=Menlo');
+    Check('settings/a-family-is-carried-verbatim',
+      SpxLoadPrefsFrom(path).FontFamily, 'Menlo');
     Put('panel=7');
     Check('settings/a-panel-that-does-not-exist-is-clamped',
       IntToStr(SpxLoadPrefsFrom(path).Panel), '2');
@@ -2601,10 +2733,10 @@ begin
 
     { a key this build has never heard of is left alone rather than treated as a mistake --
       a file written by a later version must not lose its settings by being opened here }
-    Put('theme=dark' + LineEnding + 'spellcheck=yes' + LineEnding + 'font.step=2');
+    Put('theme=dark' + LineEnding + 'spellcheck=yes' + LineEnding + 'font.size=14');
     p := SpxLoadPrefsFrom(path);
     CheckTrue('settings/an-unknown-key-does-not-spoil-the-known-ones',
-      (p.Theme = spxThemeDark) and (p.FontStep = 2));
+      (p.Theme = spxThemeDark) and (p.FontSize = 14));
 
     { comments and stray spacing, because a person edits this by hand }
     Put('# a comment' + LineEnding + '   theme  =  dark   ' + LineEnding + '  # another');
@@ -2624,6 +2756,29 @@ begin
     f.Free;
     if FileExists(path) then DeleteFile(path);
   end;
+end;
+
+{ A PNG's declared size, from IHDR: the first chunk, always, and its width and height are two
+  big-endian 32-bit numbers at a fixed offset. Eight bytes of signature, four of chunk length,
+  four of type, then the pair. No decoder needed to answer "how many cells is this". }
+function PngDim(AData: Pointer; ALen, AOffset: Integer): Integer;
+var b: PByte;
+begin
+  Result := -1;
+  if (AData = nil) or (ALen < 24) then Exit;
+  b := PByte(AData);
+  Result := (Integer(b[AOffset]) shl 24) or (Integer(b[AOffset + 1]) shl 16) or
+            (Integer(b[AOffset + 2]) shl 8) or Integer(b[AOffset + 3]);
+end;
+
+function PngWidth(AData: Pointer; ALen: Integer): Integer;
+begin
+  Result := PngDim(AData, ALen, 16);
+end;
+
+function PngHeight(AData: Pointer; ALen: Integer): Integer;
+begin
+  Result := PngDim(AData, ALen, 20);
 end;
 
 procedure TestSprites;
@@ -2660,6 +2815,16 @@ begin
     p := SpxIconStrip(SPX_ICON_SIZES[i], len);
     CheckTrue(Format('sprites/icon-%d-is-a-png', [SPX_ICON_SIZES[i]]),
       (p <> nil) and (len > 8) and (PByte(p)[0] = $89) and (PByte(p)[1] = Ord('P')));
+    { AND IT HOLDS EXACTLY SPX_ICON_COUNT CELLS. The strip and the constant are generated
+      together but consumed apart: SpxImagesFrom slices the PNG into SPX_ICON_COUNT columns,
+      so a strip one cell short does not fail -- it silently redraws every icon a fraction
+      narrower and shifts each one onto its neighbour's glyph. Nothing else here would notice.
+      Read from the PNG's own IHDR, which is the only description of the strip that cannot
+      drift from the strip. }
+    Check(Format('sprites/icon-%d-is-%d-cells-wide', [SPX_ICON_SIZES[i], SPX_ICON_COUNT]),
+      IntToStr(PngWidth(p, len)), IntToStr(SPX_ICON_SIZES[i] * SPX_ICON_COUNT));
+    Check(Format('sprites/icon-%d-is-one-row-tall', [SPX_ICON_SIZES[i]]),
+      IntToStr(PngHeight(p, len)), IntToStr(SPX_ICON_SIZES[i]));
   end;
   for i := Low(SPX_FLAG_WIDTHS) to High(SPX_FLAG_WIDTHS) do
   begin
@@ -4848,6 +5013,7 @@ begin
   TestStrings;
   TestSprites;
   TestSettings;
+  TestEditorFont;
   TestLongestLine;
   TestHtmlScan;
   TestGroups;

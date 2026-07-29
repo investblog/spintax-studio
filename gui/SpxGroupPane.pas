@@ -60,7 +60,7 @@ type
     procedure ShowGroupAt(const ADoc: string; AOffset: Integer);
     { The list is an editor now, so it takes the theme and the zoom like the other two. }
     procedure ApplyTheme(const APalette: TSpxPalette);
-    procedure ApplyFontSize(APoints: Integer);
+    procedure ApplyEditorFont(const AFamily: string; APoints: Integer);
     procedure Retranslate;
     { Put the keyboard in the list. The window calls this when it opens the panel: the rail's
       tool cannot take focus itself (a TSpeedButton is a TGraphicControl), so without it the
@@ -213,9 +213,9 @@ begin
   Invalidate;
 end;
 
-procedure TSpxGroupPane.ApplyFontSize(APoints: Integer);
+procedure TSpxGroupPane.ApplyEditorFont(const AFamily: string; APoints: Integer);
 begin
-  if (FList <> nil) and (APoints > 0) then FList.Font.Size := APoints;
+  if FList <> nil then SpxApplyEditorFont(FList.Font, AFamily, APoints);
 end;
 
 procedure TSpxGroupPane.FocusList;
