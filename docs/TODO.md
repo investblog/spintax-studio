@@ -568,7 +568,14 @@ next:
       CJK template on a machine without the language pack still gets boxes and nothing says
       why. A diagnostic ("no installed font can draw this document") is the honest fix.
 
-- [ ] **6. Platform seam debt — `SizeLocaleList`** (opened 2026-07-29 by ADR 0007). The
+- [ ] **6. The locale list reads as a bare tag to a screen reader.** The language names in
+      the dropped list are PAINTED (owner-draw), so `CB_GETLBTEXT` still returns `ru` / `en`
+      and assistive technology never sees "Русский". Sighted users gained the gloss; anyone on
+      a screen reader did not. Store submissions are not gated on this, but an accessibility
+      pass before R0 should decide between accessible descriptions on the items and putting
+      the name in the item text with the closed box drawn short.
+
+- [ ] **7. Platform seam debt — `SizeLocaleList`** (opened 2026-07-29 by ADR 0007). The
       locale combo's dropped width is set with a raw `SendMessage(…, CB_SETDROPPEDWIDTH, …)`
       inside `gui/SpxMainForm.pas`, which is exactly the shape ADR 0007 forbids: Win32 in a
       form. Move it behind `SpxSetDropdownWidth(ACombo, APixels)` in `gui/SpxUi.pas`, empty
