@@ -28,7 +28,7 @@ interface
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, ComCtrls, Grids, Spin, Dialogs,
   Graphics, FileUtil,
-  Spintax, SpxStudio, SpxDedupe, SpxExport, SpxEngineThread, SpxUi, SpxStrings;
+  Spintax, SpxStudio, SpxDedupe, SpxExport, SpxEngineThread, SpxUi, SpxStrIds, SpxStrings;
 
 type
   { What the panel needs from the form to start a batch. The form owns the document, the

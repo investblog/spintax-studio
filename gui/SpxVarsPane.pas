@@ -24,7 +24,7 @@ unit SpxVarsPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, SpxStudio, SpxUi, SpxStrings;
+  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, SpxStudio, SpxUi, SpxStrIds, SpxStrings;
 
 type
   TSpxJumpEvent = procedure(Line, Column: Integer) of object;

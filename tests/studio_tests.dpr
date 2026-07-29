@@ -33,7 +33,7 @@ uses
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
-  SpxFiles, SpxEngineThread, SpxStrings;
+  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -2511,13 +2511,37 @@ begin
   SpxSetUiLang(spxLangEn);
   CheckTrue('strings/tr-follows-it-back', Tr(sSeed) = SpxStrIn(spxLangEn, sSeed));
 
+  (* HOW MANY LANGUAGES ACTUALLY HAVE THEIR OWN WORDS. Every language answers every id --
+     the ones without a file fall back to English -- so "nothing is blank" cannot tell a
+     translation from a fallback, and this can: a language whose every string equals the
+     English one has no table of its own yet. The number is a ratchet, updated deliberately
+     as each language lands, so a translation that silently disappears fails the build. *)
+  over := 0;
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+  begin
+    worst := '';
+    for id := Low(TSpxStr) to High(TSpxStr) do
+      if SpxStrIn(lang, id) <> SpxStrIn(spxLangEn, id) then
+      begin
+        worst := 'own';
+        Break;
+      end;
+    if (worst <> '') or (lang = spxLangEn) then Inc(over);
+  end;
+  Check('strings/languages-with-words-of-their-own', IntToStr(over), '5');
+
   { The window follows the document's language, and only a language it actually has. }
   CheckTrue('strings/ru-selects-russian', SpxUiLangFor('ru') = spxLangRu);
   CheckTrue('strings/ru-RU-too', SpxUiLangFor('ru-RU') = spxLangRu);
   CheckTrue('strings/en-selects-the-base', SpxUiLangFor('en') = spxLangEn);
-  { A language with no translation falls back to the base rather than to a half-empty
-    window. }
-  CheckTrue('strings/an-untranslated-locale-falls-back', SpxUiLangFor('de') = spxLangEn);
+  { A locale outside the wave falls back to the base rather than to a half-empty window.
+    Japanese is deliberate: it is one of the four the site ships that this product does not
+    yet, because they need right-to-left layout or a width model that is not seven pixels
+    per code point. }
+  CheckTrue('strings/a-locale-outside-the-wave-falls-back',
+            SpxUiLangFor('ja') = spxLangEn);
+  CheckTrue('strings/and-a-language-in-it-does-not', SpxUiLangFor('de') = spxLangDe);
+  CheckTrue('strings/the-balkan-group-is-in-it', SpxUiLangFor('hr') = spxLangHr);
   CheckTrue('strings/and-so-does-nonsense', SpxUiLangFor('') = spxLangEn);
 
   { The diagnostics panel is the largest body of prose in the window and the one place its

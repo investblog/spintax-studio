@@ -35,13 +35,25 @@ type
     exported variant that cannot be regenerated is not reproducible (spec §4.6). }
   TSpxRngMode = (spxRandom, spxSeeded);
 
-  { Which language the product SPEAKS. It lives here, in the GUI-free layer, because the
-    diagnostics panel's wording is built here -- on the worker thread, next to the codes it
-    explains -- and a language enum is not a window. The window's own string table
-    (SpxStrings) uses this same type, so there is one language in the product rather than
-    two that agree by convention. English is the base; anything without a translation falls
-    back to it rather than to a half-translated panel. }
-  TSpxLang = (spxLangEn, spxLangRu);
+  (* Which language the product SPEAKS. It lives here, in the GUI-free layer, because the
+     diagnostics panel's wording is built here -- on the worker thread, next to the codes it
+     explains -- and a language enum is not a window. The window's own string table
+     (SpxStrings) uses this same type, so there is one language in the product rather than
+     two that agree by convention.
+
+     THE LIST IS THE SITE'S, not a guess: spintax.net ships in en, ru, es, fr, de, it, pt,
+     nl, tr (plus ar, zh, ja, ko, which wait for right-to-left layout and a width model that
+     is not seven pixels per code point). To those are added the locales this product already
+     supports for PLURAL rules and has been tested on -- uk, be, sr, hr, bs -- so an author
+     writing Ukrainian or Croatian templates can have the window in that language too.
+
+     Every one of them is Latin or Cyrillic script, which is what makes this one wave rather
+     than three: the layout and the length budgets hold as they are.
+
+     English is the base; anything without a translation falls back to it rather than to a
+     half-translated window. *)
+  TSpxLang = (spxLangEn, spxLangRu, spxLangUk, spxLangBe, spxLangSr, spxLangHr, spxLangBs,
+              spxLangDe, spxLangFr, spxLangEs, spxLangIt, spxLangPt, spxLangNl, spxLangTr);
 
   { The workspace's template set: slug -> text, built by the HOST from a folder listing and
     handed in whole (ADR 0003). editor-core does no I/O, so M0 is testable without a
@@ -918,10 +930,24 @@ begin
   end;
 end;
 
+{ The ISO code of each language, in the enum's own order -- the one place the two lists are
+  tied together, so a language added to one and forgotten in the other is a compile error
+  rather than a locale that silently resolves to English. }
+const
+  SPX_LANG_CODE: array[TSpxLang] of string =
+    ('en', 'ru', 'uk', 'be', 'sr', 'hr', 'bs',
+     'de', 'fr', 'es', 'it', 'pt', 'nl', 'tr');
+
 function SpxLangFor(const Locale: string): TSpxLang;
+var code: string; i: TSpxLang;
 begin
-  if NormalizeBaseLang(Locale) = 'ru' then Result := spxLangRu
-  else Result := spxLangEn;
+  { The engine's own normalisation, so `RU`, `ru-RU` and `ru` are one language here as they
+    are everywhere else in the family. An unknown code falls back to the base rather than to
+    a half-translated window. }
+  code := NormalizeBaseLang(Locale);
+  Result := spxLangEn;
+  for i := Low(TSpxLang) to High(TSpxLang) do
+    if SPX_LANG_CODE[i] = code then Exit(i);
 end;
 
 function SpxDiagText(const Code: string; Lang: TSpxLang): string;

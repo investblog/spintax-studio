@@ -39,14 +39,14 @@ fi
 # producing a DIFFERENT result from the same sources.
 rm -rf lib
 mkdir -p lib
-fpc -Mdelphi -Fusrc -Fugui -Fuengine/src -FUlib -O2 tests/studio_tests.dpr -otests/studio_tests
+fpc -Mdelphi -Fusrc -Fugui -Fugui/lang -Fuengine/src -FUlib -O2 tests/studio_tests.dpr -otests/studio_tests
 
 # Second build with overflow and range checks ON (-Co -Cr), into its own unit dir so it
 # cannot poison the optimised one. This reproduces Delphi's Debug configuration, which is
 # how an EIntOverflow in the engine's mulberry32 mixer once reached a released tree: FPC's
 # default build wraps silently, Delphi's Debug build raises.
 mkdir -p lib/checked
-fpc -Mdelphi -Co -Cr -Fusrc -Fugui -Fuengine/src -FUlib/checked tests/studio_tests.dpr \
+fpc -Mdelphi -Co -Cr -Fusrc -Fugui -Fugui/lang -Fuengine/src -FUlib/checked tests/studio_tests.dpr \
   -otests/studio_tests_checked
 
 # The GUI needs Lazarus (LCL + SynEdit), which plain fpc cannot see. It is built when

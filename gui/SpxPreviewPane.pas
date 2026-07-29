@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, Menus, IpHtml,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynHighlighterHTML,
-  SpxStudio, SpxUi, SpxStrings, SpxSourceMarkup;
+  SpxStudio, SpxUi, SpxStrIds, SpxStrings, SpxSourceMarkup;
 
 const
   { 16 KB is ~150 ms of layout on this machine -- still invisible between keystrokes, and

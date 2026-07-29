@@ -80,7 +80,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="../src;../engine/src"/>
+      <OtherUnitFiles Value="../src;../engine/src;lang"/>
       <UnitOutputDirectory Value="../lib/gui"/>
     </SearchPaths>
     <Parsing>

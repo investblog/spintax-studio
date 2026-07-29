@@ -26,7 +26,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Graphics, SpxStudio, SpxGroups, SpxUi,
-  SpxStrings;
+  SpxStrIds, SpxStrings;
 
 type
   { What the panel asks the window to do: replace the body of the group at [BodyStart, Stop)

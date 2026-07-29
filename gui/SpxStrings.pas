@@ -1,21 +1,23 @@
 (*
- * SpxStrings -- every word the window says, in one place.
+ * SpxStrings -- what the window says, in the language it was asked for.
+ *
+ * The TEXT lives one language to a file (gui/lang/SpxTextsXx.pas) and the ids live in
+ * SpxStrIds; this unit is what ties them together, holds the LENGTH BUDGETS, and remembers
+ * which language is current. It used to be one array with two languages in it and said so:
+ * "two fit comfortably; if a fifth arrives, this becomes a file". The site ships in fourteen,
+ * so the fifth arrived.
  *
  * ENGLISH IS THE BASE, and that is a decision rather than a habit: it is the language the
  * spec's terms are already in (`seed`, `spintax`, `shingle`), it is the shorter of the two
  * almost everywhere, and a layout that fits the English will not fit the Russian by accident
- * -- the other way round it would, and the first translation would then break the strip.
+ * -- the other way round it would, and the first translation would then break the strip. It
+ * is also what a language with no file yet falls back to.
  *
  * LENGTH IS PART OF THE CONTRACT. A caption that sits in a computed position has a BUDGET in
  * code points, and the suite checks every language against it. Without that, a translation
  * silently overflows its control and the person who added it has no way to know; with it,
  * the build says so. Budget 0 means the string has room to be as long as it needs -- a
  * status line, a message box, a dialog title.
- *
- * The table is an ARRAY, not a file to load: it ships inside the executable, it cannot go
- * missing on a user's machine, and a missing entry is a compile error rather than a blank
- * label. Two languages fit in it comfortably; if a fifth arrives, this becomes a file and
- * this comment becomes wrong.
  *)
 unit SpxStrings;
 
@@ -24,76 +26,27 @@ unit SpxStrings;
 interface
 
 uses
-  SpxStudio;
+  SpxStudio, SpxStrIds, SpxTextsEn, SpxTextsRu, SpxTextsDe, SpxTextsFr, SpxTextsEs;
 
 type
   { One language for the whole product. The enum itself lives in editor-core because the
     diagnostics panel's sentences are built there, on the worker thread; this is the same
     type, not a parallel one that has to be kept in step by hand. }
   TSpxLang = SpxStudio.TSpxLang;
+  TSpxStr = SpxStrIds.TSpxStr;
 
-  TSpxStr = (
-    { ── menus ── }
-    sMenuFile, sMenuNew, sMenuOpen, sMenuSave, sMenuSaveAs, sMenuReloadSet, sMenuExit,
-    sMenuEdit, sMenuFind, sMenuFindNext, sMenuFindPrev,
-    sMenuView, sRailLeft, sRailRight,
-    { the interface's own language -- tied to the template's only if the user says so }
-    sMenuLanguage, sLangEnglish, sLangRussian, sLangFollow,
-    { the group editor that slides out of the rail }
-    sRailFaceGroup, sTabGroup, sGroupNone, sGroupApply, sGroupRefused, sGroupMultiline,
-    sGroupChoice, sGroupConditional, sGroupPlural, sGroupPermutation,
-    { one or two characters on a rail button until icons arrive (step 4) }
-    sRailFaceDiag, sRailFaceVars, sRailFaceSet,
-    sMenuWrapBraces, sMenuWrapBrackets, sMenuReroll, sMenuCopyResult, sMenuSelectAll,
-
-    { ── the top strip: the output's half ── }
-    sSeed, sReroll, sCopy, sViewPage, sViewSource,
-    sFragmentShown, sFragmentEmpty,
-
-    { ── the top strip: the template's half ── }
-    sFindCase, sFindNothing, sFindMatches, sFindPosition, sFindClose,
-
-    { ── the bottom tabs ── }
-    sTabDiagnostics, sTabVariables, sTabVariants,
-    sColLevel, sColFile, sColAt, sColMessage,
-    { what a diagnostic row says in its first two columns; the message itself comes from
-      editor-core, which knows the codes }
-    sLevelError, sLevelWarning, sLevelNote, sDocument,
-
-    { ── the variables panel ── }
-    sVarsDefinitions, sVarsSession, sColKind, sColName, sColValue, sColLiteral,
-
-    { ── the variants panel ── }
-    sHowMany, sSeedShort, sRandomSeed, sGenerate, sStop,
-    sDropSimilar, sExactOnly, sKeepAll, sShingle, sThreshold,
-    sToXlsx, sToTxt, sToFiles, sSeedInTxt,
-    sNothingGenerated, sWorking, sStopping,
-    sReportDone, sReportExhausted, sReportStopped, sProgress, sStaleSet,
-    sWroteRows, sWroteRowsCollapsed, sWroteFiles, sWroteFilesPartial, sWriteFailed,
-    sColNo, sColSeed, sColLength, sColText,
-
-    { ── dialogs ── }
-    sOpenTemplate, sSaveTemplate, sFileFilter, sExcelFilter, sTextFilter,
-    sExportXlsx, sExportTxt, sChooseFolder, sSheetName, sColSheetSeed, sColSheetText,
-    sUnsavedTitle, sUnsavedQuestion, sUntitled, sWindowTitle,
-
-    { ── the status bar ── }
-    sStatusReady, sStatusValid, sStatusWithWarnings, sStatusErrors, sStatusNotes,
-    sStatusElapsed, sShowLarge, sTooLargeToDraw
-  );
-
-{ The text for this id in the current language. Named Tr rather than S because Pascal
-  does not distinguish case in identifiers, and half the procedures in the window keep a
-  local `s` -- which silently shadowed the function and turned every call into a syntax
-  error at best. }
+{ The text for this id in the current language. Named Tr rather than S because Pascal does
+  not distinguish case in identifiers, and half the procedures in the window keep a local
+  `s` -- which silently shadowed the function and turned every call into a syntax error at
+  best. }
 function Tr(Id: TSpxStr): string;
 
 (* Which language the window speaks. It is the USER'S setting and nothing else's: an
    interface that changed language because the document did was a surprise every time the
-   locale box was touched, so the tie is now one of the three choices rather than the rule.
-   The default comes from the operating system, which is what a desktop application is
-   expected to do; `spxUiFollow` is the setting that restores the old behaviour for someone
-   who wants it. *)
+   locale box was touched, so the tie is now one of the choices rather than the rule. The
+   default comes from the operating system, which is what a desktop application is expected
+   to do; `spxUiFollow` is the setting that restores the old behaviour for someone who wants
+   it. *)
 procedure SpxSetUiLang(ALang: TSpxLang);
 function SpxUiLang: TSpxLang;
 function SpxUiLangFor(const Locale: string): TSpxLang;
@@ -106,7 +59,7 @@ type
   one that looks at it. }
 function SpxLangForMode(AMode: TSpxUiLangMode; const DocLocale: string): TSpxLang;
 
-{ What the machine is set to, mapped onto the two languages this product speaks. }
+{ What the machine is set to, mapped onto the languages this product speaks. }
 function SpxSystemLang: TSpxLang;
 
 { How many code points this id is allowed, or 0 for "as long as it needs". Exposed so the
@@ -128,123 +81,6 @@ var
   GLang: TSpxLang = spxLangEn;
 
 const
-  TEXTS: array[TSpxLang, TSpxStr] of string = (
-    { ── English, the base ── }
-    (
-      'File', 'New', 'Open…', 'Save', 'Save as…', 'Reload set', 'Exit',
-      'Edit', 'Find…', 'Find next', 'Find previous',
-      'View', 'Tools on the left', 'Tools on the right',
-      'Interface language', 'English', 'Русский', 'Follow the template',
-      'G', 'Group under the caret',
-      'The caret is not inside a group.', 'Apply',
-      'Refused: the result would say something other than this list — a variant cannot ' +
-        'carry | } { or /#.',
-      'A variant here contains a line break, so this group is shown but not edited.',
-      'Choice', 'Conditional', 'Plural', 'Permutation',
-      'D', 'V', 'S',
-      'Wrap in {…}', 'Wrap in […]', 'Show another variant', 'Copy the result',
-      'Select all',
-
-      'seed', 'Reroll', 'Copy', 'Page', 'Source',
-      'showing a fragment', 'the fragment renders nothing',
-
-      'Case', 'not found', 'matches: %d', '%d/%d', 'x',
-
-      'Diagnostics', 'Variables', 'Variants',
-      'Level', 'File', 'At', 'Message',
-      'error', 'warning', 'Studio note', 'document',
-
-      ' Definitions — they live in the document',
-      ' Session values — rendered as spintax, never written to the document',
-      'Kind', 'Name', 'Value', 'as text',
-
-      'Count', 'seed', 'random', 'Generate', 'Stop',
-      'Drop similar', 'Exact duplicates only', 'Keep everything', 'shingle', 'limit',
-      'To .xlsx', 'To .txt', 'One file each', 'seed in .txt',
-      'nothing generated yet', 'working…', 'stopping…',
-      '%d variants, %d dropped, %d renders, next seed %d',
-      'got %d of %d — the template gives no more at this threshold (%d dropped, %d renders)',
-      'stopped: %d variants, %d dropped, %d renders',
-      '%d of %d, %d dropped, %d renders',
-      'the document has changed — this set is from the earlier text; ',
-      'wrote %d rows to %s',
-      'wrote %d rows; line breaks in %d variants became spaces — for the text as it is, ' +
-        'use .xlsx or one file each',
-      'wrote %d files to %s', 'wrote %d files, then could not continue',
-      'could not write the file',
-      '#', 'seed', 'length', 'text',
-
-      'Open a template', 'Save the template', 'Spintax templates|*%s|All files|*.*',
-      'Excel workbook|*.xlsx', 'Text|*.txt',
-      'Export to .xlsx', 'Export to .txt', 'Where to put the files', 'Variants',
-      'seed', 'variant',
-      'Spintax Studio', 'The document has unsaved changes. Save them?', 'Untitled',
-      '%s — Spintax Studio',
-
-      'ready', 'valid', 'valid, %d warnings', '%d errors', ' · %d notes', '%s · %d ms',
-      'Show', 'Output is %d KB — the page does not redraw itself'
-    ),
-
-    { ── Russian ── }
-    (
-      'Файл', 'Создать', 'Открыть…', 'Сохранить', 'Сохранить как…', 'Перечитать набор',
-      'Выход',
-      'Правка', 'Найти…', 'Найти далее', 'Найти назад',
-      'Вид', 'Инструменты слева', 'Инструменты справа',
-      'Язык интерфейса', 'English', 'Русский', 'Как в шаблоне',
-      'Г', 'Группа под курсором',
-      'Курсор не внутри группы.', 'Применить',
-      'Отказано: результат сказал бы не то, что в этом списке — вариант не может нести ' +
-        '| } { или /#.',
-      'В одном из вариантов перевод строки, поэтому группа показана, но не редактируется.',
-      'Выбор', 'Условие', 'Множественное число', 'Перестановка',
-      'Д', 'П', 'В',
-      'Обернуть в {…}', 'Обернуть в […]', 'Показать другой вариант', 'Копировать результат',
-      'Выделить всё',
-
-      'сид', 'Другой', 'Копировать', 'Страница', 'Исходник',
-      'показан фрагмент', 'фрагмент ничего не выводит',
-
-      'Регистр', 'не найдено', 'найдено: %d', '%d/%d', 'x',
-
-      'Диагностика', 'Переменные', 'Варианты',
-      'Уровень', 'Файл', 'Место', 'Сообщение',
-      'ошибка', 'предупреждение', 'заметка Studio', 'документ',
-
-      ' Определения — живут в документе',
-      ' Значения на сессию — рендерятся как spintax, в документ не пишутся',
-      'Вид', 'Имя', 'Значение', 'как текст',
-
-      'Сколько', 'сид', 'случайный', 'Сгенерировать', 'Стоп',
-      'Убирать похожие', 'Только точные совпадения', 'Ничего не убирать', 'шингл', 'порог',
-      'В .xlsx', 'В .txt', 'По файлу на текст', 'сид в .txt',
-      'ничего не сгенерировано', 'идёт…', 'останавливаю…',
-      '%d вариантов, отброшено %d, рендеров %d, следующий сид %d',
-      'получилось %d из %d — шаблон не даёт больше при этом пороге ' +
-        '(отброшено %d, рендеров %d)',
-      'остановлено: %d вариантов, отброшено %d, рендеров %d',
-      '%d из %d, отброшено %d, рендеров %d',
-      'документ изменился — набор от прежнего текста; ',
-      'записано %d строк в %s',
-      'записано %d строк; у %d вариантов переводы строк заменены пробелами — ' +
-        'для дословности берите .xlsx или «по файлу»',
-      'записано %d файлов в %s', 'записано %d файлов, дальше не удалось',
-      'не удалось записать файл',
-      '#', 'сид', 'длина', 'текст',
-
-      'Открыть шаблон', 'Сохранить шаблон', 'Шаблоны spintax|*%s|Все файлы|*.*',
-      'Книга Excel|*.xlsx', 'Текст|*.txt',
-      'Экспорт в .xlsx', 'Экспорт в .txt', 'Куда положить файлы', 'Варианты',
-      'сид', 'вариант',
-      'Spintax Studio', 'В документе есть несохранённые изменения. Сохранить?',
-      'Без имени', '%s — Spintax Studio',
-
-      'готов', 'валидно', 'валидно, %d предупреждений', '%d ошибок', ' · %d заметок',
-      '%s · %d мс',
-      'Показать', 'Вывод %d КБ — страница не обновляется сама'
-    )
-  );
-
   { What fits where. These are the strings placed by LayoutTopStrip and by the panels' own
     fixed coordinates; everything else is 0 and free to grow.
 
@@ -318,14 +154,24 @@ const
     11, 57
   );
 
+(* The table for a language, or English when that language has no file yet. The fallback is
+   the point of the shape: a language is added by writing gui/lang/SpxTextsXx.pas and naming
+   it here, and until then the window is English rather than blank. *)
 function SpxStrIn(ALang: TSpxLang; Id: TSpxStr): string;
 begin
-  Result := TEXTS[ALang, Id];
+  case ALang of
+    spxLangRu: Result := TEXTS_RU[Id];
+    spxLangDe: Result := TEXTS_DE[Id];
+    spxLangFr: Result := TEXTS_FR[Id];
+    spxLangEs: Result := TEXTS_ES[Id];
+  else
+    Result := TEXTS_EN[Id];
+  end;
 end;
 
 function Tr(Id: TSpxStr): string;
 begin
-  Result := TEXTS[GLang, Id];
+  Result := SpxStrIn(GLang, Id);
 end;
 
 procedure SpxSetUiLang(ALang: TSpxLang);

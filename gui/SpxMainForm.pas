@@ -20,7 +20,7 @@ uses
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxGroups,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
-  SpxStrings;
+  SpxStrIds, SpxStrings;
 
 type
   TSpxMainForm = class(TForm)
