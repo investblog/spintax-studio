@@ -333,6 +333,10 @@ begin
 
   FSeedEdit := TEdit.Create(Self);
   FSeedEdit.Parent := FTop;
+  { Hidden until the seed is PINNED. Unchecked, the number answers a question nobody asked
+    and spends a field's worth of the strip right where the eye goes when reading the
+    template. }
+  FSeedEdit.Visible := False;
   FSeedEdit.Text := '1';
   FSeedEdit.SetBounds(Px(Self, 145), Px(Self, 7), Px(Self, 70), Px(Self, 24));
   FSeedEdit.OnChange := @SettingChanged;
@@ -637,7 +641,9 @@ begin
   if FPartial.Visible then PlaceRight(FPartial, FPartial.Width, Px(Self, 16), Px(Self, 11));
   PlaceRight(FCopy, Px(Self, 80), Px(Self, 26), Px(Self, 6));
   PlaceRight(FReroll, Px(Self, 80), Px(Self, 26), Px(Self, 6));
-  PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
+  { Skipped rather than placed off-screen, so the controls to its left close the gap -- the
+    same way the fragment caption already comes and goes. }
+  if FSeedEdit.Visible then PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
   PlaceRight(FSeeded, Px(Self, 55), Px(Self, 22), Px(Self, 9));
   PlaceRight(FLocale, Px(Self, 70), Px(Self, 24), Px(Self, 7));
   leftEnd := right_;
@@ -1569,6 +1575,12 @@ end;
 
 procedure TSpxMainForm.SettingChanged(Sender: TObject);
 begin
+  { The number belongs to the tick beside it. }
+  if (FSeedEdit <> nil) and (FSeedEdit.Visible <> FSeeded.Checked) then
+  begin
+    FSeedEdit.Visible := FSeeded.Checked;
+    LayoutTopStrip;
+  end;
   { The document's locale changed. Whether the INTERFACE follows it is the user's setting,
     and by default it does not: an editor that changes language because the text did was a
     surprise every time this box was touched. }
