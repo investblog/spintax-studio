@@ -71,7 +71,9 @@ const
 
       'Fechar',
 
-      'Maior', 'Menor', 'Tamanho normal', 'Claro', 'Escuro'
+      'Maior', 'Menor', 'Tamanho normal', 'Claro', 'Escuro',
+
+      'Larguras iguais', 'Duplo clique: larguras iguais'
   );
 
 implementation

@@ -47,6 +47,7 @@ type
     FSmallIcons: TImageList;
     FPartial: TLabel;
     FSplit: TSplitter;
+    FSlideSplit: TSplitter;
     { The tools' strip. It is the window's, not the editor's pane's: a user who moves it to
       the right expects it at the window's edge, the way every side bar behaves. }
     FRail: TSpxToolRail;
@@ -64,6 +65,16 @@ type
     FLoading: Boolean;
     { A double click on the splitter was seen and is waiting for the drag it started to end. }
     FSplitEven: Boolean;
+    { The room each clamp last saw. A clamp must act when the WINDOW changed size and stay out
+      of the way otherwise -- Resize fires for every layout ripple, including the ones a
+      splitter drag causes, and re-applying a target then fights the drag pixel by pixel. }
+    FSlideRoom: Integer;
+    FPaneRoom: Integer;
+    { How the two panes divide the body, as a FRACTION rather than as pixels. The window is
+      resized far more often than the splitter is dragged, and a pixel width means the editor
+      keeps its size while the preview absorbs every change -- which is not what "the two
+      panes are meant to be comparable" says. Updated when the splitter is let go. }
+    FPaneFraction: Double;
     { The flags beside the language names. Owned by the FORM, not by the menu bar: the bar is
       freed and rebuilt on every language switch, and a list that went with it would be one
       more sprite decoded per switch. }
@@ -216,6 +227,10 @@ type
     procedure GutterPart(AEditor: TSynEdit; const AClass: string; AVisible: Boolean);
     procedure SplitEvenly(Sender: TObject);
     procedure SplitMoved(Sender: TObject);
+    procedure SplitEvenNow(Sender: TObject);
+    procedure SlideResized(Sender: TObject);
+    procedure ClampSlide;
+    procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
     procedure MenuDiagClicked(Sender: TObject);
     procedure MenuVarsClicked(Sender: TObject);
@@ -275,6 +290,17 @@ type
       Px() answer for the display we have just arrived on. }
     procedure AutoAdjustLayout(AMode: TLayoutAdjustmentPolicy;
       const AFromPPI, AToPPI, AOldFormWidth, ANewFormWidth: Integer); override;
+    { A window made narrower must take the room from the panel, not from the panes.
+
+      AND THIS FIRES FOR EVERY LAYOUT RIPPLE ANYWHERE IN THE FORM, not only when the window
+      changes size: any child's ChangeBounds walks up to the form and DoAllAutoSize calls
+      CallAllOnResize (control.inc:3102-3125). The FLastResizeWidth/Height comparison inside
+      TControl.Resize gates only DoOnResize, so anything written after `inherited Resize` in
+      an override runs every time. A splitter drag is such a ripple -- which is why both
+      clamps below act only when the ROOM changed and would otherwise put every dragged width
+      straight back. An earlier version of this comment claimed the opposite and cost two
+      frozen splitters. }
+    procedure Resize; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     { How many jobs this window has asked the engine for. Read-only, and out here because
@@ -302,6 +328,10 @@ type
 
 const
   DEBOUNCE_MS = 200;   // long enough to skip a burst of typing, short enough to feel live
+  { What the two panes and everything under them are never squeezed below, and what ONE pane
+    is never squeezed below. Two panes worth reading rather than two slivers. }
+  SPX_BODY_MIN = 320;
+  SPX_PANE_MIN = 140;
 
 
 constructor TSpxMainForm.Create(AOwner: TComponent);
@@ -319,6 +349,7 @@ begin
     caption is read once, when its control is made. A language restored after BuildUi would
     need every control re-read; a language restored here costs nothing. }
   FLoading := True;
+  FPaneFraction := 0.48;
   FPrefs := SpxLoadPrefs;
   FLangFollow := FPrefs.LangFollow;
   if FPrefs.Lang <> '' then FLangChosen := SpxLangFor(FPrefs.Lang)
@@ -378,14 +409,38 @@ begin
   FSlide.Parent := FOuter;
   FSlide.Align := alLeft;
   FSlide.Width := Px(Self, SPX_SLIDE_W);
+  { Wide enough to be worth opening, never wide enough to swallow the editor. The bounds are
+    the settings file's, so a width edited by hand cannot leave the panel unusable either. }
+  FSlide.Constraints.MinWidth := Px(Self, SPX_SLIDE_MIN);
+  FSlide.Constraints.MaxWidth := Px(Self, SPX_SLIDE_MAX);
   FSlide.Visible := False;
   FSlide.OnApply := @GroupApplied;
   FSlide.OnClose := @GroupPaneClosed;
+
+  { A VARIANT CAN BE LONGER THAN ANY DEFAULT. The panel is the one part of this window whose
+    useful width depends on the document rather than on the layout, so it is the user's to
+    set -- and remembered, because setting it once per session would be worse than not being
+    able to set it at all. Hidden with the panel: a drag handle for something invisible is a
+    handle that resizes nothing. }
+  FSlideSplit := TSplitter.Create(Self);
+  FSlideSplit.Parent := FOuter;
+  FSlideSplit.Align := alLeft;
+  FSlideSplit.Left := FSlide.Width + 1;
+  FSlideSplit.Visible := False;
+  FSlideSplit.OnMoved := @SlideResized;
 
   FBody := TPanel.Create(Self);
   FBody.Parent := FOuter;
   FBody.Align := alClient;
   FBody.BevelOuter := bvNone;
+  { THE PANES KEEP A FLOOR, and it has to live HERE rather than as a maximum on the slide-out.
+    LCL bounds a splitter drag by the NEIGHBOUR's constraints, not by the dragged control's
+    (customsplitter.inc:361-364): with nothing set, the floor for everything right of the
+    panel is the splitter's own MinSize of 30 px. Measured before this line existed: a window
+    780 px wide with a stored panel width of 900 opened with a body 0 px wide -- no editor, no
+    preview, no bottom block, no status bar, and the splitter off-screen so the mouse could not
+    undo it. }
+  FBody.Constraints.MinWidth := Px(Self, SPX_BODY_MIN);
 
   FTop := TPanel.Create(Self);
   FTop.Parent := FBody;
@@ -551,6 +606,14 @@ begin
 
   BuildFindBar;
 
+  { THE FLOOR HAS TO BE A CONSTRAINT, not only a clamp. LCL bounds a splitter drag by the
+    NEIGHBOUR's Constraints (customsplitter.inc:361-364), so a pane with none has nothing to
+    be read and the drag stops only at the splitter's own MinSize. Measured before this line:
+    dragging hard right left the preview at 30 px and hard left left the editor at ONE, and
+    it stuck until the window was resized. The clamp keeps the proportion; this keeps the
+    promise. }
+  FLeft.Constraints.MinWidth := Px(Self, SPX_PANE_MIN);
+
   FEditor := TSynEdit.Create(Self);
   FEditor.Parent := FLeft;
   FEditor.Align := alClient;
@@ -642,12 +705,18 @@ begin
     The click only RAISES A FLAG; the work happens in OnMoved. See SplitMoved. }
   TSplitterReach(FSplit).OnDblClick := @SplitEvenly;
   FSplit.OnMoved := @SplitMoved;
+  { A GESTURE HAS TO SAY SO SOMEWHERE, and the place it says it is where the gesture lives.
+    Nothing about a drag handle suggests it can also be double-clicked; the menu item below
+    names the action, and this teaches the shortcut to the hand that is already on it. }
+  FSplit.Hint := Tr(sSplitEvenHint);
+  FSplit.ShowHint := True;
 
   { Two views of the same output -- the page and the HTML it is -- with the switch and the
     size guard owned by the pane itself (SpxPreviewPane, ADR 0004). }
   FPreview := TSpxPreviewPane.Create(Self);
   FPreview.Parent := FBody;
   FPreview.Align := alClient;
+  FPreview.Constraints.MinWidth := Px(Self, SPX_PANE_MIN);
 
   FDebounce := TTimer.Create(Self);
   FDebounce.Enabled := False;
@@ -777,6 +846,9 @@ begin
     inset is read from the strip rather than repeated as a number, so the second row the
     search bar takes moves it too. }
   if FSlide <> nil then FSlide.BorderSpacing.Top := FTop.Height;
+  { And its drag handle with it: a splitter that starts a strip higher than the thing it
+    resizes is a line drawn through the top of the window. }
+  if FSlideSplit <> nil then FSlideSplit.BorderSpacing.Top := FTop.Height;
 
   { ── the template's half, from the left edge outwards, and only when searching ── }
   if not FFindText.Visible then
@@ -1004,7 +1076,17 @@ begin
     GroupPaneClosed(Sender);
     Exit;
   end;
+  { Before it is shown, not after: a panel that appears too wide and then snaps is worse than
+    one that appears the right size. }
+  { Showing the panel changes what the body has, so both clamps must run whatever they last
+    saw. }
+  FSlideRoom := -1;
+  FPaneRoom := -1;
+  ClampSlide;
   FSlide.Visible := True;
+  FSlideSplit.Visible := True;
+  { The panel has just taken its share; the panes divide what is actually left. }
+  ClampPanes;
   { The latch, for the route that does not set it itself. Clicking the rail's tool makes LCL
     flip Down before it calls this; opening from the View menu does not, and an unlit tool
     over an open pane is not just wrong-looking -- the next click on it flips Down to True,
@@ -1302,6 +1384,14 @@ begin
   sideItem.GroupIndex := 3;
   sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 2);
 
+  { The same action the splitter's double click performs, named and reachable without knowing
+    the gesture exists. The icon rides ON the item rather than through the menu's image list:
+    that list is the flags, indexed by language, so an index into it here would draw a flag. }
+  Item(viewMenu, '-', 0, [], nil);
+  sideItem := Item(viewMenu, Tr(sSplitEven), 0, [], @SplitEvenNow);
+  if (FSmallIcons <> nil) and (SPX_ICON_EVEN < FSmallIcons.Count) then
+    FSmallIcons.GetBitmap(SPX_ICON_EVEN, sideItem.Bitmap);
+
   { The editor's colours. Only the editor and the source view are themed -- the preview shows
     the user's HTML as it will be published, and the window's chrome is drawn by Windows,
     which has no dark mode to offer LCL. }
@@ -1371,6 +1461,13 @@ begin
   if (FFlags <> nil) and (FFlags.Width = w) then Exit;
   data := SpxFlagStrip(w, len);
   FFlags := SpxImagesFrom(Self, FFlags, data, len, w, h, SPX_FLAG_COUNT);
+end;
+
+procedure TSpxMainForm.Resize;
+begin
+  inherited Resize;
+  if FSlide <> nil then ClampSlide;
+  ClampPanes;
 end;
 
 procedure TSpxMainForm.AutoAdjustLayout(AMode: TLayoutAdjustmentPolicy;
@@ -2042,6 +2139,11 @@ begin
   FSplitEven := True;
 end;
 
+{ SplitMoved is where the division actually happens: OnMoved fires at the END of
+  StopSplitterMove -- after FSplitDragging is cleared and after the revert described above
+  (customsplitter.inc:583-588) -- so a width set there is the last word, with no assumption
+  about timing at all. It runs on every drag, hence the flag. }
+
 { Show or hide one of SynEdit's gutter parts BY CLASS NAME. The gutter is a list whose order
   and membership are SynEdit's business, so a part is found rather than indexed -- and a name
   it does not have is not an error, only a part this build of SynEdit does not ship. }
@@ -2056,15 +2158,103 @@ end;
 { OnMoved fires at the END of StopSplitterMove -- after FSplitDragging is cleared and after
   the revert described above (customsplitter.inc:583-588) -- so a width set here is the last
   word, with no assumption about timing at all. It runs on every drag, hence the flag. }
-procedure TSpxMainForm.SplitMoved(Sender: TObject);
+{ The panel, brought back inside the window. A width that fitted when it was stored -- or when
+  the window was bigger -- must not be applied as it stands: LCL gives an alLeft control the
+  width it asks for and lets the alClient neighbour have what is left, which can be nothing.
+  Called where the panel appears and whenever the window changes size, because those are the
+  two moments the answer can change. }
+procedure TSpxMainForm.ClampSlide;
+var room, want: Integer;
 begin
-  if not FSplitEven then Exit;
-  FSplitEven := False;
+  if (FSlide = nil) or (FOuter = nil) or (FSlideSplit = nil) then Exit;
+  { ONLY WHEN THE ROOM CHANGED, and this guard is the whole difference between a resizable
+    panel and a frozen one. Without it: drag the handle, LCL sets the panel's width, that
+    ripples into Resize, this runs and puts the width straight back -- so the cursor promised a
+    drag and nothing moved. Measured, and measured again with a different stored width to be
+    sure it was this and not the splitter: the panel snapped back to whatever was in the
+    settings file. A drag does not change the room; only the window does. }
+  if FOuter.ClientWidth = FSlideRoom then Exit;
+  FSlideRoom := FOuter.ClientWidth;
+  room := FOuter.ClientWidth - Px(Self, SPX_BODY_MIN) - FSlideSplit.Width;
+  { A window too narrow for both still gets a usable panel: the panes are what give way --
+    they can be scrolled, a list of variants cannot. }
+  if room < Px(Self, SPX_SLIDE_MIN) then room := Px(Self, SPX_SLIDE_MIN);
+  { THE TARGET IS THE WIDTH THE USER CHOSE, capped by what fits -- not merely "shrink if too
+    wide". Only shrinking loses the choice for the rest of the session: this runs on every
+    resize, including the small ones the window gets while it is still being built, so a panel
+    squeezed once would never grow back even after the window did. Measured: with 900 stored
+    it opened at 200 in a window with room for all of it. }
+  want := Px(Self, FPrefs.SlideWidth);
+  if want > room then want := room;
+  if FSlide.Width <> want then FSlide.Width := want;
+end;
+
+{ THE EDITOR DOES NOT KEEP ITS WIDTH WHILE THE PREVIEW STARVES. FLeft is alLeft with a width
+  of its own, so LCL never shrinks it when the body does -- it simply lets the alClient
+  neighbour have what is left, which can be nothing. Measured: with the slide-out at 900 in a
+  1300 px window the body was 351 and the editor still 528, so the preview had a negative
+  width, which is to say none at all. }
+procedure TSpxMainForm.ClampPanes;
+var room, want: Integer;
+begin
   if (FLeft = nil) or (FBody = nil) or (FSplit = nil) then Exit;
-  { Half the body each, less the splitter between them. Not half the WINDOW: the rail and the
-    slide-out have already taken their share, and the two panes divide what is left of the
-    body they share. }
-  FLeft.Width := (FBody.ClientWidth - FSplit.Width) div 2;
+  { The same guard, and for the same reason: dragging the splitter between the panes changes
+    FLeft's width, which ripples into Resize, and re-applying the fraction here would undo the
+    drag exactly as it undid the slide-out's. }
+  if FBody.ClientWidth = FPaneRoom then Exit;
+  FPaneRoom := FBody.ClientWidth;
+  room := FBody.ClientWidth - FSplit.Width - Px(Self, SPX_PANE_MIN);
+  if room < Px(Self, SPX_PANE_MIN) then room := Px(Self, SPX_PANE_MIN);
+  { THE TARGET IS THE FRACTION, capped by what fits -- not "shrink if too wide". Shrinking
+    only was tried and was wrong for the same reason it was wrong for the slide-out: this runs
+    on every resize, including the tiny ones a window gets while it is still being built, so
+    the editor was squeezed to its minimum once and never grew back. Measured: 140 px of
+    editor beside 691 of preview in a window with room for both. }
+  want := Round((FBody.ClientWidth - FSplit.Width) * FPaneFraction);
+  if want > room then want := room;
+  if want < Px(Self, SPX_PANE_MIN) then want := Px(Self, SPX_PANE_MIN);
+  if FLeft.Width <> want then FLeft.Width := want;
+end;
+
+{ The panel's new width, kept. OnMoved rather than OnChangeBounds: it fires once when the
+  drag ends, not on every pixel of it. }
+procedure TSpxMainForm.SlideResized(Sender: TObject);
+begin
+  if FLoading or (FSlide = nil) then Exit;
+  { WRITTEN IN 96-DPI UNITS, because that is what ApplyPrefs scales back up. Storing the
+    measured width would grow the panel by half on every launch on a 150% display -- Px would
+    be scaling a number that had already been scaled. }
+  FPrefs.SlideWidth := Un96(Self, FSlide.Width);
+  SavePrefs;
+end;
+
+{ Half the body each, less the splitter between them. Not half the WINDOW: the rail and the
+  slide-out have already taken their share, and the two panes divide what is left of the body
+  they share. Called by the menu item directly -- there is no drag in progress there -- and by
+  SplitMoved when a double click asked for it. }
+procedure TSpxMainForm.SplitEvenNow(Sender: TObject);
+var body: Integer;
+begin
+  if (FLeft = nil) or (FBody = nil) or (FSplit = nil) then Exit;
+  body := FBody.ClientWidth - FSplit.Width;
+  if body <= 0 then Exit;
+  FLeft.Width := body div 2;
+  FPaneFraction := FLeft.Width / body;
+end;
+
+procedure TSpxMainForm.SplitMoved(Sender: TObject);
+var body: Integer;
+begin
+  if (FLeft = nil) or (FBody = nil) or (FSplit = nil) then Exit;
+  if FSplitEven then
+  begin
+    FSplitEven := False;
+    SplitEvenNow(Sender);
+    Exit;
+  end;
+  { However it was dragged, this is now the division to keep through a resize. }
+  body := FBody.ClientWidth - FSplit.Width;
+  if body > 0 then FPaneFraction := FLeft.Width / body;
 end;
 
 { ── THE SETTINGS FILE ─────────────────────────────────────────────────────────────────── }
@@ -2074,6 +2264,7 @@ end;
 procedure TSpxMainForm.ApplyPrefs;
 begin
   if FPrefs.RailRight then FRail.Side := spxRailRight else FRail.Side := spxRailLeft;
+  FSlide.Width := Px(Self, FPrefs.SlideWidth);
   FModes.ItemIndex := Ord(FPrefs.PreviewSource);
   { SetItemIndex only fires OnChange when the value MOVES, so the preview is told directly
     rather than relying on that. }
@@ -2145,6 +2336,7 @@ begin
   FBracket.MarkupInfo.Background := pal.BracketBack;
   FBracket.MarkupInfo.Foreground := pal.BracketText;
   FPreview.ApplyTheme(pal);
+  if FSlide <> nil then FSlide.ApplyTheme(pal);
   FEditor.Invalidate;
 end;
 
@@ -2154,6 +2346,7 @@ begin
   pt := SpxEditorFontSize(FPrefs.FontStep);
   FEditor.Font.Size := pt;
   FPreview.ApplyFontSize(pt);
+  if FSlide <> nil then FSlide.ApplyFontSize(pt);
 end;
 
 { Zoom is the SYSTEM size plus a number of steps, so a person who runs a large desktop font
@@ -2245,6 +2438,10 @@ end;
 procedure TSpxMainForm.GroupPaneClosed(Sender: TObject);
 begin
   FSlide.Visible := False;
+  FSlideSplit.Visible := False;
+  { And closing it gives the room back. }
+  FPaneRoom := -1;
+  ClampPanes;
   { The rail's tool is a latch now, and it can be put out from here -- by the panel's X or by
     Escape -- as well as by clicking it. }
   FRail.SetDown(3, False);

@@ -75,7 +75,9 @@ const
 
       'Sluiten',
 
-      'Groter', 'Kleiner', 'Normale grootte', 'Licht', 'Donker'
+      'Groter', 'Kleiner', 'Normale grootte', 'Licht', 'Donker',
+
+      'Gelijke breedte', 'Dubbelklik: gelijke breedte'
   );
 
 implementation

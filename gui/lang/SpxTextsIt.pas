@@ -71,7 +71,9 @@ const
 
       'Chiudi',
 
-      'Più grande', 'Più piccolo', 'Dimensione normale', 'Chiaro', 'Scuro'
+      'Più grande', 'Più piccolo', 'Dimensione normale', 'Chiaro', 'Scuro',
+
+      'Larghezze uguali', 'Doppio clic: larghezze uguali'
   );
 
 implementation

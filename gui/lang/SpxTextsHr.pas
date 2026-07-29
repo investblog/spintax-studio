@@ -72,7 +72,9 @@ const
 
       'Zatvori',
 
-      'Veće', 'Manje', 'Uobičajena veličina', 'Svijetla', 'Tamna'
+      'Veće', 'Manje', 'Uobičajena veličina', 'Svijetla', 'Tamna',
+
+      'Podijeli na pola', 'Dvoklik — na pola'
   );
 
 implementation

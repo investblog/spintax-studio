@@ -86,6 +86,7 @@ type
     FShownSource: string; // what was last PUT INTO the source view
     FHasShown: Boolean;
     procedure SetSourceMode(AValue: Boolean);
+    procedure HideGutterPart(const AClass: string);
     procedure BuildSourceView(AWrap: Boolean);
     procedure CopyClicked(Sender: TObject);
     procedure SelectAllClicked(Sender: TObject);
@@ -211,7 +212,18 @@ end;
   background -- dark blue tags on #1E1E1E are unreadable -- so in a dark theme its attributes
   are reassigned too, and in a light one the palette says clNone and they are left exactly as
   SynEdit shipped them. }
+{ One of SynEdit's gutter parts, by class name -- the gutter is a list whose membership is
+  SynEdit's business, so a part is found rather than indexed. }
+procedure TSpxPreviewPane.HideGutterPart(const AClass: string);
+var i: Integer;
+begin
+  for i := 0 to FSource.Gutter.Parts.Count - 1 do
+    if FSource.Gutter.Parts[i].ClassName = AClass then
+      FSource.Gutter.Parts[i].Visible := False;
+end;
+
 procedure TSpxPreviewPane.ApplyTheme(const APalette: TSpxPalette);
+var i: Integer;
 
   { clNone in the table means "SynEdit's own", not "leave whatever is there now" -- those are
     the same thing only until a theme has been applied once. Skipping the assignment left the
@@ -235,6 +247,14 @@ begin
   FSource.Font.Color := APalette.Text;
   FSource.SelectedColor.Background := APalette.Sel;
   FSource.SelectedColor.Foreground := APalette.SelText;
+  { The gutter too, every part of it: one left alone keeps a system colour and stays light on
+    a dark page, which is how the main editor's marks column announced itself. }
+  FSource.Gutter.Color := APalette.Gutter;
+  for i := 0 to FSource.Gutter.Parts.Count - 1 do
+  begin
+    FSource.Gutter.Parts[i].MarkupInfo.Background := APalette.Gutter;
+    FSource.Gutter.Parts[i].MarkupInfo.Foreground := APalette.GutterText;
+  end;
 
   Recolour(FSourceHl.TextAttri, APalette.Text, FHtmlDefault[0]);
   Recolour(FSourceHl.KeyAttri, APalette.HtmlTag, FHtmlDefault[1]);
@@ -312,7 +332,22 @@ begin
   FSource.Parent := Self;
   FSource.Align := alClient;
   FSource.ReadOnly := True;
-  FSource.Gutter.Visible := False;
+  { NUMBERS, EVEN THOUGH NOTHING HERE IS EDITED -- numbers are for READING. This view answers
+    "what markup came out", and the output's LINE STRUCTURE is part of that answer: this
+    project has already paid for it once, when a CRLF template left one blank line per
+    directive and the source view opened on a screenful of nothing. With wrapping on, a line
+    boundary is otherwise invisible -- the same blindness the group editor's list was given
+    numbers to cure.
+
+    The gutter is numbers and nothing else: marks, folding, the change stripe and the
+    separator are for a document with bookmarks, structure and a saved version, and this one
+    is regenerated on every keystroke. Measured on the main editor: those four are 40 px of
+    the 55 a default gutter takes. }
+  FSource.Gutter.Visible := True;
+  HideGutterPart('TSynGutterMarks');
+  HideGutterPart('TSynGutterChanges');
+  HideGutterPart('TSynGutterSeparator');
+  HideGutterPart('TSynGutterCodeFolding');
   FSource.Options := FSource.Options - [eoScrollPastEol] + [eoHideRightMargin];
   FSource.Highlighter := FSourceHl;
   FSource.PopupMenu := FSourceMenu;

@@ -164,7 +164,9 @@ const
     { the close button's tooltip -- a tooltip sizes itself }
     0,
     { menu items, and a menu grows to fit its longest }
-    0, 0, 0, 0, 0
+    0, 0, 0, 0, 0,
+    { a menu item and a tooltip -- both size themselves }
+    0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

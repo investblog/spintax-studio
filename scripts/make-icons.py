@@ -51,6 +51,10 @@ ICONS = [
     # an icon added when the feature lands is an icon chosen in a hurry. Outline, like the
     # rest of this set.
     ('SPX_ICON_AI', 'robot-outline', 'the AI features, when they arrive (R1)'),
+    # Two arrows converging on the divider: "bring it back to the middle". NOT swap-horizontal,
+    # which the user weighed and which means EXCHANGE -- a reader would expect the two panes to
+    # trade places, which is a different (and plausible) feature.
+    ('SPX_ICON_EVEN', 'arrow-collapse-horizontal', 'divide the two panes evenly'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that

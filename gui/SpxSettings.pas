@@ -51,6 +51,10 @@ type
       still starts large, and the zoom moves from there. }
     FontStep: Integer;
     Theme: TSpxTheme;
+    { How wide the group editor's slide-out is. A variant can be longer than any sensible
+      default, and the panel is the one place in this window whose useful width depends on
+      the DOCUMENT rather than on the layout. }
+    SlideWidth: Integer;
   end;
 
 const
@@ -58,6 +62,12 @@ const
     about six points a template is unreadable, above twenty it is a poster. }
   SPX_FONT_STEP_MIN = -4;
   SPX_FONT_STEP_MAX = 12;
+
+  { Narrow enough to leave the editor usable, wide enough for a long variant. The default is
+    the width the panel shipped with. }
+  SPX_SLIDE_MIN = 200;
+  SPX_SLIDE_MAX = 900;
+  SPX_SLIDE_DEFAULT = 300;
 
 function SpxDefaultPrefs: TSpxPrefs;
 
@@ -91,6 +101,7 @@ begin
   Result.Panel := 0;
   Result.FontStep := 0;
   Result.Theme := spxThemeLight;
+  Result.SlideWidth := SPX_SLIDE_DEFAULT;
 end;
 
 function SpxConfigDir: string;
@@ -173,6 +184,11 @@ begin
         if TryStrToInt(val, n) then
           Result.FontStep := Clamp(n, SPX_FONT_STEP_MIN, SPX_FONT_STEP_MAX);
       end
+      else if key = 'slide.width' then
+      begin
+        if TryStrToInt(val, n) then
+          Result.SlideWidth := Clamp(n, SPX_SLIDE_MIN, SPX_SLIDE_MAX);
+      end
       else if key = 'theme' then
       begin
         if val = 'dark' then Result.Theme := spxThemeDark
@@ -202,6 +218,7 @@ begin
     lines.Add('preview.source=' + WriteBool(APrefs.PreviewSource));
     lines.Add('panel=' + IntToStr(APrefs.Panel));
     lines.Add('font.step=' + IntToStr(APrefs.FontStep));
+    lines.Add('slide.width=' + IntToStr(APrefs.SlideWidth));
     if APrefs.Theme = spxThemeDark then lines.Add('theme=dark') else lines.Add('theme=light');
     try
       lines.SaveToFile(APath);

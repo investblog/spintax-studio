@@ -2535,7 +2535,8 @@ begin
     CheckTrue('settings/absent-file-gives-the-defaults',
       (p.Lang = q.Lang) and (p.Panel = q.Panel) and (p.FontStep = q.FontStep) and
       (p.Theme = q.Theme) and (p.LangFollow = q.LangFollow) and
-      (p.RailRight = q.RailRight) and (p.PreviewSource = q.PreviewSource));
+      (p.RailRight = q.RailRight) and (p.PreviewSource = q.PreviewSource) and
+      (p.SlideWidth = q.SlideWidth));
 
     { the round trip, with every field away from its default }
     p.Lang := 'tr';
@@ -2545,6 +2546,7 @@ begin
     p.Panel := 2;
     p.FontStep := 3;
     p.Theme := spxThemeDark;
+    p.SlideWidth := 420;
     CheckTrue('settings/saving-says-it-worked', SpxSavePrefsTo(path, p));
     q := SpxLoadPrefsFrom(path);
     Check('settings/lang-survives', q.Lang, 'tr');
@@ -2554,6 +2556,7 @@ begin
     Check('settings/panel-survives', IntToStr(q.Panel), '2');
     Check('settings/font-step-survives', IntToStr(q.FontStep), '3');
     CheckTrue('settings/theme-survives', q.Theme = spxThemeDark);
+    Check('settings/slide-width-survives', IntToStr(q.SlideWidth), '420');
 
     { a collapsed block is -1 and must not be clamped away }
     p.Panel := -1;
@@ -2584,6 +2587,17 @@ begin
     Put('panel=7');
     Check('settings/a-panel-that-does-not-exist-is-clamped',
       IntToStr(SpxLoadPrefsFrom(path).Panel), '2');
+    { The panel's width has the same promise: a hand-edited number cannot make it swallow the
+      editor or shrink to a sliver. }
+    Put('slide.width=5000');
+    Check('settings/a-panel-wider-than-the-window-is-clamped',
+      IntToStr(SpxLoadPrefsFrom(path).SlideWidth), IntToStr(SPX_SLIDE_MAX));
+    Put('slide.width=1');
+    Check('settings/and-narrower-than-useful',
+      IntToStr(SpxLoadPrefsFrom(path).SlideWidth), IntToStr(SPX_SLIDE_MIN));
+    Put('slide.width=banana');
+    Check('settings/an-unreadable-width-is-the-default',
+      IntToStr(SpxLoadPrefsFrom(path).SlideWidth), IntToStr(SPX_SLIDE_DEFAULT));
 
     { a key this build has never heard of is left alone rather than treated as a mistake --
       a file written by a later version must not lose its settings by being opened here }
@@ -2750,8 +2764,11 @@ begin
   Check('strings/anchor-first-id', SpxStrIn(spxLangEn, sMenuFile), 'File');
   Check('strings/anchor-first-id-ru', SpxStrIn(spxLangRu, sMenuFile), 'Файл');
   Check('strings/anchor-middle-id', SpxStrIn(spxLangEn, sGenerate), 'Generate');
-  Check('strings/anchor-last-id', SpxStrIn(spxLangEn, sThemeDark), 'Dark');
-  Check('strings/anchor-last-id-ru', SpxStrIn(spxLangRu, sThemeDark), 'Тёмная');
+  Check('strings/anchor-last-id', SpxStrIn(spxLangEn, sSplitEvenHint),
+        'Double-click: even panes');
+  Check('strings/anchor-last-id-ru', SpxStrIn(spxLangRu, sSplitEvenHint),
+        'Двойной клик — поровну');
+  Check('strings/anchor-the-wave-before', SpxStrIn(spxLangEn, sThemeDark), 'Dark');
   { The ones before it, so an append that landed a place early is caught as well. Every wave
     of new ids moves these down by its own length -- that is the point of them. }
   Check('strings/anchor-next-to-last', SpxStrIn(spxLangEn, sThemeLight), 'Light');

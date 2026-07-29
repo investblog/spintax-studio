@@ -76,7 +76,9 @@ const
 
       'Close',
 
-      'Zoom in', 'Zoom out', 'Reset zoom', 'Light', 'Dark'
+      'Zoom in', 'Zoom out', 'Reset zoom', 'Light', 'Dark',
+
+      'Even panes', 'Double-click: even panes'
   );
 
 implementation

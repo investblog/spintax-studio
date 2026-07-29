@@ -26,7 +26,8 @@ interface
 
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Buttons, Graphics, ImgList, LCLType,
-  SpxStudio, SpxGroups, SpxUi, SpxIcons, SpxStrIds, SpxStrings;
+  SynEdit, SynEditTypes, SynEditWrappedView, SynGutter,
+  SpxStudio, SpxGroups, SpxUi, SpxIcons, SpxSettings, SpxTheme, SpxStrIds, SpxStrings;
 
 type
   { What the panel asks the window to do: replace the body of the group at [BodyStart, Stop)
@@ -38,7 +39,7 @@ type
   private
     FClose: TSpeedButton;
     FWhat: TLabel;
-    FList: TMemo;
+    FList: TSynEdit;
     FApply: TButton;
     FSaid: TLabel;
     FGroup: TSpxGroup;
@@ -50,12 +51,16 @@ type
     procedure ApplyClicked(Sender: TObject);
     procedure CloseClicked(Sender: TObject);
     procedure ListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure HideGutterPart(const AClass: string);
     procedure Say(const AText: string);
   public
     constructor Create(AOwner: TComponent); override;
     { The document and where the caret is in it, in bytes. Cheap to call on a caret move: the
       panel does the work only when it is visible, and the window is what decides that. }
     procedure ShowGroupAt(const ADoc: string; AOffset: Integer);
+    { The list is an editor now, so it takes the theme and the zoom like the other two. }
+    procedure ApplyTheme(const APalette: TSpxPalette);
+    procedure ApplyFontSize(APoints: Integer);
     procedure Retranslate;
     { Put the keyboard in the list. The window calls this when it opens the panel: the rail's
       tool cannot take focus itself (a TSpeedButton is a TGraphicControl), so without it the
@@ -117,14 +122,35 @@ begin
   { One variant per line, and the editor's own font: these are pieces of the template, and
     reading them in a proportional face next to a monospaced editor is a small lie about
     what they are. }
-  FList := TMemo.Create(Self);
+  { A SYNEDIT, NOT A MEMO, and the gutter is the reason. A variant can be longer than any
+    panel, and the two ways out of that both cost something: clipping hides text, wrapping
+    makes one variant look like two -- which breaks the only promise this panel makes. A
+    numbered gutter settles it: a wrapped continuation has NO number, so the eye reads the
+    numbers and knows where each variant begins. That is worth a heavier control for a list
+    of five short lines. }
+  FList := TSynEdit.Create(Self);
   FList.Parent := Self;
   FList.Top := 100;
   FList.Align := alTop;
   FList.Height := Px(Self, 220);
   FList.BorderSpacing.Around := Px(Self, 8);
+  { The gutter carries the numbers and nothing else. Marks, folding and the change stripe
+    are for a document with bookmarks, foldable structure and a saved version -- none of
+    which a five-line list of alternatives has. Measured on the main editor: those three plus
+    the separator are 40 of the 55 px a default gutter takes. }
+  FList.Gutter.Visible := True;
+  HideGutterPart('TSynGutterMarks');
+  HideGutterPart('TSynGutterChanges');
+  HideGutterPart('TSynGutterSeparator');
+  HideGutterPart('TSynGutterCodeFolding');
+
+  { WRAPPING IS DECIDED ONCE, here, and never toggled: SynEdit's wrap plugin cannot be
+    removed from a live editor -- freeing it access-violates and nilling its Editor leaves a
+    dead line-mapping view (recorded in the charter). With wrapping on there is nothing to
+    the right to scroll to, so the horizontal bar goes. }
+  TLazSynEditLineWrapPlugin.Create(FList);
   FList.ScrollBars := ssAutoVertical;
-  FList.WordWrap := False;
+  FList.Options := FList.Options - [eoScrollPastEol];
   FList.OnKeyDown := @ListKeyDown;
   SpxApplyMonoFont(FList.Font);
 
@@ -150,6 +176,46 @@ procedure TSpxGroupPane.Say(const AText: string);
 begin
   FSaid.Caption := AText;
   FSaid.Visible := AText <> '';
+end;
+
+{ One of SynEdit's gutter parts, by class name: the gutter is a list whose membership is
+  SynEdit's business, so a part is found rather than indexed, and a name this build does not
+  ship is simply not there. }
+procedure TSpxGroupPane.HideGutterPart(const AClass: string);
+var i: Integer;
+begin
+  for i := 0 to FList.Gutter.Parts.Count - 1 do
+    if FList.Gutter.Parts[i].ClassName = AClass then
+      FList.Gutter.Parts[i].Visible := False;
+end;
+
+procedure TSpxGroupPane.ApplyTheme(const APalette: TSpxPalette);
+var i: Integer;
+begin
+  if FList = nil then Exit;
+  FList.Color := APalette.Back;
+  FList.Font.Color := APalette.Text;
+  FList.Gutter.Color := APalette.Gutter;
+  { Every part, not just the numbers: a part left alone keeps a system colour and stays light
+    on a dark page -- the way the main editor's marks column announced itself. }
+  for i := 0 to FList.Gutter.Parts.Count - 1 do
+  begin
+    FList.Gutter.Parts[i].MarkupInfo.Background := APalette.Gutter;
+    FList.Gutter.Parts[i].MarkupInfo.Foreground := APalette.GutterText;
+  end;
+  FList.SelectedColor.Background := APalette.Sel;
+  FList.SelectedColor.Foreground := APalette.SelText;
+  { THE PANEL AROUND IT DOES NOT FOLLOW, and that is the rule this window already has: the
+    chrome is the system's and the EDITORS are themed. Painting the panel dark as well was
+    tried and undone -- it left the close button, whose icon is a fixed dark grey, all but
+    invisible on it, and it made this one panel disagree with every other surface in the
+    window. A dark list inside light chrome is what the main editor already looks like. }
+  Invalidate;
+end;
+
+procedure TSpxGroupPane.ApplyFontSize(APoints: Integer);
+begin
+  if (FList <> nil) and (APoints > 0) then FList.Font.Size := APoints;
 end;
 
 procedure TSpxGroupPane.FocusList;

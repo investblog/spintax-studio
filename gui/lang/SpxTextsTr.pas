@@ -70,7 +70,9 @@ const
 
       'Kapat',
 
-      'Büyüt', 'Küçült', 'Normal boyut', 'Açık', 'Koyu'
+      'Büyüt', 'Küçült', 'Normal boyut', 'Açık', 'Koyu',
+
+      'Eşit genişlik', 'Çift tıklama: eşit genişlik'
   );
 
 implementation

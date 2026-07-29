@@ -559,6 +559,21 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
 ## Raised by review, not yet built
 
+- [ ] **A right-to-left interface means MIRRORING THE WINDOW, not translating it.** Noted
+      2026-07-29, the user's, while weighing `swap-horizontal` as an icon for "even the
+      panes" — the icon was rejected because a reader would expect it to SWAP the two panes,
+      and that is exactly the operation an RTL locale needs. Arabic or Hebrew wants the
+      template on the right and the preview on the left, the tool rail on the trailing edge,
+      and the gutter on the other side of the text; a mirrored window with a left-to-right
+      layout reads as broken even when every caption is correct. So when the language wave
+      reaches `ar` or `he`, the work is not another `gui/lang/SpxTextsXx.pas` — it is
+      `BiDiMode` through the form, both splitters swapping which pane they resize, and the
+      rail's side setting becoming *leading/trailing* rather than *left/right*. The pane swap
+      is therefore worth building as its own action first: useful to anyone (some people
+      simply prefer the output on the left) and the honest foundation for RTL. LCL's
+      `TControl.BiDiMode` / `IsRightToLeft` is the seam; the segmented switch already handles
+      `IsRightToLeft` for its image, which is the one place this has been thought about.
+
 - [ ] **A high-contrast palette.** The light theme now takes its page, gutter and selection
       from the system (`clWindow` / `clBtnFace` / `clHighlight`), which fixed something worse
       than it introduced: on High Contrast Black the editor used to be SynEdit's hardcoded

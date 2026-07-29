@@ -76,7 +76,10 @@ type
     sClose,
 
     { ── the editor's size and colours ── }
-    sZoomIn, sZoomOut, sZoomReset, sThemeLight, sThemeDark
+    sZoomIn, sZoomOut, sZoomReset, sThemeLight, sThemeDark,
+
+    { ── the divider between the panes ── }
+    sSplitEven, sSplitEvenHint
   );
 
 implementation

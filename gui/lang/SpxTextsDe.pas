@@ -80,7 +80,9 @@ const
 
       'Schließen',
 
-      'Größer', 'Kleiner', 'Normale Größe', 'Hell', 'Dunkel'
+      'Größer', 'Kleiner', 'Normale Größe', 'Hell', 'Dunkel',
+
+      'Gleich breit', 'Doppelklick: gleich breit'
   );
 
 implementation

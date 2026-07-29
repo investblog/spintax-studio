@@ -55,6 +55,11 @@ function SpxImagesFrom(AOwner: TComponent; AList: TImageList; AData: Pointer;
   New is the last resort that always exists. All four carry Cyrillic. }
 procedure SpxApplyMonoFont(AFont: TFont);
 
+{ The inverse of Px: a length measured on THIS display, back in 96-dpi units. Anything a
+  window writes down has to make this trip, or a size saved on a 150% display comes back half
+  again as large on the next launch -- Px would scale a number that had already been scaled. }
+function Un96(AControl: TControl; AValue: Integer): Integer;
+
 { The editor's point size: the SYSTEM's, plus the steps the user has zoomed. An offset rather
   than an absolute, because the system size is a setting somebody already made -- a person who
   runs a large desktop font starts large and zooms from there, instead of being reset to ours.
@@ -112,6 +117,20 @@ begin
   finally
     ms.Free;
   end;
+end;
+
+function Un96(AControl: TControl; AValue: Integer): Integer;
+var f: TCustomForm; ppi: Integer;
+begin
+  { The same fallback chain as Px, for the same reason it has one. }
+  ppi := Screen.PixelsPerInch;
+  if AControl <> nil then
+  begin
+    f := GetParentForm(AControl);
+    if f <> nil then ppi := f.PixelsPerInch;
+  end;
+  if ppi <= 0 then ppi := 96;
+  Result := (AValue * 96 + ppi div 2) div ppi;
 end;
 
 function SpxEditorFontSize(ASteps: Integer): Integer;

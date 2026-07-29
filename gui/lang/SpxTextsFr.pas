@@ -80,7 +80,9 @@ const
 
       'Fermer',
 
-      'Plus grand', 'Plus petit', 'Taille normale', 'Clair', 'Sombre'
+      'Plus grand', 'Plus petit', 'Taille normale', 'Clair', 'Sombre',
+
+      'Largeurs égales', 'Double-clic : largeurs égales'
   );
 
 implementation
