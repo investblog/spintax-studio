@@ -71,7 +71,9 @@ const
 
       'gereed', 'geldig', 'geldig, %d waarschuwingen', '%d fouten', ' · %d notities',
       '%s · %d ms',
-      'Tonen', 'Uitvoer: %d KB — de pagina tekent zichzelf niet'
+      'Tonen', 'Uitvoer: %d KB — de pagina tekent zichzelf niet',
+
+      'Sluiten'
   );
 
 implementation

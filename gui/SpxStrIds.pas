@@ -70,7 +70,10 @@ type
 
     { ── the status bar ── }
     sStatusReady, sStatusValid, sStatusWithWarnings, sStatusErrors, sStatusNotes,
-    sStatusElapsed, sShowLarge, sTooLargeToDraw
+    sStatusElapsed, sShowLarge, sTooLargeToDraw,
+
+    { ── a panel's own close button ── }
+    sClose
   );
 
 implementation

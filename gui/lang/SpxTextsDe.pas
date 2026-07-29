@@ -76,7 +76,9 @@ const
       '%s — Spintax Studio',
 
       'bereit', 'gültig', 'gültig, %d Warnungen', '%d Fehler', ' · %d Notizen', '%s · %d ms',
-      'Anzeigen', 'Ausgabe: %d KB — die Seite zeichnet sich nicht neu'
+      'Anzeigen', 'Ausgabe: %d KB — die Seite zeichnet sich nicht neu',
+
+      'Schließen'
   );
 
 implementation

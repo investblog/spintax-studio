@@ -69,7 +69,9 @@ const
       '%s — Spintax Studio',
 
       'listo', 'válido', 'válido, %d advertencias', '%d errores', ' · %d notas', '%s · %d ms',
-      'Mostrar', 'Salida: %d KB — la página no se redibuja sola'
+      'Mostrar', 'Salida: %d KB — la página no se redibuja sola',
+
+      'Cerrar'
   );
 
 implementation

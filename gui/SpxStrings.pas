@@ -160,7 +160,9 @@ const
     { the status bar, then the preview's own two: the button is 90px and the line beside it
       runs from x=8 to the button at x=420 }
     0, 0, 0, 0, 0, 0,
-    11, 57
+    11, 57,
+    { the close button's tooltip -- a tooltip sizes itself }
+    0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

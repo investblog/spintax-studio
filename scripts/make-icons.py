@@ -46,6 +46,11 @@ ICONS = [
     ('SPX_ICON_COPY', 'content-copy', 'Copy the result'),
     ('SPX_ICON_PAGE', 'eye-outline', 'the preview as a rendered page'),
     ('SPX_ICON_SOURCE', 'code-tags', 'the preview as the source behind it'),
+    ('SPX_ICON_CLOSE', 'close', 'close a slide-out panel'),
+    # Not used yet, and here on purpose (the user's call 2026-07-29): the AI work is R1, and
+    # an icon added when the feature lands is an icon chosen in a hurry. Outline, like the
+    # rest of this set.
+    ('SPX_ICON_AI', 'robot-outline', 'the AI features, when they arrive (R1)'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that

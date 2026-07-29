@@ -448,6 +448,10 @@ the managed tier are later releases.
       Fix), the authoring-prompt as system, a local model via localhost, synonyms through
       the same layer. Keys local, zero telemetry.
 
+      Its icon is already in the sprite: `SPX_ICON_AI` (`robot-outline`), put there on
+      2026-07-29 at the user's request so the choice is made calmly rather than in the hour
+      the feature lands. Nothing draws it yet.
+
 ## UX plan, agreed 2026-07-28
 
 The reference is DeepL (spec §3), and what is worth taking from it is its discipline rather

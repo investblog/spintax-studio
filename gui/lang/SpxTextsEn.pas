@@ -72,8 +72,9 @@ const
       '%s — Spintax Studio',
 
       'ready', 'valid', 'valid, %d warnings', '%d errors', ' · %d notes', '%s · %d ms',
-      'Show', 'Output is %d KB — the page does not redraw itself'
-    
+      'Show', 'Output is %d KB — the page does not redraw itself',
+
+      'Close'
   );
 
 implementation

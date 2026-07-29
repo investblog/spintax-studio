@@ -188,6 +188,7 @@ type
     procedure RailRightClicked(Sender: TObject);
     procedure BuildRail;
     procedure RailGroupClicked(Sender: TObject);
+    procedure GroupPaneClosed(Sender: TObject);
     procedure ModePageClicked(Sender: TObject);
     procedure ModeSourceClicked(Sender: TObject);
     procedure CaretSettled(Sender: TObject);
@@ -331,6 +332,7 @@ begin
   FSlide.Width := Px(Self, SPX_SLIDE_W);
   FSlide.Visible := False;
   FSlide.OnApply := @GroupApplied;
+  FSlide.OnClose := @GroupPaneClosed;
 
   FBody := TPanel.Create(Self);
   FBody.Parent := FOuter;
@@ -378,6 +380,8 @@ begin
   FSeedEdit.OnChange := @SettingChanged;
 
   EnsureSmallIcons;
+  { The slide-out's close button draws from the same list the strip does. }
+  FSlide.SetIcons(FSmallIcons);
 
   FReroll := TSpeedButton.Create(Self);
   FReroll.Parent := FTop;
@@ -904,14 +908,25 @@ end;
 
 procedure TSpxMainForm.RailGroupClicked(Sender: TObject);
 begin
-  FSlide.Visible := not FSlide.Visible;
   if FSlide.Visible then
   begin
-    { It opens on whatever the caret is already in, rather than staying blank until the next
-      keypress. }
-    FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
-    FSlide.Retranslate;
+    { The same exit as the panel's own X, and for the reason that exit exists: hiding a
+      control that holds the focus leaves ActiveControl NIL -- LCL's CMVisibleChanged calls
+      DefocusControl -- so the caret would simply vanish from the editor. }
+    GroupPaneClosed(Sender);
+    Exit;
   end;
+  FSlide.Visible := True;
+  { It opens on whatever the caret is already in, rather than staying blank until the next
+    keypress. }
+  FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
+  FSlide.Retranslate;
+  { AND IT TAKES THE FOCUS. The rail's tool is a TSpeedButton, which is a TGraphicControl and
+    cannot hold focus, so opening the panel used to leave the keyboard in the editor -- which
+    made the panel's own Escape unreachable until the user clicked into the list. Caught by
+    review: the probe that "verified" Escape posted the key into the memo itself, measuring
+    the handler rather than the route to it. }
+  FSlide.FocusList;
 end;
 
 { The caret's position as a byte offset into FEditor.Text. LogicalCaretXY, not CaretXY: the
@@ -1829,6 +1844,19 @@ begin
   FPreview.SourceMode := FModes.ItemIndex = 1;
   { The menu's tick belongs to the switch, wherever the switch was moved from. }
   BuildMenu;
+end;
+
+{ The panel's own close button, and Escape from inside it. The rail's tool still toggles --
+  this is the second way out, which a slide-out needs and did not have. }
+procedure TSpxMainForm.GroupPaneClosed(Sender: TObject);
+begin
+  FSlide.Visible := False;
+  { Back to the document: a panel that closes and leaves the focus nowhere means the next
+    keystroke goes to whatever LCL picks. }
+  { CanSetFocus, not CanFocus: the pair CanFocus/SetFocus is what LCL's own header warns
+    against (wincontrol.inc:3719-3727) -- CanFocus stops at the form and never asks whether
+    the form itself can take it. The rest of this file already uses CanSetFocus. }
+  if FEditor.CanSetFocus then FEditor.SetFocus;
 end;
 
 procedure TSpxMainForm.ModePageClicked(Sender: TObject);

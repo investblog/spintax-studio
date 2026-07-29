@@ -2407,12 +2407,21 @@ begin
   end;
 end;
 
-{ The specifiers a format string carries, in order: '%d of %d' -> 'd,d'. A doubled '%%' is
-  a literal percent sign and no specifier at all, so it is stepped over rather than read. }
+{ The specifiers a format string carries, IN ARGUMENT ORDER: '%d of %s' -> 'd,s,'. A doubled
+  '%%' is a literal percent sign and no specifier at all, so it is stepped over rather than
+  read.
+
+  Argument order, not textual order, because a translation may need the arguments the other
+  way round -- Turkish says "%s dosyasına %d satır yazıldı" where English says "wrote %d rows
+  to %s" -- and FPC writes that as `%1:s ... %0:d`. Comparing what is written left to right
+  would call the correct translation wrong and the broken one right; comparing what lands in
+  argument 0 and argument 1 is the thing that actually has to match. }
 function Specifiers(const S: string): string;
-var i: Integer;
+var i, n, arg: Integer; types: array[0..15] of Char;
 begin
   Result := '';
+  for i := 0 to High(types) do types[i] := #0;
+  arg := 0;
   i := 1;
   while i < Length(S) do
   begin
@@ -2424,9 +2433,30 @@ begin
     { An escaped percent consumes BOTH characters and produces nothing. Stepping by three,
       as this did, walked past a specifier standing right behind one -- '%%%d' recorded
       nothing at all. }
-    if S[i + 1] <> '%' then Result := Result + S[i + 1] + ',';
-    Inc(i, 2);
+    if S[i + 1] = '%' then
+    begin
+      Inc(i, 2);
+      Continue;
+    end;
+    Inc(i);
+    { an explicit argument index, `%1:s`, which also moves the implicit counter after it }
+    n := 0;
+    while (i <= Length(S)) and (S[i] >= '0') and (S[i] <= '9') do
+    begin
+      n := n * 10 + (Ord(S[i]) - Ord('0'));
+      Inc(i);
+    end;
+    if (i <= Length(S)) and (S[i] = ':') then
+    begin
+      arg := n;
+      Inc(i);
+    end;
+    if (i <= Length(S)) and (arg <= High(types)) then types[arg] := S[i];
+    Inc(arg);
+    Inc(i);
   end;
+  for i := 0 to High(types) do
+    if types[i] <> #0 then Result := Result + types[i] + ',';
 end;
 
 { The two generated sprites. Nothing here draws -- that needs a window -- but three things
@@ -2599,10 +2629,17 @@ begin
     numbers missing and no error anywhere. The whole SEQUENCE is compared, not how many of
     each: '%d of %d' and '%s of %d' have the same number of specifiers and would hand Format
     a string where it wants an integer -- which is a crash, in the translated build only. }
-  for id := Low(TSpxStr) to High(TSpxStr) do
-    Check('strings/format-placeholders-survive-translation',
-          Specifiers(SpxStrIn(spxLangRu, id)),
-          Specifiers(SpxStrIn(spxLangEn, id)));
+  { EVERY language, not only Russian. This was ru-vs-en until a string was appended to all
+    fourteen positional arrays by script: a slip in the tenth file would have shifted every
+    caption after it there and left every check green, because the counts still match and
+    Russian still lines up. Comparing the whole sequence in every language is what makes a
+    shift impossible to hide -- a moved array puts a '%d' where English has none within a
+    line or two. }
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+    for id := Low(TSpxStr) to High(TSpxStr) do
+      Check('strings/format-placeholders-survive-translation',
+            Format('lang %d: %s', [Ord(lang), Specifiers(SpxStrIn(lang, id))]),
+            Format('lang %d: %s', [Ord(lang), Specifiers(SpxStrIn(spxLangEn, id))]));
 
   { ANCHORS. Both tables are positional array constants, so a reorder inside TSpxStr with
     count-preserving edits in the wrong order would move every string one place and no
@@ -2611,8 +2648,21 @@ begin
   Check('strings/anchor-first-id', SpxStrIn(spxLangEn, sMenuFile), 'File');
   Check('strings/anchor-first-id-ru', SpxStrIn(spxLangRu, sMenuFile), 'Файл');
   Check('strings/anchor-middle-id', SpxStrIn(spxLangEn, sGenerate), 'Generate');
-  Check('strings/anchor-last-id', SpxStrIn(spxLangEn, sTooLargeToDraw),
+  Check('strings/anchor-last-id', SpxStrIn(spxLangEn, sClose), 'Close');
+  Check('strings/anchor-last-id-ru', SpxStrIn(spxLangRu, sClose), 'Закрыть');
+  { The one before it, so an append that landed one place early is caught as well. }
+  Check('strings/anchor-next-to-last', SpxStrIn(spxLangEn, sTooLargeToDraw),
         'Output is %d KB — the page does not redraw itself');
+  { The sentence that made the check above worth widening: Turkish puts the file name first
+    and the count second, which is its word order, and Format is positional -- so before the
+    indices it handed a number where the text wanted a name. }
+  Check('strings/tr-export-line-keeps-its-arguments',
+        Format(SpxStrIn(spxLangTr, sWroteRows), [12, 'a.txt']),
+        'a.txt dosyasına 12 satır yazıldı');
+  Check('strings/en-export-line-is-unchanged',
+        Format(SpxStrIn(spxLangEn, sWroteRows), [12, 'a.txt']),
+        'wrote 12 rows to a.txt');
+
   Check('strings/anchor-a-budget', IntToStr(SpxStrBudget(sSeed)), '5');
   Check('strings/anchor-a-free-string', IntToStr(SpxStrBudget(sMenuFile)), '0');
 
@@ -2688,6 +2738,12 @@ begin
   Check('strings/specifiers-ignore-an-escaped-percent', Specifiers('100%% done'), '');
   Check('strings/specifiers-see-past-an-escaped-percent', Specifiers('%%%d'), 'd,');
   Check('strings/specifiers-of-a-plain-string', Specifiers('nothing here'), '');
+  { An indexed specifier reports what lands in each ARGUMENT, so a translation that reorders
+    them reads the same as the original. FPC really does honour the index -- measured:
+    Format('%1:s / %0:d', [7, 'x']) is 'x / 7'. }
+  Check('strings/specifiers-follow-an-explicit-index', Specifiers('%1:s and %0:d'), 'd,s,');
+  Check('strings/specifiers-count-past-an-index', Specifiers('%1:s %d'), ',s,d,'[2..5]);
+  Check('strings/indexed-format-really-reorders', Format('%1:s / %0:d', [7, 'x']), 'x / 7');
 end;
 
 { Spans as text, so a wrong one is readable rather than inferred. }

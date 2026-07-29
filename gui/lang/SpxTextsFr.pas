@@ -76,7 +76,9 @@ const
 
       'prêt', 'valide', 'valide, %d avertissements', '%d erreurs', ' · %d notes',
       '%s · %d ms',
-      'Afficher', 'Sortie : %d Ko — la page ne se redessine pas'
+      'Afficher', 'Sortie : %d Ko — la page ne se redessine pas',
+
+      'Fermer'
   );
 
 implementation

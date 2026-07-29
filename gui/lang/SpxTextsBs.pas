@@ -73,7 +73,9 @@ const
 
       'spreman', 'ispravno', 'ispravno, %d upozorenja', '%d grešaka', ' · %d napomena',
       '%s · %d ms',
-      'Prikaži', 'Izlaz %d KB — stranica se ne iscrtava sama'
+      'Prikaži', 'Izlaz %d KB — stranica se ne iscrtava sama',
+
+      'Zatvori'
   );
 
 implementation

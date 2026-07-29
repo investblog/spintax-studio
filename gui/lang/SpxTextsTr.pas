@@ -51,10 +51,10 @@ const
       'durduruldu: %d varyant, %d atıldı, %d render',
       '%d / %d, %d atıldı, %d render',
       'belge değişti — bu set önceki metinden; ',
-      '%s dosyasına %d satır yazıldı',
+      '%1:s dosyasına %0:d satır yazıldı',
       '%d satır yazıldı; %d varyantta satır sonları boşluğa döndü — metni olduğu gibi ' +
         'istiyorsanız .xlsx ya da her biri bir dosya kullanın',
-      '%s içine %d dosya yazıldı', '%d dosya yazıldı, sonra devam edilemedi',
+      '%1:s içine %0:d dosya yazıldı', '%d dosya yazıldı, sonra devam edilemedi',
       'dosya yazılamadı',
       '#', 'seed', 'uzunluk', 'metin',
 
@@ -66,7 +66,9 @@ const
       '%s — Spintax Studio',
 
       'hazır', 'geçerli', 'geçerli, %d uyarı', '%d hata', ' · %d not', '%s · %d ms',
-      'Göster', 'Çıktı: %d KB — sayfa kendini yenilemez'
+      'Göster', 'Çıktı: %d KB — sayfa kendini yenilemez',
+
+      'Kapat'
   );
 
 implementation

@@ -25,8 +25,8 @@ unit SpxGroupPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Graphics, SpxStudio, SpxGroups, SpxUi,
-  SpxStrIds, SpxStrings;
+  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Buttons, Graphics, ImgList, LCLType,
+  SpxStudio, SpxGroups, SpxUi, SpxIcons, SpxStrIds, SpxStrings;
 
 type
   { What the panel asks the window to do: replace the body of the group at [BodyStart, Stop)
@@ -36,6 +36,8 @@ type
 
   TSpxGroupPane = class(TPanel)
   private
+    FHead: TPanel;
+    FClose: TSpeedButton;
     FWhat: TLabel;
     FList: TMemo;
     FApply: TButton;
@@ -45,7 +47,10 @@ type
     FReadOnly: Boolean;
     FDoc: string;
     FOnApply: TSpxGroupApply;
+    FOnClose: TNotifyEvent;
     procedure ApplyClicked(Sender: TObject);
+    procedure CloseClicked(Sender: TObject);
+    procedure ListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure Say(const AText: string);
   public
     constructor Create(AOwner: TComponent); override;
@@ -53,7 +58,17 @@ type
       panel does the work only when it is visible, and the window is what decides that. }
     procedure ShowGroupAt(const ADoc: string; AOffset: Integer);
     procedure Retranslate;
+    { Put the keyboard in the list. The window calls this when it opens the panel: the rail's
+      tool cannot take focus itself (a TSpeedButton is a TGraphicControl), so without it the
+      panel opens with the keyboard still in the editor and its own Escape is unreachable. }
+    procedure FocusList;
+    { The window's own 16px list, handed over rather than built here: it is refilled in place
+      when the display's scaling changes, so this reference stays good (SpxUi.SpxImagesFrom). }
+    procedure SetIcons(AImages: TCustomImageList);
     property OnApply: TSpxGroupApply read FOnApply write FOnApply;
+    { The panel cannot hide itself -- the window owns the slot it lives in and the rail's
+      button that opens it. }
+    property OnClose: TNotifyEvent read FOnClose write FOnClose;
   end;
 
 const
@@ -69,6 +84,26 @@ begin
   BevelOuter := bvNone;
   Color := clWindow;
 
+  { A ROW OF ITS OWN for the close button, above the heading rather than beside it: the
+    heading wraps -- a permutation's is its whole configuration -- and a label sharing a
+    fixed-height row with a button would have to stop wrapping to fit. }
+  FHead := TPanel.Create(Self);
+  FHead.Parent := Self;
+  FHead.Top := 0;
+  FHead.Align := alTop;
+  FHead.BevelOuter := bvNone;
+  FHead.Color := clWindow;
+  FHead.Height := Px(Self, 26);
+
+  FClose := TSpeedButton.Create(Self);
+  FClose.Parent := FHead;
+  FClose.Align := alRight;
+  FClose.Width := Px(Self, 26);
+  FClose.Flat := True;
+  FClose.ImageIndex := SPX_ICON_CLOSE;
+  FClose.ShowHint := True;
+  FClose.OnClick := @CloseClicked;
+
   { A STACK FROM THE TOP, not a client-filled panel. The rail is full height and the list is
     usually five short lines, so stretching it put the Apply button eight hundred pixels
     below the heading -- measured. Everything sits together at the top, and the space that
@@ -78,7 +113,7 @@ begin
   { The Top is set BEFORE the alignment and only to order them: LCL sorts controls aligned
     to the same edge by that coordinate, and created-in-order was not enough -- the button
     came out above the list it applies. }
-  FWhat.Top := 0;
+  FWhat.Top := 50;      { after the close row -- LCL orders alTop siblings by this }
   FWhat.Align := alTop;
   FWhat.BorderSpacing.Around := Px(Self, 8);
   FWhat.WordWrap := True;
@@ -94,6 +129,7 @@ begin
   FList.BorderSpacing.Around := Px(Self, 8);
   FList.ScrollBars := ssAutoVertical;
   FList.WordWrap := False;
+  FList.OnKeyDown := @ListKeyDown;
   SpxApplyMonoFont(FList.Font);
 
   FApply := TButton.Create(Self);
@@ -120,9 +156,37 @@ begin
   FSaid.Visible := AText <> '';
 end;
 
+procedure TSpxGroupPane.FocusList;
+begin
+  if FList.CanSetFocus then FList.SetFocus;
+end;
+
+procedure TSpxGroupPane.SetIcons(AImages: TCustomImageList);
+begin
+  FClose.Images := AImages;
+end;
+
+procedure TSpxGroupPane.CloseClicked(Sender: TObject);
+begin
+  if Assigned(FOnClose) then FOnClose(Self);
+end;
+
+{ Escape closes it. The list is where the keyboard is while the panel is open -- FocusList
+  puts it there, and that is what makes this reachable at all. A slide-out that can only be
+  dismissed by the button that opened it is a slide-out people leave open. }
+procedure TSpxGroupPane.ListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_ESCAPE then
+  begin
+    Key := 0;
+    CloseClicked(Sender);
+  end;
+end;
+
 procedure TSpxGroupPane.Retranslate;
 begin
   FApply.Caption := Tr(sGroupApply);
+  FClose.Hint := Tr(sClose);
   if not FHas then FWhat.Caption := Tr(sGroupNone);
 end;
 
