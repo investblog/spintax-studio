@@ -341,12 +341,12 @@ begin
         Seeding it with the folded name instead would break first-occurrence-wins: a document
         whose first `%casinoprefix%` is already lower-case would leave the value equal to the
         key, and a later `%CasinoPrefix%` would then overwrite it. }
-      { BOTH GROUPS. A definition's name is folded by the engine exactly as a reference's is
+      (* BOTH GROUPS. A definition's name is folded by the engine exactly as a reference's is
         -- `SpExtractDirectives` reports `casinoname` for `#set %CasinoName%` -- and the
         scanner marks the name inside the directive as a variable too (measured: position 6 of
         `#set %CasinoName% = {Vul}`), so one pass answers for both. A name that is defined and
         also referenced gets ONE spelling, the first in the document; two spellings of one
-        variable in two tables would be worse than either. }
+        variable in two tables would be worse than either. *)
       if spell.IndexOfName(AVars[i].Name) < 0 then spell.Add(AVars[i].Name + '=');
     if Assigned(FOnSpell) and (spell.Count > 0) then FOnSpell(spell);
 

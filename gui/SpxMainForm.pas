@@ -1945,7 +1945,7 @@ begin
   JumpToPos(Line, Column, 0, 0);
 end;
 
-{ CTRL+CLICK: STOP SUPPLYING THIS PER SESSION AND WRITE IT INTO THE DOCUMENT.
+(* CTRL+CLICK: STOP SUPPLYING THIS PER SESSION AND WRITE IT INTO THE DOCUMENT.
 
   A session value is a stopgap -- it dies with the window, it is not in git, and no other engine
   in the family can see it. A `#set` is the real answer, and it is the only one that silences
@@ -1965,7 +1965,7 @@ end;
   write twice.
 
   Through InsertTextAtCaret, so the insertion is ONE undo step and the caret and the syntax
-  highlighting stay consistent -- SynEdit's own edit API is the only way to get that. }
+  highlighting stay consistent -- SynEdit's own edit API is the only way to get that. *)
 procedure TSpxMainForm.VarDefine(const AName, AValue: string);
 var line_: string; col: Integer;
 begin
