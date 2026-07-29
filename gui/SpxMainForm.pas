@@ -188,6 +188,10 @@ type
     procedure RailRightClicked(Sender: TObject);
     procedure BuildRail;
     procedure RailGroupClicked(Sender: TObject);
+    procedure ShowPanel(APage: Integer; AWanted: Boolean);
+    procedure MenuDiagClicked(Sender: TObject);
+    procedure MenuVarsClicked(Sender: TObject);
+    procedure MenuSetClicked(Sender: TObject);
     procedure GroupPaneClosed(Sender: TObject);
     procedure ModePageClicked(Sender: TObject);
     procedure ModeSourceClicked(Sender: TObject);
@@ -339,10 +343,6 @@ begin
   FBody.Align := alClient;
   FBody.BevelOuter := bvNone;
 
-  { The menu is built after the rail because its View section shows which side the rail is
-    on. }
-  BuildMenu;
-
   FTop := TPanel.Create(Self);
   FTop.Parent := FBody;
   FTop.Align := alTop;
@@ -437,6 +437,11 @@ begin
   { Two grids and their headings need more than 170: at that height the definitions list had
     no room left at all. The splitter above takes it from here. }
   FBottom.Height := Px(Self, 240);
+  { THE TAB STRIP IS GONE. It cost 28 px -- measured, 3.6% of the window -- and said two
+    things: which panel is current, and how to reach the others by keyboard. The rail's lit
+    tool says the first now and the View menu says the second, so the strip was a duplicate of
+    both. The pages stay: this is still a TPageControl, just without its tabs drawn. }
+  FBottom.ShowTabs := False;
   sheetDiag := FBottom.AddTabSheet;
   sheetDiag.Caption := Tr(sTabDiagnostics);
   sheetVars := FBottom.AddTabSheet;
@@ -590,6 +595,13 @@ begin
   FCaretTimer.Interval := 120;
   FCaretTimer.OnTimer := @CaretSettled;
 
+  { THE MENU IS BUILT LAST, because its View section is a REPORT: which side the rail is on,
+    which panel is open, which preview mode. Built earlier -- it used to sit right after the
+    rail -- it read FBottom before FBottom existed, so all three panel ticks came out unset,
+    which by this menu's own rule means "the block is collapsed" on a window whose block is
+    open. It corrected itself on the first click of anything, which is exactly why no test
+    that clicks first could see it. Caught by review, on the running app. }
+  BuildMenu;
 end;
 
 { The find bar. Hidden until asked for, because a template is read far more often than it is
@@ -898,12 +910,17 @@ procedure TSpxMainForm.BuildRail;
 begin
   FRail := TSpxToolRail.Create(Self);
   FRail.Parent := Self;
-  FRail.AddTool(SPX_ICON_DIAG, Tr(sTabDiagnostics), @RailDiagClicked);
-  FRail.AddTool(SPX_ICON_VARS, Tr(sTabVariables), @RailVarsClicked);
-  FRail.AddTool(SPX_ICON_SET, Tr(sTabVariants), @RailSetClicked);
+  { GROUP 1: the three panels are one choice, and the lit one is the panel on screen. Group 2
+    for the slide-out because it is a different question -- a latch of its own, not a fourth
+    panel. }
+  FRail.AddTool(SPX_ICON_DIAG, Tr(sTabDiagnostics), @RailDiagClicked, 1);
+  FRail.AddTool(SPX_ICON_VARS, Tr(sTabVariables), @RailVarsClicked, 1);
+  FRail.AddTool(SPX_ICON_SET, Tr(sTabVariants), @RailSetClicked, 1);
   { The one tool that is not access but WORKSPACE: a group's variants are a list, one short
     line each, which is exactly what fits beside the editor. }
-  FRail.AddTool(SPX_ICON_GROUP, Tr(sTabGroup), @RailGroupClicked);
+  FRail.AddTool(SPX_ICON_GROUP, Tr(sTabGroup), @RailGroupClicked, 2);
+  { The window opens with the diagnostics showing, so the tool that says so is lit. }
+  FRail.SetDown(0, True);
 end;
 
 procedure TSpxMainForm.RailGroupClicked(Sender: TObject);
@@ -917,6 +934,12 @@ begin
     Exit;
   end;
   FSlide.Visible := True;
+  { The latch, for the route that does not set it itself. Clicking the rail's tool makes LCL
+    flip Down before it calls this; opening from the View menu does not, and an unlit tool
+    over an open pane is not just wrong-looking -- the next click on it flips Down to True,
+    this handler sees the pane already open and closes it. So the user presses an unlit
+    "group editor" and the group editor vanishes. Measured by review, pixel for pixel. }
+  FRail.SetDown(3, True);
   { It opens on whatever the caret is already in, rather than staying blank until the next
     keypress. }
   FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
@@ -982,19 +1005,40 @@ begin
   FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
 end;
 
+{ THE BOTTOM BLOCK, and the only place that decides its fate. AWanted is the tool's own state
+  after LCL flipped it: lit means "show me this panel", out means "I clicked the one that was
+  already lit", which is the collapse. The splitter goes with the block -- a splitter with
+  nothing under it is a handle that resizes nothing. }
+procedure TSpxMainForm.ShowPanel(APage: Integer; AWanted: Boolean);
+begin
+  if (FBottom = nil) or (FDiagSplit = nil) then Exit;
+  { The same hazard the group pane was fixed for, in the same window: hiding a control that
+    holds the focus leaves ActiveControl NIL -- CMVisibleChanged calls DefocusControl -- and
+    the caret disappears from the editor. Collapsing the block while the diagnostics list or
+    the variants grid had it would do exactly that. }
+  if (not AWanted) and (Screen.ActiveControl <> nil) and
+     FBottom.ContainsControl(Screen.ActiveControl) and FEditor.CanSetFocus then
+    FEditor.SetFocus;
+  FBottom.Visible := AWanted;
+  FDiagSplit.Visible := AWanted;
+  if AWanted and (FBottom.PageCount > APage) then FBottom.PageIndex := APage;
+  { The menu's ticks are the same state seen from the other side. }
+  BuildMenu;
+end;
+
 procedure TSpxMainForm.RailDiagClicked(Sender: TObject);
 begin
-  if FBottom.PageCount >= 1 then FBottom.PageIndex := 0;
+  ShowPanel(0, FRail.IsDown(0));
 end;
 
 procedure TSpxMainForm.RailVarsClicked(Sender: TObject);
 begin
-  if FBottom.PageCount >= 2 then FBottom.PageIndex := 1;
+  ShowPanel(1, FRail.IsDown(1));
 end;
 
 procedure TSpxMainForm.RailSetClicked(Sender: TObject);
 begin
-  if FBottom.PageCount >= 3 then FBottom.PageIndex := 2;
+  ShowPanel(2, FRail.IsDown(2));
 end;
 
 { One handler for fourteen items: which language it was is the item's Tag, set when the menu
@@ -1057,7 +1101,15 @@ var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
   fileMenu, editMenu, viewMenu, langMenu, sideItem: TMenuItem;
   lang: TSpxLang;
+  keepHeight: Integer;
 begin
+  { THE WINDOW MUST NOT CHANGE SIZE BECAUSE A MENU WAS REPLACED. Detaching one makes Windows
+    hand its row back to the client area and LCL grows the form to match; re-attaching does not
+    undo it, so the first rebuild after startup made the window 20 px taller -- measured, once
+    and then stable. It is not the panels that caused it: a single language switch does the
+    same, and did before any of this. }
+  keepHeight := Height;
+
   { Rebuilt when the language changes, so the previous one is released first -- it is owned
     by the form and would otherwise pile up one menu per switch. }
   if Self.Menu <> nil then
@@ -1133,11 +1185,29 @@ begin
   sideItem.GroupIndex := 1;
   sideItem.Checked := (FRail <> nil) and (FRail.Side = spxRailRight);
   { The rail's own buttons are TSpeedButtons, and a speed button is a TGraphicControl: no
-    handle, so no tab stop and nothing for a screen reader to name. The three panel tools are
-    still reachable -- they raise pages of a TPageControl, whose tabs take the keyboard -- but
-    the group editor had no other way in at all once the faces became icons. It has one here. }
+    handle, so no tab stop and nothing for a screen reader to name. Nothing on the rail can be
+    reached from the keyboard at all -- and since the tab strip went, the items below are the
+    only route to the three panels as well as to this one. }
   Item(viewMenu, '-', 0, [], nil);
   Item(viewMenu, Tr(sTabGroup), 0, [], @RailGroupClicked);
+  { THE THREE PANELS. The tab strip used to be their keyboard route and their names; with it
+    gone this is both. A fourth state is expressible and real -- none of them ticked means the
+    block is collapsed -- which is why these are radio items in a group of their own rather
+    than a checkbox each. }
+  Item(viewMenu, '-', 0, [], nil);
+  sideItem := Item(viewMenu, Tr(sTabDiagnostics), 0, [], @MenuDiagClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 3;
+  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 0);
+  sideItem := Item(viewMenu, Tr(sTabVariables), 0, [], @MenuVarsClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 3;
+  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 1);
+  sideItem := Item(viewMenu, Tr(sTabVariants), 0, [], @MenuSetClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 3;
+  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 2);
+
   { The preview's mode, for the same reason the group editor is here. The two radio buttons
     this replaced were real BUTTON windows, which Windows' own accessibility proxy narrates;
     a custom-drawn control is not, and the win32 widgetset ships no accessibility layer to
@@ -1178,6 +1248,7 @@ begin
   sideItem.Checked := FLangFollow;
 
   Self.Menu := bar;
+  if Height <> keepHeight then Height := keepHeight;
 end;
 
 { The menu's flags, at the size this display wants. Called before the menu is built and again
@@ -1846,11 +1917,34 @@ begin
   BuildMenu;
 end;
 
+{ The menu's way to the same three panels. It always OPENS -- a menu item that closed the
+  panel it names would be a surprise; the rail's tool is where collapsing lives. }
+procedure TSpxMainForm.MenuDiagClicked(Sender: TObject);
+begin
+  FRail.SetDown(0, True);
+  ShowPanel(0, True);
+end;
+
+procedure TSpxMainForm.MenuVarsClicked(Sender: TObject);
+begin
+  FRail.SetDown(1, True);
+  ShowPanel(1, True);
+end;
+
+procedure TSpxMainForm.MenuSetClicked(Sender: TObject);
+begin
+  FRail.SetDown(2, True);
+  ShowPanel(2, True);
+end;
+
 { The panel's own close button, and Escape from inside it. The rail's tool still toggles --
   this is the second way out, which a slide-out needs and did not have. }
 procedure TSpxMainForm.GroupPaneClosed(Sender: TObject);
 begin
   FSlide.Visible := False;
+  { The rail's tool is a latch now, and it can be put out from here -- by the panel's X or by
+    Escape -- as well as by clicking it. }
+  FRail.SetDown(3, False);
   { Back to the document: a panel that closes and leaves the focus nowhere means the next
     keystroke goes to whatever LCL picks. }
   { CanSetFocus, not CanFocus: the pair CanFocus/SetFocus is what LCL's own header warns

@@ -480,6 +480,16 @@ next:
       820 px wide. Measured across all fourteen languages at 1100 px: one row, nothing
       overlapping, the switch asking for 158–192 px.
 
+      **The bottom tab strip is gone too** (2026-07-29, decided on numbers rather than taste).
+      It cost 28 px — 3.6% of the window — and was the only source of three things: which
+      panel is current, the keyboard route to the other two, and their names. Removing it for
+      the 28 px alone would have been a bad trade; what made it worth doing is that the rail
+      had to grow STATE to replace it, and a rail with state can collapse the block entirely:
+      the editor goes from 475 to 720 px, +52%, where dragging the splitter stops at its 80 px
+      floor. A second click on the lit tool is the collapse (the user's call over a menu-only
+      version); the View menu carries the three names and the keyboard route, and with the
+      block collapsed none of them is ticked.
+
       **What is still open here is the move itself:** `Copy` is smaller now but still in the
       top strip. Putting it at the preview pane's own bottom edge needs that pane to grow an
       action row, which is the part of this step nobody has built yet.

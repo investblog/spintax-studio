@@ -6,6 +6,12 @@
  * The side is a setting, which is the user's call and costs nothing as long as the layout asks
  * this class rather than hardcoding an alignment.
  *
+ * IT SHOWS WHICH TOOL IS ON. A tool given a group lights up while its panel is showing, and
+ * clicking the lit one puts it out -- which is how the bottom block is collapsed and given
+ * back to the editor. That is the whole reason the rail carries state at all: the tab strip
+ * used to say which panel was current, and once the rail says it the strip is 28 px of
+ * duplication.
+ *
  * IT IS ACCESS, NOT WORKSPACE. The panels behind these buttons hold tables -- diagnostics,
  * variables, the variant list -- and a table in a narrow column is unreadable, so the rail
  * raises the panel where the data fits instead of trying to be that place. The exception is a
@@ -46,8 +52,18 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     { One tool. AIcon is an index into the sprite (SPX_ICON_* in SpxIcons); AHint is the tool's
-      name, which is the only part of a button a translation now touches. }
-    function AddTool(AIcon: Integer; const AHint: string; AOnClick: TNotifyEvent): TSpeedButton;
+      name, which is the only part of a button a translation now touches.
+
+      AGroup 0 is a plain button. Any other value makes it a LATCH: tools sharing a group are
+      mutually exclusive, and because AllowAllUp is set, clicking the lit one puts it out --
+      LCL flips Down on mouse-up and only then calls OnClick, so the handler reads Down to
+      learn which of the two happened (speedbutton.inc:1025-1036, 148-177). }
+    function AddTool(AIcon: Integer; const AHint: string; AOnClick: TNotifyEvent;
+      AGroup: Integer = 0): TSpeedButton;
+    { The lit state of the tool at AIndex, for a window that changed the panel some other way
+      -- a menu item, or the group editor closing itself. }
+    procedure SetDown(AIndex: Integer; AValue: Boolean);
+    function IsDown(AIndex: Integer): Boolean;
     { The name of the tool at AIndex, for a language switch. }
     procedure SetTool(AIndex: Integer; const AHint: string);
     { Pick the strip that fits this display and lay the buttons out for it. Called by the
@@ -113,7 +129,7 @@ begin
 end;
 
 function TSpxToolRail.AddTool(AIcon: Integer; const AHint: string;
-  AOnClick: TNotifyEvent): TSpeedButton;
+  AOnClick: TNotifyEvent; AGroup: Integer): TSpeedButton;
 var n: Integer;
 begin
   BuildIcons;
@@ -129,6 +145,13 @@ begin
   Result.ImageIndex := AIcon;
   Result.Hint := AHint;
   Result.ShowHint := True;
+  if AGroup <> 0 then
+  begin
+    Result.GroupIndex := AGroup;
+    { Without this, SetDown refuses to put a lit button out (speedbutton.inc:165) and the
+      block could never be collapsed by clicking the tool that opened it. }
+    Result.AllowAllUp := True;
+  end;
   Result.OnClick := AOnClick;
   FButtons[n] := Result;
   Place;
@@ -138,6 +161,17 @@ procedure TSpxToolRail.SetTool(AIndex: Integer; const AHint: string);
 begin
   if (AIndex < 0) or (AIndex > High(FButtons)) then Exit;
   FButtons[AIndex].Hint := AHint;
+end;
+
+procedure TSpxToolRail.SetDown(AIndex: Integer; AValue: Boolean);
+begin
+  if (AIndex < 0) or (AIndex > High(FButtons)) then Exit;
+  FButtons[AIndex].Down := AValue;
+end;
+
+function TSpxToolRail.IsDown(AIndex: Integer): Boolean;
+begin
+  Result := (AIndex >= 0) and (AIndex <= High(FButtons)) and FButtons[AIndex].Down;
 end;
 
 procedure TSpxToolRail.Place;
