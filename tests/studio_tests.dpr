@@ -2435,6 +2435,51 @@ end;
   own size, so a bigger one is CLIPPED), and that every size it can return has bytes behind it.
   The count is the one that would rot silently: a fifteenth language is an edit in one file and
   a flag strip that is still fourteen wide, with the last language showing the wrong flag. }
+{ Every frame of the application icon, by the two fields that decide who can read it. }
+procedure CheckIconFrames;
+const ICO = 'assets/brand/spintax.ico';
+var f: TMemoryStream; n, i, at: Integer; w, h: Byte; size_, offset: LongWord; sig: array[0..3] of Byte;
+begin
+  if not FileExists(ICO) then
+  begin
+    CheckTrue('icon/the file is where the suite expects it', False);
+    Exit;
+  end;
+  f := TMemoryStream.Create;
+  try
+    f.LoadFromFile(ICO);
+    f.Position := 4;
+    n := 0;
+    f.Read(n, 2);
+    CheckTrue('icon/has frames', n > 0);
+    for i := 0 to n - 1 do
+    begin
+      at := 6 + i * 16;
+      f.Position := at;
+      f.Read(w, 1);
+      f.Read(h, 1);
+      f.Position := at + 8;
+      f.Read(size_, 4);
+      f.Read(offset, 4);
+      f.Position := offset;
+      f.Read(sig, 4);
+      { A PNG frame is legal only where the entry says width 0. Anywhere else LCL reads it as
+        a DIB and the application does not start. }
+      if (sig[0] = $89) and (sig[1] = Ord('P')) and (sig[2] = Ord('N')) and (sig[3] = Ord('G')) then
+        Check(Format('icon/frame-%d-is-a-dib-not-a-png', [i]),
+          Format('PNG at %dx%d', [w, h]), 'DIB')
+      else
+        { and a DIB starts with a 40-byte BITMAPINFOHEADER }
+        Check(Format('icon/frame-%d-has-a-bitmapinfoheader', [i]),
+          IntToStr(sig[0] + sig[1] * 256 + sig[2] * 65536 + sig[3] * 16777216), '40');
+      CheckTrue(Format('icon/frame-%d-is-inside-the-file', [i]),
+        (offset > 0) and (offset + size_ <= LongWord(f.Size)));
+    end;
+  finally
+    f.Free;
+  end;
+end;
+
 procedure TestSprites;
 var i, w, h, len, wanted: Integer; p: Pointer;
 begin
@@ -2478,6 +2523,15 @@ begin
     CheckTrue(Format('sprites/flag-%d-is-wider-than-tall', [SPX_FLAG_WIDTHS[i]]),
       SPX_FLAG_WIDTHS[i] > SPX_FLAG_HEIGHTS[i]);
   end;
+
+  { THE APP ICON, read as bytes rather than as a picture. Pillow will write every frame of an
+    .ico as a PNG, which Windows reads everywhere -- Explorer, the taskbar,
+    ExtractAssociatedIcon -- and LCL does not: TIcon only looks for a PNG where the directory
+    entry's width is 0, the 256x256 convention (icon.inc:880-897), and reads everything else
+    as a DIB. A PNG read as a DIB was a modal "Bitmap with unknown compression (268435456)"
+    on startup, from an icon that had been verified through Windows and never launched. The
+    generator refuses to write one now; this refuses to ship one. }
+  CheckIconFrames;
 
   { A size nobody has a strip for still gets one rather than nil. }
   p := SpxIconStrip(999, len);

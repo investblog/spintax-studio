@@ -64,7 +64,14 @@ def main():
     print('%-28s %d x %d' % (os.path.relpath(src_path, HERE), src.width, src.height))
 
     ico_path = os.path.join(HERE, 'assets', 'brand', 'spintax.ico')
-    src.save(ico_path, format='ICO', sizes=[(s, s) for s in SIZES])
+    # bitmap_format='bmp' IS THE WHOLE POINT of this line. Pillow will otherwise write every
+    # frame as a PNG inside the .ico, which Windows itself reads happily -- Explorer, the
+    # taskbar, ExtractAssociatedIcon -- and LCL does not: TIcon only looks for a PNG when the
+    # directory entry's width is 0, the 256x256 convention (icon.inc:880-897), and reads
+    # everything else as a DIB. A PNG read as a DIB is a modal "Bitmap with unknown
+    # compression (268435456)" at startup, which is how this was found: by the app refusing
+    # to open, after the icon had been "verified" through Windows rather than through LCL.
+    src.save(ico_path, format='ICO', sizes=[(s, s) for s in SIZES], bitmap_format='bmp')
     print('%-28s %s' % (os.path.relpath(ico_path, HERE),
                         ', '.join('%d' % s for s in SIZES)))
 
@@ -76,7 +83,14 @@ def main():
     for i in range(count):
         w, h, colours, _, planes, bits, size, offset = struct.unpack_from(
             '<BBBBHHII', blob, 6 + i * 16)
-        images.append((w, h, colours, planes, bits, blob[offset:offset + size]))
+        frame = blob[offset:offset + size]
+        # The check that would have caught it. A PNG frame is legal in an .ico ONLY where the
+        # entry says width 0; anywhere else it is a picture half the world cannot read.
+        if frame[:4] == b'\x89PNG' and w != 0:
+            raise SystemExit('the %dx%d frame is a PNG but its entry says %d wide -- LCL will '
+                             'read it as a DIB and refuse to start. Pillow needs '
+                             "bitmap_format='bmp'." % (w, h, w))
+        images.append((w, h, colours, planes, bits, frame))
 
     # The group: what Windows reads to decide which image to draw at a given size. Its entries
     # are the .ico's, with the file offset replaced by the id of the RT_ICON beside it.
