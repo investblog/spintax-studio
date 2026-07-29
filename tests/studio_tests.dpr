@@ -2528,7 +2528,7 @@ begin
       end;
     if (worst <> '') or (lang = spxLangEn) then Inc(over);
   end;
-  Check('strings/languages-with-words-of-their-own', IntToStr(over), '5');
+  Check('strings/languages-with-words-of-their-own', IntToStr(over), '14');
 
   { The window follows the document's language, and only a language it actually has. }
   CheckTrue('strings/ru-selects-russian', SpxUiLangFor('ru') = spxLangRu);

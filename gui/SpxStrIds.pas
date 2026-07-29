@@ -22,7 +22,12 @@ type
     sMenuFile, sMenuNew, sMenuOpen, sMenuSave, sMenuSaveAs, sMenuReloadSet, sMenuExit,
     sMenuEdit, sMenuFind, sMenuFindNext, sMenuFindPrev,
     sMenuView, sRailLeft, sRailRight,
-    { the interface's own language -- tied to the template's only if the user says so }
+    { The interface's own language -- tied to the template's only if the user says so.
+      sLangEnglish and sLangRussian are DEAD: the menu lists every language by its own name
+      (SpxLangName), which is not translated, so these two are neither used nor deleted --
+      removing an entry from a positional array means editing fourteen files in step, and the
+      cost of getting that wrong is higher than two unread strings. They go when the table
+      next has a reason to be rewritten. }
     sMenuLanguage, sLangEnglish, sLangRussian, sLangFollow,
     { the group editor that slides out of the rail }
     sRailFaceGroup, sTabGroup, sGroupNone, sGroupApply, sGroupRefused, sGroupMultiline,

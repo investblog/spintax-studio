@@ -42,10 +42,12 @@ type
     { The tools' strip. It is the window's, not the editor's pane's: a user who moves it to
       the right expects it at the window's edge, the way every side bar behaves. }
     FRail: TSpxToolRail;
-    { The interface's language is the USER'S setting. Tying it to the document's locale was a
-      surprise every time the locale box was touched, so the tie is now one of three choices
-      and the default comes from the machine. }
-    FLangMode: TSpxUiLangMode;
+    { The interface's language is the USER'S setting: a language of its own, or the
+      document's if the user asks for that. Tying it to the document was a surprise every
+      time the locale box was touched, so the tie is a choice and the default is the
+      machine's language. }
+    FLangChosen: TSpxLang;
+    FLangFollow: Boolean;
     { Everything that is not the rail. Two controls aligned to the same edge are ordered by
       LCL and not by us -- measured: created first, re-aligned, even moved to index 0, the
       rail still opened between the editor and the preview. A container settles it by
@@ -160,8 +162,7 @@ type
     procedure RailDiagClicked(Sender: TObject);
     procedure RailVarsClicked(Sender: TObject);
     procedure RailSetClicked(Sender: TObject);
-    procedure LangEnClicked(Sender: TObject);
-    procedure LangRuClicked(Sender: TObject);
+    procedure LangPicked(Sender: TObject);
     procedure LangFollowClicked(Sender: TObject);
     procedure ApplyLangMode;
     procedure RailLeftClicked(Sender: TObject);
@@ -239,9 +240,9 @@ begin
     of the desktop; whether it then follows the template is the user's setting, and it is not
     the default -- an interface that changed language because the text did was a surprise
     every time the locale box was touched. }
-  FLangMode := spxUiEn;
-  if SpxSystemLang = spxLangRu then FLangMode := spxUiRu;
-  SpxSetUiLang(SpxLangForMode(FLangMode, ''));
+  FLangFollow := False;
+  FLangChosen := SpxSystemLang;
+  SpxSetUiLang(FLangChosen);
   FPath := '';
   FEol := SPX_DEFAULT_EOL;
   FTrailingEol := True;
@@ -408,7 +409,7 @@ begin
   FDiag.HideSelection := False;
   { Px like everything else: these four were raw pixels, so at 150% the font grew and the
     columns did not -- the level and file columns ellipsised whatever the budget said. }
-  DiagColumn(Tr(sColLevel), Px(Self, 110));
+  DiagColumn(Tr(sColLevel), Px(Self, 130));
   DiagColumn(Tr(sColFile), Px(Self, 130));
   DiagColumn(Tr(sColAt), Px(Self, 70));
   DiagColumn(Tr(sColMessage), Px(Self, 640));
@@ -939,21 +940,19 @@ begin
   if FBottom.PageCount >= 3 then FBottom.PageIndex := 2;
 end;
 
-procedure TSpxMainForm.LangEnClicked(Sender: TObject);
+{ One handler for fourteen items: which language it was is the item's Tag, set when the menu
+  was built. Fourteen near-identical methods would be fourteen places to forget one. }
+procedure TSpxMainForm.LangPicked(Sender: TObject);
 begin
-  FLangMode := spxUiEn;
-  ApplyLangMode;
-end;
-
-procedure TSpxMainForm.LangRuClicked(Sender: TObject);
-begin
-  FLangMode := spxUiRu;
+  if not (Sender is TMenuItem) then Exit;
+  FLangFollow := False;
+  FLangChosen := TSpxLang(TMenuItem(Sender).Tag);
   ApplyLangMode;
 end;
 
 procedure TSpxMainForm.LangFollowClicked(Sender: TObject);
 begin
-  FLangMode := spxUiFollow;
+  FLangFollow := True;
   ApplyLangMode;
 end;
 
@@ -963,7 +962,7 @@ end;
 procedure TSpxMainForm.ApplyLangMode;
 var want: TSpxLang;
 begin
-  want := SpxLangForMode(FLangMode, FLocale.Text);
+  if FLangFollow then want := SpxLangFor(FLocale.Text) else want := FLangChosen;
   if want <> SpxUiLang then
   begin
     SpxSetUiLang(want);
@@ -1000,6 +999,7 @@ procedure TSpxMainForm.BuildMenu;
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
   fileMenu, editMenu, viewMenu, langMenu, sideItem: TMenuItem;
+  lang: TSpxLang;
 begin
   { Rebuilt when the language changes, so the previous one is released first -- it is owned
     by the form and would otherwise pile up one menu per switch. }
@@ -1074,15 +1074,17 @@ begin
   langMenu := TMenuItem.Create(Self);
   langMenu.Caption := Tr(sMenuLanguage);
   viewMenu.Add(langMenu);
-  sideItem := Item(langMenu, Tr(sLangEnglish), 0, [], @LangEnClicked);
-  sideItem.RadioItem := True;
-  sideItem.Checked := FLangMode = spxUiEn;
-  sideItem := Item(langMenu, Tr(sLangRussian), 0, [], @LangRuClicked);
-  sideItem.RadioItem := True;
-  sideItem.Checked := FLangMode = spxUiRu;
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+  begin
+    sideItem := Item(langMenu, SpxLangName(lang), 0, [], @LangPicked);
+    sideItem.Tag := Ord(lang);
+    sideItem.RadioItem := True;
+    sideItem.Checked := (not FLangFollow) and (FLangChosen = lang);
+  end;
+  Item(langMenu, '-', 0, [], nil);
   sideItem := Item(langMenu, Tr(sLangFollow), 0, [], @LangFollowClicked);
   sideItem.RadioItem := True;
-  sideItem.Checked := FLangMode = spxUiFollow;
+  sideItem.Checked := FLangFollow;
 
   Self.Menu := bar;
 end;
@@ -1584,7 +1586,7 @@ begin
   { The document's locale changed. Whether the INTERFACE follows it is the user's setting,
     and by default it does not: an editor that changes language because the text did was a
     surprise every time this box was touched. }
-  if FLangMode = spxUiFollow then ApplyLangMode;
+  if FLangFollow then ApplyLangMode;
   RequestRender;
 end;
 

@@ -26,7 +26,9 @@ unit SpxStrings;
 interface
 
 uses
-  SpxStudio, SpxStrIds, SpxTextsEn, SpxTextsRu, SpxTextsDe, SpxTextsFr, SpxTextsEs;
+  SpxStudio, SpxStrIds, SpxTextsEn, SpxTextsRu, SpxTextsDe, SpxTextsFr, SpxTextsEs, SpxTextsIt,
+  SpxTextsPt, SpxTextsNl, SpxTextsTr, SpxTextsUk, SpxTextsBe,
+  SpxTextsSr, SpxTextsHr, SpxTextsBs;
 
 type
   { One language for the whole product. The enum itself lives in editor-core because the
@@ -51,13 +53,10 @@ procedure SpxSetUiLang(ALang: TSpxLang);
 function SpxUiLang: TSpxLang;
 function SpxUiLangFor(const Locale: string): TSpxLang;
 
-type
-  { English, Russian, or whatever the open document says. }
-  TSpxUiLangMode = (spxUiEn, spxUiRu, spxUiFollow);
-
-{ The language this mode resolves to, given the document's locale. `spxUiFollow` is the only
-  one that looks at it. }
-function SpxLangForMode(AMode: TSpxUiLangMode; const DocLocale: string): TSpxLang;
+{ What each language calls ITSELF. Endonyms are not translated -- a menu that offered
+  "German" to a German is a menu written for someone else -- so this is one list rather than
+  fourteen, and it is the only string table in the product with no language of its own. }
+function SpxLangName(ALang: TSpxLang): string;
 
 { What the machine is set to, mapped onto the languages this product speaks. }
 function SpxSystemLang: TSpxLang;
@@ -119,11 +118,14 @@ const
       counter's three captions are what a six-digit match count has to fit into }
     10, 15, 15, 15, 2,
 
-    { tabs, the diagnostics columns (110/130/70px), and what a row says in the first two of
-      them -- an item caption is indented about six pixels, a subitem is not }
+    { tabs, the diagnostics columns (130/130/70px), and what a row says in the first two of
+      them -- an item caption is indented about six pixels, a subitem is not. The level
+      column was widened from 110 for the Slavic wave: "Studio напомена" needs fifteen and
+      the distinction it carries -- the engine's finding or Studio's own -- is not something
+      to abbreviate away. }
     14, 14, 14,
-    15, 18, 10, 0,
-    14, 14, 14, 18,
+    17, 18, 10, 0,
+    17, 17, 17, 18,
 
     { the variables panel: two headings above full-width grids, then its columns. The
       literal column is a checkbox with a title above it, and 90px holds ten characters }
@@ -164,6 +166,15 @@ begin
     spxLangDe: Result := TEXTS_DE[Id];
     spxLangFr: Result := TEXTS_FR[Id];
     spxLangEs: Result := TEXTS_ES[Id];
+    spxLangIt: Result := TEXTS_IT[Id];
+    spxLangPt: Result := TEXTS_PT[Id];
+    spxLangNl: Result := TEXTS_NL[Id];
+    spxLangTr: Result := TEXTS_TR[Id];
+    spxLangUk: Result := TEXTS_UK[Id];
+    spxLangBe: Result := TEXTS_BE[Id];
+    spxLangSr: Result := TEXTS_SR[Id];
+    spxLangHr: Result := TEXTS_HR[Id];
+    spxLangBs: Result := TEXTS_BS[Id];
   else
     Result := TEXTS_EN[Id];
   end;
@@ -191,14 +202,13 @@ begin
   Result := SpxLangFor(Locale);
 end;
 
-function SpxLangForMode(AMode: TSpxUiLangMode; const DocLocale: string): TSpxLang;
+function SpxLangName(ALang: TSpxLang): string;
+const
+  NAMES: array[TSpxLang] of string =
+    ('English', 'Русский', 'Українська', 'Беларуская', 'Српски', 'Hrvatski', 'Bosanski',
+     'Deutsch', 'Français', 'Español', 'Italiano', 'Português', 'Nederlands', 'Türkçe');
 begin
-  case AMode of
-    spxUiEn: Result := spxLangEn;
-    spxUiRu: Result := spxLangRu;
-  else
-    Result := SpxLangFor(DocLocale);
-  end;
+  Result := NAMES[ALang];
 end;
 
 function SpxSystemLang: TSpxLang;
