@@ -559,6 +559,14 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
 ## Raised by review, not yet built
 
+- [ ] **A high-contrast palette.** The light theme now takes its page, gutter and selection
+      from the system (`clWindow` / `clBtnFace` / `clHighlight`), which fixed something worse
+      than it introduced: on High Contrast Black the editor used to be SynEdit's hardcoded
+      `clWhite` under `clWindowText` white text — invisible. It is readable now. But the nine
+      SYNTAX colours are still ours, and `$993300` on black is nearly as bad. A third table
+      keyed off the system's high-contrast flag is the honest fix; noted 2026-07-29 when the
+      two themes landed.
+
 - [x] **A session value is a template, and sometimes that is not what the author meant**
       (2026-07-29). The Variables panel's session half gained a third column, «как текст»:
       ticked, the value goes to the engine through `SpNeutralize` and its braces and percent

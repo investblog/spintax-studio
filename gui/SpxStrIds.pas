@@ -73,7 +73,10 @@ type
     sStatusElapsed, sShowLarge, sTooLargeToDraw,
 
     { ── a panel's own close button ── }
-    sClose
+    sClose,
+
+    { ── the editor's size and colours ── }
+    sZoomIn, sZoomOut, sZoomReset, sThemeLight, sThemeDark
   );
 
 implementation

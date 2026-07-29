@@ -69,7 +69,9 @@ const
       'pronto', 'valido', 'valido, %d avvisi', '%d errori', ' · %d note', '%s · %d ms',
       'Mostra', 'Uscita: %d KB — la pagina non si ridisegna da sola',
 
-      'Chiudi'
+      'Chiudi',
+
+      'Più grande', 'Più piccolo', 'Dimensione normale', 'Chiaro', 'Scuro'
   );
 
 implementation

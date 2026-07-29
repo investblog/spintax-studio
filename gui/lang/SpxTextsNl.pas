@@ -73,7 +73,9 @@ const
       '%s · %d ms',
       'Tonen', 'Uitvoer: %d KB — de pagina tekent zichzelf niet',
 
-      'Sluiten'
+      'Sluiten',
+
+      'Groter', 'Kleiner', 'Normale grootte', 'Licht', 'Donker'
   );
 
 implementation

@@ -69,7 +69,9 @@ const
       'pronto', 'válido', 'válido, %d avisos', '%d erros', ' · %d notas', '%s · %d ms',
       'Mostrar', 'Saída: %d KB — a página não se redesenha sozinha',
 
-      'Fechar'
+      'Fechar',
+
+      'Maior', 'Menor', 'Tamanho normal', 'Claro', 'Escuro'
   );
 
 implementation

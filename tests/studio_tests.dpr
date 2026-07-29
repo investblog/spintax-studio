@@ -33,7 +33,7 @@ uses
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
-  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags;
+  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -47,7 +47,8 @@ uses
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxStrings in '..\gui\SpxStrings.pas',
   SpxIcons in '..\gui\SpxIcons.pas',
-  SpxFlags in '..\gui\SpxFlags.pas';
+  SpxFlags in '..\gui\SpxFlags.pas',
+  SpxSettings in '..\gui\SpxSettings.pas';
   {$ENDIF}
 
 var
@@ -2510,6 +2511,107 @@ begin
   end;
 end;
 
+(* THE SETTINGS FILE. Everything here runs against a temporary path, so the suite never
+   touches the profile of whoever runs it. What is worth checking is not the happy round trip
+   -- it is that a file which has been edited by hand, half written, or written by a later
+   version cannot stop the program from starting or silently change a setting nobody chose. *)
+procedure TestSettings;
+var path: string; p, q: TSpxPrefs; f: TStringList;
+
+  procedure Put(const AText: string);
+  begin
+    f.Text := AText;
+    f.SaveToFile(path);
+  end;
+
+begin
+  path := IncludeTrailingPathDelimiter(GetTempDir) + 'spx-prefs-test.txt';
+  if FileExists(path) then DeleteFile(path);
+  f := TStringList.Create;
+  try
+    { a file that is not there is not an error }
+    p := SpxLoadPrefsFrom(path);
+    q := SpxDefaultPrefs;
+    CheckTrue('settings/absent-file-gives-the-defaults',
+      (p.Lang = q.Lang) and (p.Panel = q.Panel) and (p.FontStep = q.FontStep) and
+      (p.Theme = q.Theme) and (p.LangFollow = q.LangFollow) and
+      (p.RailRight = q.RailRight) and (p.PreviewSource = q.PreviewSource));
+
+    { the round trip, with every field away from its default }
+    p.Lang := 'tr';
+    p.LangFollow := True;
+    p.RailRight := True;
+    p.PreviewSource := True;
+    p.Panel := 2;
+    p.FontStep := 3;
+    p.Theme := spxThemeDark;
+    CheckTrue('settings/saving-says-it-worked', SpxSavePrefsTo(path, p));
+    q := SpxLoadPrefsFrom(path);
+    Check('settings/lang-survives', q.Lang, 'tr');
+    CheckTrue('settings/follow-survives', q.LangFollow);
+    CheckTrue('settings/rail-side-survives', q.RailRight);
+    CheckTrue('settings/preview-mode-survives', q.PreviewSource);
+    Check('settings/panel-survives', IntToStr(q.Panel), '2');
+    Check('settings/font-step-survives', IntToStr(q.FontStep), '3');
+    CheckTrue('settings/theme-survives', q.Theme = spxThemeDark);
+
+    { a collapsed block is -1 and must not be clamped away }
+    p.Panel := -1;
+    SpxSavePrefsTo(path, p);
+    Check('settings/collapsed-is-a-real-value', IntToStr(SpxLoadPrefsFrom(path).Panel), '-1');
+
+    { NOISE. None of these may raise, and none may change a setting to something nobody
+      chose -- an unreadable value means the default for that key and nothing else. }
+    Put('');
+    Check('settings/an-empty-file-is-the-defaults',
+      IntToStr(SpxLoadPrefsFrom(path).Panel), '0');
+    Put('this is not a settings file at all' + LineEnding + '{"json": true}' + LineEnding +
+        '=' + LineEnding + '=nokey' + LineEnding + 'nokey');
+    Check('settings/noise-is-the-defaults', IntToStr(SpxLoadPrefsFrom(path).FontStep), '0');
+    Put('panel=banana' + LineEnding + 'font.step=' + LineEnding + 'theme=chartreuse' +
+        LineEnding + 'rail.right=maybe');
+    p := SpxLoadPrefsFrom(path);
+    CheckTrue('settings/unreadable-values-fall-back',
+      (p.Panel = 0) and (p.FontStep = 0) and (p.Theme = spxThemeLight) and (not p.RailRight));
+
+    { the range is a promise: a hand-edited 999 must not make the editor a poster }
+    Put('font.step=999');
+    Check('settings/an-absurd-size-is-clamped',
+      IntToStr(SpxLoadPrefsFrom(path).FontStep), IntToStr(SPX_FONT_STEP_MAX));
+    Put('font.step=-999');
+    Check('settings/and-clamped-the-other-way',
+      IntToStr(SpxLoadPrefsFrom(path).FontStep), IntToStr(SPX_FONT_STEP_MIN));
+    Put('panel=7');
+    Check('settings/a-panel-that-does-not-exist-is-clamped',
+      IntToStr(SpxLoadPrefsFrom(path).Panel), '2');
+
+    { a key this build has never heard of is left alone rather than treated as a mistake --
+      a file written by a later version must not lose its settings by being opened here }
+    Put('theme=dark' + LineEnding + 'spellcheck=yes' + LineEnding + 'font.step=2');
+    p := SpxLoadPrefsFrom(path);
+    CheckTrue('settings/an-unknown-key-does-not-spoil-the-known-ones',
+      (p.Theme = spxThemeDark) and (p.FontStep = 2));
+
+    { comments and stray spacing, because a person edits this by hand }
+    Put('# a comment' + LineEnding + '   theme  =  dark   ' + LineEnding + '  # another');
+    CheckTrue('settings/comments-and-spacing-are-tolerated',
+      SpxLoadPrefsFrom(path).Theme = spxThemeDark);
+
+    { The real path: under the user's profile and never beside the .exe (spec §11), and its
+      folder is a FIXED name. The second half is the one that bit -- with GetAppConfigDir the
+      folder was Application.Title, a string that exists to be displayed, so renaming the
+      window would have thrown away everyone's settings. }
+    CheckTrue('settings/the-real-path-is-in-the-profile',
+      (SpxPrefsPath <> '') and (Pos(LowerCase(ExtractFilePath(ParamStr(0))),
+                                    LowerCase(SpxPrefsPath)) = 0));
+    CheckTrue('settings/the-folder-is-a-fixed-name-not-a-caption',
+      Pos('spintax-studio', LowerCase(SpxPrefsPath)) > 0);
+  finally
+    f.Free;
+    if FileExists(path) then DeleteFile(path);
+  end;
+end;
+
 procedure TestSprites;
 var i, w, h, len, wanted: Integer; p: Pointer;
 begin
@@ -2648,10 +2750,13 @@ begin
   Check('strings/anchor-first-id', SpxStrIn(spxLangEn, sMenuFile), 'File');
   Check('strings/anchor-first-id-ru', SpxStrIn(spxLangRu, sMenuFile), 'Файл');
   Check('strings/anchor-middle-id', SpxStrIn(spxLangEn, sGenerate), 'Generate');
-  Check('strings/anchor-last-id', SpxStrIn(spxLangEn, sClose), 'Close');
-  Check('strings/anchor-last-id-ru', SpxStrIn(spxLangRu, sClose), 'Закрыть');
-  { The one before it, so an append that landed one place early is caught as well. }
-  Check('strings/anchor-next-to-last', SpxStrIn(spxLangEn, sTooLargeToDraw),
+  Check('strings/anchor-last-id', SpxStrIn(spxLangEn, sThemeDark), 'Dark');
+  Check('strings/anchor-last-id-ru', SpxStrIn(spxLangRu, sThemeDark), 'Тёмная');
+  { The ones before it, so an append that landed a place early is caught as well. Every wave
+    of new ids moves these down by its own length -- that is the point of them. }
+  Check('strings/anchor-next-to-last', SpxStrIn(spxLangEn, sThemeLight), 'Light');
+  Check('strings/anchor-before-the-last-wave', SpxStrIn(spxLangEn, sClose), 'Close');
+  Check('strings/anchor-before-that', SpxStrIn(spxLangEn, sTooLargeToDraw),
         'Output is %d KB — the page does not redraw itself');
   { The sentence that made the check above worth widening: Turkish puts the file name first
     and the count second, which is its word order, and Format is positional -- so before the
@@ -4725,6 +4830,7 @@ begin
   TestSelectionPolicy;
   TestStrings;
   TestSprites;
+  TestSettings;
   TestLongestLine;
   TestHtmlScan;
   TestGroups;

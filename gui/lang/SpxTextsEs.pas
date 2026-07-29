@@ -71,7 +71,9 @@ const
       'listo', 'válido', 'válido, %d advertencias', '%d errores', ' · %d notas', '%s · %d ms',
       'Mostrar', 'Salida: %d KB — la página no se redibuja sola',
 
-      'Cerrar'
+      'Cerrar',
+
+      'Más grande', 'Más pequeño', 'Tamaño normal', 'Claro', 'Oscuro'
   );
 
 implementation

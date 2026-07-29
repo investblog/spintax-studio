@@ -28,7 +28,8 @@ interface
 
 uses
   Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, Menus, IpHtml,
-  SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynHighlighterHTML,
+  SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditHighlighter,
+  SynHighlighterHTML, SpxTheme,
   SpxStudio, SpxUi, SpxStrIds, SpxStrings, SpxSourceMarkup;
 
 const
@@ -57,6 +58,16 @@ type
       in. }
     FSource: TSynEdit;
     FSourceHl: TSynHTMLSyn;
+    { What SynEdit's HTML highlighter shipped with, captured before anything recolours it, so
+      the light theme can PUT THEM BACK rather than describe them a second time. }
+    FHtmlDefault: array[0..6] of TColor;
+    { The last theme and size, because the source editor is REBUILT when wrapping changes --
+      the wrap plugin cannot be removed from a live one -- and a fresh TSynEdit knows nothing
+      about either. Without this, one line over 32 KB turned a dark, zoomed source view back
+      into a white one at the system size. }
+    FPalette: TSpxPalette;
+    FHasPalette: Boolean;
+    FPoints: Integer;
     { Paints back what the HTML highlighter mistook for a tag. It belongs to the editor, so
       it is created with each one and dies with it. }
     FTextBack: TSpxSourceMarkup;
@@ -100,6 +111,11 @@ type
       strip: the pane is one of two panes, and a header of its own would put its content a
       row lower than the editor beside it. }
     property SourceMode: Boolean read FSourceMode write SetSourceMode;
+    { The source view's colours and its size. The PAGE is deliberately left alone: it shows
+      the user's own HTML as it will be published, and a preview that recolours the work is
+      not a preview. }
+    procedure ApplyTheme(const APalette: TSpxPalette);
+    procedure ApplyFontSize(APoints: Integer);
     property Content: string read FContent;
   end;
 
@@ -143,6 +159,15 @@ begin
   FPage.BgColor := clWindow;
 
   FSourceHl := TSynHTMLSyn.Create(Self);
+  FHtmlDefault[0] := FSourceHl.TextAttri.Foreground;
+  FHtmlDefault[1] := FSourceHl.KeyAttri.Foreground;
+  FHtmlDefault[2] := FSourceHl.SymbolAttri.Foreground;
+  FHtmlDefault[3] := FSourceHl.IdentifierAttri.Foreground;
+  FHtmlDefault[4] := FSourceHl.ValueAttri.Foreground;
+  FHtmlDefault[5] := FSourceHl.CommentAttri.Foreground;
+  FHtmlDefault[6] := FSourceHl.UndefKeyAttri.Foreground;
+  FHasPalette := False;
+  FPoints := 0;
   { The source view shows the markup the engine produced, so it reads like the editor:
     fixed pitch, system size. }
   FSourceMenu := TPopupMenu.Create(Self);
@@ -180,6 +205,57 @@ procedure TSpxPreviewPane.SetContent(const AHtml: string);
 begin
   FContent := AHtml;
   Sync;
+end;
+
+{ Every colour the SOURCE view draws with. TSynHTMLSyn's own defaults were chosen for a light
+  background -- dark blue tags on #1E1E1E are unreadable -- so in a dark theme its attributes
+  are reassigned too, and in a light one the palette says clNone and they are left exactly as
+  SynEdit shipped them. }
+procedure TSpxPreviewPane.ApplyTheme(const APalette: TSpxPalette);
+
+  { clNone in the table means "SynEdit's own", not "leave whatever is there now" -- those are
+    the same thing only until a theme has been applied once. Skipping the assignment left the
+    HTML tags painted in the dark theme's peach on a white page after switching back, which a
+    restart cleared and a two-process probe therefore could not see. The defaults are captured
+    at construction rather than written out here, so this does not hardcode SynEdit's palette
+    in a second place. }
+  procedure Recolour(AAttr: TSynHighlighterAttributes; AColour, ADefault: TColor);
+  begin
+    if AAttr = nil then Exit;
+    if AColour <> clNone then AAttr.Foreground := AColour else AAttr.Foreground := ADefault;
+  end;
+
+begin
+  if FSource = nil then Exit;
+  { Remembered, so a rebuild of the editor (the wrap plugin cannot be removed from a live one)
+    can put them back. }
+  FPalette := APalette;
+  FHasPalette := True;
+  FSource.Color := APalette.Back;
+  FSource.Font.Color := APalette.Text;
+  FSource.SelectedColor.Background := APalette.Sel;
+  FSource.SelectedColor.Foreground := APalette.SelText;
+
+  Recolour(FSourceHl.TextAttri, APalette.Text, FHtmlDefault[0]);
+  Recolour(FSourceHl.KeyAttri, APalette.HtmlTag, FHtmlDefault[1]);
+  Recolour(FSourceHl.SymbolAttri, APalette.HtmlTag, FHtmlDefault[2]);
+  Recolour(FSourceHl.IdentifierAttri, APalette.HtmlAttr, FHtmlDefault[3]);
+  Recolour(FSourceHl.ValueAttri, APalette.HtmlValue, FHtmlDefault[4]);
+  Recolour(FSourceHl.CommentAttri, APalette.HtmlComment, FHtmlDefault[5]);
+  Recolour(FSourceHl.UndefKeyAttri, APalette.HtmlAttr, FHtmlDefault[6]);
+
+  { The overlay that paints a bare `<` back to plain text has to follow, or it would repaint
+    prose in the OLD theme's text colour -- which is the exact bug it exists to fix, upside
+    down. }
+  if APalette.Text <> clNone then FTextBack.SetTextColour(APalette.Text)
+  else FTextBack.SetTextColour(FSourceHl.TextAttri.Foreground);
+  FSource.Invalidate;
+end;
+
+procedure TSpxPreviewPane.ApplyFontSize(APoints: Integer);
+begin
+  FPoints := APoints;
+  if (FSource <> nil) and (APoints > 0) then FSource.Font.Size := APoints;
 end;
 
 procedure TSpxPreviewPane.SetSourceMode(AValue: Boolean);
@@ -262,6 +338,11 @@ begin
   FWrapped := AWrap;
   { A fresh control holds nothing, whatever the old one was showing. }
   FShownSource := '';
+  { And it knows nothing about the theme or the zoom either. Reapplying them here is what
+    keeps a wrap rebuild -- which happens on its own, when one output line crosses 32 KB --
+    from throwing a dark, zoomed source view back to white at the system size. }
+  if FHasPalette then ApplyTheme(FPalette);
+  if FPoints > 0 then FSource.Font.Size := FPoints;
 end;
 
 procedure TSpxPreviewPane.CopyClicked(Sender: TObject);

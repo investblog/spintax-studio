@@ -74,7 +74,9 @@ const
       'ready', 'valid', 'valid, %d warnings', '%d errors', ' · %d notes', '%s · %d ms',
       'Show', 'Output is %d KB — the page does not redraw itself',
 
-      'Close'
+      'Close',
+
+      'Zoom in', 'Zoom out', 'Reset zoom', 'Light', 'Dark'
   );
 
 implementation

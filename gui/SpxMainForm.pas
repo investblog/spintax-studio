@@ -20,6 +20,7 @@ uses
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
+  SpxSettings, SpxTheme,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
 
@@ -55,6 +56,12 @@ type
       machine's language. }
     FLangChosen: TSpxLang;
     FLangFollow: Boolean;
+    { What the last launch left behind, and what this one will leave. Held whole rather than
+      as loose fields so that saving is one capture and not seven places to forget. }
+    FPrefs: TSpxPrefs;
+    { Guards the save while the window is still being assembled: every Apply below moves a
+      control and would otherwise write the file once per control, with half the state. }
+    FLoading: Boolean;
     { The flags beside the language names. Owned by the FORM, not by the menu bar: the bar is
       freed and rebuilt on every language switch, and a list that went with it would be one
       more sprite decoded per switch. }
@@ -96,6 +103,8 @@ type
     FMatchesStale: Boolean;
     FEditor: TSynEdit;
     FHighlighter: TSpxSynHighlighter;
+    { Kept, not created and forgotten: a theme has to reach its colours. }
+    FBracket: TSpxBracketMarkup;
     FErrorMarkup: TSpxDiagMarkup;
     FWarnMarkup: TSpxDiagMarkup;
     FPreview: TSpxPreviewPane;
@@ -188,6 +197,20 @@ type
     procedure RailRightClicked(Sender: TObject);
     procedure BuildRail;
     procedure RailGroupClicked(Sender: TObject);
+    { The settings file, in the two directions. ApplyPrefs moves the window to match what was
+      loaded; SavePrefs reads the window back and writes it. }
+    procedure ApplyPrefs;
+    procedure SavePrefs;
+    procedure ApplyTheme;
+    procedure ApplyFontStep;
+    procedure ZoomEditor(ASteps: Integer);
+    procedure ZoomInClicked(Sender: TObject);
+    procedure ZoomOutClicked(Sender: TObject);
+    procedure ZoomResetClicked(Sender: TObject);
+    procedure ThemeLightClicked(Sender: TObject);
+    procedure ThemeDarkClicked(Sender: TObject);
+    procedure EditorMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer;
+      MousePos: TPoint; var Handled: Boolean);
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
     procedure MenuDiagClicked(Sender: TObject);
     procedure MenuVarsClicked(Sender: TObject);
@@ -280,8 +303,14 @@ begin
     of the desktop; whether it then follows the template is the user's setting, and it is not
     the default -- an interface that changed language because the text did was a surprise
     every time the locale box was touched. }
-  FLangFollow := False;
-  FLangChosen := SpxSystemLang;
+  { THE FILE IS READ BEFORE ANY CAPTION EXISTS, for the reason the comment above gives: a
+    caption is read once, when its control is made. A language restored after BuildUi would
+    need every control re-read; a language restored here costs nothing. }
+  FLoading := True;
+  FPrefs := SpxLoadPrefs;
+  FLangFollow := FPrefs.LangFollow;
+  if FPrefs.Lang <> '' then FLangChosen := SpxLangFor(FPrefs.Lang)
+  else FLangChosen := SpxSystemLang;
   SpxSetUiLang(FLangChosen);
   FPath := '';
   FEol := SPX_DEFAULT_EOL;
@@ -290,6 +319,9 @@ begin
   UpdateCaption;
   FNextId := 0;
   FLastShown := -1;
+  { The rest of the file: things that need the controls to exist. }
+  ApplyPrefs;
+  FLoading := False;
   { The strip is laid out once, here, with every control it positions in existence. }
   LayoutTopStrip;
   FEngine := TSpxEngineThread.Create(@JobDone);
@@ -513,6 +545,7 @@ begin
   { Fixed pitch, because a template is markup -- but only the FAMILY is ours. The size
     stays the system's, so a desktop configured for larger text gets a larger editor. }
   SpxApplyMonoFont(FEditor.Font);
+  FEditor.OnMouseWheel := @EditorMouseWheel;
   FEditor.Gutter.Visible := True;
   { The walkthrough from spintax.net: it opens on something that demonstrates the product
     -- macros, a conditional, plurals, permutations with config -- rather than a toy, and
@@ -564,8 +597,8 @@ begin
     the pairing rule itself is `SpxMatchBracket`, gated by the console suite. Reaching the
     markup manager needs the protected accessor, hence the local descendant. }
   FEditor.MarkupByClass[TSynEditMarkupBracket].Enabled := False;
-  TSynEditMarkupManager(TSynEditReach(FEditor).MarkupMgr).AddMarkUp(
-    TSpxBracketMarkup.Create(FEditor));
+  FBracket := TSpxBracketMarkup.Create(FEditor);
+  TSynEditMarkupManager(TSynEditReach(FEditor).MarkupMgr).AddMarkUp(FBracket);
 
   { Squiggles: red under an error, amber under a warning, on the engine's own spans. One
     markup per severity, because a markup carries one attribute. }
@@ -1024,6 +1057,7 @@ begin
   if AWanted and (FBottom.PageCount > APage) then FBottom.PageIndex := APage;
   { The menu's ticks are the same state seen from the other side. }
   BuildMenu;
+  SavePrefs;
 end;
 
 procedure TSpxMainForm.RailDiagClicked(Sender: TObject);
@@ -1048,12 +1082,17 @@ begin
   if not (Sender is TMenuItem) then Exit;
   FLangFollow := False;
   FLangChosen := TSpxLang(TMenuItem(Sender).Tag);
+  { A CHOICE, so it is written down. Until one is made the stored code stays empty, which is
+    what "follow the desktop" is spelled as. }
+  FPrefs.Lang := SpxLangCode(FLangChosen);
+  FPrefs.LangFollow := False;
   ApplyLangMode;
 end;
 
 procedure TSpxMainForm.LangFollowClicked(Sender: TObject);
 begin
   FLangFollow := True;
+  FPrefs.LangFollow := True;
   ApplyLangMode;
 end;
 
@@ -1071,17 +1110,20 @@ begin
   end
   else
     BuildMenu;   { the tick still has to move }
+  SavePrefs;
 end;
 
 procedure TSpxMainForm.RailLeftClicked(Sender: TObject);
 begin
   FRail.Side := spxRailLeft;
+  SavePrefs;
   BuildMenu;   { the tick moves with it }
 end;
 
 procedure TSpxMainForm.RailRightClicked(Sender: TObject);
 begin
   FRail.Side := spxRailRight;
+  SavePrefs;
   BuildMenu;
 end;
 
@@ -1160,6 +1202,20 @@ begin
   Item(editMenu, '-', 0, [], nil);
   Item(editMenu, Tr(sMenuWrapBraces), Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked);
   Item(editMenu, Tr(sMenuWrapBrackets), Ord('P'), [ssCtrl, ssShift], @WrapBracketsClicked);
+  { The zoom, in a menu as well as on the wheel -- the project's rule: a hotkey nobody can
+    find is a hotkey nobody uses. Ctrl+= rather than Ctrl++ because that is the key a person
+    presses; Ctrl+- and Ctrl+0 are the pair everyone else uses for the same three actions.
+
+    Ctrl+0 IS TAKEN, from SynEdit's ecGotoMarker0 (syneditkeycmds.pp:1143) -- the third such
+    decision in this menu and recorded like the other two. It costs nothing here: this app
+    exposes no bookmarks at all, in any menu, so the command it displaces is unreachable
+    anyway. If bookmarks ever become a feature, this is the line to revisit -- and note that
+    Ctrl+Shift+0 still SETS marker 0, so the pair would then be half-broken rather than
+    absent. }
+  Item(editMenu, '-', 0, [], nil);
+  Item(editMenu, Tr(sZoomIn), 187, [ssCtrl], @ZoomInClicked);       { VK_OEM_PLUS }
+  Item(editMenu, Tr(sZoomOut), 189, [ssCtrl], @ZoomOutClicked);     { VK_OEM_MINUS }
+  Item(editMenu, Tr(sZoomReset), Ord('0'), [ssCtrl], @ZoomResetClicked);
   Item(editMenu, '-', 0, [], nil);
   Item(editMenu, Tr(sMenuReroll), Ord('R'), [ssCtrl], @RerollClicked);
   Item(editMenu, Tr(sMenuCopyResult), Ord('C'), [ssCtrl, ssShift], @CopyClicked);
@@ -1207,6 +1263,19 @@ begin
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
   sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 2);
+
+  { The editor's colours. Only the editor and the source view are themed -- the preview shows
+    the user's HTML as it will be published, and the window's chrome is drawn by Windows,
+    which has no dark mode to offer LCL. }
+  Item(viewMenu, '-', 0, [], nil);
+  sideItem := Item(viewMenu, Tr(sThemeLight), 0, [], @ThemeLightClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 4;
+  sideItem.Checked := FPrefs.Theme = spxThemeLight;
+  sideItem := Item(viewMenu, Tr(sThemeDark), 0, [], @ThemeDarkClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 4;
+  sideItem.Checked := FPrefs.Theme = spxThemeDark;
 
   { The preview's mode, for the same reason the group editor is here. The two radio buttons
     this replaced were real BUTTON windows, which Windows' own accessibility proxy narrates;
@@ -1915,6 +1984,159 @@ begin
   FPreview.SourceMode := FModes.ItemIndex = 1;
   { The menu's tick belongs to the switch, wherever the switch was moved from. }
   BuildMenu;
+  SavePrefs;
+end;
+
+{ ── THE SETTINGS FILE ─────────────────────────────────────────────────────────────────── }
+
+{ The window, moved to match what was loaded. The language is already applied (the constructor
+  does it before any caption exists); everything else needs the controls, so it happens here. }
+procedure TSpxMainForm.ApplyPrefs;
+begin
+  if FPrefs.RailRight then FRail.Side := spxRailRight else FRail.Side := spxRailLeft;
+  FModes.ItemIndex := Ord(FPrefs.PreviewSource);
+  { SetItemIndex only fires OnChange when the value MOVES, so the preview is told directly
+    rather than relying on that. }
+  FPreview.SourceMode := FPrefs.PreviewSource;
+  if FPrefs.Panel >= 0 then
+  begin
+    FRail.SetDown(FPrefs.Panel, True);
+    ShowPanel(FPrefs.Panel, True);
+  end
+  else
+  begin
+    FRail.SetDown(0, False);
+    ShowPanel(0, False);
+  end;
+  ApplyTheme;
+  ApplyFontStep;
+  { Follow mode was RESTORED by the constructor and has not been RESOLVED: it means "take the
+    language from the document", and only this asks the locale box what the document says.
+    Without it the window came back in the language stored last time WITH follow ticked and
+    the locale box on something else -- the one combination follow mode exists to prevent. }
+  if FLangFollow then ApplyLangMode;
+  BuildMenu;
+end;
+
+{ The window, read back and written down. Called from every place that changes one of these,
+  and doing nothing while the window is still being built. }
+procedure TSpxMainForm.SavePrefs;
+begin
+  if FLoading then Exit;
+  { LANG IS NOT CAPTURED HERE, and that is the whole point of it. An empty code means "the
+    language of the desktop", and FLangChosen is seeded from the desktop whether or not anyone
+    ever chose anything -- so writing it back on every unrelated save would turn the first
+    click on a theme into a permanent language choice nobody made. Only LangPicked and
+    LangFollowClicked, which ARE choices, write those two. }
+  FPrefs.RailRight := (FRail <> nil) and (FRail.Side = spxRailRight);
+  FPrefs.PreviewSource := (FModes <> nil) and (FModes.ItemIndex = 1);
+  if (FBottom <> nil) and FBottom.Visible then FPrefs.Panel := FBottom.PageIndex
+  else FPrefs.Panel := -1;
+  SpxSavePrefs(FPrefs);
+end;
+
+{ ── THE EDITOR'S LOOK ──────────────────────────────────────────────────────────────────── }
+
+procedure TSpxMainForm.ApplyTheme;
+var pal: TSpxPalette;
+begin
+  pal := SpxPalette(FPrefs.Theme);
+  FHighlighter.ApplyPalette(pal);
+  FEditor.Color := pal.Back;
+  FEditor.Font.Color := pal.Text;
+  FEditor.Gutter.Color := pal.Gutter;
+  { LineNumberPart, not an index or a name: SynEdit's gutter is a list of parts whose order
+    is its business, and this is the accessor it publishes for the one we mean
+    (syngutter.pp:52). }
+  if FEditor.Gutter.LineNumberPart <> nil then
+  begin
+    FEditor.Gutter.LineNumberPart.MarkupInfo.Background := pal.Gutter;
+    FEditor.Gutter.LineNumberPart.MarkupInfo.Foreground := pal.GutterText;
+  end;
+  FEditor.SelectedColor.Background := pal.Sel;
+  FEditor.SelectedColor.Foreground := pal.SelText;
+  { The matching-bracket overlay is invisible on a dark page with its default (a frame in the
+    text colour), so the theme gives it one -- and ASSIGNS IT EITHER WAY. Skipping the light
+    table because its values are clNone was the bug: clNone is a real value meaning "no colour
+    of my own", which is exactly what the light theme wants, and skipping it left the pair
+    painted dark grey on a white page for the rest of the session. Only a restart cleared it,
+    which is why a two-process probe could not see it. }
+  FBracket.MarkupInfo.Background := pal.BracketBack;
+  FBracket.MarkupInfo.Foreground := pal.BracketText;
+  FPreview.ApplyTheme(pal);
+  FEditor.Invalidate;
+end;
+
+procedure TSpxMainForm.ApplyFontStep;
+var pt: Integer;
+begin
+  pt := SpxEditorFontSize(FPrefs.FontStep);
+  FEditor.Font.Size := pt;
+  FPreview.ApplyFontSize(pt);
+end;
+
+{ Zoom is the SYSTEM size plus a number of steps, so a person who runs a large desktop font
+  starts large. The step is clamped where it is stored (SpxSettings) and the resulting point
+  size again where it is computed (SpxUi) -- a settings file edited by hand cannot make the
+  editor unusable. }
+procedure TSpxMainForm.ZoomEditor(ASteps: Integer);
+var want: Integer;
+begin
+  want := FPrefs.FontStep + ASteps;
+  if want < SPX_FONT_STEP_MIN then want := SPX_FONT_STEP_MIN;
+  if want > SPX_FONT_STEP_MAX then want := SPX_FONT_STEP_MAX;
+  { THE STEP IS CLAMPED, AND SO IS THE POINT SIZE IT PRODUCES -- and the second clamp is the
+    one a hand feels. With a 9 pt system font, steps -4 and -3 are both 6 pt: taking the step
+    anyway would leave one notch of the wheel doing nothing visible, then two before anything
+    moved back, while the settings file recorded a number that no longer described the screen.
+    A step that changes no size is not taken. }
+  if SpxEditorFontSize(want) = SpxEditorFontSize(FPrefs.FontStep) then Exit;
+  FPrefs.FontStep := want;
+  ApplyFontStep;
+  SavePrefs;
+end;
+
+procedure TSpxMainForm.ZoomInClicked(Sender: TObject);
+begin
+  ZoomEditor(1);
+end;
+
+procedure TSpxMainForm.ZoomOutClicked(Sender: TObject);
+begin
+  ZoomEditor(-1);
+end;
+
+procedure TSpxMainForm.ZoomResetClicked(Sender: TObject);
+begin
+  FPrefs.FontStep := 0;
+  ApplyFontStep;
+  SavePrefs;
+end;
+
+{ Ctrl+wheel, which is what every editor does and what a hand reaches for before it looks for
+  a menu. Handled := True keeps the wheel from ALSO scrolling the document. }
+procedure TSpxMainForm.EditorMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  if not (ssCtrl in Shift) then Exit;
+  if WheelDelta > 0 then ZoomEditor(1) else ZoomEditor(-1);
+  Handled := True;
+end;
+
+procedure TSpxMainForm.ThemeLightClicked(Sender: TObject);
+begin
+  FPrefs.Theme := spxThemeLight;
+  ApplyTheme;
+  BuildMenu;
+  SavePrefs;
+end;
+
+procedure TSpxMainForm.ThemeDarkClicked(Sender: TObject);
+begin
+  FPrefs.Theme := spxThemeDark;
+  ApplyTheme;
+  BuildMenu;
+  SavePrefs;
 end;
 
 { The menu's way to the same three panels. It always OPENS -- a menu item that closed the

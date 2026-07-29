@@ -59,7 +59,7 @@ constructor TSpxSourceMarkup.Create(ASynEdit: TSynEditBase);
 begin
   inherited Create(ASynEdit);
   MarkupInfo.Clear;
-  MarkupInfo.Foreground := clWindowText;
+  MarkupInfo.Foreground := clWindowText;   { until SetTextColour says otherwise }
   { The WEIGHT as well as the colour. Every attribute this overlay paints over -- symbol,
     identifier, key, undefined key -- is [fsBold] in TSynHTMLSyn, so recolouring alone left
     the prose black and still bold, which is not what text looks like. A markup clears a style

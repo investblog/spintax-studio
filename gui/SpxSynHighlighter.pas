@@ -21,7 +21,7 @@ unit SpxSynHighlighter;
 interface
 
 uses
-  Classes, SysUtils, Graphics, SynEditHighlighter, SpxTokens;
+  Classes, SysUtils, Graphics, SynEditHighlighter, SpxTokens, SpxSettings, SpxTheme;
 
 type
   TSpxSynHighlighter = class(TSynCustomHighlighter)
@@ -45,6 +45,9 @@ type
     function GetDefaultAttribute(Index: integer): TSynHighlighterAttributes; override;
   public
     constructor Create(AOwner: TComponent); override;
+    { Repaint in another theme's colours. The attributes and their styles do not move -- only
+      what they are painted in. }
+    procedure ApplyPalette(const APalette: TSpxPalette);
     destructor Destroy; override;
     procedure SetLine(const NewValue: String; LineNumber: Integer); override;
     procedure Next; override;
@@ -75,21 +78,26 @@ begin
   inherited Create(AOwner);
   FTokens := TSpxTokenList.Create;
 
-  FTextAttr      := Attr('Text',       clWindowText, []);
-  FCommentAttr   := Attr('Comment',    clGray,       [fsItalic]);
-  FDirectiveAttr := Attr('Directive',  $00993300,    [fsBold]);      { dark blue }
-  FStringAttr    := Attr('String',     $00107C10,    []);            { dark green }
-  FVariableAttr  := Attr('Variable',   $00A03070,    []);            { violet }
-  FPipeAttr      := Attr('Separator',  $000060C0,    [fsBold]);      { amber }
-  FCondAttr      := Attr('Conditional',$000080C0,    [fsBold]);
-  FPluralAttr    := Attr('Plural',     $000080C0,    [fsBold]);
-  FConfigAttr    := Attr('Config',     $00808000,    []);            { teal }
+  { The names and the styles are fixed here; the COLOURS come from the palette, so there is
+    one table of them (SpxTheme) rather than a set per theme scattered through a constructor.
+    ApplyPalette below is called immediately, so a highlighter is never briefly uncoloured. }
+  FTextAttr      := Attr('Text',        clWindowText, []);
+  FCommentAttr   := Attr('Comment',     clGray,       [fsItalic]);
+  FDirectiveAttr := Attr('Directive',   clBlack,      [fsBold]);
+  FStringAttr    := Attr('String',      clBlack,      []);
+  FVariableAttr  := Attr('Variable',    clBlack,      []);
+  FPipeAttr      := Attr('Separator',   clBlack,      [fsBold]);
+  FCondAttr      := Attr('Conditional', clBlack,      [fsBold]);
+  FPluralAttr    := Attr('Plural',      clBlack,      [fsBold]);
+  FConfigAttr    := Attr('Config',      clBlack,      []);
 
   { Four shades for nesting, cycling. The eye needs a difference, not a scale. }
-  FNestAttr[0] := Attr('Nesting 1', $00B04000, [fsBold]);
-  FNestAttr[1] := Attr('Nesting 2', $00206090, [fsBold]);
-  FNestAttr[2] := Attr('Nesting 3', $00107040, [fsBold]);
-  FNestAttr[3] := Attr('Nesting 4', $00A02090, [fsBold]);
+  FNestAttr[0] := Attr('Nesting 1', clBlack, [fsBold]);
+  FNestAttr[1] := Attr('Nesting 2', clBlack, [fsBold]);
+  FNestAttr[2] := Attr('Nesting 3', clBlack, [fsBold]);
+  FNestAttr[3] := Attr('Nesting 4', clBlack, [fsBold]);
+
+  ApplyPalette(SpxPalette(spxThemeLight));
 
   FState.InComment := False;
   FState.LineEmpty := True;
@@ -100,6 +108,29 @@ begin
     so the editor does not repaint, and InternalSaveDefaultValues never runs, so there are
     no defaults to reset to. Both bite the moment a settings pane appears (spec §3). }
   SetAttributesOnChange(@DefHighlightChange);
+end;
+
+{ Every colour this highlighter draws with, from one table. Assigning an attribute fires
+  DefHighlightChange through SetAttributesOnChange, so the editor repaints itself and nothing
+  here has to know about a window. }
+procedure TSpxSynHighlighter.ApplyPalette(const APalette: TSpxPalette);
+var i: Integer;
+begin
+  BeginUpdate;
+  try
+    FTextAttr.Foreground := APalette.Text;
+    FCommentAttr.Foreground := APalette.Comment;
+    FDirectiveAttr.Foreground := APalette.Directive;
+    FStringAttr.Foreground := APalette.Str;
+    FVariableAttr.Foreground := APalette.Variable;
+    FPipeAttr.Foreground := APalette.Pipe;
+    FCondAttr.Foreground := APalette.Cond;
+    FPluralAttr.Foreground := APalette.Plural;
+    FConfigAttr.Foreground := APalette.Config;
+    for i := 0 to High(FNestAttr) do FNestAttr[i].Foreground := APalette.Nest[i];
+  finally
+    EndUpdate;
+  end;
 end;
 
 destructor TSpxSynHighlighter.Destroy;

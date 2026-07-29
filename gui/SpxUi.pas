@@ -55,6 +55,12 @@ function SpxImagesFrom(AOwner: TComponent; AList: TImageList; AData: Pointer;
   New is the last resort that always exists. All four carry Cyrillic. }
 procedure SpxApplyMonoFont(AFont: TFont);
 
+{ The editor's point size: the SYSTEM's, plus the steps the user has zoomed. An offset rather
+  than an absolute, because the system size is a setting somebody already made -- a person who
+  runs a large desktop font starts large and zooms from there, instead of being reset to ours.
+  Clamped to what stays readable in a fixed-pitch editor. }
+function SpxEditorFontSize(ASteps: Integer): Integer;
+
 implementation
 
 function Px(AControl: TControl; AValue: Integer): Integer;
@@ -106,6 +112,15 @@ begin
   finally
     ms.Free;
   end;
+end;
+
+function SpxEditorFontSize(ASteps: Integer): Integer;
+begin
+  Result := 10;
+  if Screen.SystemFont.Size > 0 then Result := Screen.SystemFont.Size;
+  Inc(Result, ASteps);
+  if Result < 6 then Result := 6;
+  if Result > 32 then Result := 32;
 end;
 
 procedure SpxApplyMonoFont(AFont: TFont);

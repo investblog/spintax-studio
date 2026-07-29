@@ -695,6 +695,11 @@ function SpxDiagText(const Code: string; Lang: TSpxLang): string;
 
 { The language for a document locale, by the engine's own normalisation -- so `RU`, `ru-RU`
   and `ru` are one language here as they are everywhere else in the family. }
+{ The engine's own code for a language ('en', 'ru', …) -- the inverse of SpxLangFor, and the
+  form in which a language is written down: an enum's ORDINAL must never reach a settings file,
+  because inserting a language would then silently rename everyone's. }
+function SpxLangCode(ALang: TSpxLang): string;
+
 function SpxLangFor(const Locale: string): TSpxLang;
 
 { The same for Studio's own notes, which carry their subject rather than a code. }
@@ -937,6 +942,11 @@ const
   SPX_LANG_CODE: array[TSpxLang] of string =
     ('en', 'ru', 'uk', 'be', 'sr', 'hr', 'bs',
      'de', 'fr', 'es', 'it', 'pt', 'nl', 'tr');
+
+function SpxLangCode(ALang: TSpxLang): string;
+begin
+  Result := SPX_LANG_CODE[ALang];
+end;
 
 function SpxLangFor(const Locale: string): TSpxLang;
 var code: string; i: TSpxLang;

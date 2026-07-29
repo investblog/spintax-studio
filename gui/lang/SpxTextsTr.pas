@@ -68,7 +68,9 @@ const
       'hazır', 'geçerli', 'geçerli, %d uyarı', '%d hata', ' · %d not', '%s · %d ms',
       'Göster', 'Çıktı: %d KB — sayfa kendini yenilemez',
 
-      'Kapat'
+      'Kapat',
+
+      'Büyüt', 'Küçült', 'Normal boyut', 'Açık', 'Koyu'
   );
 
 implementation

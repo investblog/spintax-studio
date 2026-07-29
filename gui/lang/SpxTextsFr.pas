@@ -78,7 +78,9 @@ const
       '%s · %d ms',
       'Afficher', 'Sortie : %d Ko — la page ne se redessine pas',
 
-      'Fermer'
+      'Fermer',
+
+      'Plus grand', 'Plus petit', 'Taille normale', 'Clair', 'Sombre'
   );
 
 implementation

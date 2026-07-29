@@ -75,7 +75,9 @@ const
       '%s · %d ms',
       'Prikaži', 'Izlaz %d KB — stranica se ne iscrtava sama',
 
-      'Zatvori'
+      'Zatvori',
+
+      'Veće', 'Manje', 'Uobičajena veličina', 'Svijetla', 'Tamna'
   );
 
 implementation
