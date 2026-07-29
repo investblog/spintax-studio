@@ -33,7 +33,7 @@ uses
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
-  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings;
+  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -45,7 +45,9 @@ uses
   SpxGroups in '..\src\SpxGroups.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
-  SpxStrings in '..\gui\SpxStrings.pas';
+  SpxStrings in '..\gui\SpxStrings.pas',
+  SpxIcons in '..\gui\SpxIcons.pas',
+  SpxFlags in '..\gui\SpxFlags.pas';
   {$ENDIF}
 
 var
@@ -2427,6 +2429,63 @@ begin
   end;
 end;
 
+{ The two generated sprites. Nothing here draws -- that needs a window -- but three things
+  can be settled without one: that there is a flag for every language and not one more, that
+  the picker never returns a strip too big for the space asked for (an image list draws at its
+  own size, so a bigger one is CLIPPED), and that every size it can return has bytes behind it.
+  The count is the one that would rot silently: a fifteenth language is an edit in one file and
+  a flag strip that is still fourteen wide, with the last language showing the wrong flag. }
+procedure TestSprites;
+var i, w, h, len, wanted: Integer; p: Pointer;
+begin
+  Check('sprites/a-flag-for-every-language',
+    IntToStr(SPX_FLAG_COUNT), IntToStr(Ord(High(TSpxLang)) - Ord(Low(TSpxLang)) + 1));
+
+  { From the smallest strip up, what comes back must fit -- an image list draws at its own
+    size, so one pixel too wide is a clipped glyph. Below the smallest strip there is nothing
+    to return but the smallest strip, and the generated units say so; that floor is checked
+    separately rather than folded in, because a picker that quietly returned something too
+    big at 24 would otherwise hide behind the same rule. }
+  for wanted := SPX_ICON_SIZES[Low(SPX_ICON_SIZES)] to 200 do
+  begin
+    if SpxIconPickSize(wanted) > wanted then
+      Check(Format('sprites/icon-strip-fits-a-%dpx-face', [wanted]),
+        IntToStr(SpxIconPickSize(wanted)), IntToStr(wanted));
+    SpxFlagPickSize(wanted, w, h);
+    if w > wanted then
+      Check(Format('sprites/flag-strip-fits-a-%dpx-cell', [wanted]), IntToStr(w),
+        IntToStr(wanted));
+  end;
+
+  CheckTrue('sprites/under-the-floor-gets-the-smallest-icon',
+    SpxIconPickSize(1) = SPX_ICON_SIZES[Low(SPX_ICON_SIZES)]);
+  SpxFlagPickSize(1, w, h);
+  CheckTrue('sprites/under-the-floor-gets-the-smallest-flag',
+    w = SPX_FLAG_WIDTHS[Low(SPX_FLAG_WIDTHS)]);
+
+  { PNG, in the length the array says, for every size either picker can hand back. }
+  for i := Low(SPX_ICON_SIZES) to High(SPX_ICON_SIZES) do
+  begin
+    p := SpxIconStrip(SPX_ICON_SIZES[i], len);
+    CheckTrue(Format('sprites/icon-%d-is-a-png', [SPX_ICON_SIZES[i]]),
+      (p <> nil) and (len > 8) and (PByte(p)[0] = $89) and (PByte(p)[1] = Ord('P')));
+  end;
+  for i := Low(SPX_FLAG_WIDTHS) to High(SPX_FLAG_WIDTHS) do
+  begin
+    p := SpxFlagStrip(SPX_FLAG_WIDTHS[i], len);
+    CheckTrue(Format('sprites/flag-%d-is-a-png', [SPX_FLAG_WIDTHS[i]]),
+      (p <> nil) and (len > 8) and (PByte(p)[0] = $89) and (PByte(p)[1] = Ord('P')));
+    CheckTrue(Format('sprites/flag-%d-is-wider-than-tall', [SPX_FLAG_WIDTHS[i]]),
+      SPX_FLAG_WIDTHS[i] > SPX_FLAG_HEIGHTS[i]);
+  end;
+
+  { A size nobody has a strip for still gets one rather than nil. }
+  p := SpxIconStrip(999, len);
+  CheckTrue('sprites/an-unknown-icon-size-still-gets-bytes', (p <> nil) and (len > 8));
+  p := SpxFlagStrip(999, len);
+  CheckTrue('sprites/an-unknown-flag-size-still-gets-bytes', (p <> nil) and (len > 8));
+end;
+
 procedure TestStrings;
 const
   { Every code the pinned engine can emit, from its own sources -- the panel's coverage is
@@ -4555,6 +4614,7 @@ begin
   TestPanelRows;
   TestSelectionPolicy;
   TestStrings;
+  TestSprites;
   TestLongestLine;
   TestHtmlScan;
   TestGroups;

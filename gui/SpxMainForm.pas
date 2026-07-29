@@ -14,11 +14,11 @@ unit SpxMainForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs,
+  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs, ImgList,
   Clipbrd, Graphics, LCLType,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxToolRail, SpxGroupPane, SpxGroups,
+  SpxToolRail, SpxGroupPane, SpxGroups, SpxIcons, SpxFlags,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
 
@@ -48,6 +48,10 @@ type
       machine's language. }
     FLangChosen: TSpxLang;
     FLangFollow: Boolean;
+    { The flags beside the language names. Owned by the FORM, not by the menu bar: the bar is
+      freed and rebuilt on every language switch, and a list that went with it would be one
+      more sprite decoded per switch. }
+    FFlags: TImageList;
     { Everything that is not the rail. Two controls aligned to the same edge are ordered by
       LCL and not by us -- measured: created first, re-aligned, even moved to index 0, the
       rail still opened between the editor and the preview. A container settles it by
@@ -148,6 +152,7 @@ type
     procedure LayoutTopStrip;
     procedure TopStripResized(Sender: TObject);
     procedure BuildMenu;
+    procedure EnsureFlags;
     procedure ShowFindBar;
     procedure HideFindBar;
     procedure FindTextChanged(Sender: TObject);
@@ -207,6 +212,17 @@ type
     procedure StopEngine;
     procedure FormClosed(Sender: TObject; var CloseAction: TCloseAction);
   public
+    { A window is CONSTRUCTED at 96 dpi: LCL pins PixelsPerInch there and only applies the
+      monitor's afterwards, then again on every WM_DPICHANGED. Both sprites are therefore
+      picked for 100% wherever the app actually runs, and an image list draws at its own size
+      -- so without this a 150% display showed 24px glyphs in 54px buttons for the life of
+      the window. The app declares PM_V2 in its manifest, so the rescale really happens.
+
+      It is THIS hook and not the child's DoAutoAdjustLayout because the form assigns its new
+      PixelsPerInch after the children are adjusted; the inherited call below is what makes
+      Px() answer for the display we have just arrived on. }
+    procedure AutoAdjustLayout(AMode: TLayoutAdjustmentPolicy;
+      const AFromPPI, AToPPI, AOldFormWidth, ANewFormWidth: Integer); override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     { How many jobs this window has asked the engine for. Read-only, and out here because
@@ -852,12 +868,12 @@ procedure TSpxMainForm.BuildRail;
 begin
   FRail := TSpxToolRail.Create(Self);
   FRail.Parent := Self;
-  FRail.AddTool(Tr(sRailFaceDiag), Tr(sTabDiagnostics), @RailDiagClicked);
-  FRail.AddTool(Tr(sRailFaceVars), Tr(sTabVariables), @RailVarsClicked);
-  FRail.AddTool(Tr(sRailFaceSet), Tr(sTabVariants), @RailSetClicked);
+  FRail.AddTool(SPX_ICON_DIAG, Tr(sTabDiagnostics), @RailDiagClicked);
+  FRail.AddTool(SPX_ICON_VARS, Tr(sTabVariables), @RailVarsClicked);
+  FRail.AddTool(SPX_ICON_SET, Tr(sTabVariants), @RailSetClicked);
   { The one tool that is not access but WORKSPACE: a group's variants are a list, one short
     line each, which is exactly what fits beside the editor. }
-  FRail.AddTool(Tr(sRailFaceGroup), Tr(sTabGroup), @RailGroupClicked);
+  FRail.AddTool(SPX_ICON_GROUP, Tr(sTabGroup), @RailGroupClicked);
 end;
 
 procedure TSpxMainForm.RailGroupClicked(Sender: TObject);
@@ -1010,6 +1026,8 @@ begin
     bar.Free;
   end;
   bar := TMainMenu.Create(Self);
+  EnsureFlags;
+  bar.Images := FFlags;
   fileMenu := TMenuItem.Create(Self);
   fileMenu.Caption := Tr(sMenuFile);
   bar.Items.Add(fileMenu);
@@ -1066,6 +1084,12 @@ begin
   sideItem := Item(viewMenu, Tr(sRailRight), 0, [], @RailRightClicked);
   sideItem.RadioItem := True;
   sideItem.Checked := (FRail <> nil) and (FRail.Side = spxRailRight);
+  { The rail's own buttons are TSpeedButtons, and a speed button is a TGraphicControl: no
+    handle, so no tab stop and nothing for a screen reader to name. The three panel tools are
+    still reachable -- they raise pages of a TPageControl, whose tabs take the keyboard -- but
+    the group editor had no other way in at all once the faces became icons. It has one here. }
+  Item(viewMenu, '-', 0, [], nil);
+  Item(viewMenu, Tr(sTabGroup), 0, [], @RailGroupClicked);
 
   { The interface's language, and whether it follows the document's. Three radio items in
     their own submenu rather than a checkbox, because "follow" is a third state and not the
@@ -1078,6 +1102,10 @@ begin
   begin
     sideItem := Item(langMenu, SpxLangName(lang), 0, [], @LangPicked);
     sideItem.Tag := Ord(lang);
+    { The flag is the same index as the language, by the sprite's contract. It is a country
+      standing in for a language and the two are not the same thing -- which is why the
+      ENDONYM is the caption and the flag only helps the eye find it. }
+    sideItem.ImageIndex := Ord(lang);
     sideItem.RadioItem := True;
     sideItem.Checked := (not FLangFollow) and (FLangChosen = lang);
   end;
@@ -1087,6 +1115,29 @@ begin
   sideItem.Checked := FLangFollow;
 
   Self.Menu := bar;
+end;
+
+{ The menu's flags, at the size this display wants. Called before the menu is built and again
+  whenever the scaling changes: a form is constructed at 96 dpi and only told the monitor's
+  afterwards, so the first size is the 100% one wherever it runs. The list object is REUSED --
+  the menu items hold a reference to it. }
+procedure TSpxMainForm.EnsureFlags;
+var w, h, len: Integer; data: Pointer;
+begin
+  { A Windows menu draws its images 16 px wide at 100%; the strip is chosen for that, and the
+    cells are wider than they are tall because a flag is. }
+  SpxFlagPickSize(Px(Self, 16), w, h);
+  if (FFlags <> nil) and (FFlags.Width = w) then Exit;
+  data := SpxFlagStrip(w, len);
+  FFlags := SpxImagesFrom(Self, FFlags, data, len, w, h, SPX_FLAG_COUNT);
+end;
+
+procedure TSpxMainForm.AutoAdjustLayout(AMode: TLayoutAdjustmentPolicy;
+  const AFromPPI, AToPPI, AOldFormWidth, ANewFormWidth: Integer);
+begin
+  inherited AutoAdjustLayout(AMode, AFromPPI, AToPPI, AOldFormWidth, ANewFormWidth);
+  EnsureFlags;
+  if FRail <> nil then FRail.Rescale;
 end;
 
 procedure TSpxMainForm.DiagColumn(const ACaption: string; AWidth: Integer);
@@ -1555,10 +1606,11 @@ begin
     translated text. }
   if FRail <> nil then
   begin
-    FRail.SetTool(0, Tr(sRailFaceDiag), Tr(sTabDiagnostics));
-    FRail.SetTool(1, Tr(sRailFaceVars), Tr(sTabVariables));
-    FRail.SetTool(2, Tr(sRailFaceSet), Tr(sTabVariants));
-    FRail.SetTool(3, Tr(sRailFaceGroup), Tr(sTabGroup));
+    { The faces are icons, so a language changes the tooltip and nothing else. }
+    FRail.SetTool(0, Tr(sTabDiagnostics));
+    FRail.SetTool(1, Tr(sTabVariables));
+    FRail.SetTool(2, Tr(sTabVariants));
+    FRail.SetTool(3, Tr(sTabGroup));
   end;
   FSlide.Retranslate;
   { The rows carry their words from the worker, and their first two columns are written here

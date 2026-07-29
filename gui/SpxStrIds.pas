@@ -32,7 +32,8 @@ type
     { the group editor that slides out of the rail }
     sRailFaceGroup, sTabGroup, sGroupNone, sGroupApply, sGroupRefused, sGroupMultiline,
     sGroupChoice, sGroupConditional, sGroupPlural, sGroupPermutation,
-    { one or two characters on a rail button until icons arrive (step 4) }
+    { the letters that were on the rail's buttons before the icons: unread since, kept
+      because a positional array does not lose an entry cheaply, budget 0 in SpxStrings }
     sRailFaceDiag, sRailFaceVars, sRailFaceSet,
     sMenuWrapBraces, sMenuWrapBrackets, sMenuReroll, sMenuCopyResult, sMenuSelectAll,
 

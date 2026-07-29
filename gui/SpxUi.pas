@@ -29,10 +29,23 @@ unit SpxUi;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Forms;
+  Classes, SysUtils, Controls, Graphics, Forms, ImgList;
 
 { A length in 96-dpi units, scaled to the control's display. }
 function Px(AControl: TControl; AValue: Integer): Integer;
+
+{ A sprite, sliced into an image list: AData and ALen are a PNG strip of ACount cells laid out
+  in one row, ACellW by ACellH each -- which is what SpxIcons and SpxFlags hold and what
+  TImageList.AddSliced takes. Width and height are separate because a flag is not a square.
+
+  AList IS REFILLED WHEN IT EXISTS, and only created (owned by AOwner) when it is nil. That
+  is not an optimisation: every control that shows an image holds a REFERENCE to the list, and
+  freeing one to build a bigger one does not crash -- LCL nils the reference from the free
+  notification, so the buttons simply go blank, which is worse than a crash because it looks
+  like nothing happened. Changing the size in place keeps every reference valid, which is what
+  makes rebuilding at a new scaling safe. }
+function SpxImagesFrom(AOwner: TComponent; AList: TImageList; AData: Pointer;
+  ALen, ACellW, ACellH, ACount: Integer): TImageList;
 
 { The fixed-pitch family for the editor and the source view: the first of these the system
   actually has. The SIZE is deliberately left alone, so it stays the system's.
@@ -63,6 +76,36 @@ begin
   end;
   if ppi <= 0 then ppi := 96;
   Result := (AValue * ppi + 48) div 96;
+end;
+
+function SpxImagesFrom(AOwner: TComponent; AList: TImageList; AData: Pointer;
+  ALen, ACellW, ACellH, ACount: Integer): TImageList;
+var ms: TMemoryStream; png: TPortableNetworkGraphic;
+begin
+  Result := AList;
+  if Result = nil then Result := TImageList.Create(AOwner);
+  { Clear before the size: setting either dimension clears anyway, and doing it in one place
+    says so. }
+  Result.Clear;
+  Result.Width := ACellW;
+  Result.Height := ACellH;
+  ms := TMemoryStream.Create;
+  try
+    { A copy of the strip, not a view onto it: TMemoryStream owns what it holds. Sixteen
+      hundred bytes for the rail, four thousand for the flags, once per scaling change. }
+    ms.Write(AData^, ALen);
+    ms.Position := 0;
+    png := TPortableNetworkGraphic.Create;
+    try
+      png.LoadFromStream(ms);
+      { One row of ACount cells -- the sprite's whole layout, in one call. }
+      Result.AddSliced(png, ACount, 1);
+    finally
+      png.Free;
+    end;
+  finally
+    ms.Free;
+  end;
 end;
 
 procedure SpxApplyMonoFont(AFont: TFont);

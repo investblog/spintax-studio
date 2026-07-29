@@ -97,15 +97,18 @@ const
     { menus -- a menu grows to fit its longest item }
     0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0,
-    { the View menu, then the language submenu, then the rail: a button's face is 36px, so
-      two characters and no more }
+    { the View menu, then the language submenu }
     0, 0, 0,
     0, 0, 0, 0,
-    { the group editor: a face, a name, and the panel's own sentences -- the panel is 300px
-      wide and its labels wrap, so only the kind names are held to a width }
-    2, 0, 0, 0, 0, 0,
+    { the group editor: its four rail faces are ICONS now, so the letters that used to be
+      drawn on them are unread and their budget is 0 -- a translator asked for a two-character
+      abbreviation of something nothing draws would be answering a question we stopped asking.
+      The ids stay because this is a positional array and removing four of them means editing
+      fourteen files to no visible end; the suite still checks the rest of the row. The panel
+      is 300px wide and its labels wrap, so only the kind names are held to a width }
+    0, 0, 0, 0, 0, 0,
     20, 20, 20, 20,
-    2, 2, 2,
+    0, 0, 0,
     0, 0, 0, 0, 0,
 
     { top strip, output half: the seed box 55px and the two views 90px are check/radio
