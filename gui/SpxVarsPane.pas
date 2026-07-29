@@ -62,6 +62,7 @@ type
     procedure LiteralToggled(Sender: TObject; ACol, ARow: Integer; AState: TCheckboxState);
     function KindName(Kind: TSpxVarKind): string;
     procedure FitLastColumn(AGrid: TStringGrid);
+    procedure SetRuntimeHeaders;
   protected
     procedure Resize; override;
   public
@@ -151,9 +152,12 @@ begin
   FRuntime.RowCount := 1;
   FRuntime.FixedRows := 1;
   FRuntime.ColCount := 3;
-  FRuntime.Cells[0, 0] := Tr(sColName);
-  FRuntime.Cells[1, 0] := Tr(sColValue);
-  FRuntime.Cells[2, 0] := Tr(sColLiteral);
+  { NOT Cells[x, 0]: this grid uses Columns objects, and LCL then draws the header from
+    Columns[i].Title -- the cells are simply not what is on screen. Three assignments here and
+    two more in Retranslate wrote to them anyway, which is why the session group's headers
+    stayed in the language the WINDOW WAS BUILT IN while every other caption switched.
+    Measured: switching the interface to German turned Cells[1,0] from `Value` into `Wert` and
+    changed nothing visible. The titles are set in one place now, used by both paths. }
   FRuntime.ColWidths[0] := Px(Self, 140);
   FRuntime.ColWidths[1] := Px(Self, 570);
   FRuntime.ColWidths[2] := Px(Self, 90);
@@ -164,11 +168,10 @@ begin
   FRuntime.OnSetEditText := @RuntimeEdited;
   { The third column is a checkbox rather than a word, because it is a yes/no about the value
     beside it and a word would be one more thing to translate into a column this narrow. }
-  FRuntime.Columns.Add.Title.Caption := Tr(sColName);
-  FRuntime.Columns.Add.Title.Caption := Tr(sColValue);
+  FRuntime.Columns.Add;
+  FRuntime.Columns.Add;
   with FRuntime.Columns.Add do
   begin
-    Title.Caption := Tr(sColLiteral);
     ButtonStyle := cbsCheckboxColumn;
     ValueChecked := '1';
     ValueUnchecked := '';
@@ -200,6 +203,17 @@ begin
   FRuntimeLabel.Parent := FRuntimeBox;
   FRuntimeLabel.Align := alTop;
   FRuntimeLabel.Caption := Tr(sVarsSession);
+  SetRuntimeHeaders;
+end;
+
+{ The session grid's headers, in the only place LCL reads them from. All three, including the
+  checkbox column -- Retranslate used to leave that one alone entirely. }
+procedure TSpxVarsPane.SetRuntimeHeaders;
+begin
+  if FRuntime.Columns.Count < 3 then Exit;
+  FRuntime.Columns[0].Title.Caption := Tr(sColName);
+  FRuntime.Columns[1].Title.Caption := Tr(sColValue);
+  FRuntime.Columns[2].Title.Caption := Tr(sColLiteral);
 end;
 
 procedure TSpxVarsPane.Retranslate;
@@ -209,8 +223,7 @@ begin
   FDefs.Cells[0, 0] := Tr(sColKind);
   FDefs.Cells[1, 0] := Tr(sColName);
   FDefs.Cells[2, 0] := Tr(sColValue);
-  FRuntime.Cells[0, 0] := Tr(sColName);
-  FRuntime.Cells[1, 0] := Tr(sColValue);
+  SetRuntimeHeaders;
 end;
 
 destructor TSpxVarsPane.Destroy;
