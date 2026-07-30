@@ -3246,11 +3246,17 @@ type
   THelpDoc = record
     Path: string;
     Examples: Integer;   { exact, not a floor: an example that disappears must fail the build }
+    { Is this the document the panel opens on a diagnostic row? Only that one owes an article
+      per code. Without the distinction the coverage check applied to EVERY registered document,
+      so the next help page -- the language reference, the app description, anything the planned
+      generator emits -- would have had to repeat all 22 diagnostic articles or fail. Registration
+      is compulsory for every document; carrying the codes is not. }
+    Diagnostics: Boolean;
   end;
 
 const
   HELP_DOCS: array[0..0] of THelpDoc = (
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 28));
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 30; Diagnostics: True));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
 function HelpLabel(const APath: string): string;
@@ -3261,27 +3267,34 @@ begin
 end;
 
 { Every help document ON DISK, sorted -- the other half of the registration check. }
+{ EVERY `.md` anywhere under `docs/help`, at any depth. The first version walked exactly
+  `docs/help/<lang>/*.md`, which left two ways to put unchecked prose in the tree and have it
+  look gated: a file at the top level (`docs/help/README.md`) and a subfolder (which the planned
+  page generator will create the day help stops being one document per language). Measured: with
+  both present the suite stayed green. }
+procedure CollectHelpDocs(const ADir: string; AFound: TStringList);
+var rec: TSearchRec;
+begin
+  if FindFirst(ADir + '/*', faAnyFile, rec) <> 0 then Exit;
+  try
+    repeat
+      if (rec.Name = '.') or (rec.Name = '..') then Continue;
+      if (rec.Attr and faDirectory) <> 0 then
+        CollectHelpDocs(ADir + '/' + rec.Name, AFound)
+      else if LowerCase(ExtractFileExt(rec.Name)) = '.md' then
+        AFound.Add(ADir + '/' + rec.Name);
+    until FindNext(rec) <> 0;
+  finally
+    FindClose(rec);
+  end;
+end;
+
 function HelpDocsOnDisk: string;
-var langs, files: TSearchRec; found: TStringList;
+var found: TStringList;
 begin
   found := TStringList.Create;
   try
-    if FindFirst('docs/help/*', faAnyFile, langs) = 0 then
-    begin
-      repeat
-        if (langs.Name = '.') or (langs.Name = '..') then Continue;
-        if (langs.Attr and faDirectory) = 0 then Continue;
-        if FindFirst('docs/help/' + langs.Name + '/*.md', faAnyFile, files) = 0 then
-        begin
-          repeat
-            if (files.Attr and faDirectory) <> 0 then Continue;
-            found.Add('docs/help/' + langs.Name + '/' + files.Name);
-          until FindNext(files) <> 0;
-          FindClose(files);
-        end;
-      until FindNext(langs) <> 0;
-      FindClose(langs);
-    end;
+    CollectHelpDocs('docs/help', found);
     found.Sort;
     Result := found.CommaText;
   finally
@@ -3303,6 +3316,41 @@ end;
 
    It also refuses to print what it cannot round-trip -- the parser would read those back as
    something else. *)
+{ Does what the engine returned fit an ABBREVIATED expectation? The pieces around the ellipses
+  must occur in order, the first at the very start, and the last at the very end unless it is
+  empty (a trailing ellipsis promises nothing about the end). Answers 'fits' or says where it
+  stopped, so a failure reads as a sentence rather than as two walls of text. }
+function PartialVerdict(const AGot, AWant: string): string;
+var rest, piece, tail: string; at, cut: Integer; first: Boolean;
+begin
+  rest := AGot;
+  tail := AWant;
+  first := True;
+  while True do
+  begin
+    cut := Pos(ELLIPSIS, tail);
+    if cut = 0 then Break;
+    piece := Copy(tail, 1, cut - 1);
+    Delete(tail, 1, cut + Length(ELLIPSIS) - 1);
+    if piece <> '' then
+    begin
+      at := Pos(piece, rest);
+      if at = 0 then Exit('missing piece <' + piece + '>');
+      if first and (at <> 1) then Exit('does not start with <' + piece + '>');
+      Delete(rest, 1, at + Length(piece) - 1);
+    end;
+    first := False;
+  end;
+  { What follows the last ellipsis must end the output. }
+  if tail <> '' then
+  begin
+    if Length(rest) < Length(tail) then Exit('too short to end with <' + tail + '>');
+    if Copy(rest, Length(rest) - Length(tail) + 1, Length(tail)) <> tail then
+      Exit('does not end with <' + tail + '>');
+  end;
+  Result := 'fits';
+end;
+
 procedure ReportMeasured(const APath, ATemplate, AGot, AEmpty: string; ALine: Integer);
 var shown, why: string;
 begin
@@ -3313,7 +3361,10 @@ begin
     + 'start of a prose note'
   else if Pos(ELLIPSIS, shown) > 0 then why := 'it contains an ellipsis, which would skip the '
     + 'example AND stop it being counted'
-  else if (AEmpty <> '') and (shown <> AEmpty) and (Pos(AEmpty, shown) > 0) then
+  { AGot, not `shown`: when the engine literally returns the empty-output word, `shown` equals it
+    and the old test let it through -- and pasting that line would make the parser read it as
+    "empty" instead of as those characters. }
+  else if (AEmpty <> '') and (Pos(AEmpty, AGot) > 0) then
     why := 'it contains the empty-output word, which the parser would misread';
   if why <> '' then
   begin
@@ -3340,6 +3391,16 @@ begin
   Result := False;
 end;
 
+{ Any heading, at any level. Spelling out `# `/`## `/`### ` left `#### ` and deeper open, so a
+  sub-sub-heading would have gone on collecting examples for the article above it. }
+function IsHeading(const ALine: string): Boolean;
+var n: Integer;
+begin
+  n := 1;
+  while (n <= Length(ALine)) and (ALine[n] = '#') do Inc(n);
+  Result := (n > 1) and (n <= Length(ALine)) and (ALine[n] = ' ');
+end;
+
 { The code a `### ` heading is about, or '' when it is about something else -- three headings in
   the Russian document are prose and have no code to demonstrate. }
 function HeadingCode(const AHeading: string): string;
@@ -3359,6 +3420,7 @@ procedure CheckHelpDoc(const ADoc: THelpDoc);
 var
   line, want, doc_, got, tag, key, val, label_, locale, empty_: string;
   section, undemonstrated: string;
+  seedInt: Integer;
   lines: TStringList;
   set_: TSpxTemplateSet;
   ctx: TSpxContext;
@@ -3397,9 +3459,7 @@ begin
         heading closes the previous article, not only a `###` one: a `##` that follows the last
         article of a group would otherwise leave it open, and the next section's examples would
         be counted as its. }
-      if (not inFence) and (Copy(Trim(line), 1, 2) = '# ') or
-         ((not inFence) and (Copy(Trim(line), 1, 3) = '## ')) or
-         ((not inFence) and (Copy(Trim(line), 1, 4) = '### ')) then
+      if (not inFence) and IsHeading(Trim(line)) then
       begin
         if (section <> '') and sectionHadExamples and (not sectionShown) then
           undemonstrated := undemonstrated + section + ' ';
@@ -3415,7 +3475,19 @@ begin
         begin
           tag := Trim(Copy(Trim(line), 4, MaxInt));
           isFixture := tag = 'spx-fixture';
-          if isFixture then haveFixture := True;
+          { A SECOND BLOCK IS A FAILURE, not a merge. Measured on the first version: a late block
+            had three different scopes at once -- `seed` ignored (the context is built at the
+            first example and frozen), `include` keys applied (the set is held by reference), the
+            empty-output word re-read per example. The nastiest was `locale`, ignored for
+            rendering but still deciding the folder check, so a document could fail "the locale
+            matches its folder" having been verified under the other one. One block, and it must
+            come before anything it governs. }
+          if isFixture then
+          begin
+            CheckTrue('help/' + label_ + '/the conditions block appears once, before the examples',
+                      (not haveFixture) and (checked = 0));
+            haveFixture := True;
+          end;
         end
         else
           isFixture := False;
@@ -3440,7 +3512,15 @@ begin
         key := Trim(Copy(line, 1, p - 1));
         val := Copy(line, p + 2, MaxInt);
         if key = 'locale' then locale := Trim(val)
-        else if key = 'seed' then seed := StrToIntDef(Trim(val), 0)
+        else if key = 'seed' then
+        begin
+          { `StrToIntDef(.., 0)` alone made a typo'd seed indistinguishable from a missing one,
+            and reported as "declares a seed". Seed 0 is not expressible and does not need to be
+            -- what matters is that a value which is not a number fails saying that. }
+          CheckTrue('help/' + label_ + '/seed is a number [' + Trim(val) + ']',
+                    TryStrToInt(Trim(val), seedInt) and (seedInt <> 0));
+          seed := StrToIntDef(Trim(val), 0);
+        end
         else if key = 'empty' then empty_ := Trim(val)
         else if Copy(key, 1, 8) = 'include ' then
           set_.AddOrSetValue(Trim(Copy(key, 9, MaxInt)), val)
@@ -3481,22 +3561,51 @@ begin
         Continue;
       end;
       want := Trim(Copy(line, p + Length(ARROW), MaxInt));
+      { What sits before the arrow is the LAST line of the template -- unless there is nothing
+        there, which is how a multi-line example puts its output on a line of its own. Appending
+        it anyway added a trailing blank line, so the suite verified a three-line template while
+        the reader saw two. Harmless in both live cases, and exactly the kind of drift between
+        the shown example and the checked one that this fixture exists to prevent. }
       line := TrimRight(Copy(line, 1, p - 1));
-      if doc_ <> '' then doc_ := doc_ + #10 + line else doc_ := line;
+      if line = '' then
+        { nothing to append }
+      else if doc_ <> '' then doc_ := doc_ + #10 + line
+      else doc_ := line;
       exampleLine := i + 1;
       { a note after the output, set off by three spaces, is prose and not part of it }
       p := Pos('   ', want);
       if p > 0 then want := TrimRight(Copy(want, 1, p - 1));
       if want = empty_ then want := '';
       want := StringReplace(want, ' ' + RETURN_ + ' ', #10, [rfReplaceAll]);
-      skip := (Pos(ELLIPSIS, want) > 0) or (Pos(ELLIPSIS, doc_) > 0);
+      { A TEMPLATE cannot be abbreviated -- there is nothing to render. Fails rather than
+        skips, because an abbreviated template is an example that can never be verified. }
+      skip := Pos(ELLIPSIS, doc_) > 0;
+      CheckTrue('help/' + label_ + '/no template is abbreviated at line ' +
+                IntToStr(exampleLine), not skip);
       if not skip then
       begin
         got := SpxRenderSample(doc_, ctx);
-        Check('help/' + label_ + '/example: ' +
-              StringReplace(doc_, #10, ' / ', [rfReplaceAll]), got, want);
-        { Only on a mismatch, and after Check has printed why. }
-        if got <> want then ReportMeasured(ADoc.Path, doc_, got, empty_, exampleLine);
+        (* AN ELLIPSIS IN THE OUTPUT IS A PARTIAL CLAIM, not an exemption. It used to skip the
+           example entirely: unrendered, uncompared, uncounted, and -- because the counter and
+           the causation flag lived in the same block -- it exempted the whole article too. The
+           `variable.self-reference` article had exactly one example, with an ellipsis, so it was
+           unverified prose; and anyone could walk around the ratchet by typing one character.
+
+           What an abbreviated output still says is true at its two ends and in order, so that is
+           what is checked: the pieces between the ellipses must appear in the render, in
+           sequence, starting at the beginning and finishing at the end unless the last piece is
+           empty. *)
+        if Pos(ELLIPSIS, want) > 0 then
+          Check('help/' + label_ + '/example (abbreviated): ' +
+                StringReplace(doc_, #10, ' / ', [rfReplaceAll]),
+                PartialVerdict(got, want), 'fits')
+        else
+        begin
+          Check('help/' + label_ + '/example: ' +
+                StringReplace(doc_, #10, ' / ', [rfReplaceAll]), got, want);
+          { Only on a mismatch, and after Check has printed why. }
+          if got <> want then ReportMeasured(ADoc.Path, doc_, got, empty_, exampleLine);
+        end;
         { AND IS IT AN INSTANCE OF WHAT THE ARTICLE IS ABOUT? The byte comparison proves the
           output and says nothing about the cause -- which is exactly how a section about
           `plural.arity` came to demonstrate a non-integer count instead, and stayed green for
@@ -3576,6 +3685,9 @@ end;
 
 procedure CheckHelpArticles(const APath: string);
 var arts: TStringList; label_, missing, doubled: string; i: Integer; k: TSpxNoteKind;
+  { Measured: without this, a document that moved raised EFOpenError out of SpxReadTextFile and
+    killed the run -- fifteen later procedures never ran and no summary printed. A missing
+    document must FAIL, which CheckHelpDoc already reports, not take the suite with it. }
 
   procedure Want(const ACode: string);
   var n, j: Integer;
@@ -3588,6 +3700,7 @@ var arts: TStringList; label_, missing, doubled: string; i: Integer; k: TSpxNote
   end;
 
 begin
+  if not FileExists(APath) then Exit;
   label_ := HelpLabel(APath);
   arts := HelpArticles(APath);
   try
@@ -3621,7 +3734,7 @@ begin
   for i := Low(HELP_DOCS) to High(HELP_DOCS) do
   begin
     CheckHelpDoc(HELP_DOCS[i]);
-    CheckHelpArticles(HELP_DOCS[i].Path);
+    if HELP_DOCS[i].Diagnostics then CheckHelpArticles(HELP_DOCS[i].Path);
   end;
 end;
 

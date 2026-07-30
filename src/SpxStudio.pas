@@ -736,22 +736,22 @@ function SpxPanelRows(Report: TSpxReport; Lang: TSpxLang): TSpxPanelRows;
   built on the engine worker while the window is doing something else, and a diagnostic
   whose wording depends on when it was rendered is the kind of bug that only shows up in a
   screenshot. }
+function SpxDiagText(const Code: string; Lang: TSpxLang): string;
+
 { The slug a Studio note carries in the panel -- `note.cycle`, `note.too-deep` and the rest.
   Exported because two callers outside this unit want it and neither should restate the list:
   the suite, to check the help has an article for every note, and the diagnostics panel, whose
   double-click will open that article by the row's code. }
 function SpxNoteCode(Kind: TSpxNoteKind): string;
 
-function SpxDiagText(const Code: string; Lang: TSpxLang): string;
-
 { The language for a document locale, by the engine's own normalisation -- so `RU`, `ru-RU`
   and `ru` are one language here as they are everywhere else in the family. }
+function SpxLangFor(const Locale: string): TSpxLang;
+
 { The engine's own code for a language ('en', 'ru', …) -- the inverse of SpxLangFor, and the
   form in which a language is written down: an enum's ORDINAL must never reach a settings file,
   because inserting a language would then silently rename everyone's. }
 function SpxLangCode(ALang: TSpxLang): string;
-
-function SpxLangFor(const Locale: string): TSpxLang;
 
 { The same for Studio's own notes, which carry their subject rather than a code. }
 function SpxNoteText(const Note: TSpxNote; Lang: TSpxLang): string;
