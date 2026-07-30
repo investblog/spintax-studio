@@ -3224,37 +3224,133 @@ begin
   end;
 end;
 
-procedure TestHelpExamples;
 const
   ARROW = #$E2#$86#$92;      { → }
   ELLIPSIS = #$E2#$80#$A6;   { … marks an output too long to print in full }
   RETURN_ = #$E2#$8F#$8E;    { ⏎ stands for a line break in an expected output }
-  DOC = 'docs/help/ru/diagnostics.md';
+
+type
+  (* One verified help document. TWO FIELDS, and the shortness is the point: everything the
+     examples DEPEND on -- the locale, the seed, the template set, the word the document uses for
+     "nothing" -- is declared inside the document itself, where its reader can see it. What stays
+     here is only what the SUITE must expect and the document must not be trusted to say about
+     itself.
+
+     Both fields announce their own errors: a wrong path fails FileExists loudly, and a wrong
+     count fails the ratchet loudly. That is why this is a table in the source rather than a
+     manifest on disk -- a manifest is an unverified input to the verifier, its natural parser
+     skips what it does not understand, and a silently skipped document is exactly the failure
+     this whole arrangement exists to prevent. *)
+  THelpDoc = record
+    Path: string;
+    Examples: Integer;   { exact, not a floor: an example that disappears must fail the build }
+  end;
+
+const
+  HELP_DOCS: array[0..0] of THelpDoc = (
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 25));
+
+{ `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
+function HelpLabel(const APath: string): string;
+begin
+  Result := APath;
+  if Copy(Result, 1, 10) = 'docs/help/' then Delete(Result, 1, 10);
+  if Copy(Result, Length(Result) - 2, 3) = '.md' then SetLength(Result, Length(Result) - 3);
+end;
+
+{ Every help document ON DISK, sorted -- the other half of the registration check. }
+function HelpDocsOnDisk: string;
+var langs, files: TSearchRec; found: TStringList; i: Integer;
+begin
+  found := TStringList.Create;
+  try
+    if FindFirst('docs/help/*', faAnyFile, langs) = 0 then
+    begin
+      repeat
+        if (langs.Name = '.') or (langs.Name = '..') then Continue;
+        if (langs.Attr and faDirectory) = 0 then Continue;
+        if FindFirst('docs/help/' + langs.Name + '/*.md', faAnyFile, files) = 0 then
+        begin
+          repeat
+            if (files.Attr and faDirectory) <> 0 then Continue;
+            found.Add('docs/help/' + langs.Name + '/' + files.Name);
+          until FindNext(files) <> 0;
+          FindClose(files);
+        end;
+      until FindNext(langs) <> 0;
+      FindClose(langs);
+    end;
+    found.Sort;
+    Result := found.CommaText;
+  finally
+    found.Free;
+  end;
+end;
+
+(* THE MEASUREMENT, printed rather than written.
+
+   An author cannot run the engine from inside a markdown file, and an expected output must never
+   be guessed -- least of all in a language whose post-processing has rules the other document
+   cannot show. So on a mismatch the suite prints the line to paste, in the document's own
+   notation.
+
+   NOT a write-back mode, and deliberately: a flag that rewrote the expectations would turn this
+   fixture into a snapshot of whatever the engine currently does, so an engine regression would
+   quietly rewrite the help instead of breaking the build. Printing is measurement; writing is
+   laundering.
+
+   It also refuses to print what it cannot round-trip -- the parser would read those back as
+   something else. *)
+procedure ReportMeasured(const APath, ATemplate, AGot, AEmpty: string; ALine: Integer);
+var shown, why: string;
+begin
+  shown := StringReplace(AGot, #10, ' ' + RETURN_ + ' ', [rfReplaceAll]);
+  if shown = '' then shown := AEmpty;
+  why := '';
+  if Pos('   ', shown) > 0 then why := 'it contains three spaces, which the parser reads as the '
+    + 'start of a prose note'
+  else if Pos(ELLIPSIS, shown) > 0 then why := 'it contains an ellipsis, which would skip the '
+    + 'example AND stop it being counted'
+  else if (AEmpty <> '') and (shown <> AEmpty) and (Pos(AEmpty, shown) > 0) then
+    why := 'it contains the empty-output word, which the parser would misread';
+  if why <> '' then
+  begin
+    WriteLn('     measured at ', APath, ':', ALine, ' but NOT pastable -- ', why);
+    WriteLn('     the engine returned: <', shown, '>');
+    Exit;
+  end;
+  WriteLn('     measured, paste at ', APath, ':', ALine);
+  WriteLn('       ', StringReplace(ATemplate, #10, ' / ', [rfReplaceAll]), '   ', ARROW, '  ',
+          shown);
+end;
+
+procedure CheckHelpDoc(const ADoc: THelpDoc);
 var
-  line, want, doc_, got: string;
+  line, want, doc_, got, tag, key, val, label_, locale, empty_: string;
   lines: TStringList;
   set_: TSpxTemplateSet;
   ctx: TSpxContext;
-  i, p, checked: Integer;
-  inFence, skip: Boolean;
+  i, p, checked, seed, exampleLine: Integer;
+  inFence, isFixture, skip, haveFixture, ctxReady: Boolean;
 begin
-  if not FileExists(DOC) then
+  label_ := HelpLabel(ADoc.Path);
+  if not FileExists(ADoc.Path) then
   begin
-    CheckTrue('help/the document is where the suite expects it', False);
+    CheckTrue('help/' + label_ + '/the document is where the table says', False);
     Exit;
   end;
   set_ := TSpxTemplateSet.Create;
   lines := TStringList.Create;
   try
-    { the same set the examples talk about }
-    set_.AddOrSetValue('frag', 'фрагмент');
-    set_.AddOrSetValue('loop', '#include "loop"');
-    set_.AddOrSetValue('Intro', 'вступление');
-    ctx := SpxSeededContext('ru', nil, 7, set_);
-
-    lines.Text := SpxReadTextFile(DOC);
+    lines.Text := SpxReadTextFile(ADoc.Path);
     checked := 0;
+    seed := 0;
+    locale := '';
+    empty_ := '';
     inFence := False;
+    isFixture := False;
+    haveFixture := False;
+    ctxReady := False;
     doc_ := '';
     skip := False;
     for i := 0 to lines.Count - 1 do
@@ -3262,12 +3358,61 @@ begin
       line := lines[i];
       if Copy(Trim(line), 1, 3) = '```' then
       begin
+        { The INFO STRING on the opening fence says what kind of block this is. }
+        if not inFence then
+        begin
+          tag := Trim(Copy(Trim(line), 4, MaxInt));
+          isFixture := tag = 'spx-fixture';
+          if isFixture then haveFixture := True;
+        end
+        else
+          isFixture := False;
         inFence := not inFence;
         doc_ := '';
         skip := False;
         Continue;
       end;
       if not inFence then Continue;
+
+      if isFixture then
+      begin
+        if Trim(line) = '' then Continue;
+        p := Pos(': ', line);
+        if p = 0 then
+        begin
+          CheckTrue('help/' + label_ + '/fixture line is `key: value` [' + Trim(line) + ']',
+                    False);
+          Continue;
+        end;
+        { The FIRST `: ` only, so a value may contain colons of its own. }
+        key := Trim(Copy(line, 1, p - 1));
+        val := Copy(line, p + 2, MaxInt);
+        if key = 'locale' then locale := Trim(val)
+        else if key = 'seed' then seed := StrToIntDef(Trim(val), 0)
+        else if key = 'empty' then empty_ := Trim(val)
+        else if Copy(key, 1, 8) = 'include ' then
+          set_.AddOrSetValue(Trim(Copy(key, 9, MaxInt)), val)
+        else
+          { An unrecognised key FAILS rather than reverting to a default. A typo'd `locale`
+            that silently fell back would verify the document against the wrong engine. }
+          CheckTrue('help/' + label_ + '/fixture key is one this suite knows [' + key + ']',
+                    False);
+        Continue;
+      end;
+
+      if not haveFixture then
+      begin
+        CheckTrue('help/' + label_ + '/the fixture block comes before the first example', False);
+        Exit;
+      end;
+      { Built once, from what the document declared -- and only now, because the block is read by
+        the same pass that reads the examples. }
+      if not ctxReady then
+      begin
+        ctx := SpxSeededContext(locale, nil, seed, set_);
+        ctxReady := True;
+      end;
+
       { a blank line separates one example from the next }
       if Trim(line) = '' then
       begin
@@ -3286,27 +3431,58 @@ begin
       want := Trim(Copy(line, p + Length(ARROW), MaxInt));
       line := TrimRight(Copy(line, 1, p - 1));
       if doc_ <> '' then doc_ := doc_ + #10 + line else doc_ := line;
+      exampleLine := i + 1;
       { a note after the output, set off by three spaces, is prose and not part of it }
       p := Pos('   ', want);
       if p > 0 then want := TrimRight(Copy(want, 1, p - 1));
-      if want = '(пусто)' then want := '';
+      if want = empty_ then want := '';
       want := StringReplace(want, ' ' + RETURN_ + ' ', #10, [rfReplaceAll]);
       skip := (Pos(ELLIPSIS, want) > 0) or (Pos(ELLIPSIS, doc_) > 0);
       if not skip then
       begin
         got := SpxRenderSample(doc_, ctx);
-        Check('help/example: ' + StringReplace(doc_, #10, ' / ', [rfReplaceAll]), got, want);
+        Check('help/' + label_ + '/example: ' +
+              StringReplace(doc_, #10, ' / ', [rfReplaceAll]), got, want);
+        { Only on a mismatch, and after Check has printed why. }
+        if got <> want then ReportMeasured(ADoc.Path, doc_, got, empty_, exampleLine);
         Inc(checked);
       end;
       doc_ := '';
       skip := False;
     end;
-    { A document that lost its examples would otherwise pass this test perfectly. }
-    CheckTrue('help/the document still carries its examples', checked >= 15);
+
+    { ── what the document declared about itself, before trusting any of it ── }
+    CheckTrue('help/' + label_ + '/declares a fixture block', haveFixture);
+    { The folder IS the claim about language, so the two must agree -- through the engine's own
+      normaliser, so `docs/help/en/` can never be verified under `ru`. }
+    Check('help/' + label_ + '/locale matches the folder',
+          NormalizeBaseLang(locale), Copy(label_, 1, Pos('/', label_ + '/') - 1));
+    CheckTrue('help/' + label_ + '/declares a seed', seed <> 0);
+    CheckTrue('help/' + label_ + '/declares a word for empty output', empty_ <> '');
+    { EXACT, not a floor. A shared floor let one document satisfy it for another, and ten
+      examples could vanish from this one without a word. }
+    Check('help/' + label_ + '/example count', IntToStr(checked), IntToStr(ADoc.Examples));
   finally
     lines.Free;
     set_.Free;
   end;
+end;
+
+procedure TestHelpExamples;
+var i: Integer; registered: TStringList;
+begin
+  registered := TStringList.Create;
+  try
+    for i := Low(HELP_DOCS) to High(HELP_DOCS) do registered.Add(HELP_DOCS[i].Path);
+    registered.Sort;
+    { A help document nobody registered is prose that LOOKS gated and is not -- the same arrows,
+      the same aligned output column, and no check behind any of it. This is the one assertion
+      that makes that impossible in any order of work. }
+    Check('help/every document on disk is registered', HelpDocsOnDisk, registered.CommaText);
+  finally
+    registered.Free;
+  end;
+  for i := Low(HELP_DOCS) to High(HELP_DOCS) do CheckHelpDoc(HELP_DOCS[i]);
 end;
 
 procedure TestGroups;
