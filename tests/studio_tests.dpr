@@ -3255,7 +3255,8 @@ type
   end;
 
 const
-  HELP_DOCS: array[0..0] of THelpDoc = (
+  HELP_DOCS: array[0..1] of THelpDoc = (
+    (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Diagnostics: True),
     (Path: 'docs/help/ru/diagnostics.md'; Examples: 30; Diagnostics: True));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
