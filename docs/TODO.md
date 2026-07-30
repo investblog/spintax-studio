@@ -348,7 +348,34 @@ the managed tier are later releases.
          the rules behind it are gated, but nothing here can see a window — and raising the
          user's windows at 2am to photograph one is not verification worth having.
       3. ~~write-back goes through SynEdit's own edit API so undo and the caret behave~~
-         *the VALUE landed 2026-07-30; the name, the kind and delete are still open.*
+         *the VALUE landed 2026-07-30. The name, the kind and delete are **closed, not
+         deferred** — the user's call, and one of them by measurement.*
+
+         **Why the panel stops at the value.** Three paths already write a definition, and one
+         of them is better than a grid cell at the common case:
+         - the TEXT itself, with highlighting, bracket matching and full undo;
+         - **click the row → jump → edit in place**, which is the pain this item named as its
+           reason ("hunting the macro inside a long line") and which the jump already solved;
+         - **the group editor** — and a definition's value usually IS a group
+           (`{hundreds|thousands|millions}`), which it edits one variant per line, with the kind
+           switch and a permutation's config. A one-line cell cannot do that.
+
+         The value edit stays because it is the quickest path for a value that is NOT a group,
+         and it is built and gated. The other three would each add a second way to write the
+         file for something the editor does trivially — and one of them is worse than that:
+
+         **Renaming from a cell would break the document, measured.**
+         `#set %brand% = {Акме|Вулкан}` with two `%brand%` references: after
+         `SpxSetDirectiveName(0, 'company')` the verdict goes from clean to
+         `variable.undefined` and the render prints `%brand%` literally, because the references
+         keep the old name. `SpxSetDirectiveName` renames the DEFINITION and nothing else, and
+         the hazard is now written at its declaration.
+
+- [ ] **(idea, not planned) Rename a macro WITH its references.** What the cell edit above must
+      not pretend to be. It needs every `%name%` occurrence, and the engine reports reference
+      names without positions — so it needs the highlighter's scanner, which the jump and the
+      name-spelling already use for exactly this. Worth doing only if renaming turns out to be
+      something people actually do here; a find-and-replace in the editor covers it until then.
 
          What unblocked it: `SpxSetDirectiveValue` gained an overload reporting the REGION it
          replaced (half-open, the pair `Splice` takes and the one the group editor's write-back

@@ -534,8 +534,22 @@ function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: st
   what changed, and the day an edit touches two places it would be a wrong one. }
 function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
   out NewDoc: string; out SpanA, SpanB: Integer): Boolean; overload;
+(* THIS RENAMES THE DEFINITION AND NOTHING ELSE -- so do NOT wire it to a panel cell as a
+  "rename". Measured 2026-07-30: `#set %brand% = {Акме|Вулкан}` with two `%brand%` references
+  goes from a clean document to `variable.undefined`, and the render prints `%brand%` literally
+  instead of the value. The references keep the old name because nothing here touches them.
+
+  A rename a user would accept has to carry the references with it, and the engine reports
+  reference names WITHOUT positions (`SpExtract`) -- so it needs the highlighter's scanner, the
+  way the jump and the name-spelling already do. That is a refactoring feature, not a cell edit,
+  and it is not planned (docs/TODO.md). This function stays because it is correct at what it
+  says it does and the suite pins it. *)
 function SpxSetDirectiveName(const Doc: string; Index: Integer; const Name: string;
   out NewDoc: string): Boolean;
+{ Both of these are correct and tested, and neither is wired to anything: swapping `#set` for
+  `#def` is four characters in the editor and dropping a definition is one line, so a panel
+  path for them would only add a second way to write the file. Kept for a caller that has a
+  reason the panel does not. }
 function SpxSetDirectiveKind(const Doc: string; Index: Integer; const Kind: string;
   out NewDoc: string): Boolean;
 
