@@ -280,6 +280,23 @@ the managed tier are later releases.
       Names are shown as the DOCUMENT spells them in both groups now (the engine folds them),
       from the same single scan.
 
+      **A jump says where it landed** (2026-07-30, the user's call over a gesture for opening
+      the group editor — the gesture would have cost the double-click that select-and-wrap
+      needs). SynEdit's own current-line highlight, given a colour for 900 ms and then cleared:
+      that buys the full row width, which a markup cannot, because a markup colours text.
+
+      It lives in `JumpToPos`, the single funnel every jump goes through, so DIAGNOSTICS rows
+      got it too — the user noticed that before I did. The three layers coexist, measured on the
+      pixels: the engine's wave is a FRAME so it never fights a background, the selection holds
+      its own span (`clHighlight` inside, the wash outside), and the rest of the document is
+      untouched. **The one carve-out is stepping through search matches**, which repeats — the
+      timer would re-arm and the wash would stop meaning "just arrived".
+
+      Its first version armed the colour after moving the caret, which left a wash on every
+      line visited: the markup only adopts a new line from a caret change that happens while
+      the highlight is LIVE (`syneditmarkupspecialline.pp:228` early-exits otherwise). Arm
+      first, and repaint the whole editor when clearing rather than trusting a line number.
+
       **Still open, and it is the bulk of this item:** editing a DEFINITION's value in its row.
       That needs the span rewriting (`SpExtractDirectives` reports every span) plus the plain ↔
       structured toggle above.
