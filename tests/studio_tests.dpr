@@ -34,7 +34,7 @@ uses
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
-  SpxEditorFont;
+  SpxEditorFont, SpxHelpText, SpxHelpNav;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -50,7 +50,9 @@ uses
   SpxIcons in '..\gui\SpxIcons.pas',
   SpxFlags in '..\gui\SpxFlags.pas',
   SpxSettings in '..\gui\SpxSettings.pas',
-  SpxEditorFont in '..\gui\SpxEditorFont.pas';
+  SpxEditorFont in '..\gui\SpxEditorFont.pas',
+  SpxHelpText in '..\gui\SpxHelpText.pas',
+  SpxHelpNav in '..\gui\SpxHelpNav.pas';
   {$ENDIF}
 
 var
@@ -3759,6 +3761,238 @@ begin
   end;
 end;
 
+(* THE UNIT THAT SHIPS, checked against the markdown that was verified.
+
+   TestHelpExamples proves the DOCUMENTS are true: every example rendered through the real
+   engine, byte-compared, each article demonstrating its own code. This proves the .exe carries
+   those same documents -- which is a different claim, and the one a reader actually depends on.
+   A help window showing last week's text would pass every check above this line.
+
+   Three independent grips, because each leaves a hole the others close:
+     * the DIGEST catches a markdown edit with no regeneration -- the everyday case;
+     * the STRUCTURE catches a generator that emitted the wrong thing, which a digest cannot
+       see because the digest is of the input;
+     * RE-DERIVATION from the emitted HTML catches a table that drifted from its own bytes,
+       which is the discipline TestSprites already uses on the sprite's IHDR. *)
+procedure TestHelpUnit;
+var
+  lang, page, i, seen, p_: Integer;
+  html, ids, want, got, anchorId, s_: string;
+  k: TSpxNoteKind;
+  kind: TSpxHrefKind;
+  arts: TStringList;
+
+  { Every id="..." in a page's HTML, in order, space-separated. Read from the EMITTED BYTES and
+    not from the anchor table beside them -- a table that agrees with itself proves nothing. }
+  function IdsIn(const AHtml: string): string;
+  var at, close_: Integer; rest: string;
+  begin
+    Result := '';
+    rest := AHtml;
+    repeat
+      at := Pos('id="', rest);
+      if at = 0 then Break;
+      Delete(rest, 1, at + 3);
+      close_ := Pos('"', rest);
+      if close_ = 0 then Break;
+      Result := Result + Copy(rest, 1, close_ - 1) + ' ';
+      Delete(rest, 1, close_);
+    until False;
+    Result := Trim(Result);
+  end;
+
+begin
+  { The two implementations of the digest agree. Pinned vectors, because the whole drift check
+    rests on the Pascal here and the Python in scripts/make-help.py computing the same number,
+    and nothing else would notice if they stopped. }
+  Check('help/unit/digest-of-empty', SpxHelpDigest(''), 'cbf29ce484222325');
+  Check('help/unit/digest-of-a', SpxHelpDigest('a'), 'af63dc4c8601ec8c');
+  Check('help/unit/digest-of-spintax', SpxHelpDigest('spintax'), 'dfd4591713134a8e');
+
+  CheckTrue('help/unit/there-are-languages', SPX_HELP_LANG_COUNT > 0);
+  CheckTrue('help/unit/there-are-pages', SPX_HELP_PAGE_COUNT > 0);
+
+  for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
+  begin
+    { THE DRIFT GATE. Someone edited the markdown and did not re-run the generator: the window
+      would ship the old text while the suite went on verifying the new. }
+    Check('help/unit/' + SpxHelpLangCode(lang) + '/matches its source document',
+          SpxHelpDigest(SpxReadTextFile(SpxHelpSourcePath(lang))),
+          SpxHelpSourceDigest(lang));
+
+    { The document it was built from is one the suite verifies. Closes the loop with
+      HELP_DOCS -- prose that ships but is not gated would otherwise be possible again. }
+    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/its source is a registered document',
+              Pos(SpxHelpSourcePath(lang), HelpDocsOnDisk) > 0);
+
+    { EVERY CODE THE PANEL CAN SHOW HAS AN ARTICLE TO OPEN. This is the check the whole
+      double-click entry point rests on, and the reason CheckHelpArticles exists one level up. }
+    for i := Low(ENGINE_CODES) to High(ENGINE_CODES) do
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/an article for ' + ENGINE_CODES[i],
+                SpxHelpTargetFor(lang, ENGINE_CODES[i], p_, s_));
+    for k := Low(TSpxNoteKind) to High(TSpxNoteKind) do
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/an article for ' + SpxNoteCode(k),
+                SpxHelpTargetFor(lang, SpxNoteCode(k), p_, s_));
+
+    { TWO PARSERS, ONE DOCUMENT. HelpArticles reads the markdown by the suite's own rules; the
+      generator read it by its own. Where they disagree, one of them is wrong -- and neither is
+      in a position to notice alone. }
+    arts := HelpArticles(SpxHelpSourcePath(lang));
+    try
+      { FILTERED BY IsKnownCode, which is the authority on what a code is -- it asks
+        ENGINE_CODES and SpxNoteCode rather than judging by shape. HelpArticles returns the
+        first backticked token of every `###` heading, and one of them is `#include`, a heading
+        about the syntax and not a diagnostic at all. The generator judges by shape and calls it
+        prose; both are right about their own question, and this comparison is about codes. }
+      want := '';
+      for i := 0 to arts.Count - 1 do
+        if IsKnownCode(arts[i]) then want := want + arts[i] + ' ';
+      got := '';
+      for i := 0 to SpxHelpAnchorCount(lang) - 1 do
+        if SpxHelpAnchorIsCode(lang, i) then got := got + SpxHelpAnchorId(lang, i) + ' ';
+      Check('help/unit/' + SpxHelpLangCode(lang) + '/the generator and the suite read the same articles',
+            Trim(got), Trim(want));
+    finally
+      arts.Free;
+    end;
+
+    seen := 0;
+    for page := 0 to SPX_HELP_PAGE_COUNT - 1 do
+    begin
+      html := SpxHelpPageHtml(lang, page);
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) + ' has a title',
+                SpxHelpPageTitle(lang, page) <> '');
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) + ' has a body',
+                Length(html) > 40);
+
+      { THE RENDERER'S HAZARDS, over the shipped bytes. The generator refuses to write any of
+        these; this is the second pair of eyes, because a generator checking only itself is one
+        bug away from checking nothing. }
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' has no <! (IPro never finishes parsing one, on the UI thread)',
+                Pos('<!', html) = 0);
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' has no image (there is no data provider)', Pos('<img', html) = 0);
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' has no link (nothing routes one yet)', Pos('<a ', html) = 0);
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' does not end with a bare < (it would eat the closing tag)',
+                Copy(html, Length(html), 1) <> '<');
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' is under the layout ceiling', Length(html) <= 24 * 1024);
+
+      { A DOCUMENT, never a fragment: with no element the panel goes black, and text before the
+        first tag is silently lost (ADR 0004). Asked of the function that DEFINES that rule. }
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' wraps into something the renderer opens',
+                SpxOpensDocument(SpxHelpDocument(html, '#FFFFFF', '#000000', '#0000FF')));
+
+      { RE-DERIVATION: the ids in the HTML are the ids in the table, in the same order. }
+      ids := IdsIn(html);
+      want := SpxHelpPageSlug(page);
+      for i := 0 to SpxHelpAnchorCount(lang) - 1 do
+        if SpxHelpAnchorPage(lang, i) = page then
+        begin
+          want := want + ' ' + SpxHelpAnchorId(lang, i);
+          Inc(seen);
+        end;
+      Check('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+            ' declares the anchors its HTML carries', ids, want);
+    end;
+    Check('help/unit/' + SpxHelpLangCode(lang) + '/every anchor sits on a page it claims',
+          IntToStr(seen), IntToStr(SpxHelpAnchorCount(lang)));
+
+    { The escaping regression, named because it is the one that would be invisible: the article
+      about an unknown permutation key shows an output whose CAUSE is the `<foo=1>` in the
+      template, and the renderer eats that as a tag unless it arrives escaped. }
+    html := SpxHelpPageHtml(lang, SpxHelpPageIndex('permutations'));
+    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/the permutation key survives escaping',
+              (Pos('&lt;foo=1&gt;', html) > 0) and (Pos('<foo=1>', html) = 0));
+  end;
+
+  { A slug names the same section in every language -- which is what lets the viewer keep the
+    reader's place across a language switch. }
+  for page := 0 to SPX_HELP_PAGE_COUNT - 1 do
+  begin
+    CheckTrue('help/nav/page ' + IntToStr(page) + ' has a slug', SpxHelpPageSlug(page) <> '');
+    Check('help/nav/the slug finds its own page', IntToStr(SpxHelpPageIndex(SpxHelpPageSlug(page))),
+          IntToStr(page));
+  end;
+  Check('help/nav/an unknown slug is -1', IntToStr(SpxHelpPageIndex('no-such-section')), '-1');
+
+  { THE FALLBACK, all fourteen. Two documents and fourteen interface languages means twelve
+    readers see something other than what they asked for; the rule is English, the same one the
+    interface strings already use, and the viewer must be able to SAY which case applies. }
+  for i := Ord(Low(TSpxLang)) to Ord(High(TSpxLang)) do
+  begin
+    lang := SpxHelpLangFor(TSpxLang(i));
+    CheckTrue('help/nav/' + SpxLangCode(TSpxLang(i)) + ' resolves to a document',
+              (lang >= 0) and (lang < SPX_HELP_LANG_COUNT));
+    if (SpxLangCode(TSpxLang(i)) = 'en') or (SpxLangCode(TSpxLang(i)) = 'ru') then
+    begin
+      Check('help/nav/' + SpxLangCode(TSpxLang(i)) + ' gets its own document',
+            SpxHelpLangCode(lang), SpxLangCode(TSpxLang(i)));
+      CheckTrue('help/nav/' + SpxLangCode(TSpxLang(i)) + ' is translated',
+                SpxHelpIsTranslated(TSpxLang(i)));
+    end
+    else
+    begin
+      Check('help/nav/' + SpxLangCode(TSpxLang(i)) + ' falls back to English',
+            SpxHelpLangCode(lang), 'en');
+      CheckTrue('help/nav/' + SpxLangCode(TSpxLang(i)) + ' is NOT translated, and says so',
+                not SpxHelpIsTranslated(TSpxLang(i)));
+    end;
+  end;
+
+  { A code with no article must answer False rather than a page nobody meant. }
+  CheckTrue('help/nav/an empty code has no article', not SpxHelpTargetFor(0, '', p_, s_));
+  CheckTrue('help/nav/a future engine code has no article',
+            not SpxHelpTargetFor(0, 'something.new-in-v9', p_, s_));
+
+  { Href classification. Nothing emits a link today -- that is asserted above -- so this is the
+    handler waiting for the day one arrives. }
+  anchorId := 'bracket.unclosed';
+  SpxHelpTargetFor(0, anchorId, page, s_);
+  CheckTrue('help/nav/an anchor on this page is same-page',
+            SpxHelpResolveHref(0, page, '#' + anchorId, kind, p_, s_) and
+            (kind = spxHrefSamePage) and (p_ = page) and (s_ = anchorId));
+  CheckTrue('help/nav/an anchor NOT on this page is refused',
+            not SpxHelpResolveHref(0, 0, '#' + anchorId, kind, p_, s_));
+  CheckTrue('help/nav/a slug is another page',
+            SpxHelpResolveHref(0, 0, 'plurals', kind, p_, s_) and (kind = spxHrefOtherPage) and
+            (p_ = SpxHelpPageIndex('plurals')));
+  CheckTrue('help/nav/a slug with an anchor carries both',
+            SpxHelpResolveHref(0, 0, 'brackets#' + anchorId, kind, p_, s_) and
+            (kind = spxHrefOtherPage) and (s_ = anchorId));
+  CheckTrue('help/nav/http is named and ignored',
+            SpxHelpResolveHref(0, 0, 'https://spintax.net/', kind, p_, s_) and
+            (kind = spxHrefExternal));
+  CheckTrue('help/nav/an empty href is nothing',
+            not SpxHelpResolveHref(0, 0, '', kind, p_, s_));
+  CheckTrue('help/nav/an unknown slug is nothing',
+            not SpxHelpResolveHref(0, 0, 'no-such-section', kind, p_, s_));
+
+  { Relocation across a language switch: the article if it exists there -- and for a code it
+    always does -- else the section, never a blank. }
+  SpxHelpTargetFor(0, 'plural.arity', page, s_);
+  SpxHelpRelocate(0, page, 'plural.arity', SPX_HELP_LANG_COUNT - 1, p_, s_);
+  Check('help/nav/a code keeps its article across languages', s_, 'plural.arity');
+  SpxHelpRelocate(0, SpxHelpPageIndex('includes'), 'no-such-anchor',
+                  SPX_HELP_LANG_COUNT - 1, p_, s_);
+  Check('help/nav/a lost anchor keeps the section', IntToStr(p_),
+        IntToStr(SpxHelpPageIndex('includes')));
+  Check('help/nav/a lost anchor has no anchor', s_, '');
+
+  { The document wrapper. Colours ride on <body> because a document that opens itself keeps its
+    body attributes -- the measurement ADR 0004 records from the other side. }
+  got := SpxHelpDocument('<p>x</p>', '#1E1E1E', '#D4D4D4', '#E04090');
+  CheckTrue('help/nav/the wrapper carries the theme',
+            (Pos('bgcolor="#1E1E1E"', got) > 0) and (Pos('text="#D4D4D4"', got) > 0) and
+            (Pos('link="#E04090"', got) > 0));
+  CheckTrue('help/nav/the wrapper has no head', Pos('<head', got) = 0);
+  CheckTrue('help/nav/the wrapper opens a document', SpxOpensDocument(got));
+end;
+
 procedure TestHelpExamples;
 var i: Integer; arts: TStringList; registered: TStringList;
 begin
@@ -5636,6 +5870,7 @@ begin
   TestHtmlScan;
   TestGroups;
   TestHelpExamples;
+  TestHelpUnit;
   TestSessionValues;
   TestFind;
   TestPageDocument;

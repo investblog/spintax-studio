@@ -364,37 +364,6 @@ element.
 
 ---
 
-## A silence in every language: abbreviations
-
-### An abbreviation keeps the next word lowercase
-
-```
-Ltd. our prices are low      →  Ltd. our prices are low
-Xyz. our prices are low      →  Xyz. Our prices are low
-```
-
-Two lines that differ by one word, and the second word of each tells you the rule: after `Ltd.`
-the sentence stays lowercase, after `Xyz.` it is capitalised. The engine capitalises after a full
-stop — except after an abbreviation it knows, and anything shaped like `e.g.` or `U.S.`. It is
-silent: no diagnostic, no warning, and the only way to notice is to read the output.
-
-**The list is not English.** It holds 46 entries, and 29 of them are Russian:
-
-| | |
-|---|---|
-| English | `etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ave blvd` |
-| Russian | `соц эл см ср ст ул пр пер г р руб коп тыс млн млрд трлн доп напр прим изд обл респ стр табл рис мин макс тел факс` |
-
-Both halves are live in **both** locales — the rule never asks what language you set. So `руб.`
-shields the next word in an English document, `Ltd.` shields it in a Russian one, and an English
-author who writes `no.` or `st.` mid-sentence is using a Russian-length list without knowing it.
-
-It bites in one place: a sentence that legitimately begins after `No.`, `St.` or `Co.` comes out
-lowercase. Rewrite the sentence rather than fighting the rule — the same shielding is what keeps
-`e.g. this` from being capitalised mid-sentence, which is far commoner.
-
----
-
 ## Studio notes with nothing to show
 
 The three notes below cannot be demonstrated by an example in this document, and the reason is
@@ -431,6 +400,37 @@ The limit belongs to the family: the JavaScript, PHP and Python engines do the s
 that hits it behaves identically everywhere.
 
 There is no example because of its size: showing one would take twenty-one files.
+
+---
+
+## A silence in every language: abbreviations
+
+### An abbreviation keeps the next word lowercase
+
+```
+Ltd. our prices are low      →  Ltd. our prices are low
+Xyz. our prices are low      →  Xyz. Our prices are low
+```
+
+Two lines that differ by one word, and the second word of each tells you the rule: after `Ltd.`
+the sentence stays lowercase, after `Xyz.` it is capitalised. The engine capitalises after a full
+stop — except after an abbreviation it knows, and anything shaped like `e.g.` or `U.S.`. It is
+silent: no diagnostic, no warning, and the only way to notice is to read the output.
+
+**The list is not English.** It holds 46 entries, and 29 of them are Russian:
+
+| | |
+|---|---|
+| English | `etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ave blvd` |
+| Russian | `соц эл см ср ст ул пр пер г р руб коп тыс млн млрд трлн доп напр прим изд обл респ стр табл рис мин макс тел факс` |
+
+Both halves are live in **both** locales — the rule never asks what language you set. So `руб.`
+shields the next word in an English document, `Ltd.` shields it in a Russian one, and an English
+author who writes `no.` or `st.` mid-sentence is using a Russian-length list without knowing it.
+
+It bites in one place: a sentence that legitimately begins after `No.`, `St.` or `Co.` comes out
+lowercase. Rewrite the sentence rather than fighting the rule — the same shielding is what keeps
+`e.g. this` from being capitalised mid-sentence, which is far commoner.
 
 ---
 
