@@ -3248,7 +3248,7 @@ type
 
 const
   HELP_DOCS: array[0..0] of THelpDoc = (
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 25));
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 26));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
 function HelpLabel(const APath: string): string;
@@ -3260,7 +3260,7 @@ end;
 
 { Every help document ON DISK, sorted -- the other half of the registration check. }
 function HelpDocsOnDisk: string;
-var langs, files: TSearchRec; found: TStringList; i: Integer;
+var langs, files: TSearchRec; found: TStringList;
 begin
   found := TStringList.Create;
   try
