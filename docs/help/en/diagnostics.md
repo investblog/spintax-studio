@@ -1,7 +1,8 @@
 # What the Diagnostics tab is telling you
 
-Every line in that tab is a verdict from the **engine** — the same `spintax-win` that ships for
-JavaScript, PHP and Python. It is not Studio's opinion about your template. If the engine calls
+Every line in that tab is a verdict from the **engine**, and the same verdict you would get from
+the JavaScript, PHP or Python implementation — four independent engines held to one shared
+corpus. It is not Studio's opinion about your template. If the engine calls
 something an error here, every other engine in the family calls it an error too, and your
 template will behave the same way on your server as it does in this window.
 
@@ -38,7 +39,8 @@ include Intro: Introduction
 `seed` pins the random choice: without it an enumeration or a permutation would answer
 differently every time and there would be nothing to check.
 
-**The locale is `en` here, and it changes one thing:** how many plural forms the engine expects.
+**The locale is `en` here, and it decides two things:** how many plural forms the engine expects,
+and which form goes with which number.
 English asks for two. Russian, Ukrainian, Belarusian, Serbian, Croatian and Bosnian ask for
 three. The locale comes from the selector above the right-hand pane, not from the language of the
 interface.
@@ -181,12 +183,15 @@ text** in the third column: then braces and per cent signs stay characters.
 
 ```
 #set %x% = a %x% b
-%x%                          →  A a a a … %x% b b b …
+%x%                          →  A a a … %x% … b b b
 ```
 
 Fifty levels, then a stop. The engine expands to the depth limit and halts, leaving `%x%` in the
-middle. Not a loop, and not what you wanted either. The abbreviation above is the document's, not
-the engine's: the real output carries fifty `a`s and fifty `b`s.
+middle. Not a loop, and not what you wanted either.
+
+The `…` above is this document's abbreviation, not the engine's. The real output is 207 characters
+and carries **fifty-one** letters on each side rather than fifty: the fiftieth level stops and
+leaves the value as it stands, and the value holds one more of each.
 
 ### `variable.circular-reference` — the definitions refer in a circle
 
@@ -196,8 +201,11 @@ the engine's: the real output carries fifty `a`s and fifty `b`s.
 %x%                          →  %y%
 ```
 
-Neither is expanded. The engine stops rather than looping, and what is left is the reference
-itself.
+Each side expands exactly **once** and then stops: `%x%` became `%y%`, not `%x%`. The engine
+unwinds rather than looping, and what survives is the other name in the circle — put `%x% %y%`
+in a document and it renders `%y% %x%`, the pair swapped.
+
+The panel draws a row for **each** definition in the circle, not one for the circle.
 
 ---
 
@@ -226,8 +234,9 @@ complain about — you wrote text and got text.
 Targets are the `.spintax` files in the folder of the open document. An unknown target expands to
 nothing — the paragraph disappears rather than breaking, which is exactly why it is easy to miss.
 
-**That is why the Variables tab has a third section, Includes.** It lists every target the
-document names and, for each, whether the set has it. The section appears only when the document
+**That is why the Variables tab has a third section, Includes.** It lists every `#include` the
+document contains and, for each, whether the set has its target — one row per occurrence, so a
+target named twice is two rows. The section appears only when the document
 has includes. Clicking a row moves the caret to the `#include` that names that target.
 
 The mark has **three** values, and the third matters: `no set` is not "the fragment is missing",
@@ -355,9 +364,9 @@ element.
 
 ---
 
-## A silence English authors meet and Russian ones do not
+## A silence in every language: abbreviations
 
-### Abbreviations keep the next word lowercase
+### An abbreviation keeps the next word lowercase
 
 ```
 Ltd. our prices are low      →  Ltd. our prices are low
@@ -365,14 +374,24 @@ Xyz. our prices are low      →  Xyz. Our prices are low
 ```
 
 Two lines that differ by one word, and the second word of each tells you the rule: after `Ltd.`
-the sentence stays lowercase, after `Xyz.` it is capitalised. The engine capitalises after a full stop — but not after an abbreviation, and it
-knows a list of them: `etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ave blvd`, plus
-anything shaped like `e.g.` or `U.S.`. This is silent: no diagnostic, no warning, and the only
-way to notice is to read the output.
+the sentence stays lowercase, after `Xyz.` it is capitalised. The engine capitalises after a full
+stop — except after an abbreviation it knows, and anything shaped like `e.g.` or `U.S.`. It is
+silent: no diagnostic, no warning, and the only way to notice is to read the output.
 
-It bites in exactly one place — a sentence that legitimately begins after `No.`, `St.` or `Co.`
-comes out lowercase. Rewrite the sentence rather than fighting the rule; the same shielding is
-what keeps `e.g. this` from being capitalised mid-sentence, which is the far commoner case.
+**The list is not English.** It holds 46 entries, and 29 of them are Russian:
+
+| | |
+|---|---|
+| English | `etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ave blvd` |
+| Russian | `соц эл см ср ст ул пр пер г р руб коп тыс млн млрд трлн доп напр прим изд обл респ стр табл рис мин макс тел факс` |
+
+Both halves are live in **both** locales — the rule never asks what language you set. So `руб.`
+shields the next word in an English document, `Ltd.` shields it in a Russian one, and an English
+author who writes `no.` or `st.` mid-sentence is using a Russian-length list without knowing it.
+
+It bites in one place: a sentence that legitimately begins after `No.`, `St.` or `Co.` comes out
+lowercase. Rewrite the sentence rather than fighting the rule — the same shielding is what keeps
+`e.g. this` from being capitalised mid-sentence, which is far commoner.
 
 ---
 

@@ -3246,18 +3246,12 @@ type
   THelpDoc = record
     Path: string;
     Examples: Integer;   { exact, not a floor: an example that disappears must fail the build }
-    { Is this the document the panel opens on a diagnostic row? Only that one owes an article
-      per code. Without the distinction the coverage check applied to EVERY registered document,
-      so the next help page -- the language reference, the app description, anything the planned
-      generator emits -- would have had to repeat all 22 diagnostic articles or fail. Registration
-      is compulsory for every document; carrying the codes is not. }
-    Diagnostics: Boolean;
   end;
 
 const
   HELP_DOCS: array[0..1] of THelpDoc = (
-    (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Diagnostics: True),
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 30; Diagnostics: True));
+    (Path: 'docs/help/en/diagnostics.md'; Examples: 33),
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 34));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
 function HelpLabel(const APath: string): string;
@@ -3282,7 +3276,8 @@ begin
       if (rec.Name = '.') or (rec.Name = '..') then Continue;
       if (rec.Attr and faDirectory) <> 0 then
         CollectHelpDocs(ADir + '/' + rec.Name, AFound)
-      else if LowerCase(ExtractFileExt(rec.Name)) = '.md' then
+      else if (LowerCase(ExtractFileExt(rec.Name)) = '.md') or
+              (LowerCase(ExtractFileExt(rec.Name)) = '.markdown') then
         AFound.Add(ADir + '/' + rec.Name);
     until FindNext(rec) <> 0;
   finally
@@ -3318,15 +3313,30 @@ end;
    It also refuses to print what it cannot round-trip -- the parser would read those back as
    something else. *)
 { Does what the engine returned fit an ABBREVIATED expectation? The pieces around the ellipses
-  must occur in order, the first at the very start, and the last at the very end unless it is
-  empty (a trailing ellipsis promises nothing about the end). Answers 'fits' or says where it
-  stopped, so a failure reads as a sentence rather than as two walls of text. }
+  must occur in order, the first at the very start and the last at the very end. Answers 'fits'
+  or says where it stopped, so a failure reads as a sentence rather than as two walls of text.
+
+  AN ABBREVIATION MAY HIDE THE MIDDLE AND NEVER AN END. The first version let the want begin or
+  end with an ellipsis, which cleared the corresponding anchor -- so `…` alone fitted ANY output,
+  and `A a a … b b …` said nothing whatever about how the render ends. That is not a weak check,
+  it is the thing this fixture exists to forbid: an author who does not know what the engine
+  returns could type one character and get a green build. It also cost a real defect. The
+  self-reference article's `… b b b …` let the prose claim fifty b's while the engine produces
+  fifty-one, because the trailing ellipsis made the end unverifiable.
+
+  Greedy, deliberately: `Pos` takes the first occurrence and consumes through it, so a want whose
+  pieces overlap (`aa…aab` against `aaab`) can be reported as not fitting although some other
+  alignment would satisfy it. It fails loudly rather than passing wrongly, and the shape does not
+  occur in prose written for a reader. }
 function PartialVerdict(const AGot, AWant: string): string;
 var rest, piece, tail: string; at, cut: Integer; first: Boolean;
 begin
   rest := AGot;
   tail := AWant;
   first := True;
+  if (Copy(tail, 1, Length(ELLIPSIS)) = ELLIPSIS) or
+     (Copy(tail, Length(tail) - Length(ELLIPSIS) + 1, Length(ELLIPSIS)) = ELLIPSIS) then
+    Exit('an abbreviation must show both ends: <' + AWant + '>');
   while True do
   begin
     cut := Pos(ELLIPSIS, tail);
@@ -3390,6 +3400,22 @@ begin
   for k := Low(TSpxNoteKind) to High(TSpxNoteKind) do
     if SpxNoteCode(k) = ACode then Exit(True);
   Result := False;
+end;
+
+{ Does this line look like an EXAMPLE -- bare template, arrow, bare output -- rather than prose
+  that mentions the arrow? Everything inside `backticks` is prose's way of quoting, so it is
+  removed first; what remains has to carry the arrow with real text on both sides. }
+function BareExampleShape(const ALine: string): Boolean;
+var i, at: Integer; inSpan: Boolean; bare: string;
+begin
+  bare := '';
+  inSpan := False;
+  for i := 1 to Length(ALine) do
+    if ALine[i] = '`' then inSpan := not inSpan
+    else if not inSpan then bare := bare + ALine[i];
+  at := Pos(ARROW, bare);
+  Result := (at > 0) and (Trim(Copy(bare, 1, at - 1)) <> '') and
+            (Trim(Copy(bare, at + Length(ARROW), MaxInt)) <> '');
 end;
 
 { Any heading, at any level. Spelling out `# `/`## `/`### ` left `#### ` and deeper open, so a
@@ -3497,7 +3523,21 @@ begin
         skip := False;
         Continue;
       end;
-      if not inFence then Continue;
+      if not inFence then
+      begin
+        (* AN ARROW OUTSIDE A FENCE IS INVISIBLE TO EVERY GATE and looks, in the markdown
+           source, exactly like an example: not rendered, not compared, not counted, and --
+           unlike a DELETED example -- it does not disturb the exact ratchet either. Planted
+           between two headings, `a price {cheap|dear} -> A price frobnicated` left the suite
+           green. Prose legitimately mentions the arrow (the legend explains it), so the rule
+           is that an EXAMPLE is bare text on both sides of the arrow. The legend's own
+           sentence -- `#include "frag"` -> `Fragment` would rest on ... -- has the arrow bare
+           but both operands in code spans, and it is prose, so it must not be flagged. *)
+        if BareExampleShape(line) then
+          CheckTrue('help/' + label_ + '/an example outside a fence at line ' +
+                    IntToStr(i + 1) + ' [' + Trim(line) + ']', False);
+        Continue;
+      end;
 
       if isFixture then
       begin
@@ -3535,7 +3575,8 @@ begin
 
       if not haveFixture then
       begin
-        CheckTrue('help/' + label_ + '/the fixture block comes before the first example', False);
+        CheckTrue('help/' + label_ + '/the fixture block comes before the first example ' +
+                  '(the rest of this document goes unverified)', False);
         Exit;
       end;
       { Built once, from what the document declared -- and only now, because the block is read by
@@ -3719,7 +3760,7 @@ begin
 end;
 
 procedure TestHelpExamples;
-var i: Integer; registered: TStringList;
+var i: Integer; arts: TStringList; registered: TStringList;
 begin
   registered := TStringList.Create;
   try
@@ -3735,7 +3776,22 @@ begin
   for i := Low(HELP_DOCS) to High(HELP_DOCS) do
   begin
     CheckHelpDoc(HELP_DOCS[i]);
-    if HELP_DOCS[i].Diagnostics then CheckHelpArticles(HELP_DOCS[i].Path);
+    { Only the document the panel opens on a diagnostic row owes an article per code -- the next
+      help page (a language reference, the app description) must not have to repeat all 22. But
+      that is DERIVED, not declared: a hand-set flag is an opt-out nobody verifies, and a
+      copy-pasted table row with it off would ship three articles of twenty-two and stay green.
+      A document that names even one code in a heading is claiming to be that document. }
+    arts := HelpArticles(HELP_DOCS[i].Path);
+    try
+      { ...and a file NAMED diagnostics owes them whatever its headings say, which closes the one
+        way the derivation could still be silenced: strip every coded heading and the obligation
+        would evaporate with them. }
+      if (arts.Count > 0) or
+         (LowerCase(ChangeFileExt(ExtractFileName(HELP_DOCS[i].Path), '')) = 'diagnostics') then
+        CheckHelpArticles(HELP_DOCS[i].Path);
+    finally
+      arts.Free;
+    end;
   end;
 end;
 
