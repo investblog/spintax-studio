@@ -3808,6 +3808,9 @@ var
   k: TSpxNoteKind;
   arts, hrefs: TStringList;
   j, n, want_ex: Integer;
+  ctxDoc: string;
+  ctxRep: TSpxReport;
+  ctxRows: TSpxPanelRows;
 
   { Every href="..." in a page's HTML. Read from the EMITTED BYTES for the same reason. }
   function HrefsIn(const AHtml: string): TStringList;
@@ -4056,6 +4059,70 @@ begin
   CheckTrue('help/nav/an empty code has no article', not SpxHelpTargetFor(0, '', p_, s_));
   CheckTrue('help/nav/a future engine code has no article',
             not SpxHelpTargetFor(0, 'something.new-in-v9', p_, s_));
+
+  (* WHAT THE CARET IS STANDING ON. The window asks this when the reader presses F1 or the
+     rail's tool, and it is the whole of the decision -- the panel only draws what comes back.
+
+     The rows are REAL ones, out of the engine, rather than a record filled in by hand: a span
+     the suite invents is a span nothing else agrees with, and the caret test is exactly about
+     agreeing with the squiggle the user can see. *)
+  ctxDoc := 'цена {дешёвая|дорогая';
+  ctxRep := SpxHealthReport(ctxDoc, SpxContext('ru', nil), 0);
+  try
+    ctxRows := SpxPanelRows(ctxRep, spxLangRu);
+  finally
+    ctxRep.Free;
+  end;
+  CheckTrue('help/caret/the broken document really has a finding', Length(ctxRows) > 0);
+
+  { INSIDE THE FINDING: its own article, exactly. }
+  CheckTrue('help/caret/on an unclosed brace opens its article',
+            SpxHelpForCaret(ctxDoc, 12, 1, 12, ctxRows, 0, p_, s_) and (s_ = 'bracket.unclosed'));
+
+  { No finding at the caret: the CONSTRUCT decides, and it names a chapter rather than
+    pretending to know which of its articles was meant. }
+  ctxRows := nil;
+  CheckTrue('help/caret/in a choice opens the brackets chapter',
+            SpxHelpForCaret('цена {дешёвая|дорогая}', 12, 1, 12, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('brackets')) and (s_ = ''));
+  CheckTrue('help/caret/in a permutation opens the permutations chapter',
+            SpxHelpForCaret('[a|b|c]', 3, 1, 3, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('permutations')));
+  CheckTrue('help/caret/in a plural opens the plurals chapter',
+            SpxHelpForCaret('{plural %n%: товар|товара|товаров}', 20, 1, 20, ctxRows, 0,
+                            p_, s_) and (p_ = SpxHelpPageIndex('plurals')));
+  CheckTrue('help/caret/in a conditional opens the brackets chapter',
+            SpxHelpForCaret('{?vip?да|нет}', 8, 1, 8, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('brackets')));
+
+  { A directive is line-anchored in this language, so the line's head is the whole question. }
+  CheckTrue('help/caret/on a #set line opens the definitions chapter',
+            SpxHelpForCaret('#set %x% = 1', 3, 1, 3, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('definitions')));
+  CheckTrue('help/caret/on a #def line opens the definitions chapter',
+            SpxHelpForCaret('#def %x% = 1', 3, 1, 3, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('definitions')));
+  CheckTrue('help/caret/on an #include line opens the includes chapter',
+            SpxHelpForCaret('#include "frag"', 4, 1, 4, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('includes')));
+  CheckTrue('help/caret/on the second line of a document, not the first',
+            SpxHelpForCaret('плоский текст'#10'#include "frag"', 30, 2, 4, ctxRows, 0,
+                            p_, s_) and (p_ = SpxHelpPageIndex('includes')));
+
+  { A variable is the one thing that is NOT line-anchored, so it is looked for around the
+    caret rather than at the head of the line. }
+  CheckTrue('help/caret/in a variable opens the variables chapter',
+            SpxHelpForCaret('привет %имя% и всё', 16, 1, 10, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('variables')));
+
+  { NOTHING TO BE SPECIFIC ABOUT -- the caller opens the contents, which is what "help me"
+    means with an empty document or a caret in plain prose. }
+  CheckTrue('help/caret/in plain text asks for nothing',
+            not SpxHelpForCaret('просто текст без конструкций', 5, 1, 5, ctxRows, 0, p_, s_));
+  CheckTrue('help/caret/an empty document asks for nothing',
+            not SpxHelpForCaret('', 1, 1, 1, ctxRows, 0, p_, s_));
+  CheckTrue('help/caret/past the end asks for nothing',
+            not SpxHelpForCaret('текст', 9999, 1, 9999, ctxRows, 0, p_, s_));
 
   { Relocation across a language switch: the article if it exists there -- and for a code it
     always does -- else the section, never a blank. }

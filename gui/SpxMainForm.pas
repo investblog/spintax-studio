@@ -305,6 +305,7 @@ type
     procedure TopicPicked(APage: Integer; const AAnchor: string);
     procedure HelpLangChanged(Sender: TObject);
     procedure RunHelpExample(AIndex: Integer);
+    procedure OpenHelpAtCaret;
     procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
     procedure MenuDiagClicked(Sender: TObject);
@@ -3289,12 +3290,43 @@ begin
     HelpPaneClosed(Sender);
     Exit;
   end;
-  OpenHelpPane('');
+  { Opening from the rail asks the same question F1 does -- the difference between them is only
+    that this one also closes. }
+  OpenHelpAtCaret;
 end;
 
+{ F1 AND THE MENU ALWAYS RE-AIM, even with the help already open: "help me about this" is a
+  question about where the caret is now, and a key that sometimes answers and sometimes closes
+  would be a key that does two things. The rail's tool stays a latch -- it is the way to put the
+  help away -- so between them there is a way to do each without either doing both. }
 procedure TSpxMainForm.HelpMenuClicked(Sender: TObject);
 begin
-  OpenHelpPane('');
+  OpenHelpAtCaret;
+end;
+
+{ WHAT THE CARET IS STANDING ON DECIDES THE ARTICLE. The rule is SpxHelpNav's, so it is under
+  the suite; this only gathers what it needs -- the document, the caret in both the forms the
+  rule wants, and the findings the panel is already showing.
+
+  Nothing recognisable there, an empty document, plain prose: the contents, which is what "help
+  me" means when there is nothing to be specific about. }
+procedure TSpxMainForm.OpenHelpAtCaret;
+var page: Integer; anchor: string; p: TPoint;
+begin
+  if HelpShowing then
+  begin
+    { Already open: the caret is not on screen to ask about, so this is a plain re-open. }
+    OpenHelpPane('');
+    Exit;
+  end;
+  p := FEditor.LogicalCaretXY;
+  if SpxHelpForCaret(DocText, CaretOffset, p.Y, p.X, FRows, FTopics.HelpLang, page, anchor) then
+  begin
+    OpenHelpPane('');
+    GoToHelp(page, anchor);
+  end
+  else
+    OpenHelpPane('');
 end;
 
 { The panel, OPENED rather than toggled -- the same distinction the group editor needs, and for
