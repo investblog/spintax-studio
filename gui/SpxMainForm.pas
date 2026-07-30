@@ -102,6 +102,8 @@ type
     FSlide: TSpxGroupPane;
     { The caret moves in bursts; the group under it is looked up once the burst stops. }
     FCaretTimer: TTimer;
+    { The jump's own afterglow. One-shot: a jump sets it, this clears it. }
+    FFlashTimer: TTimer;
     FLeft: TPanel;
     { Search lives in the LEFT half of the top strip -- the half over the editor, because the
       template is what is searched. It used to be a row of its own above the editor, which
@@ -188,6 +190,8 @@ type
     procedure JumpDeferred(Data: PtrInt);
     procedure VarJump(Line, Column: Integer);
     procedure VarFindRef(const AName: string);
+    procedure FlashJumpLine;
+    procedure FlashFaded(Sender: TObject);
     procedure VarSpell(ANames: TStringList);
     procedure VarDefine(const AName, AValue: string);
     procedure OpenGroupPane;
@@ -198,7 +202,11 @@ type
     function CurrentSelection(WithText: Boolean): TSpxSelection;
     procedure WrapBracesClicked(Sender: TObject);
     procedure WrapBracketsClicked(Sender: TObject);
-    procedure JumpToPos(Line, Column, EndLine, EndColumn: Integer);
+    { AFlash lights the landed row for a moment. Off for stepping through search matches: that
+      step REPEATS, and the timer re-arms, so holding F3 would leave a row permanently washed --
+      the wash would stop meaning "just arrived" and start meaning "selected". A match is
+      already shown by its selection anyway; a panel row has nothing else to show. }
+    procedure JumpToPos(Line, Column, EndLine, EndColumn: Integer; AFlash: Boolean = True);
     procedure ShowRows(const ARows: TSpxPanelRows);
     procedure JumpTo(Row: TSpxPanelRow);
     function LineOf(N: Integer): string;
@@ -782,6 +790,14 @@ begin
   FCaretTimer.Interval := 120;
   FCaretTimer.OnTimer := @CaretSettled;
 
+  { LONG ENOUGH TO BE SEEN, short enough not to become a state. 900 ms is about three times
+    the eye's saccade-plus-fixation to a new place on the screen, and well under the point
+    where a coloured row starts reading as "this line is selected". }
+  FFlashTimer := TTimer.Create(Self);
+  FFlashTimer.Enabled := False;
+  FFlashTimer.Interval := 900;
+  FFlashTimer.OnTimer := @FlashFaded;
+
   { THE MENU IS BUILT LAST, because its View section is a REPORT: which side the rail is on,
     which panel is open, which preview mode. Built earlier -- it used to sit right after the
     rail -- it read FBottom before FBottom existed, so all three panel ticks came out unset,
@@ -1208,7 +1224,7 @@ begin
   if idx < 0 then Exit;
   FMatchIndex := idx;
   JumpToPos(FMatches[idx].Line, FMatches[idx].Col,
-            FMatches[idx].EndLine, FMatches[idx].EndCol);
+            FMatches[idx].EndLine, FMatches[idx].EndCol, False);
   ShowMatchCount;
   { The focus stays in the box, so a second Enter steps again rather than typing into the
     document. }
@@ -1910,7 +1926,8 @@ end;
   variables panel, because "go where the engine said" is one act with one conversion in it:
   code points to bytes, since SynEdit's logical coordinates are byte offsets while the
   engine counts characters. }
-procedure TSpxMainForm.JumpToPos(Line, Column, EndLine, EndColumn: Integer);
+procedure TSpxMainForm.JumpToPos(Line, Column, EndLine, EndColumn: Integer;
+  AFlash: Boolean = True);
 var col: Integer;
 begin
   if Line <= 0 then Exit;
@@ -1936,6 +1953,8 @@ begin
   PreviewFollowSelection;
   FEditor.EnsureCursorPosVisible;
   FEditor.SetFocus;
+  { Last, so it lights the line the caret actually ended up on. }
+  if AFlash then FlashJumpLine;
 end;
 
 { A definition row has a place but no span -- the engine reports where the directive starts,
@@ -1989,6 +2008,41 @@ begin
     with the document by the time the user looks at it. }
   RequestRender;
   OpenGroupPane;
+end;
+
+(* A JUMP HAS TO SAY WHERE IT LANDED.
+
+   Before this, a jump from the variables panel moved the caret and nothing else: JumpToPos is
+   given no end position by VarJump or VarFindRef -- the engine reports a directive's start but
+   not its extent, and a reference has no span at all -- so nothing was selected and the only
+   evidence was a caret somewhere in a wall of text. Diagnostics rows fared better by accident:
+   TSpDiag carries End* , so those jumps select their span.
+
+   SynEdit's OWN current-line highlight does the work, the same one the Lazarus IDE uses for the
+   caret's line. It is not a markup we add: giving `LineHighlightColor` a background switches it
+   on (`HasLineHighlight` is exactly "a colour was set"), and clearing it switches it off. That
+   buys the full ROW WIDTH, which a TSynEditMarkup cannot give -- a markup colours text, and a
+   wash that stopped at the last character would not read as a row at all.
+
+   It follows the caret while it is lit, which is the right side to err on: move the caret in
+   that second and the wash comes along, still saying "you are here".
+
+   No fade. A fade over 900 ms of a wash this faint is not perceptible -- the eye catches the
+   ONSET -- and interpolating a colour per tick is arithmetic to get wrong for nothing. *)
+procedure TSpxMainForm.FlashJumpLine;
+begin
+  if FEditor = nil then Exit;
+  FEditor.LineHighlightColor.Background := SpxPalette(FPrefs.Theme).Flash;
+  { Restarted, not stacked: a second jump inside the window re-arms the same timer rather than
+    leaving the first one to cut the second one short. }
+  FFlashTimer.Enabled := False;
+  FFlashTimer.Enabled := True;
+end;
+
+procedure TSpxMainForm.FlashFaded(Sender: TObject);
+begin
+  FFlashTimer.Enabled := False;
+  if FEditor <> nil then FEditor.LineHighlightColor.Background := clNone;
 end;
 
 { THE NAMES AS THE DOCUMENT SPELLS THEM, in one pass for all of them.
