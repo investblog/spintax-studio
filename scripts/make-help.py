@@ -97,6 +97,26 @@ def inline(lang, line_no, text):
     return markup(lang, line_no, esc(text))
 
 
+# The three-space gap that sets a NOTE off from an example's output. The suite's own parser
+# already reads what follows as prose rather than as part of the answer.
+NOTE_GAP = re.compile('^(.*→.*?)   +(\\S.*)$')
+
+
+def fence_line(text):
+    """One line of a fenced block, escaped -- with a trailing note moved to a line of its own.
+
+    A <pre> cannot wrap, so its longest line sets the layout width for the WHOLE page: measured,
+    the Russian plurals page wanted 770 px against a 460 px panel, and the widest lines were wide
+    because of a note pinned after the output. Moving the note down is not a liberty -- the
+    suite's parser already excludes it from the comparison -- and it buys twenty-odd characters
+    exactly where they cost most. The note itself is not touched.
+    """
+    m = NOTE_GAP.match(text)
+    if not m:
+        return esc(text)
+    return esc(m.group(1).rstrip()) + '\n' + esc('      ' + m.group(2))
+
+
 def reject_unsupported(lang, line_no, raw):
     if re.match(r'^#{4,} ', raw.strip()):
         raise Bad(lang, line_no, 'a heading deeper than ###')
@@ -177,7 +197,12 @@ def convert(lang, path):
         if len(rows) < 2 or not re.match(r'^\|[\s|:-]+\|$', rows[1][1]):
             raise Bad(lang, rows[0][0], 'a table without a |---| delimiter row')
         width = None
-        page['html'].append('<table border=1 cellpadding=4 cellspacing=0>')
+        # WIDTH 100%, and it is not decoration. Without it IPro sizes the columns by what
+        # they would PREFER, which for three columns of prose is wider than any panel -- and
+        # the table then sets the layout width for the whole page, so the heading and the
+        # paragraphs were clipped too and the panel grew a horizontal scrollbar. Measured on
+        # the first page, which has no <pre> at all and was still cut off.
+        page['html'].append('<table border=1 cellpadding=4 cellspacing=0 width="100%">')
         for i, (no, text) in enumerate(rows):
             if i == 1:
                 continue
@@ -211,7 +236,7 @@ def convert(lang, path):
             continue
 
         if fence is not None:
-            fence_body.append(esc(raw_line.rstrip('\r')))
+            fence_body.append(fence_line(raw_line.rstrip('\r')))
             continue
 
         reject_unsupported(lang, n, line)

@@ -79,7 +79,9 @@ const
 
       'Valor não aplicado: o motor leria a diretiva de outra forma',
 
-      'Inclusões — os fragmentos que este documento traz', 'Destino', 'Encontrado', 'sim', 'FALTA', 'sem conjunto'
+      'Inclusões — os fragmentos que este documento traz', 'Destino', 'Encontrado', 'sim', 'FALTA', 'sem conjunto',
+
+      'Ajuda', 'Conteúdo', 'Idioma da ajuda', 'Ainda não há ajuda em %s.'
   );
 
 implementation

@@ -83,7 +83,9 @@ const
 
       'Waarde niet toegepast: de engine zou de directive anders lezen',
 
-      'Includes — de fragmenten die dit document ophaalt', 'Doel', 'Gevonden', 'ja', 'ONTBREEKT', 'geen set'
+      'Includes — de fragmenten die dit document ophaalt', 'Doel', 'Gevonden', 'ja', 'ONTBREEKT', 'geen set',
+
+      'Help', 'Inhoud', 'Taal van de help', 'Er is nog geen help in het %s.'
   );
 
 implementation

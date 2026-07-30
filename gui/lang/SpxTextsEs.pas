@@ -81,7 +81,9 @@ const
 
       'Valor no aplicado: el motor leería la directiva de otro modo',
 
-      'Inclusiones — los fragmentos que trae este documento', 'Destino', 'Hallado', 'sí', 'FALTA', 'sin conjunto'
+      'Inclusiones — los fragmentos que trae este documento', 'Destino', 'Hallado', 'sí', 'FALTA', 'sin conjunto',
+
+      'Ayuda', 'Contenido', 'Idioma de la ayuda', 'Todavía no hay ayuda en %s.'
   );
 
 implementation

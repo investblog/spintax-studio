@@ -25,7 +25,7 @@ uses
   Clipbrd, Graphics, LCLType, LCLIntf,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxToolRail, SpxGroupPane, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
+  SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpNav, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
@@ -99,7 +99,19 @@ type
       form holds the rail and FOuter. Two siblings aligned to the same edge are ordered by
       LCL and not by us -- that cost an afternoon once already. }
     FOuter: TPanel;
+    { THE SLOT, and the two faces that share it. A dock rather than the panel itself, so
+      the width, the constraints and the splitter belong to the slot and the faces simply
+      fill it -- which is what keeps ClampPanes down to two competitors for the window's
+      width instead of three. }
+    FDock: TPanel;
     FSlide: TSpxGroupPane;
+    FHelp: TSpxHelpPane;
+    FPendingHelpCode: string;
+    { WHICH FACE THE SLOT IS ABOUT TO HOLD, and not which one it holds. The width has to be
+      chosen BEFORE the panel is shown -- a panel that appears at the wrong size and then snaps
+      is worse than one that appears right -- so asking FHelp.Visible gave the group editor's
+      remembered width every time, and the help opened at 300 px however wide it was left. }
+    FDockHelp: Boolean;
     { The caret moves in bursts; the group under it is looked up once the burst stops. }
     FCaretTimer: TTimer;
     { The jump's own afterglow. One-shot: a jump sets it, this clears it. }
@@ -269,6 +281,13 @@ type
     procedure SplitEvenNow(Sender: TObject);
     procedure SlideResized(Sender: TObject);
     procedure ClampSlide;
+    procedure RailHelpClicked(Sender: TObject);
+    procedure HelpMenuClicked(Sender: TObject);
+    procedure HelpPaneClosed(Sender: TObject);
+    procedure DiagDoubleClicked(Sender: TObject);
+    procedure HelpDeferred(Data: PtrInt);
+    procedure OpenHelpPane(const ACode: string);
+    function DockWantWidth: Integer;
     procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
     procedure MenuDiagClicked(Sender: TObject);
@@ -448,17 +467,34 @@ begin
   { The group editor, hidden until its tool is pressed. It PUSHES rather than covers: the
     panel edits the template, and covering the text you are editing is the thing a dialog
     does wrong. }
-  FSlide := TSpxGroupPane.Create(Self);
-  FSlide.Parent := FOuter;
-  FSlide.Align := alLeft;
-  FSlide.Width := Px(Self, SPX_SLIDE_W);
+  FDock := TPanel.Create(Self);
+  FDock.Parent := FOuter;
+  FDock.Align := alLeft;
+  FDock.BevelOuter := bvNone;
+  FDock.Width := Px(Self, SPX_SLIDE_W);
   { Wide enough to be worth opening, never wide enough to swallow the editor. The bounds are
     the settings file's, so a width edited by hand cannot leave the panel unusable either. }
-  FSlide.Constraints.MinWidth := Px(Self, SPX_SLIDE_MIN);
-  FSlide.Constraints.MaxWidth := Px(Self, SPX_SLIDE_MAX);
+  FDock.Constraints.MinWidth := Px(Self, SPX_SLIDE_MIN);
+  FDock.Constraints.MaxWidth := Px(Self, SPX_SLIDE_MAX);
+  FDock.Visible := False;
+
+  FSlide := TSpxGroupPane.Create(Self);
+  FSlide.Parent := FDock;
+  FSlide.Align := alClient;
   FSlide.Visible := False;
   FSlide.OnApply := @GroupApplied;
   FSlide.OnClose := @GroupPaneClosed;
+
+  { THE OTHER FACE. Help shares this slot rather than taking one of its own, and shares the
+    rail's latch with it, so opening either closes the other -- which is what keeps the width
+    arithmetic to the two competitors it already handles. A reader is not editing a group at
+    the same moment, and two 300 px panels beside a 1100 px window would leave neither the
+    editor nor the preview anything. }
+  FHelp := TSpxHelpPane.Create(Self);
+  FHelp.Parent := FDock;
+  FHelp.Align := alClient;
+  FHelp.Visible := False;
+  FHelp.OnClose := @HelpPaneClosed;
 
   { A VARIANT CAN BE LONGER THAN ANY DEFAULT. The panel is the one part of this window whose
     useful width depends on the document rather than on the layout, so it is the user's to
@@ -468,7 +504,7 @@ begin
   FSlideSplit := TSplitter.Create(Self);
   FSlideSplit.Parent := FOuter;
   FSlideSplit.Align := alLeft;
-  FSlideSplit.Left := FSlide.Width + 1;
+  FSlideSplit.Left := FDock.Width + 1;
   FSlideSplit.Visible := False;
   FSlideSplit.OnMoved := @SlideResized;
 
@@ -622,6 +658,7 @@ begin
   DiagColumn(Tr(sColAt), Px(Self, 70));
   DiagColumn(Tr(sColMessage), Px(Self, 640));
   FDiag.OnClick := @DiagClicked;
+  FDiag.OnDblClick := @DiagDoubleClicked;
   FDiag.OnResize := @DiagResized;
 
   { The variables panel: what the document defines, and what this session supplies. }
@@ -1029,7 +1066,7 @@ begin
     aligns it with the panes on its own, and it used to begin a whole top strip higher. The
     inset is read from the strip rather than repeated as a number, so the second row the
     search bar takes moves it too. }
-  if FSlide <> nil then FSlide.BorderSpacing.Top := FTop.Height;
+  if FDock <> nil then FDock.BorderSpacing.Top := FTop.Height;
   { And its drag handle with it: a splitter that starts a strip higher than the thing it
     resizes is a line drawn through the top of the window. }
   if FSlideSplit <> nil then FSlideSplit.BorderSpacing.Top := FTop.Height;
@@ -1310,6 +1347,10 @@ begin
   { The one tool that is not access but WORKSPACE: a group's variants are a list, one short
     line each, which is exactly what fits beside the editor. }
   FRail.AddTool(SPX_ICON_GROUP, Tr(sTabGroup), @RailGroupClicked, 2);
+  { GROUP 2 AGAIN, and that is the whole mutual exclusion: the two slide-out faces share one
+    slot, so they are one choice. The icon is the one cell in the strip that is drawn rather
+    than taken from the font -- see scripts/make-icons.py. }
+  FRail.AddTool(SPX_ICON_HELP, Tr(sMenuHelp), @RailHelpClicked, 2);
   { The window opens with the diagnostics showing, so the tool that says so is lit. }
   FRail.SetDown(0, True);
 end;
@@ -1338,7 +1379,17 @@ begin
     saw. }
   FSlideRoom := -1;
   FPaneRoom := -1;
+  { ONE SLOT, ONE FACE. The rail's two latches share a group, so clicking this tool puts the
+    help tool out -- but LCL calls OnClick only for the button that was clicked, so the panel
+    that is going away has to be hidden from here. }
+  if FHelp.Visible then
+  begin
+    FHelp.Visible := False;
+    FRail.SetDown(4, False);
+  end;
+  FDockHelp := False;
   ClampSlide;
+  FDock.Visible := True;
   FSlide.Visible := True;
   FSlideSplit.Visible := True;
   { The panel has just taken its share; the panes divide what is actually left. }
@@ -1517,7 +1568,7 @@ procedure TSpxMainForm.BuildMenu;
 
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
-  fileMenu, editMenu, viewMenu, langMenu, fontMenu, sideItem: TMenuItem;
+  fileMenu, editMenu, viewMenu, helpMenu, langMenu, fontMenu, sideItem: TMenuItem;
   lang: TSpxLang;
   fi: Integer;
   keepHeight: Integer;
@@ -1745,6 +1796,17 @@ begin
   sideItem := Item(langMenu, Tr(sLangFollow), 0, [], @LangFollowClicked);
   sideItem.RadioItem := True;
   sideItem.Checked := FLangFollow;
+
+  { ── Help ── }
+  helpMenu := TMenuItem.Create(Self);
+  helpMenu.Caption := Tr(sMenuHelp);
+  bar.Items.Add(helpMenu);
+  { F1 AND NOTHING ELSE IS NEEDED. A menu shortcut is consumed before the key reaches the
+    control (see the note over the Edit menu), so this reaches the panel from inside the editor
+    too -- and F1 was unused anywhere in this project and SynEdit binds no command to it, so
+    nothing is displaced. No GroupIndex: these are not radio items, and 0 is the default that
+    would silently join whatever radio group is added to this menu next. }
+  Item(helpMenu, Tr(sHelpContents), VK_F1, [], @HelpMenuClicked);
 
   Self.Menu := bar;
   if Height <> keepHeight then Height := keepHeight;
@@ -2542,8 +2604,12 @@ begin
     FRail.SetTool(1, Tr(sTabVariables));
     FRail.SetTool(2, Tr(sTabVariants));
     FRail.SetTool(3, Tr(sTabGroup));
+    FRail.SetTool(4, Tr(sMenuHelp));
   end;
   FSlide.Retranslate;
+  { And the help, which may have to change DOCUMENT and not merely captions -- where the reader
+    lands is SpxHelpNav's rule rather than an improvisation here. }
+  if FHelp <> nil then FHelp.Retranslate;
   { The rows carry their words from the worker, and their first two columns are written here
     -- so the level and the file name change language at once. The MESSAGE column does not:
     it was worded by the render that produced it, and it stays in the old language until the
@@ -2744,7 +2810,7 @@ end;
 procedure TSpxMainForm.ClampSlide;
 var room, want: Integer;
 begin
-  if (FSlide = nil) or (FOuter = nil) or (FSlideSplit = nil) then Exit;
+  if (FDock = nil) or (FOuter = nil) or (FSlideSplit = nil) then Exit;
   { ONLY WHEN THE ROOM CHANGED, and this guard is the whole difference between a resizable
     panel and a frozen one. Without it: drag the handle, LCL sets the panel's width, that
     ripples into Resize, this runs and puts the width straight back -- so the cursor promised a
@@ -2762,9 +2828,17 @@ begin
     resize, including the small ones the window gets while it is still being built, so a panel
     squeezed once would never grow back even after the window did. Measured: with 900 stored
     it opened at 200 in a window with room for all of it. }
-  want := Px(Self, FPrefs.SlideWidth);
+  want := Px(Self, DockWantWidth);
   if want > room then want := room;
-  if FSlide.Width <> want then FSlide.Width := want;
+  if FDock.Width <> want then FDock.Width := want;
+end;
+
+{ The remembered width of the face that is showing. One slot, two faces, two numbers: a group
+  editor forced to 900 px because someone widened the help to read prose would be a worse
+  answer than either. }
+function TSpxMainForm.DockWantWidth: Integer;
+begin
+  if FDockHelp then Result := FPrefs.HelpWidth else Result := FPrefs.SlideWidth;
 end;
 
 { THE EDITOR DOES NOT KEEP ITS WIDTH WHILE THE PREVIEW STARVES. FLeft is alLeft with a width
@@ -2812,11 +2886,12 @@ end;
   drag ends, not on every pixel of it. }
 procedure TSpxMainForm.SlideResized(Sender: TObject);
 begin
-  if FLoading or (FSlide = nil) then Exit;
+  if FLoading or (FDock = nil) then Exit;
   { WRITTEN IN 96-DPI UNITS, because that is what ApplyPrefs scales back up. Storing the
     measured width would grow the panel by half on every launch on a 150% display -- Px would
     be scaling a number that had already been scaled. }
-  FPrefs.SlideWidth := Un96(Self, FSlide.Width);
+  if FDockHelp then FPrefs.HelpWidth := Un96(Self, FDock.Width)
+  else FPrefs.SlideWidth := Un96(Self, FDock.Width);
   SavePrefs;
 end;
 
@@ -2942,6 +3017,9 @@ begin
   FBracket.MarkupInfo.Foreground := pal.BracketText;
   FPreview.ApplyTheme(pal);
   if FSlide <> nil then FSlide.ApplyTheme(pal);
+  { A theme change is a RE-FEED for the help: the colours live in the loaded document, not on
+    the panel (TIpHtmlFrame.InitHtml copies them at load). }
+  if FHelp <> nil then FHelp.ApplyTheme(pal);
   FEditor.Invalidate;
 end;
 
@@ -3091,6 +3169,8 @@ end;
 procedure TSpxMainForm.GroupPaneClosed(Sender: TObject);
 begin
   FSlide.Visible := False;
+  { The slot goes with it only when nothing else is in it. }
+  FDock.Visible := False;
   FSlideSplit.Visible := False;
   { And closing it gives the room back. }
   FPaneRoom := -1;
@@ -3104,6 +3184,87 @@ begin
     against (wincontrol.inc:3719-3727) -- CanFocus stops at the form and never asks whether
     the form itself can take it. The rest of this file already uses CanSetFocus. }
   if FEditor.CanSetFocus then FEditor.SetFocus;
+end;
+
+{ The rail's help tool: a latch, like the group editor's, and in the SAME group -- so the two
+  are one choice and the slot never has to hold both. LCL flips Down on mouse-up and then calls
+  this, so the handler asks the button what happened rather than remembering. }
+procedure TSpxMainForm.RailHelpClicked(Sender: TObject);
+begin
+  if FHelp.Visible then
+  begin
+    HelpPaneClosed(Sender);
+    Exit;
+  end;
+  OpenHelpPane('');
+end;
+
+procedure TSpxMainForm.HelpMenuClicked(Sender: TObject);
+begin
+  OpenHelpPane('');
+end;
+
+{ The panel, OPENED rather than toggled -- the same distinction the group editor needs, and for
+  the same reason: F1 and a double click on a diagnostics row must arrive at an open panel
+  whether or not it happened to be open already. ACode is a diagnostic to open the article for,
+  or '' for the contents. }
+procedure TSpxMainForm.OpenHelpPane(const ACode: string);
+begin
+  FSlideRoom := -1;
+  FPaneRoom := -1;
+  if FSlide.Visible then
+  begin
+    FSlide.Visible := False;
+    FRail.SetDown(3, False);
+  end;
+  FDockHelp := True;
+  ClampSlide;
+  FDock.Visible := True;
+  FHelp.Visible := True;
+  FSlideSplit.Visible := True;
+  ClampPanes;
+  { The latch, for the routes that do not set it themselves -- the menu, F1, the panel. An
+    unlit tool over an open panel is not merely wrong-looking: the next click on it flips Down
+    to True, the handler sees the panel already open, and closes it. Paid for once already by
+    the group editor. }
+  FRail.SetDown(4, True);
+  if ACode <> '' then FHelp.GoToCode(ACode) else FHelp.GoToPage(FHelp.CurrentPage, '');
+end;
+
+procedure TSpxMainForm.HelpPaneClosed(Sender: TObject);
+begin
+  FHelp.Visible := False;
+  FDock.Visible := False;
+  FSlideSplit.Visible := False;
+  FPaneRoom := -1;
+  ClampPanes;
+  FRail.SetDown(4, False);
+  { CanSetFocus, not CanFocus -- wincontrol.inc:3719-3727, the same rule the group editor's
+    close obeys. }
+  if FEditor.CanSetFocus then FEditor.SetFocus;
+end;
+
+{ THE DOOR THE ARTICLE-PER-CODE INVARIANT WAS BUILT FOR. The suite has required one `###`
+  article per engine code and per Studio note since the help existed, and said in as many words
+  that it was for this gesture.
+
+  Deferred and copied BY VALUE, for the reason DiagClicked already is: a double click fires
+  OnClick first (control.inc:2591-2604), the jump that follows pumps the message loop, and a
+  delivered result can rebuild FRows and free the very TListItem LCL is still processing. }
+procedure TSpxMainForm.DiagDoubleClicked(Sender: TObject);
+begin
+  if FDiag.Selected = nil then Exit;
+  if (FDiag.Selected.Index < 0) or (FDiag.Selected.Index > High(FRows)) then Exit;
+  FPendingHelpCode := FRows[FDiag.Selected.Index].Code;
+  Application.QueueAsyncCall(@HelpDeferred, 0);
+end;
+
+procedure TSpxMainForm.HelpDeferred(Data: PtrInt);
+begin
+  { A code with no article opens the contents rather than nothing: a gesture that does nothing
+    reads as broken, and a code from an engine newer than this build is not the reader's
+    fault. The suite proves every code this build knows resolves. }
+  OpenHelpPane(FPendingHelpCode);
 end;
 
 { Auto: the cascade decides, per document. }

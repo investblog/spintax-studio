@@ -96,7 +96,13 @@ type
       fragment the set does not have and for a document with no set to look in -- a new file has
       none -- so a two-state mark would tell that user "MISSING" about a question nobody asked
       yet. ── }
-    sVarsIncludes, sColTarget, sColInSet, sIncludeYes, sIncludeMissing, sIncludeNoSet
+    sVarsIncludes, sColTarget, sColInSet, sIncludeYes, sIncludeMissing, sIncludeNoSet,
+
+    { ── the help. Four, and the window's own caption reuses the first: "Help — Spintax Studio"
+      reads right, no menu caption here carries an `&` accelerator, and every id costs
+      seventeen files. The section titles the viewer lists are the help document's own, and
+      the help languages are named by SpxLangName's endonyms -- neither is a string. ── }
+    sMenuHelp, sHelpContents, sHelpLanguage, sHelpNotTranslated
   );
 
 implementation

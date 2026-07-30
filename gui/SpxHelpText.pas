@@ -110,7 +110,7 @@ const
       'engine calls something an error here, every other engine in the family calls it an err' +
       'or too, and your template will behave the same way on your server as it does in this w' +
       'indow.</p>',
-    '<table border=1 cellpadding=4 cellspacing=0>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
     '<tr><th>what it says</th><th>who says it</th><th>what it means</th></tr>',
     '<tr><td><b>error</b></td><td>the engine</td><td>the template will not do what it looks' +
       ' like it does</td></tr>',
@@ -333,9 +333,13 @@ const
       '{plural %n%: item|items}</code> is the correct one.</p>',
     '<p><b>Emptiness happens for another reason, and the two are easy to confuse.</b> Compa' +
       're these two, which differ only in how many forms they carry:</p>',
-    '<pre>{plural %n%: item|items}             →  (empty)   two forms: right for English' +
+    '<pre>{plural %n%: item|items}             →  (empty)' +
       #10 +
-      '{plural %n%: item|items|itemses}     →  (empty)   three forms: wrong for English</pre>',
+      '      two forms: right for English' +
+      #10 +
+      '{plural %n%: item|items|itemses}     →  (empty)' +
+      #10 +
+      '      three forms: wrong for English</pre>',
     '<p>Both print nothing, and the panel treats them differently: the first draws only <co' +
       'de>variable.undefined</code>, the second draws <code>plural.arity</code> as well. So <' +
       'b>emptiness is not the mark of an arity error</b> — here it comes from <code>%n%</code' +
@@ -429,7 +433,7 @@ const
       'no diagnostic, no warning, and the only way to notice is to read the output.</p>',
     '<p><b>The list is not English.</b> It holds 46 entries, and 29 of them are Russian:</p' +
       '>',
-    '<table border=1 cellpadding=4 cellspacing=0>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
     '<tr><th></th><th></th></tr>',
     '<tr><td>English</td><td><code>etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ave' +
       ' blvd</code></td></tr>',
@@ -486,7 +490,7 @@ const
       ', PHP и Python. Studio его не смягчает и не ужесточает: если здесь написано «ошибка», ' +
       'значит все движки семейства считают это ошибкой.</p>',
     '<p>Три вида строк:</p>',
-    '<table border=1 cellpadding=4 cellspacing=0>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
     '<tr><th>Уровень</th><th>Кто сказал</th><th>Что это значит</th></tr>',
     '<tr><td><b>ошибка</b></td><td>движок</td><td>конструкция разобрана не так, как вы заду' +
       'мали; вывод почти всегда не тот</td></tr>',
@@ -665,8 +669,9 @@ const
     '<h2 id="includes">Вставки</h2>',
     '<h3 id="includes-0"><code>#include</code> работает только с начала строки</h3>',
     '<p>Это не диагностика, а поведение, о которое спотыкаются чаще всего:</p>',
-    '<pre>до #include "frag" после     →  До #include "frag" после   (осталось текстом, мол' +
-      'ча)' +
+    '<pre>до #include "frag" после     →  До #include "frag" после' +
+      #10 +
+      '      (осталось текстом, молча)' +
       #10 +
       '#include "frag"              →  Фрагмент</pre>',
     '<p>Посреди строки <code>#include</code> — обычный текст, и <b>никакой диагностики не б' +
@@ -714,11 +719,13 @@ const
       'Локаль берётся из селектора над правой панелью, а не из языка интерфейса.</p>',
     '<p><b>Пустота бывает по другой причине, и её легко спутать.</b> Движок проверяет в так' +
       'ом порядке:</p>',
-    '<pre>{plural %n%: {товар|штука}|товара}   →  ｛plural %n%: ｛товар|штука｝|товара｝   скоб' +
-      'ки внутри форм' +
+    '<pre>{plural %n%: {товар|штука}|товара}   →  ｛plural %n%: ｛товар|штука｝|товара｝' +
       #10 +
-      '{plural %n%: товар|товара}           →  (пусто)   счётчик не число: %n% не определён</' +
-      'pre>',
+      '      скобки внутри форм' +
+      #10 +
+      '{plural %n%: товар|товара}           →  (пусто)' +
+      #10 +
+      '      счётчик не число: %n% не определён</pre>',
     '<p>Первое — <code>plural.nested-brackets</code>. Второе панель тоже пометит как <code>' +
       'plural.arity</code>, но <b>пустота в выводе не от неё</b>: счётчик проверяется раньше ' +
       'числа форм, <code>%n%</code> здесь не определён, и рендер останавливается, не дойдя до' +
@@ -818,7 +825,7 @@ const
       ' он знает, и не после конструкций вида <code>и.о.</code> или <code>т.д.</code>. Диагно' +
       'стики нет никакой: заметить можно только по выводу.</p>',
     '<p><b>Список на 46 записей, и 29 из них русские:</b></p>',
-    '<table border=1 cellpadding=4 cellspacing=0>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
     '<tr><th></th><th></th></tr>',
     '<tr><td>русские</td><td><code>соц эл см ср ст ул пр пер г р руб коп тыс млн млрд трлн ' +
       'доп напр прим изд обл респ стр табл рис мин макс тел факс</code></td></tr>',

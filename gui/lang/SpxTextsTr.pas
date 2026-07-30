@@ -78,7 +78,9 @@ const
 
       'Değer uygulanmadı: motor yönergeyi farklı okurdu',
 
-      'Eklemeler — bu belgenin çektiği parçalar', 'Hedef', 'Bulundu', 'evet', 'YOK', 'küme yok'
+      'Eklemeler — bu belgenin çektiği parçalar', 'Hedef', 'Bulundu', 'evet', 'YOK', 'küme yok',
+
+      'Yardım', 'İçindekiler', 'Yardım dili', '%s dilinde henüz yardım yok.'
   );
 
 implementation

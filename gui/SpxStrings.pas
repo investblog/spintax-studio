@@ -175,7 +175,11 @@ const
       110px state column. 12 rather than 10 because the state has to hold both a title and its
       widest value in every language -- French wants eleven for "Dans le jeu" and Spanish twelve
       for "sin conjunto", and the suite said so rather than the column finding out on screen }
-    0, 12, 12, 10, 10, 12
+    0, 12, 12, 10, 10, 12,
+    { the help: a menu that grows to fit, its one item, a label the strip MEASURES rather than
+      budgets (a TLabel does not know its own width when you ask), and a sentence that must
+      carry %s -- which a budgeted string may not do at all }
+    0, 0, 0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

@@ -79,7 +79,9 @@ const
 
       'Valore non applicato: il motore leggerebbe la direttiva in modo diverso',
 
-      'Inclusioni — i frammenti che questo documento richiama', 'Destinazione', 'Trovato', 'sì', 'MANCA', 'nessun set'
+      'Inclusioni — i frammenti che questo documento richiama', 'Destinazione', 'Trovato', 'sì', 'MANCA', 'nessun set',
+
+      'Guida', 'Sommario', 'Lingua della guida', 'Non c’è ancora una guida in %s.'
   );
 
 implementation

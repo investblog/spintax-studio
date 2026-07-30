@@ -84,7 +84,9 @@ const
 
       'Value not applied: the engine would read the directive differently',
 
-      'Includes — the fragments this document pulls in', 'Target', 'Found', 'yes', 'MISSING', 'no set'
+      'Includes — the fragments this document pulls in', 'Target', 'Found', 'yes', 'MISSING', 'no set',
+
+      'Help', 'Contents', 'Help language', 'There is no help in %s yet.'
   );
 
 implementation

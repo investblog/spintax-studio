@@ -12,9 +12,12 @@ the images cannot be files beside it, and a Lazarus .lpi storing them as base64 
 blob in the one file the project reviews as text. A generated unit is honest about being
 generated, and the exe stays one file.
 
-Usage:  python scripts/make-icons.py <path-to-materialdesignicons-webfont.ttf>
-        (the font is not vendored: it is 1.3 MB of someone else's work, and only the
-         handful of glyphs below ever reach the product)
+Usage:  python scripts/make-icons.py [<path-to-materialdesignicons-webfont.ttf>]
+        The font is not vendored: it is 1.3 MB of someone else's work, and only the handful
+        of glyphs below ever reach the product. WITHOUT it the font's cells are copied from
+        the strips already in assets/icons and only the DRAWN cell is redrawn -- which is what
+        lets someone adjust that one glyph without fetching a webfont to reproduce fifteen
+        pictures that cannot have changed.
 
 Writes:  assets/icons/rail-<size>.png   -- the sprites, for looking at
          gui/SpxIcons.pas               -- the same bytes, for shipping
@@ -31,6 +34,9 @@ from PIL import Image, ImageDraw, ImageFont
 # The Pascal name is here rather than in the emitter: adding a fifth icon used to produce a
 # five-cell strip and only four constants, and REORDERING two used to re-point both names at
 # the wrong glyph with nothing to notice it.
+# A name no font has, so the strip builder knows to draw this cell instead of looking it up.
+DRAWN_HELP = '(drawn) help-circle-outline'
+
 ICONS = [
     ('SPX_ICON_DIAG', 'alert-circle-outline', 'Diagnostics -- the panel that says what is wrong'),
     ('SPX_ICON_VARS', 'variable', 'Variables -- definitions and session values'),
@@ -67,6 +73,12 @@ ICONS = [
     # by the same hand as the rest of the set.
     ('SPX_ICON_PREV', 'chevron-left', 'the find bar: the match before this one'),
     ('SPX_ICON_NEXT', 'chevron-right', 'the find bar: the match after this one'),
+    # DRAWN HERE, not taken from the font -- the one cell in this strip that is. The webfont is
+    # not vendored (see the usage note above) and was not to hand, so rather than block the help
+    # panel on a 1.3 MB download the glyph is constructed from the measurements of the set it
+    # has to sit beside: a 48 px cell holds a 40 px circle with a 4 px stroke, so the ratios are
+    # size*5/6 and size/12, read off assets/icons/rail-48.png rather than guessed.
+    ('SPX_ICON_HELP', DRAWN_HELP, 'the help panel'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that
@@ -87,6 +99,8 @@ def codepoints(css_path):
     css = io.open(css_path, encoding='utf-8').read()
     out = {}
     for _, name, _ in ICONS:
+        if name == DRAWN_HELP:
+            continue
         at = css.find('.mdi-' + name + '::before')
         if at < 0:
             raise SystemExit('no such icon in this font: ' + name)
@@ -113,6 +127,41 @@ def glyph(font_path, code, px):
     return img
 
 
+def drawn_help(px):
+    """A question mark in a circle, drawn to the SET'S OWN measurements rather than by eye.
+
+    Read off assets/icons/rail-48.png, cell 0 (`alert-circle-outline`): the circle's bounding
+    box is 40 px inside a 48 px cell and its wall is 4 px, and the mark inside runs from y=14 to
+    y=34. So: diameter 5/6 of the cell, stroke 1/12, and the same vertical band. Arcs rather
+    than a font's `?` -- a letter from some other typeface would carry that typeface's stroke
+    and sit beside fifteen icons drawn by one hand.
+    """
+    scale = 8                                  # supersample, then LANCZOS down: no jagged arcs
+    n = px * scale
+    img = Image.new('RGBA', (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    stroke = max(1, round(n / 12.0))
+    cx = n / 2.0
+
+    # The ring. PIL draws an outline INWARD from the box, so the box IS the outer edge -- the
+    # first draft inset it by half a stroke and measured 0.12 where the reference measures
+    # 0.083, a visibly smaller circle sitting beside fifteen of the right size.
+    pad = n / 12.0
+    d.ellipse([pad, pad, n - pad, n - pad], outline=COLOUR, width=stroke)
+
+    # The mark, to the reference's proportions: its `!` runs y 0.29..0.71 and is one stroke
+    # wide, centred on 0.50. The first draft put the stem's mid-height run at 0.54..0.64 --
+    # optically off to the right -- so the hook is smaller and the stem returns to the axis
+    # sooner. Measured again after, which is the only way to know.
+    r = n * 0.105
+    cy = n * 0.385
+    d.arc([cx - r, cy - r, cx + r, cy + r], start=175, end=25, fill=COLOUR, width=stroke)
+    d.line([cx + r * 0.91, cy + r * 0.42, cx, n * 0.585], fill=COLOUR, width=stroke)
+    dot = stroke * 0.55
+    d.ellipse([cx - dot, n * 0.675 - dot, cx + dot, n * 0.675 + dot], fill=COLOUR)
+    return img.resize((px, px), Image.LANCZOS)
+
+
 def pascal_bytes(name, data):
     lines = ['  %s: array[0..%d] of Byte = (' % (name, len(data) - 1)]
     row = []
@@ -128,22 +177,43 @@ def pascal_bytes(name, data):
 
 
 def main():
-    if len(sys.argv) < 2:
-        raise SystemExit(__doc__)
-    font_path = sys.argv[1]
-    css_path = os.path.join(os.path.dirname(font_path), '..', 'css',
-                            'materialdesignicons.css')
-    if not os.path.exists(css_path):
-        css_path = os.path.join(os.path.dirname(font_path), 'mdi.css')
-    codes = codepoints(css_path)
+    font_path = sys.argv[1] if len(sys.argv) > 1 else None
+    codes = {}
+    if font_path is None:
+        print('no font given: the font cells are copied from the committed strips, '
+              'and only the drawn one is redrawn')
+    else:
+        css_path = os.path.join(os.path.dirname(font_path), '..', 'css',
+                                'materialdesignicons.css')
+        if not os.path.exists(css_path):
+            css_path = os.path.join(os.path.dirname(font_path), 'mdi.css')
+        codes = codepoints(css_path)
 
     out_dir = os.path.join(HERE, 'assets', 'icons')
     os.makedirs(out_dir, exist_ok=True)
     blobs = []
     for px in SIZES:
         strip = Image.new('RGBA', (px * len(ICONS), px), (0, 0, 0, 0))
+        old_path = os.path.join(out_dir, 'rail-%d.png' % px)
+        old_strip = None
+        if font_path is None:
+            if not os.path.exists(old_path):
+                raise SystemExit('no font and no %s to take the other cells from' % old_path)
+            old_strip = Image.open(old_path).convert('RGBA')
         for i, (_, name, _) in enumerate(ICONS):
-            strip.paste(glyph(font_path, codes[name], px), (i * px, 0))
+            if name == DRAWN_HELP:
+                cell = drawn_help(px)
+            elif font_path is not None:
+                cell = glyph(font_path, codes[name], px)
+            else:
+                # From the strip already committed. The font's cells cannot change without the
+                # font, so copying them is exactly as true as re-rendering them -- and it is
+                # asserted: a strip that does not hold this cell is not one to copy from.
+                if (i + 1) * px > old_strip.width:
+                    raise SystemExit('%s has %d cells, not enough for %s -- run with the font'
+                                     % (old_path, old_strip.width // px, name))
+                cell = old_strip.crop((i * px, 0, (i + 1) * px, px))
+            strip.paste(cell, (i * px, 0))
         path = os.path.join(out_dir, 'rail-%d.png' % px)
         strip.save(path)
         buf = io.BytesIO()

@@ -59,6 +59,11 @@ type
       default, and the panel is the one place in this window whose useful width depends on
       the DOCUMENT rather than on the layout. }
     SlideWidth: Integer;
+    { The SAME SLOT holds two faces -- the group editor and the help -- and they want different
+      widths: one shows a list of short variants, the other shows prose. One remembered width
+      would mean a group editor at 900 px because someone widened the help once. Both in
+      96-dpi units, like SlideWidth, for the reason SlideResized gives. }
+    HelpWidth: Integer;
   end;
 
 const
@@ -67,6 +72,12 @@ const
   SPX_SLIDE_MIN = 200;
   SPX_SLIDE_MAX = 900;
   SPX_SLIDE_DEFAULT = 300;
+  { Wider than the group editor's default, and the number is measured rather than chosen: at a
+    460 px client every prose page lays out at exactly the width available, so 480 is the first
+    default at which the contents page is not clipped. Two of the twelve pages still scroll
+    sideways -- the plural article's widest example is ninety characters of real content, and a
+    <pre> cannot wrap -- and the panel drags out to 900, which fits it. }
+  SPX_HELP_DEFAULT = 480;
 
 function SpxDefaultPrefs: TSpxPrefs;
 
@@ -102,6 +113,7 @@ begin
   Result.FontFamily := '';
   Result.Theme := spxThemeLight;
   Result.SlideWidth := SPX_SLIDE_DEFAULT;
+  Result.HelpWidth := SPX_HELP_DEFAULT;
 end;
 
 function SpxConfigDir: string;
@@ -189,6 +201,11 @@ begin
         if TryStrToInt(val, n) then
           Result.SlideWidth := Clamp(n, SPX_SLIDE_MIN, SPX_SLIDE_MAX);
       end
+      else if key = 'help.width' then
+      begin
+        if TryStrToInt(val, n) then
+          Result.HelpWidth := Clamp(n, SPX_SLIDE_MIN, SPX_SLIDE_MAX);
+      end
       else if key = 'theme' then
       begin
         if val = 'dark' then Result.Theme := spxThemeDark
@@ -220,6 +237,7 @@ begin
     lines.Add('font.size=' + IntToStr(APrefs.FontSize));
     lines.Add('font.family=' + APrefs.FontFamily);
     lines.Add('slide.width=' + IntToStr(APrefs.SlideWidth));
+    lines.Add('help.width=' + IntToStr(APrefs.HelpWidth));
     if APrefs.Theme = spxThemeDark then lines.Add('theme=dark') else lines.Add('theme=light');
     try
       lines.SaveToFile(APath);

@@ -88,7 +88,9 @@ const
 
       'Valeur non appliquée : le moteur lirait la directive autrement',
 
-      'Inclusions — les fragments que ce document tire', 'Cible', 'Trouvé', 'oui', 'ABSENT', 'pas de jeu'
+      'Inclusions — les fragments que ce document tire', 'Cible', 'Trouvé', 'oui', 'ABSENT', 'pas de jeu',
+
+      'Aide', 'Sommaire', 'Langue de l’aide', 'Il n’y a pas encore d’aide en %s.'
   );
 
 implementation

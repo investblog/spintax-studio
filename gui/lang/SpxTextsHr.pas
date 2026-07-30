@@ -80,7 +80,9 @@ const
 
       'Vrijednost nije primijenjena: engine bi direktivu pročitao drugačije',
 
-      'Uključivanja — fragmenti koje ovaj dokument uvlači', 'Cilj', 'Nađeno', 'da', 'NEMA', 'nema skupa'
+      'Uključivanja — fragmenti koje ovaj dokument uvlači', 'Cilj', 'Nađeno', 'da', 'NEMA', 'nema skupa',
+
+      'Pomoć', 'Sadržaj', 'Jezik pomoći', 'Pomoć na jeziku %s još ne postoji.'
   );
 
 implementation
