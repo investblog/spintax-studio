@@ -795,6 +795,42 @@ Constraints (design into the app from the start):
 Submission tasks (after a demoable build):
 - [ ] **MSIX packaging** of the Lazarus `.exe` (Store re-signs; fallback EXE/MSI only if MSIX
       won't do — then versioned HTTPS URL + silent install + our own signing/hosting/updates).
+- [ ] **Code signing for the DIRECT download — free, through an OSS programme.** (The user's
+      plan, 2026-07-30.) Not for the Store route: Microsoft re-signs what it delivers, so a
+      Store install never meets SmartScreen. This is for the `.exe`/`.msix` on a releases page,
+      which without a signature is an "unknown app" dialog.
+
+      **Blocked on one thing: the repo has to be public.** `spintax-studio` is private today;
+      `spintax-win` is already open. These programmes sign artifacts built from a named public
+      repository, and the artifact here is the STUDIO binary — so it is the studio repo the
+      application names, with the engine's openness as supporting evidence. (The engine itself
+      is a library and produces nothing to Authenticode-sign.)
+
+      1. **SignPath Foundation** — free for qualified OSS and aimed at exactly this. Needs the
+         public repo URL, a releases/download page and a project description. Review takes
+         from a few days to a couple of weeks.
+      2. **OSSign (ossign.org) IN PARALLEL** — a direct analogue, also free for OSS. Applied to
+         at the same time on purpose, so a single review cannot hold the release.
+
+      **The one decision worth thinking about: whose name is the publisher.** SignPath shows
+      **«SignPath Foundation»** in SmartScreen, not us. If that is acceptable, 1–2 close the
+      question at no cost. If the publisher must read **301ST LTD** as a verified publisher,
+      that is **Azure Artifact Signing** (~$10/mo): it accepts us as a UK company, needs no
+      hardware token, and drops into CI through `signtool`. Nothing else in this item is a
+      choice — this is.
+
+      **Not worth the time, and why:**
+      - **EV certificates** — they no longer bypass SmartScreen, which was their only reason.
+      - **Sigstore / cosign** — not Authenticode; Windows does not read it, so it does nothing
+        for an `.exe`.
+      - **File-based certificates** — not issued since 2023.
+      - A **purchased OV cert with a hardware token** (Certum and the like) — only if signing
+        for something other than Windows becomes a need later.
+
+      **What to expect, so nobody buys a fix that does not exist:** no option removes the
+      warnings immediately. SmartScreen reputation accrues with the VOLUME of clean downloads,
+      so "unknown app" will show up at first whichever route is taken — and that is not a reason
+      to pay more.
 - [ ] **Privacy policy — even for R0.** R0 is offline, so a short page is trivially true and
       builds Store trust: *no telemetry, no account, no network, local files only.* Expand it
       when BYOK AI (R1) adds network, and again for a managed tier (data transits our
