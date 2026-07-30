@@ -168,7 +168,9 @@ const
     { a menu item and a tooltip -- both size themselves }
     0, 0,
     { a submenu and its first entry }
-    0, 0
+    0, 0,
+    { a status-bar sentence: the bar is the window's width and clips nothing }
+    0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

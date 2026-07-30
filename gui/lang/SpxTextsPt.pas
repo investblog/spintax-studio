@@ -75,7 +75,9 @@ const
 
       'Larguras iguais', 'Duplo clique: larguras iguais',
 
-      'Fonte do editor', 'Automática'
+      'Fonte do editor', 'Automática',
+
+      'Valor não aplicado: o motor leria a diretiva de outra forma'
   );
 
 implementation

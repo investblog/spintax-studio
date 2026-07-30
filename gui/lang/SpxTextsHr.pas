@@ -76,7 +76,9 @@ const
 
       'Podijeli na pola', 'Dvoklik — na pola',
 
-      'Font uređivača', 'Automatski'
+      'Font uređivača', 'Automatski',
+
+      'Vrijednost nije primijenjena: engine bi direktivu pročitao drugačije'
   );
 
 implementation

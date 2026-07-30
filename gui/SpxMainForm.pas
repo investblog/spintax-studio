@@ -193,6 +193,7 @@ type
     procedure FlashJumpLine;
     procedure FlashFaded(Sender: TObject);
     procedure VarSpell(ANames: TStringList);
+    function DefValueEdited(ADirIndex: Integer; const AValue: string): Boolean;
     procedure VarDefine(const AName, AValue: string);
     procedure OpenGroupPane;
     procedure RuntimeChanged(Sender: TObject);
@@ -631,6 +632,7 @@ begin
   FVars.OnFindRef := @VarFindRef;
   FVars.OnDefine := @VarDefine;
   FVars.OnSpell := @VarSpell;
+  FVars.OnSetDefValue := @DefValueEdited;
   FVars.OnRuntimeChanged := @RuntimeChanged;
 
   { The batch and its export. The panel owns N, the seed and the dedup settings; the document,
@@ -2058,6 +2060,50 @@ begin
     that repaints on every keystroke anyway: the cost is nothing and it cannot leave a row
     washed. }
   FEditor.Invalidate;
+end;
+
+(* A DEFINITION'S VALUE, REWRITTEN WHERE IT SITS -- the first edit this panel makes to the
+   document rather than to the session.
+
+   editor-core decides WHETHER and WHERE: SpxSetDirectiveValue splices the smallest region that
+   can carry the change, reads the result back through the engine, and refuses an edit whose
+   document would say something other than what was asked -- a value carrying `/#` opens a
+   comment that eats the rest of the file, one carrying a line break ends the directive early,
+   and a directive with a comment inside it cannot be rewritten by span at all. None of that
+   judgement belongs here.
+
+   THE WINDOW ONLY APPLIES IT, and applies the SPAN rather than the new document, which is the
+   whole reason this waited for the overload: assigning a new `Text` into SynEdit throws the undo
+   history away and moves the caret. Through TextBetweenPoints inside one undo block, Ctrl+Z puts
+   the value back in a single step -- the same road the group editor's write-back takes.
+
+   IN EDITOR COORDINATES, not DocText's. DocText normalises to the FILE's EOL, for the engine and
+   for saving; the offsets that come back must be the ones OffsetToPoint walks, and it walks
+   FEditor.Lines adding LineEnding. The directive INDEX is the same in either text -- normalising
+   rewrites terminators, not the order or the number of directives. *)
+function TSpxMainForm.DefValueEdited(ADirIndex: Integer; const AValue: string): Boolean;
+var newDoc: string; a, b: Integer;
+begin
+  Result := False;
+  if FEditor = nil then Exit;
+  Result := SpxSetDirectiveValue(FEditor.Text, ADirIndex, AValue, newDoc, a, b);
+  if not Result then
+  begin
+    { The panel puts the row back; this says why, in the one place the window talks to the user
+      without a dialog. The next render overwrites it with the verdict, which is the right
+      lifetime for a message about an edit that did not happen. }
+    FStatus.SimpleText := Tr(sDefValueRefused);
+    Exit;
+  end;
+  FEditor.BeginUndoBlock;
+  try
+    FEditor.TextBetweenPoints[OffsetToPoint(a), OffsetToPoint(b)] := AValue;
+  finally
+    FEditor.EndUndoBlock;
+  end;
+  { The document moved, so everything derived from it has to: the preview, the verdict and the
+    panel's own rows. }
+  RequestRender;
 end;
 
 { THE NAMES AS THE DOCUMENT SPELLS THEM, in one pass for all of them.

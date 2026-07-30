@@ -347,11 +347,33 @@ the managed tier are later releases.
          **Unverified by me: the panel on screen.** The layout is built in code and compiles,
          the rules behind it are gated, but nothing here can see a window — and raising the
          user's windows at 2am to photograph one is not verification worth having.
-      3. write-back goes through SynEdit's own edit API so undo and the caret behave, and the
-         panel re-derives from the text after every change (`SpExtractDirectives` is linear).
-         Still open, and it is why the definitions group is read-only: assigning a whole new
-         document into SynEdit would throw away the undo history and move the caret, which is
-         worse than waiting one PR.
+      3. ~~write-back goes through SynEdit's own edit API so undo and the caret behave~~
+         *the VALUE landed 2026-07-30; the name, the kind and delete are still open.*
+
+         What unblocked it: `SpxSetDirectiveValue` gained an overload reporting the REGION it
+         replaced (half-open, the pair `Splice` takes and the one the group editor's write-back
+         already spoke), so the window applies a span through `TextBetweenPoints` instead of
+         assigning a whole new `Text` — which is what would have thrown the undo history away
+         and moved the caret. Measured: one Ctrl+Z restores exactly, and a value edit leaves the
+         indentation, the doubled spaces, the name's own case and a trailing comment untouched.
+         In EDITOR coordinates, not `DocText`'s: `DocText` normalises to the file's EOL, while
+         the offsets have to be the ones `OffsetToPoint` walks.
+
+         **Four LCL facts this cost, each measured before it was believed:**
+         - per-column read-only needs the `Columns` collection, so the gate is `OnSelectEditor`
+           nil'ing the editor for the other two columns — adding `Columns` here would walk back
+           into the documented FixedCols shift;
+         - `OnEditingDone` fires BEFORE the grid copies the editor's text into the cell, so a
+           handler reading `Cells` there sees the old value and does nothing. `OnValidateEntry`
+           is the hook built for it, and a value written back into `NewValue` becomes the cell —
+           which is the revert-on-refusal for free;
+         - `goAlwaysShowEditor` is wrong for a FILE edit: validation happens when the editor
+           hides, so with it always open Enter committed nothing. It is also a text box standing
+           open on every row of a grid that rewrites the document;
+         - **LCL's cell editor has no `VK_RETURN` case at all** (grids.pas:10663) and
+           `EditorHide` never validates — only a selection MOVE does. So Enter is hooked on the
+           editor and commits through the panel's own single commit path. Escape still abandons,
+           because that case LCL does have.
 
       **Measured before it can surprise the panel** (2026-07-26): a directive's `Column` is
       where its CONSUMED text begins, and indentation is part of that — `  #set %a% = 1`

@@ -79,7 +79,9 @@ const
 
       'Gelijke breedte', 'Dubbelklik: gelijke breedte',
 
-      'Editorlettertype', 'Automatisch'
+      'Editorlettertype', 'Automatisch',
+
+      'Waarde niet toegepast: de engine zou de directive anders lezen'
   );
 
 implementation

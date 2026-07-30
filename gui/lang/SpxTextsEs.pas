@@ -77,7 +77,9 @@ const
 
       'Anchos iguales', 'Doble clic: anchos iguales',
 
-      'Fuente del editor', 'Automática'
+      'Fuente del editor', 'Automática',
+
+      'Valor no aplicado: el motor leería la directiva de otro modo'
   );
 
 implementation

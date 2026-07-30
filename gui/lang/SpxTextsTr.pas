@@ -74,7 +74,9 @@ const
 
       'Eşit genişlik', 'Çift tıklama: eşit genişlik',
 
-      'Düzenleyici yazı tipi', 'Otomatik'
+      'Düzenleyici yazı tipi', 'Otomatik',
+
+      'Değer uygulanmadı: motor yönergeyi farklı okurdu'
   );
 
 implementation

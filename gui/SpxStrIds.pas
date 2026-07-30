@@ -82,7 +82,14 @@ type
     sSplitEven, sSplitEvenHint,
 
     { ── the editor's own font ── }
-    sEditorFont, sFontAuto
+    sEditorFont, sFontAuto,
+
+    { ── a definition's value, edited in its row: what the status bar says when the edit is
+      refused. The engine reads every edit back, so a refusal means the document would have
+      said something other than what was typed -- a `/#` opening a comment, a line break
+      ending the directive, or a comment already inside it. Silence here would be the
+      "you can type but nothing sticks" defect all over again. ── }
+    sDefValueRefused
   );
 
 implementation

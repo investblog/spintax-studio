@@ -519,7 +519,21 @@ function SpxDocOffset(const Doc: string; Line, Column: Integer): Integer;
       ends the directive early, an empty or spaced name is no directive at all. Every edit is
       read back with `SpExtractDirectives` and refused unless the engine agrees. }
 function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
-  out NewDoc: string): Boolean;
+  out NewDoc: string): Boolean; overload;
+
+{ The same edit, ALSO reporting the region it replaced -- and that is what lets a host apply it
+  through its own editor API instead of assigning a whole new document. The difference is not
+  cosmetic: SynEdit given a new `Text` throws the undo history away and moves the caret, which
+  is exactly why editing a definition in its row waited for this.
+
+  SpanA is the first byte replaced and SpanB the first byte KEPT after it -- the half-open pair
+  `Splice` takes, and the one the group editor's write-back already speaks (SpxGroups'
+  BodyStart/Stop). On a refusal both come back 0 along with NewDoc = Doc.
+
+  The caller must apply the SPAN, not diff the two documents: a diff is a second opinion about
+  what changed, and the day an edit touches two places it would be a wrong one. }
+function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
+  out NewDoc: string; out SpanA, SpanB: Integer): Boolean; overload;
 function SpxSetDirectiveName(const Doc: string; Index: Integer; const Name: string;
   out NewDoc: string): Boolean;
 function SpxSetDirectiveKind(const Doc: string; Index: Integer; const Kind: string;
@@ -1890,10 +1904,12 @@ begin
 end;
 
 function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
-  out NewDoc: string): Boolean;
+  out NewDoc: string; out SpanA, SpanB: Integer): Boolean;
 var d: TSpDirective; a, b, na, nb, va, vb: Integer; covered: string;
 begin
   NewDoc := Doc;
+  SpanA := 0;
+  SpanB := 0;
   Result := False;
   if not DirectiveSpan(Doc, Index, d, a, b, covered) then Exit;
   if d.Kind = 'include' then Exit;              { an include carries a target, not a value }
@@ -1902,7 +1918,20 @@ begin
   NewDoc := Splice(Doc, a + va - 1, a + vb - 1, Value);
   { The engine trims a value as the renderer does, so that is what it will read back. }
   Result := EditAccepted(NewDoc, Index, d.Kind, d.Name, Trim(Value));
-  if not Result then NewDoc := Doc;
+  if Result then
+  begin
+    SpanA := a + va - 1;
+    SpanB := a + vb - 1;
+  end
+  else
+    NewDoc := Doc;
+end;
+
+function SpxSetDirectiveValue(const Doc: string; Index: Integer; const Value: string;
+  out NewDoc: string): Boolean;
+var ignoreA, ignoreB: Integer;
+begin
+  Result := SpxSetDirectiveValue(Doc, Index, Value, NewDoc, ignoreA, ignoreB);
 end;
 
 function SpxSetDirectiveName(const Doc: string; Index: Integer; const Name: string;

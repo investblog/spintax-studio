@@ -75,7 +75,9 @@ const
 
       'Larghezze uguali', 'Doppio clic: larghezze uguali',
 
-      'Carattere dell''editor', 'Automatico'
+      'Carattere dell''editor', 'Automatico',
+
+      'Valore non applicato: il motore leggerebbe la direttiva in modo diverso'
   );
 
 implementation

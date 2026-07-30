@@ -84,7 +84,9 @@ const
 
       'Largeurs égales', 'Double-clic : largeurs égales',
 
-      'Police de l''éditeur', 'Auto'
+      'Police de l''éditeur', 'Auto',
+
+      'Valeur non appliquée : le moteur lirait la directive autrement'
   );
 
 implementation

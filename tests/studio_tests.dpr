@@ -3738,6 +3738,30 @@ begin
   if not SpxSetDirectiveValue(Doc, Idx, V, Result) then Result := '<refused>';
 end;
 
+{ The region the edit replaced, as `A..B` -- or a refusal. A host applies THIS rather than a
+  whole new document, so it is the half of the answer the GUI actually consumes. }
+function EditSpan(const Doc: string; Idx: Integer; const V: string): string;
+var out_: string; a, b: Integer;
+begin
+  { THE NUMBERS EVEN ON A REFUSAL, and that is deliberate. Reporting only the boolean here made
+    the refusal checks unfalsifiable: a mutation that leaked a real span while still returning
+    False passed every one of them. The span is what a caller would splice, so the span is what
+    a refusal has to be checked on. }
+  if SpxSetDirectiveValue(Doc, Idx, V, out_, a, b) then
+    Result := IntToStr(a) + '..' + IntToStr(b)
+  else
+    Result := 'refused ' + IntToStr(a) + '..' + IntToStr(b);
+end;
+
+{ And what that region actually covered in the ORIGINAL document -- the readable form of the
+  same fact, so a wrong span is a wrong string rather than two numbers to check by hand. }
+function EditSpanText(const Doc: string; Idx: Integer; const V: string): string;
+var out_: string; a, b: Integer;
+begin
+  if not SpxSetDirectiveValue(Doc, Idx, V, out_, a, b) then Exit('<refused>');
+  Result := '[' + Copy(Doc, a, b - a) + ']';
+end;
+
 function EditName(const Doc: string; Idx: Integer; const N: string): string;
 begin
   if not SpxSetDirectiveName(Doc, Idx, N, Result) then Result := '<refused>';
@@ -3768,8 +3792,16 @@ begin
   end;
 end;
 
+{ Splice the reported region by hand, the way the window does it through the editor. }
+function SpliceByHand(const Doc: string; Idx: Integer; const V: string): string;
+var out_: string; a, b: Integer;
+begin
+  if not SpxSetDirectiveValue(Doc, Idx, V, out_, a, b) then Exit('<refused>');
+  Result := Copy(Doc, 1, a - 1) + V + Copy(Doc, b, MaxInt);
+end;
+
 procedure TestDirectiveEditing;
-var doc, out_: string;
+var doc, doc2, out_: string;
 begin
   { Setting a value to what it already is must not move one byte. This is the check that
     catches a rewrite that "only" normalises formatting. }
@@ -3782,6 +3814,31 @@ begin
         '   #set  %Brand%   =   Новое   ' + '/# хвостовой #/'#10'<p>%Brand%</p>');
   Check('edit/the-engine-reads-back-the-new-value', DirSig(EditValue(doc, 0, 'Новое')),
         'set:brand=Новое;');
+
+  { ── THE SPAN, which is what the panel applies ── }
+
+  { It covers the VALUE and nothing else: not the keyword, not the name, not the spacing that
+    leads to it, and not the trailing blanks or the comment after it. Read as text rather than
+    as two numbers, because a span off by one is then a visible string. }
+  Check('edit/span-covers-the-value-only', EditSpanText(doc, 0, 'Новое'), '[Акме]');
+  { Half-open, exactly as Splice takes it and as the group editor's write-back already speaks:
+    replacing [A, B) with the new value reproduces what the function returned. }
+  doc2 := doc;
+  Check('edit/span-applied-by-hand-matches-the-function',
+        SpliceByHand(doc2, 0, 'Новое'), EditValue(doc, 0, 'Новое'));
+  { A value that was empty still has a place to be written -- an empty span at the right point,
+    not a refusal. }
+  Check('edit/an-empty-value-still-reports-a-place',
+        EditSpanText('#set %x% =' + #10 + 'т', 0, 'A'), '[]');
+  { A REFUSAL REPORTS NO PLACE -- 0..0, asserted on the NUMBERS. A caller that spliced a leaked
+    span after a False would write into a document the function had just refused to change. }
+  Check('edit/a-refused-value-reports-no-span',
+        EditSpan('#set %x% = A'#10'т', 0, 'A /# oops'), 'refused 0..0');
+  Check('edit/a-refused-index-reports-no-span', EditSpan('#set %x% = A'#10'т', 9, 'Б'),
+        'refused 0..0');
+  { An include has a target, not a value -- and therefore no value span. }
+  Check('edit/an-include-has-no-value-span',
+        EditSpan('#include "frag"'#10'т', 0, 'Б'), 'refused 0..0');
 
   { Line endings are the document's, not ours. }
   doc := '#set %x% = A'#13#10'#def %y% = B'#13#10'текст';

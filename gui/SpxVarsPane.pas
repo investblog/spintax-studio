@@ -24,7 +24,8 @@ unit SpxVarsPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, SpxStudio, SpxUi, SpxStrIds, SpxStrings;
+  Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, LCLType,
+  SpxStudio, SpxUi, SpxStrIds, SpxStrings;
 
 type
   TSpxJumpEvent = procedure(Line, Column: Integer) of object;
@@ -44,6 +45,11 @@ type
     back `casinoprefix` and the panel used to show that. The window can tell -- its scanner
     reads the real text -- so it fills in the spelling for the names it is handed. }
   TSpxSpellEvent = procedure(ANames: TStringList) of object;
+  { A DEFINITION'S VALUE, edited in its row -- the first thing in this panel that rewrites the
+    DOCUMENT rather than the session. Returns whether the edit was applied: editor-core reads
+    every edit back through the engine and refuses one whose result would say something else,
+    and a refused row has to go back to what the file actually holds. }
+  TSpxSetDefValueEvent = function(ADirIndex: Integer; const AValue: string): Boolean of object;
 
   TSpxVarsPane = class(TPanel)
   private
@@ -66,12 +72,19 @@ type
     FOnFindRef: TSpxFindRefEvent;
     FOnDefine: TSpxDefineEvent;
     FOnSpell: TSpxSpellEvent;
+    FOnSetDefValue: TSpxSetDefValueEvent;
     { What was held down when the click started. OnClick does not carry it, and OnMouseDown
       runs before the grid has moved its current cell -- so the modifier is caught in the one
       and used in the other. }
     FClickShift: TShiftState;
     FOnRuntimeChanged: TNotifyEvent;
     procedure DefsClicked(Sender: TObject);
+    procedure DefsSelectEditor(Sender: TObject; ACol, ARow: Integer;
+      var Editor: TWinControl);
+    procedure DefsValidate(Sender: TObject; ACol, ARow: Integer;
+      const OldValue: string; var NewValue: string);
+    procedure DefsEditorKey(Sender: TObject; var Key: Word; Shift: TShiftState);
+    function CommitDefValue(AIdx: Integer; const AOld, ANew: string): string;
     procedure RuntimeClicked(Sender: TObject);
     procedure RuntimeMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure RuntimeMouseDown(Sender: TObject; Button: TMouseButton;
@@ -103,6 +116,8 @@ type
     property OnDefine: TSpxDefineEvent read FOnDefine write FOnDefine;
     { Asked once per rebuild, never per row: the answer costs a document scan. }
     property OnSpell: TSpxSpellEvent read FOnSpell write FOnSpell;
+    { Editing a definition's value writes to the document; the window does the writing. }
+    property OnSetDefValue: TSpxSetDefValueEvent read FOnSetDefValue write FOnSetDefValue;
     property OnRuntimeChanged: TNotifyEvent read FOnRuntimeChanged write FOnRuntimeChanged;
   end;
 
@@ -143,7 +158,32 @@ begin
     grid defaults to. LCL treats a click in the fixed zone as a header click and suppresses
     OnClick entirely, so a third of every row would have been dead to click-to-jump. }
   FDefs.FixedCols := 0;
-  FDefs.Options := FDefs.Options + [goRowSelect] - [goEditing, goRangeSelect];
+  { THE VALUE COLUMN IS EDITABLE, the other two are not -- and the gate is OnSelectEditor
+    rather than a per-column ReadOnly, because per-column needs the Columns collection and
+    adding that here would walk straight back into the trap the session grid's own comment
+    records: with Columns, LCL sizes the grid as FixedCols + Columns.Count and the default
+    FixedCols of 1 shifts every data column by one.
+
+    goRowSelect stays, and it is compatible: LCL's EditingAllowed asks about goEditing and the
+    column, never about row selection (grids.pas:8652). }
+  { goEditing WITHOUT goAlwaysShowEditor, and the difference decides when an edit lands.
+    Validation happens when the editor HIDES; with the editor always open it never hides while
+    the cell stays current, so Enter committed nothing -- measured: the cell read `AkmeZ` and the
+    document was untouched. Without always-show, Enter closes the editor and the value is
+    applied, Escape abandons it, and F2 or typing opens it.
+
+    It is also the safer shape for an edit that rewrites the FILE: a text box standing open on
+    every row invites a change nobody meant to make. The session group is the opposite case and
+    keeps always-show, because a value there is the panel's own and commits per keystroke. }
+  FDefs.Options := FDefs.Options + [goRowSelect, goEditing] - [goRangeSelect];
+  FDefs.OnSelectEditor := @DefsSelectEditor;
+  { OnValidateEntry, NOT OnEditingDone -- measured. EditingDone fires BEFORE the grid copies the
+    editor's text into the cell, so a handler reading Cells there sees the OLD value and decides
+    nothing happened; the first version of this did exactly that and silently did nothing.
+    ValidateEntry is the hook built for it (grids.pas:8590): NewValue arrives holding what was
+    typed, and a value written back into it is written back into the cell -- which is the
+    revert-on-refusal, for free. }
+  FDefs.OnValidateEntry := @DefsValidate;
   FDefs.OnClick := @DefsClicked;
   { Every row here jumps, so the whole grid gets the hand -- the same signal as the session
     group's name column, for the same action. }
@@ -495,9 +535,86 @@ begin
   else FRuntime.Cursor := crDefault;
 end;
 
+procedure TSpxVarsPane.DefsSelectEditor(Sender: TObject; ACol, ARow: Integer;
+  var Editor: TWinControl);
+begin
+  { Only the value. Changing the KIND or the NAME is a different edit with its own function in
+    editor-core and its own reasons to be refused; this slice is the value. }
+  if ACol <> 2 then
+  begin
+    Editor := nil;
+    Exit;
+  end;
+  { AND ENTER HAS TO ACCEPT, which LCL's own cell editor does not do: TStringCellEditor.KeyDown
+    has cases for F2, Delete, Backspace, the arrows and Escape -- and no VK_RETURN at all
+    (grids.pas:10663). Measured before believing it: the cell took `AkmeZ`, Enter left the editor
+    open, and the document did not change until the current cell moved. Typing a value and
+    pressing Enter to no effect is the same defect this panel was just cured of.
+
+    Hooked on the editor LCL has just handed us. Its OnKeyDown event is free -- the class does
+    its own key work by overriding the METHOD, not through the event. }
+  if Editor <> nil then Editor.OnKeyDown := @DefsEditorKey;
+end;
+
+procedure TSpxVarsPane.DefsEditorKey(Sender: TObject; var Key: Word; Shift: TShiftState);
+var idx: Integer; kept: string;
+begin
+  if Key <> VK_RETURN then Exit;
+  Key := 0;
+  { THE COMMIT IS DONE HERE, not left to the grid. Closing the editor does NOT validate --
+    measured, and then confirmed in the source: EditorHide never calls EditorGetValue, and the
+    only public routes that do are a selection MOVE (grids.pas:7996) and ResetEditor. So Enter
+    would have closed the editor and dropped the edit on the floor.
+
+    The new text comes from the editor itself; the OLD value is the MODEL's, which is what the
+    document holds -- not the cell, which the grid has already been updating as the user typed. }
+  idx := FDefs.Row - 1;
+  if (idx >= 0) and (idx <= High(FRows)) and (Sender is TCustomEdit) then
+  begin
+    kept := CommitDefValue(idx, FRows[idx].Value, TCustomEdit(Sender).Text);
+    FDefs.Cells[2, FDefs.Row] := kept;
+  end;
+  { Hiding it after the commit cannot commit a second time: EditorGetValue needs a VISIBLE
+    editor (grids.pas:8590), and a later selection move finds none. }
+  FDefs.EditorMode := False;
+end;
+
+{ THE ONE PLACE A DEFINITION'S VALUE IS COMMITTED, because there are two ways in and they must
+  not drift: leaving the cell (LCL validates on a selection MOVE) and pressing Enter (LCL does
+  not, so the panel does it). Returns what the cell should show afterwards -- the new value when
+  the document took it, the old one when it did not. }
+function TSpxVarsPane.CommitDefValue(AIdx: Integer; const AOld, ANew: string): string;
+begin
+  Result := AOld;
+  if (AIdx < 0) or (AIdx > High(FRows)) then Exit;
+  { ONLY WHEN IT ACTUALLY CHANGED: applying an unchanged value would splice the document -- and
+    spend an undo step -- for opening a cell and leaving it alone. }
+  if ANew = AOld then Exit(ANew);
+  { AND ONLY IF THE ROW IS STILL THE ROW IT WAS. A render can rebuild the grid while the editor
+    is open; if it did, this index no longer means what it meant when editing began, and the safe
+    answer is to change nothing. }
+  if AOld <> FRows[AIdx].Value then Exit;
+  if not Assigned(FOnSetDefValue) then Exit;
+  { A refusal leaves the old value showing: the document still says what it said, and a row
+    showing something the file does not contain is the worse of the two states. }
+  if FOnSetDefValue(FRows[AIdx].DirIndex, ANew) then Result := ANew;
+end;
+
+procedure TSpxVarsPane.DefsValidate(Sender: TObject; ACol, ARow: Integer;
+  const OldValue: string; var NewValue: string);
+begin
+  if ACol <> 2 then Exit;
+  { Whatever survives goes back into NewValue, and LCL writes that into the cell for us
+    (grids.pas:8596). }
+  NewValue := CommitDefValue(ARow - 1, OldValue, NewValue);
+end;
+
 procedure TSpxVarsPane.DefsClicked(Sender: TObject);
 var idx: Integer;
 begin
+  { The value column edits; the kind and the name jump. Same split as the session group, and for
+    the same reason -- a cell cannot both open an editor and move the caret away from it. }
+  if FDefs.Col = 2 then Exit;
   idx := FDefs.Row - 1;
   if (idx < 0) or (idx > High(FRows)) then Exit;
   if FRows[idx].Line <= 0 then Exit;

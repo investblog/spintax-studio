@@ -80,7 +80,9 @@ const
 
       'Even panes', 'Double-click: even panes',
 
-      'Editor font', 'Auto'
+      'Editor font', 'Auto',
+
+      'Value not applied: the engine would read the directive differently'
   );
 
 implementation

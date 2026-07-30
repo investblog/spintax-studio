@@ -84,7 +84,9 @@ const
 
       'Gleich breit', 'Doppelklick: gleich breit',
 
-      'Editor-Schrift', 'Automatisch'
+      'Editor-Schrift', 'Automatisch',
+
+      'Wert nicht übernommen: die Engine würde die Direktive anders lesen'
   );
 
 implementation
