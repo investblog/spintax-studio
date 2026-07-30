@@ -41,6 +41,10 @@ type
     procedure Fill;
   public
     constructor Create(AOwner: TComponent); override;
+    { TTreeNode.Data is a raw pointer, so nothing frees what hangs off it. Fill clears the
+      previous set on every refill; this clears the last one, which otherwise leaks at
+      shutdown. }
+    destructor Destroy; override;
     procedure Retranslate;
     procedure ApplyTheme(const APalette: TSpxPalette);
     { Light the node for this page and article, without firing OnPicked -- the window calls it
@@ -112,6 +116,19 @@ begin
 
   Fill;
   Retranslate;
+end;
+
+destructor TSpxHelpTopics.Destroy;
+var i: Integer;
+begin
+  if FTree <> nil then
+    for i := 0 to FTree.Items.Count - 1 do
+      if FTree.Items[i].Data <> nil then
+      begin
+        TObject(FTree.Items[i].Data).Free;
+        FTree.Items[i].Data := nil;
+      end;
+  inherited Destroy;
 end;
 
 procedure TSpxHelpTopics.CloseClicked(Sender: TObject);

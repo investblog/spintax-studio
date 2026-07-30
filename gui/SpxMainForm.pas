@@ -1421,13 +1421,19 @@ begin
   { ONE SLOT, ONE FACE. The rail's two latches share a group, so clicking this tool puts the
     help tool out -- but LCL calls OnClick only for the button that was clicked, so the panel
     that is going away has to be hidden from here. }
+  { THE FACE IS DECLARED BEFORE ANYTHING RIPPLES. HideHelp changes the pane widths, which
+    reaches the form's Resize, which runs ClampSlide -- and it used to run while FDockHelp still
+    said "help", applying the help's remembered width and caching the room. The explicit clamp
+    below then hit the room guard and did nothing, so each face opened at the OTHER one's width.
+    Measured: 300, then 300 for the help, then 260 for the group. }
+  FDockHelp := False;
   if FTopics.Visible then
   begin
     HideHelp;
     FTopics.Visible := False;
     FRail.SetDown(4, False);
   end;
-  FDockHelp := False;
+  FSlideRoom := -1;
   ClampSlide;
   FDock.Visible := True;
   FSlide.Visible := True;
@@ -2741,6 +2747,7 @@ begin
     rather than showing an answer to a question nobody asked. }
   if HelpShowing then
   begin
+    job.HelpSet := True;
     job.HelpLang := FTopics.HelpLang;
     job.UiLang := SpxUiLang;
     job.Locale := SpxHelpLocale(job.HelpLang);
@@ -2751,7 +2758,7 @@ begin
     FEngine.Post(job);
     Exit;
   end;
-  job.HelpLang := -1;
+
   { DocText, not FEditor.Text: SynEdit joins its lines with the PLATFORM's ending, so on
     Windows the engine was handed a CRLF copy of a file that is LF on disk -- and the two do
     not render the same. A directive line ending in CRLF leaves its LF behind, one blank line
@@ -3295,10 +3302,12 @@ begin
   OpenHelpAtCaret;
 end;
 
-{ F1 AND THE MENU ALWAYS RE-AIM, even with the help already open: "help me about this" is a
-  question about where the caret is now, and a key that sometimes answers and sometimes closes
-  would be a key that does two things. The rail's tool stays a latch -- it is the way to put the
-  help away -- so between them there is a way to do each without either doing both. }
+{ F1 AND THE MENU AIM AT THE CARET; the rail's tool does the same and also closes. So there is
+  a way to do each without either doing both.
+
+  With the help ALREADY OPEN they simply re-open it: the editor is hidden, so the caret has not
+  moved and there is nothing new to ask about. An earlier comment here claimed they re-aim in
+  that case too, which the code has never done -- and could not usefully do. }
 procedure TSpxMainForm.HelpMenuClicked(Sender: TObject);
 begin
   OpenHelpAtCaret;
@@ -3320,7 +3329,11 @@ begin
     Exit;
   end;
   p := FEditor.LogicalCaretXY;
-  if SpxHelpForCaret(DocText, CaretOffset, p.Y, p.X, FRows, FTopics.HelpLang, page, anchor) then
+  { FEditor.Text, NOT DocText: CaretOffset counts the EDITOR's line endings and DocText
+    normalises them, so the pair was a line-ending's difference out per line -- silently, and
+    worse the further down the document the caret was. The group editor pairs them this way. }
+  if SpxHelpForCaret(FEditor.Text, CaretOffset, p.Y, p.X, FRows, FTopics.HelpLang,
+                     page, anchor) then
   begin
     OpenHelpPane('');
     GoToHelp(page, anchor);
@@ -3343,6 +3356,8 @@ begin
     FSlide.Visible := False;
     FRail.SetDown(3, False);
   end;
+  { Declared first, for the reason OpenGroupPane gives at length: hiding the other face
+    ripples into ClampSlide, and it must already know whose width to apply. }
   FDockHelp := True;
   { Before the panes are clamped, so the page appears at its reading width rather than at the
     working one and then jumping. }
@@ -3351,6 +3366,7 @@ begin
     FWorkFraction := FPaneFraction;
     FPaneFraction := SPX_HELP_FRACTION;
   end;
+  FSlideRoom := -1;
   ClampSlide;
   FDock.Visible := True;
   FTopics.Visible := True;

@@ -322,10 +322,22 @@ def convert(lang, path):
                     # template is its own anchor pointing at the same example: a single-line
                     # inline anchor inside a <pre> is the case that was measured, and a bigger
                     # click target costs nothing.
-                    for i in range(len(fence_body) - (len(acc) - 1), len(fence_body)):
+                    #
+                    # HOW MANY LINES CAME BEFORE depends on whether THIS line carried any of the
+                    # template. When the arrow line's left side is blank the whole template is
+                    # above it, and subtracting one anyway left the first line unclickable and
+                    # emitted an empty anchor on the output line -- shipped twice in the Russian
+                    # document, and the two languages then behaved differently from the same
+                    # markdown.
+                    here = 1 if left.strip() else 0
+                    for i in range(len(fence_body) - (len(acc) - here), len(fence_body)):
                         fence_body[i] = link(ex, fence_body[i])
-                    fence_body.append(link(ex, esc(left.rstrip())) +
-                                      esc(left[len(left.rstrip()):]) + ARROW + fence_note(right))
+                    if here:
+                        fence_body.append(link(ex, esc(left.rstrip())) +
+                                          esc(left[len(left.rstrip()):]) + ARROW +
+                                          fence_note(right))
+                    else:
+                        fence_body.append(esc(left) + ARROW + fence_note(right))
                 else:
                     fence_body.append(fence_line(t))
                 del acc[:]

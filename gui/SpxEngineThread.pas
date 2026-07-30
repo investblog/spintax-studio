@@ -64,14 +64,20 @@ type
       describing the whole file, because selecting a paragraph does not make the errors
       outside it go away. }
     Fragment: string;
-    { THE HELP IS RENDERED UNDER THE HELP'S OWN CONDITIONS. -1 for an ordinary document; the
-      index of a help language when the left pane is showing the help and Text is the example
-      the caret sits in. The locale and the seed come with the job as usual, but the template
-      set cannot -- it is three fragments the document declares rather than a folder on disk --
-      so the thread builds it from SpxHelpText.
+    { THE HELP IS RENDERED UNDER THE HELP'S OWN CONDITIONS. The locale and the seed come with
+      the job as usual, but the template set cannot -- it is the fragments the document declares
+      rather than a folder on disk -- so the thread builds it from SpxHelpText.
 
-      Anything else would have the help print one answer and the pane show another, which is the
-      one thing a document whose examples are fixtures may never do. }
+      A BOOLEAN AND NOT A LANGUAGE INDEX, and the difference cost an export. The field used to be
+      -1 for an ordinary document and 0..n for a help one; `Default(TSpxJob)` zeroes it, and zero
+      was the ENGLISH HELP. BatchStep builds its job that way, so every export rendered against
+      the help's own fragments -- and the help declares one called `frag`, so a document with a
+      fragment of that name silently exported the help's text instead of its own. Measured.
+
+      Encoded so the default is the safe answer: a field whose zero is dangerous will be
+      defaulted wrong again, and the comment warning about it sat six lines from the site that
+      did. }
+    HelpSet: Boolean;
     HelpLang: Integer;
   end;
 
@@ -523,7 +529,7 @@ var i: Integer;
 begin
   { The help's set is three fragments the document declares, not a folder -- built here and
     cached by language, so a caret moving through the help does not rebuild it per keystroke. }
-  if Job.HelpLang >= 0 then
+  if Job.HelpSet then
   begin
     if FSetHelpLang = Job.HelpLang then Exit;
     FreeAndNil(FSet);

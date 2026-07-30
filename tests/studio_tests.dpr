@@ -3804,7 +3804,7 @@ end;
 procedure TestHelpUnit;
 var
   lang, page, i, seen, p_: Integer;
-  html, ids, want, got, anchorId, s_: string;
+  html, ids, want, got, s_: string;
   k: TSpxNoteKind;
   arts, hrefs: TStringList;
   j, n, want_ex: Integer;
@@ -3852,6 +3852,13 @@ begin
   { The two implementations of the digest agree. Pinned vectors, because the whole drift check
     rests on the Pascal here and the Python in scripts/make-help.py computing the same number,
     and nothing else would notice if they stopped. }
+  { A DEFAULT JOB IS NOT A HELP JOB, and this one line is the whole of the invariant that a
+    field's zero value must be its safe one. It used to be an index where 0 meant the English
+    help, so `Default(TSpxJob)` -- which is how the batch builds its job -- made every export
+    render against the help's own fragments. The help declares one called `frag`, so a document
+    with a fragment of that name exported the help's text instead of its own. }
+  CheckTrue('engine/a default job asks for no help set', not Default(TSpxJob).HelpSet);
+
   Check('help/unit/digest-of-empty', SpxHelpDigest(''), 'cbf29ce484222325');
   Check('help/unit/digest-of-a', SpxHelpDigest('a'), 'af63dc4c8601ec8c');
   Check('help/unit/digest-of-spintax', SpxHelpDigest('spintax'), 'dfd4591713134a8e');
@@ -3889,6 +3896,14 @@ begin
       render text whose output was never verified. }
     arts := TemplatesRunFor(SpxHelpSourcePath(lang));
     try
+      { THE COLLECTOR MUST HAVE RUN. It is filled while TestHelpExamples walks the markdown, so
+        this comparison is silent and vacuous if the two ever run in the other order -- measured
+        by review: swapping them dropped sixty-seven checks and reported nothing. An empty list
+        compared against anything passes, which is the worst way for a check to fail. }
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/the templates that were run were collected',
+                arts.Count > 0);
+      Check('help/unit/' + SpxHelpLangCode(lang) + '/as many collected as the unit carries',
+            IntToStr(arts.Count), IntToStr(SpxHelpExampleCount(lang)));
       for i := 0 to arts.Count - 1 do
       begin
         SpxHelpExample(lang, i, got);
@@ -4079,6 +4094,23 @@ begin
   CheckTrue('help/caret/on an unclosed brace opens its article',
             SpxHelpForCaret(ctxDoc, 12, 1, 12, ctxRows, 0, p_, s_) and (s_ = 'bracket.unclosed'));
 
+  { BEFORE the finding, in a document whose characters are two bytes each. The caret's column
+    is BYTES and the finding's is CODE POINTS: `цена ` is five characters and nine bytes, so a
+    caret at byte 9 is still left of the brace the finding names. Comparing the two units
+    directly -- which is what the first version did -- made this look covered. }
+  CheckTrue('help/caret/left of the finding, in a two-byte alphabet, is not on it',
+            not SpxHelpForCaret(ctxDoc, 9, 1, 9, ctxRows, 0, p_, s_));
+  CheckTrue('help/caret/right of it still is',
+            SpxHelpForCaret(ctxDoc, 12, 1, 12, ctxRows, 0, p_, s_) and (s_ = 'bracket.unclosed'));
+
+  { THE OFFSET AND THE TEXT MUST BE THE SAME TEXT. With CRLF endings the offset of line two's
+    content is two bytes further on than an LF copy would put it, and handing over the LF copy
+    while counting in the CRLF one is what the window did. }
+  ctxRows := nil;
+  CheckTrue('help/caret/line two of a CRLF document is found',
+            SpxHelpForCaret('плоский текст'#13#10'#include "frag"', 30, 2, 4, ctxRows, 0,
+                            p_, s_) and (p_ = SpxHelpPageIndex('includes')));
+
   { No finding at the caret: the CONSTRUCT decides, and it names a chapter rather than
     pretending to know which of its articles was meant. }
   ctxRows := nil;
@@ -4114,6 +4146,24 @@ begin
   CheckTrue('help/caret/in a variable opens the variables chapter',
             SpxHelpForCaret('привет %имя% и всё', 16, 1, 10, ctxRows, 0, p_, s_) and
             (p_ = SpxHelpPageIndex('variables')));
+
+  { A KEYWORD MUST END. All four of these are plain text to the engine -- it narrowed
+    `#include` to the family's anchor in v0.2.1 -- so a chapter about directives would be
+    teaching the reader something untrue about their own line. }
+  CheckTrue('help/caret/#includes is not #include',
+            not SpxHelpForCaret('#includes "frag"', 4, 1, 4, ctxRows, 0, p_, s_));
+  CheckTrue('help/caret/#setting is not #set',
+            not SpxHelpForCaret('#setting up the shop', 4, 1, 4, ctxRows, 0, p_, s_));
+  CheckTrue('help/caret/#definitely is not #def',
+            not SpxHelpForCaret('#definitely not a directive', 4, 1, 4, ctxRows, 0, p_, s_));
+  CheckTrue('help/caret/a tab after the keyword still counts',
+            SpxHelpForCaret('#set'#9'%x% = 1', 3, 1, 3, ctxRows, 0, p_, s_) and
+            (p_ = SpxHelpPageIndex('definitions')));
+
+  { A CR-ONLY document is one SpxDetectEol supports, so a scan that only knows LF looks for the
+    variable's opening per cent sign on the line above. }
+  CheckTrue('help/caret/a CR-only line is a line',
+            not SpxHelpForCaret('a%b'#13'cd', 6, 2, 2, ctxRows, 0, p_, s_));
 
   { NOTHING TO BE SPECIFIC ABOUT -- the caller opens the contents, which is what "help me"
     means with an empty document or a caret in plain prose. }
