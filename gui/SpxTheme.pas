@@ -77,7 +77,15 @@ begin
     { clNone leaves a selected token its own colour, which is what a syntax-coloured editor
       wants: painting selected text one flat colour throws the highlighting away. }
     Result.SelText := clNone;
-    Result.BracketBack := $00404040;
+    { BRAND MAGENTA, deep end -- `--magenta-900` (#6e0c38) from spintax.net's own token file.
+      What was here, $00404040, is RGB(64,64,64) against a page of RGB(30,30,30): a lift of
+      thirty-four on every channel, which the user reported as "practically invisible" and which
+      is exactly what a neutral grey does on a neutral background. A hue does what a shade could
+      not. The deepest of the four magentas rather than a brighter one, because this is a FILL
+      behind text: `--magenta-300` is what the brand puts on dark as a FOREGROUND (its docs
+      colour variables and conditionals with it), and a fill in that strength would drown the
+      syntax it sits under. }
+    Result.BracketBack := $00380C6E;
     Result.BracketText := $0000D7FF;
     { A lift off #1E1E1E rather than a hue: on dark, any tint at this strength reads as a
       colour cast over the syntax, and the point is "look here", not "this is special". }
@@ -118,10 +126,14 @@ begin
     { A REAL BACKGROUND, not clNone. SynEdit's bracket markup defaults to bolding the character
       (`MarkupInfo.Style := [fsBold]`, syneditmarkupbracket.pp:82) and nothing else, which is
       enough for a brace and far too little for the construct's separators -- a bold `|` on white
-      is not a highlight. Pale yellow, the colour every editor has used for a bracket match for
-      thirty years, and distinct from both the selection's blue and the jump flash's pale blue so
-      the three never read as the same thing. }
-    Result.BracketBack := $00B4FFFF;
+      is not a highlight.
+
+      THE SAME BRAND MAGENTA as the dark theme, so one thing means one thing in both -- a soft
+      fill of `--magenta-500` (#cc2070) over white, built the way spintax.net builds its own
+      `--accent-soft`: a percentage of the hue rather than a colour picked beside it. It replaces
+      a pale yellow that was nothing but my taste. Distinct from the selection's blue and from the
+      jump flash's pale blue, so the three never read as the same thing. }
+    Result.BracketBack := $00E0CEF4;
     Result.BracketText := clNone;
     { NOT a system colour, and not derived from clHighlight: the selection's colour means "the
       user selected this" everywhere else in the window, and a jump did not. A pale warm wash

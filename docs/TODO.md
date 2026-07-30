@@ -469,6 +469,23 @@ the managed tier are later releases.
       A permutation's trailing `<br>` IS marked: the engine reads it as the separator placed
       before the next element, which is why the highlighter already paints it as config.
 
+      **The mark is BRAND MAGENTA in both themes** (2026-07-30, the user's call after seeing the
+      dark one). The first version used a neutral grey on dark, `#404040` against a `#1E1E1E`
+      page: a uniform lift of 34 on every channel, which the user read as "practically
+      invisible" — and rightly, because a neutral differs from a neutral only in LIGHTNESS, which
+      the eye is worst at. A hue does what a shade could not.
+
+      **The brand's tokens live in the OTHER repo**, `W:\Projects\spintax.net\static\css	heme.css`,
+      and the magenta family is the four values `--magenta-900 #6e0c38`, `--magenta-700 #a91455`,
+      `--magenta-500 #cc2070`, `--magenta-300 #e04090`. Written down here so a later colour
+      decision does not need that checkout open. The site's own pairing is instructive: it puts
+      `magenta-300` on dark and `magenta-700` on light, but as a FOREGROUND — its docs colour
+      variables and conditionals with it. A fill behind text wants the other end, so dark takes
+      `magenta-900` and light a soft tint of `magenta-500` built the way the site builds
+      `--accent-soft`: a percentage of the hue rather than a colour chosen beside it.
+      Measured: dark `#6E0C38` on `#1E1E1E` lifts 80/18/26, light `#F4CEE0` on white lifts
+      11/49/31.
+
       **The light theme gained a real bracket background** as part of this. SynEdit's bracket
       markup defaults to bolding the character and nothing else, and the palette left
       `BracketBack` at `clNone` -- a bold `|` on white is not a highlight, so the feature would
