@@ -454,6 +454,39 @@ the managed tier are later releases.
       the colour. Telling "directly inside a permutation" from "inside a group" needs the
       kinds of the open brackets, and what crosses a line is a depth — an integer, not a
       stack, which is what makes deep nesting free. Kinds are tracked for one line only.
+- [x] **The construct shows itself when the caret steps onto a bracket** (2026-07-30, the
+      user's request, GTW's trick). Not only the pair -- every separator the construct has, and
+      none belonging to a nested one.
+
+      DEPTH is what tells them apart, and the scanner already reports it: an opener carries the
+      level it CREATES and everything inside carries that level, so a separator of this construct
+      has the opener's depth and one inside a nested group has more. Measured on `{a|{x|y}|c}`:
+      the outer pipes are depth 1, the inner one depth 2. That makes the filter exact and blind
+      to KIND -- a conditional's flag, a plural's count and a permutation's config are skipped for
+      free, because none of them is a separator token. Fourteen checks in the console suite
+      (`SpxSeparatorsOf`, src/SpxTokens.pas, where every structural question in this project goes).
+
+      A permutation's trailing `<br>` IS marked: the engine reads it as the separator placed
+      before the next element, which is why the highlighter already paints it as config.
+
+      **The light theme gained a real bracket background** as part of this. SynEdit's bracket
+      markup defaults to bolding the character and nothing else, and the palette left
+      `BracketBack` at `clNone` -- a bold `|` on white is not a highlight, so the feature would
+      have been invisible in the default theme. Pale yellow, distinct from the selection's blue
+      and from the jump flash's pale blue.
+
+      **Measured by asking the markup, not by reading pixels.** Two pixel attempts read the wrong
+      thing -- a background the light theme did not paint, then something uniform above the text
+      -- while `GetMarkupAttributeAtRowCol` is public, is the exact contract SynEdit paints from,
+      and cannot be misread. Caret away from a bracket: nothing marked. On the outer brace:
+      1, 3, 5, 11. On the inner: 6, 8, 10.
+
+- [x] **The definition jump lands on the keyword** (2026-07-30). A directive's reported `Column`
+      is where its CONSUMED text begins and the indentation is part of that, so a jump to it put
+      the caret in the margin and left the eye to find the `#set` the row was clicked for. Blanks
+      are skipped forward, and only blanks can be there: a comment is not consumed, so
+      `/# c #/#set` already reports the `#` itself. Six checks, code points not bytes.
+
 - [ ] **Highlighter gap — an include target on the following line.** The family's anchor
       allows `[ \t\n\r\f\x0B]+` between `#include` and its target, so the target may begin on
       the next line; measured, the engine reports `include(frag)` for `#include`+LF+`"frag"`.

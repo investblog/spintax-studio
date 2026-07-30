@@ -115,6 +115,29 @@ function SpxUnpackState(Value: PtrInt): TSpxScanState;
   One forward pass over the text per call, which is what a caret move costs. }
 function SpxMatchBracket(const Text: string; Offset: Integer): Integer;
 
+type
+  TSpxOffsets = array of Integer;
+
+(* THE CONSTRUCT'S OWN SEPARATORS, between a bracket and its partner.
+
+  What GTW shows when the caret steps onto a bracket: not just the pair, but every place the
+  construct divides. `|` is one, and so is a permutation's trailing `<br>` -- the engine reads
+  that as the separator placed before the next element, which is why the highlighter already
+  paints it as config rather than as text.
+
+  ITS OWN, and depth is what says so. The scanner gives an opener the level it CREATES and
+  everything inside it that level, so a separator belonging to this construct carries the
+  opener's depth and one inside a nested group carries more: measured on `{a|{x|y}|c}`, the outer
+  pipes are depth 1 and the inner one depth 2. Filtering by depth is therefore exact, and it
+  needs no knowledge of what KIND of construct this is -- a conditional's head, a plural's count
+  and a permutation's config are all skipped for free, because none of them is a separator token.
+
+  AOpen and AClose are 1-based byte offsets and must be a real pair; anything else returns
+  nothing rather than a guess. Scanning starts at the document's beginning because the scanner's
+  state does -- a comment three lines up is still open, and the depth here is only meaningful
+  counted from the top. *)
+function SpxSeparatorsOf(const Text: string; AOpen, AClose: Integer): TSpxOffsets;
+
 implementation
 
 function SpxPackState(const State: TSpxScanState): PtrInt;
@@ -129,6 +152,59 @@ begin
   Result.Depth := Value and SPX_DEPTH_MASK;
   Result.InComment := (Value and (1 shl 16)) <> 0;
   Result.LineEmpty := (Value and (1 shl 17)) <> 0;
+end;
+
+function SpxSeparatorsOf(const Text: string; AOpen, AClose: Integer): TSpxOffsets;
+var
+  state: TSpxScanState;
+  toks: TSpxTokenList;
+  at, nl, n, i, want: Integer;
+  line: string;
+  absStart: Integer;
+begin
+  Result := nil;
+  n := 0;
+  want := -1;
+  if (AOpen < 1) or (AClose <= AOpen) or (AClose > Length(Text)) then Exit;
+  state := Default(TSpxScanState);
+  toks := TSpxTokenList.Create;
+  try
+    at := 1;
+    while at <= Length(Text) do
+    begin
+      nl := at;
+      while (nl <= Length(Text)) and (Text[nl] <> #10) and (Text[nl] <> #13) do Inc(nl);
+      line := Copy(Text, at, nl - at);
+      absStart := at;
+      toks.Clear;
+      SpxScanLine(line, state, toks);
+      for i := 0 to toks.Count - 1 do
+      begin
+        { The token's offset in the DOCUMENT, which is the only coordinate a caller has. }
+        at := absStart + toks[i].Start - 1;
+        if at = AOpen then want := toks[i].Depth;
+        if (want >= 0) and (at > AOpen) and (at < AClose)
+           and (toks[i].Depth = want)
+           and (toks[i].Kind in [sptPipe, sptTrailingSep]) then
+        begin
+          SetLength(Result, n + 1);
+          Result[n] := at;
+          Inc(n);
+        end;
+      end;
+      { Past the closing bracket there is nothing left to find. }
+      if absStart + Length(line) >= AClose then Break;
+      at := absStart + Length(line);
+      { One terminator, CRLF counted as one -- the same two-character step the rest of this unit
+        takes so an offset never lands between them. }
+      if (at <= Length(Text)) and (Text[at] = #13) then Inc(at);
+      if (at <= Length(Text)) and (Text[at] = #10) then Inc(at);
+    end;
+  finally
+    toks.Free;
+  end;
+  { An opener that was never seen means the caller did not hand us a bracket. }
+  if want < 0 then Result := nil;
 end;
 
 function SpxMatchBracket(const Text: string; Offset: Integer): Integer;

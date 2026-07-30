@@ -115,7 +115,13 @@ begin
     Result.Nest[2] := $00107040;
     Result.Nest[3] := $00A02090;
 
-    Result.BracketBack := clNone;
+    { A REAL BACKGROUND, not clNone. SynEdit's bracket markup defaults to bolding the character
+      (`MarkupInfo.Style := [fsBold]`, syneditmarkupbracket.pp:82) and nothing else, which is
+      enough for a brace and far too little for the construct's separators -- a bold `|` on white
+      is not a highlight. Pale yellow, the colour every editor has used for a bracket match for
+      thirty years, and distinct from both the selection's blue and the jump flash's pale blue so
+      the three never read as the same thing. }
+    Result.BracketBack := $00B4FFFF;
     Result.BracketText := clNone;
     { NOT a system colour, and not derived from clHighlight: the selection's colour means "the
       user selected this" everywhere else in the window, and a jump did not. A pale warm wash

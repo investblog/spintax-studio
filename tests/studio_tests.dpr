@@ -1413,6 +1413,28 @@ end;
 
 { ── 6b. the bracket under the caret ─────────────────────────────────────── }
 
+{ The construct's separators as `a,b,c`, so a wrong set is a wrong string. }
+function Seps(const Text: string; AOpen, AClose: Integer): string;
+var o: TSpxOffsets; i: Integer;
+begin
+  o := SpxSeparatorsOf(Text, AOpen, AClose);
+  Result := '';
+  for i := 0 to High(o) do
+  begin
+    if Result <> '' then Result := Result + ',';
+    Result := Result + IntToStr(o[i]);
+  end;
+end;
+
+{ And what stands at those offsets, which is the readable half of the same fact. }
+function SepChars(const Text: string; AOpen, AClose: Integer): string;
+var o: TSpxOffsets; i: Integer;
+begin
+  o := SpxSeparatorsOf(Text, AOpen, AClose);
+  Result := '';
+  for i := 0 to High(o) do Result := Result + '[' + Copy(Text, o[i], 1) + ']';
+end;
+
 procedure TestBracketMatching;
 const
   PAIRS = '{a|b} [c|d]';
@@ -1468,6 +1490,38 @@ begin
       end;
     CheckTrue('bracket/every-pair-in-the-demo-round-trips', ok);
   end;
+  { ── the construct's own separators, for the highlight that shows where it divides ── }
+
+  Check('seps/a-brace-groups-pipes', Seps('{a|b|c}', 1, 7), '3,5');
+  { NOT the nested group's. Depth is what tells them apart, measured on the scanner: the outer
+    pipes are depth 1 and the inner one depth 2. }
+  Check('seps/nested-pipes-are-not-ours', Seps('{a|{x|y}|c}', 1, 11), '3,9');
+  { ...and asked about the INNER pair, only the inner one is. }
+  Check('seps/the-inner-pair-gets-its-own', Seps('{a|{x|y}|c}', 4, 8), '6');
+  { A head is not a separator, whatever it contains -- the token kinds decide, so a
+    conditional's flag, a plural's count and a permutation's config are all skipped for free. }
+  Check('seps/a-conditional-head-is-not-one', Seps('{?flag?a|b}', 1, 11), '9');
+  Check('seps/a-plural-head-is-not-one', Seps('{plural %n%: one|few|many}', 1, 26), '17,21');
+  Check('seps/a-permutation-config-is-not-one', Seps('[<sep=", ">a|b]', 1, 15), '13');
+  { A permutation's trailing `<br>` IS a separator -- the engine reads it as the one placed
+    before the next element, which is why the highlighter paints it as config and not as text. }
+  Check('seps/a-trailing-separator-counts', SepChars('[a<br>|b]', 1, 9), '[<][|]');
+  { A single variant divides nowhere. }
+  Check('seps/one-variant-has-no-separator', Seps('{only}', 1, 6), '');
+  { Across lines, where the state has to carry: an offset must not drift on the terminator. }
+  { The closing brace's REAL offset, so these pin the boundary rather than merely sitting
+    inside it: 9 with two LFs, 7 with one CRLF. }
+  Check('seps/across-lines', SepChars('{a'#10'|b'#10'|c}', 1, 9), '[|][|]');
+  Check('seps/across-crlf', SepChars('{a'#13#10'|b}', 1, 7), '[|]');
+  { A pipe inside a COMMENT is not a separator, because it is not a pipe. }
+  { 12, not 11: 11 is the `/` that CLOSES the comment. The first version of this check said 11
+    and the function said 12 -- the function was right, and the miscount is worth the note
+    because a separator list is exactly the kind of answer nobody verifies by hand twice. }
+  Check('seps/a-pipe-in-a-comment-is-not-one', Seps('{a/# x|y #/|b}', 1, 14), '12');
+  { Nonsense in, nothing out -- never a guess. }
+  Check('seps/not-a-bracket-gives-nothing', Seps('plain text', 3, 7), '');
+  Check('seps/a-reversed-pair-gives-nothing', Seps('{a|b}', 5, 1), '');
+  Check('seps/out-of-range-gives-nothing', Seps('{a|b}', 1, 99), '');
 end;
 
 { ── 7. the demo template as a document ───────────────────────────────────── }
@@ -3814,6 +3868,27 @@ begin
         '   #set  %Brand%   =   Новое   ' + '/# хвостовой #/'#10'<p>%Brand%</p>');
   Check('edit/the-engine-reads-back-the-new-value', DirSig(EditValue(doc, 0, 'Новое')),
         'set:brand=Новое;');
+
+  { ── the jump lands on the KEYWORD, not on the line's edge ── }
+
+  { Indentation IS part of what a directive consumes, so the engine reports column 1 here and a
+    jump to it puts the caret in the margin. }
+  Check('edit/keyword-past-spaces',
+        IntToStr(SpxFirstNonBlankColumn('   #set %a% = 1', 1)), '4');
+  Check('edit/keyword-past-tabs',
+        IntToStr(SpxFirstNonBlankColumn(#9#9'#def %a% = 1', 1)), '3');
+  { A comment is NOT consumed, so the engine already points at the `#` and there is nothing to
+    skip -- the adjustment must not move it. }
+  Check('edit/keyword-already-there',
+        IntToStr(SpxFirstNonBlankColumn('/# c #/#set %a% = 1', 8)), '8');
+  { CODE POINTS, not bytes: Cyrillic before the directive is where a byte count goes wrong. }
+  Check('edit/keyword-past-cyrillic-and-spaces',
+        IntToStr(SpxFirstNonBlankColumn('привет   #set %a% = 1', 7)), '10');
+  { Nothing but blanks after it, and a column past the end: unchanged rather than out of range. }
+  Check('edit/keyword-blank-line-is-unchanged',
+        IntToStr(SpxFirstNonBlankColumn('    ', 2)), '2');
+  Check('edit/keyword-past-the-end-is-unchanged',
+        IntToStr(SpxFirstNonBlankColumn('#set', 9)), '9');
 
   { ── THE SPAN, which is what the panel applies ── }
 

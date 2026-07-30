@@ -14,6 +14,14 @@
  * The document is cached as one LF-joined string with a line-start index, rebuilt only when
  * the text changes. A caret move then costs one lookup plus one scan, and never a fresh
  * copy of the buffer.
+ *
+ * IT ALSO MARKS THE CONSTRUCT'S SEPARATORS, which is the one thing added to the inherited
+ * behaviour -- GTW's trick, and the user's request: stepping onto a bracket should show not just
+ * its partner but every place the construct divides. Those positions are painted with the SAME
+ * attribute as the pair, so nothing about the colours or the invalidation grows a second policy;
+ * only the set of positions is larger. Which positions they are is a structural question and
+ * therefore answered in src/SpxTokens.pas (SpxSeparatorsOf), gated by the console suite, exactly
+ * as the pair itself is.
  *)
 unit SpxBracketMarkup;
 
@@ -22,7 +30,8 @@ unit SpxBracketMarkup;
 interface
 
 uses
-  Classes, SysUtils, Controls, SynEditMarkupBracket, SpxTokens;
+  Classes, SysUtils, Controls, SynEditMarkup, SynEditMiscClasses, SynEditTypes,
+  LazSynEditText, SynEditMarkupBracket, SpxTokens;
 
 type
   TSpxBracketMarkup = class(TSynEditMarkupBracket)
@@ -30,13 +39,27 @@ type
     FDoc: string;
     FLineStart: array of Integer;   // 1-based offset of each line in FDoc
     FDocValid: Boolean;
+    { The construct's separators, as editor points, for as long as the pair under the caret
+      stands. Empty whenever there is no pair. }
+    FSeps: array of TPoint;
     procedure RebuildDoc;
+    procedure ClearSeps;
+    function IsSep(ARow, ALogCol: Integer): Boolean;
     function OffsetOf(ALine, ACol: Integer): Integer;
     function PointOf(AOffset: Integer): TPoint;
   protected
     procedure FindMatchingBracketPair(LogCaret: TPoint;
       var StartBracket, EndBracket: TPoint); override;
     procedure DoTextChanged(StartLine, EndLine, ACountDiff: Integer); override;
+  public
+    { The inherited pair, plus the separators. `inherited` answers first, so a bracket keeps
+      exactly the attribute it had. }
+    function GetMarkupAttributeAtRowCol(const aRow: Integer;
+      const aStartCol: TLazSynDisplayTokenBound;
+      const AnRtlInfo: TLazSynDisplayRtlInfo): TSynSelectedColor; override;
+    procedure GetNextMarkupColAfterRowCol(const aRow: Integer;
+      const aStartCol: TLazSynDisplayTokenBound; const AnRtlInfo: TLazSynDisplayRtlInfo;
+      out ANextPhys, ANextLog: Integer); override;
   end;
 
 implementation
@@ -92,6 +115,25 @@ end;
 procedure TSpxBracketMarkup.FindMatchingBracketPair(LogCaret: TPoint;
   var StartBracket, EndBracket: TPoint);
 
+  { The construct's separators, as points, for a pair given in document order. }
+  procedure TakeSeps(AFrom, ATo: Integer);
+  var o: TSpxOffsets; i, n: Integer; p: TPoint;
+  begin
+    o := SpxSeparatorsOf(FDoc, AFrom, ATo);
+    n := 0;
+    SetLength(FSeps, Length(o));
+    for i := 0 to High(o) do
+    begin
+      p := PointOf(o[i]);
+      if p.Y > 0 then
+      begin
+        FSeps[n] := p;
+        Inc(n);
+      end;
+    end;
+    SetLength(FSeps, n);
+  end;
+
   { Try the bracket at this position; returns True when a pair was found. }
   function TryAt(const P: TPoint): Boolean;
   var here, partner: Integer;
@@ -104,12 +146,19 @@ procedure TSpxBracketMarkup.FindMatchingBracketPair(LogCaret: TPoint;
     StartBracket := P;
     EndBracket := PointOf(partner);
     Result := EndBracket.Y > 0;
+    { Recorded for the pair that was ACCEPTED, and here rather than at the end, because this is
+      the only place that knows both offsets. An opener may be either of the two, so the range
+      is taken in order. }
+    if Result then
+      if here < partner then TakeSeps(here, partner)
+      else TakeSeps(partner, here);
   end;
 
 var probe: TPoint;
 begin
   StartBracket.Y := -1;
   EndBracket.Y := -1;
+  ClearSeps;
   if (LogCaret.Y < 1) or (LogCaret.Y > Lines.Count) or (LogCaret.X < 1) then Exit;
   if not FDocValid then RebuildDoc;
 
@@ -125,6 +174,64 @@ begin
     StartBracket.Y := -1;
     EndBracket.Y := -1;
   end;
+end;
+
+procedure TSpxBracketMarkup.ClearSeps;
+var i: Integer;
+begin
+  { Every line that HAD a separator has to be repainted, or the mark stays on screen after the
+    caret has left the construct -- the same lesson the jump flash taught: clearing a highlight
+    means telling the editor, not only forgetting it. }
+  for i := 0 to High(FSeps) do
+    if FSeps[i].Y > 0 then InvalidateSynLines(FSeps[i].Y, FSeps[i].Y);
+  SetLength(FSeps, 0);
+end;
+
+function TSpxBracketMarkup.IsSep(ARow, ALogCol: Integer): Boolean;
+var i: Integer;
+begin
+  for i := 0 to High(FSeps) do
+    if (FSeps[i].Y = ARow) and (FSeps[i].X = ALogCol) then Exit(True);
+  Result := False;
+end;
+
+function TSpxBracketMarkup.GetMarkupAttributeAtRowCol(const aRow: Integer;
+  const aStartCol: TLazSynDisplayTokenBound;
+  const AnRtlInfo: TLazSynDisplayRtlInfo): TSynSelectedColor;
+begin
+  Result := inherited GetMarkupAttributeAtRowCol(aRow, aStartCol, AnRtlInfo);
+  if Result <> nil then Exit;
+  if not IsSep(aRow, aStartCol.Logical) then Exit;
+  Result := MarkupInfo;
+  { One byte, like the brackets: `|` is ASCII, and a permutation's `<br>` is marked at its first
+    character for the same reason the parent marks a bracket at its own -- the frame is a hint
+    about WHERE, not a measurement of the token. }
+  MarkupInfo.SetFrameBoundsLog(aStartCol.Logical, aStartCol.Logical + 1);
+end;
+
+procedure TSpxBracketMarkup.GetNextMarkupColAfterRowCol(const aRow: Integer;
+  const aStartCol: TLazSynDisplayTokenBound; const AnRtlInfo: TLazSynDisplayRtlInfo;
+  out ANextPhys, ANextLog: Integer);
+var i: Integer;
+
+  { The smallest candidate greater than where the painter is now. -1 means "nothing left on this
+    row", which is what the parent uses and what SynEdit expects. }
+  procedure Offer(ACol: Integer);
+  begin
+    if ACol <= aStartCol.Logical then Exit;
+    if (ANextLog < 0) or (ACol < ANextLog) then ANextLog := ACol;
+  end;
+
+begin
+  inherited GetNextMarkupColAfterRowCol(aRow, aStartCol, AnRtlInfo, ANextPhys, ANextLog);
+  { The separators have to be offered too, or SynEdit walks straight past the run they mark and
+    the attribute above is never asked for. }
+  for i := 0 to High(FSeps) do
+    if FSeps[i].Y = aRow then
+    begin
+      Offer(FSeps[i].X);
+      Offer(FSeps[i].X + 1);
+    end;
 end;
 
 end.

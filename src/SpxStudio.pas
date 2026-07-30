@@ -680,6 +680,18 @@ function SpxDocumentMarks(Report: TSpxReport): TSpxDiagMarks;
   panel keeps what was typed and this is produced on the way past. *)
 function SpxValueForEngine(const Pair: TSpxVarPair): string;
 
+{ THE KEYWORD, not the line's edge. A directive's reported Column is where its CONSUMED text
+  begins, and the indentation is part of that: `  #set %a% = 1` reports column 1, not 3. So a
+  jump straight to it lands in the margin and the eye has to find the `#set` itself -- which is
+  the one thing the row was clicked to reach.
+
+  Only blanks are skipped, and only forward, because only blanks can be there: a comment is NOT
+  consumed, so `/# c #/#set %a% = 1` already reports 8, the `#` itself. A column past the end,
+  or one with nothing but blanks after it, comes back unchanged rather than out of range.
+
+  Code points in and out, like every column in this unit. }
+function SpxFirstNonBlankColumn(const Line: string; CodePointCol: Integer): Integer;
+
 function SpxByteColumn(const Line: string; CodePointCol: Integer): Integer;
 
 { The longest line in Text, in bytes, counting the editor's three line endings.
@@ -896,6 +908,20 @@ begin
     end;
   end;
   SetLength(Result, n);
+end;
+
+function SpxFirstNonBlankColumn(const Line: string; CodePointCol: Integer): Integer;
+var b: Integer;
+begin
+  Result := CodePointCol;
+  if Result < 1 then Exit;
+  while True do
+  begin
+    b := SpxByteColumn(Line, Result);
+    if (b < 1) or (b > Length(Line)) then Exit(CodePointCol);
+    if (Line[b] <> ' ') and (Line[b] <> #9) then Exit;
+    Inc(Result);
+  end;
 end;
 
 function SpxCodePointColumn(const Line: string; ByteCol: Integer): Integer;

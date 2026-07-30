@@ -1966,11 +1966,13 @@ begin
   FEditor.SetFocus;
 end;
 
-{ A definition row has a place but no span -- the engine reports where the directive starts,
-  and its own column convention puts that at the line's beginning. }
+{ A definition row has a place but no span -- the engine reports where the directive starts, and
+  its own column convention puts that at the line's beginning, indentation included. The jump
+  moves on to the keyword: landing in the margin makes the eye hunt for the `#set` that the row
+  was clicked to reach. }
 procedure TSpxMainForm.VarJump(Line, Column: Integer);
 begin
-  JumpToPos(Line, Column, 0, 0);
+  JumpToPos(Line, SpxFirstNonBlankColumn(LineOf(Line), Column), 0, 0);
 end;
 
 (* CTRL+CLICK: STOP SUPPLYING THIS PER SESSION AND WRITE IT INTO THE DOCUMENT.
