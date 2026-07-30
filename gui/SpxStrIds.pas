@@ -89,7 +89,14 @@ type
       said something other than what was typed -- a `/#` opening a comment, a line break
       ending the directive, or a comment already inside it. Silence here would be the
       "you can type but nothing sticks" defect all over again. ── }
-    sDefValueRefused
+    sDefValueRefused,
+
+    { ── the include group: what this document pulls in, and whether the set has it (spec §4.4).
+      THREE states, not two, and the third is the one that matters: `Known` is False both for a
+      fragment the set does not have and for a document with no set to look in -- a new file has
+      none -- so a two-state mark would tell that user "MISSING" about a question nobody asked
+      yet. ── }
+    sVarsIncludes, sColTarget, sColInSet, sIncludeYes, sIncludeMissing, sIncludeNoSet
   );
 
 implementation

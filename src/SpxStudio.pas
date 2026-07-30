@@ -148,6 +148,11 @@ type
     DirIndex: Integer;     // the occurrence, as in TSpxVarInfo
   end;
 
+  { The panel's own shape for them, as TSpxVarInfos is for variables: the worker copies the
+    model's list into one of these because the model is freed on the engine thread and the
+    result crosses to the UI thread. }
+  TSpxIncludeInfos = array of TSpxIncludeInfo;
+
   TSpxModel = class
   public
     Vars: TList<TSpxVarInfo>;

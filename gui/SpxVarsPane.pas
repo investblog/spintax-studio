@@ -59,6 +59,13 @@ type
     FRuntimeLabel: TLabel;
     FRuntimeBox: TPanel;
     FSplit: TSplitter;
+    { The third group, and the only one that comes and goes: most documents include nothing, and
+      a permanently empty table would take room from the two that always have something to say. }
+    FIncBox: TPanel;
+    FInc: TStringGrid;
+    FIncLabel: TLabel;
+    FIncSplit: TSplitter;
+    FIncRows: TSpxIncludeInfos;
     FRows: TSpxVarInfos;          // the definitions, in the order the grid shows them
     FModel: TSpxVarInfos;         // the last model, for filtering what is sent
     FValues: TStringList;         // name -> value, the session's own
@@ -68,6 +75,7 @@ type
        round trip through it turns `{a|b}` into `a|b`. *)
     FLiteral: TStringList;        // name -> '1' for the ones handed over as text
     FSig: string;                 // what the grids currently show
+    FIncSig: string;              // and what the include group currently shows
     FOnJump: TSpxJumpEvent;
     FOnFindRef: TSpxFindRefEvent;
     FOnDefine: TSpxDefineEvent;
@@ -79,6 +87,9 @@ type
     FClickShift: TShiftState;
     FOnRuntimeChanged: TNotifyEvent;
     procedure DefsClicked(Sender: TObject);
+    procedure IncClicked(Sender: TObject);
+    procedure IncMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    function IncState(AKnown, AHaveSet: Boolean): string;
     procedure DefsSelectEditor(Sender: TObject; ACol, ARow: Integer;
       var Editor: TWinControl);
     procedure DefsValidate(Sender: TObject; ACol, ARow: Integer;
@@ -103,6 +114,10 @@ type
       arrives on every keystroke, and a grid that forgot the session on each of them would
       be unusable. }
     procedure SetModel(const AVars: TSpxVarInfos);
+    { The include group, from the same result. AHaveSet is the worker's answer to "was there a
+      set to look in at all" -- the panel must not infer it from Known being False. Hides the
+      group when the document names no includes. }
+    procedure SetIncludes(const AIncludes: TSpxIncludeInfos; AHaveSet: Boolean);
     { Every caption re-read, after the interface language changes. }
     procedure Retranslate;
     { What the next job should carry. Only names the document actually references are sent:
@@ -267,6 +282,50 @@ begin
   FRuntimeLabel.Align := alTop;
   FRuntimeLabel.Caption := Tr(sVarsSession);
   SetRuntimeHeaders;
+
+  { ── the includes, below the session group and hidden until the document has one ──
+
+    Bottom-most by Top, the same way the session box is stated rather than left to creation
+    order. It starts invisible: SetIncludes decides, and on a document with no `#include` there
+    is nothing here to show. }
+  FIncBox := TPanel.Create(Self);
+  FIncBox.Parent := Self;
+  FIncBox.Top := 30000;
+  FIncBox.Align := alBottom;
+  FIncBox.Height := Px(Self, 96);
+  FIncBox.BevelOuter := bvNone;
+  FIncBox.Visible := False;
+
+  FIncSplit := TSplitter.Create(Self);
+  FIncSplit.Parent := Self;
+  FIncSplit.Top := 25000;
+  FIncSplit.Align := alBottom;
+  FIncSplit.MinSize := Px(Self, 60);
+  FIncSplit.Visible := False;
+
+  FInc := TStringGrid.Create(Self);
+  FInc.Parent := FIncBox;
+  FInc.Align := alClient;
+  FInc.RowCount := 1;
+  FInc.FixedRows := 1;
+  FInc.ColCount := 2;
+  FInc.FixedCols := 0;
+  FInc.Cells[0, 0] := Tr(sColTarget);
+  FInc.Cells[1, 0] := Tr(sColInSet);
+  FInc.ColWidths[0] := Px(Self, 140);
+  FInc.ColWidths[1] := Px(Self, 110);
+  { READ-ONLY, and it stays that way. An include's target is a slug the SET owns -- renaming it
+    here would have to rename a file, which is not an edit this panel is allowed to make. A row
+    jumps to the `#include` that names it, which is what the group is for. }
+  FInc.Options := FInc.Options + [goRowSelect] - [goEditing, goRangeSelect];
+  FInc.Cursor := crHandPoint;
+  FInc.OnClick := @IncClicked;
+  FInc.OnMouseMove := @IncMouseMove;
+
+  FIncLabel := TLabel.Create(Self);
+  FIncLabel.Parent := FIncBox;
+  FIncLabel.Align := alTop;
+  FIncLabel.Caption := Tr(sVarsIncludes);
 end;
 
 { The session grid's headers, in the only place LCL reads them from. All three, including the
@@ -318,6 +377,7 @@ begin
   inherited Resize;
   if FDefs <> nil then FitLastColumn(FDefs);
   if FRuntime <> nil then FitLastColumn(FRuntime);
+  if FInc <> nil then FitLastColumn(FInc);
 end;
 
 function TSpxVarsPane.KindName(Kind: TSpxVarKind): string;
@@ -533,6 +593,66 @@ begin
   FRuntime.MouseToCell(X, Y, col, row);
   if (col = 0) and (row >= 1) then FRuntime.Cursor := crHandPoint
   else FRuntime.Cursor := crDefault;
+end;
+
+{ The mark, in words rather than a tick, because there are THREE answers and only one of them is
+  "no". `Known` is False both for a fragment the set does not have and for a document with no set
+  to look in, and calling the second one MISSING would accuse the user of something they have not
+  done yet -- a new file has no folder beside it, so it has no set. }
+function TSpxVarsPane.IncState(AKnown, AHaveSet: Boolean): string;
+begin
+  if AKnown then Result := Tr(sIncludeYes)
+  else if AHaveSet then Result := Tr(sIncludeMissing)
+  else Result := Tr(sIncludeNoSet);
+end;
+
+procedure TSpxVarsPane.SetIncludes(const AIncludes: TSpxIncludeInfos; AHaveSet: Boolean);
+var i: Integer; sig: string;
+begin
+  { The same guard the variables have, and for the same reason: a result arrives on every
+    debounce tick, and rebuilding a grid takes its selection with it. The set flag is part of the
+    signature because it changes what every row SAYS without changing any row. }
+  sig := BoolToStr(AHaveSet, 'S', '-');
+  for i := 0 to High(AIncludes) do
+    sig := sig + '|' + AIncludes[i].Target + IntToStr(Ord(AIncludes[i].Known)) +
+           IntToStr(AIncludes[i].Line);
+  if sig = FIncSig then Exit;
+  FIncSig := sig;
+
+  FIncRows := AIncludes;
+  { GONE, not empty: a document that includes nothing has nothing to say here, and an empty
+    table would take a third of the panel to say it. The splitter goes with it -- a drag handle
+    for an invisible panel is a line drawn across the window. }
+  FIncBox.Visible := Length(AIncludes) > 0;
+  FIncSplit.Visible := FIncBox.Visible;
+  if not FIncBox.Visible then Exit;
+
+  FInc.RowCount := Length(AIncludes) + 1;
+  for i := 0 to High(AIncludes) do
+  begin
+    FInc.Cells[0, i + 1] := AIncludes[i].Target;
+    FInc.Cells[1, i + 1] := IncState(AIncludes[i].Known, AHaveSet);
+  end;
+  FitLastColumn(FInc);
+end;
+
+{ Every row here has a place -- an include occurrence is a directive, and the engine reports
+  those with positions -- so this is the plain jump the definitions group makes, not the
+  find-by-name the session group needs. }
+procedure TSpxVarsPane.IncClicked(Sender: TObject);
+var idx: Integer;
+begin
+  idx := FInc.Row - 1;
+  if (idx < 0) or (idx > High(FIncRows)) then Exit;
+  if FIncRows[idx].Line <= 0 then Exit;
+  if Assigned(FOnJump) then FOnJump(FIncRows[idx].Line, FIncRows[idx].Column);
+end;
+
+procedure TSpxVarsPane.IncMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  { Every column jumps here, so the hand is on the whole grid -- set once at construction. The
+    handler stays for symmetry with the session group and to keep the cursor right if a column
+    ever stops being clickable. }
 end;
 
 procedure TSpxVarsPane.DefsSelectEditor(Sender: TObject; ACol, ARow: Integer;

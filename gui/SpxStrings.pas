@@ -170,7 +170,12 @@ const
     { a submenu and its first entry }
     0, 0,
     { a status-bar sentence: the bar is the window's width and clips nothing }
-    0
+    0,
+    { the include group: a heading over a full-width grid, then a 140px target column and a
+      110px state column. 12 rather than 10 because the state has to hold both a title and its
+      widest value in every language -- French wants eleven for "Dans le jeu" and Spanish twelve
+      for "sin conjunto", and the suite said so rather than the column finding out on screen }
+    0, 12, 12, 10, 10, 12
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

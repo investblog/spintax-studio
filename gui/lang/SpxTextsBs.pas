@@ -83,7 +83,9 @@ const
 
       'Font uređivača', 'Automatski',
 
-      'Vrijednost nije primijenjena: engine bi direktivu pročitao drugačije'
+      'Vrijednost nije primijenjena: engine bi direktivu pročitao drugačije',
+
+      'Uključivanja — fragmenti koje ovaj dokument uvlači', 'Cilj', 'Nađeno', 'da', 'NEMA', 'nema skupa'
   );
 
 implementation

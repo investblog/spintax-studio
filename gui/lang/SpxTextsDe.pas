@@ -86,7 +86,9 @@ const
 
       'Editor-Schrift', 'Automatisch',
 
-      'Wert nicht übernommen: die Engine würde die Direktive anders lesen'
+      'Wert nicht übernommen: die Engine würde die Direktive anders lesen',
+
+      'Includes — die Fragmente, die dieses Dokument holt', 'Ziel', 'Gefunden', 'ja', 'FEHLT', 'kein Satz'
   );
 
 implementation

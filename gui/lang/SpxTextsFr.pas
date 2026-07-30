@@ -86,7 +86,9 @@ const
 
       'Police de l''éditeur', 'Auto',
 
-      'Valeur non appliquée : le moteur lirait la directive autrement'
+      'Valeur non appliquée : le moteur lirait la directive autrement',
+
+      'Inclusions — les fragments que ce document tire', 'Cible', 'Trouvé', 'oui', 'ABSENT', 'pas de jeu'
   );
 
 implementation

@@ -82,7 +82,9 @@ const
 
       'Editor font', 'Auto',
 
-      'Value not applied: the engine would read the directive differently'
+      'Value not applied: the engine would read the directive differently',
+
+      'Includes — the fragments this document pulls in', 'Target', 'Found', 'yes', 'MISSING', 'no set'
   );
 
 implementation

@@ -280,6 +280,28 @@ the managed tier are later releases.
       Names are shown as the DOCUMENT spells them in both groups now (the engine folds them),
       from the same single scan.
 
+      **The include group landed 2026-07-30**, and spec §4.4 asked for it from the start: the
+      targets the document names, each marked with whether the set has it. It was not "half
+      drawn" before — the worker did not carry `Includes` to the GUI at all, so the branch of
+      data did not exist.
+
+      **Three states, not two, and the third is why.** `Known` is False both for a fragment the
+      set does not have and for a document with no set to look in — a new file has no folder
+      beside it — so a two-state mark would tell that user MISSING about a question nobody has
+      asked yet. The worker answers "was there a set" from `FSet`, because it is the only thing
+      that knows. Measured on all four states: no includes → the group is not there; includes
+      with no set → both rows say "no set"; a set where `frag.spintax` exists and
+      `gone.spintax` does not → "yes" and "MISSING"; a click → the caret at the `#include` that
+      names it.
+
+      **The group comes and goes** rather than standing empty: most documents include nothing,
+      and a third permanently blank table would take room from the two that always have
+      something to say. Its splitter hides with it — a drag handle for an invisible panel is a
+      line drawn across the window.
+
+      Read-only, and it stays that way: an include's target is a slug the SET owns, and renaming
+      it would have to rename a file, which is not an edit this panel may make.
+
       **A jump says where it landed** (2026-07-30, the user's call over a gesture for opening
       the group editor — the gesture would have cost the double-click that select-and-wrap
       needs). SynEdit's own current-line highlight, given a colour for 900 ms and then cleared:

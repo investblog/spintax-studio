@@ -84,6 +84,14 @@ type
     { The variables panel: every macro the document defines, with the occurrence it lives at,
       and every name it references that nothing defines. }
     Vars: TSpxVarInfos;
+    { And every `#include` the document names, with whether the set has it (spec §4.4). These
+      never reached the GUI before -- the model computed them and the result dropped them. }
+    Includes: TSpxIncludeInfos;
+    { WHETHER THERE WAS A SET AT ALL, which the panel cannot work out and must not guess.
+      `Known` is False both for a fragment the set does not have and for a document that has no
+      set to look in -- a new file has none -- and telling a user "missing" in the second case
+      would be a plain lie. Only this thread knows: it owns FSet. }
+    HaveSet: Boolean;
   end;
 
   TSpxJobDone = procedure(const Res: TSpxJobResult) of object;
@@ -565,6 +573,9 @@ begin
     try
       SetLength(FResult.Vars, model.Vars.Count);
       for i := 0 to model.Vars.Count - 1 do FResult.Vars[i] := model.Vars[i];
+      SetLength(FResult.Includes, model.Includes.Count);
+      for i := 0 to model.Includes.Count - 1 do FResult.Includes[i] := model.Includes[i];
+      FResult.HaveSet := FSet <> nil;
     finally
       model.Free;
     end;

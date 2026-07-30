@@ -81,7 +81,9 @@ const
 
       'Editorlettertype', 'Automatisch',
 
-      'Waarde niet toegepast: de engine zou de directive anders lezen'
+      'Waarde niet toegepast: de engine zou de directive anders lezen',
+
+      'Includes — de fragmenten die dit document ophaalt', 'Doel', 'Gevonden', 'ja', 'ONTBREEKT', 'geen set'
   );
 
 implementation

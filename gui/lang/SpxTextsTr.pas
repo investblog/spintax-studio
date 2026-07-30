@@ -76,7 +76,9 @@ const
 
       'Düzenleyici yazı tipi', 'Otomatik',
 
-      'Değer uygulanmadı: motor yönergeyi farklı okurdu'
+      'Değer uygulanmadı: motor yönergeyi farklı okurdu',
+
+      'Eklemeler — bu belgenin çektiği parçalar', 'Hedef', 'Bulundu', 'evet', 'YOK', 'küme yok'
   );
 
 implementation

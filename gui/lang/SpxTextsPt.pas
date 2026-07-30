@@ -77,7 +77,9 @@ const
 
       'Fonte do editor', 'Automática',
 
-      'Valor não aplicado: o motor leria a diretiva de outra forma'
+      'Valor não aplicado: o motor leria a diretiva de outra forma',
+
+      'Inclusões — os fragmentos que este documento traz', 'Destino', 'Encontrado', 'sim', 'FALTA', 'sem conjunto'
   );
 
 implementation

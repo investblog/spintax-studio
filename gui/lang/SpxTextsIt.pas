@@ -77,7 +77,9 @@ const
 
       'Carattere dell''editor', 'Automatico',
 
-      'Valore non applicato: il motore leggerebbe la direttiva in modo diverso'
+      'Valore non applicato: il motore leggerebbe la direttiva in modo diverso',
+
+      'Inclusioni — i frammenti che questo documento richiama', 'Destinazione', 'Trovato', 'sì', 'MANCA', 'nessun set'
   );
 
 implementation

@@ -3208,6 +3208,7 @@ begin
   SayPartial(Res.Preview, Res.Partial);
   ShowRows(Res.Rows);
   FVars.SetModel(Res.Vars);
+  FVars.SetIncludes(Res.Includes, Res.HaveSet);
   FErrorMarkup.SetMarks(Res.Marks);
   FWarnMarkup.SetMarks(Res.Marks);
   FEditor.Invalidate;
