@@ -37,6 +37,30 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
 
+## What R0 still needs (re-checked 2026-07-30)
+
+The FEATURES are in: M0, M1, M2 and M3 are all closed. R0 is not, and the remainder is mostly
+release work rather than product work. In the order it matters:
+
+1. **The help cannot be read in the app.** `docs/help/ru/diagnostics.md` is a file in this
+   repository and nothing in `gui/` references it — no viewer, no menu item, not even a string
+   id. R0 is offline by design, so the help has to ship INSIDE the exe (AGENTS.md says so, and
+   §11 asks the listing to be "a product, not a dev-tool stub"). This is the largest gap and it
+   is not a small one: it needs a place to show markdown, or the text converted at build time.
+2. **The About box does not exist.** It is the only place a user can read the attributions
+   NOTICE.md records (MDI Apache-2.0, Twemoji CC-BY 4.0), which is a licence obligation before
+   the first submission, not a nicety.
+3. **MSIX packaging, privacy policy, listing text and a ≥256px icon** — the §11 block below.
+   None started.
+4. **Two small product gaps, both real:** the diagnostics list has no keyboard navigation (the
+   jump is on click, so Up/Down does not move the caret) and its rows are not coloured by
+   severity.
+5. **Accessibility:** the owner-drawn locale list is invisible to a screen reader, and there is
+   no high-contrast palette.
+
+Not R0: M4 (the LLM loop) and everything downstream of it, the help's later waves, RTL, and the
+rename refactor.
+
 ## Milestones (spec §9)
 
 M0 is reused whole; the GUI (M1–M2) and the LLM loop (M4) are independent; M3/M4 order is
@@ -122,8 +146,10 @@ the managed tier are later releases.
         own every engine call, "latest wins" (spec §5). The worker itself arrived with M1.
 
       The suite stood at 101 checks, green in both builds, when M0 closed.
-- [ ] **M1 — GUI shell.** Two panes, SynEdit + a spintax highlighter, live preview, bracket
-      matching, validity indicator. The DeepL skeleton.
+- [x] **M1 — GUI shell** *(closed 2026-07-30 on re-reading it: every part of the milestone is
+      in, and its own last line named the only thing outstanding — "the panels of M2" — which
+      landed. The box was simply never ticked.)* Two panes, SynEdit + a spintax highlighter,
+      live preview, bracket matching, validity indicator. The DeepL skeleton.
 
       **Landed so far** (2026-07-26): Lazarus 4.8 installed; `gui/` holds the application —
       `SpintaxStudio.lpr`, `SpxMainForm` (top strip with locale / seed / reroll / copy, a
@@ -233,7 +259,12 @@ the managed tier are later releases.
 
       Still to come: the panels of M2.
 
-- [ ] **M2 — the variables panel is an EDITOR, with a plain ↔ structured toggle**
+- [x] **M2 — the variables panel is an EDITOR** *(closed 2026-07-30 in the shape we chose,
+      which is NOT the title's: the plain ↔ structured toggle was declined — see step 2 — and
+      editing the name, the kind and delete were closed by decision, one of them because it
+      would break the document. What shipped: the value edited in its row, the session half,
+      the include group, click-to-jump and Ctrl+click to define.)* With a plain ↔ structured
+      toggle
       (decided 2026-07-26, after studying the spintax.net playground; the reference
       implementation is `W:\projects\spintax.net\src\client\play.ts`, functions
       `parseRawVars` / `serializeVars` / `rowsToPairs` / `setMode` / `combinedTemplate`).
@@ -669,7 +700,8 @@ next:
       **What is still open here is the move itself:** `Copy` is smaller now but still in the
       top strip. Putting it at the preview pane's own bottom edge needs that pane to grow an
       action row, which is the part of this step nobody has built yet.
-- [ ] **3. The tool rail — slide-out, and on the side of what it edits.** DeepL's column
+- [x] **3. The tool rail — slide-out, and on the side of what it edits** *(closed 2026-07-30:
+      built, with the side as a remembered setting and a second click collapsing the block.)* DeepL's column
       holds tools that change the OUTPUT and sits beside the output. Ours would hold
       variables and the group editor, which change the TEMPLATE — so it belongs on the LEFT,
       beside the editor. The side is a setting (the user's call, 2026-07-28), which is cheap
@@ -899,7 +931,9 @@ Distribution target is the Store via MSIX. Some of these are **constraints on M0
 them in, don't retrofit); the submission tasks come once M1/M2 give a demoable product.
 
 Constraints (design into the app from the start):
-- [ ] **No admin, known-folder storage.** Settings / templates / keys go to the user profile
+- [x] **No admin, known-folder storage** *(done: `SpxSettings` takes the base from
+      `GetWindowsSpecialDir(CSIDL_LOCAL_APPDATA)` and pins a fixed folder under it — never
+      beside the .exe, never with administrator rights.)* Settings / templates / keys go to the user profile
       via known-folder APIs (`%APPDATA%` / `LocalAppData` / Credential Manager), never next to
       the `.exe` — required for the MSIX container and to avoid elevation (spec §7, §11).
 - [ ] **Stable app identity.** Package name + publisher (must match Partner Center), 4-part
