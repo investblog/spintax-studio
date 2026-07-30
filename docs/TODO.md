@@ -475,7 +475,7 @@ the managed tier are later releases.
       invisible" — and rightly, because a neutral differs from a neutral only in LIGHTNESS, which
       the eye is worst at. A hue does what a shade could not.
 
-      **The brand's tokens live in the OTHER repo**, `W:\Projects\spintax.net\static\css	heme.css`,
+      **The brand's tokens live in the OTHER repo**, `W:/Projects/spintax.net/static/css/theme.css`,
       and the magenta family is the four values `--magenta-900 #6e0c38`, `--magenta-700 #a91455`,
       `--magenta-500 #cc2070`, `--magenta-300 #e04090`. Written down here so a later colour
       decision does not need that checkout open. The site's own pairing is instructive: it puts
