@@ -1931,6 +1931,15 @@ procedure TSpxMainForm.JumpToPos(Line, Column, EndLine, EndColumn: Integer;
 var col: Integer;
 begin
   if Line <= 0 then Exit;
+  { ARMED BEFORE THE CARET MOVES, and the order is the whole fix. SynEdit's special-line
+    markup updates the line it lights from DoCaretChanged -> InvalidateLineHighlight, and that
+    routine EARLY-EXITS while `HasLineHighlight` is false (syneditmarkupspecialline.pp:228) --
+    which is exactly the state between two flashes. So with the colour set afterwards, the
+    caret change was ignored, FHighlightedLine still pointed at the PREVIOUS jump's line, and
+    the wash landed there instead: the user saw it left behind on every line they had visited.
+    Arming first means the caret moves while the highlight is live, so the markup invalidates
+    the old row and adopts the new one itself. }
+  if AFlash then FlashJumpLine;
   col := SpxByteColumn(LineOf(Line), Column);
   FJumping := True;
   try
@@ -1953,8 +1962,6 @@ begin
   PreviewFollowSelection;
   FEditor.EnsureCursorPosVisible;
   FEditor.SetFocus;
-  { Last, so it lights the line the caret actually ended up on. }
-  if AFlash then FlashJumpLine;
 end;
 
 { A definition row has a place but no span -- the engine reports where the directive starts,
@@ -2042,7 +2049,15 @@ end;
 procedure TSpxMainForm.FlashFaded(Sender: TObject);
 begin
   FFlashTimer.Enabled := False;
-  if FEditor <> nil then FEditor.LineHighlightColor.Background := clNone;
+  if FEditor = nil then Exit;
+  FEditor.LineHighlightColor.Background := clNone;
+  { AND REPAINT THE WHOLE EDITOR, rather than trusting the markup to know which row it lit.
+    Clearing the colour invalidates FHighlightedLine's row -- but that number is only as
+    current as the last caret change that happened WHILE the highlight was live, and there is
+    no way from here to be sure it is. One full repaint, 900 ms after a jump, on a control
+    that repaints on every keystroke anyway: the cost is nothing and it cannot leave a row
+    washed. }
+  FEditor.Invalidate;
 end;
 
 { THE NAMES AS THE DOCUMENT SPELLS THEM, in one pass for all of them.
