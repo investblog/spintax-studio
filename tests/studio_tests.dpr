@@ -3445,6 +3445,32 @@ begin
   if not IsKnownCode(Result) then Result := '';
 end;
 
+(* WHAT THE WINDOW RUNS MUST BE WHAT THIS SUITE RAN. Every example's template is collected
+   here as the markdown is walked, and TestHelpUnit compares the list against the table the
+   generator built -- so a click in the help cannot render anything but the text whose output
+   was rendered through the real engine and byte-compared a few lines below.
+
+   Keyed by the document's path, because the two languages are walked one after the other. *)
+var
+  GRanTemplates: TStringList = nil;
+
+procedure NoteTemplate(const APath, ATemplate: string);
+begin
+  if GRanTemplates = nil then GRanTemplates := TStringList.Create;
+  GRanTemplates.Add(APath + #1 + ATemplate);
+end;
+
+function TemplatesRunFor(const APath: string): TStringList;
+var i: Integer; head: string;
+begin
+  Result := TStringList.Create;
+  if GRanTemplates = nil then Exit;
+  head := APath + #1;
+  for i := 0 to GRanTemplates.Count - 1 do
+    if Copy(GRanTemplates[i], 1, Length(head)) = head then
+      Result.Add(Copy(GRanTemplates[i], Length(head) + 1, MaxInt));
+end;
+
 procedure CheckHelpDoc(const ADoc: THelpDoc);
 var
   line, want, doc_, got, tag, key, val, label_, locale, empty_: string;
@@ -3629,6 +3655,7 @@ begin
       if not skip then
       begin
         got := SpxRenderSample(doc_, ctx);
+        NoteTemplate(ADoc.Path, doc_);
         (* AN ELLIPSIS IN THE OUTPUT IS A PARTIAL CLAIM, not an exemption. It used to skip the
            example entirely: unrendered, uncompared, uncounted, and -- because the counter and
            the causation flag lived in the same block -- it exempted the whole article too. The
@@ -3779,8 +3806,25 @@ var
   lang, page, i, seen, p_: Integer;
   html, ids, want, got, anchorId, s_: string;
   k: TSpxNoteKind;
-  kind: TSpxHrefKind;
-  arts: TStringList;
+  arts, hrefs: TStringList;
+  j, n, want_ex: Integer;
+
+  { Every href="..." in a page's HTML. Read from the EMITTED BYTES for the same reason. }
+  function HrefsIn(const AHtml: string): TStringList;
+  var at, close_: Integer; rest: string;
+  begin
+    Result := TStringList.Create;
+    rest := AHtml;
+    repeat
+      at := Pos('href="', rest);
+      if at = 0 then Break;
+      Delete(rest, 1, at + 5);
+      close_ := Pos('"', rest);
+      if close_ = 0 then Break;
+      Result.Add(Copy(rest, 1, close_ - 1));
+      Delete(rest, 1, close_);
+    until False;
+  end;
 
   { Every id="..." in a page's HTML, in order, space-separated. Read from the EMITTED BYTES and
     not from the anchor table beside them -- a table that agrees with itself proves nothing. }
@@ -3824,6 +3868,42 @@ begin
       HELP_DOCS -- prose that ships but is not gated would otherwise be possible again. }
     CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/its source is a registered document',
               Pos(SpxHelpSourcePath(lang), HelpDocsOnDisk) > 0);
+
+    { THE CONDITIONS CAME WITH THE DOCUMENT. Render a clicked example under anything else and
+      the arrow printed beside it disagrees with the pane -- the one thing this document may
+      never do. }
+    Check('help/unit/' + SpxHelpLangCode(lang) + '/carries its own locale',
+          SpxHelpLocale(lang), SpxHelpLangCode(lang));
+    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/carries a seed', SpxHelpSeed(lang) > 0);
+    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/carries its template set',
+              SpxHelpIncludeCount(lang) > 0);
+    for i := 0 to SpxHelpIncludeCount(lang) - 1 do
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/include ' + IntToStr(i) + ' is named',
+                SpxHelpIncludeName(lang, i) <> '');
+
+    { AND THEY ARE THE SAME EXAMPLES, not merely as many. Each template the window can run is
+      compared against the one this suite actually put through the engine -- so a click cannot
+      render text whose output was never verified. }
+    arts := TemplatesRunFor(SpxHelpSourcePath(lang));
+    try
+      for i := 0 to arts.Count - 1 do
+      begin
+        SpxHelpExample(lang, i, got);
+        Check('help/unit/' + SpxHelpLangCode(lang) + '/example ' + IntToStr(i) +
+              ' is the one that was run', got, arts[i]);
+      end;
+    finally
+      arts.Free;
+    end;
+
+    { AS MANY EXAMPLES AS THE FIXTURE RENDERED. HELP_DOCS carries the count this suite measured
+      by running every one of them through the engine; the generator counted independently while
+      building the table the window clicks through. Two parsers, one document. }
+    want_ex := 0;
+    for i := Low(HELP_DOCS) to High(HELP_DOCS) do
+      if HELP_DOCS[i].Path = SpxHelpSourcePath(lang) then want_ex := HELP_DOCS[i].Examples;
+    Check('help/unit/' + SpxHelpLangCode(lang) + '/as many examples as the fixture rendered',
+          IntToStr(SpxHelpExampleCount(lang)), IntToStr(want_ex));
 
     { EVERY CODE THE PANEL CAN SHOW HAS AN ARTICLE TO OPEN. This is the check the whole
       double-click entry point rests on, and the reason CheckHelpArticles exists one level up. }
@@ -3873,8 +3953,24 @@ begin
                 Pos('<!', html) = 0);
       CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
                 ' has no image (there is no data provider)', Pos('<img', html) = 0);
-      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
-                ' has no link (nothing routes one yet)', Pos('<a ', html) = 0);
+      { EVERY LINK LEADS SOMEWHERE. The template of each example is an `ex:N` anchor and N is
+        what the window looks the template up by -- a link to nothing would be a click that
+        silently does nothing, which reads as a broken feature rather than as prose. Scraped
+        from the EMITTED HTML, not from the table beside it. }
+      hrefs := HrefsIn(html);
+      try
+        for j := 0 to hrefs.Count - 1 do
+        begin
+          n := SpxHelpExampleOf(hrefs[j]);
+          CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                    ' link [' + hrefs[j] + '] is an example number', n >= 0);
+          CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                    ' link [' + hrefs[j] + '] leads to a template',
+                    SpxHelpExample(lang, n, got) and (Trim(got) <> ''));
+        end;
+      finally
+        hrefs.Free;
+      end;
       CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
                 ' does not end with a bare < (it would eat the closing tag)',
                 Copy(html, Length(html), 1) <> '<');
@@ -3944,33 +4040,22 @@ begin
     end;
   end;
 
+  { THE HREF PARSER, which is the only place the link form is known. }
+  Check('help/nav/ex:0 is example 0', IntToStr(SpxHelpExampleOf('ex:0')), '0');
+  Check('help/nav/ex:12 is example 12', IntToStr(SpxHelpExampleOf('ex:12')), '12');
+  Check('help/nav/a bare number is not an href', IntToStr(SpxHelpExampleOf('12')), '-1');
+  Check('help/nav/an empty href is nothing', IntToStr(SpxHelpExampleOf('')), '-1');
+  Check('help/nav/ex: with no number is nothing', IntToStr(SpxHelpExampleOf('ex:')), '-1');
+  Check('help/nav/a url is not an example', IntToStr(SpxHelpExampleOf('https://x/')), '-1');
+  Check('help/nav/ex:1x is nothing', IntToStr(SpxHelpExampleOf('ex:1x')), '-1');
+  CheckTrue('help/nav/an example past the end has no template',
+            not SpxHelpExample(0, 99999, got));
+  CheckTrue('help/nav/a negative example has no template', not SpxHelpExample(0, -1, got));
+
   { A code with no article must answer False rather than a page nobody meant. }
   CheckTrue('help/nav/an empty code has no article', not SpxHelpTargetFor(0, '', p_, s_));
   CheckTrue('help/nav/a future engine code has no article',
             not SpxHelpTargetFor(0, 'something.new-in-v9', p_, s_));
-
-  { Href classification. Nothing emits a link today -- that is asserted above -- so this is the
-    handler waiting for the day one arrives. }
-  anchorId := 'bracket.unclosed';
-  SpxHelpTargetFor(0, anchorId, page, s_);
-  CheckTrue('help/nav/an anchor on this page is same-page',
-            SpxHelpResolveHref(0, page, '#' + anchorId, kind, p_, s_) and
-            (kind = spxHrefSamePage) and (p_ = page) and (s_ = anchorId));
-  CheckTrue('help/nav/an anchor NOT on this page is refused',
-            not SpxHelpResolveHref(0, 0, '#' + anchorId, kind, p_, s_));
-  CheckTrue('help/nav/a slug is another page',
-            SpxHelpResolveHref(0, 0, 'plurals', kind, p_, s_) and (kind = spxHrefOtherPage) and
-            (p_ = SpxHelpPageIndex('plurals')));
-  CheckTrue('help/nav/a slug with an anchor carries both',
-            SpxHelpResolveHref(0, 0, 'brackets#' + anchorId, kind, p_, s_) and
-            (kind = spxHrefOtherPage) and (s_ = anchorId));
-  CheckTrue('help/nav/http is named and ignored',
-            SpxHelpResolveHref(0, 0, 'https://spintax.net/', kind, p_, s_) and
-            (kind = spxHrefExternal));
-  CheckTrue('help/nav/an empty href is nothing',
-            not SpxHelpResolveHref(0, 0, '', kind, p_, s_));
-  CheckTrue('help/nav/an unknown slug is nothing',
-            not SpxHelpResolveHref(0, 0, 'no-such-section', kind, p_, s_));
 
   { Relocation across a language switch: the article if it exists there -- and for a code it
     always does -- else the section, never a blank. }
@@ -3983,14 +4068,6 @@ begin
         IntToStr(SpxHelpPageIndex('includes')));
   Check('help/nav/a lost anchor has no anchor', s_, '');
 
-  { The document wrapper. Colours ride on <body> because a document that opens itself keeps its
-    body attributes -- the measurement ADR 0004 records from the other side. }
-  got := SpxHelpDocument('<p>x</p>', '#1E1E1E', '#D4D4D4', '#E04090');
-  CheckTrue('help/nav/the wrapper carries the theme',
-            (Pos('bgcolor="#1E1E1E"', got) > 0) and (Pos('text="#D4D4D4"', got) > 0) and
-            (Pos('link="#E04090"', got) > 0));
-  CheckTrue('help/nav/the wrapper has no head', Pos('<head', got) = 0);
-  CheckTrue('help/nav/the wrapper opens a document', SpxOpensDocument(got));
 end;
 
 procedure TestHelpExamples;

@@ -21,7 +21,7 @@ unit SpxEngineThread;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, Spintax, SpxStudio, SpxFiles, SpxDedupe;
+  Classes, SysUtils, SyncObjs, Spintax, SpxStudio, SpxFiles, SpxDedupe, SpxHelpText;
 
 type
   { TSpxVarPairs (what the panel sends) and TSpxVarInfos (what it receives) are declared in
@@ -64,6 +64,15 @@ type
       describing the whole file, because selecting a paragraph does not make the errors
       outside it go away. }
     Fragment: string;
+    { THE HELP IS RENDERED UNDER THE HELP'S OWN CONDITIONS. -1 for an ordinary document; the
+      index of a help language when the left pane is showing the help and Text is the example
+      the caret sits in. The locale and the seed come with the job as usual, but the template
+      set cannot -- it is three fragments the document declares rather than a folder on disk --
+      so the thread builds it from SpxHelpText.
+
+      Anything else would have the help print one answer and the pane show another, which is the
+      one thing a document whose examples are fixtures may never do. }
+    HelpLang: Integer;
   end;
 
   TSpxJobResult = record
@@ -168,6 +177,8 @@ type
     FOnBatch: TSpxBatchEvent;
     FSet: TSpxTemplateSet;                // owned here, touched only on this thread
     FSetFolder: string;
+    { Which help language FSet was built for, or -1 when it is an ordinary document's set. }
+    FSetHelpLang: Integer;
     { Per-file validation results, reused across renders. The walk validates every file in
       the closure on every keystroke while only the open document has changed, and
       SpValidate is quadratic in the count of #set/#def -- so a folder of fragments makes
@@ -209,6 +220,10 @@ begin
   FWake := TSimpleEvent.Create;
   FOnDone := AOnDone;
   FHasPending := False;
+  { -1 AND NOT THE DEFAULT ZERO: zero is a valid help language, so a field left at its default
+    would tell SyncSet the set is already the English help's and the first document would render
+    against three fragments out of the help. }
+  FSetHelpLang := -1;
   FCache := TSpxValidationCache.Create;   // before the thread starts, so it cannot race
   inherited Create(False);   // start at once: the first thing it does is warm the engine
 end;
@@ -504,10 +519,26 @@ end;
   named where the user can see it: a fragment edited in another program shows up after
   "Перечитать набор". }
 procedure TSpxEngineThread.SyncSet(const Job: TSpxJob);
+var i: Integer;
 begin
-  if (not Job.ReloadSet) and (Job.SetFolder = FSetFolder) and
+  { The help's set is three fragments the document declares, not a folder -- built here and
+    cached by language, so a caret moving through the help does not rebuild it per keystroke. }
+  if Job.HelpLang >= 0 then
+  begin
+    if FSetHelpLang = Job.HelpLang then Exit;
+    FreeAndNil(FSet);
+    FSetFolder := '';
+    FSetHelpLang := Job.HelpLang;
+    FSet := TSpxTemplateSet.Create;
+    for i := 0 to SpxHelpIncludeCount(Job.HelpLang) - 1 do
+      FSet.AddOrSetValue(SpxHelpIncludeName(Job.HelpLang, i),
+                         SpxHelpIncludeText(Job.HelpLang, i));
+    Exit;
+  end;
+  if (not Job.ReloadSet) and (FSetHelpLang < 0) and (Job.SetFolder = FSetFolder) and
      ((FSet <> nil) = (Job.SetFolder <> '')) then Exit;
   FreeAndNil(FSet);
+  FSetHelpLang := -1;
   FSetFolder := Job.SetFolder;
   if FSetFolder <> '' then FSet := SpxLoadTemplateSet(FSetFolder);
 end;

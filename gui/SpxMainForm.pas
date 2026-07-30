@@ -25,7 +25,7 @@ uses
   Clipbrd, Graphics, LCLType, LCLIntf,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpNav, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
+  SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
@@ -85,6 +85,11 @@ type
       keeps its size while the preview absorbs every change -- which is not what "the two
       panes are meant to be comparable" says. Updated when the splitter is let go. }
     FPaneFraction: Double;
+    { THE HELP WANTS A DIFFERENT SPLIT than the work does. Reading is not editing: the page needs
+      its measured 450 px and an example's output is one short line, so the panes divide about
+      two to one rather than in half. The working fraction is put back on the way out -- it is
+      the user's, set by their own drag. -1 means "not in help mode", which a fraction never is. }
+    FWorkFraction: Double;
     { The flags beside the language names. Owned by the FORM, not by the menu bar: the bar is
       freed and rebuilt on every language switch, and a list that went with it would be one
       more sprite decoded per switch. }
@@ -105,7 +110,13 @@ type
       width instead of three. }
     FDock: TPanel;
     FSlide: TSpxGroupPane;
+    { THE HELP IS IN THE LEFT PANE, where the template normally is: you read on the left and
+      what it produces appears on the right, which is the shape this window already has. The
+      contents go in the slot the group editor otherwise fills. }
     FHelp: TSpxHelpPane;
+    FTopics: TSpxHelpTopics;
+    { The example the reader last clicked, or -1. The right pane renders it. }
+    FHelpExample: Integer;
     FPendingHelpCode: string;
     { WHICH FACE THE SLOT IS ABOUT TO HOLD, and not which one it holds. The width has to be
       chosen BEFORE the panel is shown -- a panel that appears at the wrong size and then snaps
@@ -288,6 +299,12 @@ type
     procedure HelpDeferred(Data: PtrInt);
     procedure OpenHelpPane(const ACode: string);
     function DockWantWidth: Integer;
+    function HelpShowing: Boolean;
+    procedure HideHelp;
+    procedure GoToHelp(APage: Integer; const AAnchor: string);
+    procedure TopicPicked(APage: Integer; const AAnchor: string);
+    procedure HelpLangChanged(Sender: TObject);
+    procedure RunHelpExample(AIndex: Integer);
     procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
     procedure MenuDiagClicked(Sender: TObject);
@@ -395,6 +412,12 @@ const
   SPX_BODY_MIN = 320;
   SPX_PANE_MIN = 140;
 
+  { TWO PARTS PAGE TO ONE PART OUTPUT, while the help is open. Reading is not editing: the page's
+    measured floor is 450 px of content and an example's output is one short line. In a 1100 px
+    window with the contents showing this gives the reading column about 500 and leaves the
+    result about 285 -- where the layout study landed. }
+  SPX_HELP_FRACTION = 0.64;
+
 
 constructor TSpxMainForm.Create(AOwner: TComponent);
 begin
@@ -412,6 +435,7 @@ begin
     need every control re-read; a language restored here costs nothing. }
   FLoading := True;
   FPaneFraction := 0.48;
+  FWorkFraction := -1;
   FPrefs := SpxLoadPrefs;
   FLangFollow := FPrefs.LangFollow;
   if FPrefs.Lang <> '' then FLangChosen := SpxLangFor(FPrefs.Lang)
@@ -490,11 +514,15 @@ begin
     arithmetic to the two competitors it already handles. A reader is not editing a group at
     the same moment, and two 300 px panels beside a 1100 px window would leave neither the
     editor nor the preview anything. }
-  FHelp := TSpxHelpPane.Create(Self);
-  FHelp.Parent := FDock;
-  FHelp.Align := alClient;
-  FHelp.Visible := False;
-  FHelp.OnClose := @HelpPaneClosed;
+  { The CONTENTS take the slot. The help itself is not here -- it is in the left pane, and
+    this only says where to go. }
+  FTopics := TSpxHelpTopics.Create(Self);
+  FTopics.Parent := FDock;
+  FTopics.Align := alClient;
+  FTopics.Visible := False;
+  FTopics.OnClose := @HelpPaneClosed;
+  FTopics.OnPicked := @TopicPicked;
+  FTopics.OnLangChanged := @HelpLangChanged;
 
   { A VARIANT CAN BE LONGER THAN ANY DEFAULT. The panel is the one part of this window whose
     useful width depends on the document rather than on the layout, so it is the user's to
@@ -739,6 +767,16 @@ begin
     the suite scans and validates the same text (SpxDemo). }
   FHighlighter := TSpxSynHighlighter.Create(Self);
   FEditor.Highlighter := FHighlighter;
+
+  { THE HELP, IN THE SAME PANE AS THE TEMPLATE and visible instead of it. The user's own
+    document is not touched at all -- not its file state, not its undo history, not anything
+    unsaved -- because nothing is loaded over it. The same trick the preview's Page/Source pair
+    uses on the other side. }
+  FHelp := TSpxHelpPane.Create(Self);
+  FHelp.Parent := FLeft;
+  FHelp.Align := alClient;
+  FHelp.Visible := False;
+  FHelp.OnRunExample := @RunHelpExample;
   FEditor.Text := SpxDemoTemplate;
   FEditor.OnChange := @EditorChanged;
   FEditor.OnStatusChange := @SelectionChanged;
@@ -1382,9 +1420,10 @@ begin
   { ONE SLOT, ONE FACE. The rail's two latches share a group, so clicking this tool puts the
     help tool out -- but LCL calls OnClick only for the button that was clicked, so the panel
     that is going away has to be hidden from here. }
-  if FHelp.Visible then
+  if FTopics.Visible then
   begin
-    FHelp.Visible := False;
+    HideHelp;
+    FTopics.Visible := False;
     FRail.SetDown(4, False);
   end;
   FDockHelp := False;
@@ -2609,7 +2648,13 @@ begin
   FSlide.Retranslate;
   { And the help, which may have to change DOCUMENT and not merely captions -- where the reader
     lands is SpxHelpNav's rule rather than an improvisation here. }
-  if FHelp <> nil then FHelp.Retranslate;
+  { The contents own the help language, so they are retranslated first; if that moved the
+    document, the page beside them follows. }
+  if FTopics <> nil then
+  begin
+    FTopics.Retranslate;
+    if HelpShowing and (FTopics.HelpLang <> FHelp.HelpLang) then HelpLangChanged(FTopics);
+  end;
   { The rows carry their words from the worker, and their first two columns are written here
     -- so the level and the file name change language at once. The MESSAGE column does not:
     it was worded by the render that produced it, and it stays in the old language until the
@@ -2683,7 +2728,29 @@ begin
     that stays live in that window. }
   if FEngine = nil then Exit;
   Inc(FNextId);
+  job := Default(TSpxJob);
   job.Id := FNextId;
+
+  { THE HELP'S EXAMPLE, UNDER THE HELP'S OWN CONDITIONS. The locale, the seed and the template
+    set are the document's, out of its spx-fixture block -- render it under the user's settings
+    instead and the arrow printed beside the example would disagree with the pane, which is the
+    one thing a document whose examples are fixtures may never do.
+
+    Nothing clicked yet means an empty template, which renders to nothing: the right pane waits
+    rather than showing an answer to a question nobody asked. }
+  if HelpShowing then
+  begin
+    job.HelpLang := FTopics.HelpLang;
+    job.UiLang := SpxUiLang;
+    job.Locale := SpxHelpLocale(job.HelpLang);
+    job.Seeded := True;
+    job.Seed := SpxHelpSeed(job.HelpLang);
+    if FHelpExample >= 0 then SpxHelpExample(job.HelpLang, FHelpExample, job.Text);
+    FShownAsk := Default(TSpxPreviewAsk);
+    FEngine.Post(job);
+    Exit;
+  end;
+  job.HelpLang := -1;
   { DocText, not FEditor.Text: SynEdit joins its lines with the PLATFORM's ending, so on
     Windows the engine was handed a CRLF copy of a file that is LF on disk -- and the two do
     not render the same. A directive line ending in CRLF leaves its LF behind, one blank line
@@ -3020,6 +3087,7 @@ begin
   { A theme change is a RE-FEED for the help: the colours live in the loaded document, not on
     the panel (TIpHtmlFrame.InitHtml copies them at load). }
   if FHelp <> nil then FHelp.ApplyTheme(pal);
+  if FTopics <> nil then FTopics.ApplyTheme(pal);
   FEditor.Invalidate;
 end;
 
@@ -3189,9 +3257,34 @@ end;
 { The rail's help tool: a latch, like the group editor's, and in the SAME group -- so the two
   are one choice and the slot never has to hold both. LCL flips Down on mouse-up and then calls
   this, so the handler asks the button what happened rather than remembering. }
+function TSpxMainForm.HelpShowing: Boolean;
+begin
+  Result := (FHelp <> nil) and FHelp.Visible;
+end;
+
+{ The document comes back. Hiding a control that HOLDS the focus leaves ActiveControl nil
+  (CMVisibleChanged calls DefocusControl), so the caret would vanish -- hence the order and the
+  SetFocus, the same rule the group editor's close obeys. }
+procedure TSpxMainForm.HideHelp;
+begin
+  if (FHelp = nil) or not FHelp.Visible then Exit;
+  FHelp.Visible := False;
+  FEditor.Visible := True;
+  FHelpExample := -1;
+  if FWorkFraction >= 0 then
+  begin
+    FPaneFraction := FWorkFraction;
+    FWorkFraction := -1;
+    FPaneRoom := -1;
+    ClampPanes;
+  end;
+  if FEditor.CanSetFocus then FEditor.SetFocus;
+  RequestRender;
+end;
+
 procedure TSpxMainForm.RailHelpClicked(Sender: TObject);
 begin
-  if FHelp.Visible then
+  if FTopics.Visible then
   begin
     HelpPaneClosed(Sender);
     Exit;
@@ -3209,6 +3302,7 @@ end;
   whether or not it happened to be open already. ACode is a diagnostic to open the article for,
   or '' for the contents. }
 procedure TSpxMainForm.OpenHelpPane(const ACode: string);
+var page: Integer; anchor: string;
 begin
   FSlideRoom := -1;
   FPaneRoom := -1;
@@ -3218,22 +3312,83 @@ begin
     FRail.SetDown(3, False);
   end;
   FDockHelp := True;
+  { Before the panes are clamped, so the page appears at its reading width rather than at the
+    working one and then jumping. }
+  if FWorkFraction < 0 then
+  begin
+    FWorkFraction := FPaneFraction;
+    FPaneFraction := SPX_HELP_FRACTION;
+  end;
   ClampSlide;
   FDock.Visible := True;
-  FHelp.Visible := True;
+  FTopics.Visible := True;
   FSlideSplit.Visible := True;
+  FPaneRoom := -1;
   ClampPanes;
   { The latch, for the routes that do not set it themselves -- the menu, F1, the panel. An
     unlit tool over an open panel is not merely wrong-looking: the next click on it flips Down
     to True, the handler sees the panel already open, and closes it. Paid for once already by
     the group editor. }
   FRail.SetDown(4, True);
-  if ACode <> '' then FHelp.GoToCode(ACode) else FHelp.GoToPage(FHelp.CurrentPage, '');
+
+  page := FHelp.CurrentPage;
+  anchor := FHelp.CurrentAnchor;
+  if ACode <> '' then
+    { A code with no article opens the contents rather than nothing: a gesture that does nothing
+      reads as broken, and a code from an engine newer than this build is not the reader's
+      fault. The suite proves every code this build knows resolves. }
+    if not SpxHelpTargetFor(FTopics.HelpLang, ACode, page, anchor) then
+    begin
+      page := 0;
+      anchor := '';
+    end;
+  GoToHelp(page, anchor);
+end;
+
+{ The page into the left pane, and the contents lit to match. Every route -- F1, the menu, a
+  topic, a diagnostics row -- arrives here. }
+procedure TSpxMainForm.GoToHelp(APage: Integer; const AAnchor: string);
+begin
+  FEditor.Visible := False;
+  FHelp.Visible := True;
+  FHelp.ShowPage(FTopics.HelpLang, APage, AAnchor);
+  FTopics.ShowAt(APage, AAnchor);
+  { A new page, a new subject: the right pane stops showing the last example rather than
+    keeping an answer to a question the reader has left behind. }
+  FHelpExample := -1;
+  RequestRender;
+  if FHelp.CanSetFocus then FHelp.SetFocus;
+end;
+
+procedure TSpxMainForm.TopicPicked(APage: Integer; const AAnchor: string);
+begin
+  if not HelpShowing then OpenHelpPane('');
+  GoToHelp(APage, AAnchor);
+end;
+
+{ The reader asked for the other document. Where they land is SpxHelpNav's rule, not an
+  improvisation here. }
+procedure TSpxMainForm.HelpLangChanged(Sender: TObject);
+var page: Integer; anchor: string;
+begin
+  SpxHelpRelocate(FHelp.HelpLang, FHelp.CurrentPage, FHelp.CurrentAnchor,
+                  FTopics.HelpLang, page, anchor);
+  GoToHelp(page, anchor);
+end;
+
+{ A TEMPLATE WAS CLICKED. The number is the generator's; the template behind it is stored
+  verbatim, as the fixture ran it, so what appears on the right is exactly what the arrow beside
+  it printed -- and the diagnostics below are that example's own. }
+procedure TSpxMainForm.RunHelpExample(AIndex: Integer);
+begin
+  FHelpExample := AIndex;
+  RequestRender;
 end;
 
 procedure TSpxMainForm.HelpPaneClosed(Sender: TObject);
 begin
-  FHelp.Visible := False;
+  HideHelp;
+  FTopics.Visible := False;
   FDock.Visible := False;
   FSlideSplit.Visible := False;
   FPaneRoom := -1;

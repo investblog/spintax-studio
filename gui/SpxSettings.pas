@@ -72,12 +72,11 @@ const
   SPX_SLIDE_MIN = 200;
   SPX_SLIDE_MAX = 900;
   SPX_SLIDE_DEFAULT = 300;
-  { Wider than the group editor's default, and the number is measured rather than chosen: at a
-    460 px client every prose page lays out at exactly the width available, so 480 is the first
-    default at which the contents page is not clipped. Two of the twelve pages still scroll
-    sideways -- the plural article's widest example is ninety characters of real content, and a
-    <pre> cannot wrap -- and the panel drags out to 900, which fits it. }
-  SPX_HELP_DEFAULT = 480;
+  { The slot holds the CONTENTS -- twelve sections and their articles -- while the help itself
+    is in the left pane. So it wants a little more than the group editor and nothing like a
+    reading column: the page needs its measured 450 px from the pane beside it, and every pixel
+    taken here is one taken from there. }
+  SPX_HELP_DEFAULT = 260;
 
 function SpxDefaultPrefs: TSpxPrefs;
 

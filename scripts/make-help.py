@@ -5,6 +5,16 @@ THE MARKDOWN STAYS THE SINGLE SOURCE. `TestHelpExamples` reads those same files 
 example through the real engine, so what the reader sees in the window cannot diverge from what
 the suite verified -- that is the whole reason this is generated rather than written by hand.
 
+THE TEMPLATE OF EVERY EXAMPLE IS A LINK, and the output beside it is not: you click the input
+and get the output, which is what the arrow already says. Measured before it was built -- an
+anchor inside a <pre> is a link to IPro, HotURL comes back as written, and the output half of the
+same line reports nothing.
+
+THE CONDITIONS TRAVEL WITH IT. Each document's spx-fixture block declares the locale, the seed
+and the template set its outputs were measured under, and those go into the unit too: a click
+renders under the document's own conditions, or the help would print one answer and the pane show
+another -- which is the one thing a document whose examples are fixtures may never do.
+
 A PAGE PER SECTION, never one document. TIpHtmlPanel's layout is quadratic (35 ms on 1.5 KB,
 12.9 s on 172 KB -- ADR 0004), and measured here on a 12.7 KB page: 156 ms. Cutting at `##`
 keeps every page around 100 ms; the Russian document whole would be four times that and a
@@ -102,6 +112,20 @@ def inline(lang, line_no, text):
 NOTE_GAP = re.compile('^(.*→.*?)   +(\\S.*)$')
 
 
+ARROW = '→'
+
+
+def link(index, inner):
+    """An anchor the window resolves by number. `ex:` rather than a bare digit so a future kind
+    of link cannot be mistaken for this one."""
+    return '<a href="ex:%d">%s</a>' % (index, inner)
+
+
+def fence_note(right):
+    """What follows the arrow, with a trailing note kept on the line but out of the link."""
+    return esc(right)
+
+
 def fence_line(text):
     """One line of a fenced block, escaped -- with a trailing note moved to a line of its own.
 
@@ -115,6 +139,35 @@ def fence_line(text):
     if not m:
         return esc(text)
     return esc(m.group(1).rstrip()) + '\n' + esc('      ' + m.group(2))
+
+
+def read_fixture(lang, line_no, body, into):
+    """The conditions the document's outputs were measured under.
+
+    The suite reads this same block out of the markdown; this carries it into the exe so the
+    pane can render under them too. Unknown keys fail rather than reverting to a default -- a
+    typo'd `locale` that silently fell back would render every example against the wrong engine.
+    """
+    for raw in body:
+        t = raw.strip()
+        if not t:
+            continue
+        at = t.find(': ')
+        if at < 0:
+            raise Bad(lang, line_no, 'a conditions line that is not `key: value` [%s]' % t)
+        key, val = t[:at].strip(), t[at + 2:]
+        if key == 'locale':
+            into['locale'] = val.strip()
+        elif key == 'seed':
+            if not val.strip().isdigit() or int(val.strip()) == 0:
+                raise Bad(lang, line_no, 'the seed is not a positive number [%s]' % val)
+            into['seed'] = int(val.strip())
+        elif key == 'empty':
+            into['empty'] = val.strip()
+        elif key.startswith('include '):
+            into['includes'].append((key[8:].strip(), val))
+        else:
+            raise Bad(lang, line_no, 'a conditions key this script does not know [%s]' % key)
 
 
 def reject_unsupported(lang, line_no, raw):
@@ -158,6 +211,10 @@ def convert(lang, path):
     at = {'para': 0, 'item': 0, 'quote': 0}   # the line each open block started on
     table = []
     fence_body = []
+    fixture = {'locale': '', 'seed': 0, 'empty': '', 'includes': []}
+    examples = []         # every example's template, in document order
+    acc = []              # the template lines of the one being read
+    seen_fixture = [False]
     fence_start = 0
 
     def start_page(title, line_no):
@@ -229,14 +286,52 @@ def convert(lang, path):
                 if fence not in ('', 'spx-fixture'):
                     raise Bad(lang, n, 'an unknown fence info string %r' % fence)
                 fence_body = []
+                del acc[:]
                 fence_start = n
             else:
+                if fence == 'spx-fixture':
+                    if seen_fixture[0]:
+                        raise Bad(lang, fence_start, 'a second conditions block')
+                    seen_fixture[0] = True
+                    read_fixture(lang, fence_start, [x for x in fence_body], fixture)
                 page['html'].append('<pre>' + '\n'.join(fence_body) + '</pre>')
                 fence = None
             continue
 
         if fence is not None:
-            fence_body.append(fence_line(raw_line.rstrip('\r')))
+            t = raw_line.rstrip()
+            if fence == 'spx-fixture':
+                fence_body.append(esc(t))
+                continue
+            # EVERY EXAMPLE'S TEMPLATE, by the same rule the suite reads them by: a line without
+            # an arrow continues the template, a line with one ends the example and contributes
+            # what stands before it, a blank line starts over. The parsing happens HERE, so the
+            # window has none of its own -- it is handed a number and looks the template up.
+            if not t.strip():
+                del acc[:]
+                fence_body.append('')
+                continue
+            if ARROW in t:
+                left, right = t.split(ARROW, 1)
+                if left.strip():
+                    acc.append(left.rstrip())
+                if acc:
+                    examples.append('\n'.join(acc))
+                    ex = len(examples) - 1
+                    # The TEMPLATE is the link and the output is not. Each line of a multi-line
+                    # template is its own anchor pointing at the same example: a single-line
+                    # inline anchor inside a <pre> is the case that was measured, and a bigger
+                    # click target costs nothing.
+                    for i in range(len(fence_body) - (len(acc) - 1), len(fence_body)):
+                        fence_body[i] = link(ex, fence_body[i])
+                    fence_body.append(link(ex, esc(left.rstrip())) +
+                                      esc(left[len(left.rstrip()):]) + ARROW + fence_note(right))
+                else:
+                    fence_body.append(fence_line(t))
+                del acc[:]
+                continue
+            acc.append(t)
+            fence_body.append(esc(t))
             continue
 
         reject_unsupported(lang, n, line)
@@ -321,11 +416,20 @@ def convert(lang, path):
         raise Bad(lang, fence_start, 'this fence is never closed')
     flush()
     close_list()
-    return pages, digest
+    return pages, digest, fixture, examples
 
 
 BLOCK_TAGS = ['p', 'pre', 'blockquote', 'ul', 'li', 'table', 'tr', 'th', 'td',
               'h1', 'h2', 'h3']
+
+
+# How many examples the document being checked has -- set before the pages are walked, so the
+# link check can say "a link to example 40 of 34" rather than only "a link".
+ANY_EXAMPLES = [0]
+
+
+def seen_any(fixture):
+    return (fixture['locale'] != '') and (fixture['seed'] > 0)
 
 
 def refuse_bad_html(lang, page):
@@ -350,9 +454,16 @@ def refuse_bad_html(lang, page):
         raise SystemExit('%s/%s: ends with a bare `<`, which eats the closing tag' % (lang, where))
     if '<img' in html:
         raise SystemExit('%s/%s: an image, and there is no data provider' % (lang, where))
-    if '<a ' in html:
-        raise SystemExit('%s/%s: a link -- SpxHelpResolveHref exists but nothing routes to it '
-                         'yet' % (lang, where))
+    # EVERY LINK IS AN EXAMPLE, and its number is one this document has. The window resolves an
+    # href by looking the number up, so a link to nothing would be a click that silently does
+    # nothing -- and a click that does nothing reads as a broken feature, not as prose.
+    for m in re.finditer('<a href="([^"]*)"', html):
+        if not re.match('^ex:[0-9]+$', m.group(1)):
+            raise SystemExit('%s/%s: a link to %r, and the only kind this emits is ex:N'
+                             % (lang, where, m.group(1)))
+        if int(m.group(1)[3:]) >= ANY_EXAMPLES[0]:
+            raise SystemExit('%s/%s: a link to example %s of %d'
+                             % (lang, where, m.group(1)[3:], ANY_EXAMPLES[0]))
     for tag in BLOCK_TAGS:
         opens = len(re.findall(r'<%s\b' % tag, html))
         closes = len(re.findall(r'</%s>' % tag, html))
@@ -399,10 +510,17 @@ def main():
         path = os.path.join(HERE, 'docs', 'help', lang, 'diagnostics.md')
         if not os.path.exists(path):
             raise SystemExit('missing help document: %s' % path)
-        pages, digest = convert(lang, path)
+        pages, digest, fixture, examples = convert(lang, path)
+        if not seen_any(fixture):
+            raise SystemExit('%s: no spx-fixture block -- the pane could not reproduce the '
+                             'outputs it prints' % lang)
+        if fixture['locale'] != lang:
+            raise SystemExit('%s declares locale %r' % (lang, fixture['locale']))
+        ANY_EXAMPLES[0] = len(examples)
         for page in pages:
             refuse_bad_html(lang, page)
-        docs.append({'lang': lang, 'pages': pages, 'digest': digest,
+        docs.append({'lang': lang, 'pages': pages, 'digest': digest, 'fixture': fixture,
+                     'examples': examples,
                      'path': 'docs/help/%s/diagnostics.md' % lang})
 
     # THE DOCUMENTS MUST RUN PARALLEL, because a slug names a section in both of them and the
@@ -428,8 +546,9 @@ def main():
     anchors = []       # (page, id, title, is_code)
     anchor_span = []   # (first, last) into anchors, per language
 
+    exs, ex_span, incs, inc_span = [], [], [], []
     for doc in docs:
-        first_anchor = len(anchors)
+        first_anchor, first_ex, first_inc = len(anchors), len(exs), len(incs)
         for page in doc['pages']:
             spans.append((len(flat), len(flat) + len(page['html']) - 1))
             flat.extend(page['html'])
@@ -438,6 +557,10 @@ def main():
             for a in page['anchors']:
                 anchors.append((p, a['id'], a['title'], a['code']))
         anchor_span.append((first_anchor, len(anchors) - 1))
+        exs.extend(doc['examples'])
+        ex_span.append((first_ex, len(exs) - 1))
+        incs.extend(doc['fixture']['includes'])
+        inc_span.append((first_inc, len(incs) - 1))
 
     u = ['(*',
          ' * SpxHelpText -- the help documents, as HTML, one page per section.',
@@ -494,6 +617,24 @@ def main():
          'function SpxHelpAnchorTitle(ALang, AIndex: Integer): string;',
          'function SpxHelpAnchorIsCode(ALang, AIndex: Integer): Boolean;',
          '',
+         '{ THE CONDITIONS THE OUTPUTS WERE MEASURED UNDER, from the document\'s own spx-fixture',
+         '  block. A click rendered under anything else would disagree with the arrow printed',
+         '  beside it, which is the one thing this document may never do. }',
+         'function SpxHelpLocale(ALang: Integer): string;',
+         'function SpxHelpSeed(ALang: Integer): LongWord;',
+         'function SpxHelpIncludeCount(ALang: Integer): Integer;',
+         'function SpxHelpIncludeName(ALang, AIndex: Integer): string;',
+         'function SpxHelpIncludeText(ALang, AIndex: Integer): string;',
+         '',
+         '{ THE TEMPLATE BEHIND A LINK. Every example`s template is an `ex:N` anchor in the page,',
+         '  and this is what N means -- stored verbatim, as the fixture rendered it, so a click',
+         '  runs exactly what the suite verified. The window parses nothing: it is handed the',
+         '  href and asks here. False for a number this build does not have. }',
+         'function SpxHelpExampleCount(ALang: Integer): Integer;',
+         'function SpxHelpExample(ALang, AIndex: Integer; out ATemplate: string): Boolean;',
+         '{ `ex:7` -> 7, or -1 for anything else. The one place the href form is known. }',
+         'function SpxHelpExampleOf(const AHref: string): Integer;',
+         '',
          'implementation',
          '',
          'const',
@@ -530,6 +671,36 @@ def main():
     u.append('  HELP_LINE: array[0..%d] of string = (' % (len(flat) - 1))
     for i, line in enumerate(flat):
         u.append('    %s%s' % (literal(line), ',' if i < len(flat) - 1 else ''))
+    u.append('  );')
+    u.append('')
+
+    u.append('  { The conditions the outputs were measured under, and the template set. }')
+    u.append('  HELP_LOCALE: array[0..%d] of string = (%s);'
+             % (len(LANGS) - 1, ', '.join("'%s'" % d['fixture']['locale'] for d in docs)))
+    u.append('  HELP_SEED: array[0..%d] of LongWord = (%s);'
+             % (len(LANGS) - 1, ', '.join(str(d['fixture']['seed']) for d in docs)))
+    u.append('  HELP_INC_FIRST: array[0..%d] of Integer = (%s);'
+             % (len(LANGS) - 1, ', '.join(str(a) for a, _ in inc_span)))
+    u.append('  HELP_INC_LAST: array[0..%d] of Integer = (%s);'
+             % (len(LANGS) - 1, ', '.join(str(b) for _, b in inc_span)))
+    u.append('  HELP_INC_NAME: array[0..%d] of string = (' % (len(incs) - 1))
+    for i, e in enumerate(incs):
+        u.append('    %s%s' % (literal(e[0]), ',' if i < len(incs) - 1 else ''))
+    u.append('  );')
+    u.append('  HELP_INC_TEXT: array[0..%d] of string = (' % (len(incs) - 1))
+    for i, e in enumerate(incs):
+        u.append('    %s%s' % (literal(e[1]), ',' if i < len(incs) - 1 else ''))
+    u.append('  );')
+    u.append('')
+
+    u.append('  { The templates the `ex:N` links point at, verbatim as the fixture ran them. }')
+    u.append('  HELP_EX_FIRST: array[0..%d] of Integer = (%s);'
+             % (len(LANGS) - 1, ', '.join(str(a) for a, _ in ex_span)))
+    u.append('  HELP_EX_LAST: array[0..%d] of Integer = (%s);'
+             % (len(LANGS) - 1, ', '.join(str(b) for _, b in ex_span)))
+    u.append('  HELP_EX_TEMPLATE: array[0..%d] of string = (' % (len(exs) - 1))
+    for i, e in enumerate(exs):
+        u.append('    %s%s' % (literal(e), ',' if i < len(exs) - 1 else ''))
     u.append('  );')
     u.append('')
 
@@ -666,6 +837,77 @@ def main():
           'begin',
           '  i := AnchorAt(ALang, AIndex);',
           '  Result := (i >= 0) and HELP_ANCHOR_CODE[i];',
+          'end;',
+          '',
+          'function SpxHelpLocale(ALang: Integer): string;',
+          'begin',
+          "  if (ALang < 0) or (ALang > High(HELP_LOCALE)) then Exit('');",
+          '  Result := HELP_LOCALE[ALang];',
+          'end;',
+          '',
+          'function SpxHelpSeed(ALang: Integer): LongWord;',
+          'begin',
+          '  if (ALang < 0) or (ALang > High(HELP_SEED)) then Exit(1);',
+          '  Result := HELP_SEED[ALang];',
+          'end;',
+          '',
+          'function SpxHelpIncludeCount(ALang: Integer): Integer;',
+          'begin',
+          '  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);',
+          '  Result := HELP_INC_LAST[ALang] - HELP_INC_FIRST[ALang] + 1;',
+          'end;',
+          '',
+          'function IncAt(ALang, AIndex: Integer): Integer;',
+          'begin',
+          '  if (AIndex < 0) or (AIndex >= SpxHelpIncludeCount(ALang)) then Exit(-1);',
+          '  Result := HELP_INC_FIRST[ALang] + AIndex;',
+          'end;',
+          '',
+          'function SpxHelpIncludeName(ALang, AIndex: Integer): string;',
+          'var i: Integer;',
+          'begin',
+          '  i := IncAt(ALang, AIndex);',
+          "  if i < 0 then Exit('');",
+          '  Result := HELP_INC_NAME[i];',
+          'end;',
+          '',
+          'function SpxHelpIncludeText(ALang, AIndex: Integer): string;',
+          'var i: Integer;',
+          'begin',
+          '  i := IncAt(ALang, AIndex);',
+          "  if i < 0 then Exit('');",
+          '  Result := HELP_INC_TEXT[i];',
+          'end;',
+          '',
+          'function SpxHelpExampleCount(ALang: Integer): Integer;',
+          'begin',
+          '  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);',
+          '  Result := HELP_EX_LAST[ALang] - HELP_EX_FIRST[ALang] + 1;',
+          'end;',
+          '',
+          'function SpxHelpExample(ALang, AIndex: Integer; out ATemplate: string): Boolean;',
+          'begin',
+          "  ATemplate := '';",
+          '  Result := (AIndex >= 0) and (AIndex < SpxHelpExampleCount(ALang));',
+          '  if Result then ATemplate := HELP_EX_TEMPLATE[HELP_EX_FIRST[ALang] + AIndex];',
+          'end;',
+          '',
+          'function SpxHelpExampleOf(const AHref: string): Integer;',
+          'var i, n: Integer; digits: string;',
+          'begin',
+          '  Result := -1;',
+          "  if Copy(AHref, 1, 3) <> 'ex:' then Exit;",
+          '  digits := Copy(AHref, 4, MaxInt);',
+          "  if (digits = '') or (Length(digits) > 6) then Exit;",
+          '  { Added up here rather than through StrToIntDef, so this unit needs no uses clause',
+          '    at all -- it is a table of constants and nothing else, and it stays that way. }',
+          '  n := 0;',
+          '  for i := 1 to Length(digits) do',
+          '  begin',
+          "    if (digits[i] < '0') or (digits[i] > '9') then Exit;",
+          "    n := n * 10 + (Ord(digits[i]) - Ord('0'));",
+          '  end;',
+          '  Result := n;',
           'end;',
           '',
           'end.',
