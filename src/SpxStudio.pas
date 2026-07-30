@@ -736,6 +736,12 @@ function SpxPanelRows(Report: TSpxReport; Lang: TSpxLang): TSpxPanelRows;
   built on the engine worker while the window is doing something else, and a diagnostic
   whose wording depends on when it was rendered is the kind of bug that only shows up in a
   screenshot. }
+{ The slug a Studio note carries in the panel -- `note.cycle`, `note.too-deep` and the rest.
+  Exported because two callers outside this unit want it and neither should restate the list:
+  the suite, to check the help has an article for every note, and the diagnostics panel, whose
+  double-click will open that article by the row's code. }
+function SpxNoteCode(Kind: TSpxNoteKind): string;
+
 function SpxDiagText(const Code: string; Lang: TSpxLang): string;
 
 { The language for a document locale, by the engine's own normalisation -- so `RU`, `ru-RU`
@@ -1114,7 +1120,7 @@ end;
 
 { Studio's notes have no engine code, and inventing one that LOOKS like an engine code would
   be the one confusion this panel exists to prevent. The `note.` prefix says whose it is. }
-function NoteCode(Kind: TSpxNoteKind): string;
+function SpxNoteCode(Kind: TSpxNoteKind): string;
 begin
   case Kind of
     spxNoteCycle: Result := 'note.cycle';
@@ -1168,7 +1174,7 @@ var
     Result.Slug := Note.Slug;
     Result.Source := spxRowStudio;
     Result.Severity := 'note';
-    Result.Code := NoteCode(Note.Kind);
+    Result.Code := SpxNoteCode(Note.Kind);
     Result.Text := SpxNoteText(Note, Lang);
     Result.Line := Note.Line;
     Result.Column := Note.Column;

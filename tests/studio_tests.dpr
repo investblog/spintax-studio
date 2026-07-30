@@ -2905,10 +2905,10 @@ begin
   CheckTrue('sprites/an-unknown-flag-size-still-gets-bytes', (p <> nil) and (len > 8));
 end;
 
-procedure TestStrings;
 const
-  { Every code the pinned engine can emit, from its own sources -- the panel's coverage is
-    only as honest as this list, so it is spelled out rather than derived. }
+  { Every code the pinned engine can emit, from its own sources -- the panel's coverage and the
+    help's are only as honest as this list, so it is spelled out rather than derived. At program
+    scope because two tests need it: the panel's wording and the help's article inventory. }
   ENGINE_CODES: array[0..16] of string = (
     'bracket.unclosed', 'bracket.mismatched', 'bracket.unexpected-closing',
     'set.malformed', 'def.malformed', 'def.include-in-value', 'definition.duplicate-name',
@@ -2916,6 +2916,8 @@ const
     'variable.circular-reference', 'plural.arity', 'plural.count-macro',
     'plural.nested-brackets', 'permutation.unknown-key', 'permutation.minsize-not-integer',
     'permutation.maxsize-not-integer');
+
+procedure TestStrings;
 var
   id: TSpxStr;
   lang: TSpxLang;
@@ -3248,7 +3250,7 @@ type
 
 const
   HELP_DOCS: array[0..0] of THelpDoc = (
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 26));
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 28));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
 function HelpLabel(const APath: string): string;
@@ -3324,14 +3326,45 @@ begin
           shown);
 end;
 
+{ Is this one of the codes a panel row can actually carry? Asked of the lists themselves, and
+  that is the point: a heading may open with a backticked CONSTRUCT rather than a code --
+  ``### `#include` работает только с начала строки`` -- and a parser that took any backticked
+  token for a code demanded that `#include` produce a diagnostic named `#include`. }
+function IsKnownCode(const ACode: string): Boolean;
+var i: Integer; k: TSpxNoteKind;
+begin
+  for i := Low(ENGINE_CODES) to High(ENGINE_CODES) do
+    if ENGINE_CODES[i] = ACode then Exit(True);
+  for k := Low(TSpxNoteKind) to High(TSpxNoteKind) do
+    if SpxNoteCode(k) = ACode then Exit(True);
+  Result := False;
+end;
+
+{ The code a `### ` heading is about, or '' when it is about something else -- three headings in
+  the Russian document are prose and have no code to demonstrate. }
+function HeadingCode(const AHeading: string): string;
+var t: string; b: Integer;
+begin
+  Result := '';
+  t := Trim(Copy(AHeading, 5, MaxInt));
+  if Copy(t, 1, 1) <> '`' then Exit;
+  b := 2;
+  while (b <= Length(t)) and (t[b] <> '`') do Inc(b);
+  if b > Length(t) then Exit;
+  Result := Copy(t, 2, b - 2);
+  if not IsKnownCode(Result) then Result := '';
+end;
+
 procedure CheckHelpDoc(const ADoc: THelpDoc);
 var
   line, want, doc_, got, tag, key, val, label_, locale, empty_: string;
+  section, undemonstrated: string;
   lines: TStringList;
   set_: TSpxTemplateSet;
   ctx: TSpxContext;
   i, p, checked, seed, exampleLine: Integer;
-  inFence, isFixture, skip, haveFixture, ctxReady: Boolean;
+  inFence, isFixture, skip, haveFixture, ctxReady, sectionShown,
+  sectionHadExamples: Boolean;
 begin
   label_ := HelpLabel(ADoc.Path);
   if not FileExists(ADoc.Path) then
@@ -3351,11 +3384,30 @@ begin
     isFixture := False;
     haveFixture := False;
     ctxReady := False;
+    section := '';
+    sectionShown := False;
+    sectionHadExamples := False;
+    undemonstrated := '';
     doc_ := '';
     skip := False;
     for i := 0 to lines.Count - 1 do
     begin
       line := lines[i];
+      { The article this example belongs to, remembered as the walk passes its heading. ANY
+        heading closes the previous article, not only a `###` one: a `##` that follows the last
+        article of a group would otherwise leave it open, and the next section's examples would
+        be counted as its. }
+      if (not inFence) and (Copy(Trim(line), 1, 2) = '# ') or
+         ((not inFence) and (Copy(Trim(line), 1, 3) = '## ')) or
+         ((not inFence) and (Copy(Trim(line), 1, 4) = '### ')) then
+      begin
+        if (section <> '') and sectionHadExamples and (not sectionShown) then
+          undemonstrated := undemonstrated + section + ' ';
+        if Copy(Trim(line), 1, 4) = '### ' then section := HeadingCode(Trim(line))
+        else section := '';
+        sectionShown := False;
+        sectionHadExamples := False;
+      end;
       if Copy(Trim(line), 1, 3) = '```' then
       begin
         { The INFO STRING on the opening fence says what kind of block this is. }
@@ -3445,11 +3497,29 @@ begin
               StringReplace(doc_, #10, ' / ', [rfReplaceAll]), got, want);
         { Only on a mismatch, and after Check has printed why. }
         if got <> want then ReportMeasured(ADoc.Path, doc_, got, empty_, exampleLine);
+        { AND IS IT AN INSTANCE OF WHAT THE ARTICLE IS ABOUT? The byte comparison proves the
+          output and says nothing about the cause -- which is exactly how a section about
+          `plural.arity` came to demonstrate a non-integer count instead, and stayed green for
+          a week. At least ONE example per article must actually produce the article's code;
+          the others are free to be counter-examples, which is what that section needed. }
+        if section <> '' then
+        begin
+          sectionHadExamples := True;
+          if Pos(':' + section + '@', RowsOf(doc_, ctx)) > 0 then sectionShown := True;
+        end;
         Inc(checked);
       end;
       doc_ := '';
       skip := False;
     end;
+
+    { The last article, which no following heading closed. }
+    if (section <> '') and sectionHadExamples and (not sectionShown) then
+      undemonstrated := undemonstrated + section;
+    { An article with NO example is allowed and says why in its own prose -- three of them do.
+      An article WITH examples that demonstrates something else is the defect this catches. }
+    Check('help/' + label_ + '/every article with examples demonstrates its own code',
+          Trim(undemonstrated), '');
 
     { ── what the document declared about itself, before trusting any of it ── }
     CheckTrue('help/' + label_ + '/declares a fixture block', haveFixture);
@@ -3468,6 +3538,72 @@ begin
   end;
 end;
 
+(* ONE ARTICLE PER CODE, and the check that keeps it.
+
+   The diagnostics panel is to open the article for a row's code on a double click. That entry
+   point rests entirely on every code having a heading of its own -- and when this check was
+   first written the document had fifteen articles for seventeen engine codes, because two
+   headings carried two codes each and one of the pair was abbreviated, so the string
+   `permutation.maxsize-not-integer` appeared nowhere in the help at all. A door that silently
+   leads nowhere for three codes is worse than no door.
+
+   The rule: a `###` heading whose first token is a backticked code IS that code's article, and
+   there must be exactly one per code -- seventeen from the engine and five Studio notes, which
+   the panel shows in the same list and whose rows carry codes just the same. *)
+function HelpArticles(const APath: string): TStringList;
+var lines: TStringList; i, a, b: Integer; t: string;
+begin
+  Result := TStringList.Create;
+  lines := TStringList.Create;
+  try
+    lines.Text := SpxReadTextFile(APath);
+    for i := 0 to lines.Count - 1 do
+    begin
+      t := Trim(lines[i]);
+      if Copy(t, 1, 4) <> '### ' then Continue;
+      t := Trim(Copy(t, 5, MaxInt));
+      if Copy(t, 1, 1) <> '`' then Continue;
+      a := 2;
+      b := a;
+      while (b <= Length(t)) and (t[b] <> '`') do Inc(b);
+      if b > Length(t) then Continue;
+      Result.Add(Copy(t, a, b - a));
+    end;
+  finally
+    lines.Free;
+  end;
+end;
+
+procedure CheckHelpArticles(const APath: string);
+var arts: TStringList; label_, missing, doubled: string; i: Integer; k: TSpxNoteKind;
+
+  procedure Want(const ACode: string);
+  var n, j: Integer;
+  begin
+    n := 0;
+    for j := 0 to arts.Count - 1 do
+      if arts[j] = ACode then Inc(n);
+    if n = 0 then missing := missing + ACode + ' '
+    else if n > 1 then doubled := doubled + ACode + ' ';
+  end;
+
+begin
+  label_ := HelpLabel(APath);
+  arts := HelpArticles(APath);
+  try
+    missing := '';
+    doubled := '';
+    for i := Low(ENGINE_CODES) to High(ENGINE_CODES) do Want(ENGINE_CODES[i]);
+    { The notes are the panel's rows too, and their slugs come from the one function that
+      mints them -- restating the list here would be a second source to drift. }
+    for k := Low(TSpxNoteKind) to High(TSpxNoteKind) do Want(SpxNoteCode(k));
+    Check('help/' + label_ + '/every code has an article', Trim(missing), '');
+    Check('help/' + label_ + '/no code has two articles', Trim(doubled), '');
+  finally
+    arts.Free;
+  end;
+end;
+
 procedure TestHelpExamples;
 var i: Integer; registered: TStringList;
 begin
@@ -3482,7 +3618,11 @@ begin
   finally
     registered.Free;
   end;
-  for i := Low(HELP_DOCS) to High(HELP_DOCS) do CheckHelpDoc(HELP_DOCS[i]);
+  for i := Low(HELP_DOCS) to High(HELP_DOCS) do
+  begin
+    CheckHelpDoc(HELP_DOCS[i]);
+    CheckHelpArticles(HELP_DOCS[i].Path);
+  end;
 end;
 
 procedure TestGroups;
