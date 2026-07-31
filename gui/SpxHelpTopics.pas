@@ -267,8 +267,43 @@ begin
   if FTop <> nil then FTop.Color := APalette.Back;
   if FTree <> nil then
   begin
+    { THE THEMED DRAW HAS TO GO, or the ink is Windows' and not ours. LCL assigns
+      Canvas.Font.Color := Font.Color (treeview.inc:5558) and then, with tvoThemedDraw in
+      Options -- the default -- hands the node's text to ThemeServices.DrawText (:5519-5523)
+      as a ttItemNormal element when it is unselected and a ttItemSelected one when it is
+      (:5482-5506). Either way the theme paints it in the SYSTEM's colour for a tree item and
+      never consults the canvas. So the panel went dark and the text stayed black.
+
+      Measured on the shipped exe: Color was $001E1E1E and Font.Color $00D4D4D4 -- both
+      correct -- while the pixels were black on #1E1E1E, a contrast of 1.26:1. The reader
+      reported it as everything blending together, and it was: the contents of the help were
+      invisible in the dark theme while the page beside them was fine. Confirmed from the
+      other side by drawing both branches into a memory DC: DrawThemeText lays down #000000
+      where the canvas says #D4D4D4, and plain DrawTextW lays down #D4D4D4. }
+    FTree.Options := FTree.Options - [tvoThemedDraw];
     FTree.Color := APalette.Back;
     FTree.Font.Color := APalette.Text;
+    { The selection comes with the text: off the themed path the tree fills the row itself,
+      and takes the ink from SelectionFontColor -- but ONLY when SelectionFontColorUsed says
+      so. SetSelectedFontColor does not set that flag (treeview.inc:3770-3776); it is a
+      published property of its own, and without it the assignment above is dead and the ink
+      is InvertNdColor(SelectionColor) instead. Found by review, measured: the inversion gives
+      white on both palettes today, so nothing looked wrong -- and it would flip to black in
+      silence if the dark Sel were ever lightened past a channel sum of 384 (:5109).
+
+      The dark palette's SelText is clNone, which SynEdit reads as "leave the token its own
+      colour" and this control cannot read at all, so it is translated into what it means
+      here: the node's own ink. Both branches assign, on both themes.
+
+      The light theme's selected row DOES change, and it was measured before it was accepted:
+      the legacy `treeview` theme class fills TVP_TREEITEM white in every state, so a selected
+      row used to be a white band with a grey border under black text -- a 1:1 band. It is
+      clHighlight with white text now, 4.5:1, which is what every other list in this window
+      does. Unselected rows in light are pixel-identical. }
+    FTree.SelectionColor := APalette.Sel;
+    if APalette.SelText <> clNone then FTree.SelectionFontColor := APalette.SelText
+    else FTree.SelectionFontColor := APalette.Text;
+    FTree.SelectionFontColorUsed := True;
   end;
   if FNote <> nil then FNote.Font.Color := APalette.Text;
 end;
