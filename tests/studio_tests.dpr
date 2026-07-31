@@ -3902,6 +3902,7 @@ var
   ctxDoc: string;
   ctxRep: TSpxReport;
   ctxRows: TSpxPanelRows;
+  hits: TSpxHelpHits;
 
   { How many rows an example draws under ITS OWN document's conditions -- the locale, the seed
     and the fragment set the fixture declared. Which is what the window has when it decides
@@ -4448,6 +4449,80 @@ begin
     diagnostic appear -- and offering to put one in the reader's document was the objection that
     produced this rule. It reads the ENGINE's answer about that very render, so the three ways of
     having nothing to offer are one condition each. }
+  (* SEARCHING THE DOCUMENTATION. The help pane's own bar runs this, and a hit is a place the
+     viewer can go: a page and the article inside it. *)
+  hits := SpxHelpFind(0, 'plural.arity', False);
+  CheckTrue('help/find/a code is found', Length(hits) > 0);
+  CheckTrue('help/find/and lands on its own article',
+            (hits[0].Anchor = 'plural.arity') or (hits[0].Page = SpxHelpPageIndex(0, 'plurals')));
+
+  { THE TITLE IS SEARCHABLE. The first version of this check proved nothing and its comment was
+    wrong with it: it claimed the title is not in the page's HTML, and the generator writes it as
+    the page's `<h1>` -- measured, StripTags of the first line equals SpxHelpPageTitle on 48 of
+    48 pages. So a title query matches through the body anyway, and guarding the title branch
+    left the suite green. What is asserted now is the OUTCOME the reader depends on -- the
+    chapter is found by the name the contents tree shows, and it is that chapter. }
+  hits := SpxHelpFind(0, SpxHelpPageTitle(0, 3), False);
+  CheckTrue('help/find/a page is found by its title', Length(hits) > 0);
+  Check('help/find/and that page is the first hit', IntToStr(hits[0].Page), '3');
+  Check('help/find/on the page itself, not inside an article', hits[0].Anchor, '');
+
+  { ENTITIES ARE DECODED BEFORE THE MATCH. `<foo=1>` is stored as `&lt;foo=1&gt;` and drawn as
+    `<foo=1>`; the reader searches for what they see. }
+  hits := SpxHelpFind(0, '<foo=1>', False);
+  CheckTrue('help/find/text the page escapes is found as it is drawn', Length(hits) > 0);
+  hits := SpxHelpFind(0, '&lt;foo=1&gt;', False);
+  CheckTrue('help/find/and not by the bytes behind it', Length(hits) = 0);
+
+  { ONE HIT PER ARTICLE. Two matches in the same one would scroll to the same place, so
+    stepping between them would move nothing.
+
+    ASSERTED AGAINST THE RAW COUNT, because the first version counted hits equal to hits[0] --
+    which cannot exceed one by construction, since pages are scanned in order and the dedup only
+    looks at the hit before. Guarding the dedup left the suite green. Here the two numbers are
+    measured independently: how many LINES of the whole help hold the word, and how many places
+    the arrows visit. }
+  hits := SpxHelpFind(0, 'plural', False);
+  n := 0;
+  for i := 0 to SpxHelpPageCount(0) - 1 do
+  begin
+    s_ := SpxHelpPlainText(0, i);
+    j := 1;
+    while j <= Length(s_) do
+    begin
+      if Length(SpxFindAll(Copy(s_, j, Pos(#10, Copy(s_, j, MaxInt) + #10) - 1),
+                           'plural', False)) > 0 then Inc(n);
+      Inc(j, Pos(#10, Copy(s_, j, MaxInt) + #10));
+    end;
+  end;
+  CheckTrue('help/find/more lines hold the word than there are hits',
+            (n > Length(hits)) and (Length(hits) > 0));
+
+  CheckTrue('help/find/nothing is not a search', Length(SpxHelpFind(0, '   ', False)) = 0);
+  CheckTrue('help/find/a word no document has is not found',
+            Length(SpxHelpFind(0, 'zzqqxx', False)) = 0);
+
+  { CASE. The switch is the find bar's own, and it is the editor's matcher underneath. }
+  CheckTrue('help/find/case-insensitive finds the other case',
+            Length(SpxHelpFind(0, 'PLURAL.ARITY', False)) > 0);
+  CheckTrue('help/find/case-sensitive does not',
+            Length(SpxHelpFind(0, 'PLURAL.ARITY', True)) = 0);
+
+  { The stripping must not eat the text it walks past. }
+  for i := 0 to SpxHelpPageCount(0) - 1 do
+  begin
+    s_ := SpxHelpPlainText(0, i);
+    CheckTrue('help/find/page ' + IntToStr(i) + ' has readable text', Length(Trim(s_)) > 20);
+    { WHICH TAGS, AND WHY ONLY THESE. `Pos('<') = 0` was the first version and four pages failed
+      it, rightly: after decoding, `&lt;foo=1&gt;` IS a `<` in the text. Then `<br>` failed on
+      the silences chapter, also rightly -- that chapter is ABOUT `<br>` and `</b>` and says so
+      in prose. What is left are the three the documentation never writes as text and the
+      generator writes on every page: a paragraph, an article heading, and the non-breaking
+      space that holds an example's columns. }
+    CheckTrue('help/find/page ' + IntToStr(i) + ' kept no markup',
+              (Pos('<p>', s_) = 0) and (Pos('<h3 id=', s_) = 0) and (Pos('&nbsp;', s_) = 0));
+  end;
+
   CheckTrue('help/offer/a clean example is offered', SpxHelpOffersInsert(True, 0, 0));
   CheckTrue('help/offer/one that drew a row is not', not SpxHelpOffersInsert(True, 0, 1));
   CheckTrue('help/offer/no example clicked, no offer', not SpxHelpOffersInsert(True, -1, 0));

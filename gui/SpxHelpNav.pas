@@ -124,11 +124,126 @@ function SpxHelpInsertText(ALang, AIndex: Integer; const AEol: string;
   that the panel below the pane does not already show. }
 function SpxHelpOffersInsert(AHelpShowing: Boolean; AExample, ARows: Integer): Boolean;
 
+{ SEARCHING THE HELP. One hit is one place the viewer can actually GO -- a page, and the article
+  within it that the match fell in -- because scrolling to an anchor is the whole of what the
+  renderer offers. Two matches in the same article are one hit for the same reason: stepping
+  between them would move nothing on screen.
+
+  The text searched is what the reader SEES: the tags are stripped and the four entities decoded,
+  so `<foo=1>` finds the line the page draws as `<foo=1>` and stores as `&lt;foo=1&gt;`, and a
+  word inside an example block is found across the `&nbsp;` that hold its columns.
+
+  Here rather than in the window because it is a RULE, and the console suite compiles this. }
+type
+  TSpxHelpHit = record
+    Page: Integer;
+    Anchor: string;   { '' for a match before the page's first article }
+  end;
+  TSpxHelpHits = array of TSpxHelpHit;
+
+function SpxHelpFind(ALang: Integer; const AQuery: string;
+  ACaseSensitive: Boolean): TSpxHelpHits;
+
+{ The page as the reader sees it: tags gone, entities decoded. Public because the suite compares
+  it against the markdown, which is the only way to know the stripping did not eat text. }
+function SpxHelpPlainText(ALang, APage: Integer): string;
+
 implementation
 
 function SpxHelpOffersInsert(AHelpShowing: Boolean; AExample, ARows: Integer): Boolean;
 begin
   Result := AHelpShowing and (AExample >= 0) and (ARows = 0);
+end;
+
+{ One line of the page, as text. The HTML is this project's own -- the generator refuses to write
+  a `<` that opens no tag -- so a state machine over `<`..`>` is enough and needs no parser. }
+function StripTags(const ALine: string): string;
+var i: Integer; inTag: Boolean;
+begin
+  Result := '';
+  inTag := False;
+  for i := 1 to Length(ALine) do
+    if ALine[i] = '<' then inTag := True
+    else if ALine[i] = '>' then inTag := False
+    else if not inTag then Result := Result + ALine[i];
+  { The four the generator emits, and nothing else -- it refuses any other entity, so a table
+    here would be a second list to drift from that refusal. }
+  Result := StringReplace(Result, '&nbsp;', ' ', [rfReplaceAll]);
+  Result := StringReplace(Result, '&lt;', '<', [rfReplaceAll]);
+  Result := StringReplace(Result, '&gt;', '>', [rfReplaceAll]);
+  { LAST, so `&amp;lt;` decodes to `&lt;` and not to `<`. }
+  Result := StringReplace(Result, '&amp;', '&', [rfReplaceAll]);
+end;
+
+{ The id of the article a line opens, or '' if it opens none. }
+function AnchorOn(const ALine: string): string;
+var at, close_: Integer;
+begin
+  Result := '';
+  at := Pos('<h3 id="', ALine);
+  if at = 0 then Exit;
+  Inc(at, Length('<h3 id="'));
+  close_ := at;
+  while (close_ <= Length(ALine)) and (ALine[close_] <> '"') do Inc(close_);
+  Result := Copy(ALine, at, close_ - at);
+end;
+
+{ THE EDITOR'S OWN MATCHER, so "what counts as a match" is one rule and not two. SpxFindAll is
+  what the find bar runs over the document, case folding included, and it is already gated. }
+function Holds(const AText, AQuery: string; ACaseSensitive: Boolean): Boolean;
+begin
+  Result := Length(SpxFindAll(AText, AQuery, ACaseSensitive)) > 0;
+end;
+
+function SpxHelpPlainText(ALang, APage: Integer): string;
+begin
+  Result := StripTags(SpxHelpPageHtml(ALang, APage));
+end;
+
+function SpxHelpFind(ALang: Integer; const AQuery: string;
+  ACaseSensitive: Boolean): TSpxHelpHits;
+var
+  page, n, at, stop: Integer;
+  html, line, anchor, lastAnchor, onLine: string;
+  lastPage: Integer;
+
+  procedure Add(APage: Integer; const AAnchor: string);
+  begin
+    { One hit per article. A second match in the same one would scroll to the same place. }
+    if (APage = lastPage) and (AAnchor = lastAnchor) then Exit;
+    lastPage := APage;
+    lastAnchor := AAnchor;
+    SetLength(Result, n + 1);
+    Result[n].Page := APage;
+    Result[n].Anchor := AAnchor;
+    Inc(n);
+  end;
+
+begin
+  Result := nil;
+  n := 0;
+  lastPage := -1;
+  lastAnchor := #1;   { not a possible id, so the first hit is never swallowed }
+  if Trim(AQuery) = '' then Exit;
+  for page := 0 to SpxHelpPageCount(ALang) - 1 do
+  begin
+    { THE TITLE COUNTS. It is what the contents tree shows and what a reader searches for first,
+      and it is not in the page's HTML -- the generator puts it in a table of its own. }
+    if Holds(SpxHelpPageTitle(ALang, page), AQuery, ACaseSensitive) then Add(page, '');
+    html := SpxHelpPageHtml(ALang, page);
+    anchor := '';
+    at := 1;
+    while at <= Length(html) do
+    begin
+      stop := at;
+      while (stop <= Length(html)) and (html[stop] <> #10) do Inc(stop);
+      line := Copy(html, at, stop - at);
+      onLine := AnchorOn(line);
+      if onLine <> '' then anchor := onLine;
+      if Holds(StripTags(line), AQuery, ACaseSensitive) then Add(page, anchor);
+      at := stop + 1;
+    end;
+  end;
 end;
 
 

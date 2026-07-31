@@ -37,6 +37,8 @@ type
     FPal: TSpxPalette;
     FHasPal: Boolean;
     FOnRun: TSpxRunExample;
+    { What the panel is already showing -- see Feed. }
+    FShown: string;
     procedure HotClicked(Sender: TObject);
     procedure Feed;
   public
@@ -52,6 +54,7 @@ type
   end;
 
 implementation
+
 
 { TColor is $00BBGGRR and HTML wants #RRGGBB, and the light palette's entries are SYSTEM colours
   (clWindow, clWindowText) whose ordinal carries no channels at all -- so ColorToRGB first is
@@ -93,7 +96,7 @@ begin
 end;
 
 procedure TSpxHelpPane.Feed;
-var back, text_, link_: string;
+var back, text_, link_, doc: string;
 begin
   if FPage = nil then Exit;
   if FHasPal then
@@ -115,7 +118,22 @@ begin
     text_ := HtmlColor(clWindowText);
     link_ := HtmlColor(clHotLight);
   end;
-  FPage.SetHtmlFromStr(SpxHelpDocument(SpxHelpPageHtml(FLang, FPageNo), back, text_, link_));
+  { THE SAME DOCUMENT IS NOT FED TWICE. IPro's parse is flat but its first layout is quadratic
+    (ADR 0004), and measured here a help page costs 62-234 ms -- so a second feed of a string
+    the panel is already showing is a fifth of a second the reader watches for nothing. Opening
+    the help fed TWICE (measured: two per open), and re-opening on the same page fed again.
+
+    The ANCHOR stays outside the cache: the same page with a different article is a scroll and
+    not a reload, which is the case the search bar makes on almost every step.
+
+    The preview pane has had this cache since it was written and gives the same reason; this one
+    was written without it. }
+  doc := SpxHelpDocument(SpxHelpPageHtml(FLang, FPageNo), back, text_, link_);
+  if doc <> FShown then
+  begin
+    FShown := doc;
+    FPage.SetHtmlFromStr(doc);
+  end;
   if FAnchor <> '' then FPage.MakeAnchorVisible(FAnchor);
 end;
 

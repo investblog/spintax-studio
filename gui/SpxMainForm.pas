@@ -117,6 +117,12 @@ type
     FTopics: TSpxHelpTopics;
     { The example the reader last clicked, or -1. The right pane renders it. }
     FHelpExample: Integer;
+    { THE HELP'S OWN HEADER. While the help is up the top strip belongs to it: the document's
+      controls act on a document nobody can see, and the search bar searched that document too
+      -- typing a word that is on the page in front of you answered "not found". }
+    FHelpClose: TSpeedButton;
+    FHelpHits: TSpxHelpHits;
+    FHelpHitIndex: Integer;
     FPendingHelpCode: string;
     { WHICH FACE THE SLOT IS ABOUT TO HOLD, and not which one it holds. The width has to be
       chosen BEFORE the panel is shown -- a panel that appears at the wrong size and then snaps
@@ -301,11 +307,13 @@ type
     function DockWantWidth: Integer;
     function HelpShowing: Boolean;
     procedure HideHelp;
-    procedure GoToHelp(APage: Integer; const AAnchor: string);
+    procedure GoToHelp(APage: Integer; const AAnchor: string;
+      AFocusPane: Boolean = True);
     procedure TopicPicked(APage: Integer; const AAnchor: string);
     procedure HelpLangChanged(Sender: TObject);
     procedure RunHelpExample(AIndex: Integer);
     procedure InsertHelpExample(Sender: TObject);
+    procedure HelpCloseClicked(Sender: TObject);
     procedure OpenHelpAtCaret;
     procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
@@ -897,11 +905,28 @@ begin
   FFindText.OnChange := @FindTextChanged;
   FFindText.OnKeyDown := @FindKeyDown;
 
+  { AN EXPLICIT CLOSE for the help, in the header the reader is looking at -- the rail's tool
+    is a latch and the topics panel's X is small and elsewhere. An icon rather than a word, so
+    it matches the seven other buttons on this strip and needs no room for a translation. }
+  FHelpClose := TSpeedButton.Create(Self);
+  FHelpClose.Parent := FTop;
+  FHelpClose.Flat := True;
+  FHelpClose.Images := FSmallIcons;
+  FHelpClose.ImageIndex := SPX_ICON_CLOSE;
+  FHelpClose.Hint := Tr(sClose);
+  FHelpClose.ShowHint := True;
+  FHelpClose.Visible := False;
+  FHelpClose.OnClick := @HelpCloseClicked;
+
   { THE ONE THING THAT MAKES SEARCH FINDABLE. It had a shortcut and nothing to click, which
     means it existed only for people who already knew it existed -- and this is a Store
     product, where the second kind of user is most of them. It sits at the strip's left
     because that half belongs to the template, and it stands aside when the bar opens: the
-    field starts exactly where the icon was, so nothing shifts. }
+    field starts exactly where the icon was, so nothing shifts.
+
+    Over the HELP it does not stand aside: the bar is always open there, so the icon becomes the
+    field's LABEL and sits in front of it instead (LayoutTopStrip). An unlabelled box in a
+    header is a box nobody tries. }
   FFindOpen := TSpeedButton.Create(Self);
   FFindOpen.Parent := FTop;
   FFindOpen.Flat := True;
@@ -1070,6 +1095,7 @@ end;
 
 procedure TSpxMainForm.LayoutTopStrip;
 var right_, leftEnd, x, y, fieldW, fixed, editorEnd: Integer;
+  helpMode: Boolean;
 
   procedure PlaceRight(C: TControl; W, H, Y: Integer);
   begin
@@ -1087,19 +1113,53 @@ begin
   if (FTop = nil) or (FModes = nil) or (FLocale = nil) or (FCopy = nil) or
      (FFindText = nil) then Exit;
 
+  { ── WHOSE STRIP IS IT. Every control's visibility is decided here and nowhere else, because
+    the two owners want opposite things and a rule split between them is a rule that disagrees
+    with itself. The document's controls -- the locale, the seed, reroll, copy, the Page/Source
+    switch -- act on the document, and while the help is up the document is not on screen: they
+    were inert decoration. Their own conditions are read from the source rather than remembered,
+    so closing the help restores exactly what was there. }
+  helpMode := HelpShowing;
+  FLocale.Visible := not helpMode;
+  FSeeded.Visible := not helpMode;
+  FSeedEdit.Visible := (not helpMode) and FSeeded.Checked;
+  FReroll.Visible := not helpMode;
+  FCopy.Visible := not helpMode;
+  FModes.Visible := not helpMode;
+  FPartial.Visible := (not helpMode) and FPartialShown;
+  FHelpClose.Visible := helpMode;
+  { THE SEARCH IS PART OF THE HELP, not something to open. A reader with a reference in front of
+    them wants to search it; making them find Ctrl+F first is a step with nothing behind it. Its
+    own close button goes -- there is nothing to close -- and so does the magnifier, which is the
+    door to a bar that is already open. }
+  if helpMode then
+  begin
+    FFindText.Visible := True;
+    FFindPrev.Visible := True;
+    FFindNext.Visible := True;
+    FFindCase.Visible := True;
+    FFindCount.Visible := True;
+    FFindClose.Visible := False;
+  end;
+
   { ── the output's half, from the right edge inwards ── }
   editorEnd := 0;
   right_ := FTop.ClientWidth - Px(Self, 12);
-  { The switch asks for what its own captions need; everything else is a fixed slot. }
-  PlaceRight(FModes, FModes.MeasureWidth, Px(Self, 26), Px(Self, 6));
-  if FPartial.Visible then PlaceRight(FPartial, FPartial.Width, Px(Self, 16), Px(Self, 11));
-  PlaceRight(FCopy, Px(Self, 30), Px(Self, 26), Px(Self, 6));
-  PlaceRight(FReroll, Px(Self, 30), Px(Self, 26), Px(Self, 6));
-  { Skipped rather than placed off-screen, so the controls to its left close the gap -- the
-    same way the fragment caption already comes and goes. }
-  if FSeedEdit.Visible then PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
-  PlaceRight(FSeeded, Px(Self, 55), Px(Self, 22), Px(Self, 9));
-  PlaceRight(FLocale, Px(Self, 70), Px(Self, 24), Px(Self, 7));
+  if helpMode then
+    PlaceRight(FHelpClose, Px(Self, 30), Px(Self, 26), Px(Self, 6))
+  else
+  begin
+    { The switch asks for what its own captions need; everything else is a fixed slot. }
+    PlaceRight(FModes, FModes.MeasureWidth, Px(Self, 26), Px(Self, 6));
+    if FPartial.Visible then PlaceRight(FPartial, FPartial.Width, Px(Self, 16), Px(Self, 11));
+    PlaceRight(FCopy, Px(Self, 30), Px(Self, 26), Px(Self, 6));
+    PlaceRight(FReroll, Px(Self, 30), Px(Self, 26), Px(Self, 6));
+    { Skipped rather than placed off-screen, so the controls to its left close the gap -- the
+      same way the fragment caption already comes and goes. }
+    if FSeedEdit.Visible then PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
+    PlaceRight(FSeeded, Px(Self, 55), Px(Self, 22), Px(Self, 9));
+    PlaceRight(FLocale, Px(Self, 70), Px(Self, 24), Px(Self, 7));
+  end;
   leftEnd := right_;
 
   { THE SLIDE-OUT STARTS WHERE THE EDITOR DOES. It is a sibling of the body rather than a
@@ -1125,7 +1185,10 @@ begin
   { The sum of everything on the bar except the field, in the order it is placed below:
     gap, prev, gap, next, gap, case box, gap, counter, gap, close. It has to be READ from that
     block -- it is what tells the editor's edge how narrow the bar can honestly get. }
-  fixed := Px(Self, 8 + 30 + 4 + 30 + 8 + 90 + 8 + 110 + 8 + 30);
+  fixed := Px(Self, 8 + 30 + 4 + 30 + 8 + 90 + 8 + 110);
+  { The close's slot only when the close is placed. In the help it is not -- the bar has no
+    close of its own there -- and reserving it clamped the field to its floor 38 px early. }
+  if not helpMode then Inc(fixed, Px(Self, 8 + 30));
   if (FLeft <> nil) and (FLeft.Width > 0) then
   begin
     editorEnd := FLeft.Left + FLeft.Width;
@@ -1138,15 +1201,21 @@ begin
       control is worse than losing an edge. }
     if editorEnd < Px(Self, 8) + Px(Self, 90) + fixed then
       editorEnd := Px(Self, 8) + Px(Self, 90) + fixed;
+    { And the icon before the field, when there is one, is part of that floor. }
+    if helpMode then Inc(editorEnd, Px(Self, 30));
     if editorEnd < leftEnd then leftEnd := editorEnd;
   end;
 
-  { The magnifier stands where the field will: same left edge, so opening the bar does not
-    move anything, it replaces it. }
+  { THE MAGNIFIER HAS TWO JOBS, and which one depends on whose strip it is. Over the document
+    it is the DOOR to a bar that is closed, and it stands where the field will so that opening
+    the bar replaces it rather than moving anything. Over the help the bar is always open and
+    there is no door to be -- it stands BEFORE the field instead, saying what the field is,
+    because an unlabelled box in a header is a box nobody tries. Clicking it there focuses the
+    field, which is the only honest thing left for it to do. }
   if FFindOpen <> nil then
   begin
-    FFindOpen.Visible := not FFindText.Visible;
-    if FFindOpen.Visible then
+    FFindOpen.Visible := helpMode or (not FFindText.Visible);
+    if FFindOpen.Visible and (not helpMode) then
       FFindOpen.SetBounds(Px(Self, 8), Px(Self, 6), Px(Self, 30), Px(Self, 26));
   end;
 
@@ -1166,6 +1235,8 @@ begin
     `fixed` is computed above, where the editor's edge needs it to know how narrow the bar can
     honestly get. }
   x := Px(Self, 8);
+  { In the help the magnifier is a label for the field, so the field starts after it. }
+  if helpMode then Inc(x, Px(Self, 30));
   if leftEnd - x - fixed >= Px(Self, 140) then
   begin
     y := Px(Self, 0);
@@ -1184,6 +1255,8 @@ begin
     FTop.Height := Px(Self, 70);
   end;
 
+  if helpMode then
+    FFindOpen.SetBounds(x - Px(Self, 30), y + Px(Self, 6), Px(Self, 30), Px(Self, 26));
   FFindText.SetBounds(x, y + Px(Self, 7), fieldW, Px(Self, 24));
   Inc(x, fieldW + Px(Self, 8));
   { ONE WIDTH FOR ALL FOUR, and the same 30 the strip's other icon buttons use. They were 34,
@@ -1206,8 +1279,14 @@ end;
 procedure TSpxMainForm.ShowFindBar;
 begin
   { Opening on the selection is what every editor does and what the hand expects: select a
-    macro, press Ctrl+F, and the box already holds it. }
-  if (FEditor.SelAvail) and (Pos(LineEnding, FEditor.SelText) = 0) then
+    macro, press Ctrl+F, and the box already holds it.
+
+    NOT WHILE THE HELP IS UP. The box searches the help then, and the selection belongs to a
+    document nobody can see: Ctrl+F replaced the reader's query with a line of hidden text and
+    re-counted against it. The magnifier's own handler guarded this and Ctrl+F did not, which is
+    why the guard is here instead -- one door, one rule. }
+  if (not HelpShowing) and (FEditor.SelAvail) and
+     (Pos(LineEnding, FEditor.SelText) = 0) then
     FFindText.Text := FEditor.SelText;
   FFindText.Visible := True;
   FFindPrev.Visible := True;
@@ -1234,7 +1313,8 @@ begin
   FFindClose.Visible := False;
   FMatches := nil;
   { AND LAY THE STRIP OUT, which this did not do and which broke two things at once.
-    FFindOpen's visibility is decided in LayoutTopStrip -- it is the inverse of the field's --
+    FFindOpen's visibility is decided in LayoutTopStrip -- over the document it is the inverse
+    of the field's, and in the help it is always up as the field's label --
     so without this the magnifier stayed hidden after the first Escape and came back only when
     something unrelated re-laid the strip: a window resize, a splitter drag, a language
     switch. The one control that makes search findable disappeared the first time search was
@@ -1253,6 +1333,19 @@ end;
 procedure TSpxMainForm.ShowMatchCount;
 begin
   if (FFindText = nil) or (FFindCount = nil) then Exit;
+  { The same three sentences either way -- a hit in the help is a match in the document, and a
+    reader does not need two vocabularies for one bar. }
+  if HelpShowing then
+  begin
+    if FFindText.Text = '' then FFindCount.Caption := ''
+    else if Length(FHelpHits) = 0 then FFindCount.Caption := Tr(sFindNothing)
+    else if FHelpHitIndex >= 0 then
+      FFindCount.Caption := Format(Tr(sFindPosition),
+                                   [FHelpHitIndex + 1, Length(FHelpHits)])
+    else
+      FFindCount.Caption := Format(Tr(sFindMatches), [Length(FHelpHits)]);
+    Exit;
+  end;
   if FFindText.Text = '' then FFindCount.Caption := ''
   else if Length(FMatches) = 0 then FFindCount.Caption := Tr(sFindNothing)
   else if FMatchIndex >= 0 then
@@ -1264,6 +1357,18 @@ end;
 procedure TSpxMainForm.RefreshMatches;
 var n: Integer;
 begin
+  if HelpShowing then
+  begin
+    { SpxHelpNav's rule, so the suite reaches it: one hit per article, titles included, entities
+      decoded so the reader searches for what the page draws. }
+    FHelpHits := SpxHelpFind(FTopics.HelpLang, FFindText.Text, FFindCase.Checked);
+    FHelpHitIndex := -1;
+    n := Length(FHelpHits);
+    ShowMatchCount;
+    FFindPrev.Enabled := n > 0;
+    FFindNext.Enabled := n > 0;
+    Exit;
+  end;
   FMatches := SpxFindAll(FEditor.Text, FFindText.Text, FFindCase.Checked);
   FMatchesStale := False;
   FMatchIndex := -1;
@@ -1278,6 +1383,27 @@ end;
 procedure TSpxMainForm.StepToMatch(Backwards: Boolean);
 var idx: Integer; pos_: TPoint;
 begin
+  if HelpShowing then
+  begin
+    if Length(FHelpHits) = 0 then Exit;
+    if Backwards then
+    begin
+      Dec(FHelpHitIndex);
+      if FHelpHitIndex < 0 then FHelpHitIndex := High(FHelpHits);
+    end
+    else
+    begin
+      Inc(FHelpHitIndex);
+      if FHelpHitIndex > High(FHelpHits) then FHelpHitIndex := 0;
+    end;
+    { WITHOUT TAKING THE FOCUS. Every other route into GoToHelp is a gesture that ends in the
+      page -- a topic, a diagnostics row, F1 -- but a search bar is used by typing, and a step
+      that moved the caret out of the field would cost a click per result. }
+    GoToHelp(FHelpHits[FHelpHitIndex].Page, FHelpHits[FHelpHitIndex].Anchor, False);
+    ShowMatchCount;
+    Exit;
+  end;
+
   { The document may have changed since the list was built. }
   if FMatchesStale then RefreshMatches;
   if Length(FMatches) = 0 then Exit;
@@ -1346,6 +1472,18 @@ end;
 
 procedure TSpxMainForm.FindOpenClicked(Sender: TObject);
 begin
+  { In the help the bar is already open and this is its label, so the click means "put me in
+    the field" -- and nothing else, since ShowFindBar would copy the EDITOR's selection into a
+    box that searches the help. }
+  if HelpShowing then
+  begin
+    if FFindText.CanSetFocus then
+    begin
+      FFindText.SetFocus;
+      FFindText.SelectAll;
+    end;
+    Exit;
+  end;
   { The same door the menu item and Ctrl+F use, so the box arrives holding the selection and
     focused, exactly as it does from the keyboard. }
   ShowFindBar;
@@ -1366,7 +1504,9 @@ begin
       end;
     VK_ESCAPE:
       begin
-        HideFindBar;
+        { In the help the bar has no close of its own -- it is part of the header -- so Escape
+          means the thing the reader wants it to mean here: put the help away. }
+        if HelpShowing then HelpCloseClicked(nil) else HideFindBar;
         Key := 0;
       end;
   end;
@@ -2626,6 +2766,7 @@ begin
   FFindPrev.Hint := Tr(sMenuFindPrev);
   FFindNext.Hint := Tr(sMenuFindNext);
   FFindClose.Hint := Tr(sClose);
+  FHelpClose.Hint := Tr(sClose);
   BuildMenu;
   if FBottom.PageCount >= 3 then
   begin
@@ -3295,6 +3436,14 @@ begin
   FHelp.Visible := False;
   FEditor.Visible := True;
   FHelpExample := -1;
+  { THE STRIP COMES BACK HERE, at the one place the help stops showing -- and not in the close
+    handler, which is only one of the ways out. Opening the group editor calls HideHelp directly
+    (OpenGroupPane), and with the restore in the other routine the reader was left with a search
+    bar they never opened, over the document, with its close button hidden and its magnifier
+    gone: two rows of strip and no way back. Found by review. }
+  FHelpHits := nil;
+  FHelpHitIndex := -1;
+  HideFindBar;
   if FWorkFraction >= 0 then
   begin
     FPaneFraction := FWorkFraction;
@@ -3365,6 +3514,12 @@ end;
 procedure TSpxMainForm.OpenHelpPane(const ACode: string);
 var page: Integer; anchor: string;
 begin
+  { ONE LAYOUT, NOT NINE. Showing the help touches the dock, the topics panel, the splitter, the
+    two clamps and the strip, and each of those re-aligns the whole form -- LCL lays out from
+    the top on every one. Batched here so the arithmetic runs once and the window paints once.
+    Measured before and after, below. }
+  DisableAlign;
+  try
   FSlideRoom := -1;
   FPaneRoom := -1;
   if FSlide.Visible then
@@ -3407,11 +3562,18 @@ begin
       anchor := '';
     end;
   GoToHelp(page, anchor);
+  { The field may already hold a word from the editor's search; the bar is the help's now, so
+    the count under it has to be about the help. }
+  RefreshMatches;
+  finally
+    EnableAlign;
+  end;
 end;
 
 { The page into the left pane, and the contents lit to match. Every route -- F1, the menu, a
   topic, a diagnostics row -- arrives here. }
-procedure TSpxMainForm.GoToHelp(APage: Integer; const AAnchor: string);
+procedure TSpxMainForm.GoToHelp(APage: Integer; const AAnchor: string;
+  AFocusPane: Boolean = True);
 begin
   FEditor.Visible := False;
   FHelp.Visible := True;
@@ -3420,14 +3582,28 @@ begin
   { A new page, a new subject: the right pane stops showing the last example rather than
     keeping an answer to a question the reader has left behind. }
   FHelpExample := -1;
+  { THE STRIP CHANGES OWNER. Its controls are decided by LayoutTopStrip and it is the help that
+    just took it over, so the switch happens here rather than waiting for a resize.
+
+    THE HITS ARE NOT REBUILT HERE, and the first version did: every route into the page goes
+    through this procedure, INCLUDING the search's own step, so refreshing here reset the
+    position to -1 on every step and the arrows walked from the first hit to the second and
+    back for ever. Measured -- three steps, three times page 1. The list is built where the
+    help OPENS and where its language changes, which is where it can actually be stale. }
+  LayoutTopStrip;
   RequestRender;
-  if FHelp.CanSetFocus then FHelp.SetFocus;
+  if AFocusPane and FHelp.CanSetFocus then FHelp.SetFocus;
 end;
 
 procedure TSpxMainForm.TopicPicked(APage: Integer; const AAnchor: string);
 begin
   if not HelpShowing then OpenHelpPane('');
   GoToHelp(APage, AAnchor);
+  { The reader has left the hit the counter was counting from, so it stops claiming a position
+    and goes back to a total. Without this the next arrow stepped from where the counter said
+    rather than from where the page was. }
+  FHelpHitIndex := -1;
+  ShowMatchCount;
 end;
 
 { The reader asked for the other document. Where they land is SpxHelpNav's rule, not an
@@ -3438,6 +3614,8 @@ begin
   SpxHelpRelocate(FHelp.HelpLang, FHelp.CurrentPage, FHelp.CurrentAnchor,
                   FTopics.HelpLang, page, anchor);
   GoToHelp(page, anchor);
+  { Another document, so another set of hits. }
+  RefreshMatches;
 end;
 
 { A TEMPLATE WAS CLICKED. The number is the generator's; the template behind it is stored
@@ -3447,6 +3625,11 @@ procedure TSpxMainForm.RunHelpExample(AIndex: Integer);
 begin
   FHelpExample := AIndex;
   RequestRender;
+end;
+
+procedure TSpxMainForm.HelpCloseClicked(Sender: TObject);
+begin
+  HelpPaneClosed(nil);
 end;
 
 (* THE EXAMPLE BECOMES THE READER'S. Two things make this cheap rather than clever: the
@@ -3480,6 +3663,8 @@ end;
 
 procedure TSpxMainForm.HelpPaneClosed(Sender: TObject);
 begin
+  DisableAlign;
+  try
   HideHelp;
   FTopics.Visible := False;
   FDock.Visible := False;
@@ -3487,6 +3672,9 @@ begin
   FPaneRoom := -1;
   ClampPanes;
   FRail.SetDown(4, False);
+  finally
+    EnableAlign;
+  end;
   { CanSetFocus, not CanFocus -- wincontrol.inc:3719-3727, the same rule the group editor's
     close obeys. }
   if FEditor.CanSetFocus then FEditor.SetFocus;
