@@ -8,6 +8,21 @@
  * Two levels: the twelve sections, and under each the articles it holds. A tree rather than a
  * list because a diagnostic code is looked up by name and there are twenty-four of them --
  * flattened they would be a wall, and grouped they are a contents page.
+ *
+ * AND NOTHING ELSE. The panel used to carry a strip above the tree with a language box and a
+ * close button, and the reader asked for both to go: the help's language is the INTERFACE's
+ * language, which the View menu already switches, and a second place to set it is a second
+ * thing to keep in step. The close was worse than redundant -- the header strip has had an
+ * explicit close since it was reworked, and this one had no glyph assigned at all, so it drew
+ * as an empty box beside the box that stood out.
+ *
+ * What the removal costs is named honestly, in two parts. A Russian speaker running an English
+ * interface can no longer read the Russian document without switching the whole interface. And
+ * nothing in the window NAMES the language the help is in any more: the box did, by showing the
+ * endonym of the current help language, and the note that stays says only `There is no help in
+ * %s yet` about the reader's own -- it has never mentioned English, and it is not a substitute
+ * for what the box said. What a German reader has instead is the page in front of them, which
+ * is in English and says so by being it.
  *)
 unit SpxHelpTopics;
 
@@ -16,8 +31,8 @@ unit SpxHelpTopics;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, ComCtrls, Buttons, Graphics,
-  SpxStudio, SpxUi, SpxIcons, SpxTheme, SpxStrIds, SpxStrings, SpxHelpText, SpxHelpNav;
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, ComCtrls, Graphics,
+  SpxStudio, SpxUi, SpxTheme, SpxStrIds, SpxStrings, SpxHelpText, SpxHelpNav;
 
 type
   { Where the reader asked to go: a page, and the article in it -- empty for the page's top. }
@@ -25,19 +40,12 @@ type
 
   TSpxHelpTopics = class(TPanel)
   private
-    FTop: TPanel;
-    FClose: TSpeedButton;
-    FLangBox: TComboBox;
     FNote: TLabel;
     FTree: TTreeView;
     FLang: Integer;
     FFilling: Boolean;
     FOnPicked: TSpxTopicPicked;
-    FOnLangChanged: TNotifyEvent;
-    FOnClose: TNotifyEvent;
-    procedure CloseClicked(Sender: TObject);
     procedure TreeClicked(Sender: TObject);
-    procedure LangPicked(Sender: TObject);
     procedure Fill;
   public
     constructor Create(AOwner: TComponent); override;
@@ -52,8 +60,6 @@ type
     procedure ShowAt(APage: Integer; const AAnchor: string);
     property HelpLang: Integer read FLang;
     property OnPicked: TSpxTopicPicked read FOnPicked write FOnPicked;
-    property OnLangChanged: TNotifyEvent read FOnLangChanged write FOnLangChanged;
-    property OnClose: TNotifyEvent read FOnClose write FOnClose;
   end;
 
 implementation
@@ -71,30 +77,6 @@ begin
   BevelOuter := bvNone;
   Color := clWindow;
   FLang := SpxHelpLangFor(SpxUiLang);
-
-  FTop := TPanel.Create(Self);
-  FTop.Parent := Self;
-  FTop.Align := alTop;
-  FTop.BevelOuter := bvNone;
-  FTop.Height := Px(Self, 30);
-
-  FClose := TSpeedButton.Create(Self);
-  FClose.Parent := FTop;
-  FClose.Anchors := [akTop, akRight];
-  FClose.SetBounds(FTop.Width - Px(Self, 28), Px(Self, 2), Px(Self, 26), Px(Self, 26));
-  FClose.Flat := True;
-  FClose.OnClick := @CloseClicked;
-
-  { By ENDONYM, from the one table with no language of its own -- so a Russian speaker running
-    an English interface can reach the Russian document, which the fallback rule alone denies
-    them. }
-  FLangBox := TComboBox.Create(Self);
-  FLangBox.Parent := FTop;
-  FLangBox.Align := alClient;
-  FLangBox.BorderSpacing.Right := Px(Self, 32);
-  FLangBox.BorderSpacing.Around := Px(Self, 2);
-  FLangBox.Style := csDropDownList;
-  FLangBox.OnChange := @LangPicked;
 
   { Shown only when the reader's own language has no document. Nothing needs saying when the
     two agree, and a standing notice about a language you do not use is noise. }
@@ -129,11 +111,6 @@ begin
         FTree.Items[i].Data := nil;
       end;
   inherited Destroy;
-end;
-
-procedure TSpxHelpTopics.CloseClicked(Sender: TObject);
-begin
-  if Assigned(FOnClose) then FOnClose(Self);
 end;
 
 procedure TSpxHelpTopics.Fill;
@@ -197,15 +174,6 @@ begin
   if Assigned(FOnPicked) then FOnPicked(ref.Page, ref.Anchor);
 end;
 
-procedure TSpxHelpTopics.LangPicked(Sender: TObject);
-begin
-  if FFilling then Exit;
-  if (FLangBox.ItemIndex < 0) or (FLangBox.ItemIndex = FLang) then Exit;
-  FLang := FLangBox.ItemIndex;
-  Fill;
-  if Assigned(FOnLangChanged) then FOnLangChanged(Self);
-end;
-
 procedure TSpxHelpTopics.ShowAt(APage: Integer; const AAnchor: string);
 var i: Integer; ref: TTopicRef;
 begin
@@ -229,31 +197,17 @@ begin
 end;
 
 procedure TSpxHelpTopics.Retranslate;
-var i, want: Integer;
+var want: Integer;
 begin
-  if FLangBox = nil then Exit;
-  FClose.Hint := Tr(sClose);
-  FClose.ShowHint := True;
-
+  if FTree = nil then Exit;
+  { THE DOCUMENT FOLLOWS THE INTERFACE. It always did -- this is the same want/refill the
+    language box wrapped -- and now it is the only thing that decides, so there is no second
+    control to leave disagreeing with the menu. }
   want := SpxHelpLangFor(SpxUiLang);
-  FFilling := True;
-  try
-    FLangBox.Items.BeginUpdate;
-    try
-      FLangBox.Items.Clear;
-      for i := 0 to SPX_HELP_LANG_COUNT - 1 do
-        FLangBox.Items.Add(SpxLangName(SpxLangFor(SpxHelpLangCode(i))));
-    finally
-      FLangBox.Items.EndUpdate;
-    end;
-    if want <> FLang then
-    begin
-      FLang := want;
-      Fill;
-    end;
-    FLangBox.ItemIndex := FLang;
-  finally
-    FFilling := False;
+  if want <> FLang then
+  begin
+    FLang := want;
+    Fill;
   end;
 
   FNote.Visible := not SpxHelpIsTranslated(SpxUiLang);
@@ -264,7 +218,6 @@ end;
 procedure TSpxHelpTopics.ApplyTheme(const APalette: TSpxPalette);
 begin
   Color := APalette.Back;
-  if FTop <> nil then FTop.Color := APalette.Back;
   if FTree <> nil then
   begin
     { THE THEMED DRAW HAS TO GO, or the ink is Windows' and not ours. LCL assigns

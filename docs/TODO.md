@@ -1181,6 +1181,18 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
 ## Raised by review, not yet built
 
+- [ ] **The help's language can move while the help is CLOSED, and nothing relocates it then.**
+      Found by review 2026-07-31, latent and not a regression. `RetranslateUi` only relocates
+      when the pane is up (`SpxMainForm.pas:2810`, `if HelpShowing and (FTopics.HelpLang <>
+      FHelp.HelpLang)`); with the help closed, the topics panel's language moves and `FHelp`
+      keeps the previous language's `CurrentPage`/`CurrentAnchor`, which the next
+      `OpenHelpPane` hands straight to `ShowPage` without passing through `SpxHelpRelocate`.
+      It lands on the right article today **only because the two languages' page tables are
+      parallel** — `HELP_PAGE_FIRST = (0, 24)`, `HELP_PAGE_LAST = (23, 47)` and an identical
+      slug sequence. A third document, or a language whose chapters differ, breaks it silently.
+      The fix is to relocate on the language change rather than on the open, or to store the
+      reader's place as a SLUG rather than a page index.
+
 - [ ] **A right-to-left interface means MIRRORING THE WINDOW, not translating it.** Noted
       2026-07-29, the user's, while weighing `swap-horizontal` as an icon for "even the
       panes" — the icon was rejected because a reader would expect it to SWAP the two panes,

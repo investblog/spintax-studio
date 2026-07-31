@@ -532,9 +532,7 @@ begin
   FTopics.Parent := FDock;
   FTopics.Align := alClient;
   FTopics.Visible := False;
-  FTopics.OnClose := @HelpPaneClosed;
   FTopics.OnPicked := @TopicPicked;
-  FTopics.OnLangChanged := @HelpLangChanged;
 
   { A VARIANT CAN BE LONGER THAN ANY DEFAULT. The panel is the one part of this window whose
     useful width depends on the document rather than on the layout, so it is the user's to
