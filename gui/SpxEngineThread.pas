@@ -79,10 +79,23 @@ type
       did. }
     HelpSet: Boolean;
     HelpLang: Integer;
+    { WHICH example this job renders. It rides on the job -- and back on the result -- rather
+      than being read from the window when the answer lands, because the window has moved on by
+      then. Measured by review: with a 1.2 MB document still rendering, opening the help and
+      clicking a BROKEN example put the offer up for 16 ms on the document's own verdict.
+
+      ITS ZERO IS DANGEROUS in exactly the way the paragraph above describes -- zero is a real
+      example -- so it is never read on its own. HelpSet is the guard: False by default, so a
+      job built with Default() can never be mistaken for an answer about example 0. }
+    HelpExample: Integer;
   end;
 
   TSpxJobResult = record
     Id: Int64;
+    { Both copied from the job, so the window can ask "is this an answer about what I am
+      showing?" instead of assuming it is. Read together, never apart: see the job's field. }
+    HelpSet: Boolean;
+    HelpExample: Integer;
     Preview: string;
     Errors: Integer;
     Warnings: Integer;
@@ -577,6 +590,8 @@ begin
 
     FResult := Default(TSpxJobResult);
     FResult.Id := Job.Id;
+    FResult.HelpSet := Job.HelpSet;
+    FResult.HelpExample := Job.HelpExample;
     { A selection renders in the document's scope, not on its own: editor-core prepends the
       document's directives in source order, so a fragment that references a macro shows what
       the macro produces rather than the literal `%name%`. }

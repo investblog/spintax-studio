@@ -113,7 +113,24 @@ function SpxHelpDigest(const AText: string): string;
 function SpxHelpInsertText(ALang, AIndex: Integer; const AEol: string;
   out AText: string): Boolean;
 
+{ WHETHER TO OFFER IT AT ALL. The offer is for a template worth keeping, and most of the help's
+  examples are not: they are counter-examples, written to make a diagnostic appear. Measured over
+  the shipped documents, under the conditions each declares -- 11 of 33 English examples and 13 of
+  34 Russian ones render without a single row, so the offer stood over twenty-two broken templates
+  it had no business offering.
+
+  ARows is what the ENGINE said about this very render, not a property of the document: the
+  window has the rows in hand by the time it asks. Nothing is re-derived and nothing is claimed
+  that the panel below the pane does not already show. }
+function SpxHelpOffersInsert(AHelpShowing: Boolean; AExample, ARows: Integer): Boolean;
+
 implementation
+
+function SpxHelpOffersInsert(AHelpShowing: Boolean; AExample, ARows: Integer): Boolean;
+begin
+  Result := AHelpShowing and (AExample >= 0) and (ARows = 0);
+end;
+
 
 function SpxHelpLangFor(ALang: TSpxLang): Integer;
 begin

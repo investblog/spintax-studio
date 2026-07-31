@@ -1849,6 +1849,37 @@ begin
     CheckTrue('thread/the-whole-document-renders-again',
               Pos('ломано', probe.Last.Preview) > 0);
 
+    (* WHOSE ANSWER IS THIS? The window decides the help's insert offer when a result lands,
+       and it used to decide it from what was on SCREEN at that moment -- so a document render
+       still in flight when the reader opened the help and clicked a broken example set that
+       example's offer from the document's own clean verdict. Measured by review: the offer
+       stood for 16 ms over a template with an unclosed brace.
+
+       So the identity travels with the answer. These two checks are that round trip, and the
+       THIRD is why HelpSet is read with it: `Default` zeroes HelpExample, and zero is a real
+       example -- the same trap this record's own comment describes, one field along. *)
+    job.Id := 8;
+    job.Text := 'документ';
+    job.HelpSet := False;
+    job.HelpExample := -1;
+    th.Post(job);
+    CheckTrue('thread/delivers-the-eighth', PumpUntil(probe, 8, 5000));
+    CheckTrue('thread/a-document-answer-says-it-is-not-about-the-help',
+              not probe.Last.HelpSet);
+
+    job.Id := 9;
+    job.HelpSet := True;
+    job.HelpLang := 0;
+    job.HelpExample := 4;
+    SpxHelpExample(0, 4, job.Text);
+    th.Post(job);
+    CheckTrue('thread/delivers-the-ninth', PumpUntil(probe, 9, 5000));
+    CheckTrue('thread/a-help-answer-carries-the-example-it-rendered',
+              probe.Last.HelpSet and (probe.Last.HelpExample = 4));
+
+    CheckTrue('thread/a-defaulted-result-is-about-no-example',
+              not Default(TSpxJobResult).HelpSet);
+
     { LATEST WINS. Fifty edits arrive faster than fifty renders can run, so the queue holds
       one job and the rest are replaced unrendered. Without that, a fast typist would build
       a backlog the UI then walks through one stale preview at a time. }
@@ -3842,6 +3873,38 @@ var
   ctxRep: TSpxReport;
   ctxRows: TSpxPanelRows;
 
+  { How many rows an example draws under ITS OWN document's conditions -- the locale, the seed
+    and the fragment set the fixture declared. Which is what the window has when it decides
+    whether to offer the example, so this asks the same question the same way. }
+  function RowsOfHelpExample(ALang: Integer; const ATmpl: string): Integer;
+  var rep: TSpxReport; rws: TSpxPanelRows; set_: TSpxTemplateSet; e: Integer;
+  begin
+    set_ := nil;
+    if SpxHelpIncludeCount(ALang) > 0 then
+    begin
+      set_ := TSpxTemplateSet.Create;
+      for e := 0 to SpxHelpIncludeCount(ALang) - 1 do
+        set_.AddOrSetValue(SpxHelpIncludeName(ALang, e), SpxHelpIncludeText(ALang, e));
+    end;
+    try
+      { THE WORKER'S CALL, ARGUMENT FOR ARGUMENT (SpxEngineThread:575). The first version
+        wrote `SpxContext(locale, set_)` -- and SpxContext is (Locale, Vars, Templates) with
+        TSpxTemplateSet an alias of TStrMap, so the set bound to VARS and Templates stayed nil:
+        every example was validated with no fragments at all, and the three `#include` examples
+        counted as clean. The seed went into `Probes` by the same slip. Both compile. }
+      rep := SpxHealthReport(ATmpl,
+               SpxSeededContext(SpxHelpLocale(ALang), nil, SpxHelpSeed(ALang), set_), 0);
+      try
+        rws := SpxPanelRows(rep, spxLangEn);
+        Result := Length(rws);
+      finally
+        rep.Free;
+      end;
+    finally
+      set_.Free;
+    end;
+  end;
+
   { The first example that spans lines -- and there MUST be one, or the ending check below is
     about nothing. `-1` is returned rather than guessed at, and the caller fails on it. }
   function MultiLineExample(ALang: Integer): Integer;
@@ -4287,6 +4350,36 @@ begin
         StringReplace(t_, #13#10, #10, [rfReplaceAll]), s_);
   CheckTrue('help/insert/an index that is not one gives nothing',
             (not SpxHelpInsertText(0, 9999, #10, t_)) and (t_ = ''));
+
+  { WHEN THE OFFER IS MADE. Most of the help's examples are counter-examples -- written to make a
+    diagnostic appear -- and offering to put one in the reader's document was the objection that
+    produced this rule. It reads the ENGINE's answer about that very render, so the three ways of
+    having nothing to offer are one condition each. }
+  CheckTrue('help/offer/a clean example is offered', SpxHelpOffersInsert(True, 0, 0));
+  CheckTrue('help/offer/one that drew a row is not', not SpxHelpOffersInsert(True, 0, 1));
+  CheckTrue('help/offer/no example clicked, no offer', not SpxHelpOffersInsert(True, -1, 0));
+  CheckTrue('help/offer/with the help shut, nothing is offered',
+            not SpxHelpOffersInsert(False, 0, 0));
+
+  { And the counts the rule exists for -- EXACT, like every other count in this file. The first
+    version asserted `(ins > 0) and (ins < count)`, which passes for anything from 1 to 32:
+    review changed the helper so the numbers moved by three per language and the suite reported
+    the same 6010 checks, 0 failed. A check indifferent to a fifth of its subject is not one. }
+  Check('help/offer/languages this count is written for', IntToStr(SPX_HELP_LANG_COUNT), '2');
+  for i := 0 to SPX_HELP_LANG_COUNT - 1 do
+  begin
+    ins := 0;
+    for j := 0 to SpxHelpExampleCount(i) - 1 do
+    begin
+      SpxHelpExample(i, j, s_);
+      if RowsOfHelpExample(i, s_) = 0 then Inc(ins);
+    end;
+    { 11 of 33 and 13 of 34 -- the rest are counter-examples, which is what the rule is for. }
+    if SpxHelpLangCode(i) = 'en' then
+      Check('help/offer/en/clean example count', IntToStr(ins), '11')
+    else
+      Check('help/offer/ru/clean example count', IntToStr(ins), '13');
+  end;
 end;
 
 procedure TestHelpExamples;

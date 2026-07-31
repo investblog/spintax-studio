@@ -2755,10 +2755,11 @@ begin
     job.Locale := SpxHelpLocale(job.HelpLang);
     job.Seeded := True;
     job.Seed := SpxHelpSeed(job.HelpLang);
+    job.HelpExample := FHelpExample;
     if FHelpExample >= 0 then SpxHelpExample(job.HelpLang, FHelpExample, job.Text);
-    { The offer rides with the example, in the one place that knows both -- so it appears when
-      a template is clicked, and goes when the reader turns the page or shuts the help. }
-    FPreview.Offering := FHelpExample >= 0;
+    { Down until the answer comes back: whether to offer this example depends on what the engine
+      says about it, and that is not known yet. JobDone decides. }
+    FPreview.Offering := False;
     FShownAsk := Default(TSpxPreviewAsk);
     FEngine.Post(job);
     Exit;
@@ -3614,6 +3615,16 @@ begin
   FPreview.SetContent(Res.Preview);
   SayPartial(Res.Preview, Res.Partial);
   ShowRows(Res.Rows);
+  { AND ONLY NOW is it known whether this example is worth keeping. The rule is SpxHelpNav's, so
+    the suite can reach it; what happens here is handing it the three facts -- and the first of
+    them comes off the RESULT. A row count is about whatever job just finished, and asking the
+    window which example is up conflates the two: a document render still in flight when the
+    reader opens the help decided a broken example's offer from the document's own clean
+    verdict. Comparing what came back against what is on screen is the whole guard, and it needs
+    no id arithmetic -- `Post` replaces only the pending job, so the current example's answer
+    always follows. }
+  FPreview.Offering := Res.HelpSet and (Res.HelpExample = FHelpExample) and
+                       SpxHelpOffersInsert(HelpShowing, FHelpExample, Length(Res.Rows));
   FVars.SetModel(Res.Vars);
   FVars.SetIncludes(Res.Includes, Res.HaveSet);
   FErrorMarkup.SetMarks(Res.Marks);
