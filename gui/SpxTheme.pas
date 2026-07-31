@@ -40,16 +40,22 @@ type
       uses -- so it has to be faint: a background strong enough to read as a state would make
       the editor look like it had selected something. }
     Flash: TColor;
-    { A link in the HELP page. Brand magenta rather than the browser blue IPro defaults to:
-      the help is the one page in this window that is ours, and blue-on-dark is the least
-      readable pair the default palette offers. Not used by the preview, which shows the
-      user's own HTML and is deliberately not themed at all. }
-    Link: TColor;
     { the source view's HTML }
     HtmlTag, HtmlAttr, HtmlValue, HtmlComment, HtmlEntity: TColor;
   end;
 
 function SpxPalette(ATheme: TSpxTheme): TSpxPalette;
+
+{ A LINK IN THE HELP PAGE, and it is NOT part of the palette: the page it sits on is the
+  system's window colour whatever theme the editor is in (SpxHelpPane says why), so a link that
+  changed with the theme would be picking a colour for a background it no longer has. This is
+  the deep magenta -- brand, rather than the browser blue IPro defaults to, because the help is
+  the one page in this window that is ours. TColor is $00BBGGRR, so this is #a91455.
+
+  The palette used to carry a second, lighter magenta for the dark theme; it existed to sit on
+  #1E1E1E and there is no longer a #1E1E1E page for it to sit on. }
+const
+  SPX_HELP_LINK = $005514A9;
 
 implementation
 
@@ -95,7 +101,6 @@ begin
     { A lift off #1E1E1E rather than a hue: on dark, any tint at this strength reads as a
       colour cast over the syntax, and the point is "look here", not "this is special". }
     Result.Flash := $00332F2B;
-    Result.Link := $009040E0;   { #e04090 -- the brand's light magenta, on dark }
 
     Result.HtmlTag := $00D69C56;
     Result.HtmlAttr := $00FEDC9C;
@@ -145,7 +150,6 @@ begin
       user selected this" everywhere else in the window, and a jump did not. A pale warm wash
       is distinct from both the selection and the amber a warning wears. }
     Result.Flash := $00D9F0FF;
-    Result.Link := $005514A9;   { #a91455 -- the brand's deep magenta, on light }
 
     { clNone means "leave SynEdit's own HTML colours alone" -- they were chosen for a light
       background and there is nothing to improve there. }

@@ -3255,9 +3255,11 @@ begin
   FBracket.MarkupInfo.Foreground := pal.BracketText;
   FPreview.ApplyTheme(pal);
   if FSlide <> nil then FSlide.ApplyTheme(pal);
-  { A theme change is a RE-FEED for the help: the colours live in the loaded document, not on
-    the panel (TIpHtmlFrame.InitHtml copies them at load). }
-  if FHelp <> nil then FHelp.ApplyTheme(pal);
+  { THE HELP PAGE IS NOT IN THIS LIST, and that is the fix for what the dark theme did to it:
+    IPro paints the document's background where the document reaches and its own default
+    everywhere else, so a themed page came out in bands of black. It is system-coloured now, like
+    the preview's page -- SpxHelpPane says why at the top. The topics tree beside it is LCL's own
+    drawing and has no such margins, so it still follows the theme. }
   if FTopics <> nil then FTopics.ApplyTheme(pal);
   FEditor.Invalidate;
 end;
