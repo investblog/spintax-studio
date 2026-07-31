@@ -63,12 +63,16 @@ PAGE_LIMIT = 24 * 1024
 # sections. A slug names the same section in every language -- that is what lets the viewer keep
 # your place when the interface language changes -- so the list is the contract and the script
 # refuses a document with more sections than names.
-DOCS = ['diagnostics']
+DOCS = ['diagnostics', 'syntax']
 
 DOC_SLUGS = {
     'diagnostics': [
         'about', 'reading', 'brackets', 'definitions', 'variables', 'includes',
         'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq',
+    ],
+    'syntax': [
+        'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions',
+        'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next',
     ],
 }
 

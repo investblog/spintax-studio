@@ -3279,6 +3279,13 @@ type
   THelpDoc = record
     Path: string;
     Examples: Integer;   { exact, not a floor: an example that disappears must fail the build }
+    { WHETHER THIS DOCUMENT ANSWERS THE PANEL. Exactly one document per language does, and it
+      is the one the double-click on a diagnostics row opens -- so it must carry an article for
+      every code and note the panel can show. The language reference carries none: it is about
+      constructs that work, and holding it to the same list demanded 22 articles it has no
+      business having. Named as an obligation rather than derived from the file name, because
+      the obligation is the thing the check is about. }
+    Codes: Boolean;
     Good: Integer;       { how many of them CLAIM to be clean -- exact for the same reason:
                            deleting the word `spx-good` from a fence, or putting it on the
                            CLOSING one where both parsers ignore it, turns the claim back into
@@ -3287,9 +3294,11 @@ type
   end;
 
 const
-  HELP_DOCS: array[0..1] of THelpDoc = (
-    (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Good: 5),
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 34; Good: 5));
+  HELP_DOCS: array[0..3] of THelpDoc = (
+    (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Codes: True;  Good: 5),
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 36; Codes: True;  Good: 7),
+    (Path: 'docs/help/en/syntax.md';      Examples: 32; Codes: False; Good: 30),
+    (Path: 'docs/help/ru/syntax.md';      Examples: 35; Codes: False; Good: 33));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
 function HelpLabel(const APath: string): string;
@@ -4457,11 +4466,14 @@ begin
     begin
       if RowsOfHelpExample(i, j) = 0 then Inc(ins);
     end;
-    { 11 of 33 and 13 of 34 -- the rest are counter-examples, which is what the rule is for. }
+    { Across BOTH of the language's documents. The diagnostics document is mostly
+      counter-examples -- 11 of its 33 are clean in English, 15 of 36 in Russian -- and the
+      language reference is the other way round, because it demonstrates constructs that work.
+      Exact, so a new counter-example cannot arrive without being counted. }
     if SpxHelpLangCode(i) = 'en' then
-      Check('help/offer/en/clean example count', IntToStr(ins), '11')
+      Check('help/offer/en/clean example count', IntToStr(ins), '41')
     else
-      Check('help/offer/ru/clean example count', IntToStr(ins), '13');
+      Check('help/offer/ru/clean example count', IntToStr(ins), '48');
   end;
 end;
 
@@ -4494,7 +4506,7 @@ begin
         would evaporate with them. }
       if (arts.Count > 0) or
          (LowerCase(ChangeFileExt(ExtractFileName(HELP_DOCS[i].Path), '')) = 'diagnostics') then
-        CheckHelpArticles(HELP_DOCS[i].Path);
+        if HELP_DOCS[i].Codes then CheckHelpArticles(HELP_DOCS[i].Path);
     finally
       arts.Free;
     end;

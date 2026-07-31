@@ -137,7 +137,7 @@ begin
 end;
 
 procedure TSpxHelpTopics.Fill;
-var page, i: Integer; sect, node: TTreeNode; ref: TTopicRef;
+var page, i, doc: Integer; sect, node, docNode: TTreeNode; ref: TTopicRef;
 begin
   FFilling := True;
   FTree.Items.BeginUpdate;
@@ -147,12 +147,30 @@ begin
     for i := 0 to FTree.Items.Count - 1 do
       if FTree.Items[i].Data <> nil then TTopicRef(FTree.Items[i].Data).Free;
     FTree.Items.Clear;
+    { THREE LEVELS, AND THE MARKDOWN ALREADY HAS THEM. A language has more than one document
+      now, and a flat list of every section put two chapters called "How to read the examples"
+      one under the other with nothing to say which was which. The `#` heading that opens a
+      document is its title and its first page; the `##` sections are its chapters, and the
+      `###` articles hang under those. So the document node IS a page -- clicking it opens the
+      document's own front page rather than doing nothing, which a bare grouping label would. }
+    doc := -1;
+    docNode := nil;
     for page := 0 to SpxHelpPageCount(FLang) - 1 do
     begin
-      sect := FTree.Items.AddChild(nil, SpxHelpPageTitle(FLang, page));
       ref := TTopicRef.Create;
       ref.Page := page;
-      sect.Data := ref;
+      if SpxHelpPageDoc(FLang, page) <> doc then
+      begin
+        doc := SpxHelpPageDoc(FLang, page);
+        docNode := FTree.Items.AddChild(nil, SpxHelpPageTitle(FLang, page));
+        docNode.Data := ref;
+        sect := docNode;
+      end
+      else
+      begin
+        sect := FTree.Items.AddChild(docNode, SpxHelpPageTitle(FLang, page));
+        sect.Data := ref;
+      end;
       for i := 0 to SpxHelpAnchorCount(FLang) - 1 do
         if SpxHelpAnchorPage(FLang, i) = page then
         begin
@@ -163,6 +181,8 @@ begin
           node.Data := ref;
         end;
     end;
+    { Opened, because a reader who pressed F1 wants the chapters, not two closed folders. }
+    FTree.FullExpand;
   finally
     FTree.Items.EndUpdate;
     FFilling := False;

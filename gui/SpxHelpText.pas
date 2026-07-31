@@ -27,7 +27,7 @@ interface
 const
   SPX_HELP_LANG_COUNT = 2;
   { The document KINDS this build knows, whether or not a language carries them. }
-  SPX_HELP_KIND_COUNT = 1;
+  SPX_HELP_KIND_COUNT = 2;
 
 { The help languages, by the engine's own code. Not the interface's fourteen: a
   language with no document here falls back, and SpxHelpNav owns that rule. }
@@ -93,67 +93,77 @@ const
   HELP_LANG: array[0..1] of string = (
     'en', 'ru'
   );
-  HELP_KIND_SLUG: array[0..0] of string = (
-    'diagnostics'
+  HELP_KIND_SLUG: array[0..1] of string = (
+    'diagnostics', 'syntax'
   );
 
   { Each language's documents: a span into the tables below. }
   HELP_DOC_FIRST: array[0..1] of Integer = (
-    0, 1
+    0, 2
   );
   HELP_DOC_LAST: array[0..1] of Integer = (
-    0, 1
+    1, 3
   );
-  HELP_DOC_KIND: array[0..1] of Integer = (
-    0, 0
+  HELP_DOC_KIND: array[0..3] of Integer = (
+    0, 1, 0, 1
   );
-  HELP_DOC_PATH: array[0..1] of string = (
+  HELP_DOC_PATH: array[0..3] of string = (
     'docs/help/en/diagnostics.md',
-    'docs/help/ru/diagnostics.md'
+    'docs/help/en/syntax.md',
+    'docs/help/ru/diagnostics.md',
+    'docs/help/ru/syntax.md'
   );
-  HELP_DOC_DIGEST: array[0..1] of string = (
-    '18de7309d6cea043', 'c431d1f7613c233d'
+  HELP_DOC_DIGEST: array[0..3] of string = (
+    '18de7309d6cea043', '605c61c6f231a069', '0effac0c5cdb4ad4', 'b61b55bc16b9ee83'
   );
-  HELP_DOC_LOCALE: array[0..1] of string = (
-    'en', 'ru'
+  HELP_DOC_LOCALE: array[0..3] of string = (
+    'en', 'en', 'ru', 'ru'
   );
-  HELP_DOC_SEED: array[0..1] of LongWord = (
-    7, 7
+  HELP_DOC_SEED: array[0..3] of LongWord = (
+    7, 7, 7, 7
   );
-  HELP_INC_FIRST: array[0..1] of Integer = (
-    0, 3
+  HELP_INC_FIRST: array[0..3] of Integer = (
+    0, 3, 5, 8
   );
-  HELP_INC_LAST: array[0..1] of Integer = (
-    2, 5
+  HELP_INC_LAST: array[0..3] of Integer = (
+    2, 4, 7, 9
   );
-  HELP_INC_NAME: array[0..5] of string = (
+  HELP_INC_NAME: array[0..9] of string = (
     'frag',
     'loop',
     'Intro',
+    'intro',
+    'shout',
     'frag',
     'loop',
-    'Intro'
+    'Intro',
+    'intro',
+    'shout'
   );
-  HELP_INC_TEXT: array[0..5] of string = (
+  HELP_INC_TEXT: array[0..9] of string = (
     'Fragment',
     '#include "loop"',
     'Introduction',
+    'Welcome to {Acme|Globex}.',
+    'The %brand% is here.',
     'фрагмент',
     '#include "loop"',
-    'вступление'
+    'вступление',
+    'Добро пожаловать в {Акме|Глобекс}.',
+    'Здесь %brand%.'
   );
 
   { Each language's pages: a span into the tables below. }
   HELP_PAGE_FIRST: array[0..1] of Integer = (
-    0, 12
+    0, 24
   );
   HELP_PAGE_LAST: array[0..1] of Integer = (
-    11, 23
+    23, 47
   );
-  HELP_SLUG: array[0..23] of string = (
-    'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..47] of string = (
+    'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next'
   );
-  HELP_TITLE: array[0..23] of string = (
+  HELP_TITLE: array[0..47] of string = (
     'What the Diagnostics tab is telling you',
     'How to read the examples',
     'Brackets',
@@ -166,6 +176,18 @@ const
     'A silence in every language: abbreviations',
     'What the correct form looks like',
     'Frequently asked',
+    'The language, construct by construct',
+    'How to read the examples',
+    'Choices',
+    'Shuffles',
+    'Macros',
+    'Conditions',
+    'Counting',
+    'Fragments',
+    'Remarks',
+    'What the engine tidies afterwards',
+    'Silences',
+    'Where to look next',
     'Что говорит вкладка «Диагностика»',
     'Как читать примеры',
     'Скобки',
@@ -177,21 +199,33 @@ const
     'Заметки Studio, которым нечего показать',
     'Молчание, которое встречают все: сокращения',
     'Как выглядит правильное',
-    'Часто спрашивают'
+    'Часто спрашивают',
+    'Язык, конструкция за конструкцией',
+    'Как читать примеры',
+    'Выбор',
+    'Перестановки',
+    'Макросы',
+    'Условия',
+    'Счёт',
+    'Фрагменты',
+    'Комментарии',
+    'Что движок приводит в порядок в конце',
+    'Молчания',
+    'Куда смотреть дальше'
   );
-  HELP_PAGE_DOC: array[0..23] of Integer = (
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  HELP_PAGE_DOC: array[0..47] of Integer = (
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
   );
-  HELP_FIRST: array[0..23] of Integer = (
-    0, 10, 17, 28, 44, 68, 86, 105, 116, 129, 142, 150, 157, 168, 174, 187, 203, 227, 245, 264, 275, 288, 303, 311
+  HELP_FIRST: array[0..47] of Integer = (
+    0, 10, 17, 28, 44, 68, 86, 105, 116, 129, 142, 150, 157, 162, 168, 180, 199, 209, 216, 223, 232, 236, 250, 265, 267, 278, 284, 297, 313, 337, 355, 374, 385, 398, 418, 426, 432, 437, 443, 455, 474, 484, 491, 499, 508, 512, 526, 549
   );
-  HELP_LAST: array[0..23] of Integer = (
-    9, 16, 27, 43, 67, 85, 104, 115, 128, 141, 149, 156, 167, 173, 186, 202, 226, 244, 263, 274, 287, 302, 310, 316
+  HELP_LAST: array[0..47] of Integer = (
+    9, 16, 27, 43, 67, 85, 104, 115, 128, 141, 149, 156, 161, 167, 179, 198, 208, 215, 222, 231, 235, 249, 264, 266, 277, 283, 296, 312, 336, 354, 373, 384, 397, 417, 425, 431, 436, 442, 454, 473, 483, 490, 498, 507, 511, 525, 548, 550
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..316] of string = (
+  HELP_LINE: array[0..550] of string = (
     '<h1 id="about">What the Diagnostics tab is telling you</h1>',
     '<p>Every line in that tab is a verdict from the <b>engine</b>, and the same verdict yo' +
       'u would get from the JavaScript, PHP or Python implementation — four independent engin' +
@@ -594,6 +628,269 @@ const
     '<p><b>Is the preview the same as what my server will produce?</b> Yes, with one condit' +
       'ion: the same engine version and the same locale. That is the whole reason the preview' +
       ' runs the real <code>spintax-win</code> rather than an approximation of it.</p>',
+    '<h1 id="language">The language, construct by construct</h1>',
+    '<p>A template is ordinary text with a few marked places in it. Everything that is not ' +
+      'marked is copied out as it stands; the marks are what make one template able to produc' +
+      'e many texts.</p>',
+    '<p>There are six of them, and that is the whole language: a <b>choice</b> between alte' +
+      'rnatives, a <b>shuffle</b> of several pieces, a <b>macro</b> you define once and use b' +
+      'y name, a <b>condition</b>, a <b>count</b> that picks the right word form, and an <b>i' +
+      'nclude</b> that pulls in another template. Comments are a seventh mark that produces n' +
+      'othing at all.</p>',
+    '<blockquote>Every example below was run through <code>spintax-win v0.3.3</code>, and t' +
+      'he right-hand side is exactly what it returned. Nothing here is remembered or guessed.' +
+      '</blockquote>',
+    '<p>The other document in this help, <b>What the Diagnostics tab is telling you</b>, is' +
+      ' about what goes wrong. This one is about what the constructs do when nothing goes wro' +
+      'ng — including the several places where a template does something surprising and nothi' +
+      'ng reports it.</p>',
+    '<h2 id="reading-syntax">How to read the examples</h2>',
+    '<p>The arrow <code>→</code> separates the template from what the engine returned. <cod' +
+      'e>(empty)</code> means it printed nothing at all. Text after the output, set off by th' +
+      'ree spaces, is a note rather than part of the answer.</p>',
+    '<p>The conditions are stated rather than assumed, because without them half the answer' +
+      's below could not be reproduced:</p>',
+    '<p><small><tt>locale:&nbsp;en<br>seed:&nbsp;7<br>empty:&nbsp;(empty)<br>include&nbsp;i' +
+      'ntro:&nbsp;Welcome&nbsp;to&nbsp;{Acme|Globex}.<br>include&nbsp;shout:&nbsp;The&nbsp;%b' +
+      'rand%&nbsp;is&nbsp;here.</tt></small></p>',
+    '<p><code>seed</code> pins the random choice. A template with a choice in it has no sin' +
+      'gle answer, so an example without a seed would print something different on every run ' +
+      'and there would be nothing to check. In the window it is the tick-box marked <b>Seed</' +
+      'b> above the right-hand pane; tick it and a number field appears beside it, and the pr' +
+      'eview stops moving while you edit.</p>',
+    '<p><code>locale</code> decides plural forms, and it is the selector above the right-ha' +
+      'nd pane rather than the language of the interface. English needs two forms; Russian, U' +
+      'krainian, Belarusian, Serbian, Croatian and Bosnian need three.</p>',
+    '<h2 id="choices">Choices</h2>',
+    '<p>Braces with <code>|</code> between them: the engine picks <b>one</b>.</p>',
+    '<p><small><tt><a href="ex:33">A&nbsp;{small|large}&nbsp;room.</a>&nbsp;&nbsp;→&nbsp;&n' +
+      'bsp;A&nbsp;small&nbsp;room.</tt></small></p>',
+    '<p>The pick is random, so the same template gives <code>A large room.</code> on anothe' +
+      'r run. The choice itself leaves the text around it alone — though the tidy-up describe' +
+      'd near the end of this document still reaches it, which is why the answer above opens ' +
+      'with a capital the template does not have.</p>',
+    '<h3 id="choices-0">Nesting</h3>',
+    '<p>A choice can contain another, to any depth.</p>',
+    '<p><small><tt><a href="ex:34">Acme&nbsp;{Pro&nbsp;{Plus|Max}|Lite}</a>&nbsp;&nbsp;→&nb' +
+      'sp;&nbsp;Acme&nbsp;Pro&nbsp;Plus</tt></small></p>',
+    '<p>The inner choice is only made when the outer one picks the branch it is in: with <c' +
+      'ode>Lite</code> chosen, <code>Plus|Max</code> is never consulted — and, measurably, no' +
+      't even asked for a random number.</p>',
+    '<h3 id="choices-1">An empty option</h3>',
+    '<p>An option may be empty. It is the ordinary way to make something appear only someti' +
+      'mes.</p>',
+    '<p><small><tt><a href="ex:35">A&nbsp;{|very&nbsp;}large&nbsp;room.</a>&nbsp;&nbsp;→&nb' +
+      'sp;&nbsp;A&nbsp;large&nbsp;room.</tt></small></p>',
+    '<p>Writing the space inside the option, <code>{|very }</code> rather than <code>{|very' +
+      '} </code>, is a habit rather than a requirement: the tidy-up collapses the double spac' +
+      'e either way.</p>',
+    '<h2 id="shuffles">Shuffles</h2>',
+    '<p>Square brackets take several pieces, choose how many, put them in a random order an' +
+      'd join them.</p>',
+    '<p><small><tt><a href="ex:36">[red|green|blue]</a>&nbsp;&nbsp;→&nbsp;&nbsp;Green&nbsp;' +
+      'blue&nbsp;red</tt></small></p>',
+    '<p>Left alone it takes all of them and joins with a single space. Everything else abou' +
+      't a shuffle is set in a <code>&lt;…&gt;</code> block immediately after the opening bra' +
+      'cket.</p>',
+    '<h3 id="shuffles-0">The separator</h3>',
+    '<p><small><tt><a href="ex:37">[&lt;,&nbsp;&gt;red|green|blue]</a>&nbsp;&nbsp;→&nbsp;&n' +
+      'bsp;Green,&nbsp;blue,&nbsp;red</tt></small></p>',
+    '<p>A <code>&lt;…&gt;</code> block holding no <code>=</code> is the separator itself. W' +
+      'rite it out in full when you want two different ones:</p>',
+    '<p><small><tt><a href="ex:38">[&lt;sep=",&nbsp;";lastsep="&nbsp;and&nbsp;"&gt;red|gree' +
+      'n|blue]</a>&nbsp;&nbsp;→&nbsp;&nbsp;Green,&nbsp;blue&nbsp;and&nbsp;red</tt></small></p' +
+      '>',
+    '<p><code>sep</code> goes between the items and <code>lastsep</code> before the final o' +
+      'ne, which is how an English list is punctuated.</p>',
+    '<h3 id="shuffles-1">How many</h3>',
+    '<p><small><tt><a href="ex:39">[&lt;minsize=2;maxsize=2&gt;red|green|blue]</a>&nbsp;&nb' +
+      'sp;→&nbsp;&nbsp;Green&nbsp;blue</tt></small></p>',
+    '<p><code>minsize</code> is the floor and <code>maxsize</code> the ceiling; the count b' +
+      'etween them is random, like the order. Equal values take exactly that many. <b>With ne' +
+      'ither, all of them — but with only <code>maxsize</code>, the floor is one</b>, which s' +
+      'urprises people:</p>',
+    '<p><small><tt><a href="ex:40">[&lt;maxsize=3&gt;a|b|c]</a>&nbsp;&nbsp;→&nbsp;&nbsp;C</' +
+      'tt></small></p>',
+    '<p>Three items, a ceiling of three, and one piece came out. Write <code>minsize</code>' +
+      ' too when you mean "all of them, at most three". A <code>maxsize</code> above the numb' +
+      'er of items is quietly reduced to it, and a <code>minsize</code> above the <code>maxsi' +
+      'ze</code> is accepted without a word.</p>',
+    '<h3 id="shuffles-2">A separator between two items</h3>',
+    '<p>A <code>&lt;…&gt;</code> written <b>between</b> two items is the separator for that' +
+      ' pair.</p>',
+    '<p><small><tt><a href="ex:41">[red|green&lt;and&gt;|blue]</a>&nbsp;&nbsp;→&nbsp;&nbsp;' +
+      'Green&nbsp;and&nbsp;blue&nbsp;red</tt></small></p>',
+    '<p>It belongs to the item <b>after</b> it and travels with that item through the shuff' +
+      'le, so it turns up wherever that item lands rather than at a fixed place in the output' +
+      '. A <code>&lt;…&gt;</code> after the <b>last</b> item is not a separator at all and pr' +
+      'ints as text:</p>',
+    '<p><small><tt><a href="ex:42">[red|green|blue&lt;and&gt;]</a>&nbsp;&nbsp;→&nbsp;&nbsp;' +
+      'Green&nbsp;blue&lt;and&gt;&nbsp;red</tt></small></p>',
+    '<h2 id="macros">Macros</h2>',
+    '<p><code>#set</code> gives a name to a piece of text. The name is used as <code>%name%' +
+      '</code>, and the directive must be the first thing on its line — leading spaces and ta' +
+      'bs are allowed, anything else is not.</p>',
+    '<p><small><tt><a href="ex:43">#set&nbsp;%city%&nbsp;=&nbsp;Boston</a><br><a href="ex:4' +
+      '3">Fly&nbsp;to&nbsp;%city%.</a>&nbsp;&nbsp;→&nbsp;&nbsp;Fly&nbsp;to&nbsp;Boston.</tt><' +
+      '/small></p>',
+    '<p>Names are ASCII letters, digits and <code>_</code>. A name in any other alphabet is' +
+      ' not a name, which the other document covers under <code>set.malformed</code>.</p>',
+    '<h3 id="macros-0"><code>#set</code> rolls again, <code>#def</code> rolls once</h3>',
+    '<p>This is the whole difference between the two, and it only shows when the value cont' +
+      'ains a choice.</p>',
+    '<p><small><tt><a href="ex:44">#set&nbsp;%pick%&nbsp;=&nbsp;{A|B}</a><br><a href="ex:44' +
+      '">%pick%&nbsp;%pick%&nbsp;%pick%</a>&nbsp;&nbsp;→&nbsp;&nbsp;A&nbsp;A&nbsp;B</tt></sma' +
+      'll></p>',
+    '<p><small><tt><a href="ex:45">#def&nbsp;%pick%&nbsp;=&nbsp;{A|B}</a><br><a href="ex:45' +
+      '">%pick%&nbsp;%pick%&nbsp;%pick%</a>&nbsp;&nbsp;→&nbsp;&nbsp;A&nbsp;A&nbsp;A</tt></sma' +
+      'll></p>',
+    '<p>Both examples ran under the same seed. <code>#set</code> stores the template and ro' +
+      'lls it at every use; <code>#def</code> rolls once and keeps the answer. Use <code>#def' +
+      '</code> for something that must agree with itself — a brand, a city, a name, a count —' +
+      ' and <code>#set</code> for variety.</p>',
+    '<p>One seed cannot tell them apart: there are seeds where <code>#set</code> happens to' +
+      ' pick the same option three times and the two look identical. That is worth knowing be' +
+      'fore you conclude from a single preview that a definition is not working.</p>',
+    '<h2 id="conditions">Conditions</h2>',
+    '<p><code>{?name?then|else}</code> asks whether a macro has a value.</p>',
+    '<p><small><tt><a href="ex:46">#set&nbsp;%n%&nbsp;=&nbsp;5</a><br><a href="ex:46">{?n?w' +
+      'e&nbsp;have&nbsp;%n%|nothing&nbsp;yet}</a>&nbsp;&nbsp;→&nbsp;&nbsp;We&nbsp;have&nbsp;5' +
+      '</tt></small></p>',
+    '<p>The <code>else</code> half may be left out — <code>{?name?then}</code> prints nothi' +
+      'ng when the answer is no. A <code>!</code> inverts the question:</p>',
+    '<p><small><tt><a href="ex:47">#set&nbsp;%vip%&nbsp;=&nbsp;1</a><br><a href="ex:47">{?!' +
+      'vip?stranger|friend}</a>&nbsp;&nbsp;→&nbsp;&nbsp;Friend</tt></small></p>',
+    '<p>Having a value means having <b>at least one character that is not a space</b>. A ma' +
+      'cro set to nothing, or to spaces only, counts as having no value.</p>',
+    '<p>A condition''s name must <b>start</b> with a letter or <code>_</code>, which is str' +
+      'icter than a macro''s — and the silences chapter says what a name starting with a digi' +
+      't turns into.</p>',
+    '<h2 id="counting">Counting</h2>',
+    '<p><code>{plural %n%: …}</code> picks the word form that goes with a number.</p>',
+    '<p><small><tt><a href="ex:48">#def&nbsp;%n%&nbsp;=&nbsp;1</a><br><a href="ex:48">%n%&n' +
+      'bsp;{plural&nbsp;%n%:&nbsp;file|files}</a>&nbsp;&nbsp;→&nbsp;&nbsp;1&nbsp;file</tt></s' +
+      'mall></p>',
+    '<p><small><tt><a href="ex:49">#def&nbsp;%n%&nbsp;=&nbsp;5</a><br><a href="ex:49">%n%&n' +
+      'bsp;{plural&nbsp;%n%:&nbsp;file|files}</a>&nbsp;&nbsp;→&nbsp;&nbsp;5&nbsp;files</tt></' +
+      'small></p>',
+    '<p>The count is a <code>#def</code> here rather than a <code>#set</code> on purpose, a' +
+      'nd the rule is worth keeping: <b>make the count a plain number or a <code>#def</code>,' +
+      ' never a <code>#set</code>.</b> What reaches the count slot from a <code>#set</code> i' +
+      's the stored TEXT, <code>{5|5}</code> rather than <code>5</code> — not a number, so th' +
+      'e whole construct produces nothing and the panel says <code>plural.count-macro</code>.' +
+      ' The count and the form cannot disagree: the word disappears instead.</p>',
+    '<p><small><tt><a href="ex:50">#set&nbsp;%n%&nbsp;=&nbsp;{5|5}</a><br><a href="ex:50">%' +
+      'n%&nbsp;{plural&nbsp;%n%:&nbsp;file|files}</a>&nbsp;&nbsp;→&nbsp;&nbsp;5</tt></small><' +
+      '/p>',
+    '<p>The number of forms is decided by the locale, not by you: under <code>en</code> the' +
+      're are two, under <code>ru</code> three. The wrong number is an error the panel report' +
+      's (<code>plural.arity</code>), and the engine then prints the whole construct back wit' +
+      'h the braces swapped for wide ones <code>｛｝</code>, so it cannot be mistaken for outpu' +
+      't.</p>',
+    '<h2 id="fragments">Fragments</h2>',
+    '<p><code>#include "name"</code> puts another template in at that point, and the direct' +
+      'ive must be the first thing on its line — again, leading spaces and tabs are allowed.<' +
+      '/p>',
+    '<p><small><tt><a href="ex:51">#include&nbsp;"intro"</a>&nbsp;&nbsp;→&nbsp;&nbsp;Welcom' +
+      'e&nbsp;to&nbsp;Acme.</tt></small></p>',
+    '<p>The fragment is rendered as its own template, so a choice inside it is made afresh:' +
+      ' <code>intro</code> holds <code>{Acme|Globex}</code> and answers with either.</p>',
+    '<p>The name is matched <b>exactly</b>. <code>Intro</code> and <code>intro</code> are t' +
+      'wo different fragments, and on Windows that is easy to get wrong because the file syst' +
+      'em does not care. A missing target renders as nothing and the panel says <code>include' +
+      '.unknown-target</code>; a target that differs only in case gets a Studio note naming t' +
+      'he one you probably meant.</p>',
+    '<h3 id="fragments-0">A fragment does not see your macros</h3>',
+    '<p>It is rendered as its own template: it has the session''s values, but not the <code' +
+      '>#set</code> and <code>#def</code> of the document that included it.</p>',
+    '<p><small><tt><a href="ex:52">#set&nbsp;%brand%&nbsp;=&nbsp;Acme</a><br><a href="ex:52' +
+      '">#include&nbsp;"shout"</a>&nbsp;&nbsp;→&nbsp;&nbsp;The&nbsp;%brand%&nbsp;is&nbsp;here' +
+      '.</tt></small></p>',
+    '<p><code>shout</code> is <code>The %brand% is here.</code>, and the name has to be def' +
+      'ined in the fragment itself. This one is not a silence — the panel does say <code>vari' +
+      'able.undefined</code> — but it says it against <b><code>shout</code></b>, at line 1 of' +
+      ' that file, and no squiggle appears in the document you are looking at, because the po' +
+      'sition belongs to another buffer. Read the <b>File</b> column when a warning seems to ' +
+      'be about a line you did not write.</p>',
+    '<h2 id="remarks">Remarks</h2>',
+    '<p><code>/# … #/</code> is a comment: everything between the marks is removed before a' +
+      'nything else happens.</p>',
+    '<p><small><tt><a href="ex:53">draft&nbsp;/#&nbsp;not&nbsp;sure&nbsp;about&nbsp;this&nb' +
+      'sp;#/&nbsp;ready</a>&nbsp;&nbsp;→&nbsp;&nbsp;Draft&nbsp;ready</tt></small></p>',
+    '<p>Comments do not nest. The first <code>#/</code> closes the comment, whatever came b' +
+      'efore it, so a comment wrapped around text that itself contains <code>#/</code> ends e' +
+      'arlier than it looks.</p>',
+    '<h2 id="tidying">What the engine tidies afterwards</h2>',
+    '<p>The output is not quite the text the constructs produced. Several things happen to ' +
+      'it at the end; two you meet daily.</p>',
+    '<p>The first letter of every sentence is capitalised:</p>',
+    '<p><small><tt><a href="ex:54">one.&nbsp;two.&nbsp;three.</a>&nbsp;&nbsp;→&nbsp;&nbsp;O' +
+      'ne.&nbsp;Two.&nbsp;Three.</tt></small></p>',
+    '<p>That is why the examples in this help so often answer with a capital where the temp' +
+      'late has a small letter. A dot after an abbreviation the engine knows does not end a s' +
+      'entence, and neither does anything shaped like <code>e.g.</code> or <code>U.S.</code>:' +
+      '</p>',
+    '<p><small><tt><a href="ex:55">e.g.&nbsp;this&nbsp;stays&nbsp;lower</a>&nbsp;&nbsp;→&nb' +
+      'sp;&nbsp;e.g.&nbsp;this&nbsp;stays&nbsp;lower</tt></small></p>',
+    '<p><small><tt><a href="ex:56">Ltd.&nbsp;our&nbsp;prices&nbsp;are&nbsp;low</a>&nbsp;&nb' +
+      'sp;→&nbsp;&nbsp;Ltd.&nbsp;our&nbsp;prices&nbsp;are&nbsp;low</tt></small></p>',
+    '<p>Any other word ends a sentence, however short — length has nothing to do with it:</' +
+      'p>',
+    '<p><small><tt><a href="ex:57">Xyz.&nbsp;our&nbsp;prices&nbsp;are&nbsp;low</a>&nbsp;&nb' +
+      'sp;→&nbsp;&nbsp;Xyz.&nbsp;Our&nbsp;prices&nbsp;are&nbsp;low</tt></small></p>',
+    '<p>The list the engine knows has 46 entries, most of them Russian, and the other docum' +
+      'ent goes through it under <b>A silence in every language</b>.</p>',
+    '<p>The second everyday one is that runs of spaces collapse to one. That is what lets y' +
+      'ou leave an empty option without counting the spaces around it.</p>',
+    '<p>The rest, in one breath: a space before <code>,;:!?.</code> is dropped and one is i' +
+      'nserted after it; the whole output is trimmed; the capital arrives after a line break ' +
+      'and after a block tag as well as after a full stop; and URLs, e-mail addresses, bare d' +
+      'omains and decimal numbers are shielded and come out exactly as typed.</p>',
+    '<p><small><tt><a href="ex:58">hello&nbsp;,&nbsp;world</a>&nbsp;&nbsp;→&nbsp;&nbsp;Hell' +
+      'o,&nbsp;world</tt></small></p>',
+    '<p><small><tt><a href="ex:59">one.two</a>&nbsp;&nbsp;→&nbsp;&nbsp;one.two</tt></small>' +
+      '</p>',
+    '<h2 id="silences">Silences</h2>',
+    '<p>Every case below renders, produces something other than what it looks like, and dra' +
+      'ws <b>no diagnostic at all</b>. They are collected here because nothing else in the wi' +
+      'ndow will ever mention them.</p>',
+    '<p><b>A <code>#include</code> that is not alone on its line is plain text.</b></p>',
+    '<p><small><tt><a href="ex:60">Before.&nbsp;#include&nbsp;"intro"</a>&nbsp;&nbsp;→&nbsp' +
+      ';&nbsp;Before.&nbsp;#include&nbsp;"intro"</tt></small></p>',
+    '<p>The same is true of a directive with anything after it, and of <code>#include"intro' +
+      '"</code> with no space. The rule is the family''s rather than this engine''s, and it i' +
+      's what makes a directive recognisable without parsing the whole line.</p>',
+    '<p><b>A condition whose name starts with a digit is not a condition.</b> It becomes an' +
+      ' ordinary choice between <code>?1x?yes</code> and <code>no</code>:</p>',
+    '<p><small><tt><a href="ex:61">{?1x?yes|no}</a>&nbsp;&nbsp;→&nbsp;&nbsp;?1x?&nbsp;Yes</' +
+      'tt></small></p>',
+    '<p><b>A <code>&lt;…&gt;</code> at the head of a later item is not a separator</b> and ' +
+      'prints as it stands:</p>',
+    '<p><small><tt><a href="ex:62">[red|&lt;and&gt;green]</a>&nbsp;&nbsp;→&nbsp;&nbsp;&lt;a' +
+      'nd&gt;Green&nbsp;red</tt></small></p>',
+    '<p>The block at the head of the <b>first</b> item is the separator — that is the synta' +
+      'x the shuffles chapter opens with, and <code>[&lt;and&gt;red|green]</code> answers <co' +
+      'de>Green and red</code>. Anywhere after a <code>|</code> it is plain text, and a separ' +
+      'ator between two items goes at the <b>end</b> of the first.</p>',
+    '<p><b>A bare tag at the end of an item is taken as that pair''s separator</b> and prin' +
+      'ted as its own text:</p>',
+    '<p><small><tt><a href="ex:63">[one&lt;br&gt;|two]</a>&nbsp;&nbsp;→&nbsp;&nbsp;Two&nbsp' +
+      ';one</tt></small></p>',
+    '<p>Under this seed the two landed in the other order, so the separator did not come ou' +
+      't at all; under another the same template answers <code>One br two</code>. A closing t' +
+      'ag (<code>&lt;/b&gt;</code>), a self-closing one (<code>&lt;br/&gt;</code>), one carry' +
+      'ing attributes (<code>&lt;br class="x"&gt;</code>) and a tag in the middle of an item ' +
+      'are all left alone.</p>',
+    '<p><b>An unclosed comment swallows everything after it</b>, silently:</p>',
+    '<p><small><tt><a href="ex:64">before&nbsp;/#&nbsp;rest&nbsp;of&nbsp;it</a>&nbsp;&nbsp;' +
+      '→&nbsp;&nbsp;Before</tt></small></p>',
+    '<h2 id="next">Where to look next</h2>',
+    '<p>The other document, <b>What the Diagnostics tab is telling you</b>, has one article' +
+      ' per line the panel can show — what it means, what causes it, and what the engine does' +
+      ' with the template while it is there. Press F1 with the caret inside a construct and t' +
+      'he help opens at that construct''s chapter <b>in that document</b>: a brace on <b>Brac' +
+      'kets</b>, a <code>[…]</code> on <b>Permutations</b>, a <code>#set</code> line on <b>De' +
+      'finitions</b>.</p>',
     '<h1 id="about">Что говорит вкладка «Диагностика»</h1>',
     '<p>Внизу окна Studio показывает вердикт о вашем шаблоне. Вердикт выносит <b>движок</b>' +
       ' — тот самый, что рисует правую панель и что стоит на боевых серверах в версиях для JS' +
@@ -943,8 +1240,16 @@ const
     '<p>Две строки, отличающиеся одним словом, и второе слово каждой показывает правило: по' +
       'сле <code>руб.</code> предложение остаётся строчным, после <code>ххх.</code> — начинае' +
       'тся с прописной. Движок ставит прописную после точки — но не после сокращения, которое' +
-      ' он знает, и не после конструкций вида <code>и.о.</code> или <code>т.д.</code>. Диагно' +
-      'стики нет никакой: заметить можно только по выводу.</p>',
+      ' он знает. Диагностики нет никакой: заметить можно только по выводу.</p>',
+    '<p>Правило про <b>несколько точек подряд</b> — <code>e.g.</code>, <code>U.S.</code> — ' +
+      'тоже есть, и на кириллице оно <b>не работает</b>:</p>',
+    '<p><small><tt><a href="ex:27">это&nbsp;т.е.&nbsp;вот&nbsp;так</a>&nbsp;&nbsp;→&nbsp;&n' +
+      'bsp;Это&nbsp;т.&nbsp;Е.&nbsp;Вот&nbsp;так</tt></small></p>',
+    '<p><small><tt><a href="ex:28">и.о.&nbsp;директора&nbsp;здесь</a>&nbsp;&nbsp;→&nbsp;&nb' +
+      'sp;И.&nbsp;О.&nbsp;Директора&nbsp;здесь</tt></small></p>',
+    '<p>Проверка начинается с границы слова, а граница у неё латинская. Раньше здесь было н' +
+      'аписано обратное — что <code>и.о.</code> и <code>т.д.</code> заэкранированы; это была ' +
+      'единственная непроверенная фраза в главе, и она была неверна.</p>',
     '<p><b>Список на 46 записей, и 29 из них русские:</b></p>',
     '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
     '<tr><th></th><th></th></tr>',
@@ -957,31 +1262,34 @@ const
       'зык вы выбрали.</p>',
     '<p>Кусается это чаще, чем кажется, потому что <code>г.</code>, <code>ул.</code>, <code' +
       '>стр.</code>, <code>см.</code> — обычные слова русской прозы:</p>',
-    '<p><small><tt><a href="ex:27">дом&nbsp;5&nbsp;г.&nbsp;москва</a>&nbsp;&nbsp;&nbsp;&nbs' +
+    '<p><small><tt><a href="ex:29">дом&nbsp;5&nbsp;г.&nbsp;москва</a>&nbsp;&nbsp;&nbsp;&nbs' +
       'p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' +
-      '→&nbsp;&nbsp;Дом&nbsp;5&nbsp;г.&nbsp;москва<br><a href="ex:28">смотрите&nbsp;стр.&nbsp' +
+      '→&nbsp;&nbsp;Дом&nbsp;5&nbsp;г.&nbsp;москва<br><a href="ex:30">смотрите&nbsp;стр.&nbsp' +
       ';12.&nbsp;там&nbsp;всё&nbsp;есть</a>&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;Смотрите&nbsp;стр.&' +
       'nbsp;12.&nbsp;Там&nbsp;всё&nbsp;есть</tt></small></p>',
     '<p>В первой строке <code>москва</code> осталась строчной — сокращение <code>г.</code> ' +
       'заэкранировало её, хотя это название города. Во второй видно, что правило потокенное: ' +
       '<code>стр.</code> экранирует, а <code>12.</code> — нет, и <code>Там</code> встало с пр' +
-      'описной. Переписывайте фразу, а не боритесь с правилом: то же экранирование не даёт по' +
-      'ставить прописную после <code>т.е.</code> в середине предложения, а это случай куда бо' +
-      'лее частый.</p>',
+      'описной. Переписывайте фразу, а не боритесь с правилом.</p>',
+    '<p>И обратный случай, тоже измеренный: <b>кириллический домен не заслоняется</b>. <cod' +
+      'e>сайт.рф наши цены</code> выходит как <code>Сайт. Рф наши цены</code> — латинский <co' +
+      'de>one.two</code> уцелел бы, а <code>.рф</code> разбирается на два предложения по той ' +
+      'же причине, что и <code>т.е.</code>: граница слова спрашивает про латиницу. Ссылка со ' +
+      'схемой уцелеет, <code>https://сайт.рф/х</code> выходит нетронутой.</p>',
     '<hr>',
     '<h2 id="correct">Как выглядит правильное</h2>',
     '<p>Для контраста — то же самое, разобранное без единого замечания:</p>',
-    '<p><small><tt><a href="ex:29">цена&nbsp;{дешёвая|дорогая}</a>&nbsp;&nbsp;&nbsp;&nbsp;&' +
+    '<p><small><tt><a href="ex:31">цена&nbsp;{дешёвая|дорогая}</a>&nbsp;&nbsp;&nbsp;&nbsp;&' +
       'nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;Цена&nbsp;дешёвая</tt></small></p>',
-    '<p><small><tt><a href="ex:30">[&lt;minsize=2;sep=",&nbsp;"&gt;а|б|в]</a>&nbsp;&nbsp;→&' +
+    '<p><small><tt><a href="ex:32">[&lt;minsize=2;sep=",&nbsp;"&gt;а|б|в]</a>&nbsp;&nbsp;→&' +
       'nbsp;&nbsp;В,&nbsp;б</tt></small></p>',
-    '<p><small><tt><a href="ex:31">#set&nbsp;%vip%&nbsp;=&nbsp;1</a><br><a href="ex:31">{?v' +
+    '<p><small><tt><a href="ex:33">#set&nbsp;%vip%&nbsp;=&nbsp;1</a><br><a href="ex:33">{?v' +
       'ip?для&nbsp;вас|для&nbsp;всех}</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;Для' +
       '&nbsp;вас</tt></small></p>',
-    '<p><small><tt><a href="ex:32">#set&nbsp;%n%&nbsp;=&nbsp;5</a><br><a href="ex:32">%n%&n' +
+    '<p><small><tt><a href="ex:34">#set&nbsp;%n%&nbsp;=&nbsp;5</a><br><a href="ex:34">%n%&n' +
       'bsp;{plural&nbsp;%n%:&nbsp;товар|товара|товаров}</a>&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;5&n' +
       'bsp;товаров</tt></small></p>',
-    '<p><small><tt><a href="ex:33">до&nbsp;/#&nbsp;заметка&nbsp;#/&nbsp;после</a>&nbsp;&nbs' +
+    '<p><small><tt><a href="ex:35">до&nbsp;/#&nbsp;заметка&nbsp;#/&nbsp;после</a>&nbsp;&nbs' +
       'p;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→&nbsp;&nbsp;До&nbsp;после</tt></small></p>',
     '<hr>',
     '<h2 id="faq">Часто спрашивают</h2>',
@@ -1006,17 +1314,292 @@ const
       '<code>#include</code> и вставка по кругу. Обе выводят пустоту. Третья, на которую дума' +
       'ют чаще всего, — неверное число форм у множественного числа — <b>не</b> пустота: движо' +
       'к печатает конструкцию целиком в широких скобках <code>｛｝</code>. Пустоту там даёт неч' +
-      'исловой счётчик, а не число форм.</p>'
+      'исловой счётчик, а не число форм.</p>',
+    '<h1 id="language">Язык, конструкция за конструкцией</h1>',
+    '<p>Шаблон — это обычный текст, в котором размечено несколько мест. Всё, что не размече' +
+      'но, выводится как есть; разметка — то, из-за чего один шаблон умеет давать много разны' +
+      'х текстов.</p>',
+    '<p>Разметок шесть, и это весь язык: <b>выбор</b> из вариантов, <b>перестановка</b> нес' +
+      'кольких кусков, <b>макрос</b>, который объявляют один раз и зовут по имени, <b>условие' +
+      '</b>, <b>счёт</b>, подбирающий нужную форму слова, и <b>включение</b> другого шаблона.' +
+      ' Комментарий — седьмая разметка, не дающая ничего.</p>',
+    '<blockquote>Каждый пример ниже прогнан через <code>spintax-win v0.3.3</code>, и справа' +
+      ' стоит ровно то, что он вернул. Здесь ничего не вспомнено и не угадано.</blockquote>',
+    '<p>Второй документ этой справки, <b>Что говорит вкладка диагностики</b>, — про то, что' +
+      ' идёт не так. Этот — про то, что конструкции делают, когда всё так, включая несколько ' +
+      'мест, где шаблон делает неожиданное и никто об этом не сообщает.</p>',
+    '<h2 id="reading-syntax">Как читать примеры</h2>',
+    '<p>Стрелка <code>→</code> отделяет шаблон от того, что вернул движок. <code>(пусто)</c' +
+      'ode> значит, что не напечаталось ничего. Текст после ответа, отбитый тремя пробелами, ' +
+      '— примечание, а не часть ответа.</p>',
+    '<p>Условия названы, а не подразумеваются: без них половину ответов ниже невозможно вос' +
+      'произвести.</p>',
+    '<p><small><tt>locale:&nbsp;ru<br>seed:&nbsp;7<br>empty:&nbsp;(пусто)<br>include&nbsp;i' +
+      'ntro:&nbsp;Добро&nbsp;пожаловать&nbsp;в&nbsp;{Акме|Глобекс}.<br>include&nbsp;shout:&nb' +
+      'sp;Здесь&nbsp;%brand%.</tt></small></p>',
+    '<p><code>seed</code> закрепляет случайный выбор. У шаблона с выбором нет единственного' +
+      ' ответа, поэтому пример без зерна печатал бы при каждом запуске разное и проверять был' +
+      'о бы нечего. В окне это флажок <b>сид</b> над правой панелью; поставьте его — рядом по' +
+      'явится поле с числом, и предпросмотр перестанет меняться, пока вы правите.</p>',
+    '<p><code>locale</code> решает, сколько форм у множественного числа, и берётся из селек' +
+      'тора над правой панелью, а не из языка интерфейса. Английскому нужно две формы; русско' +
+      'му, украинскому, белорусскому, сербскому, хорватскому и боснийскому — три.</p>',
+    '<h2 id="choices">Выбор</h2>',
+    '<p>Фигурные скобки с <code>|</code> внутри: движок берёт <b>один</b> вариант.</p>',
+    '<p><small><tt><a href="ex:36">Комната&nbsp;{маленькая|большая}.</a>&nbsp;&nbsp;→&nbsp;' +
+      '&nbsp;Комната&nbsp;маленькая.</tt></small></p>',
+    '<p>Выбор случаен, поэтому в другой раз тот же шаблон даст <code>Комната большая.</code' +
+      '> Сам выбор не трогает текст вокруг — но приведение в порядок, описанное ближе к концу' +
+      ' документа, до него добирается, и поэтому ответ выше начинается с заглавной, которой в' +
+      ' шаблоне нет.</p>',
+    '<h3 id="choices-0">Вложенность</h3>',
+    '<p>Выбор может содержать другой выбор, на любую глубину.</p>',
+    '<p><small><tt><a href="ex:37">Акме&nbsp;{Про&nbsp;{Плюс|Макс}|Лайт}</a>&nbsp;&nbsp;→&n' +
+      'bsp;&nbsp;Акме&nbsp;Про&nbsp;Плюс</tt></small></p>',
+    '<p>Внутренний выбор делается, только если внешний взял ту ветку, где он стоит: когда в' +
+      'ыпал <code>Лайт</code>, <code>Плюс|Макс</code> не спрашивают вовсе — и это измеримо: с' +
+      'лучайное число для него даже не берут.</p>',
+    '<h3 id="choices-1">Пустой вариант</h3>',
+    '<p>Вариант может быть пустым. Это обычный способ сделать так, чтобы что-то появлялось ' +
+      'не всегда.</p>',
+    '<p><small><tt><a href="ex:38">Комната&nbsp;{|очень&nbsp;}большая.</a>&nbsp;&nbsp;→&nbs' +
+      'p;&nbsp;Комната&nbsp;большая.</tt></small></p>',
+    '<p>Пробел внутри варианта, <code>{|очень }</code>, а не <code>{|очень} </code> — привы' +
+      'чка, а не требование: двойной пробел всё равно схлопнется при приведении в порядок.</p' +
+      '>',
+    '<h2 id="shuffles">Перестановки</h2>',
+    '<p>Квадратные скобки берут несколько кусков, решают сколько, перемешивают и склеивают.' +
+      '</p>',
+    '<p><small><tt><a href="ex:39">[красный|зелёный|синий]</a>&nbsp;&nbsp;→&nbsp;&nbsp;Зелё' +
+      'ный&nbsp;синий&nbsp;красный</tt></small></p>',
+    '<p>Без настроек берутся все и склеиваются одним пробелом. Всё остальное задаётся блоко' +
+      'м <code>&lt;…&gt;</code> сразу после открывающей скобки.</p>',
+    '<h3 id="shuffles-0">Разделитель</h3>',
+    '<p><small><tt><a href="ex:40">[&lt;,&nbsp;&gt;красный|зелёный|синий]</a>&nbsp;&nbsp;→&' +
+      'nbsp;&nbsp;Зелёный,&nbsp;синий,&nbsp;красный</tt></small></p>',
+    '<p>Блок <code>&lt;…&gt;</code> без <code>=</code> — это и есть разделитель. Когда нужн' +
+      'ы два разных, пишут полностью:</p>',
+    '<p><small><tt><a href="ex:41">[&lt;sep=",&nbsp;";lastsep="&nbsp;и&nbsp;"&gt;красный|зе' +
+      'лёный|синий]</a>&nbsp;&nbsp;→&nbsp;&nbsp;Зелёный,&nbsp;синий&nbsp;и&nbsp;красный</tt><' +
+      '/small></p>',
+    '<p><code>sep</code> идёт между элементами, <code>lastsep</code> — перед последним.</p>',
+    '<h3 id="shuffles-1">Сколько брать</h3>',
+    '<p><small><tt><a href="ex:42">[&lt;minsize=2;maxsize=2&gt;красный|зелёный|синий]</a>&n' +
+      'bsp;&nbsp;→&nbsp;&nbsp;Зелёный&nbsp;синий</tt></small></p>',
+    '<p><code>minsize</code> — нижняя граница, <code>maxsize</code> — верхняя; число между ' +
+      'ними случайно, как и порядок. Равные значения берут ровно столько. <b>Без обоих — все,' +
+      ' но с одним только <code>maxsize</code> нижняя граница равна единице</b>, и это удивля' +
+      'ет:</p>',
+    '<p><small><tt><a href="ex:43">[&lt;maxsize=3&gt;а|б|в]</a>&nbsp;&nbsp;→&nbsp;&nbsp;В</' +
+      'tt></small></p>',
+    '<p>Три элемента, потолок три, а вышел один. Когда имеется в виду «все, но не больше тр' +
+      'ёх», пишите и <code>minsize</code>. <code>maxsize</code>, превышающий число элементов,' +
+      ' тихо уменьшается до него, а <code>minsize</code>, превышающий <code>maxsize</code>, п' +
+      'ринимается без единого слова.</p>',
+    '<h3 id="shuffles-2">Разделитель между двумя элементами</h3>',
+    '<p>Блок <code>&lt;…&gt;</code>, написанный <b>между</b> двумя элементами, — разделител' +
+      'ь этой пары.</p>',
+    '<p><small><tt><a href="ex:44">[красный|зелёный&lt;и&gt;|синий]</a>&nbsp;&nbsp;→&nbsp;&' +
+      'nbsp;Зелёный&nbsp;и&nbsp;синий&nbsp;красный</tt></small></p>',
+    '<p>Он принадлежит элементу <b>после</b> себя и переезжает вместе с ним при перемешиван' +
+      'ии, поэтому всплывает там, куда попал этот элемент, а не на фиксированном месте. Блок ' +
+      'после <b>последнего</b> элемента разделителем не является и печатается текстом:</p>',
+    '<p><small><tt><a href="ex:45">[красный|зелёный|синий&lt;и&gt;]</a>&nbsp;&nbsp;→&nbsp;&' +
+      'nbsp;Зелёный&nbsp;синий&lt;и&gt;&nbsp;красный</tt></small></p>',
+    '<h2 id="macros">Макросы</h2>',
+    '<p><code>#set</code> даёт имя куску текста. К имени обращаются как <code>%имя%</code>,' +
+      ' а директива обязана быть первой на своей строке — пробелы и табуляции перед ней допус' +
+      'тимы, что-либо ещё нет.</p>',
+    '<p><small><tt><a href="ex:46">#set&nbsp;%city%&nbsp;=&nbsp;Москва</a><br><a href="ex:4' +
+      '6">Город&nbsp;—&nbsp;%city%.</a>&nbsp;&nbsp;→&nbsp;&nbsp;Город&nbsp;—&nbsp;Москва.</tt' +
+      '></small></p>',
+    '<p>Имя состоит из <b>латинских</b> букв, цифр и <code>_</code>. Имя в другом алфавите ' +
+      'именем не является — про это второй документ, статья <code>set.malformed</code>.</p>',
+    '<h3 id="macros-0"><code>#set</code> разворачивает заново, <code>#def</code> — один раз' +
+      '</h3>',
+    '<p>В этом вся разница между ними, и видна она только когда в значении есть выбор.</p>',
+    '<p><small><tt><a href="ex:47">#set&nbsp;%pick%&nbsp;=&nbsp;{А|Б}</a><br><a href="ex:47' +
+      '">%pick%&nbsp;%pick%&nbsp;%pick%</a>&nbsp;&nbsp;→&nbsp;&nbsp;А&nbsp;А&nbsp;Б</tt></sma' +
+      'll></p>',
+    '<p><small><tt><a href="ex:48">#def&nbsp;%pick%&nbsp;=&nbsp;{А|Б}</a><br><a href="ex:48' +
+      '">%pick%&nbsp;%pick%&nbsp;%pick%</a>&nbsp;&nbsp;→&nbsp;&nbsp;А&nbsp;А&nbsp;А</tt></sma' +
+      'll></p>',
+    '<p>Оба примера прогнаны на одном зерне. <code>#set</code> хранит шаблон и разворачивае' +
+      'т его при каждой ссылке; <code>#def</code> разворачивает один раз и запоминает ответ. ' +
+      '<code>#def</code> — для того, что обязано совпадать само с собой: бренд, город, имя, с' +
+      'чёт. <code>#set</code> — для разнообразия.</p>',
+    '<p>По одному зерну их не различить: есть зёрна, на которых <code>#set</code> трижды по' +
+      'дряд выбирает одно и то же, и оба выглядят одинаково. Об этом стоит помнить, прежде че' +
+      'м по одному предпросмотру решить, что объявление не работает.</p>',
+    '<h2 id="conditions">Условия</h2>',
+    '<p><code>{?имя?тогда|иначе}</code> спрашивает, есть ли у макроса значение.</p>',
+    '<p><small><tt><a href="ex:49">#set&nbsp;%n%&nbsp;=&nbsp;5</a><br><a href="ex:49">{?n?у' +
+      '&nbsp;нас&nbsp;%n%|пока&nbsp;ничего}</a>&nbsp;&nbsp;→&nbsp;&nbsp;У&nbsp;нас&nbsp;5</tt' +
+      '></small></p>',
+    '<p>Половину «иначе» можно опустить — <code>{?имя?тогда}</code> при отрицательном ответ' +
+      'е не печатает ничего. <code>!</code> переворачивает вопрос:</p>',
+    '<p><small><tt><a href="ex:50">#set&nbsp;%vip%&nbsp;=&nbsp;1</a><br><a href="ex:50">{?!' +
+      'vip?незнакомец|друг}</a>&nbsp;&nbsp;→&nbsp;&nbsp;Друг</tt></small></p>',
+    '<p>Иметь значение — значит иметь <b>хотя бы один непробельный символ</b>. Макрос, кото' +
+      'рому присвоили пустоту или одни пробелы, считается не имеющим значения.</p>',
+    '<p>Имя условия обязано <b>начинаться</b> с буквы или <code>_</code>, что строже, чем у' +
+      ' макроса, — и глава про молчания говорит, во что превращается имя, начатое с цифры.</p' +
+      '>',
+    '<h2 id="counting">Счёт</h2>',
+    '<p><code>{plural %n%: …}</code> подбирает форму слова к числу.</p>',
+    '<p><small><tt><a href="ex:51">#def&nbsp;%n%&nbsp;=&nbsp;1</a><br><a href="ex:51">%n%&n' +
+      'bsp;{plural&nbsp;%n%:&nbsp;файл|файла|файлов}</a>&nbsp;&nbsp;→&nbsp;&nbsp;1&nbsp;файл<' +
+      '/tt></small></p>',
+    '<p><small><tt><a href="ex:52">#def&nbsp;%n%&nbsp;=&nbsp;2</a><br><a href="ex:52">%n%&n' +
+      'bsp;{plural&nbsp;%n%:&nbsp;файл|файла|файлов}</a>&nbsp;&nbsp;→&nbsp;&nbsp;2&nbsp;файла' +
+      '</tt></small></p>',
+    '<p><small><tt><a href="ex:53">#def&nbsp;%n%&nbsp;=&nbsp;5</a><br><a href="ex:53">%n%&n' +
+      'bsp;{plural&nbsp;%n%:&nbsp;файл|файла|файлов}</a>&nbsp;&nbsp;→&nbsp;&nbsp;5&nbsp;файло' +
+      'в</tt></small></p>',
+    '<p>Счёт здесь <code>#def</code>, а не <code>#set</code>, и это правило стоит держать: ' +
+      '<b>счёт делают числом или <code>#def</code>, никогда не <code>#set</code>.</b> В слот ' +
+      'счёта от <code>#set</code> попадает сохранённый ТЕКСТ, <code>{5|5}</code>, а не <code>' +
+      '5</code> — числом он не является, вся конструкция даёт пустоту, а панель ставит <code>' +
+      'plural.count-macro</code>. Разойтись счёт с формой не могут: слово просто исчезает.</p' +
+      '>',
+    '<p><small><tt><a href="ex:54">#set&nbsp;%n%&nbsp;=&nbsp;{5|5}</a><br><a href="ex:54">%' +
+      'n%&nbsp;{plural&nbsp;%n%:&nbsp;файл|файла|файлов}</a>&nbsp;&nbsp;→&nbsp;&nbsp;5</tt></' +
+      'small></p>',
+    '<p>Сколько форм, решает локаль, а не вы: под <code>ru</code> их три, под <code>en</cod' +
+      'e> две. Неверное число — ошибка, которую панель показывает как <code>plural.arity</cod' +
+      'e>, и движок печатает всю конструкцию обратно, заменив скобки на широкие <code>｛｝</cod' +
+      'e>, чтобы её нельзя было принять за вывод.</p>',
+    '<h2 id="fragments">Фрагменты</h2>',
+    '<p><code>#include "имя"</code> подставляет в это место другой шаблон, и директива тоже' +
+      ' обязана быть первой на своей строке — пробелы и табуляции перед ней допустимы.</p>',
+    '<p><small><tt><a href="ex:55">#include&nbsp;"intro"</a>&nbsp;&nbsp;→&nbsp;&nbsp;Добро&' +
+      'nbsp;пожаловать&nbsp;в&nbsp;Акме.</tt></small></p>',
+    '<p>Фрагмент рендерится как собственный шаблон, поэтому выбор внутри него делается зано' +
+      'во: <code>intro</code> содержит <code>{Акме|Глобекс}</code> и отвечает то одним, то др' +
+      'угим.</p>',
+    '<p>Имя сравнивается <b>точно</b>. <code>Intro</code> и <code>intro</code> — два разных' +
+      ' фрагмента, и на Windows ошибиться легко, потому что файловой системе всё равно. Отсут' +
+      'ствующая цель даёт пустоту, а панель говорит <code>include.unknown-target</code>; цель' +
+      ', отличающаяся только регистром, получает заметку Studio с подсказкой, что вы, вероятн' +
+      'о, имели в виду.</p>',
+    '<h3 id="fragments-0">Фрагмент не видит ваших макросов</h3>',
+    '<p>Он рендерится как собственный шаблон: значения сессии у него есть, а <code>#set</co' +
+      'de> и <code>#def</code> документа, который его включил, — нет.</p>',
+    '<p><small><tt><a href="ex:56">#set&nbsp;%brand%&nbsp;=&nbsp;Акме</a><br><a href="ex:56' +
+      '">#include&nbsp;"shout"</a>&nbsp;&nbsp;→&nbsp;&nbsp;Здесь&nbsp;%brand%.</tt></small></' +
+      'p>',
+    '<p><code>shout</code> — это <code>Здесь %brand%.</code>, и имя должно быть объявлено в' +
+      ' самом фрагменте. Это не молчание — панель говорит <code>variable.undefined</code>, — ' +
+      'но говорит она это про <b><code>shout</code></b>, про первую строку того файла, и в до' +
+      'кументе, который вы видите, ничего не подчёркивается волнистой линией, потому что пози' +
+      'ция принадлежит другому буферу. Смотрите на столбец <b>Файл</b>, когда предупреждение ' +
+      'относится к строке, которую вы не писали.</p>',
+    '<h2 id="remarks">Комментарии</h2>',
+    '<p><code>/# … #/</code> — комментарий: всё между метками убирается прежде всего осталь' +
+      'ного.</p>',
+    '<p><small><tt><a href="ex:57">черновик&nbsp;/#&nbsp;не&nbsp;уверен&nbsp;#/&nbsp;готово' +
+      '</a>&nbsp;&nbsp;→&nbsp;&nbsp;Черновик&nbsp;готово</tt></small></p>',
+    '<p>Комментарии не вкладываются. Первый же <code>#/</code> закрывает комментарий, что б' +
+      'ы ни стояло до него, так что комментарий вокруг текста, в котором есть <code>#/</code>' +
+      ', кончается раньше, чем кажется.</p>',
+    '<h2 id="tidying">Что движок приводит в порядок в конце</h2>',
+    '<p>Вывод — не совсем тот текст, который дали конструкции. В конце с ним происходит нес' +
+      'колько вещей, и две встречаются ежедневно.</p>',
+    '<p>Первая буква каждого предложения становится заглавной:</p>',
+    '<p><small><tt><a href="ex:58">раз.&nbsp;два.&nbsp;три.</a>&nbsp;&nbsp;→&nbsp;&nbsp;Раз' +
+      '.&nbsp;Два.&nbsp;Три.</tt></small></p>',
+    '<p>Поэтому примеры в этой справке так часто отвечают заглавной там, где в шаблоне стро' +
+      'чная. Точка после сокращения, которое движок знает, предложения не заканчивает:</p>',
+    '<p><small><tt><a href="ex:59">г.&nbsp;Москва&nbsp;наши&nbsp;цены&nbsp;низкие</a>&nbsp;' +
+      '&nbsp;→&nbsp;&nbsp;г.&nbsp;Москва&nbsp;наши&nbsp;цены&nbsp;низкие</tt></small></p>',
+    '<p>Любое другое слово заканчивает, каким бы коротким оно ни было — длина здесь ни при ' +
+      'чём:</p>',
+    '<p><small><tt><a href="ex:60">Ыыы.&nbsp;наши&nbsp;цены&nbsp;низкие</a>&nbsp;&nbsp;→&nb' +
+      'sp;&nbsp;Ыыы.&nbsp;Наши&nbsp;цены&nbsp;низкие</tt></small></p>',
+    '<p>В списке движка 46 записей, и <b>29 из них кириллические</b> — <code>г.</code>, <co' +
+      'de>стр.</code>, <code>рис.</code> и прочие; второй документ разбирает их в главе <b>Мо' +
+      'лчание, которое встречают все</b>.</p>',
+    '<p>Вторая ежедневная — подряд идущие пробелы схлопываются в один. Именно это позволяет' +
+      ' оставлять пустой вариант, не считая пробелы вокруг него.</p>',
+    '<p>Остальное одним духом: пробел перед <code>,;:!?.</code> убирается, а после — добавл' +
+      'яется; весь вывод обрезается по краям; заглавная приходит и после переноса строки, и п' +
+      'осле блочного тега; а ссылки со схемой, латинские адреса почты, латинские голые домены' +
+      ' и десятичные числа экранируются и выходят ровно как набраны.</p>',
+    '<p><small><tt><a href="ex:61">привет&nbsp;,&nbsp;мир</a>&nbsp;&nbsp;→&nbsp;&nbsp;Приве' +
+      'т,&nbsp;мир</tt></small></p>',
+    '<p><small><tt><a href="ex:62">one.two</a>&nbsp;&nbsp;→&nbsp;&nbsp;one.two</tt></small>' +
+      '</p>',
+    '<p>Слово «латинские» здесь не оговорка, а измерение, и для русского автора это важнее ' +
+      'всего остального в главе: правило спрашивает границу слова, а она латинская. Кирилличе' +
+      'ский домен под него не попадает — про это глава про молчания.</p>',
+    '<h2 id="silences">Молчания</h2>',
+    '<p>Каждый случай ниже рендерится, даёт не то, на что похож, и <b>не порождает ни одной' +
+      ' строки диагностики</b>. Они собраны здесь, потому что больше нигде в окне о них не ск' +
+      'ажут.</p>',
+    '<p><b><code>#include</code>, который не один на строке, — обычный текст.</b></p>',
+    '<p><small><tt><a href="ex:63">Сначала.&nbsp;#include&nbsp;"intro"</a>&nbsp;&nbsp;→&nbs' +
+      'p;&nbsp;Сначала.&nbsp;#include&nbsp;"intro"</tt></small></p>',
+    '<p>То же верно для директивы, после которой что-то есть, и для <code>#include"intro"</' +
+      'code> без пробела. Это правило общее для всего семейства движков, а не особенность зде' +
+      'шнего, и именно оно позволяет узнавать директиву, не разбирая всю строку.</p>',
+    '<p><b>Условие, имя которого начинается с цифры, — не условие.</b> Оно становится обычн' +
+      'ым выбором между <code>?1x?да</code> и <code>нет</code>:</p>',
+    '<p><small><tt><a href="ex:64">{?1x?да|нет}</a>&nbsp;&nbsp;→&nbsp;&nbsp;?1x?&nbsp;Да</t' +
+      't></small></p>',
+    '<p><b>Блок <code>&lt;…&gt;</code> в начале не первого элемента разделителем не являетс' +
+      'я</b> и печатается как есть:</p>',
+    '<p><small><tt><a href="ex:65">[красный|&lt;и&gt;зелёный]</a>&nbsp;&nbsp;→&nbsp;&nbsp;&' +
+      'lt;и&gt;Зелёный&nbsp;красный</tt></small></p>',
+    '<p>Блок в начале <b>первого</b> элемента — это как раз разделитель, с которого начинае' +
+      'тся глава про перестановки: <code>[&lt;и&gt;красный|зелёный]</code> отвечает <code>Зел' +
+      'ёный и красный</code>. Сразу после <code>|</code> он обычный текст, а разделитель пары' +
+      ' пишут в <b>конце</b> первого из двух элементов.</p>',
+    '<p><b>Голый тег в конце элемента принимается за разделитель этой пары</b> и печатается' +
+      ' обычным текстом:</p>',
+    '<p><small><tt><a href="ex:66">[один&lt;br&gt;|два]</a>&nbsp;&nbsp;→&nbsp;&nbsp;Два&nbs' +
+      'p;один</tt></small></p>',
+    '<p>На этом зерне пара легла в другом порядке, и разделитель не вышел вовсе; на другом ' +
+      'тот же шаблон отвечает <code>Один br два</code>. Закрывающий тег (<code>&lt;/b&gt;</co' +
+      'de>), самозакрывающийся (<code>&lt;br/&gt;</code>), тег с атрибутами (<code>&lt;br cla' +
+      'ss="x"&gt;</code>) и тег в середине элемента остаются нетронутыми.</p>',
+    '<p><b>Кириллический домен не заслоняется.</b> Латинский выходит как набран, а <code>.р' +
+      'ф</code> движок разбирает на два предложения:</p>',
+    '<p><small><tt><a href="ex:67">сайт.рф&nbsp;наши&nbsp;цены&nbsp;низкие</a>&nbsp;&nbsp;→' +
+      '&nbsp;&nbsp;Сайт.&nbsp;Рф&nbsp;наши&nbsp;цены&nbsp;низкие</tt></small></p>',
+    '<p>Это правило семейства, а не особенность здешнего движка: проверка границы слова спр' +
+      'ашивает про латиницу, и у целиком кириллической метки такой границы перед точкой нет. ' +
+      'Ссылка со схемой уцелеет — <code>https://сайт.рф/х</code> выходит нетронутой, — потому' +
+      ' что границу даёт латинское <code>https</code>.</p>',
+    '<p><b>Сокращение из нескольких точек работает только на латинице.</b> <code>e.g.</code' +
+      '> и <code>U.S.</code> движок узнаёт:</p>',
+    '<p><small><tt><a href="ex:68">e.g.&nbsp;наши&nbsp;цены&nbsp;низкие</a>&nbsp;&nbsp;→&nb' +
+      'sp;&nbsp;e.g.&nbsp;наши&nbsp;цены&nbsp;низкие</tt></small></p>',
+    '<p>А <code>т.е.</code>, <code>т.д.</code> и <code>и.о.</code> — нет, по той же причине' +
+      ', что и домен:</p>',
+    '<p><small><tt><a href="ex:69">это&nbsp;т.е.&nbsp;вот&nbsp;так</a>&nbsp;&nbsp;→&nbsp;&n' +
+      'bsp;Это&nbsp;т.&nbsp;Е.&nbsp;Вот&nbsp;так</tt></small></p>',
+    '<p>Односложные сокращения из списка движка это не затрагивает: <code>г.</code>, <code>' +
+      'стр.</code>, <code>рис.</code> заслонены, и их в списке 29 из 46.</p>',
+    '<p><b>Незакрытый комментарий съедает всё, что после него</b>, молча:</p>',
+    '<p><small><tt><a href="ex:70">сначала&nbsp;/#&nbsp;остальное</a>&nbsp;&nbsp;→&nbsp;&nb' +
+      'sp;Сначала</tt></small></p>',
+    '<h2 id="next">Куда смотреть дальше</h2>',
+    '<p>Второй документ, <b>Что говорит вкладка диагностики</b>, содержит по статье на кажд' +
+      'ую строку, которую умеет показать панель: что она значит, отчего берётся и что движок ' +
+      'делает с шаблоном, пока она там. Нажмите F1, поставив курсор внутрь конструкции, — спр' +
+      'авка откроется на главе про эту конструкцию <b>в том документе</b>: на скобке — <b>Ско' +
+      'бки</b>, на <code>[…]</code> — <b>Перестановки</b>, на строке <code>#set</code> — <b>О' +
+      'пределения</b>.</p>'
   );
 
   { The templates the `ex:N` links point at, verbatim as the fixture ran them. }
   HELP_EX_FIRST: array[0..1] of Integer = (
-    0, 33
+    0, 65
   );
   HELP_EX_LAST: array[0..1] of Integer = (
-    32, 66
+    64, 135
   );
-  HELP_EX_TEMPLATE: array[0..66] of string = (
+  HELP_EX_TEMPLATE: array[0..135] of string = (
     'a price {cheap|dear',
     'a price {cheap|dear]',
     'a price cheap} and all',
@@ -1078,6 +1661,56 @@ const
       '%n% {plural %n%: item|items}',
     'before /# a note #/ after',
     'hello %café% and %name%',
+    'A {small|large} room.',
+    'Acme {Pro {Plus|Max}|Lite}',
+    'A {|very }large room.',
+    '[red|green|blue]',
+    '[<, >red|green|blue]',
+    '[<sep=", ";lastsep=" and ">red|green|blue]',
+    '[<minsize=2;maxsize=2>red|green|blue]',
+    '[<maxsize=3>a|b|c]',
+    '[red|green<and>|blue]',
+    '[red|green|blue<and>]',
+    '#set %city% = Boston' +
+      #10 +
+      'Fly to %city%.',
+    '#set %pick% = {A|B}' +
+      #10 +
+      '%pick% %pick% %pick%',
+    '#def %pick% = {A|B}' +
+      #10 +
+      '%pick% %pick% %pick%',
+    '#set %n% = 5' +
+      #10 +
+      '{?n?we have %n%|nothing yet}',
+    '#set %vip% = 1' +
+      #10 +
+      '{?!vip?stranger|friend}',
+    '#def %n% = 1' +
+      #10 +
+      '%n% {plural %n%: file|files}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: file|files}',
+    '#set %n% = {5|5}' +
+      #10 +
+      '%n% {plural %n%: file|files}',
+    '#include "intro"',
+    '#set %brand% = Acme' +
+      #10 +
+      '#include "shout"',
+    'draft /# not sure about this #/ ready',
+    'one. two. three.',
+    'e.g. this stays lower',
+    'Ltd. our prices are low',
+    'Xyz. our prices are low',
+    'hello , world',
+    'one.two',
+    'Before. #include "intro"',
+    '{?1x?yes|no}',
+    '[red|<and>green]',
+    '[one<br>|two]',
+    'before /# rest of it',
     'цена {дешёвая|дорогая',
     'цена {дешёвая|дорогая]',
     'цена дешёвая} и всё',
@@ -1129,6 +1762,8 @@ const
     '[<maxsize=много>а|б|в]',
     'цена 100 руб. наша скидка ждёт',
     'цена 100 ххх. наша скидка ждёт',
+    'это т.е. вот так',
+    'и.о. директора здесь',
     'дом 5 г. москва',
     'смотрите стр. 12. там всё есть',
     'цена {дешёвая|дорогая}',
@@ -1139,23 +1774,78 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: товар|товара|товаров}',
-    'до /# заметка #/ после'
+    'до /# заметка #/ после',
+    'Комната {маленькая|большая}.',
+    'Акме {Про {Плюс|Макс}|Лайт}',
+    'Комната {|очень }большая.',
+    '[красный|зелёный|синий]',
+    '[<, >красный|зелёный|синий]',
+    '[<sep=", ";lastsep=" и ">красный|зелёный|синий]',
+    '[<minsize=2;maxsize=2>красный|зелёный|синий]',
+    '[<maxsize=3>а|б|в]',
+    '[красный|зелёный<и>|синий]',
+    '[красный|зелёный|синий<и>]',
+    '#set %city% = Москва' +
+      #10 +
+      'Город — %city%.',
+    '#set %pick% = {А|Б}' +
+      #10 +
+      '%pick% %pick% %pick%',
+    '#def %pick% = {А|Б}' +
+      #10 +
+      '%pick% %pick% %pick%',
+    '#set %n% = 5' +
+      #10 +
+      '{?n?у нас %n%|пока ничего}',
+    '#set %vip% = 1' +
+      #10 +
+      '{?!vip?незнакомец|друг}',
+    '#def %n% = 1' +
+      #10 +
+      '%n% {plural %n%: файл|файла|файлов}',
+    '#def %n% = 2' +
+      #10 +
+      '%n% {plural %n%: файл|файла|файлов}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: файл|файла|файлов}',
+    '#set %n% = {5|5}' +
+      #10 +
+      '%n% {plural %n%: файл|файла|файлов}',
+    '#include "intro"',
+    '#set %brand% = Акме' +
+      #10 +
+      '#include "shout"',
+    'черновик /# не уверен #/ готово',
+    'раз. два. три.',
+    'г. Москва наши цены низкие',
+    'Ыыы. наши цены низкие',
+    'привет , мир',
+    'one.two',
+    'Сначала. #include "intro"',
+    '{?1x?да|нет}',
+    '[красный|<и>зелёный]',
+    '[один<br>|два]',
+    'сайт.рф наши цены низкие',
+    'e.g. наши цены низкие',
+    'это т.е. вот так',
+    'сначала /# остальное'
   );
-  HELP_EX_DOC: array[0..66] of Integer = (
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  HELP_EX_DOC: array[0..135] of Integer = (
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
   );
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
   HELP_ANCHOR_FIRST: array[0..1] of Integer = (
-    0, 24
+    0, 31
   );
   HELP_ANCHOR_LAST: array[0..1] of Integer = (
-    23, 47
+    30, 61
   );
-  HELP_ANCHOR_PAGE: array[0..47] of Integer = (
-    2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9
+  HELP_ANCHOR_PAGE: array[0..61] of Integer = (
+    2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 14, 14, 15, 15, 15, 16, 19, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 14, 14, 15, 15, 15, 16, 19
   );
-  HELP_ANCHOR_ID: array[0..47] of string = (
+  HELP_ANCHOR_ID: array[0..61] of string = (
     'bracket.unclosed',
     'bracket.mismatched',
     'bracket.unexpected-closing',
@@ -1180,6 +1870,13 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'choices-0',
+    'choices-1',
+    'shuffles-0',
+    'shuffles-1',
+    'shuffles-2',
+    'macros-0',
+    'fragments-0',
     'bracket.unclosed',
     'bracket.mismatched',
     'bracket.unexpected-closing',
@@ -1203,9 +1900,16 @@ const
     'note.raw-sentinel',
     'note.unknown-target',
     'note.too-deep',
-    'abbreviations-0'
+    'abbreviations-0',
+    'choices-0',
+    'choices-1',
+    'shuffles-0',
+    'shuffles-1',
+    'shuffles-2',
+    'macros-0',
+    'fragments-0'
   );
-  HELP_ANCHOR_TITLE: array[0..47] of string = (
+  HELP_ANCHOR_TITLE: array[0..61] of string = (
     '`bracket.unclosed` — a bracket is opened and never closed',
     '`bracket.mismatched` — closed by a bracket of another kind',
     '`bracket.unexpected-closing` — a closing bracket with nothing open',
@@ -1231,6 +1935,13 @@ const
     '`note.unknown-target` — the set is empty, so there is nothing to judge by',
     '`note.too-deep` — includes nested too deeply',
     'An abbreviation keeps the next word lowercase',
+    'Nesting',
+    'An empty option',
+    'The separator',
+    'How many',
+    'A separator between two items',
+    '`#set` rolls again, `#def` rolls once',
+    'A fragment does not see your macros',
     '`bracket.unclosed` — скобка открыта и не закрыта',
     '`bracket.mismatched` — скобка закрыта скобкой другого вида',
     '`bracket.unexpected-closing` — закрывающая скобка без открывающей',
@@ -1254,10 +1965,17 @@ const
     '`note.raw-sentinel` — служебный символ в тексте',
     '`note.unknown-target` — набор пуст, и судить не о чем',
     '`note.too-deep` — вставки вложены слишком глубоко',
-    'Сокращение оставляет следующее слово строчным'
+    'Сокращение оставляет следующее слово строчным',
+    'Вложенность',
+    'Пустой вариант',
+    'Разделитель',
+    'Сколько брать',
+    'Разделитель между двумя элементами',
+    '`#set` разворачивает заново, `#def` — один раз',
+    'Фрагмент не видит ваших макросов'
   );
-  HELP_ANCHOR_CODE: array[0..47] of Boolean = (
-    True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
+  HELP_ANCHOR_CODE: array[0..61] of Boolean = (
+    True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False
   );
 
 function SpxHelpLangCode(ALang: Integer): string;
