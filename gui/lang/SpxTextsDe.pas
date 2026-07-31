@@ -92,7 +92,9 @@ const
 
       'Hilfe', 'Inhalt', 'Sprache der Hilfe', 'Auf %s gibt es noch keine Hilfe.',
 
-      'aus der Hilfe', 'In mein Dokument einfügen'
+      'aus der Hilfe', 'In mein Dokument einfügen',
+
+      'Über das Programm'
   );
 
 implementation

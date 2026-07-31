@@ -87,7 +87,9 @@ const
 
       'Help', 'Inhoud', 'Taal van de help', 'Er is nog geen help in het %s.',
 
-      'uit de Help', 'In mijn document invoegen'
+      'uit de Help', 'In mijn document invoegen',
+
+      'Over'
   );
 
 implementation

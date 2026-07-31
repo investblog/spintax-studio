@@ -92,7 +92,9 @@ const
 
       'Aide', 'Sommaire', 'Langue de l’aide', 'Il n’y a pas encore d’aide en %s.',
 
-      'tiré de l''aide', 'Insérer dans mon document'
+      'tiré de l''aide', 'Insérer dans mon document',
+
+      'À propos'
   );
 
 implementation

@@ -85,7 +85,9 @@ const
 
       'Ayuda', 'Contenido', 'Idioma de la ayuda', 'Todavía no hay ayuda en %s.',
 
-      'de la ayuda', 'Insertar en mi documento'
+      'de la ayuda', 'Insertar en mi documento',
+
+      'Acerca de'
   );
 
 implementation

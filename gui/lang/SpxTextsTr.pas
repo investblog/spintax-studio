@@ -82,7 +82,9 @@ const
 
       'Yardım', 'İçindekiler', 'Yardım dili', '%s dilinde henüz yardım yok.',
 
-      'yardımdan', 'Belgeme ekle'
+      'yardımdan', 'Belgeme ekle',
+
+      'Hakkında'
   );
 
 implementation

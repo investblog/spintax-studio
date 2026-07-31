@@ -25,7 +25,8 @@ uses
   Clipbrd, Graphics, LCLType, LCLIntf,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
-  SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
+  SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
+  SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
@@ -300,6 +301,7 @@ type
     procedure ClampSlide;
     procedure RailHelpClicked(Sender: TObject);
     procedure HelpMenuClicked(Sender: TObject);
+    procedure AboutClicked(Sender: TObject);
     procedure HelpPaneClosed(Sender: TObject);
     procedure DiagDoubleClicked(Sender: TObject);
     procedure HelpDeferred(Data: PtrInt);
@@ -1995,6 +1997,10 @@ begin
     nothing is displaced. No GroupIndex: these are not radio items, and 0 is the default that
     would silently join whatever radio group is added to this menu next. }
   Item(helpMenu, Tr(sHelpContents), VK_F1, [], @HelpMenuClicked);
+  { The attributions live behind this and nowhere else in the window. NOTICE.md calls the About
+    box "the copy a user can actually read", which makes this menu item the licence obligation
+    rather than a courtesy. No shortcut: it is opened on purpose, once. }
+  Item(helpMenu, Tr(sMenuAbout), 0, [], @AboutClicked);
 
   Self.Menu := bar;
   if Height <> keepHeight then Height := keepHeight;
@@ -3625,6 +3631,11 @@ procedure TSpxMainForm.RunHelpExample(AIndex: Integer);
 begin
   FHelpExample := AIndex;
   RequestRender;
+end;
+
+procedure TSpxMainForm.AboutClicked(Sender: TObject);
+begin
+  SpxShowAbout(Self);
 end;
 
 procedure TSpxMainForm.HelpCloseClicked(Sender: TObject);

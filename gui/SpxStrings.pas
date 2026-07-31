@@ -182,7 +182,9 @@ const
     0, 0, 0, 0,
     { the offer strip: both are MEASURED and placed from the measurement, for the same
       reason -- and the button holds a whole verb phrase in fourteen languages }
-    0, 0
+    0, 0,
+    { the About box: a menu item and a dialog caption, both of which size themselves }
+    0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

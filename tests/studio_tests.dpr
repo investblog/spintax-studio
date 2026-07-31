@@ -34,7 +34,7 @@ uses
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
-  SpxEditorFont, SpxHelpText, SpxHelpNav;
+  SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -52,7 +52,8 @@ uses
   SpxSettings in '..\gui\SpxSettings.pas',
   SpxEditorFont in '..\gui\SpxEditorFont.pas',
   SpxHelpText in '..\gui\SpxHelpText.pas',
-  SpxHelpNav in '..\gui\SpxHelpNav.pas';
+  SpxHelpNav in '..\gui\SpxHelpNav.pas',
+  SpxAbout in '..\gui\SpxAbout.pas';
   {$ENDIF}
 
 var
@@ -3890,6 +3891,125 @@ end;
        see because the digest is of the input;
      * RE-DERIVATION from the emitted HTML catches a table that drifted from its own bytes,
        which is the discipline TestSprites already uses on the sprite's IHDR. *)
+{ The digits of an XML attribute value, which is all the version check wants from a line. }
+function Digits(const ALine: string): string;
+var i: Integer;
+begin
+  Result := '';
+  for i := 1 to Length(ALine) do
+    if (ALine[i] >= '0') and (ALine[i] <= '9') then Result := Result + ALine[i];
+end;
+
+(* THE ABOUT BOX IS A LICENCE OBLIGATION, and NOTICE.md says so in its own words: "anything
+   here that requires attribution must also appear in the application's About box -- the About
+   box is the copy a user can actually read, and this file is the copy an audit can."
+
+   So the two are held to each other. Not by eye: the unit is generated from the file, and these
+   checks are what make the generation load-bearing rather than a convenience. *)
+procedure TestAbout;
+var i, j, dots, at, stop, seen_: Integer; text_, name_: string; found: Boolean;
+    body: TStringList;
+begin
+  { A version at all, and in the shape a Store package manifest wants -- four numbers. The
+    reader sees this string and so does Partner Center; there is one line behind both. }
+  CheckTrue('about/there is a version', SPX_VERSION <> '');
+  dots := 0;
+  for i := 1 to Length(SPX_VERSION) do
+    if SPX_VERSION[i] = '.' then Inc(dots);
+  Check('about/the version has four parts', IntToStr(dots), '3');
+  for i := 1 to Length(SPX_VERSION) do
+    CheckTrue('about/the version is digits and dots [' + SPX_VERSION + ']',
+              (SPX_VERSION[i] = '.') or ((SPX_VERSION[i] >= '0') and (SPX_VERSION[i] <= '9')));
+
+  { The engine's version, said out loud, because this is one of four implementations held to a
+    shared corpus and a difference between them is reported against a build. }
+  CheckTrue('about/the engine version is named', Copy(SPX_ENGINE_VERSION, 1, 1) = 'v');
+
+  { AND THE SAME NUMBER IN THE EXECUTABLE'S OWN RESOURCE. `VERSION` is what the reader sees;
+    `<VersionInfo>` in the project file is what Partner Center, Explorer's Details tab and a
+    crash report read. Two places, so they are compared -- the generator's docstring says "the
+    manifest and the screen cannot disagree" and this is what makes that true rather than
+    aspirational. Review found the resource missing entirely. }
+  body := TStringList.Create;
+  try
+    body.Text := SpxReadTextFile('gui/SpintaxStudio.lpi');
+    at := Pos('<VersionInfo>', body.Text);
+    CheckTrue('about/the project declares a version resource', at > 0);
+    name_ := '';
+    for i := 0 to body.Count - 1 do
+    begin
+      if Pos('<MajorVersionNr Value="', body[i]) > 0 then name_ := name_ + Digits(body[i]) + '.';
+      if Pos('<MinorVersionNr Value="', body[i]) > 0 then name_ := name_ + Digits(body[i]) + '.';
+      if Pos('<RevisionNr Value="', body[i]) > 0 then name_ := name_ + Digits(body[i]) + '.';
+      if Pos('<BuildNr Value="', body[i]) > 0 then name_ := name_ + Digits(body[i]);
+    end;
+    Check('about/the resource carries the version the box shows', name_, SPX_VERSION);
+    CheckTrue('about/and its string table repeats it',
+              Pos('ProductVersion="' + SPX_VERSION + '"', body.Text) > 0);
+  finally
+    body.Free;
+  end;
+
+  text_ := '';
+  for i := 0 to SpxAboutLineCount - 1 do text_ := text_ + SpxAboutLine(i) + #10;
+  CheckTrue('about/there is something to read', Length(text_) > 200);
+
+  { EVERY LICENCE THE FILE NAMES IS IN THE TEXT THAT SHIPS. The generator collected them while
+    reading NOTICE.md; this asks the shipped lines for each one. }
+  CheckTrue('about/licences were collected', SpxAboutLicenceCount > 0);
+  for i := 0 to SpxAboutLicenceCount - 1 do
+    CheckTrue('about/the shipped text names ' + SpxAboutLicence(i),
+              Pos(SpxAboutLicence(i), text_) > 0);
+
+  { AND EVERY ENTRY THE FILE OBLIGES US TO SHOW. This half is a legal requirement rather than
+    good manners. }
+  CheckTrue('about/obliged entries were collected', SpxAboutObligedCount > 0);
+  for i := 0 to SpxAboutObligedCount - 1 do
+    CheckTrue('about/the shipped text names ' + SpxAboutObliged(i),
+              Pos(SpxAboutObliged(i), text_) > 0);
+
+  { THE OTHER DIRECTION, and it is the one that catches the drift the generator cannot see:
+    NOTICE.md gained an entry and nobody re-ran the script. Read from the file on disk, over
+    the obliging section only -- the sections below it name libraries the licences do not
+    require us to attribute. }
+  { BY LINES, and that is the whole of the fix. The first version searched the text for `## ` and
+    for `**` anywhere: a code span naming a heading inside an entry's prose cut the section short,
+    and the check then stopped running -- measured by review, a planted failure DISAPPEARED and
+    took the Twemoji check with it, 7213 checks and 0 failed. A check that goes quiet is worse
+    than one that fails, so the count it found is asserted too. }
+  body := TStringList.Create;
+  try
+    body.Text := SpxReadTextFile('NOTICE.md');
+    CheckTrue('about/NOTICE.md is where it was', body.Count > 20);
+    at := -1;
+    for i := 0 to body.Count - 1 do
+      if Trim(body[i]) = '## Requires attribution in the shipped application' then at := i;
+    CheckTrue('about/NOTICE.md still has the obliging section', at >= 0);
+    seen_ := 0;
+    if at >= 0 then
+      for i := at + 1 to body.Count - 1 do
+      begin
+        if Copy(body[i], 1, 3) = '## ' then Break;
+        { An entry starts a line with `**`; bold inside prose does not. }
+        if Copy(body[i], 1, 2) <> '**' then Continue;
+        stop := PosEx('**', body[i], 3);
+        if stop = 0 then Continue;
+        name_ := Copy(body[i], 3, stop - 3);
+        Inc(seen_);
+        found := False;
+        for j := 0 to SpxAboutObligedCount - 1 do
+          if SpxAboutObliged(j) = name_ then found := True;
+        CheckTrue('about/NOTICE.md''s obliged entry [' + name_ + '] reached the About box',
+                  found);
+      end;
+    { The number of entries this check actually looked at, so it cannot pass by not running. }
+    Check('about/as many obliged entries in the file as in the box',
+          IntToStr(seen_), IntToStr(SpxAboutObligedCount));
+  finally
+    body.Free;
+  end;
+end;
+
 procedure TestHelpUnit;
 var
   lang, page, i, seen, p_: Integer;
@@ -6429,6 +6549,7 @@ begin
   TestHtmlScan;
   TestGroups;
   TestHelpExamples;
+  TestAbout;
   TestHelpUnit;
   TestSessionValues;
   TestFind;

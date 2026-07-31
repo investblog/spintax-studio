@@ -83,7 +83,9 @@ const
 
       'Guida', 'Sommario', 'Lingua della guida', 'Non c’è ancora una guida in %s.',
 
-      'dalla guida', 'Inserisci nel mio documento'
+      'dalla guida', 'Inserisci nel mio documento',
+
+      'Informazioni'
   );
 
 implementation

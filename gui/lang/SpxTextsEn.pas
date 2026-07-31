@@ -88,7 +88,9 @@ const
 
       'Help', 'Contents', 'Help language', 'There is no help in %s yet.',
 
-      'from the help', 'Insert into my document'
+      'from the help', 'Insert into my document',
+
+      'About'
   );
 
 implementation

@@ -98,6 +98,25 @@ jobs:
           python3 scripts/make-help.py
           git diff --exit-code gui/SpxHelpText.pas
 
+      # The same for the About box, and here the stakes are licensing rather than prose:
+      # NOTICE.md asks that anything requiring attribution appear in the box, and the suite
+      # holds the two to each other -- but only if the unit was regenerated. This is the step
+      # that catches "NOTICE.md was edited and the script was not re-run".
+      #
+      # It needs the submodule, because the engine's version comes from its tag.
+      - name: The About unit is the generator's output
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # THE TAGS FIRST. actions/checkout clones the submodule at depth 1, and when the pin
+          # is behind the remote's tip -- which it is, deliberately -- git fetches that commit
+          # alone and brings no tags with it. `describe` then answers "No names found" and the
+          # generator refuses, which would read as "the About unit is stale" and be wrong.
+          # Measured by review, reproducing checkout's own submodule command.
+          git -C engine fetch --tags --quiet || true
+          python3 scripts/make-about.py
+          git diff --exit-code gui/SpxAbout.pas
+
   # The window is built on its own leg, because it needs Lazarus (LCL + SynEdit) where the
   # rest needs only fpc, and because it is Windows the product ships on. The console suite
   # above already gates the engine thread's logic -- what this leg adds is proof that the

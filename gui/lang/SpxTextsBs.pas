@@ -89,7 +89,9 @@ const
 
       'Pomoć', 'Sadržaj', 'Jezik pomoći', 'Pomoć na jeziku %s još ne postoji.',
 
-      'iz pomoći', 'Umetni u moj dokument'
+      'iz pomoći', 'Umetni u moj dokument',
+
+      'O programu'
   );
 
 implementation

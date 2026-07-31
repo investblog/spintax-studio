@@ -106,7 +106,10 @@ type
 
     { ── the help's offer to keep an example: what the right pane is showing, and the
       button that puts it in the reader's own document ── }
-    sHelpExampleFrom, sHelpExampleInsert
+    sHelpExampleFrom, sHelpExampleInsert,
+
+    { ── the About box: its menu item and its own caption ── }
+    sMenuAbout
   );
 
 implementation
