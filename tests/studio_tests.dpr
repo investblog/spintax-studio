@@ -1439,6 +1439,32 @@ begin
   for i := 0 to High(o) do Result := Result + '[' + Copy(Text, o[i], 1) + ']';
 end;
 
+{ The construct a separator belongs to, as `open..close`, or `-` when the offset is not one.
+  A string, so a wrong construct is a wrong answer rather than a pair of numbers to compare by
+  hand. }
+function ConstructAt(const Text: string; AOffset: Integer): string;
+var o, c: Integer; seps: TSpxOffsets;
+begin
+  if SpxConstructOf(Text, AOffset, o, c, seps) then
+    Result := IntToStr(o) + '..' + IntToStr(c)
+  else
+    Result := '-';
+end;
+
+{ And the separators it handed back with the pair -- the caller draws THESE, so they are the
+  half worth checking separately from the pair. }
+function ConstructSeps(const Text: string; AOffset: Integer): string;
+var o, c, i: Integer; seps: TSpxOffsets;
+begin
+  Result := '';
+  if not SpxConstructOf(Text, AOffset, o, c, seps) then Exit('-');
+  for i := 0 to High(seps) do
+  begin
+    if Result <> '' then Result := Result + ',';
+    Result := Result + IntToStr(seps[i]);
+  end;
+end;
+
 procedure TestBracketMatching;
 const
   PAIRS = '{a|b} [c|d]';
@@ -1526,6 +1552,61 @@ begin
   Check('seps/not-a-bracket-gives-nothing', Seps('plain text', 3, 7), '');
   Check('seps/a-reversed-pair-gives-nothing', Seps('{a|b}', 5, 1), '');
   Check('seps/out-of-range-gives-nothing', Seps('{a|b}', 1, 99), '');
+
+  (* ── and back the other way: the construct a SEPARATOR divides ─────────────────────
+     The reader reported this half missing: the highlight ran from a bracket and not from a
+     `|`. Measured before it was written -- a caret on either pipe of `{a|b|c}` found nothing
+     at all, because the matcher exits unless the character under it is a bracket.
+
+     Written in the parenthesis-star form, because this quotes the language and a closing
+     brace inside a brace comment ends it -- which it did, twice in one afternoon. Nor may
+     the two forms be nested: FPC ends this comment at the first star-paren it meets. *)
+
+  Check('construct/a-pipe-finds-its-braces', ConstructAt('{a|b|c}', 3), '1..7');
+  Check('construct/the-second-pipe-too', ConstructAt('{a|b|c}', 5), '1..7');
+  { And it hands back the same separators the bracket case draws, which is the point: the
+    construct lights whole, from either end of the relation. }
+  Check('construct/it-brings-the-separators', ConstructSeps('{a|b|c}', 3), '3,5');
+  Check('construct/the-same-set-as-from-the-bracket', ConstructSeps('{a|b|c}', 3),
+        Seps('{a|b|c}', 1, 7));
+
+  { NESTING, from the inside out: a pipe answers with the construct it divides and not with
+    the one around it. }
+  Check('construct/an-inner-pipe-gets-the-inner-pair', ConstructAt('{a|{x|y}|c}', 6), '4..8');
+  Check('construct/an-outer-pipe-gets-the-outer-pair', ConstructAt('{a|{x|y}|c}', 3), '1..11');
+  Check('construct/and-the-outer-one-after-it', ConstructAt('{a|{x|y}|c}', 9), '1..11');
+  Check('construct/the-inner-pair-brings-its-own', ConstructSeps('{a|{x|y}|c}', 6), '6');
+
+  { A permutation's trailing separator is one, at its `<` -- the same token the bracket case
+    already marks. }
+  Check('construct/a-trailing-separator-counts', ConstructAt('[a<br>|b]', 3), '1..9');
+  { A permutation's CONFIG is not, though it also starts with `<`. }
+  Check('construct/a-config-is-not-a-separator', ConstructAt('[<sep=", ">a|b]', 2), '-');
+
+  { Not a separator, not an answer. A caret merely inside a group lights nothing: the
+    highlight is about structure the caret stands on. }
+  Check('construct/ordinary-text-inside-gets-nothing', ConstructAt('{a|b|c}', 2), '-');
+  Check('construct/a-brace-is-the-other-rule''s-business', ConstructAt('{a|b|c}', 1), '-');
+  Check('construct/a-pipe-outside-anything-gets-nothing', ConstructAt('a | b', 3), '-');
+  Check('construct/a-pipe-in-a-comment-gets-nothing', ConstructAt('{a/# x|y #/|b}', 7), '-');
+  { The comment's own pipe is not one; the pipe AFTER the comment still is. }
+  Check('construct/the-pipe-after-a-comment-still-is', ConstructAt('{a/# x|y #/|b}', 12),
+        '1..14');
+
+  { A mismatched pair answers nothing and does not climb to the construct outside it -- the
+    same rule SpxMatchBracket states for a brace closed by a square bracket. }
+  Check('construct/a-mismatched-pair-gives-nothing', ConstructAt('{a|b]', 3), '-');
+  Check('construct/and-does-not-climb-out-of-one', ConstructAt('{x{a|b]y}', 5), '-');
+
+  { Nonsense in, nothing out. }
+  Check('construct/before-the-text-gives-nothing', ConstructAt('{a|b}', 0), '-');
+  Check('construct/past-the-text-gives-nothing', ConstructAt('{a|b}', 99), '-');
+  Check('construct/an-unclosed-construct-gives-nothing', ConstructAt('{a|b', 3), '-');
+
+  { Across lines, where the offsets have to survive the terminator -- the same boundary the
+    separator checks above pin, asked from the other side. }
+  Check('construct/across-lines', ConstructAt('{a'#10'|b'#10'|c}', 4), '1..9');
+  Check('construct/across-crlf', ConstructAt('{a'#13#10'|b}', 5), '1..7');
 end;
 
 { ── 7. the demo template as a document ───────────────────────────────────── }

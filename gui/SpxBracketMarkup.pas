@@ -22,6 +22,13 @@
  * only the set of positions is larger. Which positions they are is a structural question and
  * therefore answered in src/SpxTokens.pas (SpxSeparatorsOf), gated by the console suite, exactly
  * as the pair itself is.
+ *
+ * AND IT WORKS FROM EITHER END OF THAT RELATION. A caret on a SEPARATOR lights the construct
+ * the separator divides -- both its brackets and its other separators -- which is the half the
+ * reader reported missing: the highlight ran from a bracket and not back from a `|`. The pair
+ * it hands the parent is the construct's own, so the painting, the attribute and the
+ * invalidation are the same ones the bracket case has always used; only the way the pair was
+ * FOUND is different, and that rule is SpxConstructOf, beside the other two and gated with them.
  *)
 unit SpxBracketMarkup;
 
@@ -115,11 +122,10 @@ end;
 procedure TSpxBracketMarkup.FindMatchingBracketPair(LogCaret: TPoint;
   var StartBracket, EndBracket: TPoint);
 
-  { The construct's separators, as points, for a pair given in document order. }
-  procedure TakeSeps(AFrom, ATo: Integer);
-  var o: TSpxOffsets; i, n: Integer; p: TPoint;
+  { The construct's separators, as points, from the offsets whoever found them already has. }
+  procedure KeepSeps(const o: TSpxOffsets);
+  var i, n: Integer; p: TPoint;
   begin
-    o := SpxSeparatorsOf(FDoc, AFrom, ATo);
     n := 0;
     SetLength(FSeps, Length(o));
     for i := 0 to High(o) do
@@ -132,6 +138,12 @@ procedure TSpxBracketMarkup.FindMatchingBracketPair(LogCaret: TPoint;
       end;
     end;
     SetLength(FSeps, n);
+  end;
+
+  { The same, for a pair given in document order: the offsets have to be found first. }
+  procedure TakeSeps(AFrom, ATo: Integer);
+  begin
+    KeepSeps(SpxSeparatorsOf(FDoc, AFrom, ATo));
   end;
 
   { Try the bracket at this position; returns True when a pair was found. }
@@ -154,6 +166,24 @@ procedure TSpxBracketMarkup.FindMatchingBracketPair(LogCaret: TPoint;
       else TakeSeps(partner, here);
   end;
 
+  { And the other direction: a SEPARATOR at this position lights the construct it divides. The
+    pair handed back is the construct's own brackets, so everything downstream -- the parent's
+    painting, the attribute, the invalidation -- is the bracket case unchanged. }
+  function TrySepAt(const P: TPoint): Boolean;
+  var here, o, c: Integer; seps: TSpxOffsets;
+  begin
+    Result := False;
+    here := OffsetOf(P.Y, P.X);
+    if here = 0 then Exit;
+    if not SpxConstructOf(FDoc, here, o, c, seps) then Exit;
+    StartBracket := PointOf(o);
+    EndBracket := PointOf(c);
+    Result := (StartBracket.Y > 0) and (EndBracket.Y > 0);
+    { The offsets the rule already had -- scanning for them again would double the one
+      expensive half of a caret move. }
+    if Result then KeepSeps(seps);
+  end;
+
 var probe: TPoint;
 begin
   StartBracket.Y := -1;
@@ -169,7 +199,24 @@ begin
     probe := Point(LogCaret.X - 1, LogCaret.Y);
     if TryAt(probe) then Exit;
   end;
-  if not TryAt(LogCaret) then
+  if TryAt(LogCaret) then Exit;
+
+  (* BRACKETS FIRST, ALWAYS. Where a bracket and a separator are both in reach -- an empty
+     element, whose pipe sits against a brace -- the pair is the older and stronger reading, and
+     a caret that used to light a pair must keep lighting it. The separator is tried only when
+     there was no pair at all.
+
+     Written in the parenthesis-star form because this comment quotes the language: a closing
+     brace inside a brace comment ends it, which cost a hard "illegal character" here. Naming
+     the two forms in words rather than writing them is the other half of the same lesson --
+     spelling them out raised `Comment level 2 found`, and under the gate's -Sew that is
+     fatal. *)
+  if LogCaret.X > 1 then
+  begin
+    probe := Point(LogCaret.X - 1, LogCaret.Y);
+    if TrySepAt(probe) then Exit;
+  end;
+  if not TrySepAt(LogCaret) then
   begin
     StartBracket.Y := -1;
     EndBracket.Y := -1;

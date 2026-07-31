@@ -1181,6 +1181,25 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
 ## Raised by review, not yet built
 
+- [ ] **An unbalanced bracket inside a permutation's config makes the two bracket rules
+      contradict each other.** Found by review 2026-08-01, fuzzing 80 000 documents: on
+      `[x|[<sep="{">a|b]|y]` the tokenizer says the inner `[` is closed by the `]` at 17 and the
+      pipe at 15 is its separator, while `SpxMatchBracket` pairs that `[` with the OUTER `]` at
+      20 — because both stack walks count the `{` inside the config as an opener, and the
+      phantom pair swallows the real closer. The editor therefore lights `4..20` and paints a
+      separator the new `SpxConstructOf` declines to answer for. Four shapes in 80 000, none in
+      the demo, all needing an unbalanced bracket character inside a config. **The pre-existing
+      rule is the wrong side**: it draws a pair its own tokenizer contradicts. The fix is for the
+      bracket walks to skip a permutation's config the way the tokenizer does — which would also
+      close the fact that the walk now lives in two places (`SpxMatchBracket` and
+      `SpxConstructOf`), near-verbatim.
+
+- [ ] **A separator on a middle line may appear one caret move late.** Pre-existing, raised in
+      the same review and not measured with a window: `ClearSeps` invalidates the lines that HAD
+      separators, and the parent invalidates the two bracket lines, but nothing invalidates a
+      line that has just GAINED one. On a construct spanning three lines the middle line's mark
+      would therefore wait for the next repaint. Needs a probe before it is believed.
+
 - [ ] **The help's language can move while the help is CLOSED, and nothing relocates it then.**
       Found by review 2026-07-31, latent and not a regression. `RetranslateUi` only relocates
       when the pane is up (`SpxMainForm.pas:2810`, `if HelpShowing and (FTopics.HelpLang <>
