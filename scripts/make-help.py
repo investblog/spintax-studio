@@ -10,6 +10,13 @@ and get the output, which is what the arrow already says. Measured before it was
 anchor inside a <pre> is a link to IPro, HotURL comes back as written, and the output half of the
 same line reports nothing.
 
+AN EXAMPLE IN A ` ```spx-good ` FENCE IS A CLAIM THAT NOTHING IS WRONG WITH IT, and the suite
+holds it to that: not one diagnostic row. The chapter about what correct looks like had five
+examples and no articles, so the causation check -- which works per article -- never reached
+them, and its own sentence about being parsed without a remark was verified by nothing. The word
+goes in the fence's info string because that vocabulary is already validated here and an unknown
+one already fails; no new markdown was needed.
+
 THE CONDITIONS TRAVEL WITH IT. Each document's spx-fixture block declares the locale, the seed
 and the template set its outputs were measured under, and those go into the unit too: a click
 renders under the document's own conditions, or the help would print one answer and the pane show
@@ -283,12 +290,21 @@ def convert(lang, path):
                 flush()
                 close_list()
                 fence = stripped[3:].strip()
-                if fence not in ('', 'spx-fixture'):
+                if fence not in ('', 'spx-fixture', 'spx-good'):
                     raise Bad(lang, n, 'an unknown fence info string %r' % fence)
                 fence_body = []
                 del acc[:]
                 fence_start = n
             else:
+                # A CLOSING fence carries no info string, and saying otherwise is refused here
+                # rather than ignored. Both parsers read only the opening one, so a `spx-good`
+                # written on the closing line reads as a marked block and is checked as an
+                # ordinary one -- measured by review: the suite stayed green with the word
+                # visibly in the document. The suite's count catches it now; this names it.
+                if stripped[3:].strip():
+                    raise Bad(lang, n, 'an info string on a closing fence (%r) -- it belongs on '
+                                       'the opening one, where both parsers read it'
+                                       % stripped[3:].strip())
                 if fence == 'spx-fixture':
                     if seen_fixture[0]:
                         raise Bad(lang, fence_start, 'a second conditions block')

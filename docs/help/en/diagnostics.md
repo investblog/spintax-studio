@@ -436,25 +436,25 @@ lowercase. Rewrite the sentence rather than fighting the rule — the same shiel
 
 ## What the correct form looks like
 
-```
+```spx-good
 a price {cheap|dear}         →  A price cheap
 ```
 
-```
+```spx-good
 [<minsize=2;sep=", ">a|b|c]  →  C, b
 ```
 
-```
+```spx-good
 #set %vip% = 1
 {?vip?for you|for everyone}  →  For you
 ```
 
-```
+```spx-good
 #set %n% = 5
 %n% {plural %n%: item|items} →  5 items
 ```
 
-```
+```spx-good
 before /# a note #/ after    →  Before after
 ```
 

@@ -76,7 +76,7 @@ implementation
 const
   HELP_LANG: array[0..1] of string = ('en', 'ru');
   HELP_PATH: array[0..1] of string = ('docs/help/en/diagnostics.md', 'docs/help/ru/diagnostics.md');
-  HELP_DIGEST: array[0..1] of string = ('1d55b75bd2937b92', 'e6d9838e84f31c40');
+  HELP_DIGEST: array[0..1] of string = ('18de7309d6cea043', 'c431d1f7613c233d');
 
   HELP_SLUG: array[0..11] of string = (
     'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'

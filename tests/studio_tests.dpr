@@ -3248,12 +3248,17 @@ type
   THelpDoc = record
     Path: string;
     Examples: Integer;   { exact, not a floor: an example that disappears must fail the build }
+    Good: Integer;       { how many of them CLAIM to be clean -- exact for the same reason:
+                           deleting the word `spx-good` from a fence, or putting it on the
+                           CLOSING one where both parsers ignore it, turns the claim back into
+                           an ordinary block and stops it being checked. Measured by review:
+                           ten checks disappeared and the build stayed green. }
   end;
 
 const
   HELP_DOCS: array[0..1] of THelpDoc = (
-    (Path: 'docs/help/en/diagnostics.md'; Examples: 33),
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 34));
+    (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Good: 5),
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 34; Good: 5));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
 function HelpLabel(const APath: string): string;
@@ -3479,8 +3484,8 @@ var
   lines: TStringList;
   set_: TSpxTemplateSet;
   ctx: TSpxContext;
-  i, p, checked, seed, exampleLine: Integer;
-  inFence, isFixture, skip, haveFixture, ctxReady, sectionShown,
+  i, p, checked, good, seed, exampleLine: Integer;
+  inFence, isFixture, isGood, skip, haveFixture, ctxReady, sectionShown,
   sectionHadExamples: Boolean;
 begin
   label_ := HelpLabel(ADoc.Path);
@@ -3494,11 +3499,13 @@ begin
   try
     lines.Text := SpxReadTextFile(ADoc.Path);
     checked := 0;
+    good := 0;
     seed := 0;
     locale := '';
     empty_ := '';
     inFence := False;
     isFixture := False;
+    isGood := False;
     haveFixture := False;
     ctxReady := False;
     section := '';
@@ -3530,6 +3537,12 @@ begin
         begin
           tag := Trim(Copy(Trim(line), 4, MaxInt));
           isFixture := tag = 'spx-fixture';
+          { A `spx-good` fence CLAIMS the examples in it are clean, and the claim is checked
+            below rather than believed. Without it the chapter about correct forms proved
+            nothing: the causation check works per article, and that chapter has none. }
+          isGood := tag = 'spx-good';
+          CheckTrue('help/' + label_ + '/the fence tag is one this suite knows [' + tag + ']',
+                    (tag = '') or isFixture or isGood);
           { A SECOND BLOCK IS A FAILURE, not a merge. Measured on the first version: a late block
             had three different scopes at once -- `seed` ignored (the context is built at the
             first example and frozen), `include` keys applied (the set is held by reference), the
@@ -3545,7 +3558,10 @@ begin
           end;
         end
         else
+        begin
           isFixture := False;
+          isGood := False;
+        end;
         inFence := not inFence;
         doc_ := '';
         skip := False;
@@ -3687,6 +3703,16 @@ begin
           sectionHadExamples := True;
           if Pos(':' + section + '@', RowsOf(doc_, ctx)) > 0 then sectionShown := True;
         end;
+        { THE `spx-good` CLAIM, held to. An example that says it is correct and draws a row is
+          the same class of defect as an article that demonstrates the wrong code -- plausible
+          prose, green bytes, and untrue. }
+        if isGood then
+        begin
+          Check('help/' + label_ + '/a good example draws nothing: ' +
+                StringReplace(doc_, #10, ' / ', [rfReplaceAll]),
+                RowsOf(doc_, ctx), '<none>');
+          Inc(good);
+        end;
         Inc(checked);
       end;
       doc_ := '';
@@ -3712,6 +3738,9 @@ begin
     { EXACT, not a floor. A shared floor let one document satisfy it for another, and ten
       examples could vanish from this one without a word. }
     Check('help/' + label_ + '/example count', IntToStr(checked), IntToStr(ADoc.Examples));
+    { The same ratchet over the claims. Without it the `spx-good` contract is opt-in in the one
+      direction that matters: removing the tag removes the check, and green means nothing. }
+    Check('help/' + label_ + '/good-example count', IntToStr(good), IntToStr(ADoc.Good));
   finally
     lines.Free;
     set_.Free;
