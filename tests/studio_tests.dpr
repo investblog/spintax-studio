@@ -4062,6 +4062,31 @@ begin
     html := SpxHelpPageHtml(lang, SpxHelpPageIndex('permutations'));
     CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/the permutation key survives escaping',
               (Pos('&lt;foo=1&gt;', html) > 0) and (Pos('<foo=1>', html) = 0));
+
+    { AND THE ESCAPING MUST BE SOMEWHERE THAT DECODES IT. Escaping alone was not enough: IPro puts
+      a token inside a <pre> into ANSIText, whose setter escapes it a second time
+      (iphtmlparser.pas:1965-1968), so `&lt;foo=1&gt;` was DRAWN as `&lt;foo=1&gt;` -- the reader
+      reported it as an encoding fault and it was in both languages. Example blocks are <tt> in a
+      paragraph now; the tag that eats entities may not come back. }
+    for page := 0 to SPX_HELP_PAGE_COUNT - 1 do
+    begin
+      html := SpxHelpPageHtml(lang, page);
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' uses no <pre> (IPro would show its entities raw)',
+                Pos('<pre', LowerCase(html)) = 0);
+      { The other half of the same rule, on EVERY page rather than on the one that happened to
+        be in `html` -- eleven pages could have lost their spacing in silence. A page with no
+        example block has nothing to keep, which is what the first half of the test says. }
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' keeps the spacing of its example blocks',
+                (Pos('<tt>', html) = 0) or (Pos('&nbsp;', html) > 0));
+      { And at the size a PRE gave them: <tt> sets the typeface, <small> the two points a PRE
+        subtracts. Without it every example is a quarter wider and the widest one drags the whole
+        page -- headings and prose included -- past the panel. }
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' keeps the size of its example blocks',
+                (Pos('<tt>', html) = 0) or (Pos('<small><tt>', html) > 0));
+    end;
   end;
 
   { A slug names the same section in every language -- which is what lets the viewer keep the

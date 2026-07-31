@@ -7,8 +7,11 @@ the suite verified -- that is the whole reason this is generated rather than wri
 
 THE TEMPLATE OF EVERY EXAMPLE IS A LINK, and the output beside it is not: you click the input
 and get the output, which is what the arrow already says. Measured before it was built -- an
-anchor inside a <pre> is a link to IPro, HotURL comes back as written, and the output half of the
-same line reports nothing.
+inline anchor is a link to IPro, HotURL comes back as written, and the output half of the same
+line reports nothing.
+
+AN EXAMPLE BLOCK IS NOT A <pre>, though it looks like one -- see `preformatted` below for the
+measurement that cost: inside a PRE, IPro shows `&lt;` as those four characters.
 
 AN EXAMPLE IN A ` ```spx-good ` FENCE IS A CLAIM THAT NOTHING IS WRONG WITH IT, and the suite
 holds it to that: not one diagnostic row. The chapter about what correct looks like had five
@@ -88,6 +91,56 @@ def fnv1a(data):
 def esc(text):
     """The three characters the renderer would otherwise read as markup. Nothing else."""
     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
+def preformatted(lines):
+    """An example block, laid out like a <pre> and NOT one.
+
+    IPro DOES NOT DECODE ENTITIES INSIDE <pre>. Measured, and then found in its source:
+    `iphtmlparser.pas:1965-1968` puts the token into `ANSIText` when it is inside a PRE and into
+    `EscapedText` when it is not -- and `SetAnsiText` runs `AnsiToEscape` over it, so `&lt;`
+    becomes `&amp;lt;` and the one decode that follows gives back a visible `&lt;`. The reader
+    saw `[&lt;minsize=2;sep=", "&gt;a|b|c]` where the document says `[<minsize=2;sep=", ">a|b|c]`.
+
+    Writing the character raw instead is not the way out: the tokenizer takes `<` followed by a
+    letter as a tag and eats it (`iphtmlparser.pas:695-712`), which is the measurement the escaping
+    was introduced for in the first place. Inside a PRE both forms are wrong -- so the block stops
+    being a PRE.
+
+    <small><tt> in a paragraph, spaces as &nbsp; and breaks as <br>, gives the same monospace
+    and the same preserved alignment, decodes entities, and keeps the anchor a link. Measured side
+    by side against the <pre> it replaces.
+
+    <small> IS NOT DECORATION. A PRE sets the fixed typeface AND `FontSize := FontSize - 2`
+    (`iphtmlnodes.pas:2593`); <tt> sets only the typeface, so every example came out at 12 pt
+    instead of 10 -- a quarter wider. The widest block sets the layout width for the WHOLE page,
+    so the headings and the prose were clipped with it: the Russian plurals page needs 942 px
+    where it used to need 760, and the ADR's sentence about the panel reaching 900 px stopped
+    being true. hfsSMALL applies the same subtraction (`:3912-3915`). Found by review, measured
+    against the old rendering at the same width.
+
+    The spaces INSIDE a tag must survive as spaces -- `<a href="ex:28">` is not text -- so this
+    walks the line rather than calling replace() on it.
+    """
+    out = []
+    # FLATTENED FIRST. A line may itself carry a newline -- fence_line puts a trailing note on
+    # its own line that way -- and inside a PRE that LF was a break. In a paragraph it is not:
+    # TrimFormatting turns it into a space, so the note would join the output line. Unreachable
+    # in today's two documents (measured: fence_line is never called for either), which is
+    # exactly why it is worth closing now rather than when a third document finds it.
+    for line in '\n'.join(lines).split('\n'):
+        buf, in_tag = [], False
+        for ch in line:
+            if ch == '<':
+                in_tag = True
+            elif ch == '>':
+                in_tag = False
+            if ch == ' ' and not in_tag:
+                buf.append('&nbsp;')
+            else:
+                buf.append(ch)
+        out.append(''.join(buf))
+    return '<p><small><tt>' + '<br>'.join(out) + '</tt></small></p>'
 
 
 def markup(lang, line_no, escaped):
@@ -310,7 +363,7 @@ def convert(lang, path):
                         raise Bad(lang, fence_start, 'a second conditions block')
                     seen_fixture[0] = True
                     read_fixture(lang, fence_start, [x for x in fence_body], fixture)
-                page['html'].append('<pre>' + '\n'.join(fence_body) + '</pre>')
+                page['html'].append(preformatted(fence_body))
                 fence = None
             continue
 
@@ -474,8 +527,10 @@ def refuse_bad_html(lang, page):
     for m in re.finditer(r'<(.?)', html):
         if not re.match(r'[A-Za-z/]', m.group(1) or ' '):
             raise SystemExit('%s/%s: a `<` that opens no tag' % (lang, where))
+    # `nbsp` joins the three because `preformatted` writes it for every space in an example
+    # block: a paragraph collapses runs of spaces and the arrow columns are made of them.
     for m in re.finditer(r'&([^;]*);?', html):
-        if m.group(1) not in ('amp', 'lt', 'gt'):
+        if m.group(1) not in ('amp', 'lt', 'gt', 'nbsp'):
             raise SystemExit('%s/%s: the entity &%s; is not one of the three this emits'
                              % (lang, where, m.group(1)))
     if html.endswith('<'):
