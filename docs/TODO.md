@@ -1307,8 +1307,28 @@ Constraints (design into the app from the start):
       the `.exe` — required for the MSIX container and to avoid elevation (spec §7, §11).
 - [ ] **Stable app identity.** Package name + publisher (must match Partner Center), 4-part
       MSIX version that only increases, an icon/asset set for Store tiles. The exe's own icon
-      is done (the brand hexagon, 16–128); the Store tiles and anything at 256+ need a vector
-      export from the brand, which nobody has yet.
+      is done (the brand hexagon, 16–128); the Store tiles and anything at 256+ need a raster
+      of the brand ABOVE 180, which is all the site publishes.
+
+      **A raster CAN be made from the vector, and the way was found by needing it for the brand
+      link's mark (2026-07-31) — but the invocation is not dependable, and that half is the
+      part worth writing down.** `assets/brand/spintax-logo-512.png` is genuinely headless
+      Chrome's render of `spintax-logo.svg`, alpha intact: `chrome.exe --headless=new
+      --disable-gpu --hide-scrollbars --default-background-color=00000000 --window-size=W,W
+      --screenshot=out.png page.html`, run from the page's own directory, where `page.html` is
+      one `<img src="…svg">` sized in CSS.
+
+      It worked once and has not worked since. Measured, after a review could not reproduce it:
+      both headless modes, with and without an isolated `--user-data-dir`, at 256 and at 1024 —
+      Chrome exits **0**, prints nothing, and writes no file anywhere. So the recipe is a lead,
+      not a procedure: **check that the output file exists**, never the exit code, and expect to
+      need another rasteriser. This machine has none — no cairo (cairosvg and svglib both
+      refuse), no ImageMagick, and the `convert` on PATH is **Windows' NTFS converter**, which
+      must never be run by accident.
+
+      So the 256 for the Store is unblocked in principle and still needs someone to actually
+      produce it; `make-appicon.py`'s note about the vector was corrected to say this rather
+      than that it cannot be done.
 - [ ] **About box** — it is the only place a user can read the attributions NOTICE.md records
       (MDI Apache-2.0, Twemoji CC-BY 4.0), and both licences ask for exactly that in the
       shipped app. Small, and blocking for the submission rather than for M1.

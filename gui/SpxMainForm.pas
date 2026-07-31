@@ -316,6 +316,7 @@ type
     procedure RunHelpExample(AIndex: Integer);
     procedure InsertHelpExample(Sender: TObject);
     procedure HelpCloseClicked(Sender: TObject);
+    procedure BrandClicked(Sender: TObject);
     procedure OpenHelpAtCaret;
     procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
@@ -404,6 +405,13 @@ var
   MainForm: TSpxMainForm;
 
 implementation
+
+const
+  { The site the brand belongs to. Two forms because they are read by different things: the
+    HOST is what a reader sees on the rail's hint, and a domain is not translated -- it is the
+    same word in every one of the fourteen languages. The URL is what the shell is handed. }
+  SPX_SITE_HOST = 'spintax.net';
+  SPX_SITE_URL = 'https://spintax.net';
 
 type
   { The markup manager is protected on TSynEditBase; a descendant declared here reaches it
@@ -1534,6 +1542,21 @@ begin
   FRail.AddTool(SPX_ICON_HELP, Tr(sMenuHelp), @RailHelpClicked, 2);
   { The window opens with the diagnostics showing, so the tool that says so is lit. }
   FRail.SetDown(0, True);
+  { THE BRAND, at the rail's foot. The hint is the domain and is not translated: a domain is
+    the same word everywhere, and the mark beside it is the site's own. }
+  FRail.SetBrand(SPX_SITE_HOST, @BrandClicked);
+end;
+
+procedure TSpxMainForm.BrandClicked(Sender: TObject);
+begin
+  { THE ONE PLACE THIS PRODUCT REACHES OUTSIDE ITSELF, and it does not reach: it hands a URL to
+    the shell, which opens whatever browser the machine has. The application makes no request,
+    so R0 stays offline in the sense that matters -- editor, validation, render and export work
+    with no network and no key (spec §1, §11), and nothing here changes that. The help pane has
+    no link like this -- its generator refuses to write any href but `ex:N`, and the pane
+    ignores anything else without a word -- so this is the deliberate exception the reader asked
+    for, and it is the only one in the product. }
+  OpenURL(SPX_SITE_URL);
 end;
 
 procedure TSpxMainForm.RailGroupClicked(Sender: TObject);

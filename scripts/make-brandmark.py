@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""Build the brand mark the rail's link wears, as PNG frames inside the executable.
+
+THE MARK IS THE LOGO, NOT THE ICON, and the two are different pictures. spintax.net serves a
+hexagon (`apple-touch-icon.png`, which `make-appicon.py` turns into the application's icon) and
+a ribbon (`logo.svg`, the mark beside the wordmark on the site and in its og-image). The icon
+says "this program"; the ribbon says "this brand", which is what a link to the site is for. The
+reader asked for the ribbon, in as many words.
+
+RASTERISED ONCE, VENDORED, AND NOT RE-RASTERISED HERE. `assets/brand/spintax-logo-512.png` is
+headless Chrome's render of the vendored `spintax-logo.svg` at 512 px wide, cropped to its own
+ink -- 512x228, alpha intact. It is committed because nothing on the build machines can turn an
+SVG into pixels: this one has no cairo (so cairosvg and svglib both refuse), no ImageMagick (the
+`convert` on PATH is Windows' NTFS converter, which must never be run by accident), and CI has
+neither plus no Pillow. So the vector is kept for provenance and the raster is what this reads.
+The same shape as `spintax-mark-180.png` beside it, and for the same reason.
+
+WHY WIDTHS AND NOT SIZES. The ribbon is 2.25:1, so a frame is named by its WIDTH and carries the
+height that keeps the aspect. This is NOT a first: SpxFlags does the same for the language flags,
+which are 4:3 -- separate SPX_FLAG_WIDTHS and SPX_FLAG_HEIGHTS tables, and a picker that hands
+back both numbers. The rail's icons are the square case, not the only case, and the shape here
+follows the flags rather than inventing anything. (A draft of this file claimed the mark was the
+only non-square picture in the product; it was wrong, and the flags were already in the build.)
+
+The widths are the rail's face at the scalings Windows offers -- 36 px at 100%, and 45/54/63/72
+at 125/150/175/200, which is what Px() returns for those ppi -- plus two below for a rail that is
+ever made narrower. A frame is RESIZED from the 512 with LANCZOS, never upscaled: 72 is the
+largest and the source is seven times that.
+
+Pure Pillow and stdlib, run by hand like make-appicon.py -- CI has no Pillow and does not
+regenerate this. What CI and the suite check instead is the ARTIFACT: the shipped bytes are read
+back as a PNG and asked their own width and height, so a frame that drifted from the table
+beside it fails the build rather than shipping.
+
+Usage:  python scripts/make-brandmark.py
+
+Writes: gui/SpxBrandMark.pas
+"""
+import io
+import os
+
+from PIL import Image
+
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SOURCE = os.path.join(HERE, 'assets', 'brand', 'spintax-logo-512.png')
+OUT = os.path.join(HERE, 'gui', 'SpxBrandMark.pas')
+
+# The rail's face at 100/125/150/175/200%, and two below it.
+WIDTHS = [24, 30, 36, 45, 54, 63, 72]
+
+
+def fail(message):
+    raise SystemExit('make-brandmark: %s' % message)
+
+
+def load():
+    if not os.path.exists(SOURCE):
+        fail('no %s -- the vendored render of the logo is the input' % SOURCE)
+    im = Image.open(SOURCE)
+    if im.mode != 'RGBA':
+        fail('the source is %s; the mark sits on the rail and needs its alpha' % im.mode)
+    if im.getbbox() != (0, 0, im.width, im.height):
+        fail('the source has empty margins -- it must be cropped to its own ink, so a frame '
+             'is the mark and not the mark inside padding')
+    if not (2.0 < im.width / float(im.height) < 2.5):
+        fail('the source is %dx%d, aspect %.3f -- that is not the ribbon this was written for'
+             % (im.width, im.height, im.width / float(im.height)))
+    return im
+
+
+def frame(im, width):
+    """One frame, at WIDTH, keeping the source's aspect."""
+    if width > im.width:
+        fail('a %d px frame would upscale the %d px source' % (width, im.width))
+    height = int(round(width * im.height / float(im.width)))
+    if height < 1:
+        fail('a %d px frame is under a pixel tall' % width)
+    small = im.resize((width, height), Image.LANCZOS)
+    buf = io.BytesIO()
+    small.save(buf, format='PNG', optimize=True)
+    data = buf.getvalue()
+    # Read back what was written, the way the suite will: the PNG's own IHDR, not the numbers
+    # that produced it.
+    back = Image.open(io.BytesIO(data))
+    if (back.width, back.height) != (width, height):
+        fail('the %d px frame came back %dx%d' % (width, back.width, back.height))
+    return height, data
+
+
+def pas_bytes(name, data):
+    out = ['  %s: array[0..%d] of Byte = (' % (name, len(data) - 1)]
+    for i in range(0, len(data), 16):
+        row = ', '.join('$%02X' % b for b in data[i:i + 16])
+        out.append('    ' + row + (',' if i + 16 < len(data) else ''))
+    out.append('  );')
+    return out
+
+
+def main():
+    im = load()
+    frames = [(w,) + frame(im, w) for w in WIDTHS]
+
+    u = ['(*',
+         ' * SpxBrandMark -- the ribbon from spintax.net, as bytes.',
+         ' *',
+         ' * GENERATED by scripts/make-brandmark.py from assets/brand/spintax-logo-512.png,',
+         ' * which is a render of assets/brand/spintax-logo.svg. Do not edit: change the source',
+         ' * and run the script again.',
+         ' *',
+         ' * THE LOGO, NOT THE ICON. The site serves two marks -- a hexagon, which is the',
+         " * application's icon, and this ribbon, which is the brand. A link to the site wears the",
+         ' * brand.',
+         ' *',
+         ' * A frame is named by its WIDTH: the ribbon is 2.25:1 and cannot be picked by one',
+         ' * number the way a square glyph is. The widths are the rail\'s face at the scalings',
+         ' * Windows offers. The bytes travel INSIDE the executable because R0 ships as one',
+         ' * offline file (spec §11).',
+         ' *)',
+         'unit SpxBrandMark;',
+         '',
+         '{$mode objfpc}{$H+}',
+         '',
+         'interface',
+         '',
+         'const',
+         '  { The widths there are frames for, ascending. }',
+         '  SPX_MARK_WIDTHS: array[0..%d] of Integer = (%s);'
+         % (len(frames) - 1, ', '.join(str(f[0]) for f in frames)),
+         '',
+         '{ The widest frame that fits AWanted, or the narrowest when nothing does -- the same',
+         '  rule SpxIconPickSize uses, so the mark and the tools above it choose alike. }',
+         'function SpxMarkPickWidth(AWanted: Integer): Integer;',
+         '',
+         '{ The height that goes with a width this unit has a frame for, or 0 for one it does',
+         "  not. Asked rather than computed: the aspect is the picture's, not a constant a",
+         '  caller should carry. }',
+         'function SpxMarkHeight(AWidth: Integer): Integer;',
+         '',
+         '{ The PNG for a width, byte for byte. It is a pointer INTO the executable image: read',
+         '  it, do not free it, and do not write through it. }',
+         'function SpxMarkPng(AWidth: Integer; out ALen: Integer): Pointer;',
+         '',
+         'implementation',
+         '',
+         'const']
+    for i, (w, h, data) in enumerate(frames):
+        u.append('  { %d x %d }' % (w, h))
+        u += pas_bytes('SPX_MARK_%d' % w, data)
+        if i < len(frames) - 1:
+            u.append('')
+    u += ['',
+          '  SPX_MARK_HEIGHTS: array[0..%d] of Integer = (%s);'
+          % (len(frames) - 1, ', '.join(str(f[1]) for f in frames)),
+          '',
+          'function SpxMarkPickWidth(AWanted: Integer): Integer;',
+          'var i: Integer;',
+          'begin',
+          '  Result := SPX_MARK_WIDTHS[Low(SPX_MARK_WIDTHS)];',
+          '  for i := Low(SPX_MARK_WIDTHS) to High(SPX_MARK_WIDTHS) do',
+          '    if SPX_MARK_WIDTHS[i] <= AWanted then Result := SPX_MARK_WIDTHS[i];',
+          'end;',
+          '',
+          'function SpxMarkHeight(AWidth: Integer): Integer;',
+          'var i: Integer;',
+          'begin',
+          '  Result := 0;',
+          '  for i := Low(SPX_MARK_WIDTHS) to High(SPX_MARK_WIDTHS) do',
+          '    if SPX_MARK_WIDTHS[i] = AWidth then Exit(SPX_MARK_HEIGHTS[i]);',
+          'end;',
+          '',
+          'function SpxMarkPng(AWidth: Integer; out ALen: Integer): Pointer;',
+          'begin',
+          '  ALen := 0;',
+          '  Result := nil;',
+          '  case AWidth of']
+    for w, h, data in frames:
+        u.append('    %d: begin Result := @SPX_MARK_%d[0]; ALen := Length(SPX_MARK_%d); end;'
+                 % (w, w, w))
+    u += ['  end;',
+          'end;',
+          '',
+          'end.',
+          '']
+
+    io.open(OUT, 'w', encoding='utf-8', newline='').write('\n'.join(u))
+    print('source %dx%d, aspect %.4f' % (im.width, im.height, im.width / float(im.height)))
+    for w, h, data in frames:
+        print('  %2d x %2d   %5d bytes' % (w, h, len(data)))
+    print('%-30s %d bytes' % (os.path.relpath(OUT, HERE), os.path.getsize(OUT)))
+
+
+if __name__ == '__main__':
+    main()

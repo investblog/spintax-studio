@@ -34,7 +34,7 @@ uses
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
-  SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout;
+  SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -53,7 +53,8 @@ uses
   SpxEditorFont in '..\gui\SpxEditorFont.pas',
   SpxHelpText in '..\gui\SpxHelpText.pas',
   SpxHelpNav in '..\gui\SpxHelpNav.pas',
-  SpxAbout in '..\gui\SpxAbout.pas';
+  SpxAbout in '..\gui\SpxAbout.pas',
+  SpxBrandMark in '..\gui\SpxBrandMark.pas';
   {$ENDIF}
 
 var
@@ -4010,6 +4011,79 @@ begin
   end;
 end;
 
+(* THE BRAND MARK, read back out of the executable. The rail draws it through an image list,
+   which takes the frame's WIDTH and HEIGHT as arguments and stretches whatever it is given --
+   so a frame whose real size drifted from the table beside it would not fail, it would draw
+   the ribbon squashed and nothing here would notice. Hence the PNG's own IHDR: the one
+   description of a frame that cannot drift from the frame.
+
+   The same discipline as TestSprites, which checks the language flags the same way for the same
+   reason: they are 4:3, so their height is a fact rather than a copy of their width, and this
+   mark is 2.25:1. Square glyphs are the icon strip's case, not the product's rule. *)
+procedure TestBrandMark;
+var i, w, h, len, wanted, prevW: Integer; p: Pointer; ratio, srcRatio: Double;
+begin
+  CheckTrue('brand/there are frames', Length(SPX_MARK_WIDTHS) > 0);
+
+  { ASCENDING, which is what the picker's one-pass rule depends on: it walks the table keeping
+    the last entry that fits, so an out-of-order table would hand back something too wide. }
+  prevW := 0;
+  for i := Low(SPX_MARK_WIDTHS) to High(SPX_MARK_WIDTHS) do
+  begin
+    CheckTrue(Format('brand/width %d comes after %d', [SPX_MARK_WIDTHS[i], prevW]),
+              SPX_MARK_WIDTHS[i] > prevW);
+    prevW := SPX_MARK_WIDTHS[i];
+  end;
+
+  { The ribbon's aspect, from the widest frame, and every other frame held to it within a
+    pixel's worth of rounding. A frame that lost the aspect is a squashed logo. }
+  srcRatio := SPX_MARK_WIDTHS[High(SPX_MARK_WIDTHS)] /
+              SpxMarkHeight(SPX_MARK_WIDTHS[High(SPX_MARK_WIDTHS)]);
+  CheckTrue(Format('brand/the mark is the ribbon, not a square [%.3f]', [srcRatio]),
+            (srcRatio > 2.0) and (srcRatio < 2.5));
+
+  for i := Low(SPX_MARK_WIDTHS) to High(SPX_MARK_WIDTHS) do
+  begin
+    w := SPX_MARK_WIDTHS[i];
+    h := SpxMarkHeight(w);
+    CheckTrue(Format('brand/%d has a height', [w]), h > 0);
+    p := SpxMarkPng(w, len);
+    CheckTrue(Format('brand/%d is a png', [w]),
+              (p <> nil) and (len > 8) and (PByte(p)[0] = $89) and (PByte(p)[1] = Ord('P')));
+    { The bytes' OWN account of themselves, against the table. }
+    Check(Format('brand/%d is %d px wide', [w, w]), IntToStr(PngWidth(p, len)), IntToStr(w));
+    Check(Format('brand/%d is %d px tall', [w, h]), IntToStr(PngHeight(p, len)), IntToStr(h));
+    ratio := w / h;
+    CheckTrue(Format('brand/%d keeps the aspect [%.3f vs %.3f]', [w, ratio, srcRatio]),
+              Abs(ratio - srcRatio) < 0.15);
+  end;
+
+  { A width nobody generated answers with nothing rather than with something else's bytes --
+    the rail checks for nil and would otherwise draw a frame of the wrong size. }
+  p := SpxMarkPng(SPX_MARK_WIDTHS[High(SPX_MARK_WIDTHS)] + 1, len);
+  CheckTrue('brand/an unknown width has no frame', (p = nil) and (len = 0));
+  Check('brand/and no height either',
+        IntToStr(SpxMarkHeight(SPX_MARK_WIDTHS[High(SPX_MARK_WIDTHS)] + 1)), '0');
+
+  { The picker never hands back something WIDER than asked for -- an image list draws at its
+    own size, so one pixel too wide is a clipped mark. Below the floor there is nothing to
+    return but the floor, and that is checked on its own. }
+  for wanted := SPX_MARK_WIDTHS[Low(SPX_MARK_WIDTHS)] to 200 do
+    if SpxMarkPickWidth(wanted) > wanted then
+      Check(Format('brand/the frame fits a %dpx face', [wanted]),
+            IntToStr(SpxMarkPickWidth(wanted)), IntToStr(wanted));
+  Check('brand/under the floor gets the narrowest frame',
+        IntToStr(SpxMarkPickWidth(1)), IntToStr(SPX_MARK_WIDTHS[Low(SPX_MARK_WIDTHS)]));
+
+  { And the rail's own face, at every scaling Windows offers, has a frame that fits it: this is
+    the number the rail actually asks for (Px of 36), so a table that stopped covering the
+    display someone has would be found here rather than on their screen. }
+  for i := 100 to 200 do
+    if (i mod 25) = 0 then
+      CheckTrue(Format('brand/a frame fits the rail at %d%%', [i]),
+                SpxMarkPickWidth(Round(36 * i / 100)) <= Round(36 * i / 100));
+end;
+
 procedure TestHelpUnit;
 var
   lang, page, i, seen, p_: Integer;
@@ -6635,6 +6709,7 @@ begin
   TestGroups;
   TestHelpExamples;
   TestAbout;
+  TestBrandMark;
   TestHelpUnit;
   TestSessionValues;
   TestFind;

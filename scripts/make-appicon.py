@@ -3,10 +3,16 @@
 
 THE MARK IS OURS -- it is the spintax.net brand, vendored in assets/brand as the 180 px raster
 the site publishes (spintax-mark-180.png) alongside the vector it was drawn from
-(spintax-mark.svg, kept for the day someone can rasterise it properly). 180 is the largest
-raster the site has, so the icon tops out at 128: Windows only needs 256 for Explorer's largest
-view, and an upscale of ours would be no better than the upscale Windows already does. A real
-256 wants a vector export -- that is a request to make of the brand, not a thing to fake here.
+(spintax-mark.svg). 180 is the largest raster the site has, so the icon tops out at 128: Windows
+only needs 256 for Explorer's largest view, and an upscale of ours would be no better than the
+upscale Windows already does.
+
+A REAL 256 IS NO LONGER A REQUEST TO MAKE OF THE BRAND -- the vector is here and headless Chrome
+rendered its sibling (the ribbon, for the rail's brand link) at 512 with alpha on 2026-07-31.
+What stops it being done in this script is that the same invocation has not worked since:
+measured in both headless modes, with and without an isolated profile, Chrome exits 0 and writes
+nothing. So a bigger frame is a job for whoever gets a rasteriser to behave, and the recipe and
+its unreliability are both in docs/TODO.md under the Store block. Nothing here fakes one.
 
 WHY A SEPARATE .res AND NOT THE PROJECT'S. gui/SpintaxStudio.res is Lazarus's, holding the
 manifest, and lazbuild rewrites it from the .lpi whenever the project's own resources change --
