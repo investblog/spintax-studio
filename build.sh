@@ -72,7 +72,21 @@ if [ -n "$lazbuild_exe" ]; then
   # gui/ is the one layer the hook's -Sew pass skips (it cannot see the LCL), so a warning
   # here has nowhere else to surface. Everything else stays quiet.
   printf '%s\n' "$laz_out" | grep -E 'Warning|Error' >&2 || true
-  echo "built: tests/studio_tests(+checked), spintax-studio"
+
+  # THE SIZE IS A GATE, because the difference is a factor of eight and it is invisible.
+  # Measured 2026-07-31: the project carried debug info and shipped a 49.8 MB executable;
+  # with GenerateDebugInfo off it is 6.4 MB, and `strip --strip-all` of the old one gave the
+  # same 6.6 MB -- so the whole difference was symbols nobody was reading (no -gl, and the
+  # probes report a message rather than a stack). The ceiling is generous: it is not here to
+  # police growth, it is here so that debug info coming back fails the build rather than a
+  # Store submission.
+  exe_bytes=$(stat -c %s spintax-studio.exe 2>/dev/null || echo 0)
+  if [ "$exe_bytes" -gt 16000000 ]; then
+    echo "spintax-studio.exe is $exe_bytes bytes; over 16 MB means debug info is back" >&2
+    echo "  (measured: 6.4 MB without it, 49.8 MB with it)" >&2
+    exit 1
+  fi
+  echo "built: tests/studio_tests(+checked), spintax-studio ($((exe_bytes / 1024 / 1024)) MB)"
 else
   echo "built: tests/studio_tests(+checked)"
   echo "note: lazbuild not found - the GUI was skipped (install Lazarus to build the app)" >&2

@@ -98,6 +98,7 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
+        <GenerateDebugInfo Value="False"/>
         <UseHeaptrc Value="False"/>
       </Debugging>
       <Options>
@@ -107,7 +108,7 @@
       </Options>
     </Linking>
     <Other>
-      <CustomOptions Value="-dSPX_GUI -vm4046"/>
+      <CustomOptions Value="-dSPX_GUI -vm4046 -O2 -Xs -CX -XX"/>
     </Other>
   </CompilerOptions>
 </CONFIG>
