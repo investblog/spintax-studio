@@ -136,24 +136,40 @@ def preformatted(lines):
 
     The spaces INSIDE a tag must survive as spaces -- `<a href="ex:28">` is not text -- so this
     walks the line rather than calling replace() on it.
+
+    A RUN OF SPACES KEEPS ONE ORDINARY SPACE AT ITS END, and that is the difference between an
+    example a narrow panel can show and one it cuts off. With every space non-breaking the block
+    is a single unbreakable run, and IPro lays the PAGE out at that run's width -- so at a 503 px
+    panel the PROSE beside the example was clipped mid-sentence, because the widest example
+    demanded 95 characters. The width is unchanged (k-1 non-breaking and one ordinary is still
+    k); what changes is that the line may break where the author put a space. A LEADING run stays
+    wholly non-breaking: there is nothing before it to break after, and an ordinary space at the
+    start of a line is dropped by the layout.
     """
     out = []
     # FLATTENED FIRST. A line may itself carry a newline -- fence_line puts a trailing note on
-    # its own line that way -- and inside a PRE that LF was a break. In a paragraph it is not:
-    # TrimFormatting turns it into a space, so the note would join the output line. Unreachable
-    # in today's two documents (measured: fence_line is never called for either), which is
-    # exactly why it is worth closing now rather than when a third document finds it.
+    # its own line that way, and the arrow puts the output on one -- and inside a PRE that LF was
+    # a break. In a paragraph it is not: TrimFormatting turns it into a space, so the output
+    # would join the template.
     for line in '\n'.join(lines).split('\n'):
-        buf, in_tag = [], False
+        buf, in_tag, run, seen = [], False, 0, False
         for ch in line:
+            if ch == ' ' and not in_tag:
+                run += 1
+                continue
+            if run:
+                buf.append('&nbsp;' * run if not seen else '&nbsp;' * (run - 1) + ' ')
+                run = 0
             if ch == '<':
                 in_tag = True
             elif ch == '>':
                 in_tag = False
-            if ch == ' ' and not in_tag:
-                buf.append('&nbsp;')
-            else:
-                buf.append(ch)
+            elif not in_tag:
+                seen = True
+            buf.append(ch)
+        # Trailing spaces have nothing after them to break before, so they stay as they were.
+        if run:
+            buf.append('&nbsp;' * run)
         out.append(''.join(buf))
     return '<p><small><tt>' + '<br>'.join(out) + '</tt></small></p>'
 
@@ -422,12 +438,21 @@ def convert(lang, path, slugs, ex_base):
                     here = 1 if left.strip() else 0
                     for i in range(len(fence_body) - (len(acc) - here), len(fence_body)):
                         fence_body[i] = link(ex, fence_body[i])
+                    # THE OUTPUT GOES ON ITS OWN LINE, and the spaces that aligned the arrow into
+                    # a column go nowhere. That column is what a fixed-width file wants; on a
+                    # panel it made every example as wide as BOTH its sides at once -- 95
+                    # characters at the worst, against 58 for the widest line this now emits
+                    # (`→  ｛plural %n%: ｛товар|штука｝|товара｝   скобки внутри форм`, and the 95
+                    # was that same line with its template in front of it). The widest example
+                    # sets the width of the whole page. fence_line already moves a
+                    # trailing note down for this reason and says so; the arrow is the larger
+                    # half of the same problem. Still ONE entry per source line, so the anchors
+                    # counted backwards above still land on the lines they mean.
                     if here:
-                        fence_body.append(link(ex, esc(left.rstrip())) +
-                                          esc(left[len(left.rstrip()):]) + ARROW +
-                                          fence_note(right))
+                        fence_body.append(link(ex, esc(left.rstrip())) + '\n' +
+                                          ARROW + fence_note(right))
                     else:
-                        fence_body.append(esc(left) + ARROW + fence_note(right))
+                        fence_body.append(ARROW + fence_note(right))
                 else:
                     fence_body.append(fence_line(t))
                 del acc[:]

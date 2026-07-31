@@ -4064,6 +4064,66 @@ var
     end;
   end;
 
+  { THE WIDTH THE PAGE WILL DEMAND, in characters: the longest run the layout has no place to
+    break. This is the number that decides whether a panel can show a page or cuts it, and it is
+    not visible in any other check -- a page whose longest run is 95 characters renders its PROSE
+    clipped mid-sentence, because the run sets the layout width for everything on the page.
+
+    Counted the way a layout counts: a tag is nothing, `<br>` and the block tags end a run, an
+    ordinary space is a break, `&nbsp;` is a character that is not one, and a UTF-8 continuation
+    byte is not a character at all -- Cyrillic would otherwise count double and the ratchet would
+    be measuring the language rather than the width.
+
+    `<th` is in the list although the generator emits no header cell today: a cell that does not
+    end a run joins the one beside it, which OVERSTATES the width and would be read as a page
+    that needs more room than it does. The newline between a page's lines is a break for the same
+    reason -- it is where SpxHelpPageHtml joined them, not something a reader sees. }
+  function LongestUnbreakable(const AHtml: string): Integer;
+  var i, j, run: Integer; tag: string;
+  begin
+    Result := 0; run := 0; i := 1;
+    while i <= Length(AHtml) do
+    begin
+      if AHtml[i] = '<' then
+      begin
+        j := PosEx('>', AHtml, i);
+        if j = 0 then j := Length(AHtml);
+        tag := LowerCase(Copy(AHtml, i, j - i + 1));
+        if (tag = '<br>') or (Copy(tag, 1, 2) = '<p') or (Copy(tag, 1, 3) = '</p') or
+           (Copy(tag, 1, 3) = '<li') or (Copy(tag, 1, 3) = '<td') or (Copy(tag, 1, 3) = '<th') or
+           (Copy(tag, 1, 3) = '<h1') or (Copy(tag, 1, 3) = '<h2') or (Copy(tag, 1, 3) = '<h3') or
+           (Copy(tag, 1, 3) = '<tr') then
+          run := 0;
+        i := j + 1;
+        Continue;
+      end;
+      if AHtml[i] = '&' then
+      begin
+        j := PosEx(';', AHtml, i);
+        if (j > 0) and (j - i <= 6) then
+        begin
+          Inc(run);
+          if run > Result then Result := run;
+          i := j + 1;
+          Continue;
+        end;
+      end;
+      if (AHtml[i] = ' ') or (AHtml[i] = #10) or (AHtml[i] = #13) then
+      begin
+        run := 0;
+        Inc(i);
+        Continue;
+      end;
+      { A continuation byte belongs to the character before it and is not one of its own. }
+      if (Ord(AHtml[i]) and $C0) <> $80 then
+      begin
+        Inc(run);
+        if run > Result then Result := run;
+      end;
+      Inc(i);
+    end;
+  end;
+
   { The first example that spans lines -- and there MUST be one, or the ending check below is
     about nothing. `-1` is returned rather than guessed at, and the caller fails on it. }
   function MultiLineExample(ALang: Integer): Integer;
@@ -4340,18 +4400,43 @@ begin
       CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
                 ' uses no <pre> (IPro would show its entities raw)',
                 Pos('<pre', LowerCase(html)) = 0);
-      { The other half of the same rule, on EVERY page rather than on the one that happened to
-        be in `html` -- eleven pages could have lost their spacing in silence. A page with no
-        example block has nothing to keep, which is what the first half of the test says. }
-      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
-                ' keeps the spacing of its example blocks',
-                (Pos('<tt>', html) = 0) or (Pos('&nbsp;', html) > 0));
+      { A RUN OF SPACES KEEPS ITS WIDTH: the extra ones non-breaking and the last one not, which
+        is what lets a narrow panel break the line where the author put a space. Asked as the
+        FAILURE looks -- two ordinary spaces inside an example, which IPro's TrimFormatting
+        (iphtml.pas:2790) collapses into one and the alignment narrows in silence.
+
+        Asking instead for the PRESENCE of `&nbsp;` is what this replaced, and it was measured to
+        be nearly blind: with runs of two emitted as two ordinary spaces -- 136 of the 141 runs
+        the two documents have -- 45 of 48 pages lost every non-breaking space and a per-language
+        `some page still has one` check stayed green. }
+      p_ := Pos('<small><tt>', html);
+      while p_ > 0 do
+      begin
+        i := PosEx('</tt>', html, p_);
+        if i = 0 then i := Length(html);
+        CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                  ' keeps the spacing of its example blocks',
+                  Pos('  ', Copy(html, p_, i - p_)) = 0);
+        p_ := PosEx('<small><tt>', html, i);
+      end;
       { And at the size a PRE gave them: <tt> sets the typeface, <small> the two points a PRE
         subtracts. Without it every example is a quarter wider and the widest one drags the whole
         page -- headings and prose included -- past the panel. }
       CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
                 ' keeps the size of its example blocks',
                 (Pos('<tt>', html) = 0) or (Pos('<small><tt>', html) > 0));
+      { AND NO PAGE MAY DEMAND MORE WIDTH THAN A PANEL CAN GIVE. The longest unbreakable run sets
+        the layout width for the WHOLE page, prose included -- so while the examples were one run
+        of non-breaking spaces from template to output, a 503 px panel clipped the PARAGRAPHS
+        beside them mid-sentence and the reader reported the page as not displaying at all.
+
+        Ratcheted at what the two documents actually need: 44, and it is `[<minsize=2;maxsize=2>
+        красный|зелёный|синий]` (docs/help/ru/syntax.md:104) -- one construct with no space in
+        it, which is the one thing here that SHOULD NOT break. Anything wider has to earn it
+        rather than take the width from the prose. }
+      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+                ' can be broken to a narrow panel [' + IntToStr(LongestUnbreakable(html)) + ']',
+                LongestUnbreakable(html) <= 44);
     end;
   end;
 
