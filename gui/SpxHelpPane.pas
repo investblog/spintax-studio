@@ -122,7 +122,9 @@ end;
 procedure TSpxHelpPane.ShowPage(ALang, APage: Integer; const AAnchor: string);
 begin
   if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then ALang := 0;
-  if (APage < 0) or (APage >= SPX_HELP_PAGE_COUNT) then APage := 0;
+  { The count is the LANGUAGE's now: a language has documents, and its pages are all of
+    their sections in order. }
+  if (APage < 0) or (APage >= SpxHelpPageCount(ALang)) then APage := 0;
   FLang := ALang;
   FPageNo := APage;
   FAnchor := AAnchor;

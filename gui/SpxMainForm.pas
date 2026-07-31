@@ -2751,10 +2751,19 @@ begin
   begin
     job.HelpSet := True;
     job.HelpLang := FTopics.HelpLang;
+    { WHICH DOCUMENT the conditions come from: the clicked example's, or -- with nothing clicked
+      -- the page being read. A language has documents and each declares its own locale, seed and
+      fragments, so this is the difference between rendering under the conditions the example was
+      measured under and under some other document's. }
+    if FHelpExample >= 0 then
+      job.HelpDoc := SpxHelpExampleDoc(job.HelpLang, FHelpExample)
+    else
+      job.HelpDoc := SpxHelpPageDoc(job.HelpLang, FHelp.CurrentPage);
+    if job.HelpDoc < 0 then job.HelpDoc := 0;
     job.UiLang := SpxUiLang;
-    job.Locale := SpxHelpLocale(job.HelpLang);
+    job.Locale := SpxHelpLocale(job.HelpLang, job.HelpDoc);
     job.Seeded := True;
-    job.Seed := SpxHelpSeed(job.HelpLang);
+    job.Seed := SpxHelpSeed(job.HelpLang, job.HelpDoc);
     job.HelpExample := FHelpExample;
     if FHelpExample >= 0 then SpxHelpExample(job.HelpLang, FHelpExample, job.Text);
     { Down until the answer comes back: whether to offer this example depends on what the engine

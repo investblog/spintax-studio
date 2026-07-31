@@ -177,10 +177,12 @@ begin
       end;
   { The article is gone -- a prose heading, whose id is positional and may not survive an edit.
     The SECTION still exists, because the two documents are parallel by construction. }
-  slug := SpxHelpPageSlug(AFromPage);
+  { The slug is the same string in both languages -- looked up in the language being moved TO,
+    because a page number belongs to a language now that a language has documents. }
+  slug := SpxHelpPageSlug(AFromLang, AFromPage);
   if slug <> '' then
   begin
-    i := SpxHelpPageIndex(slug);
+    i := SpxHelpPageIndex(AToLang, slug);
     if i >= 0 then APage := i;
   end;
 end;
@@ -370,7 +372,7 @@ begin
 
   slug := SlugForCaret(AText, AOffset);
   if slug = '' then Exit;
-  APage := SpxHelpPageIndex(slug);
+  APage := SpxHelpPageIndex(AHelpLang, slug);
   if APage < 0 then Exit;
   Result := True;
 end;

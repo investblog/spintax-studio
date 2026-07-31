@@ -59,18 +59,29 @@ LANGS = ['en', 'ru']
 # (the largest is about 9 KB); it is here so that growth trips a build rather than a user.
 PAGE_LIMIT = 24 * 1024
 
-# A slug names a section across BOTH documents, so the viewer can keep your place when the
-# interface language changes. Taken from the English titles, applied by position -- which is
-# sound only while the two documents run parallel, and that is asserted below.
-SLUGS = [
-    'about', 'reading', 'brackets', 'definitions', 'variables', 'includes',
-    'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq',
-]
+# The document KINDS, in the order a reader meets them, each with the slugs naming its
+# sections. A slug names the same section in every language -- that is what lets the viewer keep
+# your place when the interface language changes -- so the list is the contract and the script
+# refuses a document with more sections than names.
+DOCS = ['diagnostics']
+
+DOC_SLUGS = {
+    'diagnostics': [
+        'about', 'reading', 'brackets', 'definitions', 'variables', 'includes',
+        'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq',
+    ],
+}
+
+
+# The document being converted, so an error names the file it is in. A module-level cell in
+# the style this script already uses for ANY_EXAMPLES and seen_fixture -- it is single-pass and
+# single-threaded, and threading a path through thirty raise sites would say less.
+CURRENT = ['docs/help/en/diagnostics.md']
 
 
 class Bad(SystemExit):
     def __init__(self, lang, line_no, message):
-        SystemExit.__init__(self, 'docs/help/%s/diagnostics.md:%d: %s' % (lang, line_no, message))
+        SystemExit.__init__(self, '%s:%d: %s' % (CURRENT[0], line_no, message))
 
 
 def fnv1a(data):
@@ -256,8 +267,13 @@ def heading_anchor(page_slug, index, text):
     return '%s-%d' % (page_slug, index), False
 
 
-def convert(lang, path):
-    """One document into pages. Each page: slug, title, html lines, anchors."""
+def convert(lang, path, slugs, ex_base):
+    """One document into pages. Each page: slug, title, html lines, anchors.
+
+    `ex_base` is where this document's examples start in the LANGUAGE's numbering: `ex:N` in a
+    page is looked up by the window against one flat table per language, so a second document's
+    links have to continue the first's rather than start again at zero.
+    """
     raw = io.open(path, 'rb').read()
     digest = fnv1a(raw)
     lines = raw.decode('utf-8').split('\n')
@@ -279,9 +295,10 @@ def convert(lang, path):
 
     def start_page(title, line_no):
         n = len(pages)
-        if n >= len(SLUGS):
-            raise Bad(lang, line_no, 'more sections than SLUGS names -- add one to the script')
-        pages.append({'slug': SLUGS[n], 'title': title, 'html': [], 'anchors': []})
+        if n >= len(slugs):
+            raise Bad(lang, line_no,
+                      'more sections than DOC_SLUGS names for this document -- add one')
+        pages.append({'slug': slugs[n], 'title': title, 'html': [], 'anchors': []})
         return pages[-1]
 
     def flush():
@@ -386,7 +403,7 @@ def convert(lang, path):
                     acc.append(left.rstrip())
                 if acc:
                     examples.append('\n'.join(acc))
-                    ex = len(examples) - 1
+                    ex = ex_base + len(examples) - 1
                     # The TEMPLATE is the link and the output is not. Each line of a multi-line
                     # template is its own anchor pointing at the same example: a single-line
                     # inline anchor inside a <pre> is the case that was measured, and a bigger
@@ -504,8 +521,8 @@ BLOCK_TAGS = ['p', 'pre', 'blockquote', 'ul', 'li', 'table', 'tr', 'th', 'td',
               'h1', 'h2', 'h3']
 
 
-# How many examples the document being checked has -- set before the pages are walked, so the
-# link check can say "a link to example 40 of 34" rather than only "a link".
+# How many examples the LANGUAGE has so far -- the bound every `ex:N` in a page must be under.
+# Per language and not per document, because a second document continues the first's numbering.
 ANY_EXAMPLES = [0]
 
 
@@ -587,68 +604,387 @@ def literal(text):
     return " +\n      ".join(parts)
 
 
+# The unit's function bodies. Constants only above them, no uses clause at all: this unit is a
+# table and stays one, so nothing it is compiled into can pull a dependency through it.
+ACCESSORS = """function SpxHelpLangCode(ALang: Integer): string;
+begin
+  if (ALang < 0) or (ALang > High(HELP_LANG)) then Exit('');
+  Result := HELP_LANG[ALang];
+end;
+
+function SpxHelpLangIndex(const ACode: string): Integer;
+var i: Integer;
+begin
+  for i := Low(HELP_LANG) to High(HELP_LANG) do
+    if HELP_LANG[i] = ACode then Exit(i);
+  Result := -1;
+end;
+
+function SpxHelpKindSlug(AKind: Integer): string;
+begin
+  if (AKind < 0) or (AKind > High(HELP_KIND_SLUG)) then Exit('');
+  Result := HELP_KIND_SLUG[AKind];
+end;
+
+function SpxHelpDocCount(ALang: Integer): Integer;
+begin
+  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);
+  Result := HELP_DOC_LAST[ALang] - HELP_DOC_FIRST[ALang] + 1;
+end;
+
+{ The one place a (language, document) pair becomes a row. -1 when either is out of range, so
+  every caller answers with an empty string rather than a range error. }
+function DocAt(ALang, ADoc: Integer): Integer;
+begin
+  if (ADoc < 0) or (ADoc >= SpxHelpDocCount(ALang)) then Exit(-1);
+  Result := HELP_DOC_FIRST[ALang] + ADoc;
+end;
+
+function SpxHelpDocKind(ALang, ADoc: Integer): Integer;
+var i: Integer;
+begin
+  i := DocAt(ALang, ADoc);
+  if i < 0 then Exit(-1);
+  Result := HELP_DOC_KIND[i];
+end;
+
+function SpxHelpSourcePath(ALang, ADoc: Integer): string;
+var i: Integer;
+begin
+  i := DocAt(ALang, ADoc);
+  if i < 0 then Exit('');
+  Result := HELP_DOC_PATH[i];
+end;
+
+function SpxHelpSourceDigest(ALang, ADoc: Integer): string;
+var i: Integer;
+begin
+  i := DocAt(ALang, ADoc);
+  if i < 0 then Exit('');
+  Result := HELP_DOC_DIGEST[i];
+end;
+
+function SpxHelpPageCount(ALang: Integer): Integer;
+begin
+  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);
+  Result := HELP_PAGE_LAST[ALang] - HELP_PAGE_FIRST[ALang] + 1;
+end;
+
+{ The same rule as DocAt, for pages. }
+function PageAt(ALang, APage: Integer): Integer;
+begin
+  if (APage < 0) or (APage >= SpxHelpPageCount(ALang)) then Exit(-1);
+  Result := HELP_PAGE_FIRST[ALang] + APage;
+end;
+
+function SpxHelpPageSlug(ALang, APage: Integer): string;
+var i: Integer;
+begin
+  i := PageAt(ALang, APage);
+  if i < 0 then Exit('');
+  Result := HELP_SLUG[i];
+end;
+
+function SpxHelpPageIndex(ALang: Integer; const ASlug: string): Integer;
+var i: Integer;
+begin
+  for i := 0 to SpxHelpPageCount(ALang) - 1 do
+    if HELP_SLUG[HELP_PAGE_FIRST[ALang] + i] = ASlug then Exit(i);
+  Result := -1;
+end;
+
+function SpxHelpPageTitle(ALang, APage: Integer): string;
+var i: Integer;
+begin
+  i := PageAt(ALang, APage);
+  if i < 0 then Exit('');
+  Result := HELP_TITLE[i];
+end;
+
+function SpxHelpPageDoc(ALang, APage: Integer): Integer;
+var i: Integer;
+begin
+  i := PageAt(ALang, APage);
+  if i < 0 then Exit(-1);
+  Result := HELP_PAGE_DOC[i];
+end;
+
+function SpxHelpPageHtml(ALang, APage: Integer): string;
+var i, n: Integer;
+begin
+  Result := '';
+  i := PageAt(ALang, APage);
+  if i < 0 then Exit;
+  for n := HELP_FIRST[i] to HELP_LAST[i] do
+  begin
+    if n > HELP_FIRST[i] then Result := Result + #10;
+    Result := Result + HELP_LINE[n];
+  end;
+end;
+
+function SpxHelpAnchorCount(ALang: Integer): Integer;
+begin
+  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);
+  Result := HELP_ANCHOR_LAST[ALang] - HELP_ANCHOR_FIRST[ALang] + 1;
+end;
+
+function AnchorAt(ALang, AIndex: Integer): Integer;
+begin
+  if (AIndex < 0) or (AIndex >= SpxHelpAnchorCount(ALang)) then Exit(-1);
+  Result := HELP_ANCHOR_FIRST[ALang] + AIndex;
+end;
+
+function SpxHelpAnchorPage(ALang, AIndex: Integer): Integer;
+var i: Integer;
+begin
+  i := AnchorAt(ALang, AIndex);
+  if i < 0 then Exit(-1);
+  Result := HELP_ANCHOR_PAGE[i];
+end;
+
+function SpxHelpAnchorId(ALang, AIndex: Integer): string;
+var i: Integer;
+begin
+  i := AnchorAt(ALang, AIndex);
+  if i < 0 then Exit('');
+  Result := HELP_ANCHOR_ID[i];
+end;
+
+function SpxHelpAnchorTitle(ALang, AIndex: Integer): string;
+var i: Integer;
+begin
+  i := AnchorAt(ALang, AIndex);
+  if i < 0 then Exit('');
+  Result := HELP_ANCHOR_TITLE[i];
+end;
+
+function SpxHelpAnchorIsCode(ALang, AIndex: Integer): Boolean;
+var i: Integer;
+begin
+  i := AnchorAt(ALang, AIndex);
+  Result := (i >= 0) and HELP_ANCHOR_CODE[i];
+end;
+
+function SpxHelpLocale(ALang, ADoc: Integer): string;
+var i: Integer;
+begin
+  i := DocAt(ALang, ADoc);
+  if i < 0 then Exit('');
+  Result := HELP_DOC_LOCALE[i];
+end;
+
+function SpxHelpSeed(ALang, ADoc: Integer): LongWord;
+var i: Integer;
+begin
+  i := DocAt(ALang, ADoc);
+  if i < 0 then Exit(1);
+  Result := HELP_DOC_SEED[i];
+end;
+
+function SpxHelpIncludeCount(ALang, ADoc: Integer): Integer;
+var i: Integer;
+begin
+  i := DocAt(ALang, ADoc);
+  if i < 0 then Exit(0);
+  Result := HELP_INC_LAST[i] - HELP_INC_FIRST[i] + 1;
+end;
+
+function IncAt(ALang, ADoc, AIndex: Integer): Integer;
+var i: Integer;
+begin
+  i := DocAt(ALang, ADoc);
+  if (i < 0) or (AIndex < 0) or (AIndex >= SpxHelpIncludeCount(ALang, ADoc)) then Exit(-1);
+  Result := HELP_INC_FIRST[i] + AIndex;
+end;
+
+function SpxHelpIncludeName(ALang, ADoc, AIndex: Integer): string;
+var i: Integer;
+begin
+  i := IncAt(ALang, ADoc, AIndex);
+  if i < 0 then Exit('');
+  Result := HELP_INC_NAME[i];
+end;
+
+function SpxHelpIncludeText(ALang, ADoc, AIndex: Integer): string;
+var i: Integer;
+begin
+  i := IncAt(ALang, ADoc, AIndex);
+  if i < 0 then Exit('');
+  Result := HELP_INC_TEXT[i];
+end;
+
+function SpxHelpExampleCount(ALang: Integer): Integer;
+begin
+  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);
+  Result := HELP_EX_LAST[ALang] - HELP_EX_FIRST[ALang] + 1;
+end;
+
+function SpxHelpExample(ALang, AIndex: Integer; out ATemplate: string): Boolean;
+begin
+  ATemplate := '';
+  Result := (AIndex >= 0) and (AIndex < SpxHelpExampleCount(ALang));
+  if Result then ATemplate := HELP_EX_TEMPLATE[HELP_EX_FIRST[ALang] + AIndex];
+end;
+
+function SpxHelpExampleDoc(ALang, AIndex: Integer): Integer;
+begin
+  if (AIndex < 0) or (AIndex >= SpxHelpExampleCount(ALang)) then Exit(-1);
+  Result := HELP_EX_DOC[HELP_EX_FIRST[ALang] + AIndex];
+end;
+
+function SpxHelpExampleOf(const AHref: string): Integer;
+var i, n: Integer; digits: string;
+begin
+  Result := -1;
+  if Copy(AHref, 1, 3) <> 'ex:' then Exit;
+  digits := Copy(AHref, 4, MaxInt);
+  if (digits = '') or (Length(digits) > 6) then Exit;
+  { Added up here rather than through StrToIntDef, so this unit needs no uses clause
+    at all -- it is a table of constants and nothing else, and it stays that way. }
+  n := 0;
+  for i := 1 to Length(digits) do
+  begin
+    if (digits[i] < '0') or (digits[i] > '9') then Exit;
+    n := n * 10 + (Ord(digits[i]) - Ord('0'));
+  end;
+  Result := n;
+end;
+
+end.
+""".split('\n')
+
+
 def main():
-    docs = []
+    # Per language, the documents it has -- in DOCS order. A language must have EVERY document:
+    # a slug names the same section in every language, and the viewer keeps the reader's place
+    # across a language switch by that name. Lagging by a whole document is a thing this shape
+    # could grow (the pages are already a per-language span) and deliberately does not have yet:
+    # nothing needs it, and an invariant is worth more than a capability nobody asked for.
+    langs = []
     for lang in LANGS:
-        path = os.path.join(HERE, 'docs', 'help', lang, 'diagnostics.md')
-        if not os.path.exists(path):
-            raise SystemExit('missing help document: %s' % path)
-        pages, digest, fixture, examples = convert(lang, path)
-        if not seen_any(fixture):
-            raise SystemExit('%s: no spx-fixture block -- the pane could not reproduce the '
-                             'outputs it prints' % lang)
-        if fixture['locale'] != lang:
-            raise SystemExit('%s declares locale %r' % (lang, fixture['locale']))
-        ANY_EXAMPLES[0] = len(examples)
-        for page in pages:
-            refuse_bad_html(lang, page)
-        docs.append({'lang': lang, 'pages': pages, 'digest': digest, 'fixture': fixture,
-                     'examples': examples,
-                     'path': 'docs/help/%s/diagnostics.md' % lang})
+        entries = []
+        for kind in DOCS:
+            path = os.path.join(HERE, 'docs', 'help', lang, kind + '.md')
+            if not os.path.exists(path):
+                raise SystemExit('missing help document: %s' % path)
+            CURRENT[0] = 'docs/help/%s/%s.md' % (lang, kind)
+            # The examples of a language are ONE table, so this document's `ex:N` continue where
+            # the previous document's stopped.
+            ex_base = sum(len(e['examples']) for e in entries)
+            pages, digest, fixture, examples = convert(lang, path, DOC_SLUGS[kind], ex_base)
+            if not seen_any(fixture):
+                raise SystemExit('%s: no spx-fixture block -- the pane could not reproduce the '
+                                 'outputs it prints' % CURRENT[0])
+            if fixture['locale'] != lang:
+                raise SystemExit('%s declares locale %r' % (CURRENT[0], fixture['locale']))
+            ANY_EXAMPLES[0] = ex_base + len(examples)
+            for page in pages:
+                refuse_bad_html(lang, page)
+            entries.append({'kind': kind, 'path': CURRENT[0], 'digest': digest,
+                            'pages': pages, 'fixture': fixture, 'examples': examples})
+        langs.append({'lang': lang, 'docs': entries})
 
-    # THE DOCUMENTS MUST RUN PARALLEL, because a slug names a section in both of them and the
-    # viewer keeps your place across a language switch by that name. Checked on the CODES, which
-    # are the part that cannot be a matter of taste: page N carries the same articles in both.
-    base = docs[0]
-    for other in docs[1:]:
-        if len(other['pages']) != len(base['pages']):
-            raise SystemExit('%s has %d sections and %s has %d -- they must run parallel'
-                             % (other['lang'], len(other['pages']),
-                                base['lang'], len(base['pages'])))
-        for i, (a, b) in enumerate(zip(base['pages'], other['pages'])):
-            ca = sorted(x['id'] for x in a['anchors'] if x['code'])
-            cb = sorted(x['id'] for x in b['anchors'] if x['code'])
-            if ca != cb:
-                raise SystemExit('section %d (%s) holds %s in %s but %s in %s'
-                                 % (i, a['slug'], ca, base['lang'], cb, other['lang']))
+    # THE DOCUMENTS MUST RUN PARALLEL, per kind, across the languages -- see above for why. The
+    # comparison is on the CODES, which are the part that cannot be a matter of taste: section N
+    # of a kind carries the same articles in every language.
+    base = langs[0]
+    for other in langs[1:]:
+        for d, (a_doc, b_doc) in enumerate(zip(base['docs'], other['docs'])):
+            if len(a_doc['pages']) != len(b_doc['pages']):
+                raise SystemExit('%s has %d sections and %s has %d -- they must run parallel'
+                                 % (b_doc['path'], len(b_doc['pages']),
+                                    a_doc['path'], len(a_doc['pages'])))
+            for i, (a, b) in enumerate(zip(a_doc['pages'], b_doc['pages'])):
+                ca = sorted(x['id'] for x in a['anchors'] if x['code'])
+                cb = sorted(x['id'] for x in b['anchors'] if x['code'])
+                if ca != cb:
+                    raise SystemExit('section %d (%s) holds %s in %s but %s in %s'
+                                     % (i, a['slug'], ca, a_doc['path'], cb, b_doc['path']))
 
-    npages = len(base['pages'])
-    flat = []          # every HTML line of every page, in (lang, page) order
-    spans = []         # (first, last) into flat, indexed lang*npages + page
-    titles = []
-    anchors = []       # (page, id, title, is_code)
-    anchor_span = []   # (first, last) into anchors, per language
+    # ── flat tables ────────────────────────────────────────────────────────────────────────
+    # A SLUG IS LOOKED UP ACROSS THE WHOLE LANGUAGE, because that is what a page number is to
+    # the window -- so two documents claiming `about` would make the second one's page
+    # unreachable, and every route that resolves a slug (a language switch, F1 on a construct,
+    # the contents tree) would land in the first. The suite catches the symptom; this names the
+    # cause, which is the generator's job and where its other eight refusals live.
+    all_slugs = [s for k in DOCS for s in DOC_SLUGS[k]]
+    dupes = sorted({s for s in all_slugs if all_slugs.count(s) > 1})
+    if dupes:
+        raise SystemExit('two documents share the page slug(s) %s -- a slug is looked up across '
+                         'the whole language, so the second would be unreachable' % dupes)
 
-    exs, ex_span, incs, inc_span = [], [], [], []
-    for doc in docs:
-        first_anchor, first_ex, first_inc = len(anchors), len(exs), len(incs)
-        for page in doc['pages']:
-            spans.append((len(flat), len(flat) + len(page['html']) - 1))
-            flat.extend(page['html'])
-            titles.append(page['title'])
-        for p, page in enumerate(doc['pages']):
-            for a in page['anchors']:
-                anchors.append((p, a['id'], a['title'], a['code']))
-        anchor_span.append((first_anchor, len(anchors) - 1))
-        exs.extend(doc['examples'])
+    kinds = list(DOCS)
+    docs_flat = []          # one row per (language, document)
+    doc_span = []           # (first, last) into docs_flat, per language
+    incs, inc_span = [], []  # the fragments of each document
+    flat_pages = []         # (slug, title, doc_in_lang, first_line, last_line)
+    page_span = []          # (first, last) into flat_pages, per language
+    flat = []               # every HTML line of every page
+    exs, ex_span, ex_doc = [], [], []
+    anchors, anchor_span = [], []
+
+    for entry in langs:
+        first_doc, first_page, first_ex, first_anchor = (
+            len(docs_flat), len(flat_pages), len(exs), len(anchors))
+        for d, doc in enumerate(entry['docs']):
+            first_inc = len(incs)
+            incs.extend(doc['fixture']['includes'])
+            inc_span.append((first_inc, len(incs) - 1))
+            docs_flat.append({'kind': kinds.index(doc['kind']), 'path': doc['path'],
+                              'digest': doc['digest'],
+                              'locale': doc['fixture']['locale'],
+                              'seed': doc['fixture']['seed']})
+            for page in doc['pages']:
+                flat_pages.append({'slug': page['slug'], 'title': page['title'], 'doc': d,
+                                   'first': len(flat), 'last': len(flat) + len(page['html']) - 1})
+                flat.extend(page['html'])
+            exs.extend(doc['examples'])
+            ex_doc.extend([d] * len(doc['examples']))
+        doc_span.append((first_doc, len(docs_flat) - 1))
+        page_span.append((first_page, len(flat_pages) - 1))
         ex_span.append((first_ex, len(exs) - 1))
-        incs.extend(doc['fixture']['includes'])
-        inc_span.append((first_inc, len(incs) - 1))
+        # Anchors carry a page number IN THE LANGUAGE, so they are numbered after the pages are.
+        p = 0
+        for doc in entry['docs']:
+            for page in doc['pages']:
+                for a in page['anchors']:
+                    anchors.append((p, a['id'], a['title'], a['code']))
+                p += 1
+        anchor_span.append((first_anchor, len(anchors) - 1))
+
+    def arr(name, kind, values, per_line=None):
+        """One Pascal constant array -- and one unreachable element where it would be empty.
+
+        Pascal has no empty array constant (`array[0..-1] of string = ()` is `Illegal
+        expression`) and the accessors below name every array unconditionally, so a comment in
+        its place turns a range error into six `Identifier not found`. Found by review, which
+        registered a second document with no fragments and no `###` headings -- the shape a
+        language reference has -- and got a unit that would not compile.
+
+        The element is never read: every accessor range-checks against a count derived from the
+        spans, and an empty span answers zero.
+        """
+        if not values:
+            zero = {'string': "''", 'Integer': '0', 'LongWord': '0', 'Boolean': 'False'}[kind]
+            return ['  { %s: nothing to carry in this build. The one element exists because'
+                    ' Pascal has' % name,
+                    '    no empty array constant and the accessors name it; the count is taken'
+                    ' from the spans,',
+                    '    which are empty, so nothing ever reads it. }',
+                    '  %s: array[0..0] of %s = (%s);' % (name, kind, zero)]
+        out = ['  %s: array[0..%d] of %s = (' % (name, len(values) - 1, kind)]
+        if per_line:
+            for i, v in enumerate(values):
+                out.append('    %s%s' % (v, ',' if i < len(values) - 1 else ''))
+        else:
+            out.append('    ' + ', '.join(values))
+        out.append('  );')
+        return out
 
     u = ['(*',
          ' * SpxHelpText -- the help documents, as HTML, one page per section.',
          ' *',
-         ' * GENERATED by scripts/make-help.py from docs/help/<lang>/diagnostics.md. Do not edit:',
+         ' * GENERATED by scripts/make-help.py from docs/help/<lang>/<document>.md. Do not edit:',
          ' * change the markdown and run the script again. The markdown is the single source --',
          ' * TestHelpExamples runs every example in it through the real engine, so what ships here',
          ' * cannot diverge from what was verified. The suite compares SpxHelpSourceDigest against',
@@ -658,10 +994,12 @@ def main():
          ' * A PAGE PER SECTION. TIpHtmlPanel\'s layout is quadratic -- measured 156 ms on 12.7 KB,',
          ' * and 12.9 s on 172 KB (ADR 0004). Whole documents would be seconds.',
          ' *',
-         ' * The index is ALang * SPX_HELP_PAGE_COUNT + APage. Both documents carry the same',
-         ' * sections in the same order, and the script refuses to write unless they do, because a',
-         ' * slug names a section in BOTH -- that is how the viewer keeps your place when the',
-         ' * interface language changes.',
+         ' * A LANGUAGE HAS DOCUMENTS AND A DOCUMENT HAS PAGES, and the two dimensions are kept',
+         ' * apart because the CONDITIONS are the document\'s: each declares its own locale, seed',
+         ' * and fragments in its own spx-fixture block, and a click has to render under the ones',
+         ' * belonging to the page it was clicked on. Pages and examples are numbered per LANGUAGE,',
+         ' * flat across its documents, because that is what a page index and an `ex:N` mean to the',
+         ' * window.',
          ' *)',
          'unit SpxHelpText;',
          '',
@@ -671,22 +1009,34 @@ def main():
          '',
          'const',
          '  SPX_HELP_LANG_COUNT = %d;' % len(LANGS),
-         '  SPX_HELP_PAGE_COUNT = %d;' % npages,
+         '  { The document KINDS this build knows, whether or not a language carries them. }',
+         '  SPX_HELP_KIND_COUNT = %d;' % len(kinds),
          '',
          '{ The help languages, by the engine\'s own code. Not the interface\'s fourteen: a',
          '  language with no document here falls back, and SpxHelpNav owns that rule. }',
          'function SpxHelpLangCode(ALang: Integer): string;',
          'function SpxHelpLangIndex(const ACode: string): Integer;   { -1 when absent }',
          '',
+         '{ A KIND is `diagnostics` or `syntax`: what the document is about, the same in every',
+         '  language. A DOCUMENT is one language\'s copy of a kind, and carries the conditions its',
+         '  examples were measured under. }',
+         'function SpxHelpKindSlug(AKind: Integer): string;',
+         'function SpxHelpDocCount(ALang: Integer): Integer;',
+         'function SpxHelpDocKind(ALang, ADoc: Integer): Integer;   { -1 when absent }',
+         '',
          '{ Where the document came from, and an FNV-1a of its bytes. The suite reads the file and',
          '  compares -- an edit without a regeneration fails the build. }',
-         'function SpxHelpSourcePath(ALang: Integer): string;',
-         'function SpxHelpSourceDigest(ALang: Integer): string;',
+         'function SpxHelpSourcePath(ALang, ADoc: Integer): string;',
+         'function SpxHelpSourceDigest(ALang, ADoc: Integer): string;',
          '',
-         '{ A page. The slug is the same string in every language; the title is that language\'s. }',
-         'function SpxHelpPageSlug(APage: Integer): string;',
-         'function SpxHelpPageIndex(const ASlug: string): Integer;   { -1 when absent }',
+         '{ A page. Numbered per LANGUAGE, flat across its documents; the slug is the same string',
+         '  in every language and the title is that language\'s. SpxHelpPageDoc says which of the',
+         '  language\'s documents the page came from, which is how its conditions are found. }',
+         'function SpxHelpPageCount(ALang: Integer): Integer;',
+         'function SpxHelpPageSlug(ALang, APage: Integer): string;',
+         'function SpxHelpPageIndex(ALang: Integer; const ASlug: string): Integer;  { -1 absent }',
          'function SpxHelpPageTitle(ALang, APage: Integer): string;',
+         'function SpxHelpPageDoc(ALang, APage: Integer): Integer;',
          '',
          '{ The page\'s HTML -- a FRAGMENT, with no <html> around it. SpxHelpNav.SpxHelpDocument',
          '  wraps it, and the renderer must never be handed a bare fragment (ADR 0004). }',
@@ -700,14 +1050,14 @@ def main():
          'function SpxHelpAnchorTitle(ALang, AIndex: Integer): string;',
          'function SpxHelpAnchorIsCode(ALang, AIndex: Integer): Boolean;',
          '',
-         '{ THE CONDITIONS THE OUTPUTS WERE MEASURED UNDER, from the document\'s own spx-fixture',
+         '{ THE CONDITIONS THE OUTPUTS WERE MEASURED UNDER, from the DOCUMENT\'s own spx-fixture',
          '  block. A click rendered under anything else would disagree with the arrow printed',
          '  beside it, which is the one thing this document may never do. }',
-         'function SpxHelpLocale(ALang: Integer): string;',
-         'function SpxHelpSeed(ALang: Integer): LongWord;',
-         'function SpxHelpIncludeCount(ALang: Integer): Integer;',
-         'function SpxHelpIncludeName(ALang, AIndex: Integer): string;',
-         'function SpxHelpIncludeText(ALang, AIndex: Integer): string;',
+         'function SpxHelpLocale(ALang, ADoc: Integer): string;',
+         'function SpxHelpSeed(ALang, ADoc: Integer): LongWord;',
+         'function SpxHelpIncludeCount(ALang, ADoc: Integer): Integer;',
+         'function SpxHelpIncludeName(ALang, ADoc, AIndex: Integer): string;',
+         'function SpxHelpIncludeText(ALang, ADoc, AIndex: Integer): string;',
          '',
          '{ THE TEMPLATE BEHIND A LINK. Every example`s template is an `ex:N` anchor in the page,',
          '  and this is what N means -- stored verbatim, as the fixture rendered it, so a click',
@@ -715,294 +1065,69 @@ def main():
          '  href and asks here. False for a number this build does not have. }',
          'function SpxHelpExampleCount(ALang: Integer): Integer;',
          'function SpxHelpExample(ALang, AIndex: Integer; out ATemplate: string): Boolean;',
+         '{ Which document it belongs to, so it renders under that document\'s conditions. }',
+         'function SpxHelpExampleDoc(ALang, AIndex: Integer): Integer;',
          '{ `ex:7` -> 7, or -1 for anything else. The one place the href form is known. }',
          'function SpxHelpExampleOf(const AHref: string): Integer;',
          '',
          'implementation',
          '',
-         'const',
-         '  HELP_LANG: array[0..%d] of string = (%s);'
-         % (len(LANGS) - 1, ', '.join("'%s'" % c for c in LANGS)),
-         '  HELP_PATH: array[0..%d] of string = (%s);'
-         % (len(LANGS) - 1, ', '.join("'%s'" % d['path'] for d in docs)),
-         '  HELP_DIGEST: array[0..%d] of string = (%s);'
-         % (len(LANGS) - 1, ', '.join("'%s'" % d['digest'] for d in docs)),
-         '',
-         '  HELP_SLUG: array[0..%d] of string = (' % (npages - 1),
-         '    ' + ', '.join("'%s'" % p['slug'] for p in base['pages']),
-         '  );',
-         '']
+         'const']
 
-    u.append('  { Titles, indexed ALang * SPX_HELP_PAGE_COUNT + APage. }')
-    u.append('  HELP_TITLE: array[0..%d] of string = (' % (len(titles) - 1))
-    for i, t in enumerate(titles):
-        u.append('    %s%s' % (literal(t), ',' if i < len(titles) - 1 else ''))
-    u.append('  );')
+    u += arr('HELP_LANG', 'string', ["'%s'" % c for c in LANGS])
+    u += arr('HELP_KIND_SLUG', 'string', ["'%s'" % k for k in kinds])
     u.append('')
-
-    u.append('  { First and last line of each page in HELP_LINE, same index. }')
-    u.append('  HELP_FIRST: array[0..%d] of Integer = (' % (len(spans) - 1))
-    u.append('    ' + ', '.join(str(a) for a, _ in spans))
-    u.append('  );')
-    u.append('  HELP_LAST: array[0..%d] of Integer = (' % (len(spans) - 1))
-    u.append('    ' + ', '.join(str(b) for _, b in spans))
-    u.append('  );')
+    u.append('  { Each language\'s documents: a span into the tables below. }')
+    u += arr('HELP_DOC_FIRST', 'Integer', [str(a) for a, _ in doc_span])
+    u += arr('HELP_DOC_LAST', 'Integer', [str(b) for _, b in doc_span])
+    u += arr('HELP_DOC_KIND', 'Integer', [str(d['kind']) for d in docs_flat])
+    u += arr('HELP_DOC_PATH', 'string', [literal(d['path']) for d in docs_flat], True)
+    u += arr('HELP_DOC_DIGEST', 'string', ["'%s'" % d['digest'] for d in docs_flat])
+    u += arr('HELP_DOC_LOCALE', 'string', ["'%s'" % d['locale'] for d in docs_flat])
+    u += arr('HELP_DOC_SEED', 'LongWord', [str(d['seed']) for d in docs_flat])
+    u += arr('HELP_INC_FIRST', 'Integer', [str(a) for a, _ in inc_span])
+    u += arr('HELP_INC_LAST', 'Integer', [str(b) for _, b in inc_span])
+    u += arr('HELP_INC_NAME', 'string', [literal(e[0]) for e in incs], True)
+    u += arr('HELP_INC_TEXT', 'string', [literal(e[1]) for e in incs], True)
     u.append('')
-
+    u.append('  { Each language\'s pages: a span into the tables below. }')
+    u += arr('HELP_PAGE_FIRST', 'Integer', [str(a) for a, _ in page_span])
+    u += arr('HELP_PAGE_LAST', 'Integer', [str(b) for _, b in page_span])
+    u += arr('HELP_SLUG', 'string', ["'%s'" % p['slug'] for p in flat_pages])
+    u += arr('HELP_TITLE', 'string', [literal(p['title']) for p in flat_pages], True)
+    u += arr('HELP_PAGE_DOC', 'Integer', [str(p['doc']) for p in flat_pages])
+    u += arr('HELP_FIRST', 'Integer', [str(p['first']) for p in flat_pages])
+    u += arr('HELP_LAST', 'Integer', [str(p['last']) for p in flat_pages])
+    u.append('')
     u.append('  { Every page of every language, one element per line of HTML -- a change to the')
     u.append('    prose is then one readable hunk in a diff, which a byte array would not be. }')
-    u.append('  HELP_LINE: array[0..%d] of string = (' % (len(flat) - 1))
-    for i, line in enumerate(flat):
-        u.append('    %s%s' % (literal(line), ',' if i < len(flat) - 1 else ''))
-    u.append('  );')
+    u += arr('HELP_LINE', 'string', [literal(x) for x in flat], True)
     u.append('')
-
-    u.append('  { The conditions the outputs were measured under, and the template set. }')
-    u.append('  HELP_LOCALE: array[0..%d] of string = (%s);'
-             % (len(LANGS) - 1, ', '.join("'%s'" % d['fixture']['locale'] for d in docs)))
-    u.append('  HELP_SEED: array[0..%d] of LongWord = (%s);'
-             % (len(LANGS) - 1, ', '.join(str(d['fixture']['seed']) for d in docs)))
-    u.append('  HELP_INC_FIRST: array[0..%d] of Integer = (%s);'
-             % (len(LANGS) - 1, ', '.join(str(a) for a, _ in inc_span)))
-    u.append('  HELP_INC_LAST: array[0..%d] of Integer = (%s);'
-             % (len(LANGS) - 1, ', '.join(str(b) for _, b in inc_span)))
-    u.append('  HELP_INC_NAME: array[0..%d] of string = (' % (len(incs) - 1))
-    for i, e in enumerate(incs):
-        u.append('    %s%s' % (literal(e[0]), ',' if i < len(incs) - 1 else ''))
-    u.append('  );')
-    u.append('  HELP_INC_TEXT: array[0..%d] of string = (' % (len(incs) - 1))
-    for i, e in enumerate(incs):
-        u.append('    %s%s' % (literal(e[1]), ',' if i < len(incs) - 1 else ''))
-    u.append('  );')
-    u.append('')
-
     u.append('  { The templates the `ex:N` links point at, verbatim as the fixture ran them. }')
-    u.append('  HELP_EX_FIRST: array[0..%d] of Integer = (%s);'
-             % (len(LANGS) - 1, ', '.join(str(a) for a, _ in ex_span)))
-    u.append('  HELP_EX_LAST: array[0..%d] of Integer = (%s);'
-             % (len(LANGS) - 1, ', '.join(str(b) for _, b in ex_span)))
-    u.append('  HELP_EX_TEMPLATE: array[0..%d] of string = (' % (len(exs) - 1))
-    for i, e in enumerate(exs):
-        u.append('    %s%s' % (literal(e), ',' if i < len(exs) - 1 else ''))
-    u.append('  );')
+    u += arr('HELP_EX_FIRST', 'Integer', [str(a) for a, _ in ex_span])
+    u += arr('HELP_EX_LAST', 'Integer', [str(b) for _, b in ex_span])
+    u += arr('HELP_EX_TEMPLATE', 'string', [literal(e) for e in exs], True)
+    u += arr('HELP_EX_DOC', 'Integer', [str(d) for d in ex_doc])
     u.append('')
-
     u.append('  { The `###` articles: page, id, title, and whether the id is a diagnostic code. }')
-    u.append('  HELP_ANCHOR_FIRST: array[0..%d] of Integer = (%s);'
-             % (len(LANGS) - 1, ', '.join(str(a) for a, _ in anchor_span)))
-    u.append('  HELP_ANCHOR_LAST: array[0..%d] of Integer = (%s);'
-             % (len(LANGS) - 1, ', '.join(str(b) for _, b in anchor_span)))
-    u.append('  HELP_ANCHOR_PAGE: array[0..%d] of Integer = (' % (len(anchors) - 1))
-    u.append('    ' + ', '.join(str(a[0]) for a in anchors))
-    u.append('  );')
-    u.append('  HELP_ANCHOR_ID: array[0..%d] of string = (' % (len(anchors) - 1))
-    for i, a in enumerate(anchors):
-        u.append('    %s%s' % (literal(a[1]), ',' if i < len(anchors) - 1 else ''))
-    u.append('  );')
-    u.append('  HELP_ANCHOR_TITLE: array[0..%d] of string = (' % (len(anchors) - 1))
-    for i, a in enumerate(anchors):
-        u.append('    %s%s' % (literal(a[2]), ',' if i < len(anchors) - 1 else ''))
-    u.append('  );')
-    u.append('  HELP_ANCHOR_CODE: array[0..%d] of Boolean = (' % (len(anchors) - 1))
-    u.append('    ' + ', '.join('True' if a[3] else 'False' for a in anchors))
-    u.append('  );')
+    u += arr('HELP_ANCHOR_FIRST', 'Integer', [str(a) for a, _ in anchor_span])
+    u += arr('HELP_ANCHOR_LAST', 'Integer', [str(b) for _, b in anchor_span])
+    u += arr('HELP_ANCHOR_PAGE', 'Integer', [str(a[0]) for a in anchors])
+    u += arr('HELP_ANCHOR_ID', 'string', [literal(a[1]) for a in anchors], True)
+    u += arr('HELP_ANCHOR_TITLE', 'string', [literal(a[2]) for a in anchors], True)
+    u += arr('HELP_ANCHOR_CODE', 'Boolean', ['True' if a[3] else 'False' for a in anchors])
     u.append('')
 
-    u += ['function SpxHelpLangCode(ALang: Integer): string;',
-          'begin',
-          '  if (ALang < 0) or (ALang > High(HELP_LANG)) then Exit(\'\');',
-          '  Result := HELP_LANG[ALang];',
-          'end;',
-          '',
-          'function SpxHelpLangIndex(const ACode: string): Integer;',
-          'var i: Integer;',
-          'begin',
-          '  for i := Low(HELP_LANG) to High(HELP_LANG) do',
-          '    if HELP_LANG[i] = ACode then Exit(i);',
-          '  Result := -1;',
-          'end;',
-          '',
-          'function SpxHelpSourcePath(ALang: Integer): string;',
-          'begin',
-          '  if (ALang < 0) or (ALang > High(HELP_PATH)) then Exit(\'\');',
-          '  Result := HELP_PATH[ALang];',
-          'end;',
-          '',
-          'function SpxHelpSourceDigest(ALang: Integer): string;',
-          'begin',
-          '  if (ALang < 0) or (ALang > High(HELP_DIGEST)) then Exit(\'\');',
-          '  Result := HELP_DIGEST[ALang];',
-          'end;',
-          '',
-          'function SpxHelpPageSlug(APage: Integer): string;',
-          'begin',
-          '  if (APage < 0) or (APage > High(HELP_SLUG)) then Exit(\'\');',
-          '  Result := HELP_SLUG[APage];',
-          'end;',
-          '',
-          'function SpxHelpPageIndex(const ASlug: string): Integer;',
-          'var i: Integer;',
-          'begin',
-          '  for i := Low(HELP_SLUG) to High(HELP_SLUG) do',
-          '    if HELP_SLUG[i] = ASlug then Exit(i);',
-          '  Result := -1;',
-          'end;',
-          '',
-          '{ The one place the two-dimensional index is computed. -1 when either is out of range,',
-          '  so every caller above can answer with an empty string rather than a range error. }',
-          'function PageAt(ALang, APage: Integer): Integer;',
-          'begin',
-          '  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) or',
-          '     (APage < 0) or (APage >= SPX_HELP_PAGE_COUNT) then Exit(-1);',
-          '  Result := ALang * SPX_HELP_PAGE_COUNT + APage;',
-          'end;',
-          '',
-          'function SpxHelpPageTitle(ALang, APage: Integer): string;',
-          'var i: Integer;',
-          'begin',
-          '  i := PageAt(ALang, APage);',
-          '  if i < 0 then Exit(\'\');',
-          '  Result := HELP_TITLE[i];',
-          'end;',
-          '',
-          'function SpxHelpPageHtml(ALang, APage: Integer): string;',
-          'var i, n: Integer;',
-          'begin',
-          '  Result := \'\';',
-          '  i := PageAt(ALang, APage);',
-          '  if i < 0 then Exit;',
-          '  for n := HELP_FIRST[i] to HELP_LAST[i] do',
-          '  begin',
-          '    if n > HELP_FIRST[i] then Result := Result + #10;',
-          '    Result := Result + HELP_LINE[n];',
-          '  end;',
-          'end;',
-          '',
-          'function SpxHelpAnchorCount(ALang: Integer): Integer;',
-          'begin',
-          '  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);',
-          '  Result := HELP_ANCHOR_LAST[ALang] - HELP_ANCHOR_FIRST[ALang] + 1;',
-          'end;',
-          '',
-          '{ -1 rather than a range error, for the same reason PageAt gives. }',
-          'function AnchorAt(ALang, AIndex: Integer): Integer;',
-          'begin',
-          '  if (AIndex < 0) or (AIndex >= SpxHelpAnchorCount(ALang)) then Exit(-1);',
-          '  Result := HELP_ANCHOR_FIRST[ALang] + AIndex;',
-          'end;',
-          '',
-          'function SpxHelpAnchorPage(ALang, AIndex: Integer): Integer;',
-          'var i: Integer;',
-          'begin',
-          '  i := AnchorAt(ALang, AIndex);',
-          '  if i < 0 then Exit(-1);',
-          '  Result := HELP_ANCHOR_PAGE[i];',
-          'end;',
-          '',
-          'function SpxHelpAnchorId(ALang, AIndex: Integer): string;',
-          'var i: Integer;',
-          'begin',
-          '  i := AnchorAt(ALang, AIndex);',
-          '  if i < 0 then Exit(\'\');',
-          '  Result := HELP_ANCHOR_ID[i];',
-          'end;',
-          '',
-          'function SpxHelpAnchorTitle(ALang, AIndex: Integer): string;',
-          'var i: Integer;',
-          'begin',
-          '  i := AnchorAt(ALang, AIndex);',
-          '  if i < 0 then Exit(\'\');',
-          '  Result := HELP_ANCHOR_TITLE[i];',
-          'end;',
-          '',
-          'function SpxHelpAnchorIsCode(ALang, AIndex: Integer): Boolean;',
-          'var i: Integer;',
-          'begin',
-          '  i := AnchorAt(ALang, AIndex);',
-          '  Result := (i >= 0) and HELP_ANCHOR_CODE[i];',
-          'end;',
-          '',
-          'function SpxHelpLocale(ALang: Integer): string;',
-          'begin',
-          "  if (ALang < 0) or (ALang > High(HELP_LOCALE)) then Exit('');",
-          '  Result := HELP_LOCALE[ALang];',
-          'end;',
-          '',
-          'function SpxHelpSeed(ALang: Integer): LongWord;',
-          'begin',
-          '  if (ALang < 0) or (ALang > High(HELP_SEED)) then Exit(1);',
-          '  Result := HELP_SEED[ALang];',
-          'end;',
-          '',
-          'function SpxHelpIncludeCount(ALang: Integer): Integer;',
-          'begin',
-          '  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);',
-          '  Result := HELP_INC_LAST[ALang] - HELP_INC_FIRST[ALang] + 1;',
-          'end;',
-          '',
-          'function IncAt(ALang, AIndex: Integer): Integer;',
-          'begin',
-          '  if (AIndex < 0) or (AIndex >= SpxHelpIncludeCount(ALang)) then Exit(-1);',
-          '  Result := HELP_INC_FIRST[ALang] + AIndex;',
-          'end;',
-          '',
-          'function SpxHelpIncludeName(ALang, AIndex: Integer): string;',
-          'var i: Integer;',
-          'begin',
-          '  i := IncAt(ALang, AIndex);',
-          "  if i < 0 then Exit('');",
-          '  Result := HELP_INC_NAME[i];',
-          'end;',
-          '',
-          'function SpxHelpIncludeText(ALang, AIndex: Integer): string;',
-          'var i: Integer;',
-          'begin',
-          '  i := IncAt(ALang, AIndex);',
-          "  if i < 0 then Exit('');",
-          '  Result := HELP_INC_TEXT[i];',
-          'end;',
-          '',
-          'function SpxHelpExampleCount(ALang: Integer): Integer;',
-          'begin',
-          '  if (ALang < 0) or (ALang >= SPX_HELP_LANG_COUNT) then Exit(0);',
-          '  Result := HELP_EX_LAST[ALang] - HELP_EX_FIRST[ALang] + 1;',
-          'end;',
-          '',
-          'function SpxHelpExample(ALang, AIndex: Integer; out ATemplate: string): Boolean;',
-          'begin',
-          "  ATemplate := '';",
-          '  Result := (AIndex >= 0) and (AIndex < SpxHelpExampleCount(ALang));',
-          '  if Result then ATemplate := HELP_EX_TEMPLATE[HELP_EX_FIRST[ALang] + AIndex];',
-          'end;',
-          '',
-          'function SpxHelpExampleOf(const AHref: string): Integer;',
-          'var i, n: Integer; digits: string;',
-          'begin',
-          '  Result := -1;',
-          "  if Copy(AHref, 1, 3) <> 'ex:' then Exit;",
-          '  digits := Copy(AHref, 4, MaxInt);',
-          "  if (digits = '') or (Length(digits) > 6) then Exit;",
-          '  { Added up here rather than through StrToIntDef, so this unit needs no uses clause',
-          '    at all -- it is a table of constants and nothing else, and it stays that way. }',
-          '  n := 0;',
-          '  for i := 1 to Length(digits) do',
-          '  begin',
-          "    if (digits[i] < '0') or (digits[i] > '9') then Exit;",
-          "    n := n * 10 + (Ord(digits[i]) - Ord('0'));",
-          '  end;',
-          '  Result := n;',
-          'end;',
-          '',
-          'end.',
-          '']
-
+    u += ACCESSORS
     out = os.path.join(HERE, 'gui', 'SpxHelpText.pas')
     io.open(out, 'w', encoding='utf-8', newline='').write('\n'.join(u))
-    for doc in docs:
-        big = max(len('\n'.join(p['html']).encode('utf-8')) for p in doc['pages'])
-        print('%-30s %2d pages, %2d articles, largest %d bytes'
-              % (doc['path'], len(doc['pages']),
-                 sum(len(p['anchors']) for p in doc['pages']), big))
+    for entry in langs:
+        for doc in entry['docs']:
+            big = max(len('\n'.join(p['html']).encode('utf-8')) for p in doc['pages'])
+            print('%-30s %2d pages, %2d articles, %2d examples, largest %d bytes'
+                  % (doc['path'], len(doc['pages']),
+                     sum(len(p['anchors']) for p in doc['pages']),
+                     len(doc['examples']), big))
     print('%-30s %d bytes' % (os.path.relpath(out, HERE), os.path.getsize(out)))
 
 

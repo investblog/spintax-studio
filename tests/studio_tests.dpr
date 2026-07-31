@@ -3490,6 +3490,25 @@ end;
 var
   GRanTemplates: TStringList = nil;
 
+{ How many fragments a document's fixture declared. Recorded rather than asserted, so the
+  unit's table can be compared against the suite's own reading of the same block -- two parsers,
+  one document, which is the shape every other claim about the help is checked in. }
+var GFixtureIncludes: TStringList = nil;
+
+procedure NoteFixtureIncludes(const APath: string; ACount: Integer);
+begin
+  if GFixtureIncludes = nil then GFixtureIncludes := TStringList.Create;
+  GFixtureIncludes.Values[APath] := IntToStr(ACount);
+end;
+
+function FixtureIncludesFor(const APath: string): Integer;
+begin
+  Result := -1;
+  if GFixtureIncludes = nil then Exit;
+  if GFixtureIncludes.IndexOfName(APath) < 0 then Exit;
+  Result := StrToIntDef(GFixtureIncludes.Values[APath], -1);
+end;
+
 procedure NoteTemplate(const APath, ATemplate: string);
 begin
   if GRanTemplates = nil then GRanTemplates := TStringList.Create;
@@ -3769,6 +3788,7 @@ begin
     { EXACT, not a floor. A shared floor let one document satisfy it for another, and ten
       examples could vanish from this one without a word. }
     Check('help/' + label_ + '/example count', IntToStr(checked), IntToStr(ADoc.Examples));
+    NoteFixtureIncludes(ADoc.Path, set_.Count);
     { The same ratchet over the claims. Without it the `spx-good` contract is opt-in in the one
       direction that matters: removing the tag removes the check, and green means nothing. }
     Check('help/' + label_ + '/good-example count', IntToStr(good), IntToStr(ADoc.Good));
@@ -3867,8 +3887,9 @@ var
   html, ids, want, got, s_: string;
   k: TSpxNoteKind;
   arts, hrefs: TStringList;
-  j, n, want_ex, ins: Integer;
-  t_: string;
+  j, n, want_ex, ins, d: Integer;
+  t_, doc_: string;
+  ran: TStringList;
   ctxDoc: string;
   ctxRep: TSpxReport;
   ctxRows: TSpxPanelRows;
@@ -3876,15 +3897,22 @@ var
   { How many rows an example draws under ITS OWN document's conditions -- the locale, the seed
     and the fragment set the fixture declared. Which is what the window has when it decides
     whether to offer the example, so this asks the same question the same way. }
-  function RowsOfHelpExample(ALang: Integer; const ATmpl: string): Integer;
-  var rep: TSpxReport; rws: TSpxPanelRows; set_: TSpxTemplateSet; e: Integer;
+  function RowsOfHelpExample(ALang, AIndex: Integer): Integer;
+  var rep: TSpxReport; rws: TSpxPanelRows; set_: TSpxTemplateSet; e, doc: Integer;
+      tmpl: string;
   begin
+    { The conditions belong to the DOCUMENT the example came from, not to the language: each
+      declares its own locale, seed and fragments, so the example is looked up along with the
+      document it lives in. }
+    doc := SpxHelpExampleDoc(ALang, AIndex);
+    SpxHelpExample(ALang, AIndex, tmpl);
     set_ := nil;
-    if SpxHelpIncludeCount(ALang) > 0 then
+    if SpxHelpIncludeCount(ALang, doc) > 0 then
     begin
       set_ := TSpxTemplateSet.Create;
-      for e := 0 to SpxHelpIncludeCount(ALang) - 1 do
-        set_.AddOrSetValue(SpxHelpIncludeName(ALang, e), SpxHelpIncludeText(ALang, e));
+      for e := 0 to SpxHelpIncludeCount(ALang, doc) - 1 do
+        set_.AddOrSetValue(SpxHelpIncludeName(ALang, doc, e),
+                           SpxHelpIncludeText(ALang, doc, e));
     end;
     try
       { THE WORKER'S CALL, ARGUMENT FOR ARGUMENT (SpxEngineThread:575). The first version
@@ -3892,8 +3920,9 @@ var
         TSpxTemplateSet an alias of TStrMap, so the set bound to VARS and Templates stayed nil:
         every example was validated with no fragments at all, and the three `#include` examples
         counted as clean. The seed went into `Probes` by the same slip. Both compile. }
-      rep := SpxHealthReport(ATmpl,
-               SpxSeededContext(SpxHelpLocale(ALang), nil, SpxHelpSeed(ALang), set_), 0);
+      rep := SpxHealthReport(tmpl,
+               SpxSeededContext(SpxHelpLocale(ALang, doc), nil,
+                                SpxHelpSeed(ALang, doc), set_), 0);
       try
         rws := SpxPanelRows(rep, spxLangEn);
         Result := Length(rws);
@@ -3967,38 +3996,71 @@ begin
   Check('help/unit/digest-of-spintax', SpxHelpDigest('spintax'), 'dfd4591713134a8e');
 
   CheckTrue('help/unit/there-are-languages', SPX_HELP_LANG_COUNT > 0);
-  CheckTrue('help/unit/there-are-pages', SPX_HELP_PAGE_COUNT > 0);
+  CheckTrue('help/unit/there-are-pages', SpxHelpPageCount(0) > 0);
 
   for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
   begin
-    { THE DRIFT GATE. Someone edited the markdown and did not re-run the generator: the window
-      would ship the old text while the suite went on verifying the new. }
-    Check('help/unit/' + SpxHelpLangCode(lang) + '/matches its source document',
-          SpxHelpDigest(SpxReadTextFile(SpxHelpSourcePath(lang))),
-          SpxHelpSourceDigest(lang));
+    { EVERY DOCUMENT OF THE LANGUAGE, one at a time: a language has documents now, and each
+      carries its own source, its own digest and its own conditions. }
+    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/has documents',
+              SpxHelpDocCount(lang) > 0);
+    for d := 0 to SpxHelpDocCount(lang) - 1 do
+    begin
+      doc_ := SpxHelpLangCode(lang) + '/' + SpxHelpKindSlug(SpxHelpDocKind(lang, d));
 
-    { The document it was built from is one the suite verifies. Closes the loop with
-      HELP_DOCS -- prose that ships but is not gated would otherwise be possible again. }
-    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/its source is a registered document',
-              Pos(SpxHelpSourcePath(lang), HelpDocsOnDisk) > 0);
+      { THE DRIFT GATE. Someone edited the markdown and did not re-run the generator: the window
+        would ship the old text while the suite went on verifying the new. }
+      Check('help/unit/' + doc_ + '/matches its source document',
+            SpxHelpDigest(SpxReadTextFile(SpxHelpSourcePath(lang, d))),
+            SpxHelpSourceDigest(lang, d));
 
-    { THE CONDITIONS CAME WITH THE DOCUMENT. Render a clicked example under anything else and
-      the arrow printed beside it disagrees with the pane -- the one thing this document may
-      never do. }
-    Check('help/unit/' + SpxHelpLangCode(lang) + '/carries its own locale',
-          SpxHelpLocale(lang), SpxHelpLangCode(lang));
-    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/carries a seed', SpxHelpSeed(lang) > 0);
-    CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/carries its template set',
-              SpxHelpIncludeCount(lang) > 0);
-    for i := 0 to SpxHelpIncludeCount(lang) - 1 do
-      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/include ' + IntToStr(i) + ' is named',
-                SpxHelpIncludeName(lang, i) <> '');
+      { The document it was built from is one the suite verifies. Closes the loop with
+        HELP_DOCS -- prose that ships but is not gated would otherwise be possible again. }
+      CheckTrue('help/unit/' + doc_ + '/its source is a registered document',
+                Pos(SpxHelpSourcePath(lang, d), HelpDocsOnDisk) > 0);
+
+      { And its file name is the kind it claims to be, so a document cannot be registered under
+        another one's name and quietly take its slugs. }
+      CheckTrue('help/unit/' + doc_ + '/is the file its kind names',
+                Pos('/' + SpxHelpKindSlug(SpxHelpDocKind(lang, d)) + '.md',
+                    SpxHelpSourcePath(lang, d)) > 0);
+
+      { THE CONDITIONS CAME WITH THE DOCUMENT. Render a clicked example under anything else and
+        the arrow printed beside it disagrees with the pane -- the one thing this document may
+        never do. }
+      Check('help/unit/' + doc_ + '/carries its own locale',
+            SpxHelpLocale(lang, d), SpxHelpLangCode(lang));
+      CheckTrue('help/unit/' + doc_ + '/carries a seed', SpxHelpSeed(lang, d) > 0);
+      { AS MANY FRAGMENTS AS THE DOCUMENT DECLARED -- not "at least one". The first version
+        demanded one of every document, which the generator never did: `read_fixture` treats
+        `include` as optional, so a language reference needing no fragments could not be
+        registered without inventing one. Found by review, which registered exactly that. }
+      CheckTrue('help/unit/' + doc_ + '/was read by the suite as well as by the generator',
+                FixtureIncludesFor(SpxHelpSourcePath(lang, d)) >= 0);
+      Check('help/unit/' + doc_ + '/carries the fragments its fixture declared',
+            IntToStr(SpxHelpIncludeCount(lang, d)),
+            IntToStr(FixtureIncludesFor(SpxHelpSourcePath(lang, d))));
+      for i := 0 to SpxHelpIncludeCount(lang, d) - 1 do
+        CheckTrue('help/unit/' + doc_ + '/include ' + IntToStr(i) + ' is named',
+                  SpxHelpIncludeName(lang, d, i) <> '');
+    end;
 
     { AND THEY ARE THE SAME EXAMPLES, not merely as many. Each template the window can run is
       compared against the one this suite actually put through the engine -- so a click cannot
       render text whose output was never verified. }
-    arts := TemplatesRunFor(SpxHelpSourcePath(lang));
+    { CONCATENATED OVER THE LANGUAGE'S DOCUMENTS, in the order the unit numbers them: `ex:N`
+      is one flat table per language, so the templates that were run must line up the same way. }
+    arts := TStringList.Create;
     try
+      for d := 0 to SpxHelpDocCount(lang) - 1 do
+      begin
+        ran := TemplatesRunFor(SpxHelpSourcePath(lang, d));
+        try
+          arts.AddStrings(ran);
+        finally
+          ran.Free;
+        end;
+      end;
       { THE COLLECTOR MUST HAVE RUN. It is filled while TestHelpExamples walks the markdown, so
         this comparison is silent and vacuous if the two ever run in the other order -- measured
         by review: swapping them dropped sixty-seven checks and reported nothing. An empty list
@@ -4021,8 +4083,10 @@ begin
       by running every one of them through the engine; the generator counted independently while
       building the table the window clicks through. Two parsers, one document. }
     want_ex := 0;
-    for i := Low(HELP_DOCS) to High(HELP_DOCS) do
-      if HELP_DOCS[i].Path = SpxHelpSourcePath(lang) then want_ex := HELP_DOCS[i].Examples;
+    for d := 0 to SpxHelpDocCount(lang) - 1 do
+      for i := Low(HELP_DOCS) to High(HELP_DOCS) do
+        if HELP_DOCS[i].Path = SpxHelpSourcePath(lang, d) then
+          Inc(want_ex, HELP_DOCS[i].Examples);
     Check('help/unit/' + SpxHelpLangCode(lang) + '/as many examples as the fixture rendered',
           IntToStr(SpxHelpExampleCount(lang)), IntToStr(want_ex));
 
@@ -4038,8 +4102,17 @@ begin
     { TWO PARSERS, ONE DOCUMENT. HelpArticles reads the markdown by the suite's own rules; the
       generator read it by its own. Where they disagree, one of them is wrong -- and neither is
       in a position to notice alone. }
-    arts := HelpArticles(SpxHelpSourcePath(lang));
+    arts := TStringList.Create;
     try
+      for d := 0 to SpxHelpDocCount(lang) - 1 do
+      begin
+        ran := HelpArticles(SpxHelpSourcePath(lang, d));
+        try
+          arts.AddStrings(ran);
+        finally
+          ran.Free;
+        end;
+      end;
       { FILTERED BY IsKnownCode, which is the authority on what a code is -- it asks
         ENGINE_CODES and SpxNoteCode rather than judging by shape. HelpArticles returns the
         first backticked token of every `###` heading, and one of them is `#include`, a heading
@@ -4058,7 +4131,7 @@ begin
     end;
 
     seen := 0;
-    for page := 0 to SPX_HELP_PAGE_COUNT - 1 do
+    for page := 0 to SpxHelpPageCount(lang) - 1 do
     begin
       html := SpxHelpPageHtml(lang, page);
       CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) + ' has a title',
@@ -4106,7 +4179,7 @@ begin
 
       { RE-DERIVATION: the ids in the HTML are the ids in the table, in the same order. }
       ids := IdsIn(html);
-      want := SpxHelpPageSlug(page);
+      want := SpxHelpPageSlug(lang, page);
       for i := 0 to SpxHelpAnchorCount(lang) - 1 do
         if SpxHelpAnchorPage(lang, i) = page then
         begin
@@ -4122,7 +4195,7 @@ begin
     { The escaping regression, named because it is the one that would be invisible: the article
       about an unknown permutation key shows an output whose CAUSE is the `<foo=1>` in the
       template, and the renderer eats that as a tag unless it arrives escaped. }
-    html := SpxHelpPageHtml(lang, SpxHelpPageIndex('permutations'));
+    html := SpxHelpPageHtml(lang, SpxHelpPageIndex(lang, 'permutations'));
     CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/the permutation key survives escaping',
               (Pos('&lt;foo=1&gt;', html) > 0) and (Pos('<foo=1>', html) = 0));
 
@@ -4131,7 +4204,7 @@ begin
       (iphtmlparser.pas:1965-1968), so `&lt;foo=1&gt;` was DRAWN as `&lt;foo=1&gt;` -- the reader
       reported it as an encoding fault and it was in both languages. Example blocks are <tt> in a
       paragraph now; the tag that eats entities may not come back. }
-    for page := 0 to SPX_HELP_PAGE_COUNT - 1 do
+    for page := 0 to SpxHelpPageCount(lang) - 1 do
     begin
       html := SpxHelpPageHtml(lang, page);
       CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
@@ -4154,13 +4227,24 @@ begin
 
   { A slug names the same section in every language -- which is what lets the viewer keep the
     reader's place across a language switch. }
-  for page := 0 to SPX_HELP_PAGE_COUNT - 1 do
+  for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
   begin
-    CheckTrue('help/nav/page ' + IntToStr(page) + ' has a slug', SpxHelpPageSlug(page) <> '');
-    Check('help/nav/the slug finds its own page', IntToStr(SpxHelpPageIndex(SpxHelpPageSlug(page))),
-          IntToStr(page));
+    Check('help/nav/' + SpxHelpLangCode(lang) + '/as many pages as the first language',
+          IntToStr(SpxHelpPageCount(lang)), IntToStr(SpxHelpPageCount(0)));
+    for page := 0 to SpxHelpPageCount(lang) - 1 do
+    begin
+      CheckTrue('help/nav/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) + ' has a slug',
+                SpxHelpPageSlug(lang, page) <> '');
+      Check('help/nav/' + SpxHelpLangCode(lang) + '/the slug finds its own page',
+            IntToStr(SpxHelpPageIndex(lang, SpxHelpPageSlug(lang, page))), IntToStr(page));
+      { THE SAME SECTION IN EVERY LANGUAGE, by name and by position -- which is what lets the
+        viewer keep the reader's place when the language changes under them. }
+      Check('help/nav/' + SpxHelpLangCode(lang) + '/page ' + IntToStr(page) +
+            ' is the same section as in the first language',
+            SpxHelpPageSlug(lang, page), SpxHelpPageSlug(0, page));
+    end;
   end;
-  Check('help/nav/an unknown slug is -1', IntToStr(SpxHelpPageIndex('no-such-section')), '-1');
+  Check('help/nav/an unknown slug is -1', IntToStr(SpxHelpPageIndex(0, 'no-such-section')), '-1');
 
   { THE FALLBACK, all fourteen. Two documents and fourteen interface languages means twelve
     readers see something other than what they asked for; the rule is English, the same one the
@@ -4237,43 +4321,43 @@ begin
   ctxRows := nil;
   CheckTrue('help/caret/line two of a CRLF document is found',
             SpxHelpForCaret('плоский текст'#13#10'#include "frag"', 30, 2, 4, ctxRows, 0,
-                            p_, s_) and (p_ = SpxHelpPageIndex('includes')));
+                            p_, s_) and (p_ = SpxHelpPageIndex(0, 'includes')));
 
   { No finding at the caret: the CONSTRUCT decides, and it names a chapter rather than
     pretending to know which of its articles was meant. }
   ctxRows := nil;
   CheckTrue('help/caret/in a choice opens the brackets chapter',
             SpxHelpForCaret('цена {дешёвая|дорогая}', 12, 1, 12, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('brackets')) and (s_ = ''));
+            (p_ = SpxHelpPageIndex(0, 'brackets')) and (s_ = ''));
   CheckTrue('help/caret/in a permutation opens the permutations chapter',
             SpxHelpForCaret('[a|b|c]', 3, 1, 3, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('permutations')));
+            (p_ = SpxHelpPageIndex(0, 'permutations')));
   CheckTrue('help/caret/in a plural opens the plurals chapter',
             SpxHelpForCaret('{plural %n%: товар|товара|товаров}', 20, 1, 20, ctxRows, 0,
-                            p_, s_) and (p_ = SpxHelpPageIndex('plurals')));
+                            p_, s_) and (p_ = SpxHelpPageIndex(0, 'plurals')));
   CheckTrue('help/caret/in a conditional opens the brackets chapter',
             SpxHelpForCaret('{?vip?да|нет}', 8, 1, 8, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('brackets')));
+            (p_ = SpxHelpPageIndex(0, 'brackets')));
 
   { A directive is line-anchored in this language, so the line's head is the whole question. }
   CheckTrue('help/caret/on a #set line opens the definitions chapter',
             SpxHelpForCaret('#set %x% = 1', 3, 1, 3, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('definitions')));
+            (p_ = SpxHelpPageIndex(0, 'definitions')));
   CheckTrue('help/caret/on a #def line opens the definitions chapter',
             SpxHelpForCaret('#def %x% = 1', 3, 1, 3, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('definitions')));
+            (p_ = SpxHelpPageIndex(0, 'definitions')));
   CheckTrue('help/caret/on an #include line opens the includes chapter',
             SpxHelpForCaret('#include "frag"', 4, 1, 4, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('includes')));
+            (p_ = SpxHelpPageIndex(0, 'includes')));
   CheckTrue('help/caret/on the second line of a document, not the first',
             SpxHelpForCaret('плоский текст'#10'#include "frag"', 30, 2, 4, ctxRows, 0,
-                            p_, s_) and (p_ = SpxHelpPageIndex('includes')));
+                            p_, s_) and (p_ = SpxHelpPageIndex(0, 'includes')));
 
   { A variable is the one thing that is NOT line-anchored, so it is looked for around the
     caret rather than at the head of the line. }
   CheckTrue('help/caret/in a variable opens the variables chapter',
             SpxHelpForCaret('привет %имя% и всё', 16, 1, 10, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('variables')));
+            (p_ = SpxHelpPageIndex(0, 'variables')));
 
   { A KEYWORD MUST END. All four of these are plain text to the engine -- it narrowed
     `#include` to the family's anchor in v0.2.1 -- so a chapter about directives would be
@@ -4286,7 +4370,7 @@ begin
             not SpxHelpForCaret('#definitely not a directive', 4, 1, 4, ctxRows, 0, p_, s_));
   CheckTrue('help/caret/a tab after the keyword still counts',
             SpxHelpForCaret('#set'#9'%x% = 1', 3, 1, 3, ctxRows, 0, p_, s_) and
-            (p_ = SpxHelpPageIndex('definitions')));
+            (p_ = SpxHelpPageIndex(0, 'definitions')));
 
   { A CR-ONLY document is one SpxDetectEol supports, so a scan that only knows LF looks for the
     variable's opening per cent sign on the line above. }
@@ -4307,10 +4391,10 @@ begin
   SpxHelpTargetFor(0, 'plural.arity', page, s_);
   SpxHelpRelocate(0, page, 'plural.arity', SPX_HELP_LANG_COUNT - 1, p_, s_);
   Check('help/nav/a code keeps its article across languages', s_, 'plural.arity');
-  SpxHelpRelocate(0, SpxHelpPageIndex('includes'), 'no-such-anchor',
+  SpxHelpRelocate(0, SpxHelpPageIndex(0, 'includes'), 'no-such-anchor',
                   SPX_HELP_LANG_COUNT - 1, p_, s_);
   Check('help/nav/a lost anchor keeps the section', IntToStr(p_),
-        IntToStr(SpxHelpPageIndex('includes')));
+        IntToStr(SpxHelpPageIndex(0, 'includes')));
   Check('help/nav/a lost anchor has no anchor', s_, '');
 
   (* WHAT "PUT THIS IN MY DOCUMENT" ACTUALLY PUTS THERE. The reader sees the page, and the page
@@ -4371,8 +4455,7 @@ begin
     ins := 0;
     for j := 0 to SpxHelpExampleCount(i) - 1 do
     begin
-      SpxHelpExample(i, j, s_);
-      if RowsOfHelpExample(i, s_) = 0 then Inc(ins);
+      if RowsOfHelpExample(i, j) = 0 then Inc(ins);
     end;
     { 11 of 33 and 13 of 34 -- the rest are counter-examples, which is what the rule is for. }
     if SpxHelpLangCode(i) = 'en' then

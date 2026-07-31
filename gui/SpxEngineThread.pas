@@ -79,6 +79,9 @@ type
       did. }
     HelpSet: Boolean;
     HelpLang: Integer;
+    { WHICH DOCUMENT of that language: its fragments, its locale and its seed are the ones the
+      page was measured under, and a language has more than one. }
+    HelpDoc: Integer;
     { WHICH example this job renders. It rides on the job -- and back on the result -- rather
       than being read from the window when the answer lands, because the window has moved on by
       then. Measured by review: with a 1.2 MB document still rendering, opening the help and
@@ -198,6 +201,7 @@ type
     FSetFolder: string;
     { Which help language FSet was built for, or -1 when it is an ordinary document's set. }
     FSetHelpLang: Integer;
+    FSetHelpDoc: Integer;
     { Per-file validation results, reused across renders. The walk validates every file in
       the closure on every keystroke while only the open document has changed, and
       SpValidate is quadratic in the count of #set/#def -- so a folder of fragments makes
@@ -243,6 +247,7 @@ begin
     would tell SyncSet the set is already the English help's and the first document would render
     against three fragments out of the help. }
   FSetHelpLang := -1;
+  FSetHelpDoc := -1;
   FCache := TSpxValidationCache.Create;   // before the thread starts, so it cannot race
   inherited Create(False);   // start at once: the first thing it does is warm the engine
 end;
@@ -540,24 +545,27 @@ end;
 procedure TSpxEngineThread.SyncSet(const Job: TSpxJob);
 var i: Integer;
 begin
-  { The help's set is three fragments the document declares, not a folder -- built here and
-    cached by language, so a caret moving through the help does not rebuild it per keystroke. }
+  { The help's set is the fragments the DOCUMENT declares, not a folder -- built here and
+    cached by (language, document), so a caret moving through the help does not rebuild it per
+    keystroke, and turning from one document to another does. }
   if Job.HelpSet then
   begin
-    if FSetHelpLang = Job.HelpLang then Exit;
+    if (FSetHelpLang = Job.HelpLang) and (FSetHelpDoc = Job.HelpDoc) then Exit;
     FreeAndNil(FSet);
     FSetFolder := '';
     FSetHelpLang := Job.HelpLang;
+    FSetHelpDoc := Job.HelpDoc;
     FSet := TSpxTemplateSet.Create;
-    for i := 0 to SpxHelpIncludeCount(Job.HelpLang) - 1 do
-      FSet.AddOrSetValue(SpxHelpIncludeName(Job.HelpLang, i),
-                         SpxHelpIncludeText(Job.HelpLang, i));
+    for i := 0 to SpxHelpIncludeCount(Job.HelpLang, Job.HelpDoc) - 1 do
+      FSet.AddOrSetValue(SpxHelpIncludeName(Job.HelpLang, Job.HelpDoc, i),
+                         SpxHelpIncludeText(Job.HelpLang, Job.HelpDoc, i));
     Exit;
   end;
   if (not Job.ReloadSet) and (FSetHelpLang < 0) and (Job.SetFolder = FSetFolder) and
      ((FSet <> nil) = (Job.SetFolder <> '')) then Exit;
   FreeAndNil(FSet);
   FSetHelpLang := -1;
+  FSetHelpDoc := -1;
   FSetFolder := Job.SetFolder;
   if FSetFolder <> '' then FSet := SpxLoadTemplateSet(FSetFolder);
 end;

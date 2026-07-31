@@ -147,7 +147,7 @@ begin
     for i := 0 to FTree.Items.Count - 1 do
       if FTree.Items[i].Data <> nil then TTopicRef(FTree.Items[i].Data).Free;
     FTree.Items.Clear;
-    for page := 0 to SPX_HELP_PAGE_COUNT - 1 do
+    for page := 0 to SpxHelpPageCount(FLang) - 1 do
     begin
       sect := FTree.Items.AddChild(nil, SpxHelpPageTitle(FLang, page));
       ref := TTopicRef.Create;
