@@ -90,7 +90,9 @@ const
 
       'Inclusions — les fragments que ce document tire', 'Cible', 'Trouvé', 'oui', 'ABSENT', 'pas de jeu',
 
-      'Aide', 'Sommaire', 'Langue de l’aide', 'Il n’y a pas encore d’aide en %s.'
+      'Aide', 'Sommaire', 'Langue de l’aide', 'Il n’y a pas encore d’aide en %s.',
+
+      'tiré de l''aide', 'Insérer dans mon document'
   );
 
 implementation

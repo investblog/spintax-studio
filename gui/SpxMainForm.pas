@@ -305,6 +305,7 @@ type
     procedure TopicPicked(APage: Integer; const AAnchor: string);
     procedure HelpLangChanged(Sender: TObject);
     procedure RunHelpExample(AIndex: Integer);
+    procedure InsertHelpExample(Sender: TObject);
     procedure OpenHelpAtCaret;
     procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
@@ -857,6 +858,7 @@ begin
   FPreview.Parent := FBody;
   FPreview.Align := alClient;
   FPreview.Constraints.MinWidth := Px(Self, SPX_PANE_MIN);
+  FPreview.OnInsert := @InsertHelpExample;
 
   FDebounce := TTimer.Create(Self);
   FDebounce.Enabled := False;
@@ -2754,6 +2756,9 @@ begin
     job.Seeded := True;
     job.Seed := SpxHelpSeed(job.HelpLang);
     if FHelpExample >= 0 then SpxHelpExample(job.HelpLang, FHelpExample, job.Text);
+    { The offer rides with the example, in the one place that knows both -- so it appears when
+      a template is clicked, and goes when the reader turns the page or shuts the help. }
+    FPreview.Offering := FHelpExample >= 0;
     FShownAsk := Default(TSpxPreviewAsk);
     FEngine.Post(job);
     Exit;
@@ -2766,6 +2771,7 @@ begin
     blank line as the file is, thirty-five once normalised to CRLF, and the source view then
     opens on a screenful of nothing. The preview must show what the FILE produces. }
   job.Text := DocText;
+  FPreview.Offering := False;
   { The family is the document's business, so this is where it is reconsidered. }
   UpdateEditorFont(job.Text);
   job.UiLang := SpxUiLang;
@@ -3433,6 +3439,35 @@ begin
   RequestRender;
 end;
 
+(* THE EXAMPLE BECOMES THE READER'S. Two things make this cheap rather than clever: the
+   template is taken from the table the fixture ran (SpxHelpInsertText, and the suite compares
+   the two for every example), and once it is in the document the application stops believing
+   the help at all -- the render that follows is the real engine on the reader's own text,
+   under the reader's own settings.
+
+   THE HELP IS PUT AWAY FIRST, and not for tidiness: it occupies the editor's half of the
+   window, so an insertion made while it is up lands in a document nobody can see. Closing is
+   the only thing that makes the result visible.
+
+   Through InsertTextAtCaret, so it is ONE undo step -- the same reason VarDefine gives. *)
+procedure TSpxMainForm.InsertHelpExample(Sender: TObject);
+var tmpl: string;
+begin
+  if (FEditor = nil) or (FHelpExample < 0) then Exit;
+  { Read BEFORE the close: HideHelp forgets which example was showing, which is right for the
+    pane and would be a bug here. }
+  if not SpxHelpInsertText(FTopics.HelpLang, FHelpExample, LineEnding, tmpl) then Exit;
+  HelpPaneClosed(nil);
+
+  FEditor.BeginUpdate;
+  try
+    FEditor.InsertTextAtCaret(tmpl);
+  finally
+    FEditor.EndUpdate;
+  end;
+  RequestRender;
+end;
+
 procedure TSpxMainForm.HelpPaneClosed(Sender: TObject);
 begin
   HideHelp;
@@ -3550,6 +3585,12 @@ end;
   something else. }
 procedure TSpxMainForm.ShowVariant(const AText: string);
 begin
+  { AND IT IS NOT THE HELP'S EXAMPLE. This is the second route into the pane -- RequestRender
+    is the other -- and the strip's rule has to be stated on both or it describes whichever
+    ran last. With the help open, three clicks in the variants panel left the offer up over a
+    row of the reader's own document, and pressing it inserted the help's template instead.
+    Found by review. The next template click puts it back. }
+  FPreview.Offering := False;
   FPreview.SetContent(AText);
   SayPartial(AText, False);
 end;

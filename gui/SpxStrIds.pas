@@ -102,7 +102,11 @@ type
       reads right, no menu caption here carries an `&` accelerator, and every id costs
       seventeen files. The section titles the viewer lists are the help document's own, and
       the help languages are named by SpxLangName's endonyms -- neither is a string. ── }
-    sMenuHelp, sHelpContents, sHelpLanguage, sHelpNotTranslated
+    sMenuHelp, sHelpContents, sHelpLanguage, sHelpNotTranslated,
+
+    { ── the help's offer to keep an example: what the right pane is showing, and the
+      button that puts it in the reader's own document ── }
+    sHelpExampleFrom, sHelpExampleInsert
   );
 
 implementation

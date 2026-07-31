@@ -85,7 +85,9 @@ const
 
       'Includes — de fragmenten die dit document ophaalt', 'Doel', 'Gevonden', 'ja', 'ONTBREEKT', 'geen set',
 
-      'Help', 'Inhoud', 'Taal van de help', 'Er is nog geen help in het %s.'
+      'Help', 'Inhoud', 'Taal van de help', 'Er is nog geen help in het %s.',
+
+      'uit de Help', 'In mijn document invoegen'
   );
 
 implementation

@@ -102,6 +102,17 @@ function SpxHelpDocument(const ABody, ABack, AText, ALink: string): string;
   cannot drift from each other while checking that nothing else does. }
 function SpxHelpDigest(const AText: string): string;
 
+{ THE TEMPLATE A READER ASKED TO KEEP, ready for the editor: the example's own bytes with the
+  document's LF turned into whatever the editor joins lines with.
+
+  It comes from the example TABLE, never from the page -- the page is HTML, where the very lines
+  this matters for are escaped (`[<foo=1>a|b|c]` is drawn as `&lt;foo=1&gt;`), so lifting the
+  text a reader can SEE would hand them something the engine has never rendered. The table holds
+  what the fixture ran, byte for byte; the suite compares the two here so the panel cannot quietly
+  start reading the other one. }
+function SpxHelpInsertText(ALang, AIndex: Integer; const AEol: string;
+  out AText: string): Boolean;
+
 implementation
 
 function SpxHelpLangFor(ALang: TSpxLang): Integer;
@@ -367,5 +378,19 @@ begin
   Result := LowerCase(IntToHex(h, 16));
 end;
 {$pop}
+
+function SpxHelpInsertText(ALang, AIndex: Integer; const AEol: string;
+  out AText: string): Boolean;
+begin
+  AText := '';
+  Result := SpxHelpExample(ALang, AIndex, AText);
+  if not Result then Exit;
+  { The unit stores LF, because the markdown does; the caller asks for the ending it joins its
+    own lines with. Measured, and worth writing down because the obvious justification is wrong:
+    SynEdit splits on LF, CRLF or CR and re-joins with the platform's, so through the editor the
+    two forms produce the same buffer. The conversion is here for callers that are NOT an
+    editor, and to keep this function's output describable without naming one. }
+  if AEol <> #10 then AText := StringReplace(AText, #10, AEol, [rfReplaceAll]);
+end;
 
 end.

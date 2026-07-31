@@ -80,7 +80,9 @@ const
 
       'Eklemeler — bu belgenin çektiği parçalar', 'Hedef', 'Bulundu', 'evet', 'YOK', 'küme yok',
 
-      'Yardım', 'İçindekiler', 'Yardım dili', '%s dilinde henüz yardım yok.'
+      'Yardım', 'İçindekiler', 'Yardım dili', '%s dilinde henüz yardım yok.',
+
+      'yardımdan', 'Belgeme ekle'
   );
 
 implementation

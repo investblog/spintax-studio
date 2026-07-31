@@ -81,7 +81,9 @@ const
 
       'Inclusioni — i frammenti che questo documento richiama', 'Destinazione', 'Trovato', 'sì', 'MANCA', 'nessun set',
 
-      'Guida', 'Sommario', 'Lingua della guida', 'Non c’è ancora una guida in %s.'
+      'Guida', 'Sommario', 'Lingua della guida', 'Non c’è ancora una guida in %s.',
+
+      'dalla guida', 'Inserisci nel mio documento'
   );
 
 implementation

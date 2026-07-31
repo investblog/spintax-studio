@@ -3836,10 +3836,21 @@ var
   html, ids, want, got, s_: string;
   k: TSpxNoteKind;
   arts, hrefs: TStringList;
-  j, n, want_ex: Integer;
+  j, n, want_ex, ins: Integer;
+  t_: string;
   ctxDoc: string;
   ctxRep: TSpxReport;
   ctxRows: TSpxPanelRows;
+
+  { The first example that spans lines -- and there MUST be one, or the ending check below is
+    about nothing. `-1` is returned rather than guessed at, and the caller fails on it. }
+  function MultiLineExample(ALang: Integer): Integer;
+  var e: Integer; t: string;
+  begin
+    Result := -1;
+    for e := 0 to SpxHelpExampleCount(ALang) - 1 do
+      if SpxHelpExample(ALang, e, t) and (Pos(#10, t) > 0) then Exit(e);
+  end;
 
   { Every href="..." in a page's HTML. Read from the EMITTED BYTES for the same reason. }
   function HrefsIn(const AHtml: string): TStringList;
@@ -4214,6 +4225,43 @@ begin
         IntToStr(SpxHelpPageIndex('includes')));
   Check('help/nav/a lost anchor has no anchor', s_, '');
 
+  (* WHAT "PUT THIS IN MY DOCUMENT" ACTUALLY PUTS THERE. The reader sees the page, and the page
+     is HTML: the examples this matters for most are the ones the tokenizer would eat, and they
+     are drawn escaped. So the text must come from the TABLE the fixture ran, and that is what
+     is checked here -- for every example in every language, not for a sample. *)
+  for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
+  begin
+    ins := 0;
+    for i := 0 to SpxHelpExampleCount(lang) - 1 do
+    begin
+      SpxHelpExample(lang, i, s_);
+      CheckTrue('help/insert/' + SpxHelpLangCode(lang) + '/#' + IntToStr(i) + ' is the fixture''s',
+                SpxHelpInsertText(lang, i, #10, t_) and (t_ = s_) and (t_ <> ''));
+      { An entity that survived into the insert text would mean it came off the page. }
+      CheckTrue('help/insert/' + SpxHelpLangCode(lang) + '/#' + IntToStr(i) + ' carries no markup',
+                (Pos('&lt;', t_) = 0) and (Pos('&gt;', t_) = 0) and (Pos('&amp;', t_) = 0));
+      Inc(ins);
+    end;
+    { `ins = SpxHelpExampleCount(lang)` was the first form and it cannot fail: it compares the
+      counter with the bound of the loop that raised it. What is worth asserting is that the
+      loop ran at all -- an empty table would otherwise take all 134 checks above with it in
+      silence. }
+    CheckTrue('help/insert/' + SpxHelpLangCode(lang) + '/there were examples to offer',
+              ins > 0);
+  end;
+
+  { The editor joins its lines with the platform's ending, so the template arrives in that
+    shape -- and a template with no line break is untouched either way. }
+  CheckTrue('help/insert/there is a multi-line example to check the endings on',
+            MultiLineExample(0) >= 0);
+  SpxHelpInsertText(0, MultiLineExample(0), #13#10, t_);
+  CheckTrue('help/insert/a multi-line example arrives with the editor''s endings',
+            (Pos(#13#10, t_) > 0) and (Pos(#10#10, t_) = 0));
+  SpxHelpInsertText(0, MultiLineExample(0), #10, s_);
+  Check('help/insert/and is otherwise the same text',
+        StringReplace(t_, #13#10, #10, [rfReplaceAll]), s_);
+  CheckTrue('help/insert/an index that is not one gives nothing',
+            (not SpxHelpInsertText(0, 9999, #10, t_)) and (t_ = ''));
 end;
 
 procedure TestHelpExamples;

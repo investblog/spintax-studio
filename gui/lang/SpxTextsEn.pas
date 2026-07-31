@@ -86,7 +86,9 @@ const
 
       'Includes — the fragments this document pulls in', 'Target', 'Found', 'yes', 'MISSING', 'no set',
 
-      'Help', 'Contents', 'Help language', 'There is no help in %s yet.'
+      'Help', 'Contents', 'Help language', 'There is no help in %s yet.',
+
+      'from the help', 'Insert into my document'
   );
 
 implementation

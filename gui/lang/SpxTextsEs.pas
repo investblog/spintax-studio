@@ -83,7 +83,9 @@ const
 
       'Inclusiones — los fragmentos que trae este documento', 'Destino', 'Hallado', 'sí', 'FALTA', 'sin conjunto',
 
-      'Ayuda', 'Contenido', 'Idioma de la ayuda', 'Todavía no hay ayuda en %s.'
+      'Ayuda', 'Contenido', 'Idioma de la ayuda', 'Todavía no hay ayuda en %s.',
+
+      'de la ayuda', 'Insertar en mi documento'
   );
 
 implementation

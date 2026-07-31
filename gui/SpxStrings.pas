@@ -179,7 +179,10 @@ const
     { the help: a menu that grows to fit, its one item, a label the strip MEASURES rather than
       budgets (a TLabel does not know its own width when you ask), and a sentence that must
       carry %s -- which a budgeted string may not do at all }
-    0, 0, 0, 0
+    0, 0, 0, 0,
+    { the offer strip: both are MEASURED and placed from the measurement, for the same
+      reason -- and the button holds a whole verb phrase in fourteen languages }
+    0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is
