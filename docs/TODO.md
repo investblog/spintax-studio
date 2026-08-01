@@ -878,7 +878,11 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       а про то, чтобы вернувшаяся отладочная информация упала на гейте, а не на подаче в Store.
       Проверено мутацией: с потолком 1 МБ гейт краснеет.
 
-- [ ] **Плавающий тест в потоковой партии — замечен 2026-07-31, один прогон из шестнадцати.**
+- [x] **Плавающий тест в потоковой партии — ЗАКРЫТ 2026-08-01, и виноват был не поток.**
+      Заменённая партия по замыслу досылает уже начатый рендер; проба складывала обе в одну
+      кучу и считала их одной. Теперь фильтрует по запрошенному номеру и проверяет, что
+      «отставшая» строка несёт номер ЗАМЕНЁННОЙ партии. Восемнадцать прогонов подряд —
+      одинаковое число проверок; раньше плавало. *Исходная запись:* замечен 2026-07-31, один прогон из шестнадцати.**
       `batchthread/and-the-seeds-start-at-the-new-base` упал в одном прогоне
       `tests/studio_tests_checked`; двенадцать подряд после этого чистые. Настораживает не
       падение, а то, что **менялось само число проверок** (6011 против 6010) — значит гонка не
@@ -1039,7 +1043,7 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
         подставив туда пример, её вытесняешь, и статью с примером одновременно уже не видно. К
         этой раскладке пришли через две переделки (ADR 0008).
 
-- [ ] **Мелочи, оставшиеся от ревью справки 2026-07-31.** Обе названы и обе не сделаны:
+- [x] **Мелочи, оставшиеся от ревью справки 2026-07-31 — обе закрыты 2026-08-01.** Обе названы и обе не сделаны:
       ~~Escape справку не закрывает~~ — **измерено 2026-08-01: закрывает**, из дерева тем, со
       страницы и из нижней панели (`FormKeyDown` при `KeepPreview`). Перечисленные там выходы
       с тех пор изменились: рельс в режиме справки скрыт, крестик тем убран, а закрытие живёт
@@ -1192,8 +1196,11 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
 ## Raised by review, not yet built
 
-- [ ] **An unbalanced bracket inside a permutation's config makes the two bracket rules
-      contradict each other.** Found by review 2026-08-01, fuzzing 80 000 documents: on
+- [x] **An unbalanced bracket inside a permutation's config made the two bracket rules
+      contradict each other — FIXED 2026-08-01.** Both walks ask the tokenizer's own
+      `PermConfigLength` and skip the config whole; the first attempt left the defect alive
+      behind one space, because the engine and the tokenizer left-trim and the walk did not.
+      Five checks, three of which fail without the trim. *The original finding:* Found by review 2026-08-01, fuzzing 80 000 documents: on
       `[x|[<sep="{">a|b]|y]` the tokenizer says the inner `[` is closed by the `]` at 17 and the
       pipe at 15 is its separator, while `SpxMatchBracket` pairs that `[` with the OUTER `]` at
       20 — because both stack walks count the `{` inside the config as an opener, and the
@@ -1370,12 +1377,12 @@ Constraints (design into the app from the start):
       So the 256 for the Store is unblocked in principle and still needs someone to actually
       produce it; `make-appicon.py`'s note about the vector was corrected to say this rather
       than that it cannot be done.
-- [ ] **About box** — it is the only place a user can read the attributions NOTICE.md records
-      (MDI Apache-2.0, Twemoji CC-BY 4.0), and both licences ask for exactly that in the
-      shipped app. Small, and blocking for the submission rather than for M1.
-- [ ] **Offline baseline is the review keystone.** Editor / validation / render / export must
-      work with no key and no network; AI stays opt-in — so a reviewer verifies the product
-      without any setup (spec §1, §11).
+- [x] **About box — done 2026-07-31.** Modal, generated from NOTICE.md, VERSION and the
+      engine submodule's tag, with the suite holding all three sources to each other.
+- [x] **Offline baseline is the review keystone — and it is now GATED, 2026-08-01.** Editor,
+      validation, render and export work with no key and no network, and the suite proves it
+      rather than the README asserting it: a network unit in any shipped unit's uses clause
+      fails the build by name (mutation-tested).
 
 Submission tasks (after a demoable build):
 - [x] **MSIX packaging — ANSWERED 2026-08-01, and it works end to end.** This was the one
@@ -1436,10 +1443,14 @@ Submission tasks (after a demoable build):
       does. And no option removes the warning immediately — SmartScreen reputation accrues with
       the VOLUME of clean downloads, so "unknown app" shows up at first on every route.
 
-- [ ] **Privacy policy — even for R0.** R0 is offline, so a short page is trivially true and
-      builds Store trust: *no telemetry, no account, no network, local files only.* Expand it
-      when BYOK AI (R1) adds network, and again for a managed tier (data transits our
-      zero-retention proxy).
+- [x] **Privacy policy — written 2026-08-01, `docs/privacy.md`.** Every sentence is a fact
+      about the code rather than a promise: no unit in the product links an HTTP client or a
+      socket, and there is exactly ONE outbound action (OpenURL on the brand link), which the
+      page names rather than omits. The suite reads every shipped unit's uses clause and fails
+      the build on a network unit, so the page cannot quietly stop being true.
+
+      **Still to do: host it at a URL** — Partner Center asks for one. Expand it when BYOK AI
+      (R1) adds network, and again for a managed tier.
 - [ ] **No purchases in R0** — no paywall, trial, or IAP; a free offline app keeps the first
       submission out of financial policy too.
 - [ ] **AI disclosure + report path** — **R1+ only** (once live generative AI ships): disclose
