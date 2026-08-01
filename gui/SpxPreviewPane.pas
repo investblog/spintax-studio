@@ -58,7 +58,7 @@ type
     FOffer: TPanel;
     FOfferInsert: TSpeedButton;
     FOfferReroll: TSpeedButton;
-    FOfferHelp: TSpeedButton;
+    FOfferHelp: TPaintBox;
     { What the strip was last laid out for -- see LayOutOffer. }
     FOfferFor: Integer;
     FOfferSide: Integer;
@@ -106,6 +106,7 @@ type
     procedure LayOutOffer;
     procedure OfferClicked(Sender: TObject);
     procedure OfferRerollClicked(Sender: TObject);
+    procedure OfferHelpPaint(Sender: TObject);
     procedure HideGutterPart(const AClass: string);
     procedure BuildSourceView(AWrap: Boolean);
     procedure CopyClicked(Sender: TObject);
@@ -205,11 +206,23 @@ begin
   FOfferReroll.ShowHint := True;
   FOfferReroll.OnClick := @OfferRerollClicked;
 
-  FOfferHelp := TSpeedButton.Create(Self);
+  (* A MARK, NOT A BUTTON -- and it was a button, with no OnClick, since the strip was written.
+     It depressed when clicked and did nothing, which is the same complaint as a border that
+     offers a drag it will not perform: an affordance the control cannot honour.
+
+     Nor should it become one. The strip is on screen only while the help is open on an
+     example, so "go to the help" would mean "stay where you are", and there is no example-to-
+     page map to navigate with even if it did. What the glyph says is where this preview came
+     FROM, which its hint has always said in words.
+
+     A TPaintBox drawing through the same image list, so the pixels are the ones the button
+     drew -- rather than a TImage, which would need the glyph copied out of the list and would
+     be a second chance to lose its alpha. It still cannot take the keyboard, but nothing in
+     the strip can, and this one no longer pretends it has anything to give. *)
+  FOfferHelp := TPaintBox.Create(Self);
   FOfferHelp.Parent := FOffer;
-  FOfferHelp.Flat := True;
-  FOfferHelp.ImageIndex := SPX_ICON_HELP;
   FOfferHelp.ShowHint := True;
+  FOfferHelp.OnPaint := @OfferHelpPaint;
 
   { HERE, not only in Retranslate. The window sets the language BEFORE it builds anything, so
     every control reads its own hint in its own constructor -- and RetranslateUi runs only
@@ -541,7 +554,28 @@ procedure TSpxPreviewPane.SetIcons(AImages: TCustomImageList);
 begin
   FOfferInsert.Images := AImages;
   FOfferReroll.Images := AImages;
-  FOfferHelp.Images := AImages;
+  { The buttons repaint themselves when their Images change; the mark has to be told. }
+  if FOfferHelp <> nil then FOfferHelp.Invalidate;
+end;
+
+{ Centred the way the image list centres a glyph in a flat speed button of the same side, so
+  the mark sits where the button's glyph sat.
+
+  THE LIST IS READ OFF THE BUTTON BESIDE IT rather than kept in a field of its own, and that is
+  the point: TSpeedButton.Images is nil'd through Notification if the list is ever freed, so
+  borrowing it means this cannot outlive it. A raw field would have been a dangling pointer
+  waiting for the one day something frees the list -- latent today only because SpxImagesFrom
+  refills the same object in place. It also means a refill at a new DPI reaches the mark and
+  the two buttons through exactly one reference. }
+procedure TSpxPreviewPane.OfferHelpPaint(Sender: TObject);
+var x, y: Integer; list_: TCustomImageList;
+begin
+  if FOfferHelp = nil then Exit;
+  list_ := FOfferInsert.Images;
+  if list_ = nil then Exit;
+  x := (FOfferHelp.Width - list_.Width) div 2;
+  y := (FOfferHelp.Height - list_.Height) div 2;
+  list_.Draw(FOfferHelp.Canvas, x, y, SPX_ICON_HELP);
 end;
 
 procedure TSpxPreviewPane.Sync;

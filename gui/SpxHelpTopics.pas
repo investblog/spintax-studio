@@ -35,7 +35,7 @@ unit SpxHelpTopics;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, ComCtrls, Graphics,
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, ComCtrls, Graphics, LCLType,
   SpxStudio, SpxUi, SpxTheme, SpxStrIds, SpxStrings, SpxHelpText, SpxHelpNav;
 
 type
@@ -50,6 +50,8 @@ type
     FFilling: Boolean;
     FOnPicked: TSpxTopicPicked;
     procedure TreeClicked(Sender: TObject);
+    procedure TreeKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure PickSelected;
     procedure Fill;
   public
     constructor Create(AOwner: TComponent); override;
@@ -99,6 +101,7 @@ begin
   FTree.HideSelection := False;
   FTree.RowSelect := True;
   FTree.OnClick := @TreeClicked;
+  FTree.OnKeyUp := @TreeKeyUp;
 
   Fill;
   Retranslate;
@@ -170,12 +173,41 @@ begin
   end;
 end;
 
-procedure TSpxHelpTopics.TreeClicked(Sender: TObject);
+procedure TSpxHelpTopics.PickSelected;
 var ref: TTopicRef;
 begin
   if FFilling or (FTree.Selected = nil) or (FTree.Selected.Data = nil) then Exit;
   ref := TTopicRef(FTree.Selected.Data);
   if Assigned(FOnPicked) then FOnPicked(ref.Page, ref.Anchor);
+end;
+
+procedure TSpxHelpTopics.TreeClicked(Sender: TObject);
+begin
+  PickSelected;
+end;
+
+(* ENTER AND SPACE, AND DELIBERATELY NOT THE ARROWS -- which is the opposite of what the
+   diagnostics list does, for a reason that is about cost rather than taste.
+
+   The tree was mouse-only: TCustomTreeView.KeyDown moves the selection and never calls Click
+   (treeview.inc:4373-4444), so arrowing lit a chapter and opened nothing. That is a real gap
+   and this closes it.
+
+   But opening a chapter FEEDS AN IPro PAGE, measured at 62-234 ms, and the pane's cache keys
+   on the whole document string, so stepping through the contents would parse a new document
+   on nearly every press. Worse, GoToHelp focuses the page, so the first arrow would hand the
+   keyboard to the reader and the second would scroll it -- the very defect just fixed in the
+   variables grids. So selection-follows is wrong here even though it is right there, and
+   arrowing merely moves while Enter and Space open. That is also what every contents tree on
+   this platform does.
+
+   Both keys are free: the tree is ReadOnly, so the label editor that consumes VK_RETURN
+   (treeview.inc:6551) never exists, and KeyDown's own case handles neither. *)
+procedure TSpxHelpTopics.TreeKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  { A modified key means something else -- Ctrl+Space is not "open this". }
+  if Shift * [ssShift, ssAlt, ssCtrl] <> [] then Exit;
+  if (Key = VK_RETURN) or (Key = VK_SPACE) then PickSelected;
 end;
 
 procedure TSpxHelpTopics.ShowAt(APage: Integer; const AAnchor: string);

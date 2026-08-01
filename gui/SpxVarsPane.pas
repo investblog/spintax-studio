@@ -28,13 +28,16 @@ uses
   SpxStudio, SpxUi, SpxStrIds, SpxStrings, SpxHelpNav;
 
 type
-  TSpxJumpEvent = procedure(Line, Column: Integer) of object;
+  { AFocus is whether the caret should also TAKE the keyboard. A click means "take me there";
+    an arrow means "show me the next one" and must leave the list holding the keyboard, or the
+    second press goes to the editor and the list cannot be walked at all. }
+  TSpxJumpEvent = procedure(Line, Column: Integer; AFocus: Boolean) of object;
   { A session row has no position to offer -- `SpExtract` returns reference names WITHOUT
     positions (the engine's own contract), so the model carries Line = 0 for every one of them.
     The panel therefore asks by NAME and the window finds the place, which it can: the
     highlighter's scanner already reports `%name%` occurrences with their offsets, and knows
     which ones are inside a comment. }
-  TSpxFindRefEvent = procedure(const AName: string) of object;
+  TSpxFindRefEvent = procedure(const AName: string; AFocus: Boolean) of object;
   { Ctrl+click: stop supplying this per session and WRITE IT INTO THE DOCUMENT. A session value
     dies with the window; a definition is in the file, in git, and read by every engine in the
     family -- and it is the only thing that silences variable.undefined for good. The value
@@ -94,13 +97,42 @@ type
     FOnDefine: TSpxDefineEvent;
     FOnSpell: TSpxSpellEvent;
     FOnSetDefValue: TSpxSetDefValueEvent;
-    { What was held down when the click started. OnClick does not carry it, and OnMouseDown
-      runs before the grid has moved its current cell -- so the modifier is caught in the one
-      and used in the other. }
+    (* WHICH DEVICE MOVED THE SELECTION, and what it was holding down. Neither OnSelection nor
+       OnClick carries either, so both are caught one event earlier and read one event later.
+
+       The ORDER is guaranteed rather than hoped for: TCustomGrid.MouseDown opens with
+       `inherited MouseDown` (grids.pas:6863) and TCustomGrid.KeyDown opens with
+       `inherited KeyDown` (:7720), and those are what raise OnMouseDown and OnKeyDown -- both
+       before the grid moves its current cell and raises OnSelection.
+
+       FFromMouse decides whether the jump TAKES THE FOCUS. A click means "take me there"; an
+       arrow means "show me the next one", and taking the focus on the first press would send
+       the second press to the editor. That is not a slow list, it is a list you cannot walk --
+       and it is what this window did until 2026-08-01, because an arrow key in a TStringGrid
+       raises OnClick too (MoveSel calls Click, grids.pas:7697) and the jump defaulted to
+       focusing. The diagnostics list next door has always had the rule; the grids did not. *)
+    FFromMouse: Boolean;
+    (* A REBUILD IS NOT A GESTURE, and OnSelection cannot tell the difference by itself. This
+       is the one thing OnClick gave for free and the swap took away: assigning RowCount moves
+       the current cell when it would fall off the end -- CheckCount computes
+       `if Row >= aNewRowCount then NewRow := aNewRowCount-1` and, when that differs, calls
+       MoveNextSelectable (grids.pas:5524-5530), which reaches MoveSelection. Click is
+       unreachable from there; OnSelection is not.
+
+       Found by review, and it is a real sequence rather than a theoretical one: click the last
+       include, then delete that line. The includes list is assigned BEFORE its RowCount shrinks,
+       so the handler would fire against the NEW rows with the OLD mouse flag still set -- the
+       caret would leap to a different include and take the focus with it while the reader was
+       typing. The two other groups escape only by accident, because SetModel drops RowCount to
+       1 first and the guard at :5529 then fails. *)
+    FRebuilding: Boolean;
     FClickShift: TShiftState;
     FOnRuntimeChanged: TNotifyEvent;
-    procedure DefsClicked(Sender: TObject);
-    procedure IncClicked(Sender: TObject);
+    procedure GridMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure GridKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure DefsSelected(Sender: TObject; ACol, ARow: Integer);
+    procedure IncSelected(Sender: TObject; ACol, ARow: Integer);
     procedure IncMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     function IncState(AKnown, AHaveSet: Boolean): string;
     procedure DefsSelectEditor(Sender: TObject; ACol, ARow: Integer;
@@ -109,10 +141,8 @@ type
       const OldValue: string; var NewValue: string);
     procedure DefsEditorKey(Sender: TObject; var Key: Word; Shift: TShiftState);
     function CommitDefValue(AIdx: Integer; const AOld, ANew: string): string;
-    procedure RuntimeClicked(Sender: TObject);
+    procedure RuntimeSelected(Sender: TObject; ACol, ARow: Integer);
     procedure RuntimeMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure RuntimeMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure RuntimeEdited(Sender: TObject; ACol, ARow: Integer; const AValue: string);
     procedure LiteralToggled(Sender: TObject; ACol, ARow: Integer; AState: TCheckboxState);
     function KindName(Kind: TSpxVarKind): string;
@@ -234,7 +264,9 @@ begin
     typed, and a value written back into it is written back into the cell -- which is the
     revert-on-refusal, for free. }
   FDefs.OnValidateEntry := @DefsValidate;
-  FDefs.OnClick := @DefsClicked;
+  FDefs.OnSelection := @DefsSelected;
+  FDefs.OnMouseDown := @GridMouseDown;
+  FDefs.OnKeyDown := @GridKeyDown;
   { Every row here jumps, so the whole grid gets the hand -- the same signal as the session
     group's name column, for the same action. }
   FDefs.Cursor := crHandPoint;
@@ -304,13 +336,14 @@ begin
     read-only, so a click on it has nothing else to do; the value beside it must keep starting
     an edit on the first click, which is why the jump cannot be the plain click for the whole
     row the way it is in the definitions group. }
-  FRuntime.OnClick := @RuntimeClicked;
+  FRuntime.OnSelection := @RuntimeSelected;
+  FRuntime.OnKeyDown := @GridKeyDown;
   { THE HINT THAT NEEDS NO WORDS. A name that jumps has to say so before it is clicked, and a
     hand cursor is how everything else on this desktop says it -- no new caption to translate
     into fourteen languages, and it points at the ONE column that does it rather than at the
     group as a whole. }
   FRuntime.OnMouseMove := @RuntimeMouseMove;
-  FRuntime.OnMouseDown := @RuntimeMouseDown;
+  FRuntime.OnMouseDown := @GridMouseDown;
 
   FRuntimeLabel := TLabel.Create(Self);
   FRuntimeLabel.Parent := FRuntimeBox;
@@ -354,7 +387,9 @@ begin
     jumps to the `#include` that names it, which is what the group is for. }
   FInc.Options := FInc.Options + [goRowSelect] - [goEditing, goRangeSelect];
   FInc.Cursor := crHandPoint;
-  FInc.OnClick := @IncClicked;
+  FInc.OnSelection := @IncSelected;
+  FInc.OnMouseDown := @GridMouseDown;
+  FInc.OnKeyDown := @GridKeyDown;
   FInc.OnMouseMove := @IncMouseMove;
 
   FIncLabel := TLabel.Create(Self);
@@ -482,6 +517,8 @@ var
   sig, shown: string;
   spell: TStringList;
 begin
+  FRebuilding := True;
+  try
   FModel := AVars;
 
   { Nothing is rebuilt when nothing changed. A result arrives on every debounce tick, and
@@ -580,6 +617,9 @@ begin
   finally
     spell.Free;
   end;
+  finally
+    FRebuilding := False;
+  end;
 end;
 
 { What the next job should carry: the session's values, filtered to the names the document
@@ -647,30 +687,38 @@ begin
   if Assigned(FOnRuntimeChanged) then FOnRuntimeChanged(Self);
 end;
 
-{ Only the name column, and only a real row. Col is where the click landed: LCL has already
-  moved the current cell by the time OnClick runs, which is what the definitions group relies
-  on too. }
-procedure TSpxVarsPane.RuntimeMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  FClickShift := Shift;
-end;
-
-procedure TSpxVarsPane.RuntimeClicked(Sender: TObject);
+{ Only the name column, and only a real row -- and the column arrives as a PARAMETER now rather
+  than being read back off the grid, because OnSelection is handed the cell it moved to. }
+procedure TSpxVarsPane.RuntimeSelected(Sender: TObject; ACol, ARow: Integer);
 var name_: string;
 begin
-  if FRuntime.Col <> 0 then Exit;
-  if FRuntime.Row < 1 then Exit;
-  name_ := FRuntime.Cells[0, FRuntime.Row];
+  if FRebuilding then Exit;
+  { COLUMN 0 ONLY, and from the keyboard as well: column 1 is the value, which is editable and
+    shows its editor always, so a selection landing there is somebody about to type. }
+  if ACol <> 0 then Exit;
+  if ARow < 1 then Exit;
+  name_ := FRuntime.Cells[0, ARow];
   if name_ = '' then Exit;
-  if ssCtrl in FClickShift then
+  (* CTRL+CLICK, AND THE CLICK IS PART OF IT. A grid does NOT guard its arrows against
+     modifiers -- `VK_UP: MoveSel(True, 0, -1)` has no Shift test at all (grids.pas:7772-7775),
+     and Ctrl+Home/Ctrl+End are handled as jumps -- so a reader holding Ctrl and pressing Down
+     moves the selection with Ctrl in the state. Without this the promotion would fire from
+     that, writing a `#set` into the document nobody asked for; the diagnostics list next door
+     escapes because a TListView really does move only its focus rectangle, which is why
+     DiagKeyUp guards Ctrl and this could not just copy it.
+
+     THE LATCH IS CONSUMED, so a Ctrl+click that slides a row promotes once rather than once
+     per row crossed: OnSelection arrives for every cell a drag passes through (MouseMove ->
+     MoveExtend, grids.pas:7027), where OnClick used to arrive once at the end. *)
+  if FFromMouse and (ssCtrl in FClickShift) then
   begin
+    FClickShift := [];
     { The value goes with the name: the point of the action is to keep what the user typed and
       move it somewhere that survives. }
     if Assigned(FOnDefine) then FOnDefine(name_, FValues.Values[name_]);
     Exit;
   end;
-  if Assigned(FOnFindRef) then FOnFindRef(name_);
+  if Assigned(FOnFindRef) then FOnFindRef(name_, FFromMouse);
 end;
 
 { The hand only over the column that jumps. MouseToCell answers in CELL coordinates, so this
@@ -708,6 +756,8 @@ begin
   if sig = FIncSig then Exit;
   FIncSig := sig;
 
+  FRebuilding := True;
+  try
   FIncRows := AIncludes;
   { GONE, not empty: a document that includes nothing has nothing to say here, and an empty
     table would take a third of the panel to say it. The splitter goes with it -- a drag handle
@@ -726,18 +776,22 @@ begin
     FInc.Cells[1, i + 1] := IncState(AIncludes[i].Known, AHaveSet);
   end;
   FitLastColumn(FInc);
+  finally
+    FRebuilding := False;
+  end;
 end;
 
 { Every row here has a place -- an include occurrence is a directive, and the engine reports
   those with positions -- so this is the plain jump the definitions group makes, not the
   find-by-name the session group needs. }
-procedure TSpxVarsPane.IncClicked(Sender: TObject);
+procedure TSpxVarsPane.IncSelected(Sender: TObject; ACol, ARow: Integer);
 var idx: Integer;
 begin
-  idx := FInc.Row - 1;
+  if FRebuilding then Exit;
+  idx := ARow - 1;
   if (idx < 0) or (idx > High(FIncRows)) then Exit;
   if FIncRows[idx].Line <= 0 then Exit;
-  if Assigned(FOnJump) then FOnJump(FIncRows[idx].Line, FIncRows[idx].Column);
+  if Assigned(FOnJump) then FOnJump(FIncRows[idx].Line, FIncRows[idx].Column, FFromMouse);
 end;
 
 procedure TSpxVarsPane.IncMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -821,16 +875,56 @@ begin
   NewValue := CommitDefValue(ARow - 1, OldValue, NewValue);
 end;
 
-procedure TSpxVarsPane.DefsClicked(Sender: TObject);
+{ WHICH DEVICE, caught one event before the selection moves. Both handlers are shared by the
+  three grids: the flag says what to do with the focus and the modifiers are read by the
+  session group's promote-to-definition. Catching Shift here rather than only in MouseDown is
+  the fix for a latch that nothing ever cleared -- a keyboard activation after any earlier
+  Ctrl+click used to re-fire the promotion, because it read the modifiers of a gesture that had
+  ended minutes before. }
+procedure TSpxVarsPane.GridMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  FFromMouse := True;
+  FClickShift := Shift;
+end;
+
+procedure TSpxVarsPane.GridKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  FFromMouse := False;
+  FClickShift := Shift;
+end;
+
+(* ON SELECTION rather than ON CLICK, and the difference is two defects.
+
+   The first is why this reads FFromMouse at all: an arrow key raises OnClick in a TStringGrid
+   (MoveSel calls Click, grids.pas:7697), so the arrows were already jumping -- and jumping
+   with the focus, which moved the keyboard into the editor on the first press and scrolled the
+   document on the second.
+
+   The second comes free with the event: TCustomGrid.Click is gated on FIgnoreClick
+   (grids.pas:3455), which MouseDown sets and only the gzNormal branch clears (:6870, :6936).
+   Click a column HEADER and it stays set, so the arrows silently stopped navigating until the
+   next click on a row. OnSelection has no such gate.
+
+   Nothing is lost by the change: clicking the row that is already current still arrives, because
+   MouseDOWN calls MoveSelection by hand when MoveExtend reports the cell did not move
+   (grids.pas:6987-6994 -- inside MouseDown, which begins at :6851; MouseUp is :7076). The
+   difference in timing is real and worth knowing: the selection now lands on the press rather
+   than on the release.
+
+   What OnSelection does NOT distinguish is a rebuild from a gesture, which OnClick did for
+   free. FRebuilding is the answer to that; its declaration carries the measurement. *)
+procedure TSpxVarsPane.DefsSelected(Sender: TObject; ACol, ARow: Integer);
 var idx: Integer;
 begin
+  if FRebuilding then Exit;
   { The value column edits; the kind and the name jump. Same split as the session group, and for
     the same reason -- a cell cannot both open an editor and move the caret away from it. }
-  if FDefs.Col = 2 then Exit;
-  idx := FDefs.Row - 1;
+  if ACol = 2 then Exit;
+  idx := ARow - 1;
   if (idx < 0) or (idx > High(FRows)) then Exit;
   if FRows[idx].Line <= 0 then Exit;
-  if Assigned(FOnJump) then FOnJump(FRows[idx].Line, FRows[idx].Column);
+  if Assigned(FOnJump) then FOnJump(FRows[idx].Line, FRows[idx].Column, FFromMouse);
 end;
 
 end.

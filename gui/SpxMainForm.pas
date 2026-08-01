@@ -120,6 +120,9 @@ type
     FTopics: TSpxHelpTopics;
     { The example the reader last clicked, or -1. The right pane renders it. }
     FHelpExample: Integer;
+    { The insert-example command's menu face. Held because its enabled state follows the
+      preview's offer strip rather than the menu's own rebuild -- see ShowOffer. }
+    FInsertItem: TMenuItem;
     { The first render of an example is fixture-seeded, so it matches the checked arrow in
       the article. A reroll is explicitly a fresh draw of the same clean template. }
     FHelpRandom: Boolean;
@@ -231,8 +234,9 @@ type
     procedure EnsureSevIcons;
     procedure DiagResized(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
-    procedure VarJump(Line, Column: Integer);
-    procedure VarFindRef(const AName: string);
+    procedure ShowOffer(AValue: Boolean);
+    procedure VarJump(Line, Column: Integer; AFocus: Boolean);
+    procedure VarFindRef(const AName: string; AFocus: Boolean);
     procedure FlashJumpLine;
     procedure FlashFaded(Sender: TObject);
     procedure VarSpell(ANames: TStringList);
@@ -1993,6 +1997,26 @@ begin
   Item(editMenu, '-', 0, [], nil);
   Item(editMenu, Tr(sMenuReroll), Ord('R'), [ssCtrl], @RerollClicked);
   Item(editMenu, Tr(sMenuCopyResult), Ord('C'), [ssCtrl, ssShift], @CopyClicked);
+  (* PUT THIS EXAMPLE IN MY DOCUMENT -- the second command in this window that a pointer was
+     the only way to reach. Its button lives in the preview's offer strip and is a
+     TSpeedButton, so the keyboard could not have it.
+
+     THE EDIT MENU rather than Help, because the act edits the document; the strip's own
+     caption is reused, so this costs no string id.
+
+     DISABLED RATHER THAN ABSENT when there is no example, and rather than silently doing
+     nothing: SpxHelpOffersInsert is the same predicate the strip itself is shown by, so the
+     menu and the button can never disagree about whether there is something to insert. The
+     bar is rebuilt on every state change that matters, which is what keeps this true.
+
+     No shortcut: the command is live only while the help is open on an example, and a global
+     key for a mode-specific action is one a reader presses and sees nothing happen. *)
+  Item(editMenu, '-', 0, [], nil);
+  FInsertItem := Item(editMenu, Tr(sHelpExampleInsert), 0, [], @InsertHelpExample);
+  { KEPT rather than computed here. The bar is rebuilt on a language change, a panel toggle, a
+    theme switch -- and on none of the paths that decide whether there IS an example, so a state
+    read at build time is a state read at the wrong moment. ShowOffer owns both now. }
+  FInsertItem.Enabled := FPreview.Offering;
 
   { Which edge the tools live on. A setting rather than a decision of ours: the rail belongs
     beside what it edits, and which side of the screen that is depends on the person. It sits
@@ -2157,6 +2181,18 @@ begin
     box "the copy a user can actually read", which makes this menu item the licence obligation
     rather than a courtesy. No shortcut: it is opened on purpose, once. }
   Item(helpMenu, Tr(sMenuAbout), 0, [], @AboutClicked);
+  (* THE SITE, AND IT IS HERE BECAUSE IT WAS NOWHERE ELSE. The mark at the foot of the tool
+     rail is a TSpeedButton -- a TGraphicControl, which can never hold the keyboard -- and it
+     was the one command in this window with no menu item and no shortcut at all: reachable by
+     pointer only. Every other rail tool has a View entry; this one had nothing.
+
+     THE CAPTION IS THE DOMAIN, untranslated, for the reason the rail already records: a domain
+     is the same word in every language. So this costs no string id, in a product where one
+     costs seventeen files.
+
+     No shortcut. It leaves the application for a browser, and a hotkey that does that is a
+     hotkey somebody presses by accident. *)
+  Item(helpMenu, SPX_SITE_HOST, 0, [], @BrandClicked);
 
   Self.Menu := bar;
   if Height <> keepHeight then Height := keepHeight;
@@ -2458,9 +2494,29 @@ end;
   its own column convention puts that at the line's beginning, indentation included. The jump
   moves on to the keyword: landing in the margin makes the eye hunt for the `#set` that the row
   was clicked to reach. }
-procedure TSpxMainForm.VarJump(Line, Column: Integer);
+(* THE OFFER IS ONE STATE WITH TWO FACES, so it is set in one place. The strip in the preview
+   and the Edit-menu item are the same command -- one for a pointer, one for the keyboard --
+   and the menu's copy was computed inside BuildMenu, which runs on a language change, a panel
+   toggle and a theme switch, and on NOT ONE of the four paths that decide whether there is an
+   example to insert. So the item was still in its startup state when the strip went live: the
+   keyboard route this was added for did not work, and after a rebuild while an example was up
+   it stayed enabled past the help closing and did nothing when pressed.
+
+   Found by review. The fix is not to add BuildMenu calls -- that is the arrangement that
+   drifted -- but to make drifting unrepresentable: nothing may assign FPreview.Offering except
+   this. *)
+procedure TSpxMainForm.ShowOffer(AValue: Boolean);
 begin
-  JumpToPos(Line, SpxFirstNonBlankColumn(LineOf(Line), Column), 0, 0);
+  FPreview.Offering := AValue;
+  if FInsertItem <> nil then FInsertItem.Enabled := AValue;
+end;
+
+procedure TSpxMainForm.VarJump(Line, Column: Integer; AFocus: Boolean);
+begin
+  { AFlash stays True for both devices -- the wash says WHERE, and an arrow needs that more
+    than a click does, having moved the caret without the eye following a pointer. AFocus is
+    the one that differs, and it is the panel that knows which device asked. }
+  JumpToPos(Line, SpxFirstNonBlankColumn(LineOf(Line), Column), 0, 0, True, AFocus);
 end;
 
 (* CTRL+CLICK: STOP SUPPLYING THIS PER SESSION AND WRITE IT INTO THE DOCUMENT.
@@ -2656,7 +2712,7 @@ end;
 
   Case-insensitively, because the engine matches names that way: `%CasinoName%` and
   `%casinoname%` are one variable, and the panel shows the folded name the model gave it. }
-procedure TSpxMainForm.VarFindRef(const AName: string);
+procedure TSpxMainForm.VarFindRef(const AName: string; AFocus: Boolean);
 var
   state: TSpxScanState;
   toks: TSpxTokenList;
@@ -2685,7 +2741,7 @@ begin
           if LowerCase(Copy(text_, toks[i].Start + 1, k - 2)) = want then
           begin
             { Lines are 1-based for the editor, and the token's Start already is. }
-            JumpToPos(line + 1, toks[i].Start, 0, 0);
+            JumpToPos(line + 1, toks[i].Start, 0, 0, True, AFocus);
             Exit;
           end;
         end;
@@ -3152,7 +3208,7 @@ begin
     if FHelpExample >= 0 then SpxHelpExample(job.HelpLang, FHelpExample, job.Text);
     { Down until the answer comes back: whether to offer this example depends on what the engine
       says about it, and that is not known yet. JobDone decides. }
-    FPreview.Offering := False;
+    ShowOffer(False);
     FShownAsk := Default(TSpxPreviewAsk);
     FEngine.Post(job);
     Exit;
@@ -3165,7 +3221,7 @@ begin
     blank line as the file is, thirty-five once normalised to CRLF, and the source view then
     opens on a screenful of nothing. The preview must show what the FILE produces. }
   job.Text := DocText;
-  FPreview.Offering := False;
+  ShowOffer(False);
   { The family is the document's business, so this is where it is reconsidered. }
   UpdateEditorFont(job.Text);
   job.UiLang := SpxUiLang;
@@ -4057,7 +4113,7 @@ begin
     ran last. With the help open, three clicks in the variants panel left the offer up over a
     row of the reader's own document, and pressing it inserted the help's template instead.
     Found by review. The next template click puts it back. }
-  FPreview.Offering := False;
+  ShowOffer(False);
   FPreview.SetContent(AText);
   SayPartial(AText, False);
 end;
@@ -4089,8 +4145,8 @@ begin
     verdict. Comparing what came back against what is on screen is the whole guard, and it needs
     no id arithmetic -- `Post` replaces only the pending job, so the current example's answer
     always follows. }
-  FPreview.Offering := Res.HelpSet and (Res.HelpExample = FHelpExample) and
-                       SpxHelpOffersInsert(HelpShowing, FHelpExample, Length(Res.Rows));
+  ShowOffer(Res.HelpSet and (Res.HelpExample = FHelpExample) and
+            SpxHelpOffersInsert(HelpShowing, FHelpExample, Length(Res.Rows)));
   FVars.SetModel(Res.Vars);
   FVars.SetIncludes(Res.Includes, Res.HaveSet);
   FErrorMarkup.SetMarks(Res.Marks);

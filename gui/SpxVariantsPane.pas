@@ -84,7 +84,7 @@ type
     procedure ThresholdChanged(Sender: TObject);
     procedure DedupeToggled(Sender: TObject);
     procedure RandomSeedToggled(Sender: TObject);
-    procedure RowClicked(Sender: TObject);
+    procedure RowSelected(Sender: TObject; ACol, ARow: Integer);
     procedure ExportXlsx(Sender: TObject);
     procedure ExportTxt(Sender: TObject);
     procedure ExportFiles(Sender: TObject);
@@ -270,7 +270,13 @@ begin
   FGrid.ColWidths[COL_LEN] := Px(Self, 70);
   FGrid.ColWidths[COL_TEXT] := Px(Self, 600);
   FGrid.Options := FGrid.Options + [goRowSelect] - [goEditing, goRangeSelect];
-  FGrid.OnClick := @RowClicked;
+  { ON SELECTION rather than ON CLICK. Arrow keys already reached the old handler -- MoveSel
+    calls Click (grids.pas:7697) -- so this is not new keyboard support; what it fixes is
+    TCustomGrid.Click's FIgnoreClick gate (:3455), which a click on a column HEADER leaves set
+    until the next click on a row, silently stopping the arrows from previewing anything.
+    Showing a variant costs a string assignment and takes no focus, so selection-follows is
+    exactly right here. }
+  FGrid.OnSelection := @RowSelected;
 
   { ── writing it out ── }
 
@@ -553,10 +559,10 @@ begin
   SetStatus(Tr(sStaleSet) + FStatus.Caption);
 end;
 
-procedure TSpxVariantsPane.RowClicked(Sender: TObject);
+procedure TSpxVariantsPane.RowSelected(Sender: TObject; ACol, ARow: Integer);
 var idx: Integer;
 begin
-  idx := FGrid.Row - 1;
+  idx := ARow - 1;
   if (idx < 0) or (idx >= FVariants.Count) then Exit;
   if Assigned(FOnShowVariant) then FOnShowVariant(FVariants[idx].Text);
 end;
