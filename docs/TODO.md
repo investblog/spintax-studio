@@ -1204,11 +1204,22 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       close the fact that the walk now lives in two places (`SpxMatchBracket` and
       `SpxConstructOf`), near-verbatim.
 
-- [ ] **A separator on a middle line may appear one caret move late.** Pre-existing, raised in
-      the same review and not measured with a window: `ClearSeps` invalidates the lines that HAD
-      separators, and the parent invalidates the two bracket lines, but nothing invalidates a
-      line that has just GAINED one. On a construct spanning three lines the middle line's mark
-      would therefore wait for the next repaint. Needs a probe before it is believed.
+- [ ] **A consumer that replaces a RUNNING batch must tell the two apart by `Progress.Id`.**
+      Written down 2026-08-01 because a guard for it was built and taken out again. The thread
+      installs a replacement between renders, so the render in flight still delivers and the
+      replaced batch still gets its own `Done`; a consumer that keeps both mixes two batches in
+      one grid, and the old batch's `Done` stops the new one's progress line. **The window does
+      not reach that case** — `TSpxVariantsPane.GoClicked` refuses to start while one runs, and
+      nothing else raises `OnGenerate` — so it filters nothing. The guard that was tried
+      compared against `FNextId`, which `RequestRender` also bumps: one keystroke during an
+      export dropped every remaining record including the `Done`, and the panel wedged for the
+      session. Measured on the real worker, 121 records dropped. If a second caller ever
+      appears, it needs a batch id of its own, never the shared one.
+
+- [ ] ~~**A separator on a middle line may appear one caret move late.**~~ *(closed 2026-08-01:
+      `KeepSeps` now invalidates the lines that GAIN a separator, mirroring what `ClearSeps`
+      already did for the ones that lose one. The parent invalidates only the two bracket
+      lines — `syneditmarkupbracket.pp:200-225` — so nothing else would have.)*
 
 - [ ] **The help's language can move while the help is CLOSED, and nothing relocates it then.**
       Found by review 2026-07-31, latent and not a regression. `RetranslateUi` only relocates

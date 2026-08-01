@@ -1768,6 +1768,13 @@ type
     Ids: TStringList;
     LastDoneId: Int64;
     Kept: TSpxVariantList;
+    { Which batch's rows to keep, and how many arrived from another one. The thread delivers
+      the render already in flight when a batch is replaced -- by design -- so a probe that
+      kept everything was counting two batches as one, which is what made this test fail one
+      run in sixteen. }
+    Want: Integer;
+    Strays: Integer;
+    StrayIds: string;
     BatchDone: Boolean;
     Cancelled: Boolean;
     Report: TSpxBatchReport;
@@ -1798,8 +1805,16 @@ begin
   Ids.Add(IntToStr(P.Id));
   if P.Accepted then
   begin
-    if Kept = nil then Kept := TSpxVariantList.Create;
-    Kept.Add(P.Variant);
+    if (Want <> 0) and (P.Id <> Want) then
+    begin
+      Inc(Strays);
+      if Pos(IntToStr(P.Id), StrayIds) = 0 then StrayIds := StrayIds + IntToStr(P.Id) + ' ';
+    end
+    else
+    begin
+      if Kept = nil then Kept := TSpxVariantList.Create;
+      Kept.Add(P.Variant);
+    end;
   end;
   if P.Done then
   begin
@@ -2169,6 +2184,9 @@ begin
 
     probe.Kept.Free;
     probe.Kept := nil;
+    probe.Want := 5;
+    probe.Strays := 0;
+    probe.StrayIds := '';
     req.Id := 5;
     req.Text := 'короткий {a|b|c|d|e|f}';
     req.Count := 3;
@@ -2186,7 +2204,17 @@ begin
     for i := 0 to probe.Kept.Count - 1 do
       CheckTrue('batchthread/every-row-belongs-to-the-new-batch',
                 (probe.Kept[i].Seed >= 900) and (probe.Kept[i].Seed < 910));
-    CheckTrue('batchthread/and-the-seeds-start-at-the-new-base', probe.Kept[0].Seed = 900);
+    CheckTrue('batchthread/and-the-seeds-start-at-the-new-base',
+              (probe.Kept <> nil) and (probe.Kept.Count > 0) and (probe.Kept[0].Seed = 900));
+    { AND ANY ROW THAT DID ARRIVE FROM THE REPLACED BATCH CARRIED ITS OWN ID. The thread
+      finishes the render in flight, so a straggler is expected rather than wrong -- what
+      would be wrong is a straggler indistinguishable from the new batch's rows, since the
+      window tells them apart by exactly this. }
+    Check('batchthread/a-straggler-carries-the-replaced-id [' + probe.StrayIds + ']',
+          StringReplace(probe.StrayIds, '4 ', '', [rfReplaceAll]), '');
+    { RESET, so the scenarios below fill Kept again. Without it the id-6 and id-8 requests
+      accumulated into Strays and the next check added here would have measured nothing. }
+    probe.Want := 0;
 
     { A request for nothing ends whatever is running, and ends it PROPERLY -- the old code
       cleared the state without a Done, leaving a panel spinning for the session. }
@@ -3787,10 +3815,17 @@ begin
       if isFixture then
       begin
         if Trim(line) = '' then Continue;
+        { TRIMMED FIRST, because the generator trims the whole line before it splits one
+          (`t = raw.strip()`), and these two must read the same block the same way. They did
+          not: a fragment whose value ended in a space was VERIFIED here with the space and
+          SHIPPED without it, so the suite would have been checking a text the reader never
+          gets. Nothing in the two documents triggers it today, which is exactly why it was
+          worth closing before something did. }
+        line := Trim(line);
         p := Pos(': ', line);
         if p = 0 then
         begin
-          CheckTrue('help/' + label_ + '/fixture line is `key: value` [' + Trim(line) + ']',
+          CheckTrue('help/' + label_ + '/fixture line is `key: value` [' + line + ']',
                     False);
           Continue;
         end;
@@ -4047,6 +4082,58 @@ end;
 
    So the two are held to each other. Not by eye: the unit is generated from the file, and these
    checks are what make the generation load-bearing rather than a convenience. *)
+(* THE SILENCES CHAPTER, held to two rules.
+
+   A silence is a behaviour that produces no diagnostic at all -- a `#include` that is not alone
+   on its line is plain text, an unclosed comment eats the rest of the file -- and the reader
+   meets it only by being told. Nothing else in this suite can catch one: a silence has no code
+   to enumerate, which is why the chapter exists.
+
+   WHAT CAN BE HELD IS THE CHAPTER'S OWN DISCIPLINE. Every claim it makes must be SHOWN --
+   followed by an example that ran through the real engine -- and the number of claims is a
+   ratchet, so a silence added or removed is a deliberate edit of a number rather than a quiet
+   change to a document nobody diffs.
+
+   THE COUNTS DIFFER BY LANGUAGE, AND THAT IS CORRECT rather than a gap. Two of the Russian
+   silences are about Cyrillic -- a bare `.рф` domain is not shielded, `т.е.` is not recognised
+   as an abbreviation -- because the engine's word-boundary check is ASCII. They are not English
+   readers' silences, and a shared list would have forced one language to carry the other's. *)
+procedure TestHelpSilences;
+const
+  { en, ru. A number, deliberately: see above. }
+  WANT: array[0..1] of Integer = (5, 7);
+var lang, page, at, nextAt, claims, shown, ex: Integer; html: string;
+begin
+  for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
+  begin
+    page := SpxHelpPageIndex(lang, 'silences');
+    CheckTrue('help/silences/' + SpxHelpLangCode(lang) + '/the chapter is where the slug says',
+              page >= 0);
+    if page < 0 then Continue;
+    html := SpxHelpPageHtml(lang, page);
+    claims := 0;
+    shown := 0;
+    at := Pos('<p><b>', html);
+    while at > 0 do
+    begin
+      Inc(claims);
+      nextAt := PosEx('<p><b>', html, at + 6);
+      if nextAt = 0 then nextAt := Length(html) + 1;
+      { Demonstrated before the next claim begins -- an example further down the page belongs
+        to a different silence. }
+      ex := PosEx('<small><tt>', html, at);
+      if (ex > 0) and (ex < nextAt) then Inc(shown);
+      if nextAt > Length(html) then Break;
+      at := nextAt;
+    end;
+    Check('help/silences/' + SpxHelpLangCode(lang) + '/every claim is shown, not just made',
+          IntToStr(shown), IntToStr(claims));
+    if lang <= High(WANT) then
+      Check('help/silences/' + SpxHelpLangCode(lang) + '/the chapter still names this many',
+            IntToStr(claims), IntToStr(WANT[lang]));
+  end;
+end;
+
 (* THE OFFLINE CLAIM, WHICH IS NOW A PUBLISHED ONE. docs/privacy.md tells the Store and its
    readers that this application collects nothing and sends nothing, and a promise of that kind
    is exactly the sort that stops being true by accident: one `uses fphttpclient` in a later
@@ -6991,6 +7078,7 @@ begin
   TestHtmlScan;
   TestGroups;
   TestHelpExamples;
+  TestHelpSilences;
   TestOfflineClaim;
   TestAbout;
   TestBrandMark;

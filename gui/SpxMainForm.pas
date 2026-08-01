@@ -3974,6 +3974,19 @@ begin
   if (FEngine <> nil) and FEngine.BatchInProgress then FEngine.CancelBatch;
 end;
 
+{ Every record goes through, and the id is deliberately NOT consulted here.
+
+  A guard that dropped records from a replaced batch was written and taken out again, because
+  it was wrong twice over. The case it guarded is unreachable from the window: TSpxVariantsPane
+  .GoClicked refuses to start while one is running, and nothing else raises OnGenerate, so two
+  batches never overlap. And the number it compared against is not the batch's -- FNextId is
+  bumped by RequestRender too, so one keystroke during an export moved it past the running
+  batch and every remaining record, INCLUDING the final Done, was dropped: measured on the real
+  worker, 121 records dropped and the panel wedged for the session with its Go disabled.
+
+  What the thread does support is replacing a running batch, and a consumer that ever uses it
+  must tell the batches apart by Progress.Id -- the record carries it for exactly that. This
+  window does not use it, so it does not need to. }
 procedure TSpxMainForm.BatchProgress(const P: TSpxBatchProgress);
 begin
   FSet.BatchProgress(P);
