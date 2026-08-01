@@ -7,9 +7,10 @@ EXE/MSI fallback that would put signing, hosting and update mechanics on us). It
 today, with the Windows SDK already on the machine, and the answer does not depend on Partner
 Center -- so it is answered first and the identity is filled in later.
 
-IDENTITY IS A PLACEHOLDER UNTIL PARTNER CENTER SAYS OTHERWISE, and the script says so on every
-run rather than letting a made-up publisher look settled. `Publisher` is the certificate subject
-Microsoft signs with; it is reserved with the account, not chosen here.
+IDENTITY IS THE RESERVATION'S, not ours. `Spintax Studio` is reserved in Partner Center as an
+MSIX product, and the three fields below are copied from its Product identity page. Microsoft
+rejects an upload whose manifest disagrees with them, so they are transcribed rather than
+chosen, and the one thing to keep in step by hand is the VERSION, which comes from the file.
 
 THE TILES ARE BUILD OUTPUT, not committed artefacts. They are resized from the brand raster the
 application icon already uses, and they live only in the staging folder: unlike the icons and
@@ -41,21 +42,26 @@ SOURCE = os.path.join(HERE, 'assets', 'brand', 'spintax-mark-180.png')
 TEMPLATE = os.path.join(HERE, 'packaging', 'AppxManifest.xml.in')
 EXE = os.path.join(HERE, 'spintax-studio.exe')
 
-# IDENTITY. What is settled is here; what Partner Center still has to say is marked, and the
-# script says which on every run rather than letting a guess look like an answer.
+# IDENTITY, and every field of it is now the REAL one: the product `Spintax Studio` is reserved
+# in Partner Center as an MSIX product, and these are copied from its Product identity page.
+# None of it is a secret -- all of it is readable in any package this account ships -- and none
+# of it may be edited here: Microsoft rejects an upload whose manifest disagrees with the
+# reservation, byte for byte.
 #
-# The PUBLISHER is real: it is the account's Windows publisher ID, which is the certificate
-# subject Microsoft signs with. It is not a secret -- it is readable in every package that
-# account ever ships -- and it is the one identity field that cannot be guessed at all.
+# ONE OF THEM WAS CONFIRMED BY ACCIDENT, and it is worth writing down. Registering the package
+# while the Name was still a placeholder produced the family suffix `jnd8jmenjzsm0`, which is
+# exactly the suffix Partner Center shows -- because the suffix is a hash of the PUBLISHER
+# alone. So the publisher that went in before the reservation existed was already right.
+IDENTITY_NAME = '301.SpintaxStudio'
 PUBLISHER = 'CN=BEE1F94B-ABDE-4CF8-9F30-1DF4DAFDAE83'
-# The package NAME and the publisher's DISPLAY name come from reserving the app in Partner
-# Center (Product identity), which has not been done. An upload with these is rejected.
-IDENTITY_NAME = 'RESERVE-IN-PARTNER-CENTER.SpintaxStudio'
-PUBLISHER_DISPLAY = 'RESERVE-IN-PARTNER-CENTER'
+PUBLISHER_DISPLAY = '301'
 DISPLAY_NAME = 'Spintax Studio'
 DESCRIPTION = ('An editor for spintax templates: write a template once, see every variant it '
                'produces, and export them. Works offline.')
-PENDING = 'RESERVE-IN-PARTNER-CENTER'
+# What the reservation gives back, for the listing and the deep link. Not used by the manifest;
+# here so the numbers live with the identity rather than in a chat log.
+PACKAGE_FAMILY = '301.SpintaxStudio_jnd8jmenjzsm0'
+STORE_ID = '9MW3CH7B530P'
 
 # What the manifest names, and the side of the square. A tile is drawn from the mark centred on
 # transparency -- the mark is a hexagon and a tile is a square, and stretching one into the
@@ -163,12 +169,8 @@ def main():
         fail('MakeAppx refused the package (exit %d)' % run.returncode)
 
     print('%-30s %d bytes' % (os.path.relpath(package, HERE), os.path.getsize(package)))
-    print('Publisher %s (real), Version %s (from VERSION)' % (PUBLISHER, version))
-    missing = [n for n, v in [('Identity Name', IDENTITY_NAME),
-                              ('PublisherDisplayName', PUBLISHER_DISPLAY)] if PENDING in v]
-    if missing:
-        print('STILL TO RESERVE in Partner Center, and an upload is rejected without them: %s'
-              % ', '.join(missing))
+    print('%s / %s / %s' % (IDENTITY_NAME, PUBLISHER, version))
+    print('family %s, Store ID %s' % (PACKAGE_FAMILY, STORE_ID))
 
 
 if __name__ == '__main__':
