@@ -34,7 +34,7 @@ uses
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
-  SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark;
+  SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxSevIcons;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -54,7 +54,8 @@ uses
   SpxHelpText in '..\gui\SpxHelpText.pas',
   SpxHelpNav in '..\gui\SpxHelpNav.pas',
   SpxAbout in '..\gui\SpxAbout.pas',
-  SpxBrandMark in '..\gui\SpxBrandMark.pas';
+  SpxBrandMark in '..\gui\SpxBrandMark.pas',
+  SpxSevIcons in '..\gui\SpxSevIcons.pas';
   {$ENDIF}
 
 var
@@ -2972,6 +2973,36 @@ begin
       Check(Format('sprites/flag-strip-fits-a-%dpx-cell', [wanted]), IntToStr(w),
         IntToStr(wanted));
   end;
+
+  { THE SEVERITY GLYPHS, held to the same account as the two strips above. What a drifted one
+    does here is worse than a wrong toolbar picture: an image list slices a strip into
+    SPX_SEV_COUNT columns whatever its real width, so a strip one cell short paints the ERROR
+    glyph on a warning -- a list that lies about the level, silently, in the one panel whose
+    whole job is to say it. }
+  Check('sprites/a-glyph-for-every-level', IntToStr(SPX_SEV_COUNT), '3');
+  Check('sprites/the-levels-are-in-the-order-the-panel-indexes-by',
+        Format('%d,%d,%d', [SPX_SEV_ERROR, SPX_SEV_WARN, SPX_SEV_NOTE]), '0,1,2');
+  for i := Low(SPX_SEV_SIZES) to High(SPX_SEV_SIZES) do
+  begin
+    p := SpxSevStrip(SPX_SEV_SIZES[i], len);
+    CheckTrue(Format('sprites/severity-%d-is-a-png', [SPX_SEV_SIZES[i]]),
+      (p <> nil) and (len > 8) and (PByte(p)[0] = $89) and (PByte(p)[1] = Ord('P')));
+    Check(Format('sprites/severity-%d-is-%d-cells-wide', [SPX_SEV_SIZES[i], SPX_SEV_COUNT]),
+      IntToStr(PngWidth(p, len)), IntToStr(SPX_SEV_SIZES[i] * SPX_SEV_COUNT));
+    Check(Format('sprites/severity-%d-is-one-row-tall', [SPX_SEV_SIZES[i]]),
+      IntToStr(PngHeight(p, len)), IntToStr(SPX_SEV_SIZES[i]));
+  end;
+  { The picker never hands back something BIGGER than the row it is for. }
+  for wanted := SPX_SEV_SIZES[Low(SPX_SEV_SIZES)] to 200 do
+    if SpxSevPickSize(wanted) > wanted then
+      Check(Format('sprites/severity-strip-fits-a-%dpx-row', [wanted]),
+        IntToStr(SpxSevPickSize(wanted)), IntToStr(wanted));
+  Check('sprites/under-the-floor-gets-the-smallest-severity-strip',
+    IntToStr(SpxSevPickSize(1)), IntToStr(SPX_SEV_SIZES[Low(SPX_SEV_SIZES)]));
+  { And a size nobody generated still gets bytes rather than nil: the window would otherwise
+    show no glyph at all, which is the failure that looks like the feature was never built. }
+  p := SpxSevStrip(SPX_SEV_SIZES[High(SPX_SEV_SIZES)] + 1, len);
+  CheckTrue('sprites/an-unknown-severity-size-still-gets-a-strip', (p <> nil) and (len > 8));
 
   CheckTrue('sprites/under-the-floor-gets-the-smallest-icon',
     SpxIconPickSize(1) = SPX_ICON_SIZES[Low(SPX_ICON_SIZES)]);

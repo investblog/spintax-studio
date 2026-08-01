@@ -26,7 +26,7 @@ uses
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
-  SpxGroups, SpxIcons, SpxFlags, SpxSegmented,
+  SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
@@ -52,6 +52,8 @@ type
     FModes: TSpxSegmented;
     { 16px icons for the top strip -- the rail's list is 24 and a list draws at its own size. }
     FSmallIcons: TImageList;
+    { The diagnostics list's three levels, at whatever size the display asks for. }
+    FSevIcons: TImageList;
     FPartial: TLabel;
     FSplit: TSplitter;
     FSlideSplit: TSplitter;
@@ -198,6 +200,10 @@ type
     FResErrors, FResWarnings, FResNotes, FResElapsed: Integer;
     FPartialShown, FPartialEmpty: Boolean;
     FPendingRow: TSpxPanelRow;
+    { Whether the queued jump hands the focus to the editor, and whether one is queued at all
+      -- see QueueJump. }
+    FPendingFocus: Boolean;
+    FJumpQueued: Boolean;
     { What a jump left behind, so the preview does not narrow to it: going to look at an
       error must not replace the document's preview with a render of the broken span. The
       rule that reads this lives in editor-core, where it is gated. }
@@ -215,7 +221,10 @@ type
       the jump, when the state is true. }
     FJumping: Boolean;
     procedure DiagColumn(const ACaption: string; AWidth: Integer);
+    procedure QueueJump(AIndex: Integer; AFocusEditor: Boolean);
     procedure DiagClicked(Sender: TObject);
+    procedure DiagKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure EnsureSevIcons;
     procedure DiagResized(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
     procedure VarJump(Line, Column: Integer);
@@ -237,9 +246,10 @@ type
       step REPEATS, and the timer re-arms, so holding F3 would leave a row permanently washed --
       the wash would stop meaning "just arrived" and start meaning "selected". A match is
       already shown by its selection anyway; a panel row has nothing else to show. }
-    procedure JumpToPos(Line, Column, EndLine, EndColumn: Integer; AFlash: Boolean = True);
+    procedure JumpToPos(Line, Column, EndLine, EndColumn: Integer; AFlash: Boolean = True;
+      AFocusEditor: Boolean = True);
     procedure ShowRows(const ARows: TSpxPanelRows);
-    procedure JumpTo(Row: TSpxPanelRow);
+    procedure JumpTo(Row: TSpxPanelRow; AFocusEditor: Boolean = True);
     function LineOf(N: Integer): string;
     procedure BuildUi;
     procedure BuildFindBar;
@@ -260,6 +270,7 @@ type
     procedure FindOpenClicked(Sender: TObject);
     procedure FindMenuClicked(Sender: TObject);
     procedure FindKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure StepToMatch(Backwards: Boolean);
     procedure RefreshMatches;
     procedure ShowMatchCount;
@@ -493,6 +504,8 @@ begin
   Constraints.MinWidth := Px(Self, 760);
   Constraints.MinHeight := Px(Self, 520);
   Position := poScreenCenter;
+  KeyPreview := True;
+  OnKeyDown := @FormKeyDown;
   OnClose := @FormClosed;
   OnCloseQuery := @FormAsked;
 
@@ -704,6 +717,8 @@ begin
   DiagColumn(Tr(sColAt), Px(Self, 70));
   DiagColumn(Tr(sColMessage), Px(Self, 640));
   FDiag.OnClick := @DiagClicked;
+  FDiag.OnKeyUp := @DiagKeyUp;
+  EnsureSevIcons;
   FDiag.OnDblClick := @DiagDoubleClicked;
   FDiag.OnResize := @DiagResized;
 
@@ -833,7 +848,15 @@ begin
     And no 80-column rule -- a code editor's convention, drawn here as a line standing in the
     middle of wrapped prose. The switch is this OPTION, not RightEdge := 0: SetRightEdge has
     no zero case, so a zero would merely move the line to the start of the text. }
-  FEditor.Options := FEditor.Options - [eoScrollPastEol] + [eoHideRightMargin];
+  { eoPersistentCaret, because the caret now moves while the editor does NOT have the focus:
+    stepping the diagnostics list with the arrows puts the caret on each finding and leaves the
+    keyboard in the list. Without it SynEdit destroys the caret whenever it is unfocused
+    (TCustomSynEdit.UpdateScreenCaret), so a row with no SPAN -- which is every Studio note by
+    construction, and any engine finding whose end offset is zero -- showed the 900 ms flash and
+    then nothing at all. Found by review, and found because the first measurement read CaretXY
+    rather than the screen: a property is not a pixel. }
+  FEditor.Options := FEditor.Options - [eoScrollPastEol] +
+                     [eoHideRightMargin, eoPersistentCaret];
 
   { Bracket matching by spintax rules. SynEdit's own markup counts parentheses and quotes
     as brackets and ignores block comments, so it is switched off and ours takes its place;
@@ -932,9 +955,9 @@ begin
     because that half belongs to the template, and it stands aside when the bar opens: the
     field starts exactly where the icon was, so nothing shifts.
 
-    Over the HELP it does not stand aside: the bar is always open there, so the icon becomes the
-    field's LABEL and sits in front of it instead (LayoutTopStrip). An unlabelled box in a
-    header is a box nobody tries. }
+    Over the HELP, when search has been opened explicitly, it becomes the field's LABEL and
+    sits in front of it instead (LayoutTopStrip). An unlabelled box in a header is a box nobody
+    tries. }
   FFindOpen := TSpeedButton.Create(Self);
   FFindOpen.Parent := FTop;
   FFindOpen.Flat := True;
@@ -1136,19 +1159,22 @@ begin
   FModes.Visible := not helpMode;
   FPartial.Visible := (not helpMode) and FPartialShown;
   FHelpClose.Visible := helpMode;
-  { THE SEARCH IS PART OF THE HELP, not something to open. A reader with a reference in front of
-    them wants to search it; making them find Ctrl+F first is a step with nothing behind it. Its
-    own close button goes -- there is nothing to close -- and so does the magnifier, which is the
-    door to a bar that is already open. }
-  if helpMode then
+  { THE HELP DOES NOT PAY FOR SEARCH UNTIL SEARCH IS ASKED FOR. The first help header was always
+    open, mostly empty, and took a whole line from the document the reader was trying to read.
+    Ctrl+F still opens the same bar over the help; until then the top strip is absent. }
+  if helpMode and (not FFindText.Visible) then
   begin
-    FFindText.Visible := True;
-    FFindPrev.Visible := True;
-    FFindNext.Visible := True;
-    FFindCase.Visible := True;
-    FFindCount.Visible := True;
-    FFindClose.Visible := False;
+    FTop.Visible := False;
+    FTop.Height := 0;
+    FHelpClose.Visible := False;
+    FFindOpen.Visible := False;
+    if FDock <> nil then FDock.BorderSpacing.Top := 0;
+    if FSlideSplit <> nil then FSlideSplit.BorderSpacing.Top := 0;
+    Exit;
   end;
+  FTop.Visible := True;
+  if helpMode then
+    FFindClose.Visible := False;
 
   { ── the output's half, from the right edge inwards ── }
   editorEnd := 0;
@@ -1216,10 +1242,9 @@ begin
 
   { THE MAGNIFIER HAS TWO JOBS, and which one depends on whose strip it is. Over the document
     it is the DOOR to a bar that is closed, and it stands where the field will so that opening
-    the bar replaces it rather than moving anything. Over the help the bar is always open and
-    there is no door to be -- it stands BEFORE the field instead, saying what the field is,
-    because an unlabelled box in a header is a box nobody tries. Clicking it there focuses the
-    field, which is the only honest thing left for it to do. }
+    the bar replaces it rather than moving anything. Over the help, once Ctrl+F has opened the
+    strip, there is no door to be -- it stands BEFORE the field instead, saying what the field
+    is. Clicking it there focuses the field, which is the only honest thing left for it to do. }
   if FFindOpen <> nil then
   begin
     FFindOpen.Visible := helpMode or (not FFindText.Visible);
@@ -1437,12 +1462,13 @@ begin
   end;
   if idx < 0 then Exit;
   FMatchIndex := idx;
-  JumpToPos(FMatches[idx].Line, FMatches[idx].Col,
-            FMatches[idx].EndLine, FMatches[idx].EndCol, False);
-  ShowMatchCount;
   { The focus stays in the box, so a second Enter steps again rather than typing into the
-    document. }
-  if FFindText.CanSetFocus then FFindText.SetFocus;
+    document -- and it is no longer taken and given back: this used to focus the editor and
+    then focus the field again on the next line, which is the bounce the diagnostics list's
+    arrows turned into a parameter. }
+  JumpToPos(FMatches[idx].Line, FMatches[idx].Col,
+            FMatches[idx].EndLine, FMatches[idx].EndCol, False, False);
+  ShowMatchCount;
 end;
 
 procedure TSpxMainForm.FindTextChanged(Sender: TObject);
@@ -1517,6 +1543,26 @@ begin
         if HelpShowing then HelpCloseClicked(nil) else HideFindBar;
         Key := 0;
       end;
+  end;
+end;
+
+procedure TSpxMainForm.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key <> VK_ESCAPE then Exit;
+  if HelpShowing then
+  begin
+    HelpPaneClosed(nil);
+    Key := 0;
+  end
+  else if (FSlide <> nil) and FSlide.Visible then
+  begin
+    GroupPaneClosed(nil);
+    Key := 0;
+  end
+  else if (FFindText <> nil) and FFindText.Visible then
+  begin
+    HideFindBar;
+    Key := 0;
   end;
 end;
 
@@ -2055,6 +2101,7 @@ begin
   inherited AutoAdjustLayout(AMode, AFromPPI, AToPPI, AOldFormWidth, ANewFormWidth);
   EnsureFlags;
   EnsureSmallIcons;
+  EnsureSevIcons;
   if FRail <> nil then FRail.Rescale;
   { The switch's width is its captions', and a caption's width is the display's. }
   LayoutTopStrip;
@@ -2082,6 +2129,30 @@ begin
   if (FSmallIcons <> nil) and (FSmallIcons.Width = size_) then Exit;
   p := SpxIconStrip(size_, len);
   FSmallIcons := SpxImagesFrom(Self, FSmallIcons, p, len, size_, size_, SPX_ICON_COUNT);
+end;
+
+(* THE LEVEL, AS A GLYPH BESIDE THE WORD. The backlog asked for the rows to be COLOURED, and
+   that could not be done. LCL calls OnCustomDrawItem on Windows and then drops what the
+   handler leaves on the canvas, having no CDRF_NEWFONT to return: measured on the running
+   window with a probe's OWN handler, which ran once per row while forcing red text on a
+   yellow background and changed not one pixel. Owner draw would work and would cost this list
+   what the locale list has already lost, so the level is drawn by the native control as an
+   icon instead.
+
+   THREE SHAPES as well as three colours, so the panel is readable to someone who cannot
+   separate red from amber; and the word in the level column is still there for anyone reading
+   it aloud. Refilled rather than rebuilt on a scaling change, because the list holds a
+   reference to the list object. *)
+procedure TSpxMainForm.EnsureSevIcons;
+var size_, len: Integer; p: Pointer;
+begin
+  if FDiag = nil then Exit;
+  size_ := SpxSevPickSize(Px(Self, 16));
+  if (FSevIcons <> nil) and (FSevIcons.Width = size_) then Exit;
+  p := SpxSevStrip(size_, len);
+  if p = nil then Exit;
+  FSevIcons := SpxImagesFrom(Self, FSevIcons, p, len, size_, size_, SPX_SEV_COUNT);
+  FDiag.SmallImages := FSevIcons;
 end;
 
 procedure TSpxMainForm.DiagColumn(const ACaption: string; AWidth: Integer);
@@ -2134,6 +2205,11 @@ begin
 
       it := FDiag.Items.Add;
       it.Caption := level;
+      { The same three the word says, in the order the strip holds them. }
+      if ARows[i].Source = spxRowStudio then it.ImageIndex := SPX_SEV_NOTE
+      else if ARows[i].Severity = 'error' then it.ImageIndex := SPX_SEV_ERROR
+      else if ARows[i].Severity = 'warning' then it.ImageIndex := SPX_SEV_WARN
+      else it.ImageIndex := SPX_SEV_NOTE;
       it.SubItems.Add(name_);
       it.SubItems.Add(place);
       it.SubItems.Add(ARows[i].Text);
@@ -2158,21 +2234,62 @@ begin
   FDiag.Columns[last].Width := room;
 end;
 
+{ THE ONE DOOR OUT OF THIS LIST, for the mouse and for the keyboard alike.
+
+  Deferred rather than run inside the event. Everything the jump may do pumps the message loop
+  -- the save prompt, a file dialog -- and while it pumps, a delivered result rebuilds this
+  list, freeing the very TListItem the event is still about. The row is copied into a field
+  first, for the same reason JumpTo takes it by value.
+
+  QUEUED ONCE, and what that buys is COALESCING rather than de-duplication. Two arrow presses
+  landing before the queue drains would otherwise be two jumps, and the first is to a row the
+  reader has already left; the flag keeps one, and because the row is overwritten BEFORE the
+  guard, the one kept is the newest. (An earlier version of this note claimed a click opens
+  both doors at once. It cannot: LCL raises Click from WM_LBUTTONUP and a mouse gesture
+  produces no WM_KEYUP. Found by review.) }
+procedure TSpxMainForm.QueueJump(AIndex: Integer; AFocusEditor: Boolean);
+begin
+  if (AIndex < 0) or (AIndex > High(FRows)) then Exit;
+  FPendingRow := FRows[AIndex];
+  FPendingFocus := AFocusEditor;
+  if FJumpQueued then Exit;
+  FJumpQueued := True;
+  Application.QueueAsyncCall(@JumpDeferred, 0);
+end;
+
 procedure TSpxMainForm.DiagClicked(Sender: TObject);
 begin
   if FDiag.Selected = nil then Exit;
-  if (FDiag.Selected.Index < 0) or (FDiag.Selected.Index > High(FRows)) then Exit;
-  { Deferred out of the click rather than run inside it. Everything the jump may do pumps the
-    message loop -- the save prompt, a file dialog -- and while it pumps, a delivered result
-    rebuilds this list, freeing the very TListItem whose click LCL is still processing. The
-    row is copied into a field first, for the same reason JumpTo takes it by value. }
-  FPendingRow := FRows[FDiag.Selected.Index];
-  Application.QueueAsyncCall(@JumpDeferred, 0);
+  { A click says "take me there", so the editor takes the focus. }
+  QueueJump(FDiag.Selected.Index, True);
+end;
+
+(* THE KEYBOARD, which had none: the jump hung on OnClick, so Up and Down moved the
+   highlight and nothing else. Read on key UP because that is when the selection has already
+   moved -- on key DOWN the list still reports the row the reader is leaving.
+
+   The arrows do NOT take the focus (see JumpToPos): the caret and the preview follow each row
+   as it is stepped onto, and the list keeps the keyboard so the next press is another step.
+   Enter and Space mean the same as a click, and hand the focus over. *)
+procedure TSpxMainForm.DiagKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if FDiag.Selected = nil then Exit;
+  { Ctrl and Alt change what an arrow MEANS in a list -- Ctrl+arrow moves the focus rectangle
+    without moving the selection -- so a modified key is not a step and must not re-jump to the
+    row already shown. Shift+arrow extends the selection, which is a step. }
+  if (ssCtrl in Shift) or (ssAlt in Shift) then Exit;
+  case Key of
+    VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT, VK_HOME, VK_END:
+      QueueJump(FDiag.Selected.Index, False);
+    VK_RETURN, VK_SPACE:
+      QueueJump(FDiag.Selected.Index, True);
+  end;
 end;
 
 procedure TSpxMainForm.JumpDeferred(Data: PtrInt);
 begin
-  JumpTo(FPendingRow);
+  FJumpQueued := False;
+  JumpTo(FPendingRow, FPendingFocus);
 end;
 
 { A row is a jump only when the engine gave it a place: `Line = 0` means it could not, and
@@ -2186,7 +2303,7 @@ end;
   LoadDocument. While that loop runs, the worker's Synchronize delivers a result, JobDone
   reaches ShowRows, and `FRows := ARows` releases the array this row lived in -- after which
   the reads below are reads of freed memory. The copy costs two string refcounts. }
-procedure TSpxMainForm.JumpTo(Row: TSpxPanelRow);
+procedure TSpxMainForm.JumpTo(Row: TSpxPanelRow; AFocusEditor: Boolean);
 var target: string;
 begin
   if Row.Line <= 0 then Exit;
@@ -2198,7 +2315,7 @@ begin
     if not AskSave then Exit;
     LoadDocument(target);
   end;
-  JumpToPos(Row.Line, Row.Column, Row.EndLine, Row.EndColumn);
+  JumpToPos(Row.Line, Row.Column, Row.EndLine, Row.EndColumn, True, AFocusEditor);
 end;
 
 { The caret, and a selection when there is a span. Shared by the diagnostics panel and the
@@ -2206,7 +2323,7 @@ end;
   code points to bytes, since SynEdit's logical coordinates are byte offsets while the
   engine counts characters. }
 procedure TSpxMainForm.JumpToPos(Line, Column, EndLine, EndColumn: Integer;
-  AFlash: Boolean = True);
+  AFlash: Boolean; AFocusEditor: Boolean);
 var col: Integer;
 begin
   if Line <= 0 then Exit;
@@ -2240,7 +2357,12 @@ begin
     nothing; a jump out of a fragment asks for the document back, and that one renders. }
   PreviewFollowSelection;
   FEditor.EnsureCursorPosVisible;
-  FEditor.SetFocus;
+  { THE CARET MOVES; THE FOCUS ONLY SOMETIMES FOLLOWS IT. A click on a finding means "take me
+    there", so it does. An ARROW KEY in the list means "show me the next one", and taking the
+    focus on the first press would send the second press to the editor -- which is not a slow
+    list, it is a list you cannot walk. The caret and the preview follow either way, so the
+    reader sees each finding as they step onto it while the list keeps the keyboard. }
+  if AFocusEditor then FEditor.SetFocus;
 end;
 
 { A definition row has a place but no span -- the engine reports where the directive starts, and
@@ -3692,6 +3814,7 @@ begin
   finally
     FEditor.EndUpdate;
   end;
+  FlashJumpLine;
   RequestRender;
 end;
 
