@@ -53,6 +53,9 @@ type
     procedure ListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure HideGutterPart(const AClass: string);
     procedure Say(const AText: string);
+    { The header line, from the group this panel is showing. One routine, so a language change
+      can rebuild it as well as a move of the caret. }
+    procedure SayWhat;
   public
     constructor Create(AOwner: TComponent); override;
     { The document and where the caret is in it, in bytes. Cheap to call on a caret move: the
@@ -118,6 +121,10 @@ begin
   { Room for the button that floats over this row. }
   FWhat.BorderSpacing.Right := Px(Self, 8 + 30);
   FWhat.WordWrap := True;
+  { The WEIGHT is not set here: this label is a heading in one state and a sentence in the
+    other, so SayWhat decides it along with the words. One label rather than two, because the
+    kind and its head are one sentence and splitting them would cost this panel a wrapping
+    layout for no gain. }
 
   { One variant per line, and the editor's own font: these are pieces of the template, and
     reading them in a proportional face next to a monospaced editor is a small lie about
@@ -249,32 +256,66 @@ procedure TSpxGroupPane.Retranslate;
 begin
   FApply.Caption := Tr(sGroupApply);
   FClose.Hint := Tr(sClose);
-  if not FHas then FWhat.Caption := Tr(sGroupNone);
+  { THE HEADER TOO, and it did not before: the old line refreshed it only when there was NO
+    group, so switching the interface language with one open left the kind's name in the
+    previous language until the caret moved to another construct. Pre-existing, found by review
+    of the line above it, and the same silent half-translation this project keeps catching --
+    cheap to close now that one routine builds the caption. }
+  SayWhat;
 end;
 
-procedure TSpxGroupPane.ShowGroupAt(const ADoc: string; AOffset: Integer);
+procedure TSpxGroupPane.SayWhat;
 const
   KIND: array[TSpxGroupKind] of TSpxStr =
     (sGroupChoice, sGroupConditional, sGroupPlural, sGroupPermutation);
+  (* THE BRACKETS THE AUTHOR ACTUALLY TYPED, in front of the kind's name.
+
+     The four kinds were named in plain text at the same weight as everything else in the
+     header, and a reader reported that they read alike -- which matters because the LIST
+     below means different things under each. Under a choice the lines are interchangeable
+     alternatives; under a permutation they are a set that gets picked from AND ordered.
+     Editing one as if it were the other is a mistake the panel was doing nothing to prevent.
+
+     Nothing is invented here: `{a|b}` and `[a|b]` are how this language writes the two, so the
+     mark is a fact of the syntax rather than an icon somebody has to learn. It also costs no
+     string id -- which in this product is seventeen files -- and no sprite. A plural is braced
+     like a choice because it IS braced like a choice; what separates those two is the head
+     (`plural %n%:`), and the head is already on this line. *)
+  MARK: array[TSpxGroupKind] of string = ('{|}', '{?|}', '{|}', '[|]');
+var head: string;
+begin
+  { A HEADING IS BOLD; A SENTENCE IS NOT. The empty state is not a heading, it is the panel
+    saying the caret is not inside a group -- and bolding that would be the message raising its
+    voice for no reason. Found by review, which noticed the effect was wider than the reason. }
+  if not FHas then
+  begin
+    FWhat.Font.Style := [];
+    FWhat.Caption := Tr(sGroupNone);
+    Exit;
+  end;
+  FWhat.Font.Style := [fsBold];
+  head := FGroup.Head;
+  if head <> '' then head := '  ' + head;
+  FWhat.Caption := MARK[FGroup.Kind] + '  ' + Tr(KIND[FGroup.Kind]) + head;
+end;
+
+procedure TSpxGroupPane.ShowGroupAt(const ADoc: string; AOffset: Integer);
 var
   i: Integer;
-  head: string;
 begin
   FDoc := ADoc;
   FHas := SpxGroupAt(ADoc, AOffset, FGroup);
   Say('');
+  SayWhat;
   if not FHas then
   begin
-    FWhat.Caption := Tr(sGroupNone);
     FList.Lines.Clear;
     FList.ReadOnly := True;
     FApply.Enabled := False;
     Exit;
   end;
 
-  head := FGroup.Head;
-  if head <> '' then head := '  ' + head;
-  FWhat.Caption := Tr(KIND[FGroup.Kind]) + head;
+  SayWhat;
 
   { A variant that carries a line break cannot be a line in this list. Shown, not edited. }
   FReadOnly := False;
