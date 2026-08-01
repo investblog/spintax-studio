@@ -255,6 +255,49 @@ begin
   if want < 0 then Result := nil;
 end;
 
+{ The tokenizer's own rules, declared ahead of their definitions because the two things below
+  need them: SpxConstructOf puts an angle bracket to TrailingSepLength before paying for a
+  scan, and ConfigSkip asks PermConfigLength where a permutation's config ends. One rule, one
+  place: a second copy here would be a second thing to keep in step with the engine. }
+function TrailingSepLength(const Line: string; p: Integer): Integer; forward;
+function PermConfigLength(const Line: string; p: Integer): Integer; forward;
+
+(* HOW MANY BYTES A PERMUTATION'S CONFIG TAKES AT AAt, or 0 when there is no config there.
+
+  A config is not code, and the brackets inside it open nothing: `[<sep="{">a|b]` carries a
+  brace that belongs to a quoted string. Both walks below used to count it, so the phantom
+  pair swallowed the `]` that really closes the permutation -- measured by fuzzing, four shapes
+  in eighty thousand documents, and the tokenizer disagreed with the matcher about every one of
+  them. The tokenizer is the side that was right, so this asks IT rather than deciding again.
+
+  Line-local because the rule is: PermConfigLength wants the config's `>` on the same line.
+
+  AND BLANKS BEFORE THE `<` ARE PART OF IT. The engine left-trims a permutation's first part
+  before asking whether it opens with `<` (Spintax.pas:1258), the tokenizer does the same
+  (SpxScanLine, and its comment says the space may not disable the colouring), so a walk that
+  required the `<` to sit against the `[` left the whole defect alive behind one space:
+  measured on `[ <sep="{">a|b]`, the opener matched nothing and the inner permutation took the
+  outer `]`. Found by review, after this comment already claimed to ask the tokenizer rather
+  than decide again. *)
+function ConfigSkip(const Text: string; AAt: Integer): Integer;
+var from_, stop, blanks: Integer;
+begin
+  Result := 0;
+  if (AAt < 1) or (AAt > Length(Text)) then Exit;
+  blanks := 0;
+  while (AAt + blanks <= Length(Text)) and
+        (Text[AAt + blanks] in [' ', #9, #11, #12]) do Inc(blanks);
+  Inc(AAt, blanks);
+  if (AAt > Length(Text)) or (Text[AAt] <> '<') then Exit;
+  from_ := AAt;
+  while (from_ > 1) and (Text[from_ - 1] <> #10) and (Text[from_ - 1] <> #13) do Dec(from_);
+  stop := AAt;
+  while (stop <= Length(Text)) and (Text[stop] <> #10) and (Text[stop] <> #13) do Inc(stop);
+  Result := PermConfigLength(Copy(Text, from_, stop - from_), AAt - from_ + 1);
+  { The blanks are skipped with it, or the caller lands back on them. }
+  if Result > 0 then Inc(Result, blanks);
+end;
+
 function SpxMatchBracket(const Text: string; Offset: Integer): Integer;
 type
   TOpen = record Pos: Integer; Ch: Char; end;
@@ -296,6 +339,9 @@ begin
       stack[top].Pos := i;
       stack[top].Ch := c;
       Inc(top);
+      { A permutation's config is skipped whole: the brackets in it open nothing, and counting
+        them let a phantom pair swallow the `]` that really closes the permutation. }
+      if c = '[' then Inc(i, ConfigSkip(Text, i + 1));
     end
     else if (c = '}') or (c = ']') then
     begin
@@ -316,11 +362,6 @@ begin
     Inc(i);
   end;
 end;
-
-{ The tokenizer's own rule for a trailing separator, declared ahead of its definition so the
-  construct rule below can put an angle bracket to it before paying for a scan. One rule, one
-  place: a second copy here would be a second thing to keep in step with the engine. }
-function TrailingSepLength(const Line: string; p: Integer): Integer; forward;
 
 function SpxConstructOf(const Text: string; Offset: Integer;
   out AOpen, AClose: Integer; out ASeps: TSpxOffsets): Boolean;
@@ -383,6 +424,9 @@ begin
       stack[top].Pos := i;
       stack[top].Ch := c;
       Inc(top);
+      { A permutation's config is skipped whole: the brackets in it open nothing, and counting
+        them let a phantom pair swallow the `]` that really closes the permutation. }
+      if c = '[' then Inc(i, ConfigSkip(Text, i + 1));
     end
     else if (c = '}') or (c = ']') then
     begin

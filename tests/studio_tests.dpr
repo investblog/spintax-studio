@@ -1599,6 +1599,34 @@ begin
   Check('construct/a-mismatched-pair-gives-nothing', ConstructAt('{a|b]', 3), '-');
   Check('construct/and-does-not-climb-out-of-one', ConstructAt('{x{a|b]y}', 5), '-');
 
+  (* A PERMUTATION'S CONFIG IS NOT CODE, and the brackets inside it open nothing. Found by
+     fuzzing eighty thousand documents in review: `[x|[<sep="{">a|b]|y]` made the matcher
+     disagree with its own tokenizer -- the brace in the quoted separator was counted as an
+     opener, and the phantom pair swallowed the `]` that really closes the inner permutation,
+     so the editor lit `4..20` and painted a separator this rule then declined to answer for.
+     Both walks now ask the tokenizer's own PermConfigLength and skip the config whole. *)
+  Check('construct/a-brace-in-a-config-does-not-move-the-pair',
+        IntToStr(SpxMatchBracket('[x|[<sep="{">a|b]|y]', 4)), '17');
+  Check('construct/nor-a-brace-in-a-config-of-its-own',
+        IntToStr(SpxMatchBracket('[<sep="}">a|b]', 1)), '14');
+  { AND A BLANK BEFORE THE `<` DOES NOT REVIVE IT. The engine left-trims a permutation's first
+    part before asking whether it opens a config, and so does the tokenizer -- a walk that
+    wanted the `<` against the `[` left the whole defect alive behind one space. Found by
+    review, after the first fix's own comment claimed to ask the tokenizer rather than decide
+    again. }
+  Check('construct/a-space-before-the-config-changes-nothing',
+        IntToStr(SpxMatchBracket('[x|[ <sep="{">a|b]|y]', 4)), '18');
+  Check('construct/nor-does-it-for-a-closing-bracket-in-one',
+        IntToStr(SpxMatchBracket('[ <sep="]">a|b]', 1)), '15');
+  Check('construct/and-the-spaced-inner-pipe-still-lands',
+        ConstructAt('[x|[ <sep="{">a|b]|y]', 16), '4..18');
+  { And the two rules agree about every pipe in it, which is the disagreement itself. }
+  Check('construct/the-inner-pipe-gets-the-inner-permutation',
+        ConstructAt('[x|[<sep="{">a|b]|y]', 15), '4..17');
+  Check('construct/and-the-outer-ones-the-outer',
+        ConstructAt('[x|[<sep="{">a|b]|y]', 3) + ' ' + ConstructAt('[x|[<sep="{">a|b]|y]', 18),
+        '1..20 1..20');
+
   { Nonsense in, nothing out. }
   Check('construct/before-the-text-gives-nothing', ConstructAt('{a|b}', 0), '-');
   Check('construct/past-the-text-gives-nothing', ConstructAt('{a|b}', 99), '-');

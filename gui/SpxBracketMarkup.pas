@@ -138,6 +138,14 @@ procedure TSpxBracketMarkup.FindMatchingBracketPair(LogCaret: TPoint;
       end;
     end;
     SetLength(FSeps, n);
+    { AND THE LINES THAT HAVE JUST GAINED ONE ARE TOLD. ClearSeps says the rule from the other
+      side -- clearing a highlight means telling the editor, not only forgetting it -- and
+      setting one is the same act. The parent invalidates the two BRACKET lines and no others,
+      so a separator on a middle line of a construct spanning three had nothing to repaint it
+      and appeared one caret move late. Raised by review, unmeasured there; the asymmetry is
+      visible in the code either way and costs one loop to close. }
+    for i := 0 to n - 1 do
+      InvalidateSynLines(FSeps[i].Y, FSeps[i].Y);
   end;
 
   { The same, for a pair given in document order: the offsets have to be found first. }
