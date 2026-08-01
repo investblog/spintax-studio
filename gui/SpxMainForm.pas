@@ -120,6 +120,9 @@ type
     FTopics: TSpxHelpTopics;
     { The example the reader last clicked, or -1. The right pane renders it. }
     FHelpExample: Integer;
+    { The first render of an example is fixture-seeded, so it matches the checked arrow in
+      the article. A reroll is explicitly a fresh draw of the same clean template. }
+    FHelpRandom: Boolean;
     { THE HELP'S OWN HEADER. While the help is up the top strip belongs to it: the document's
       controls act on a document nobody can see, and the search bar searched that document too
       -- typing a word that is on the page in front of you answered "not found". }
@@ -326,6 +329,7 @@ type
     procedure HelpLangChanged(Sender: TObject);
     procedure RunHelpExample(AIndex: Integer);
     procedure InsertHelpExample(Sender: TObject);
+    procedure RerollHelpExample(Sender: TObject);
     procedure HelpCloseClicked(Sender: TObject);
     procedure BrandClicked(Sender: TObject);
     procedure OpenHelpAtCaret;
@@ -897,7 +901,9 @@ begin
   FPreview.Parent := FBody;
   FPreview.Align := alClient;
   FPreview.Constraints.MinWidth := Px(Self, SPX_PANE_MIN);
+  FPreview.SetIcons(FSmallIcons);
   FPreview.OnInsert := @InsertHelpExample;
+  FPreview.OnReroll := @RerollHelpExample;
 
   FDebounce := TTimer.Create(Self);
   FDebounce.Enabled := False;
@@ -3005,6 +3011,11 @@ end;
 
 procedure TSpxMainForm.RerollClicked(Sender: TObject);
 begin
+  if HelpShowing then
+  begin
+    RerollHelpExample(Sender);
+    Exit;
+  end;
   { A reroll in seeded mode would return the same text, so it draws fresh instead -- the
     button means "show me another one". }
   FSeeded.Checked := False;
@@ -3052,7 +3063,7 @@ begin
     if job.HelpDoc < 0 then job.HelpDoc := 0;
     job.UiLang := SpxUiLang;
     job.Locale := SpxHelpLocale(job.HelpLang, job.HelpDoc);
-    job.Seeded := True;
+    job.Seeded := not FHelpRandom;
     job.Seed := SpxHelpSeed(job.HelpLang, job.HelpDoc);
     job.HelpExample := FHelpExample;
     if FHelpExample >= 0 then SpxHelpExample(job.HelpLang, FHelpExample, job.Text);
@@ -3587,6 +3598,7 @@ begin
   FHelp.Visible := False;
   FEditor.Visible := True;
   FHelpExample := -1;
+  FHelpRandom := False;
   { THE STRIP COMES BACK HERE, at the one place the help stops showing -- and not in the close
     handler, which is only one of the ways out. Opening the group editor calls HideHelp directly
     (OpenGroupPane), and with the restore in the other routine the reader was left with a search
@@ -3733,6 +3745,7 @@ begin
   { A new page, a new subject: the right pane stops showing the last example rather than
     keeping an answer to a question the reader has left behind. }
   FHelpExample := -1;
+  FHelpRandom := False;
   { THE STRIP CHANGES OWNER. Its controls are decided by LayoutTopStrip and it is the help that
     just took it over, so the switch happens here rather than waiting for a resize.
 
@@ -3775,6 +3788,14 @@ end;
 procedure TSpxMainForm.RunHelpExample(AIndex: Integer);
 begin
   FHelpExample := AIndex;
+  FHelpRandom := False;
+  RequestRender;
+end;
+
+procedure TSpxMainForm.RerollHelpExample(Sender: TObject);
+begin
+  if (not HelpShowing) or (FHelpExample < 0) then Exit;
+  FHelpRandom := True;
   RequestRender;
 end;
 

@@ -27,10 +27,10 @@ unit SpxPreviewPane;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, Menus, IpHtml,
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, Graphics, Menus, IpHtml, Buttons, ImgList,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditHighlighter,
   SynHighlighterHTML, SpxTheme,
-  SpxStudio, SpxUi, SpxStrIds, SpxStrings, SpxSourceMarkup;
+  SpxStudio, SpxUi, SpxStrIds, SpxStrings, SpxSourceMarkup, SpxIcons;
 
 const
   { 16 KB is ~150 ms of layout on this machine -- still invisible between keystrokes, and
@@ -56,9 +56,11 @@ type
       is a link, and a second link on the template would put two magenta things on one line
       where one of them means "render this" and the other "keep this". }
     FOffer: TPanel;
-    FOfferText: TLabel;
-    FOfferBtn: TButton;
+    FOfferInsert: TSpeedButton;
+    FOfferReroll: TSpeedButton;
+    FOfferHelp: TSpeedButton;
     FOnInsert: TNotifyEvent;
+    FOnReroll: TNotifyEvent;
     FPage: TIpHtmlPanel;
     { A read-only editor rather than a plain memo, for one reason: the markup is what this
       view is FOR, and unhighlighted markup is a wall of angle brackets. SynEdit's own HTML
@@ -100,6 +102,7 @@ type
     function GetOffering: Boolean;
     procedure LayOutOffer;
     procedure OfferClicked(Sender: TObject);
+    procedure OfferRerollClicked(Sender: TObject);
     procedure HideGutterPart(const AClass: string);
     procedure BuildSourceView(AWrap: Boolean);
     procedure CopyClicked(Sender: TObject);
@@ -131,11 +134,15 @@ type
       not a preview. }
     procedure ApplyTheme(const APalette: TSpxPalette);
     procedure ApplyEditorFont(const AFamily: string; APoints: Integer);
+    { The window's own 16px list, handed over rather than built here: it is refilled in place
+      when the display's scaling changes, so this reference stays good (SpxUi.SpxImagesFrom). }
+    procedure SetIcons(AImages: TCustomImageList);
     property Content: string read FContent;
     { Whether the strip above the page is up. The window sets it; the pane holds no idea of
       what the help is, only that what it is drawing came from somewhere else. }
     property Offering: Boolean read GetOffering write SetOffering;
     property OnInsert: TNotifyEvent read FOnInsert write FOnInsert;
+    property OnReroll: TNotifyEvent read FOnReroll write FOnReroll;
   end;
 
 implementation
@@ -181,21 +188,33 @@ begin
   FOffer.BevelOuter := bvNone;
   FOffer.Visible := False;
 
-  FOfferText := TLabel.Create(Self);
-  FOfferText.Parent := FOffer;
-  FOfferText.AutoSize := False;
+  FOfferInsert := TSpeedButton.Create(Self);
+  FOfferInsert.Parent := FOffer;
+  FOfferInsert.Flat := True;
+  FOfferInsert.ImageIndex := SPX_ICON_INSERT;
+  FOfferInsert.ShowHint := True;
+  FOfferInsert.OnClick := @OfferClicked;
 
-  FOfferBtn := TButton.Create(Self);
-  FOfferBtn.Parent := FOffer;
-  FOfferBtn.OnClick := @OfferClicked;
+  FOfferReroll := TSpeedButton.Create(Self);
+  FOfferReroll.Parent := FOffer;
+  FOfferReroll.Flat := True;
+  FOfferReroll.ImageIndex := SPX_ICON_REROLL;
+  FOfferReroll.ShowHint := True;
+  FOfferReroll.OnClick := @OfferRerollClicked;
+
+  FOfferHelp := TSpeedButton.Create(Self);
+  FOfferHelp.Parent := FOffer;
+  FOfferHelp.Flat := True;
+  FOfferHelp.ImageIndex := SPX_ICON_HELP;
+  FOfferHelp.ShowHint := True;
 
   { HERE, not only in Retranslate. The window sets the language BEFORE it builds anything, so
-    every control reads its own caption in its own constructor -- and RetranslateUi runs only
-    when the language CHANGES. Setting these two only there shipped a blank 24px button and no
-    sentence on every fresh run, until the reader switched language to the one they were
-    already in. Found by review, measured on a deleted settings file. }
-  FOfferText.Caption := Tr(sHelpExampleFrom);
-  FOfferBtn.Caption := Tr(sHelpExampleInsert);
+    every control reads its own hint in its own constructor -- and RetranslateUi runs only
+    when the language CHANGES. The offer used to have captions; now the text lives in the
+    hints, where icon buttons put translated verbs without spending strip width. }
+  FOfferInsert.Hint := Tr(sHelpExampleInsert);
+  FOfferReroll.Hint := Tr(sReroll);
+  FOfferHelp.Hint := Tr(sHelpExampleFrom);
 
   FPage := TIpHtmlPanel.Create(Self);
   FPage.Parent := Self;
@@ -295,7 +314,6 @@ begin
   if FOffer <> nil then
   begin
     FOffer.Color := APalette.Gutter;
-    FOfferText.Font.Color := APalette.Text;
   end;
 
   if FSource = nil then Exit;
@@ -460,6 +478,11 @@ begin
   if Assigned(FOnInsert) then FOnInsert(Self);
 end;
 
+procedure TSpxPreviewPane.OfferRerollClicked(Sender: TObject);
+begin
+  if Assigned(FOnReroll) then FOnReroll(Self);
+end;
+
 function TSpxPreviewPane.GetOffering: Boolean;
 begin
   Result := FOffer.Visible;
@@ -472,62 +495,26 @@ begin
   if AValue then LayOutOffer;
 end;
 
-{ BOTH CAPTIONS ARE MEASURED, not budgeted. The button holds a whole verb phrase in fourteen
-  languages -- 'In mein Dokument einfügen' beside 'Belgeme ekle' -- and a fixed width that fits
-  the longest wastes the strip in every other language while still being a guess. An off-screen
-  bitmap has no layout to disturb (the variants panel's `Fit` is the same three lines, and the
-  reason is written out there): AutoSize on a TLabel is a no-op, and AdjustSize from a layout
-  path is `ELayoutException: AdjustSize loop detected`. }
 procedure TSpxPreviewPane.LayOutOffer;
-var ruler: TBitmap; pad, gap, x, room, w: Integer;
+var pad, gap, x, side: Integer;
 begin
   pad := Px(Self, 8);
-  gap := Px(Self, 10);
-  ruler := TBitmap.Create;
-  try
-    { Self.ClientWidth, not the strip's: the strip spans the pane and has no bevel, so they are
-      the same number -- but the pane's is current whether or not LCL has realigned the strip
-      yet, and this runs the moment the strip is shown. }
-    room := ClientWidth - 2 * pad;
-    ruler.Canvas.Font.Assign(FOfferBtn.Font);
-    FOfferBtn.AutoSize := False;
-    w := ruler.Canvas.TextWidth(FOfferBtn.Caption) + Px(Self, 24);
-    { The button is clamped too. It fits at every width the pane can actually be -- measured,
-      fourteen languages, the widest being Italian at 174 px against a 283 px strip -- so this
-      is the rule rather than the fix: nothing in the strip may be drawn past its edge, and a
-      reader who drags the splitter to 161 px gets a shortened button, not one hanging out of
-      its own panel. }
-    if w > room then w := room;
-    if w < 0 then w := 0;
-    FOfferBtn.SetBounds(pad, Px(Self, 3), w, Px(Self, 24));
-    ruler.Canvas.Font.Assign(FOfferText.Font);
-    { The sentence follows the button rather than leading it: the button is the thing being
-      offered, and a reader scanning the strip should meet the verb first. It also decides
-      which one CLIPS when the pane is narrow, and the answer has to be the sentence.
-
-      CLAMPED TO WHAT IS LEFT, because at the size this strip is actually seen there is not
-      much. Measured with the help open, which is the only time it is up: the preview pane is
-      283 px, and the first draft's sentence ran past the edge in eight languages of fourteen
-      -- 'Een voorbeeld uit de Help' by 42 px. The button always fitted; the strip's own width
-      is the thing neither caption may exceed. }
-    x := FOfferBtn.Left + FOfferBtn.Width + gap;
-    room := ClientWidth - x - pad;
-    if room < 0 then room := 0;
-    w := ruler.Canvas.TextWidth(FOfferText.Caption);
-    if w > room then w := room;
-    FOfferText.SetBounds(x, Px(Self, 8), w, Px(Self, 16));
-  finally
-    ruler.Free;
-  end;
+  gap := Px(Self, 4);
+  side := Px(Self, 26);
+  x := pad;
+  FOfferInsert.SetBounds(x, Px(Self, 2), side, side);
+  Inc(x, side + gap);
+  FOfferReroll.SetBounds(x, Px(Self, 2), side, side);
+  Inc(x, side + gap);
+  FOfferHelp.SetBounds(x, Px(Self, 2), side, side);
 end;
 
 procedure TSpxPreviewPane.Retranslate;
 begin
   FDraw.Caption := Tr(sShowLarge);
-  FOfferText.Caption := Tr(sHelpExampleFrom);
-  FOfferBtn.Caption := Tr(sHelpExampleInsert);
-  { Placed from the NEW captions -- a strip laid out from the previous language's widths is
-    the failure this project has already written down twice. }
+  FOfferInsert.Hint := Tr(sHelpExampleInsert);
+  FOfferReroll.Hint := Tr(sReroll);
+  FOfferHelp.Hint := Tr(sHelpExampleFrom);
   LayOutOffer;
   FMenuCopy.Caption := Tr(sCopy);
   FMenuSelectAll.Caption := Tr(sMenuSelectAll);
@@ -535,6 +522,13 @@ begin
     when it is the one on screen, because Sync owns when it appears. }
   if FStale.Visible then
     FStaleText.Caption := Format(Tr(sTooLargeToDraw), [Length(FContent) div 1024]);
+end;
+
+procedure TSpxPreviewPane.SetIcons(AImages: TCustomImageList);
+begin
+  FOfferInsert.Images := AImages;
+  FOfferReroll.Images := AImages;
+  FOfferHelp.Images := AImages;
 end;
 
 procedure TSpxPreviewPane.Sync;

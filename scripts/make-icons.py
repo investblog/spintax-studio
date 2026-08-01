@@ -36,6 +36,7 @@ from PIL import Image, ImageDraw, ImageFont
 # the wrong glyph with nothing to notice it.
 # A name no font has, so the strip builder knows to draw this cell instead of looking it up.
 DRAWN_HELP = '(drawn) help-circle-outline'
+DRAWN_INSERT = '(drawn) insert-example'
 
 ICONS = [
     ('SPX_ICON_DIAG', 'alert-circle-outline', 'Diagnostics -- the panel that says what is wrong'),
@@ -79,6 +80,10 @@ ICONS = [
     # has to sit beside: a 48 px cell holds a 40 px circle with a 4 px stroke, so the ratios are
     # size*5/6 and size/12, read off assets/icons/rail-48.png rather than guessed.
     ('SPX_ICON_HELP', DRAWN_HELP, 'the help panel'),
+    # Drawn for the same reason as the help glyph: the repository has the already-rendered
+    # cells, not the whole webfont. It is the "keep this example" action in the help preview:
+    # a small document with a plus, not "copy", because pressing it changes the editor.
+    ('SPX_ICON_INSERT', DRAWN_INSERT, 'insert the help example into the document'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that
@@ -162,6 +167,32 @@ def drawn_help(px):
     return img.resize((px, px), Image.LANCZOS)
 
 
+def drawn_insert(px):
+    """A document with a plus, drawn in the same stroke ratios as the local help glyph."""
+    scale = 8
+    n = px * scale
+    img = Image.new('RGBA', (n, n), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    stroke = max(1, round(n / 12.0))
+    left = n * 0.22
+    top = n * 0.14
+    right = n * 0.60
+    bottom = n * 0.82
+    fold = n * 0.12
+
+    d.line([left, top, right - fold, top, right, top + fold, right, bottom, left, bottom,
+            left, top], fill=COLOUR, width=stroke, joint='curve')
+    d.line([right - fold, top, right - fold, top + fold, right, top + fold],
+           fill=COLOUR, width=stroke)
+
+    cx = n * 0.69
+    cy = n * 0.63
+    half = n * 0.15
+    d.line([cx - half, cy, cx + half, cy], fill=COLOUR, width=stroke)
+    d.line([cx, cy - half, cx, cy + half], fill=COLOUR, width=stroke)
+    return img.resize((px, px), Image.LANCZOS)
+
+
 def pascal_bytes(name, data):
     lines = ['  %s: array[0..%d] of Byte = (' % (name, len(data) - 1)]
     row = []
@@ -203,6 +234,8 @@ def main():
         for i, (_, name, _) in enumerate(ICONS):
             if name == DRAWN_HELP:
                 cell = drawn_help(px)
+            elif name == DRAWN_INSERT:
+                cell = drawn_insert(px)
             elif font_path is not None:
                 cell = glyph(font_path, codes[name], px)
             else:
