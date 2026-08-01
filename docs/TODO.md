@@ -799,12 +799,19 @@ next:
       CJK template on a machine without the language pack still gets boxes and nothing says
       why. A diagnostic ("no installed font can draw this document") is the honest fix.
 
-- [ ] **6. The locale list reads as a bare tag to a screen reader.** The language names in
-      the dropped list are PAINTED (owner-draw), so `CB_GETLBTEXT` still returns `ru` / `en`
-      and assistive technology never sees "Русский". Sighted users gained the gloss; anyone on
-      a screen reader did not. Store submissions are not gated on this, but an accessibility
-      pass before R0 should decide between accessible descriptions on the items and putting
-      the name in the item text with the closed box drawn short.
+- [x] **6. The locale list reads as a bare tag to a screen reader** (closed 2026-08-02). The
+      name went into the ITEM and the drawing did not change — the closed 70 px box still shows
+      two letters, because the handler takes the tag from the table rather than from the item.
+      The table moved to `SpxStrings` so the suite can hold it to its contract.
+
+      The dangerous part was not the string: `FLocale.Text` was the locale handed straight to
+      the engine, and a label in its place would have sent `PluralArity` to a language nobody
+      named, with no diagnostic anywhere. `CurrentLocale` is the only reader now.
+
+      What it did NOT buy, measured: the box is still not exposed AS a combo box — UIA reports
+      a nameless `Pane`. LCL registers it under its own subclass name (`LCLComboBox`) and
+      Windows' proxies for the standard controls are keyed on the class name. The reported
+      VALUE changed, which is the whole of the win. ADR 0009.
 
 - [ ] **7. Platform seam debt — `SizeLocaleList`** (opened 2026-07-29 by ADR 0007). The
       locale combo's dropped width is set with a raw `SendMessage(…, CB_SETDROPPEDWIDTH, …)`
@@ -1278,13 +1285,22 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       `TControl.BiDiMode` / `IsRightToLeft` is the seam; the segmented switch already handles
       `IsRightToLeft` for its image, which is the one place this has been thought about.
 
-- [ ] **A high-contrast palette.** The light theme now takes its page, gutter and selection
-      from the system (`clWindow` / `clBtnFace` / `clHighlight`), which fixed something worse
-      than it introduced: on High Contrast Black the editor used to be SynEdit's hardcoded
-      `clWhite` under `clWindowText` white text — invisible. It is readable now. But the nine
-      SYNTAX colours are still ours, and `$993300` on black is nearly as bad. A third table
-      keyed off the system's high-contrast flag is the honest fix; noted 2026-07-29 when the
-      two themes landed.
+- [x] **A high-contrast palette** (closed 2026-08-02). The third table landed, keyed off
+      `SpxHighContrast` and COMPUTED rather than stored — `TSpxTheme` stays the two values that
+      go in the settings file, so turning the desktop's contrast off cannot strand the app in a
+      look nobody chose.
+
+      The note above understated it: `$993300` measures **1.50:1** on the #202020 page a
+      contrast theme actually supplies, not merely "nearly as bad" on black. Nine syntax roles
+      collapse into four classes, because a theme guarantees only `clWindowText`, `clGrayText`
+      and `clHotLight` legible there.
+
+      Three things the note did not know about, all found on the way and all measured: the
+      preview was **1.29:1** — black text on the dark page, because the pane took its background
+      from the system and left the ink to the renderer's default; the tool rail's own glyphs
+      were **1.48:1**, since the sprite is baked at rgb(60,60,60) and those buttons have no
+      caption at all, so the glyph IS the control; and the Page/Source switch drew `clWindowText`
+      on a hardcoded `#FFFFFF`. All three at 11:1 or better now. ADR 0009.
 
 - [x] **A session value is a template, and sometimes that is not what the author meant**
       (2026-07-29). The Variables panel's session half gained a third column, «как текст»:
