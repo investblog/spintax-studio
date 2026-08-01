@@ -3253,6 +3253,50 @@ begin
   CheckTrue('strings/the-balkan-group-is-in-it', SpxUiLangFor('hr') = spxLangHr);
   CheckTrue('strings/and-so-does-nonsense', SpxUiLangFor('') = spxLangEn);
 
+  (* THE LOCALE BOX, AND WHAT A SCREEN READER HEARS FROM IT. The list used to hold bare tags
+     and paint the endonym beside them, so the name existed only as pixels and the box
+     reported itself as `ru`.
+
+     WHAT THESE CHECKS DO NOT REACH, said plainly because the gap is the interesting part:
+     this suite compiles no LCL unit, so it cannot see the WINDOW. Restore the old
+     `Items.CommaText := 'ru,uk,be,...'` in SpxMainForm and every check below stays green --
+     CurrentLocale reads this table by index and would still answer correctly, the app would
+     behave identically, and only a screen reader would know. What gates that one line is
+     docs/accessibility-baseline.txt, which is a measurement rather than a build step.
+     So these hold the TABLE to its contract and nothing more. Mutation-tested: collapsing
+     SpxLocaleLabel back to the bare tag fails twelve of them. *)
+  for i := 0 to SpxLocaleCount - 1 do
+  begin
+    { A tag the engine can use. Not the label, and this is the one that matters: a locale of
+      'Русский (ru)' would send PluralArity to a language nobody named, and the preview would
+      then disagree with every other engine in the family without a diagnostic. }
+    CheckTrue('locale/every-tag-is-two-letters', Length(SpxLocaleTag(i)) = 2);
+    { The round trip SpxLocaleEndonym relies on. Break it and every name silently becomes
+      'English', because SpxLangFor answers the base for whatever it does not know. }
+    CheckTrue('locale/every-tag-round-trips',
+              SpxLangCode(SpxLangFor(SpxLocaleTag(i))) = SpxLocaleTag(i));
+    { THE SCREEN-READER ASSERTION: a label equal to its own tag is a list that says 'ru' out
+      loud, which is the state this slice ended. }
+    CheckTrue('locale/label-is-not-the-bare-tag', SpxLocaleLabel(i) <> SpxLocaleTag(i));
+    { ...and the tag is still in it, so the code is spoken as well as the name. }
+    CheckTrue('locale/label-carries-the-tag', Pos(SpxLocaleTag(i), SpxLocaleLabel(i)) > 0);
+    CheckTrue('locale/index-of-round-trips', SpxLocaleIndexOf(SpxLocaleTag(i)) = i);
+  end;
+  { The window looks 'en' up by name to pick the box's opening value, so a missing one would
+    leave the box on whatever happened to be first. }
+  CheckTrue('locale/english-is-in-the-list', SpxLocaleIndexOf('en') >= 0);
+  CheckTrue('locale/an-absent-tag-answers-minus-one', SpxLocaleIndexOf('ja') = -1);
+  { Out of range answers empty rather than raising: the draw handler is called by Windows with
+    whatever index the list has, and a paint that raises takes the window with it. }
+  Check('locale/below-the-range-is-empty', SpxLocaleTag(-1), '');
+  Check('locale/above-the-range-is-empty', SpxLocaleTag(SpxLocaleCount), '');
+  { Anchors, because the box's order is NOT TSpxLang's -- it leads with the languages this
+    product's readers write in, and a reorder would move every ItemIndex silently. }
+  Check('locale/anchor-first-is-russian', SpxLocaleLabel(0), 'Русский (ru)');
+  Check('locale/anchor-english-sits-fourth', SpxLocaleTag(3), 'en');
+  Check('locale/anchor-last-is-bosnian', SpxLocaleLabel(SpxLocaleCount - 1), 'Bosanski (bs)');
+  Check('locale/the-list-is-ten-long', IntToStr(SpxLocaleCount), '10');
+
   { The diagnostics panel is the largest body of prose in the window and the one place its
     words come from editor-core. Every code the engine can emit must read as a sentence in
     BOTH languages -- a code that is translated in one and bare in the other gives a panel

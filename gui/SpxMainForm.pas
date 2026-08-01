@@ -262,6 +262,8 @@ type
     procedure LocaleDrawItem(Control: TWinControl; Index: Integer; ARect: TRect;
       State: TOwnerDrawState);
     procedure SizeLocaleList;
+    { The locale TAG the box is set to. Never FLocale.Text -- the item is a readable label. }
+    function CurrentLocale: string;
     procedure BuildMenu;
     procedure EnsureFlags;
     procedure EnsureSmallIcons;
@@ -502,6 +504,7 @@ end;
 procedure TSpxMainForm.BuildUi;
 var
   sheetDiag, sheetVars, sheetSet: TTabSheet;
+  i: Integer;
 begin
   Width := 1100;
   Height := 700;
@@ -596,13 +599,30 @@ begin
   FLocale := TComboBox.Create(Self);
   FLocale.Parent := FTop;
   FLocale.Style := csDropDownList;
-  FLocale.Items.CommaText := 'ru,uk,be,en,de,fr,es,sr,hr,bs';
+  (* THE ITEM IS THE READABLE NAME, and the two letters are what the ENGINE gets. The list
+     held bare tags until 2026-08-01 and painted the endonym beside them, so the name existed
+     only as pixels and the box reported itself as `ru`. Filling from SpxLocaleLabel puts it
+     where assistive technology can reach it; nothing about the DRAWING changes, because the
+     handler below reads the tag from the table rather than from Items. Every read of the
+     chosen value goes through CurrentLocale for the same reason.
+
+     WHAT THIS DOES AND DOES NOT BUY, measured rather than assumed -- docs/accessibility-
+     baseline.txt is the walk. The box's reported VALUE went from `ru` to `English (en)`, which
+     is the whole of the win. It is still not exposed as a combo box: UIA reports it as a
+     nameless `Pane` with no enumerable items and IsKeyboardFocusable False. The cause is in
+     LCL rather than here -- the widget is a real Win32 combo (`pClassName := ComboboxClsName`,
+     win32wsstdctrls.pp:1087) but it is registered under LCL's own subclass name,
+     `LCLComboBox` (win32int.pp:249), and Windows' proxies for the standard controls are keyed
+     on the CLASS NAME. So the generic HWND provider answers instead, and its Name is the
+     window text -- which for a csDropDownList combo is the selected item's string, which is
+     why changing Items changed what a reader hears at all. *)
+  for i := 0 to SpxLocaleCount - 1 do FLocale.Items.Add(SpxLocaleLabel(i));
   { The locale belongs to the TEMPLATE, not to the UI, so it opens on the demo's language.
     On `ru` the demo is genuinely invalid: PluralArity('ru') is 3 and the demo's plural
     block carries two forms, which the engine reports as plural.arity at 11:120 -- and an
     app that opens on an error against its own sample teaches the user to distrust the
     verdict. }
-  FLocale.ItemIndex := FLocale.Items.IndexOf('en');
+  FLocale.ItemIndex := SpxLocaleIndexOf('en');
   FLocale.SetBounds(Px(Self, 8), Px(Self, 7), Px(Self, 70), Px(Self, 24));
   FLocale.OnChange := @SettingChanged;
   { The list is drawn by hand for ONE reason: a two-letter tag is not a thing most people can
@@ -1068,20 +1088,22 @@ begin
   LayoutTopStrip;
 end;
 
-{ The language's own name for a locale tag, or '' when the tag is not one this build has a
-  name for. The round trip is the guard: SpxLangFor falls back to English for anything it does
-  not know (by design -- a half-translated window is worse than an English one), so asking it
-  about `pl` would answer "English" with a straight face. Comparing the code back catches
-  exactly that, and an unnamed tag is then simply shown bare. }
-function SpxLocaleName(const ACode: string): string;
-var lang: TSpxLang;
+{ WHAT THE BOX IS SET TO, and every reader of it comes here. The item text is the readable
+  label now ('Русский (ru)'), so FLocale.Text is no longer a locale -- handing it to the engine
+  would send PluralArity to a language nobody named and the preview would disagree with the
+  rest of the family in silence, which is exactly the kind of failure that has no diagnostic.
+  The tag comes from the table the items were built from, BY INDEX, which is the coupling this
+  whole arrangement rests on: Items are filled from SpxLocaleLabel in table order, Sorted is
+  False, and ItemIndex is set through SpxLocaleIndexOf. Break any of those three and the box
+  draws one tag while the engine is told another -- wrong rather than crashing, because both
+  sides fail soft out of range. }
+function TSpxMainForm.CurrentLocale: string;
 begin
-  Result := '';
-  lang := SpxLangFor(ACode);
-  { A plain compare rather than the engine's normalisation, because the tags being named are
-    the combo's own -- bare two-letter codes this window put there. A regional tag would simply
-    go unnamed and be shown bare, which is the same thing an unknown one does. }
-  if SameText(SpxLangCode(lang), ACode) then Result := SpxLangName(lang);
+  if FLocale = nil then Exit('en');
+  Result := SpxLocaleTag(FLocale.ItemIndex);
+  { An unset box answers the base rather than an empty locale: NormalizeBaseLang('') is not a
+    language, and the engine would fall back on its own without saying so. }
+  if Result = '' then Result := 'en';
 end;
 
 procedure TSpxMainForm.LocaleDrawItem(Control: TWinControl; Index: Integer;
@@ -1090,7 +1112,9 @@ var cb: TComboBox; code, name_: string; y, x: Integer;
 begin
   cb := TComboBox(Control);
   if (Index < 0) or (Index >= cb.Items.Count) then Exit;
-  code := cb.Items[Index];
+  { The TAG, not the item: the item says 'Русский (ru)' so that a screen reader has something
+    to read, and the two-column drawing below wants the two halves apart. }
+  code := SpxLocaleTag(Index);
   { LCL has already set the brush and the font colour for this row's state -- selected rows
     arrive with the highlight colours -- so filling is all the background needs. }
   cb.Canvas.FillRect(ARect);
@@ -1100,7 +1124,7 @@ begin
   { The closed box is the SAME item drawn in a 70px hole: the name goes to the list only, and
     odComboBoxEdit is how the two calls are told apart. }
   if odComboBoxEdit in State then Exit;
-  name_ := SpxLocaleName(code);
+  name_ := SpxLocaleEndonym(Index);
   if name_ = '' then Exit;
   { A fixed column so the names line up under one another rather than following the width of a
     tag; the tags are all two letters, so this is a column and not a coincidence. }
@@ -1131,7 +1155,7 @@ begin
     wide := 0;
     for i := 0 to FLocale.Items.Count - 1 do
     begin
-      name_ := SpxLocaleName(FLocale.Items[i]);
+      name_ := SpxLocaleEndonym(i);
       if name_ = '' then Continue;
       w := bmp.Canvas.TextWidth('nn') + Px(Self, 10) + bmp.Canvas.TextWidth(name_);
       if w > wide then wide := w;
@@ -1851,7 +1875,7 @@ end;
 procedure TSpxMainForm.ApplyLangMode;
 var want: TSpxLang;
 begin
-  if FLangFollow then want := SpxLangFor(FLocale.Text) else want := FLangChosen;
+  if FLangFollow then want := SpxLangFor(CurrentLocale) else want := FLangChosen;
   if want <> SpxUiLang then
   begin
     SpxSetUiLang(want);
@@ -3145,7 +3169,7 @@ begin
   { The family is the document's business, so this is where it is reconsidered. }
   UpdateEditorFont(job.Text);
   job.UiLang := SpxUiLang;
-  job.Locale := FLocale.Text;
+  job.Locale := CurrentLocale;
   job.Seeded := FSeeded.Checked;
   job.Seed := LongWord(StrToInt64Def(FSeedEdit.Text, 1));
   { The folder, not the set: the worker owns the map it builds from this. An unsaved
@@ -3187,7 +3211,7 @@ begin
   { The same document the preview renders, for the same reason -- an export whose line
     endings differ from the file's is an export of a different template. }
   req.Text := DocText;
-  req.Locale := FLocale.Text;
+  req.Locale := CurrentLocale;
   { The same context the preview renders in, minus the preview's own seed: a batch derives
     its seeds from the base the panel gives it. The set folder and the slug come along so
     `#include` resolves for a batch exactly as it does for a render -- an export that

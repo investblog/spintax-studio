@@ -58,6 +58,27 @@ function SpxUiLangFor(const Locale: string): TSpxLang;
   fourteen, and it is the only string table in the product with no language of its own. }
 function SpxLangName(ALang: TSpxLang): string;
 
+(* THE LOCALE BOX'S LIST, and it lives here rather than in the window for one reason: what a
+   screen reader hears is a STRING, and a string the suite cannot read is a string nothing
+   checks. The box used to hold bare tags -- `ru`, `en` -- and paint the endonym beside them,
+   so the name was pixels and the box reported itself as two letters. The readable name moves
+   into the item; the painting stays exactly as it was, because the drawing takes the tag from
+   this table rather than from the item.
+
+   THE ORDER IS THE BOX'S, NOT TSpxLang'S. The enum leads with English because English is the
+   fallback; the box leads with Russian because these are the locales this product's readers
+   write IN, and the list is a list of documents rather than of interfaces. Ten of them
+   against the interface's fourteen, for the same reason.
+
+   `SpxLocaleTag` is the one the ENGINE gets. Nothing may hand it a label: a locale of
+   `Русский (ru)` is not a locale, `PluralArity` would answer for a language nobody named, and
+   the preview would diverge from every other engine in the family with no diagnostic at all. *)
+function SpxLocaleCount: Integer;
+function SpxLocaleTag(AIndex: Integer): string;       { 'ru' -- what the engine is told }
+function SpxLocaleEndonym(AIndex: Integer): string;   { 'Русский', or '' for a tag we cannot name }
+function SpxLocaleLabel(AIndex: Integer): string;     { 'Русский (ru)' -- what the list SAYS }
+function SpxLocaleIndexOf(const ATag: string): Integer;  { -1 when absent }
+
 { What the machine is set to, mapped onto the languages this product speaks. }
 function SpxSystemLang: TSpxLang;
 
@@ -242,6 +263,55 @@ const
      'Deutsch', 'Français', 'Español', 'Italiano', 'Português', 'Nederlands', 'Türkçe');
 begin
   Result := NAMES[ALang];
+end;
+
+const
+  SPX_LOCALES: array[0..9] of string =
+    ('ru', 'uk', 'be', 'en', 'de', 'fr', 'es', 'sr', 'hr', 'bs');
+
+function SpxLocaleCount: Integer;
+begin
+  Result := Length(SPX_LOCALES);
+end;
+
+function SpxLocaleTag(AIndex: Integer): string;
+begin
+  if (AIndex < Low(SPX_LOCALES)) or (AIndex > High(SPX_LOCALES)) then Exit('');
+  Result := SPX_LOCALES[AIndex];
+end;
+
+function SpxLocaleEndonym(AIndex: Integer): string;
+var tag: string; lang: TSpxLang;
+begin
+  Result := '';
+  tag := SpxLocaleTag(AIndex);
+  if tag = '' then Exit;
+  lang := SpxLangFor(tag);
+  { THE ROUND TRIP IS THE GUARD, not decoration. SpxLangFor answers spxLangEn for everything
+    it does not recognise, so asking it for a tag the interface has no language for would
+    gloss that tag `English`. Comparing the code back catches exactly that: a locale this
+    product cannot name is shown bare, which is the same thing an unknown one does. }
+  if SameText(SpxLangCode(lang), tag) then Result := SpxLangName(lang);
+end;
+
+function SpxLocaleLabel(AIndex: Integer): string;
+var tag, name_: string;
+begin
+  tag := SpxLocaleTag(AIndex);
+  if tag = '' then Exit('');
+  name_ := SpxLocaleEndonym(AIndex);
+  { The tag is in the label as well as the name, and both orders were considered: a reader
+    hears the language first and the code as a qualifier, which is the way round a person
+    asks the question. The box still DRAWS the tag alone when it is closed. }
+  if name_ = '' then Result := tag else Result := name_ + ' (' + tag + ')';
+end;
+
+function SpxLocaleIndexOf(const ATag: string): Integer;
+var i: Integer;
+begin
+  for i := Low(SPX_LOCALES) to High(SPX_LOCALES) do
+    if SameText(SPX_LOCALES[i], ATag) then Exit(i);
+  Result := -1;
 end;
 
 function SpxSystemLang: TSpxLang;
