@@ -14,12 +14,11 @@
  * INTERFACE's language, which the View menu already switches, and a second place to set it is a
  * second thing to keep in step. The close went with it because the header strip had one.
  *
- * THE CLOSE IS BACK, and the reason is that the header no longer offers one: the strip is
- * absent in help mode until Ctrl+F asks for it, so the reader was left with the rail's latch,
- * the menu and Escape -- three exits, none of them where a hand looks for the way out of a
- * panel. This one is a real button with a real glyph, which the old one never was: it had no
- * image assigned at all and drew as an empty box, which is why it read as broken rather than
- * as redundant.
+ * AND NO CLOSE OF ITS OWN. One was added here while the header had none, and taken out again
+ * when the header got the help's own toggle: the way in and the way out are one glyph in the
+ * strip now, and a second X over the contents would be the duplicate the first removal was
+ * about. What made the ORIGINAL one read as broken is worth keeping written down -- it had no
+ * image assigned at all and drew as an empty box.
  *
  * What the removal costs is named honestly, in two parts. A Russian speaker running an English
  * interface can no longer read the Russian document without switching the whole interface. And
@@ -36,8 +35,8 @@ unit SpxHelpTopics;
 interface
 
 uses
-  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, ComCtrls, Buttons, ImgList, Graphics,
-  SpxStudio, SpxUi, SpxTheme, SpxIcons, SpxStrIds, SpxStrings, SpxHelpText, SpxHelpNav;
+  Classes, SysUtils, Controls, ExtCtrls, StdCtrls, ComCtrls, Graphics,
+  SpxStudio, SpxUi, SpxTheme, SpxStrIds, SpxStrings, SpxHelpText, SpxHelpNav;
 
 type
   { Where the reader asked to go: a page, and the article in it -- empty for the page's top. }
@@ -45,15 +44,11 @@ type
 
   TSpxHelpTopics = class(TPanel)
   private
-    FTop: TPanel;
-    FClose: TSpeedButton;
     FNote: TLabel;
     FTree: TTreeView;
     FLang: Integer;
     FFilling: Boolean;
     FOnPicked: TSpxTopicPicked;
-    FOnClose: TNotifyEvent;
-    procedure CloseClicked(Sender: TObject);
     procedure TreeClicked(Sender: TObject);
     procedure Fill;
   public
@@ -69,11 +64,6 @@ type
     procedure ShowAt(APage: Integer; const AAnchor: string);
     property HelpLang: Integer read FLang;
     property OnPicked: TSpxTopicPicked read FOnPicked write FOnPicked;
-    { The way out of the help, and the only one on screen while the header is absent. }
-    property OnClose: TNotifyEvent read FOnClose write FOnClose;
-    { The window's own 16px list, handed over rather than built here -- it is refilled in place
-      when the scaling changes, so this reference stays good. }
-    procedure SetIcons(AImages: TCustomImageList);
   end;
 
 implementation
@@ -91,22 +81,6 @@ begin
   BevelOuter := bvNone;
   Color := clWindow;
   FLang := SpxHelpLangFor(SpxUiLang);
-
-  { A row for the close and nothing else: 26 px, which is one button, and the tree keeps the
-    rest. The header strip's line was worth reclaiming; a panel's own way out is not the same
-    line and is not worth reclaiming. }
-  FTop := TPanel.Create(Self);
-  FTop.Parent := Self;
-  FTop.Align := alTop;
-  FTop.BevelOuter := bvNone;
-  FTop.Height := Px(Self, 26);
-
-  FClose := TSpeedButton.Create(Self);
-  FClose.Parent := FTop;
-  FClose.Anchors := [akTop, akRight];
-  FClose.SetBounds(FTop.Width - Px(Self, 28), 0, Px(Self, 26), Px(Self, 26));
-  FClose.Flat := True;
-  FClose.OnClick := @CloseClicked;
 
   { Shown only when the reader's own language has no document. Nothing needs saying when the
     two agree, and a standing notice about a language you do not use is noise. }
@@ -141,17 +115,6 @@ begin
         FTree.Items[i].Data := nil;
       end;
   inherited Destroy;
-end;
-
-procedure TSpxHelpTopics.SetIcons(AImages: TCustomImageList);
-begin
-  FClose.Images := AImages;
-  FClose.ImageIndex := SPX_ICON_CLOSE;
-end;
-
-procedure TSpxHelpTopics.CloseClicked(Sender: TObject);
-begin
-  if Assigned(FOnClose) then FOnClose(Self);
 end;
 
 procedure TSpxHelpTopics.Fill;
@@ -240,9 +203,6 @@ end;
 procedure TSpxHelpTopics.Retranslate;
 var want: Integer;
 begin
-  { The close is not the tree's and is not gated on it. }
-  FClose.Hint := Tr(sClose);
-  FClose.ShowHint := True;
   if FTree = nil then Exit;
   { THE DOCUMENT FOLLOWS THE INTERFACE. It always did -- this is the same want/refill the
     language box wrapped -- and now it is the only thing that decides, so there is no second
@@ -262,7 +222,6 @@ end;
 procedure TSpxHelpTopics.ApplyTheme(const APalette: TSpxPalette);
 begin
   Color := APalette.Back;
-  if FTop <> nil then FTop.Color := APalette.Back;
   if FTree <> nil then
   begin
     { THE THEMED DRAW HAS TO GO, or the ink is Windows' and not ours. LCL assigns

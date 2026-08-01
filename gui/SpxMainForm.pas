@@ -126,6 +126,7 @@ type
     { THE HELP'S OWN HEADER. While the help is up the top strip belongs to it: the document's
       controls act on a document nobody can see, and the search bar searched that document too
       -- typing a word that is on the page in front of you answered "not found". }
+    FHelpTool: TSpeedButton;
     FHelpClose: TSpeedButton;
     FHelpHits: TSpxHelpHits;
     FHelpHitIndex: Integer;
@@ -313,7 +314,7 @@ type
     procedure SplitEvenNow(Sender: TObject);
     procedure SlideResized(Sender: TObject);
     procedure ClampSlide;
-    procedure RailHelpClicked(Sender: TObject);
+    procedure HelpToolClicked(Sender: TObject);
     procedure HelpMenuClicked(Sender: TObject);
     procedure AboutClicked(Sender: TObject);
     procedure HelpPaneClosed(Sender: TObject);
@@ -547,8 +548,8 @@ begin
   FSlide.OnApply := @GroupApplied;
   FSlide.OnClose := @GroupPaneClosed;
 
-  { THE OTHER FACE. Help shares this slot rather than taking one of its own, and shares the
-    rail's latch with it, so opening either closes the other -- which is what keeps the width
+  { THE OTHER FACE. Help shares this slot rather than taking one of its own, and opening
+    either closes the other -- which is what keeps the width
     arithmetic to the two competitors it already handles. A reader is not editing a group at
     the same moment, and two 300 px panels beside a 1100 px window would leave neither the
     editor nor the preview anything. }
@@ -559,7 +560,6 @@ begin
   FTopics.Align := alClient;
   FTopics.Visible := False;
   FTopics.OnPicked := @TopicPicked;
-  FTopics.OnClose := @HelpPaneClosed;
 
   { A VARIANT CAN BE LONGER THAN ANY DEFAULT. The panel is the one part of this window whose
     useful width depends on the document rather than on the layout, so it is the user's to
@@ -638,13 +638,11 @@ begin
   FSeedEdit.OnChange := @SettingChanged;
 
   EnsureSmallIcons;
-  { The two panels whose close buttons draw from the strip's own list -- and AFTER
-    EnsureSmallIcons, which is the whole of the ordering: handing the list over before it is
-    built hands over nil, and a speed button with no images draws an empty box. That is exactly
-    what the topics panel's ORIGINAL close did, and repeating it while restoring that button is
-    how this comment came to be here. }
+  { The slide-out's close draws from the strip's own list -- and AFTER EnsureSmallIcons, which
+    is the whole of the ordering: handing the list over before it is built hands over nil, and a
+    speed button with no images draws an empty box. Measured twice, once as the topics panel's
+    original close and once while restoring it. }
   FSlide.SetIcons(FSmallIcons);
-  FTopics.SetIcons(FSmallIcons);
 
   FReroll := TSpeedButton.Create(Self);
   FReroll.Parent := FTop;
@@ -953,13 +951,28 @@ begin
   { AN EXPLICIT CLOSE for the help, in the header the reader is looking at -- the rail's tool
     is a latch and the topics panel's X is small and elsewhere. An icon rather than a word, so
     it matches the seven other buttons on this strip and needs no room for a translation. }
+  { THE WAY INTO THE HELP AND OUT OF IT, in the header rather than on the rail -- the rail is
+    hidden while the help is up, and a toggle that disappears with what it toggles is a trap.
+    A latch of its own so it can show that the help IS open; its handler reads the pane rather
+    than the button, so LCL flipping Down before the click cannot confuse it. }
+  FHelpTool := TSpeedButton.Create(Self);
+  FHelpTool.Parent := FTop;
+  FHelpTool.Flat := True;
+  FHelpTool.GroupIndex := 9;
+  FHelpTool.AllowAllUp := True;
+  FHelpTool.OnClick := @HelpToolClicked;
+
   FHelpClose := TSpeedButton.Create(Self);
   FHelpClose.Parent := FTop;
   FHelpClose.Flat := True;
+  FHelpTool.Images := FSmallIcons;
+  FHelpTool.ImageIndex := SPX_ICON_HELP;
   FHelpClose.Images := FSmallIcons;
   FHelpClose.ImageIndex := SPX_ICON_CLOSE;
   FHelpClose.Hint := Tr(sClose);
   FHelpClose.ShowHint := True;
+  FHelpTool.Hint := Tr(sMenuHelp);
+  FHelpTool.ShowHint := True;
   FHelpClose.Visible := False;
   FHelpClose.OnClick := @HelpCloseClicked;
 
@@ -1176,18 +1189,35 @@ begin
   FModes.Visible := not helpMode;
   FPartial.Visible := (not helpMode) and FPartialShown;
   FHelpClose.Visible := helpMode;
-  { THE HELP DOES NOT PAY FOR SEARCH UNTIL SEARCH IS ASKED FOR. The first help header was always
-    open, mostly empty, and took a whole line from the document the reader was trying to read.
-    Ctrl+F still opens the same bar over the help; until then the top strip is absent. }
-  if helpMode and (not FFindText.Visible) then
+  { THE RAIL IS WHAT GOES, NOT THE HEADER. Its tools are the document's -- the three panels and
+    the group under the caret -- and none of them is about the page the reader is on, so while
+    the help is up the strip of them is forty-four pixels of controls for somewhere else. The
+    header stays, with the search in it: searching the help is the one thing a reader of a
+    manual reaches for first, and a header that has to be summoned is a header nobody finds.
+
+    THE HELP'S OWN GLYPH MOVED HERE with that decision. It used to be the rail's fifth tool,
+    which cannot be reached once the rail is hidden; in the header it is the way in AND the way
+    out, and the topics panel needs no close of its own. }
+  if FRail <> nil then FRail.Visible := not helpMode;
+  { THE LATCH LIVES HERE NOW, not on the rail. Every route that opens or closes the help ends
+    in this routine -- GoToHelp on the way in, HideFindBar on the way out -- so the toggle
+    cannot disagree with the pane. It used to be a rail tool whose Down LCL flipped on the
+    click, which meant a route that did NOT click it (the View menu) left it lying, and the
+    next press read the stale state and did the opposite. Setting it from the truth removes
+    that class rather than guarding it. }
+  FHelpTool.Down := helpMode;
+  { AND THE SEARCH IS SIMPLY OPEN THERE. A manual is searched, not scrolled -- twenty-four
+    chapters and thirty-one articles are past the point where the eye is faster -- and a bar
+    that has to be summoned is a bar nobody finds. The room it costs is the room the rail just
+    gave back. Its own close is hidden instead: there is nothing to close it TO, since the bar
+    is what the header is for while the help is up. }
+  if helpMode then
   begin
-    FTop.Visible := False;
-    FTop.Height := 0;
-    FHelpClose.Visible := False;
-    FFindOpen.Visible := False;
-    if FDock <> nil then FDock.BorderSpacing.Top := 0;
-    if FSlideSplit <> nil then FSlideSplit.BorderSpacing.Top := 0;
-    Exit;
+    FFindText.Visible := True;
+    FFindPrev.Visible := True;
+    FFindNext.Visible := True;
+    FFindCase.Visible := True;
+    FFindCount.Visible := True;
   end;
   FTop.Visible := True;
   if helpMode then
@@ -1196,9 +1226,12 @@ begin
   { ── the output's half, from the right edge inwards ── }
   editorEnd := 0;
   right_ := FTop.ClientWidth - Px(Self, 12);
-  if helpMode then
-    PlaceRight(FHelpClose, Px(Self, 30), Px(Self, 26), Px(Self, 6))
-  else
+  { THE CLOSE FIRST, then the toggle beside it: rightmost is where a hand goes for "put this
+    away", and the toggle is the way back to it. In the document the toggle is the only one of
+    the two, at the same edge, so it does not move when the help opens. }
+  if helpMode then PlaceRight(FHelpClose, Px(Self, 30), Px(Self, 26), Px(Self, 6));
+  PlaceRight(FHelpTool, Px(Self, 30), Px(Self, 26), Px(Self, 6));
+  if not helpMode then
   begin
     { The switch asks for what its own captions need; everything else is a fixed slot. }
     PlaceRight(FModes, FModes.MeasureWidth, Px(Self, 26), Px(Self, 6));
@@ -1259,9 +1292,8 @@ begin
 
   { THE MAGNIFIER HAS TWO JOBS, and which one depends on whose strip it is. Over the document
     it is the DOOR to a bar that is closed, and it stands where the field will so that opening
-    the bar replaces it rather than moving anything. Over the help, once Ctrl+F has opened the
-    strip, there is no door to be -- it stands BEFORE the field instead, saying what the field
-    is. Clicking it there focuses the field, which is the only honest thing left for it to do. }
+    the bar replaces it rather than moving anything. Over the help the bar is simply open, so
+    there is no door to be -- it stands BEFORE the field instead, saying what the field is. Clicking it there focuses the field, which is the only honest thing left for it to do. }
   if FFindOpen <> nil then
   begin
     FFindOpen.Visible := helpMode or (not FFindText.Visible);
@@ -1599,10 +1631,6 @@ begin
   { The one tool that is not access but WORKSPACE: a group's variants are a list, one short
     line each, which is exactly what fits beside the editor. }
   FRail.AddTool(SPX_ICON_GROUP, Tr(sTabGroup), @RailGroupClicked, 2);
-  { GROUP 2 AGAIN, and that is the whole mutual exclusion: the two slide-out faces share one
-    slot, so they are one choice. The icon is the one cell in the strip that is drawn rather
-    than taken from the font -- see scripts/make-icons.py. }
-  FRail.AddTool(SPX_ICON_HELP, Tr(sMenuHelp), @RailHelpClicked, 2);
   { The window opens with the diagnostics showing, so the tool that says so is lit. }
   FRail.SetDown(0, True);
   { THE BRAND, at the rail's foot. The hint is the domain and is not translated: a domain is
@@ -1667,25 +1695,33 @@ begin
     below then hit the room guard and did nothing, so each face opened at the OTHER one's width.
     Measured: 300, then 300 for the help, then 260 for the group. }
   FDockHelp := False;
-  if FTopics.Visible then
-  begin
-    HideHelp;
-    FTopics.Visible := False;
-    FRail.SetDown(4, False);
+  { BATCHED, like the two help transitions beside it. This path now shows the rail as well --
+    HideHelp reaches LayoutTopStrip -- and every control it touches re-aligns the whole form
+    from the top otherwise. The charter has the numbers for the unbatched version of the same
+    switch: 641-1469 ms against 266-344 ms. }
+  DisableAlign;
+  try
+    if FTopics.Visible then
+    begin
+      HideHelp;
+      FTopics.Visible := False;
+    end;
+    FSlideRoom := -1;
+    ClampSlide;
+    FDock.Visible := True;
+    FSlide.Visible := True;
+    FSlideSplit.Visible := True;
+    { The panel has just taken its share; the panes divide what is actually left. }
+    ClampPanes;
+    { The latch, for the route that does not set it itself. Clicking the rail's tool makes LCL
+      flip Down before it calls this; opening from the View menu does not, and an unlit tool
+      over an open pane is not just wrong-looking -- the next click on it flips Down to True,
+      this handler sees the pane already open and closes it. So the user presses an unlit
+      "group editor" and the group editor vanishes. Measured by review, pixel for pixel. }
+    FRail.SetDown(3, True);
+  finally
+    EnableAlign;
   end;
-  FSlideRoom := -1;
-  ClampSlide;
-  FDock.Visible := True;
-  FSlide.Visible := True;
-  FSlideSplit.Visible := True;
-  { The panel has just taken its share; the panes divide what is actually left. }
-  ClampPanes;
-  { The latch, for the route that does not set it itself. Clicking the rail's tool makes LCL
-    flip Down before it calls this; opening from the View menu does not, and an unlit tool
-    over an open pane is not just wrong-looking -- the next click on it flips Down to True,
-    this handler sees the pane already open and closes it. So the user presses an unlit
-    "group editor" and the group editor vanishes. Measured by review, pixel for pixel. }
-  FRail.SetDown(3, True);
   { It opens on whatever the caret is already in, rather than staying blank until the next
     keypress. }
   FSlide.ShowGroupAt(FEditor.Text, CaretOffset);
@@ -2945,6 +2981,7 @@ begin
   FFindNext.Hint := Tr(sMenuFindNext);
   FFindClose.Hint := Tr(sClose);
   FHelpClose.Hint := Tr(sClose);
+  FHelpTool.Hint := Tr(sMenuHelp);
   BuildMenu;
   if FBottom.PageCount >= 3 then
   begin
@@ -2971,7 +3008,6 @@ begin
     FRail.SetTool(1, Tr(sTabVariables));
     FRail.SetTool(2, Tr(sTabVariants));
     FRail.SetTool(3, Tr(sTabGroup));
-    FRail.SetTool(4, Tr(sMenuHelp));
   end;
   FSlide.Retranslate;
   { And the help, which may have to change DOCUMENT and not merely captions -- where the reader
@@ -3641,7 +3677,7 @@ begin
   RequestRender;
 end;
 
-procedure TSpxMainForm.RailHelpClicked(Sender: TObject);
+procedure TSpxMainForm.HelpToolClicked(Sender: TObject);
 begin
   if FTopics.Visible then
   begin
@@ -3653,7 +3689,7 @@ begin
   OpenHelpAtCaret;
 end;
 
-{ F1 AND THE MENU AIM AT THE CARET; the rail's tool does the same and also closes. So there is
+{ F1 AND THE MENU AIM AT THE CARET; the header's toggle does the same and also closes. So there is
   a way to do each without either doing both.
 
   With the help ALREADY OPEN they simply re-open it: the editor is hidden, so the caret has not
@@ -3734,7 +3770,6 @@ begin
     unlit tool over an open panel is not merely wrong-looking: the next click on it flips Down
     to True, the handler sees the panel already open, and closes it. Paid for once already by
     the group editor. }
-  FRail.SetDown(4, True);
 
   page := FHelp.CurrentPage;
   anchor := FHelp.CurrentAnchor;
@@ -3872,7 +3907,6 @@ begin
   FSlideSplit.Visible := False;
   FPaneRoom := -1;
   ClampPanes;
-  FRail.SetDown(4, False);
   finally
     EnableAlign;
   end;
