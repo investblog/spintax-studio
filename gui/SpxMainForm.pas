@@ -559,6 +559,7 @@ begin
   FTopics.Align := alClient;
   FTopics.Visible := False;
   FTopics.OnPicked := @TopicPicked;
+  FTopics.OnClose := @HelpPaneClosed;
 
   { A VARIANT CAN BE LONGER THAN ANY DEFAULT. The panel is the one part of this window whose
     useful width depends on the document rather than on the layout, so it is the user's to
@@ -637,8 +638,13 @@ begin
   FSeedEdit.OnChange := @SettingChanged;
 
   EnsureSmallIcons;
-  { The slide-out's close button draws from the same list the strip does. }
+  { The two panels whose close buttons draw from the strip's own list -- and AFTER
+    EnsureSmallIcons, which is the whole of the ordering: handing the list over before it is
+    built hands over nil, and a speed button with no images draws an empty box. That is exactly
+    what the topics panel's ORIGINAL close did, and repeating it while restoring that button is
+    how this comment came to be here. }
   FSlide.SetIcons(FSmallIcons);
+  FTopics.SetIcons(FSmallIcons);
 
   FReroll := TSpeedButton.Create(Self);
   FReroll.Parent := FTop;
@@ -1159,6 +1165,9 @@ begin
     were inert decoration. Their own conditions are read from the source rather than remembered,
     so closing the help restores exactly what was there. }
   helpMode := HelpShowing;
+  { The panel's teaching sentences are about a document the reader cannot see while the help is
+    up, and they link into the help that is already open. The grids stay. }
+  if FVars <> nil then FVars.Teaching := not helpMode;
   FLocale.Visible := not helpMode;
   FSeeded.Visible := not helpMode;
   FSeedEdit.Visible := (not helpMode) and FSeeded.Checked;
@@ -3970,9 +3979,6 @@ begin
   FSet.BatchProgress(P);
 end;
 
-{ A row from the set, shown in the right pane. It is a finished text, not a template, so it
-  goes to the pane as it is -- the preview's own render path would spin it again and show
-  something else. }
 procedure TSpxMainForm.ShowVariant(const AText: string);
 begin
   { AND IT IS NOT THE HELP'S EXAMPLE. This is the second route into the pane -- RequestRender

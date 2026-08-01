@@ -88,6 +88,8 @@ type
     FIncSig: string;              // and what the include group currently shows
     FOnJump: TSpxJumpEvent;
     FOnHint: TSpxHintEvent;
+    { Whether the sentences are allowed at all -- see Teaching. }
+    FTeaching: Boolean;
     FOnFindRef: TSpxFindRefEvent;
     FOnDefine: TSpxDefineEvent;
     FOnSpell: TSpxSpellEvent;
@@ -115,6 +117,8 @@ type
     procedure LiteralToggled(Sender: TObject; ACol, ARow: Integer; AState: TCheckboxState);
     function KindName(Kind: TSpxVarKind): string;
     procedure FitLastColumn(AGrid: TStringGrid);
+    procedure SetTeaching(AValue: Boolean);
+    procedure ShowHints;
     procedure StyleHint(ALabel: TLabel; AHint: TSpxHelpHint);
     procedure HintClicked(Sender: TObject);
     procedure SetRuntimeHeaders;
@@ -140,6 +144,11 @@ type
     property OnJump: TSpxJumpEvent read FOnJump write FOnJump;
     { Clicking an empty group's sentence opens the chapter it names. }
     property OnHint: TSpxHintEvent read FOnHint write FOnHint;
+    { WHETHER TO TEACH AT ALL. False while the help is up, and the reason is that the sentence
+      is a call to ACTION -- "write #set in the document" -- about a document the reader cannot
+      see, with a link into the help they are already reading. The grids stay: those are facts
+      about the document rather than instructions to go and edit it. }
+    property Teaching: Boolean read FTeaching write SetTeaching;
     { Clicking a session row's NAME asks for the first place the document references it. }
     property OnFindRef: TSpxFindRefEvent read FOnFindRef write FOnFindRef;
     { Ctrl+clicking it asks for a definition in the document instead. }
@@ -156,6 +165,8 @@ implementation
 constructor TSpxVarsPane.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  { The sentences are on until the window says otherwise -- see Teaching. }
+  FTeaching := True;
   BevelOuter := bvNone;
   FValues := TStringList.Create;
   FLiteral := TStringList.Create;
@@ -381,6 +392,21 @@ begin
   ALabel.OnClick := @HintClicked;
 end;
 
+{ One place decides what the two sentences do, so a group's own emptiness and the help being up
+  cannot disagree about it. }
+procedure TSpxVarsPane.ShowHints;
+begin
+  FDefsHint.Visible := FTeaching and (FDefs.RowCount <= 1);
+  FIncHint.Visible := FTeaching and (not FIncBox.Visible);
+end;
+
+procedure TSpxVarsPane.SetTeaching(AValue: Boolean);
+begin
+  if FTeaching = AValue then Exit;
+  FTeaching := AValue;
+  ShowHints;
+end;
+
 procedure TSpxVarsPane.HintClicked(Sender: TObject);
 begin
   if Assigned(FOnHint) then FOnHint(TSpxHelpHint((Sender as TLabel).Tag));
@@ -550,7 +576,7 @@ begin
   SetLength(FRows, defRow);
   { AND WHAT THE GROUP SAYS WHEN IT HAS NOTHING. The grid keeps its header row, so "empty" is
     one row, not none. }
-  FDefsHint.Visible := FDefs.RowCount <= 1;
+  ShowHints;
   finally
     spell.Free;
   end;
@@ -690,7 +716,7 @@ begin
   FIncSplit.Visible := FIncBox.Visible;
   { One or the other, never both: the table when there is something to table, the sentence
     when there is not. }
-  FIncHint.Visible := not FIncBox.Visible;
+  ShowHints;
   if not FIncBox.Visible then Exit;
 
   FInc.RowCount := Length(AIncludes) + 1;
