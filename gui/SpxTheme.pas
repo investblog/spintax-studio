@@ -44,7 +44,37 @@ type
     HtmlTag, HtmlAttr, HtmlValue, HtmlComment, HtmlEntity: TColor;
   end;
 
-function SpxPalette(ATheme: TSpxTheme): TSpxPalette;
+(* THE THEME THE USER PICKED, unless the DESKTOP has asked for something louder.
+
+   AHighContrast overrides both tables rather than sitting beside them: a Windows contrast
+   theme is an accessibility setting, not a colour preference, and an application that
+   answered it with its own idea of dark would be answering a different question. It is
+   computed at runtime (SpxHighContrast) and never stored -- TSpxTheme stays the two values
+   that go in the settings file, so turning the desktop's contrast off cannot leave this
+   application stranded in a theme nobody chose, on a settings file that crosses machines. *)
+function SpxPalette(ATheme: TSpxTheme; AHighContrast: Boolean = False): TSpxPalette;
+
+(* THE WINDOW'S OWN PAINTED FURNITURE, which is not the editor's palette and is themed by a
+   different rule. The editor follows the reader's light/dark choice; these follow the SYSTEM,
+   because they are chrome and chrome belongs to the desktop. Off high contrast they are the
+   literals this window has always drawn, to the byte, so "nothing changed" is provable with a
+   pixel diff rather than an argument. *)
+type
+  TSpxChrome = record
+    { the tool rail's background }
+    RailBack: TColor;
+    { the Page/Source switch: its track, the lit segment, and the two inks }
+    TrackBack, TrackEdge, OnBack, OnEdge, HotBack, OnText, OffText: TColor;
+    { the preview's "this output is stale" banner }
+    BannerBack, BannerText: TColor;
+  end;
+
+function SpxChrome(AHighContrast: Boolean): TSpxChrome;
+
+{ The help page's link. Brand magenta normally; under a contrast theme the system's own
+  hyperlink colour, because #a91455 on a contrast theme's page measures 2.25:1 and the
+  threshold is 4.5. }
+function SpxHelpLink(AHighContrast: Boolean): TColor;
 
 { A LINK IN THE HELP PAGE, and it is NOT part of the palette: the page it sits on is the
   system's window colour whatever theme the editor is in (SpxHelpPane says why), so a link that
@@ -59,9 +89,114 @@ const
 
 implementation
 
-function SpxPalette(ATheme: TSpxTheme): TSpxPalette;
+function SpxHelpLink(AHighContrast: Boolean): TColor;
 begin
-  if ATheme = spxThemeDark then
+  if AHighContrast then Result := clHotLight else Result := SPX_HELP_LINK;
+end;
+
+function SpxChrome(AHighContrast: Boolean): TSpxChrome;
+begin
+  if AHighContrast then
+  begin
+    { The rail and the switch are surfaces the system has names for. The lit segment is the
+      one that was actually BROKEN rather than merely unthemed: it drew clWindowText on a
+      hardcoded #FFFFFF, so a contrast theme's white ink landed on white. }
+    Result.RailBack := clBtnFace;
+    Result.TrackBack := clBtnFace;
+    Result.TrackEdge := clWindowText;
+    Result.OnBack := clHighlight;
+    Result.OnEdge := clHighlight;
+    { THE HOVER GOES SILENT, and it is named rather than worked around: a contrast theme has
+      no shade between its surfaces, so the hot segment fills with the same colour as the track
+      and nothing is drawn. clHighlight would show, and would read as "this one is selected" on
+      a control whose whole job is to say which one is. Off contrast this is $E8E8E8 on
+      $F4F4F4 and visible as intended. }
+    Result.HotBack := clBtnFace;
+    Result.OnText := clHighlightText;
+    Result.OffText := clBtnText;
+    Result.BannerBack := clBtnFace;
+    Result.BannerText := clBtnText;
+  end
+  else
+  begin
+    { EXACTLY what these controls drew before there was a record to hold it. The values are
+      copied rather than adjusted, so any pixel difference off high contrast is a defect. }
+    Result.RailBack := $00F4F4F4;
+    Result.TrackBack := $00F4F4F4;
+    Result.TrackEdge := $00DEDEDE;
+    Result.OnBack := $00FFFFFF;
+    Result.OnEdge := $00C8C8C8;
+    Result.HotBack := $00E8E8E8;
+    Result.OnText := clWindowText;
+    Result.OffText := $00606060;
+    Result.BannerBack := $00E1F0FF;
+    Result.BannerText := clWindowText;
+  end;
+end;
+
+function SpxPalette(ATheme: TSpxTheme; AHighContrast: Boolean = False): TSpxPalette;
+begin
+  if AHighContrast then
+  begin
+    (* THREE INKS, NOT NINE, AND THAT IS THE ANSWER RATHER THAN A SHORTFALL. A contrast theme
+       offers very little that is guaranteed legible ON the window: clWindowText, clGrayText and
+       clHotLight are the three a theme promises to make readable there. Measured on this
+       machine's theme, against its #202020 page: white 16.3:1, grey #A6A6A6 6.7:1, hot-light
+       #75E9FC 11.5:1. clHighlight and clActiveCaption are BACKGROUND colours -- nothing
+       promises they can be read as ink, so neither is used as one.
+
+       So the nine syntax roles collapse into four visual classes, and the styles that separate
+       them are already in the highlighter's constructor rather than here: comment is italic,
+       structure is bold. What a reader gets is text, structure, comments and NAMED THINGS
+       (strings, variables, config keys) -- which is the distinction worth keeping when the
+       desktop has asked for fewer colours, and it is honest about giving up the rest.
+
+       What this replaces was not a compromise, it was invisible: the light table's directive
+       colour is rgb(0,51,153), which on that #202020 page is 1.50:1 against a 4.5 threshold.
+       (1.93:1 was the first number written here and it is the ratio against pure BLACK, not
+       against the page the sentence names -- caught by review. The conclusion is unchanged and
+       the real figure is worse.) *)
+    Result.Back := clWindow;
+    Result.Text := clWindowText;
+
+    Result.Comment := clGrayText;
+    Result.Directive := clWindowText;
+    Result.Str := clHotLight;
+    Result.Variable := clHotLight;
+    Result.Pipe := clWindowText;
+    Result.Cond := clWindowText;
+    Result.Plural := clWindowText;
+    Result.Config := clHotLight;
+
+    { Alternating rather than four shades: depth still reads as a change at each level, and
+      there is no fourth legible ink to spend on it. }
+    Result.Nest[0] := clWindowText;
+    Result.Nest[1] := clHotLight;
+    Result.Nest[2] := clWindowText;
+    Result.Nest[3] := clHotLight;
+
+    Result.Gutter := clBtnFace;
+    Result.GutterText := clGrayText;
+    Result.Sel := clHighlight;
+    Result.SelText := clHighlightText;
+    { The bracket highlight becomes the selection's pair, which is the only fill/ink couple a
+      contrast theme guarantees can be read together. }
+    Result.BracketBack := clHighlight;
+    Result.BracketText := clHighlightText;
+    { A JUMP MAY LAND SILENTLY HERE, and that is stated rather than worked around. The flash is
+      a faint wash, and a contrast theme has no faint anything -- clBtnFace is the nearest
+      honest answer, and on this machine's theme it is #202020, the same as the page, so the
+      wash does not show. The caret still moves and the preview still follows; inventing a
+      colour the theme did not offer would be the louder mistake. }
+    Result.Flash := clBtnFace;
+
+    Result.HtmlTag := clWindowText;
+    Result.HtmlAttr := clHotLight;
+    Result.HtmlValue := clHotLight;
+    Result.HtmlComment := clGrayText;
+    Result.HtmlEntity := clHotLight;
+  end
+  else if ATheme = spxThemeDark then
   begin
     Result.Back := $001E1E1E;
     Result.Text := $00D4D4D4;

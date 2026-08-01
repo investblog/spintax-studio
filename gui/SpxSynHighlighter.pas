@@ -97,7 +97,9 @@ begin
   FNestAttr[2] := Attr('Nesting 3', clBlack, [fsBold]);
   FNestAttr[3] := Attr('Nesting 4', clBlack, [fsBold]);
 
-  ApplyPalette(SpxPalette(spxThemeLight));
+  { The light table is only a starting point -- the window applies the real one, high contrast
+    included, before the editor is ever shown. }
+  ApplyPalette(SpxPalette(spxThemeLight, False));
 
   FState.InComment := False;
   FState.LineEmpty := True;

@@ -42,7 +42,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, Buttons, ExtCtrls, Graphics, ImgList,
-  SpxUi, SpxIcons, SpxBrandMark;
+  SpxUi, SpxIcons, SpxBrandMark, SpxTheme;
 
 type
   { Which edge of the WINDOW the rail lives on. Not "which side of the editor": a user who
@@ -53,6 +53,9 @@ type
   private
     FSide: TSpxRailSide;
     FIcons: TImageList;
+    { What the sprite was last recoloured to, so the cache notices a theme change and not only
+      a change of scaling. clNone means "as baked". }
+    FIconInk: TColor;
     FButtons: array of TSpeedButton;
     FBrand: TSpeedButton;
     FBrandImgs: TImageList;
@@ -73,6 +76,10 @@ type
     procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
+    { The window's chrome colours. Off high contrast this assigns the same literal the
+      constructor did, so it changes nothing; under one it hands the strip back to the system,
+      which is the point -- a #F4F4F4 bar on a contrast theme's black desktop is a white slab. }
+    procedure ApplyChrome(const AChrome: TSpxChrome);
     { One tool. AIcon is an index into the sprite (SPX_ICON_* in SpxIcons); AHint is the tool's
       name, which is the only part of a button a translation now touches.
 
@@ -125,20 +132,39 @@ begin
   Width := Px(Self, SPX_RAIL_W);
 end;
 
+procedure TSpxToolRail.ApplyChrome(const AChrome: TSpxChrome);
+begin
+  Color := AChrome.RailBack;
+  { The glyphs go with the background: they are this control's only content, and BuildIcons
+    now keys its cache on the ink as well as the size. }
+  BuildIcons;
+end;
+
 { The sprite, sliced. Built on the first tool rather than in the constructor because the size
   depends on the window's scaling, and a panel has no parent form while it is constructing
   itself (SpxUi.Px says the same thing at more length). }
 procedure TSpxToolRail.BuildIcons;
-var size_, len, i: Integer; p: Pointer;
+var size_, len, i: Integer; p: Pointer; ink: TColor;
 begin
   { 24 inside a 36 face at 100%: six pixels of air either side, which is the proportion every
     side bar uses. A glyph filling its button reads as a button that is too small. }
   size_ := SpxIconPickSize(Px(Self, 24));
-  if (FIcons <> nil) and (FIcons.Width = size_) then Exit;
+  (* AND THE INK. These buttons have no caption -- AddTool sets an image and a hint and
+     nothing else -- so the sprite IS the control, and the sprite is baked at rgb(60,60,60).
+     The moment the rail takes the system's background under a contrast theme, its own tools
+     measure 1.48:1: 316 pixels of #3C3C3C on #202020, counted off a photograph.
+
+     Recorded because the first version of this slice missed it and said the opposite. The
+     rail was "measured at 16.29:1" -- but that number was 27 pixels of white window frame in
+     the sampled band, not the 316 pixels of glyph. The instrument found the brightest thing
+     in the region rather than the thing the region is FOR. *)
+  if SpxHighContrast then ink := ColorToRGB(clWindowText) else ink := clNone;
+  if (FIcons <> nil) and (FIcons.Width = size_) and (FIconInk = ink) then Exit;
+  FIconInk := ink;
   p := SpxIconStrip(size_, len);
   { The same list object, refilled -- the buttons hold a reference to it and would go blank
     if it were freed (SpxUi.SpxImagesFrom says why at more length). }
-  FIcons := SpxImagesFrom(Self, FIcons, p, len, size_, size_, SPX_ICON_COUNT);
+  FIcons := SpxImagesFrom(Self, FIcons, p, len, size_, size_, SPX_ICON_COUNT, ink);
   for i := 0 to High(FButtons) do
     if FButtons[i] <> nil then FButtons[i].Images := FIcons;
 end;

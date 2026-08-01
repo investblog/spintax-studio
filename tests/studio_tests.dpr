@@ -5741,6 +5741,36 @@ begin
   Check('page/lines-are-kept', SpxPageDocument('раз'#10'два'),
         '<html><body>раз'#10'два</body></html>');
 
+  (* THE COLOURS THE WRAPPER CAN CARRY, and why it carries them at all: the ink has to travel
+     with the document, which is what the help page has always done and what was measured to
+     work here. (The panel's own TextColor property was tried first and changed nothing on
+     screen -- but both attempts changed the property without changing the content, and the
+     feed was keyed on the content, so it was never re-fed. Review caught the confound; the
+     document route is kept because it is the one that was measured, not because the other was
+     disproven.)
+
+     What it closes: the preview took its BACKGROUND from the system and left the text to the
+     renderer's default black. On a light desktop the pair agrees by luck; under a Windows
+     contrast theme the page is #202020 and the text is still #000000 -- 1.29:1, measured off a
+     PrintWindow photograph in which the brightest pixel in the whole pane was the background.
+     It is 16.29:1 now. *)
+  Check('page/colours-become-body-attributes',
+        SpxPageDocument('текст', '#202020', '#ffffff'),
+        '<html><body bgcolor="#202020" text="#ffffff">текст</body></html>');
+  { BOTH OR NEITHER, because one of the two is exactly the defect above. }
+  Check('page/a-background-alone-is-ignored', SpxPageDocument('текст', '#202020', ''),
+        '<html><body>текст</body></html>');
+  Check('page/an-ink-alone-is-ignored', SpxPageDocument('текст', '', '#ffffff'),
+        '<html><body>текст</body></html>');
+  { Default arguments, so every caller and every check above keeps the document it had. }
+  Check('page/no-colours-is-what-it-always-was', SpxPageDocument('текст'),
+        '<html><body>текст</body></html>');
+  { A document that opens its own still passes through: it brought its colours with it, and
+    the whole point of the pass-through is not to argue with them. }
+  Check('page/a-real-document-keeps-its-own-colours',
+        SpxPageDocument('<html><body bgcolor="#101010">своё</body></html>', '#202020', '#ffffff'),
+        '<html><body bgcolor="#101010">своё</body></html>');
+
   { ── and what counts as "this fragment shows nothing" ── }
   CheckTrue('blank/empty', SpxIsBlankOutput(''));
   CheckTrue('blank/spaces-and-newlines', SpxIsBlankOutput('  '#13#10' '#9));

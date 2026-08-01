@@ -29,10 +29,29 @@ unit SpxUi;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Forms, ImgList{$IFDEF WINDOWS}, Windows{$ENDIF};
+  Classes, SysUtils, Controls, Graphics, Forms, ImgList, IntfGraphics, FPimage,
+  GraphType{$IFDEF WINDOWS}, Windows{$ENDIF};
 
 { A length in 96-dpi units, scaled to the control's display. }
 function Px(AControl: TControl; AValue: Integer): Integer;
+
+(* IS THE DESKTOP IN A HIGH-CONTRAST THEME? A system ACCESSIBILITY setting, not a colour
+   preference -- which is why it overrides the application's own light/dark choice rather than
+   sitting beside it, and why the answer is computed at runtime and never stored.
+
+   LCL cannot be asked. `SPI_GETHIGHCONTRAST` is declared in lcltype.pp:2039 and NOTHING in the
+   library reads it -- there is no ThemeServices or Screen property for this -- so the call is
+   made here, behind the same seam the settings path and the glyph lookup already live behind
+   (ADR 0007). FPC declares the record, the flag and the call, so nothing has to be imported.
+
+   Conservative on every failure: False off Windows, and False when the call itself fails,
+   which is why its return value is tested. A zeroed dwFlags from a failed call is
+   indistinguishable from "high contrast is off" if you ignore it. *)
+function SpxHighContrast: Boolean;
+
+{ A TColor as HTML writes it. Shared because two panes now put colours INTO their documents
+  rather than on the panel -- the panel's TextColor does not reach the text, measured. }
+function SpxHtmlColor(AColor: TColor): string;
 
 { A sprite, sliced into an image list: AData and ALen are a PNG strip of ACount cells laid out
   in one row, ACellW by ACellH each -- which is what SpxIcons and SpxFlags hold and what
@@ -43,9 +62,17 @@ function Px(AControl: TControl; AValue: Integer): Integer;
   freeing one to build a bigger one does not crash -- LCL nils the reference from the free
   notification, so the buttons simply go blank, which is worse than a crash because it looks
   like nothing happened. Changing the size in place keeps every reference valid, which is what
-  makes rebuilding at a new scaling safe. }
+  makes rebuilding at a new scaling safe.
+
+  AInk RECOLOURS THE SPRITE, and it is what makes these glyphs survive a contrast theme. The
+  strips are MONOCHROME with alpha -- scripts/make-icons.py bakes every one at rgb(60,60,60) --
+  so a glyph is legible only against a light surface. Hand the rail back to the system and its
+  own icons measure 1.48:1 on the theme this was tested against: 316 pixels of #3C3C3C on
+  #202020, counted off a PrintWindow photograph. Passing clWindowText replaces the ink and
+  keeps the alpha, so the shape is untouched and the contrast becomes the system's own. clNone
+  leaves the sprite exactly as it was baked, which is every caller that is not on chrome. }
 function SpxImagesFrom(AOwner: TComponent; AList: TImageList; AData: Pointer;
-  ALen, ACellW, ACellH, ACount: Integer): TImageList;
+  ALen, ACellW, ACellH, ACount: Integer; AInk: TColor = clNone): TImageList;
 
 { A fixed-pitch family, in a hurry: the first of these the system has, at the system's size.
 
@@ -104,9 +131,37 @@ begin
   Result := (AValue * ppi + 48) div 96;
 end;
 
+{ TColor is $00BBGGRR and HTML wants #RRGGBB -- and a SYSTEM colour's ordinal carries no
+  channels at all, so ColorToRGB first is mandatory rather than tidiness. }
+function SpxHtmlColor(AColor: TColor): string;
+var rgb_: LongInt;
+begin
+  rgb_ := ColorToRGB(AColor);
+  Result := Format('#%.2x%.2x%.2x', [rgb_ and $FF, (rgb_ shr 8) and $FF, (rgb_ shr 16) and $FF]);
+end;
+
+function SpxHighContrast: Boolean;
+{$IFDEF WINDOWS}
+var hc: HIGHCONTRAST;
+{$ENDIF}
+begin
+  Result := False;
+  {$IFDEF WINDOWS}
+  FillChar(hc, SizeOf(hc), 0);
+  hc.cbSize := SizeOf(hc);
+  { lpszDefaultScheme stays NIL on purpose: Windows writes the scheme's NAME into a buffer the
+    caller supplies, and a non-nil pointer that does not address one is a write into this
+    process. Nothing here wants the name, only the flag. }
+  if not SystemParametersInfoW(SPI_GETHIGHCONTRAST, SizeOf(hc), @hc, 0) then Exit;
+  Result := (hc.dwFlags and HCF_HIGHCONTRASTON) <> 0;
+  {$ENDIF}
+end;
+
 function SpxImagesFrom(AOwner: TComponent; AList: TImageList; AData: Pointer;
-  ALen, ACellW, ACellH, ACount: Integer): TImageList;
-var ms: TMemoryStream; png: TPortableNetworkGraphic;
+  ALen, ACellW, ACellH, ACount: Integer; AInk: TColor = clNone): TImageList;
+var
+  ms: TMemoryStream; png: TPortableNetworkGraphic;
+  intf: TLazIntfImage; x, y: Integer; px: TFPColor; rgb_: LongInt;
 begin
   Result := AList;
   if Result = nil then Result := TImageList.Create(AOwner);
@@ -124,6 +179,30 @@ begin
     png := TPortableNetworkGraphic.Create;
     try
       png.LoadFromStream(ms);
+      if AInk <> clNone then
+      begin
+        { THE ALPHA IS KEPT AND ONLY THE COLOUR CHANGES, so the glyph's shape and its edges are
+          the ones the generator drew. Through a TLazIntfImage because TBitmap.Canvas.Pixels
+          cannot see alpha at all, and an anti-aliased glyph edited without it comes back with
+          a black halo. }
+        rgb_ := ColorToRGB(AInk);
+        intf := png.CreateIntfImage;
+        try
+          for y := 0 to intf.Height - 1 do
+            for x := 0 to intf.Width - 1 do
+            begin
+              px := intf.Colors[x, y];
+              if px.Alpha = 0 then Continue;
+              px.Red := (rgb_ and $FF) * 257;
+              px.Green := ((rgb_ shr 8) and $FF) * 257;
+              px.Blue := ((rgb_ shr 16) and $FF) * 257;
+              intf.Colors[x, y] := px;
+            end;
+          png.LoadFromIntfImage(intf);
+        finally
+          intf.Free;
+        end;
+      end;
       { One row of ACount cells -- the sprite's whole layout, in one call. }
       Result.AddSliced(png, ACount, 1);
     finally

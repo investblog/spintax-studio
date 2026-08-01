@@ -97,7 +97,8 @@ type
     FMenuCopy: TMenuItem;
     FMenuSelectAll: TMenuItem;
     FContent: string;     // what the engine last produced
-    FShown: string;       // what the page is currently displaying
+    FShown: string;       // the RAW output the page was last fed from -- the stale test
+    FShownDoc: string;    // the DOCUMENT actually fed, colours and all -- the redraw test
     FShownSource: string; // what was last PUT INTO the source view
     FHasShown: Boolean;
     procedure SetSourceMode(AValue: Boolean);
@@ -113,6 +114,8 @@ type
     procedure SelectAllClicked(Sender: TObject);
     procedure DrawClicked(Sender: TObject);
     procedure DrawPage;
+    { Feed the page again with the system's current colours, without drawing anything new. }
+    procedure RefeedShown;
     procedure Sync;
   protected
     procedure Resize; override;
@@ -137,6 +140,10 @@ type
       the user's own HTML as it will be published, and a preview that recolours the work is
       not a preview. }
     procedure ApplyTheme(const APalette: TSpxPalette);
+    { The window's chrome colours. Only the stale banner needs them here -- its pale blue was
+      chosen when there was one theme, and on a contrast theme it is a pale slab under the
+      system's own white ink. Off high contrast the value is that same pale blue. }
+    procedure ApplyChrome(const AChrome: TSpxChrome);
     procedure ApplyEditorFont(const AFamily: string; APoints: Integer);
     { The window's own 16px list, handed over rather than built here: it is refilled in place
       when the display's scaling changes, so this reference stays good (SpxUi.SpxImagesFrom). }
@@ -237,6 +244,26 @@ begin
   FPage.Align := alClient;
   FPage.Color := clWindow;
   FPage.BgColor := clWindow;
+  (* AND THE INK, which was missing -- the half of a pair that only looks complete while the
+     two halves happen to agree.
+
+     The background was taken from the system and the text was not, so the renderer supplied
+     its own default: black. On a light desktop that is right by coincidence. Turn on a Windows
+     contrast theme and clWindow becomes #202020 while the text stays #000000, and the whole
+     preview goes to 1.29:1 -- measured from a PrintWindow photograph, where the brightest
+     pixel in the entire pane was the background itself.
+
+     Worth recording HOW it was missed: the screenshot was on the screen and read as light text
+     on dark. The eye was the faulty instrument and the number is what caught it.
+
+     WHAT REACHES THE TEXT is the `text=` attribute the wrapper writes, which is how the help
+     page has always done it and what the 16.29:1 above was measured with. The panel property
+     is set as well, because InitHtml copies it into the document object (iphtml.pas:6182) and
+     agreeing costs nothing -- but it is NOT established that the property alone would fail.
+     Two attempts at it changed nothing on screen; both changed the property without changing
+     the content, and the feed was keyed on the content, so nothing was ever fed again. Review
+     caught that, and the claim is left as what is known rather than what was concluded. *)
+  FPage.TextColor := ColorToRGB(clWindowText);
 
   FSourceHl := TSynHTMLSyn.Create(Self);
   FHtmlDefault[0] := FSourceHl.TextAttri.Foreground;
@@ -387,23 +414,55 @@ begin
   DrawPage;
 end;
 
-procedure TSpxPreviewPane.DrawPage;
+(* RECOLOUR WHAT IS ON SCREEN -- which is NOT the same as drawing what the engine last
+   produced, and the difference is the size guard.
+
+   The first version of this called DrawPage, guarded by FHasShown. But FHasShown means "a page
+   was drawn at some time", and DrawPage always builds from FContent. So on a document past
+   SPX_PAGE_AUTO_LIMIT -- where Sync deliberately shows the stale banner and does not draw --
+   picking a theme from the View menu would have rendered the whole thing anyway: ADR 0004
+   measures that at 3.4 s for 86 KB and 12.9 s for 172 KB, the exact freeze the threshold
+   exists to prevent, reachable in two clicks. It would also have hidden the banner and the
+   button that offers the draw, leaving nothing to say the page had ever been held back.
+
+   So this feeds FShown -- the output the page is actually displaying -- with the system's new
+   pair around it. The guard's decision stands, the banner stays up if it was up, and the
+   colours are right for whatever is there. Found by review. *)
+procedure TSpxPreviewPane.RefeedShown;
+var doc: string;
 begin
-  { The same text twice is the common case while the user types elsewhere in the settings;
-    redrawing it would cost the full layout for no change on screen. }
-  if FHasShown and (FShown = FContent) then
+  if (FPage = nil) or (not FHasShown) or FSourceMode then Exit;
+  doc := SpxPageDocument(FShown, SpxHtmlColor(clWindow), SpxHtmlColor(clWindowText));
+  if doc = FShownDoc then Exit;
+  FPage.SetHtmlFromStr(doc);
+  FShownDoc := doc;
+end;
+
+procedure TSpxPreviewPane.DrawPage;
+var doc: string;
+begin
+  { SpxPageDocument, never the raw string: the renderer needs a document, and a bare one goes
+    black, loses the text before the first tag, or hangs on an unterminated `<!` (the
+    measurements are with the function).
+
+    THE COLOURS GO IN THE DOCUMENT. The comment that used to stand here warned that FShown
+    tracks the RAW output and that this holds only while SpxPageDocument is a pure function of
+    that string -- "give it a setting, a theme or a charset one day and FShown stops being a
+    valid key for what is on screen". That day is this one, so the key moved with it: FShownDoc
+    holds what was actually fed. FShown keeps tracking the raw output, because the STALE
+    indicator asks a different question -- is the engine's answer newer than the drawn one.
+
+    Building the document first costs a string concatenation; the layout it might avoid costs
+    35 ms to 12.9 s (ADR 0004), so the order is the cheap test first. }
+  doc := SpxPageDocument(FContent, SpxHtmlColor(clWindow), SpxHtmlColor(clWindowText));
+  if FHasShown and (FShownDoc = doc) then
   begin
     FStale.Visible := False;
     Exit;
   end;
-  { SpxPageDocument, never the raw string: the renderer needs a document, and a bare one goes
-    black, loses the text before the first tag, or hangs on an unterminated `<!` (the
-    measurements are with the function). FShown tracks the RAW output, so the redraw check
-    above still compares what the engine produced, not what was wrapped around it -- which
-    holds only while SpxPageDocument is a pure function of that string. Give it a setting, a
-    theme or a charset one day and FShown stops being a valid key for what is on screen. }
-  FPage.SetHtmlFromStr(SpxPageDocument(FContent));
+  FPage.SetHtmlFromStr(doc);
   FShown := FContent;
+  FShownDoc := doc;
   FHasShown := True;
   FStale.Visible := False;
 end;
@@ -550,6 +609,26 @@ begin
     FStaleText.Caption := Format(Tr(sTooLargeToDraw), [Length(FContent) div 1024]);
 end;
 
+procedure TSpxPreviewPane.ApplyChrome(const AChrome: TSpxChrome);
+begin
+  { The page's own pair, re-stated because a contrast theme can arrive while the window is
+    open and these were assigned once in the constructor. Both halves together, always: the
+    defect this closes was setting one of them. }
+  if FPage <> nil then
+  begin
+    FPage.Color := clWindow;
+    FPage.BgColor := ColorToRGB(clWindow);
+    FPage.TextColor := ColorToRGB(clWindowText);
+    { And fed again, because the colours live in the DOCUMENT. RefeedShown, never DrawPage:
+      the two differ exactly when it matters. }
+    RefeedShown;
+  end;
+  if FStale <> nil then FStale.Color := AChrome.BannerBack;
+  { The label's ink too: it was the system's on a fixed pale blue, which is legible only while
+    the system's ink stays dark. }
+  if FStaleText <> nil then FStaleText.Font.Color := AChrome.BannerText;
+end;
+
 procedure TSpxPreviewPane.SetIcons(AImages: TCustomImageList);
 begin
   FOfferInsert.Images := AImages;
@@ -610,6 +689,10 @@ begin
     DrawPage
   else
   begin
+    { Held back by the size guard -- but the page still on screen may be carrying the colours
+      of a theme that has since changed, and this is the one path back to the page view that
+      never redraws. Recolouring it costs one feed of what is already there. }
+    RefeedShown;
     FStaleText.Caption := Format(Tr(sTooLargeToDraw), [Length(FContent) div 1024]);
     FStale.Visible := (not FHasShown) or (FShown <> FContent);
   end;

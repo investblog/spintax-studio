@@ -447,8 +447,26 @@ function SpxOpensDocument(const AHtml: string): Boolean;
   Not byte-transparent for what it wraps, in two corner cases, both of which beat a black
   pane: output ending in a bare `<` swallows the wrapper's closing tag and shows it, and prose
   containing a literal `</body>` is cut there. The SOURCE view shows the engine's output raw
-  either way, which is where "what markup came out" is answered (ADR 0004). }
-function SpxPageDocument(const AHtml: string): string;
+  either way, which is where "what markup came out" is answered (ADR 0004).
+
+  ABg and AText, when given, become the wrapper's `<body>` attributes. This is the route the
+  help page has always used and the one measured to work: the preview went from 1.29:1 to
+  16.29:1 under a contrast theme when the colours moved into the document.
+
+  WHAT IS NOT ESTABLISHED is that the panel property could not have done it. Setting
+  TIpHtmlPanel.TextColor was tried twice, symbolically and resolved, and changed nothing on
+  screen -- but both attempts changed the PROPERTY without changing the CONTENT, and the feed
+  was keyed on the content, so the page was never fed again. Review caught the confound. The
+  document attribute is kept because it is the measured route and because it survives a
+  re-feed, not because the other one was proven broken.
+
+  Left empty they are omitted entirely, so every existing caller and every check keeps the
+  byte-for-byte document it had.
+
+  A document that opens its OWN `<html`/`<body>` still passes through untouched: it carries
+  its own colours, and the whole point of the pass-through is not to argue with them. }
+function SpxPageDocument(const AHtml: string; const ABg: string = '';
+  const AText: string = ''): string;
 
 { ── finding text in the template ─────────────────────────────────────────── }
 
@@ -1608,14 +1626,21 @@ begin
   Result := Opens('<html') or Opens('<body');
 end;
 
-function SpxPageDocument(const AHtml: string): string;
+function SpxPageDocument(const AHtml: string; const ABg: string = '';
+  const AText: string = ''): string;
+var attrs: string;
 begin
   if SpxOpensDocument(AHtml) then
-    Result := AHtml
-  else
-    { The output goes in untouched: nothing is escaped, normalised or re-ordered, so what the
-      renderer lays out is still what the engine produced. }
-    Result := '<html><body>' + AHtml + '</body></html>';
+    Exit(AHtml);
+  attrs := '';
+  { BOTH OR NEITHER. A background without an ink is the defect this parameter exists to close:
+    the pane took its page colour from the system and left the text to the renderer's default
+    black, which agreed by luck on a light desktop and measured 1.29:1 on a contrast theme. }
+  if (ABg <> '') and (AText <> '') then
+    attrs := ' bgcolor="' + ABg + '" text="' + AText + '"';
+  { The output goes in untouched: nothing is escaped, normalised or re-ordered, so what the
+    renderer lays out is still what the engine produced. }
+  Result := '<html><body' + attrs + '>' + AHtml + '</body></html>';
 end;
 
 { ── editing a directive where it sits ────────────────────────────────────── }

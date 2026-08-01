@@ -23,7 +23,7 @@ unit SpxSegmented;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, LCLType, LCLIntf, ImgList, SpxUi;
+  Classes, SysUtils, Controls, Graphics, LCLType, LCLIntf, ImgList, SpxUi, SpxTheme;
 
 type
   TSpxSegment = record
@@ -37,6 +37,9 @@ type
     FIndex: Integer;
     FHot: Integer;
     FImages: TCustomImageList;
+    { Seeded in the constructor with the literals this control has always drawn, so it is
+      correct before anything applies a theme to it. }
+    FChrome: TSpxChrome;
     FOnChange: TNotifyEvent;
     procedure SetItemIndex(AValue: Integer);
     procedure SetImages(AValue: TCustomImageList);
@@ -54,6 +57,9 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); override;
+    { The window's chrome colours; see TSpxChrome. Off high contrast these are the literals the
+      constructor already holds, so calling it changes nothing. }
+    procedure ApplyChrome(const AChrome: TSpxChrome);
     { One position. AIcon is an index into Images, or -1 for text alone. }
     procedure Add(const ACaption: string; AIcon: Integer = -1);
     { A language changed. }
@@ -71,16 +77,20 @@ type
 implementation
 
 const
-  { The switch reads as one object with a lit position inside it, so the track is the shade
+  { The six colours the switch draws with are no longer constants -- they arrive as a
+    TSpxChrome, seeded with exactly these literals so nothing moves off high contrast:
+
+      TRACK_BG $F4F4F4  TRACK_EDGE $DEDEDE  ON_BG $FFFFFF
+      ON_EDGE  $C8C8C8  HOT_BG     $E8E8E8  OFF_TEXT $606060
+
+    The switch reads as one object with a lit position inside it, so the track is the shade
     that already means "chrome" here (the tool rail's), and the lit segment is the window's own
-    background lifted out of it. Both are literal rather than clBtnFace/clWindow because the
-    rail is literal: two greys that must match cannot be one system colour and one constant. }
-  TRACK_BG = $00F4F4F4;
-  TRACK_EDGE = $00DEDEDE;
-  ON_BG = $00FFFFFF;
-  ON_EDGE = $00C8C8C8;
-  HOT_BG = $00E8E8E8;
-  OFF_TEXT = $00606060;
+    background lifted out of it. Both were literal rather than clBtnFace/clWindow because the
+    rail was literal: two greys that must match cannot be one system colour and one constant --
+    and now they are one record, which is how they keep matching under a contrast theme too.
+
+    THE LIT SEGMENT WAS THE BUG. Its caption was clWindowText on a hardcoded $FFFFFF, so a
+    contrast theme's white ink landed on white and the current view's name disappeared. }
 
   PAD_X = 10;      { either side of a segment's content }
   GAP = 6;         { between an icon and its caption }
@@ -95,6 +105,15 @@ begin
   { Painted whole, every time: without this LCL clears to the parent's colour first and the
     track flickers on every hover. }
   ControlStyle := ControlStyle + [csOpaque];
+  { The colours this control drew with before there was a record to hold them, so it is right
+    from its first paint whether or not the window ever applies a theme to it. }
+  FChrome := SpxChrome(False);
+end;
+
+procedure TSpxSegmented.ApplyChrome(const AChrome: TSpxChrome);
+begin
+  FChrome := AChrome;
+  Invalidate;
 end;
 
 procedure TSpxSegmented.Add(const ACaption: string; AIcon: Integer);
@@ -203,8 +222,8 @@ begin
   Canvas.FillRect(ClientRect);
 
   { the track }
-  Canvas.Brush.Color := TRACK_BG;
-  Canvas.Pen.Color := TRACK_EDGE;
+  Canvas.Brush.Color := FChrome.TrackBack;
+  Canvas.Pen.Color := FChrome.TrackEdge;
   Canvas.RoundRect(0, 0, w * Length(FSegments) + 2, Height,
     Px(Self, RADIUS) * 2, Px(Self, RADIUS) * 2);
 
@@ -216,15 +235,15 @@ begin
 
     if on_ then
     begin
-      Canvas.Brush.Color := ON_BG;
-      Canvas.Pen.Color := ON_EDGE;
+      Canvas.Brush.Color := FChrome.OnBack;
+      Canvas.Pen.Color := FChrome.OnEdge;
       Canvas.RoundRect(r.Left, r.Top, r.Right, r.Bottom,
         Px(Self, RADIUS) * 2, Px(Self, RADIUS) * 2);
     end
     else if i = FHot then
     begin
-      Canvas.Brush.Color := HOT_BG;
-      Canvas.Pen.Color := HOT_BG;
+      Canvas.Brush.Color := FChrome.HotBack;
+      Canvas.Pen.Color := FChrome.HotBack;
       Canvas.RoundRect(r.Left, r.Top, r.Right, r.Bottom,
         Px(Self, RADIUS) * 2, Px(Self, RADIUS) * 2);
     end;
@@ -232,7 +251,7 @@ begin
     { the content, centred in the segment }
     Canvas.Brush.Style := bsClear;
     Canvas.Font.Assign(Font);
-    if on_ then Canvas.Font.Color := clWindowText else Canvas.Font.Color := OFF_TEXT;
+    if on_ then Canvas.Font.Color := FChrome.OnText else Canvas.Font.Color := FChrome.OffText;
     tw := ContentWidth(Canvas, i);
     cx := x + (w - tw) div 2;
     if (FImages <> nil) and (FSegments[i].Icon >= 0) then
@@ -248,7 +267,7 @@ begin
       arrow keys move. }
     if Focused and on_ then
     begin
-      Canvas.Pen.Color := ON_EDGE;
+      Canvas.Pen.Color := FChrome.OnEdge;
       InflateRect(r, -3, -3);
       Canvas.DrawFocusRect(r);
     end;

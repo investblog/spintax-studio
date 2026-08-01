@@ -22,7 +22,7 @@ uses
   {$IFDEF WINDOWS}Windows,{$ENDIF}
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Menus, Dialogs, ImgList,
   Buttons,
-  Clipbrd, Graphics, LCLType, LCLIntf,
+  Clipbrd, Graphics, LCLType, LCLIntf, Themes,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
@@ -123,6 +123,20 @@ type
     { The insert-example command's menu face. Held because its enabled state follows the
       preview's offer strip rather than the menu's own rebuild -- see ShowOffer. }
     FInsertItem: TMenuItem;
+    { What the desktop was asking for at the last ApplyTheme, so the theme-change handler can
+      tell a change that matters from an ordinary visual-style one. Never persisted.
+
+      The View menu does NOT explain itself under a contrast theme: Light and Dark stay
+      enabled and keep recording the preference for when the desktop's contrast goes off, and
+      nothing says why the choice is not in force. That is a decision rather than an omission
+      -- every application on a contrast desktop follows the desktop, so a row of explanation
+      would be noise -- but it costs a string id if it is ever reversed. }
+    FHighContrast: Boolean;
+    { What the small sprite was last recoloured to, so a theme change rebuilds it and a
+      repeated call does not. clNone means "as baked". }
+    FIconInk: TColor;
+    { The system pair as it stood at the last ApplyTheme -- see SystemThemeChanged. }
+    FSysBack, FSysText: TColor;
     { The first render of an example is fixture-seeded, so it matches the checked arrow in
       the article. A reroll is explicitly a fresh draw of the same clean template. }
     FHelpRandom: Boolean;
@@ -235,6 +249,7 @@ type
     procedure DiagResized(Sender: TObject);
     procedure JumpDeferred(Data: PtrInt);
     procedure ShowOffer(AValue: Boolean);
+    procedure SystemThemeChanged(Sender: TObject);
     procedure VarJump(Line, Column: Integer; AFocus: Boolean);
     procedure VarFindRef(const AName: string; AFocus: Boolean);
     procedure FlashJumpLine;
@@ -960,6 +975,11 @@ begin
     open. It corrected itself on the first click of anything, which is exactly why no test
     that clicks first could see it. Caught by review, on the running app. }
   BuildMenu;
+
+  { Last, so nothing it might re-theme is still unbuilt. Cleared in the destructor:
+    ThemeServices is a global singleton and outlives this form, so a method pointer left in it
+    fires into freed memory at shutdown. }
+  ThemeServices.OnThemeChange := @SystemThemeChanged;
 end;
 
 { The find bar. Hidden until asked for, because a template is read far more often than it is
@@ -2247,13 +2267,23 @@ end;
 { The top strip's icons: 16px inside a 26px button at 100%, the same proportion the rail uses
   at 24-in-36. Refilled rather than rebuilt when the scaling changes, because the buttons and
   the switch hold a reference to the list (SpxUi.SpxImagesFrom says why at more length). }
+(* AND THE INK, because the glyphs are monochrome. The strip is baked at rgb(60,60,60), which
+   is legible on the chrome this window draws and measures 1.48:1 once the rail is handed back
+   to a contrast theme -- counted off a photograph: 316 pixels of #3C3C3C on #202020. So under
+   one, the sprite is recoloured to the system's own ink as it is sliced.
+
+   THE INK IS PART OF THE CACHE KEY. Without it the list would be rebuilt only when the SIZE
+   changed, and a desktop switching to a contrast theme at the same scaling would keep the dark
+   glyphs -- the same shape of bug as a settings value that never invalidates what it feeds. *)
 procedure TSpxMainForm.EnsureSmallIcons;
-var size_, len: Integer; p: Pointer;
+var size_, len: Integer; p: Pointer; ink: TColor;
 begin
   size_ := SpxIconPickSize(Px(Self, 16));
-  if (FSmallIcons <> nil) and (FSmallIcons.Width = size_) then Exit;
+  if SpxHighContrast then ink := ColorToRGB(clWindowText) else ink := clNone;
+  if (FSmallIcons <> nil) and (FSmallIcons.Width = size_) and (FIconInk = ink) then Exit;
+  FIconInk := ink;
   p := SpxIconStrip(size_, len);
-  FSmallIcons := SpxImagesFrom(Self, FSmallIcons, p, len, size_, size_, SPX_ICON_COUNT);
+  FSmallIcons := SpxImagesFrom(Self, FSmallIcons, p, len, size_, size_, SPX_ICON_COUNT, ink);
 end;
 
 (* THE LEVEL, AS A GLYPH BESIDE THE WORD. The backlog asked for the rows to be COLOURED, and
@@ -2494,6 +2524,35 @@ end;
   its own column convention puts that at the line's beginning, indentation included. The jump
   moves on to the keyword: landing in the margin makes the eye hunt for the `#set` that the row
   was clicked to reach. }
+(* THE DESKTOP CAN CHANGE UNDER A RUNNING APPLICATION, and a contrast theme is exactly the
+   setting somebody turns on because they are struggling to read what is on the screen right
+   now. So the window listens rather than reading the flag once at startup.
+
+   ThemeServices.OnThemeChange is the only hook LCL offers, and it is unassigned by default --
+   nothing in the library or its packages takes it. It fires for ANY visual-style change, so the
+   first thing here is to ask whether the answer actually moved: re-theming on every one of them
+   is the "how many times does it do the same work" trap the help panel already paid for.
+
+   Batched, for the same reason and with the same instrument: that investigation measured a
+   panel switch at 641-1469 ms unbatched and 266-344 ms with DisableAlign around it, because LCL
+   re-aligns the whole form once per control touched. *)
+procedure TSpxMainForm.SystemThemeChanged(Sender: TObject);
+begin
+  { THE KEY IS THE COLOURS, NOT THE FLAG. Windows ships four contrast themes, and Aquatic ->
+    Desert is True -> True: a boolean would have called that "no change" and left the two
+    RENDERED pages frozen at the old scheme, because their colours are written into a document
+    at feed time rather than resolved at paint. Everything else in the window is symbolic and
+    would have re-resolved on its own, which is exactly what makes this the easy one to miss. }
+  if (SpxHighContrast = FHighContrast) and (ColorToRGB(clWindow) = FSysBack)
+     and (ColorToRGB(clWindowText) = FSysText) then Exit;
+  DisableAlign;
+  try
+    ApplyTheme;
+  finally
+    EnableAlign;
+  end;
+end;
+
 (* THE OFFER IS ONE STATE WITH TWO FACES, so it is set in one place. The strip in the preview
    and the Edit-menu item are the same command -- one for a pointer, one for the keyboard --
    and the menu's copy was computed inside BuildMenu, which runs on a language change, a panel
@@ -2587,7 +2646,7 @@ end;
 procedure TSpxMainForm.FlashJumpLine;
 begin
   if FEditor = nil then Exit;
-  FEditor.LineHighlightColor.Background := SpxPalette(FPrefs.Theme).Flash;
+  FEditor.LineHighlightColor.Background := SpxPalette(FPrefs.Theme, FHighContrast).Flash;
   { Restarted, not stacked: a second jump inside the window re-arms the same timer rather than
     leaving the first one to cut the second one short. }
   FFlashTimer.Enabled := False;
@@ -3520,9 +3579,17 @@ end;
 { ── THE EDITOR'S LOOK ──────────────────────────────────────────────────────────────────── }
 
 procedure TSpxMainForm.ApplyTheme;
-var pal: TSpxPalette; i: Integer;
+var pal: TSpxPalette; chrome: TSpxChrome; hc: Boolean; i: Integer;
 begin
-  pal := SpxPalette(FPrefs.Theme);
+  { ASKED ONCE PER APPLY, not cached in a field: the desktop can change under a running
+    application, and a field would need somebody to remember to update it. The call is one
+    SystemParametersInfo. }
+  hc := SpxHighContrast;
+  FHighContrast := hc;
+  FSysBack := ColorToRGB(clWindow);
+  FSysText := ColorToRGB(clWindowText);
+  pal := SpxPalette(FPrefs.Theme, hc);
+  chrome := SpxChrome(hc);
   FHighlighter.ApplyPalette(pal);
   FEditor.Color := pal.Back;
   FEditor.Font.Color := pal.Text;
@@ -3554,6 +3621,20 @@ begin
     the preview's page -- SpxHelpPane says why at the top. The topics tree beside it is LCL's own
     drawing and has no such margins, so it still follows the theme. }
   if FTopics <> nil then FTopics.ApplyTheme(pal);
+  { THE CHROME IS THE SYSTEM'S, and it is applied from here so there is one moment when the
+    window's colour is decided. Off high contrast every one of these is the literal the control
+    drew before, so this adds a call and changes no pixel. }
+  { BEFORE the chrome, because the rail is about to be handed a background the current glyphs
+    may not survive. EnsureSmallIcons refills the SAME list object, so every button holding a
+    reference keeps it and simply repaints. }
+  EnsureSmallIcons;
+  if FRail <> nil then FRail.ApplyChrome(chrome);
+  if FModes <> nil then FModes.ApplyChrome(chrome);
+  FPreview.ApplyChrome(chrome);
+  { The help page carries the brand's magenta except where a contrast theme has made it
+    unreadable, and the page has to be fed again for a colour to reach it: IPro copies these
+    into the document at load (iphtml.pas:6178-6204), so they are load-time rather than live. }
+  if FHelp <> nil then FHelp.SetLinkColor(SpxHelpLink(hc));
   FEditor.Invalidate;
 end;
 
@@ -4207,6 +4288,9 @@ destructor TSpxMainForm.Destroy;
 begin
   { A jump queued from the panel and not yet run would fire into a freed form. }
   Application.RemoveAsyncCalls(Self);
+  { And so would a desktop theme change: ThemeServices is a global singleton that outlives
+    every form, so the method pointer has to be taken back out. }
+  ThemeServices.OnThemeChange := nil;
   { The worker is a thread, not an owned component, so nothing would free it on a path that
     reaches the destructor without OnClose. No such path exists today -- this is the form
     owning what it created rather than trusting one event to fire. }

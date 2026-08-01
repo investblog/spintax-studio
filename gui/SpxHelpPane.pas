@@ -56,12 +56,20 @@ type
     FOnRun: TSpxRunExample;
     { What the panel is already showing -- see Feed. }
     FShown: string;
+    { The link's colour. Held rather than read from a constant so a contrast theme can change
+      it; the feed cache keys on the whole document string, so a changed colour invalidates it
+      by itself and nothing has to remember to. }
+    FLink: TColor;
     procedure HotClicked(Sender: TObject);
     procedure Feed;
   protected
     procedure Resize; override;
   public
     constructor Create(AOwner: TComponent); override;
+    { The link colour the page draws with -- SpxHelpLink answers it. Re-feeds when it changes,
+      because IPro copies colours into the document at LOAD (iphtml.pas:6178-6204) -- but only
+      once something has been shown; see the body. }
+    procedure SetLinkColor(AValue: TColor);
     { Show a page and scroll to an article. Measured: MakeAnchorVisible finds an `id` on a
       heading with no DataProvider, and the name goes WITHOUT the leading '#'. }
     procedure ShowPage(ALang, APage: Integer; const AAnchor: string);
@@ -73,22 +81,14 @@ type
 
 implementation
 
-
-{ TColor is $00BBGGRR and HTML wants #RRGGBB, and the light palette's entries are SYSTEM colours
-  (clWindow, clWindowText) whose ordinal carries no channels at all -- so ColorToRGB first is
-  mandatory, not tidiness. }
-function HtmlColor(AColor: TColor): string;
-var rgb_: LongInt;
-begin
-  rgb_ := ColorToRGB(AColor);
-  Result := Format('#%.2x%.2x%.2x', [rgb_ and $FF, (rgb_ shr 8) and $FF, (rgb_ shr 16) and $FF]);
-end;
-
 constructor TSpxHelpPane.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   BevelOuter := bvNone;
   Color := clWindow;
+  { The brand's magenta until the window says otherwise, so the page is right on its first feed
+    even if nothing ever applies a theme to this pane. }
+  FLink := SPX_HELP_LINK;
   FLang := 0;
   FPageNo := 0;
 
@@ -113,24 +113,41 @@ begin
   if (n >= 0) and Assigned(FOnRun) then FOnRun(n);
 end;
 
+procedure TSpxHelpPane.SetLinkColor(AValue: TColor);
+begin
+  if FLink = AValue then Exit;
+  FLink := AValue;
+  { NOTHING SHOWN YET, NOTHING TO RE-COLOUR. Under a contrast theme the first ApplyTheme
+    changes this colour, and feeding here would parse page 0 of a pane the reader has not
+    opened -- 62-234 ms of startup, spent only by the users least able to absorb it.
+    ShowPage feeds with the current colour when the help is actually opened.
+
+    Otherwise no cache to clear: Feed builds the document with the colour written into it, so a
+    changed link makes a different string and the FShown comparison re-feeds by itself. }
+  if FShown = '' then Exit;
+  Feed;
+end;
+
 procedure TSpxHelpPane.Feed;
 var back, text_, link_, doc: string;
 begin
   if FPage = nil then Exit;
   { THE SYSTEM'S BACKGROUND AND TEXT -- see the top of this unit -- and the brand's link on top
-    of them. SPX_HELP_LINK is a constant rather than a palette entry for the reason SpxTheme
-    gives: the page it sits on no longer changes with the theme, so neither does it.
+    of them. The link is a constant rather than a palette entry for the reason SpxTheme gives:
+    the page it sits on no longer changes with the theme, so neither does it -- EXCEPT under a
+    Windows contrast theme, where the brand magenta measures 2.25:1 on the page the system then
+    supplies and SpxHelpLink hands back clHotLight instead.
 
     Set on the panel as well as written into the document: the panel's are what IPro copies in
     when a document has no colour of its own (TIpHtmlFrame.InitHtml, iphtml.pas:6178-6204), so
     the two agreeing is what keeps a future document that drops an attribute from surprising
     anyone. }
-  back := HtmlColor(clWindow);
-  text_ := HtmlColor(clWindowText);
-  link_ := HtmlColor(SPX_HELP_LINK);
+  back := SpxHtmlColor(clWindow);
+  text_ := SpxHtmlColor(clWindowText);
+  link_ := SpxHtmlColor(FLink);
   FPage.BgColor := clWindow;
   FPage.TextColor := clWindowText;
-  FPage.LinkColor := SPX_HELP_LINK;
+  FPage.LinkColor := FLink;
   FPage.Color := clWindow;
   { THE SAME DOCUMENT IS NOT FED TWICE. IPro's parse is flat but its first layout is quadratic
     (ADR 0004), and measured here a help page costs 62-234 ms -- so a second feed of a string
