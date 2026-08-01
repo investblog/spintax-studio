@@ -37,32 +37,27 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
 
-## What R0 still needs (re-checked 2026-07-30)
+## What R0 still needs (re-checked 2026-08-01)
 
-The FEATURES are in: M0, M1, M2 and M3 are all closed. R0 is not, and the remainder is mostly
-release work rather than product work. In the order it matters:
+The FEATURES are in: M0, M1, M2 and M3 are all closed, and so are the two gaps that stood at
+the top of this list a day ago — **the help is readable in the app** (ADR 0008, both documents
+in both languages, with a contents tree, search and the diagnostics double-click) and **the
+About box exists**. What remains is release work, two small product gaps and accessibility:
 
-1. **The help cannot be read in the app.** `docs/help/ru/diagnostics.md` is a file in this
-   repository and nothing in `gui/` references it — no viewer, no menu item, not even a string
-   id. R0 is offline by design, so the help has to ship INSIDE the exe (AGENTS.md says so, and
-   §11 asks the listing to be "a product, not a dev-tool stub"). This is the largest gap and it
-   is not a small one: it needs a place to show markdown, or the text converted at build time.
-   **Planned in seven steps** under *Help & FAQ* below: the renderer, the size constraint and the
-   anchor-per-code that the diagnostics entry point depends on.
-2. **The About box does not exist.** It is the only place a user can read the attributions
-   NOTICE.md records (MDI Apache-2.0, Twemoji CC-BY 4.0), which is a licence obligation before
-   the first submission, not a nicety. **Planned** below, with the version constant it
-   shares with app identity.
-3. **MSIX packaging, privacy policy, listing text and a ≥256px icon** — the §11 block below.
-   None started.
-4. **Two small product gaps, both real:** the diagnostics list has no keyboard navigation (the
+1. **MSIX packaging, privacy policy, listing text and a ≥256px icon** — the §11 block below.
+   None started, and this is now the whole of what stands between here and a submission.
+2. **Two small product gaps, both real:** the diagnostics list has no keyboard navigation (the
    jump is on click, so Up/Down does not move the caret) and its rows are not coloured by
    severity.
-5. **Accessibility:** the owner-drawn locale list is invisible to a screen reader, and there is
+3. **Accessibility:** the owner-drawn locale list is invisible to a screen reader, and there is
    no high-contrast palette.
+4. **The help's next layer** — three of its five steps are open (*Help & FAQ* below): empty
+   panels that teach, the mini-context strip (blocked on `SpxHtmlEscape` in core), and the
+   silences white-list. None of them blocks a submission; all of them are what makes the
+   listing "a product, not a dev-tool stub".
 
-Not R0: M4 (the LLM loop) and everything downstream of it, the help's later waves, RTL, and the
-rename refactor.
+Not R0: M4 (the LLM loop) and everything downstream of it, the other twelve help languages,
+RTL, and the rename refactor.
 
 ## Milestones (spec §9)
 
@@ -1031,9 +1026,12 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
          раньше рецептов.
 
       **Не делаем, и вот почему:**
-      - **Поиска.** Двенадцать заголовков глав видны целиком — сканировать быстрее, чем печатать.
-        Ценны в предложении были синонимы, но это непроверяемый контент на двух языках, который
-        протухнет молча.
+      - ~~**Поиска.**~~ **Сделан 2026-07-31, по требованию пользователя, и довод выше был
+        неверен.** «Двенадцать заголовков глав видны целиком» перестало быть правдой в тот
+        момент, когда документов стало два: глав двадцать четыре, а статей под ними — тридцать
+        одна. Поиск живёт в шапке справки, без отдельного вызова, тем же матчером, что и поиск
+        по документу (`SpxFindAll`), и одна статья — одно попадание. Синонимы по-прежнему не
+        делаем, и по прежней причине: непроверяемый контент на двух языках протухнет молча.
       - **Песочницы с подстановкой примера в левую панель.** Справка **и есть** левая панель;
         подставив туда пример, её вытесняешь, и статью с примером одновременно уже не видно. К
         этой раскладке пришли через две переделки (ADR 0008).
@@ -1067,11 +1065,13 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       Окно **системного цвета**, а не темы: `SpxTheme` прямо говорит, что обвязка не красится, и
       тёмный диалог со светлой рамкой был единственной поверхностью, которая это нарушала.
 
-- [ ] **ЗНАК: на сайте их два.** Приложение вендорит `apple-touch-icon.png` — шестиугольник,
-      байт-в-байт то, что spintax.net отдаёт сейчас, и из него собрана иконка. Но `og-image.png`
-      и `logo.svg` (4957 байт против 3666 у фавиконки) показывают **другой** знак — ленту.
-      Решить, какой из двух брендовый, и привести к одному: иконка приложения, окно «О программе»
-      и листинг Store должны показывать одно и то же.
+- [x] **ЗНАК: на сайте их два — решено 2026-08-01, и решение в том, что они разные по роли.**
+      Шестиугольник (`apple-touch-icon.png`) — знак **программы**: он в иконке exe, в заголовке
+      окна, на панели задач и в окне «О программе». Лента (`logo.svg`) — знак **бренда**: она
+      стоит у подошвы рельса ссылкой на spintax.net и больше нигде. Решение пользователя, и
+      оно снимает вопрос не приведением к одному, а разделением: одно говорит «эта программа»,
+      другое — «этот проект». Обе теперь вендорены (`assets/brand/`), лента вместе с растром,
+      потому что растеризовать SVG на сборочной машине нечем.
 
 - [ ] ~~**ОКНО «О ПРОГРАММЕ» — план, 2026-07-30.**~~ (сделано выше) Меньше по объёму и обязательно до первой
       подачи: единственное место, где пользователь читает атрибуции из `NOTICE.md` (MDI
@@ -1110,7 +1110,14 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       попадает (§11) — но листинг читает рецензент, и формулировка не должна создавать
       впечатление, будто AI внутри.
 
-- [ ] **2. Справочник языка** — конструкции по одной, с проверяемыми примерами. Писать после
+- [x] **2. Справочник языка — сделано 2026-07-31.** `docs/help/{en,ru}/syntax.md`, по двенадцать
+      глав в каждом, 32 и 35 измеренных примеров, своя фикстура на документ и глава о молчаниях.
+      Английский не переведён с русского, а **измерен заново**, и измерения разошлись с русскими
+      на их же предмете: под `en` правильных форм две, а ошибочных три — ровно наоборот.
+      Изначальный план ниже (писать после рецептов) был перевёрнут по решению пользователя, и
+      верно: справочник — то, из чего рецепты потом цитируют, а не наоборот.
+
+      *Исходный план:* конструкции по одной, с проверяемыми примерами. Писать после
       редактора групп: часть этого он покажет руками. Источник — зеркала документации сайта, не
       SKILL.md (см. выше).
 
