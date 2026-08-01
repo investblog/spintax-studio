@@ -4019,6 +4019,135 @@ end;
 
    So the two are held to each other. Not by eye: the unit is generated from the file, and these
    checks are what make the generation load-bearing rather than a convenience. *)
+(* THE OFFLINE CLAIM, WHICH IS NOW A PUBLISHED ONE. docs/privacy.md tells the Store and its
+   readers that this application collects nothing and sends nothing, and a promise of that kind
+   is exactly the sort that stops being true by accident: one `uses fphttpclient` in a later
+   version and the page is a lie nobody edited.
+
+   So the claim is held the way the help's examples are held -- to the code, mechanically. The
+   uses clause of every unit that ships is read, and a network unit in any of them fails the
+   build. Read from the SOURCE rather than from a list kept beside it, because a list would be
+   the thing that goes stale.
+
+   The single outbound action is counted too. The policy says "exactly one place", and names it;
+   a second OpenURL would make that sentence false while every other check stayed green. *)
+procedure TestOfflineClaim;
+const
+  { Unit names that mean a socket is being opened. Whole words, matched inside a uses clause
+    only, so a comment mentioning one of them is not a failure. }
+  NET_UNITS: array[0..9] of string = (
+    'fphttpclient', 'httpsend', 'ftpsend', 'smtpsend', 'ssockets', 'sockets',
+    'winsock', 'winsock2', 'opensslsockets', 'netdb');
+var
+  dirs: array[0..2] of string;
+  d, i: Integer;
+  rec: TSearchRec;
+  text_, low_, clause, name_: string;
+  at, stop, opens: Integer;
+
+  { Every uses clause in the file, joined -- a unit may have one in the interface and one in
+    the implementation. }
+  function UsesClauses(const ASource: string): string;
+  var p_, q_: Integer;
+  begin
+    Result := '';
+    p_ := 1;
+    repeat
+      p_ := PosEx('uses', ASource, p_);
+      if p_ = 0 then Break;
+      q_ := PosEx(';', ASource, p_);
+      if q_ = 0 then q_ := Length(ASource);
+      Result := Result + ' ' + Copy(ASource, p_, q_ - p_ + 1);
+      p_ := q_ + 1;
+    until False;
+  end;
+
+  { A whole-word search, so `Sockets` matches and `SpxSocketsDemo` would not. }
+  function HasWord(const AHay, ANeedle: string): Boolean;
+  var k: Integer; before_, after_: Char;
+  begin
+    Result := False;
+    k := 1;
+    repeat
+      k := PosEx(ANeedle, AHay, k);
+      if k = 0 then Exit;
+      if k = 1 then before_ := ' ' else before_ := AHay[k - 1];
+      if k + Length(ANeedle) > Length(AHay) then after_ := ' '
+      else after_ := AHay[k + Length(ANeedle)];
+      if not (before_ in ['a'..'z', 'A'..'Z', '0'..'9', '_', '.']) and
+         not (after_ in ['a'..'z', 'A'..'Z', '0'..'9', '_', '.']) then Exit(True);
+      Inc(k, Length(ANeedle));
+    until False;
+  end;
+
+begin
+  { The page exists and still says the thing the checks below defend. }
+  text_ := SpxReadTextFile('docs/privacy.md');
+  CheckTrue('offline/the privacy policy is where the Store will point', Length(text_) > 400);
+  CheckTrue('offline/and it still promises nothing is collected',
+            Pos('collect, transmit or store any', text_) > 0);
+
+  dirs[0] := 'src';
+  dirs[1] := 'gui';
+  dirs[2] := 'gui/lang';
+  opens := 0;
+  for d := 0 to High(dirs) do
+  begin
+    if FindFirst(dirs[d] + '/*.pas', faAnyFile, rec) <> 0 then
+    begin
+      Check('offline/' + dirs[d] + ' has units to read', 'found', 'none');
+      Continue;
+    end;
+    try
+      repeat
+        if (rec.Attr and faDirectory) <> 0 then Continue;
+        text_ := SpxReadTextFile(dirs[d] + '/' + rec.Name);
+        low_ := LowerCase(text_);
+        clause := LowerCase(UsesClauses(low_));
+        { ONE CHECK PER FILE, naming the unit it found. Per file AND per name would be five
+          hundred lines of green saying one thing, and a suite whose count is mostly noise is
+          a suite nobody reads the count of. }
+        name_ := '';
+        for i := Low(NET_UNITS) to High(NET_UNITS) do
+          if HasWord(clause, NET_UNITS[i]) then name_ := NET_UNITS[i];
+        Check('offline/' + rec.Name + ' opens no socket', name_, '');
+        { And the one outbound call, counted across the whole product. }
+        at := 1;
+        repeat
+          at := PosEx('openurl(', low_, at);
+          if at = 0 then Break;
+          Inc(opens);
+          Inc(at, 8);
+        until False;
+      until FindNext(rec) <> 0;
+    finally
+      FindClose(rec);
+    end;
+  end;
+  { EXACTLY ONE, because the policy says so in as many words. A second one is not a defect in
+    itself -- it is a sentence in a published document becoming false. }
+  Check('offline/exactly one place hands a URL to the shell', IntToStr(opens), '1');
+  { Belt and braces: nothing in the product opens a process either. }
+  stop := 0;
+  for d := 0 to High(dirs) do
+  begin
+    if FindFirst(dirs[d] + '/*.pas', faAnyFile, rec) <> 0 then Continue;
+    try
+      repeat
+        low_ := LowerCase(SpxReadTextFile(dirs[d] + '/' + rec.Name));
+        if (Pos('createprocess(', low_) > 0) or (Pos('shellexecute(', low_) > 0) then
+        begin
+          Inc(stop);
+          name_ := rec.Name;
+        end;
+      until FindNext(rec) <> 0;
+    finally
+      FindClose(rec);
+    end;
+  end;
+  Check('offline/and nothing launches a process [' + name_ + ']', IntToStr(stop), '0');
+end;
+
 procedure TestAbout;
 var i, j, dots, at, stop, seen_: Integer; text_, name_: string; found: Boolean;
     body: TStringList;
@@ -6821,6 +6950,7 @@ begin
   TestHtmlScan;
   TestGroups;
   TestHelpExamples;
+  TestOfflineClaim;
   TestAbout;
   TestBrandMark;
   TestHelpUnit;
