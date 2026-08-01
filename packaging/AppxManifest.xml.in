@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The package manifest, as a TEMPLATE: scripts/make-msix.py substitutes the at-sign names below
+  and refuses to write a manifest that still holds one. Nothing here is edited by hand except
+  the parts that are not substituted, and those are decisions rather than values.
+
+  Written without a double hyphen anywhere, because XML forbids one inside a comment and
+  MakeAppx says so only as "expected '>'" at a column. The prose here uses commas.
+
+  IDENTITY IS NOT OURS TO INVENT. Name and Publisher must match what Partner Center reserves
+  for the account, byte for byte, or the upload is rejected. Publisher in particular is the
+  certificate subject Microsoft signs with, not a name we choose. Until the account exists the
+  script fills placeholders and says so on every run; the values below are the SHAPE, not the
+  answer.
+
+  runFullTrust is what makes a packaged Win32 application a packaged Win32 application: it is a
+  restricted capability, declared here and approved at submission, and every desktop bridge app
+  carries it. It does not widen what this program does, since R0 makes no network call, reads no
+  device and asks for nothing else.
+
+  MinVersion 10.0.17763 (1809) is where MSIX for desktop settled; below it the platform wants
+  the older appx story, and the Store's own floor for new desktop submissions is higher still.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity
+    Name="@IDENTITY_NAME@"
+    Publisher="@PUBLISHER@"
+    Version="@VERSION@"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>@DISPLAY_NAME@</DisplayName>
+    <PublisherDisplayName>@PUBLISHER_DISPLAY@</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0"
+                        MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+
+  <Applications>
+    <Application Id="SpintaxStudio"
+                 Executable="spintax-studio.exe"
+                 EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="@DISPLAY_NAME@"
+        Description="@DESCRIPTION@"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Square71x71Logo="Assets\SmallTile.png"
+                         Square310x310Logo="Assets\LargeTile.png"
+                         Wide310x150Logo="Assets\WideTile.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>
