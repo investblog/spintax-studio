@@ -44,8 +44,11 @@ the top of this list a day ago — **the help is readable in the app** (ADR 0008
 in both languages, with a contents tree, search and the diagnostics double-click) and **the
 About box exists**. What remains is release work, two small product gaps and accessibility:
 
-1. **MSIX packaging, privacy policy, listing text and a ≥256px icon** — the §11 block below.
-   None started, and this is now the whole of what stands between here and a submission.
+1. **The submission itself** — the §11 block below. **MSIX packaging is done and proven**
+   (2026-08-01: packs, validates, signs, registers, launches from the container). What is left
+   there is not machinery: reserve the app in Partner Center for the package **Name** and
+   **PublisherDisplayName**, a **privacy policy** page, **listing text and screenshots**, and a
+   **≥256px icon**, which needs a render from the vector.
 2. **Two small product gaps, both real:** the diagnostics list has no keyboard navigation (the
    jump is on click, so Up/Down does not move the caret) and its rows are not coloured by
    severity.
@@ -1363,8 +1366,30 @@ Constraints (design into the app from the start):
       without any setup (spec §1, §11).
 
 Submission tasks (after a demoable build):
-- [ ] **MSIX packaging** of the Lazarus `.exe` (Store re-signs; fallback EXE/MSI only if MSIX
-      won't do — then versioned HTTPS URL + silent install + our own signing/hosting/updates).
+- [x] **MSIX packaging — ANSWERED 2026-08-01, and it works end to end.** This was the one
+      unknown that could have invalidated the distribution plan, so it was done first rather than
+      last. Measured on this machine, with a Windows SDK that turned out to be installed already
+      (`makeappx` / `signtool` / `makepri`, 10.0.19041): the Lazarus `.exe` packs into a 2.5 MB
+      MSIX, MakeAppx validates the manifest, signtool signs it, the package REGISTERS, and the
+      application launches from inside the container and renders its demo document. **The §11
+      fallback (EXE/MSI, with signing, hosting and update mechanics on us) is therefore not
+      needed and should not be planned for.**
+
+      `scripts/make-msix.py` builds it from `packaging/AppxManifest.xml.in`. The tiles are
+      resized from the brand raster into the staging folder and are build output, not committed
+      artefacts: unlike the icons and the help they do not travel inside the executable.
+
+      Two things learned on the way, both silent when wrong: **XML forbids a double hyphen
+      inside a comment**, which MakeAppx reports only as `expected '>'` at a column; and
+      **installing an unsigned or self-signed package needs Developer Mode** — a self-signed
+      certificate in the USER's TrustedPeople store is refused with `0x800B0109`, the root not
+      being trusted, so the choice is Developer Mode or an elevated shell.
+
+      **What is still owed is identity, not machinery.** The account is personal, and its
+      Windows publisher ID `CN=BEE1F94B-ABDE-4CF8-9F30-1DF4DAFDAE83` is real and in the script.
+      The package **Name** and the **PublisherDisplayName** come from reserving the app in
+      Partner Center, are marked `RESERVE-IN-PARTNER-CENTER`, and the script prints which are
+      missing on every run.
 - [ ] **(conditional — only if the MSIX path fails) Code signing.** Researched 2026-07-30 so
       it is not researched twice; **not pending work.**
 
