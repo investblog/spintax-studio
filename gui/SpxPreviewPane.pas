@@ -59,6 +59,9 @@ type
     FOfferInsert: TSpeedButton;
     FOfferReroll: TSpeedButton;
     FOfferHelp: TSpeedButton;
+    { What the strip was last laid out for -- see LayOutOffer. }
+    FOfferFor: Integer;
+    FOfferSide: Integer;
     FOnInsert: TNotifyEvent;
     FOnReroll: TNotifyEvent;
     FPage: TIpHtmlPanel;
@@ -501,6 +504,16 @@ begin
   pad := Px(Self, 8);
   gap := Px(Self, 4);
   side := Px(Self, 26);
+  { NOTHING TO DO WHEN NOTHING MOVED, and that is what stops the strip blinking on a reroll.
+    Resize fires for every layout ripple in the form, not only when this pane changed size
+    (AGENTS.md records the same trap on the window's own clamp) -- and a reroll delivers a
+    render, which ripples. Re-setting the three buttons' bounds to the values they already
+    have still repaints them, so the reader saw the glyphs flick on every click of a button
+    that has nothing to do with them. The face size and the pane's width are the only inputs
+    this layout has; if neither changed, neither did the answer. }
+  if (FOfferFor = ClientWidth) and (FOfferSide = side) then Exit;
+  FOfferFor := ClientWidth;
+  FOfferSide := side;
   x := pad;
   FOfferInsert.SetBounds(x, Px(Self, 2), side, side);
   Inc(x, side + gap);
