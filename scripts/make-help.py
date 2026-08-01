@@ -60,10 +60,11 @@ LANGS = ['en', 'ru']
 PAGE_LIMIT = 24 * 1024
 
 # The document KINDS, in the order a reader meets them, each with the slugs naming its
-# sections. A slug names the same section in every language -- that is what lets the viewer keep
-# your place when the interface language changes -- so the list is the contract and the script
-# refuses a document with more sections than names.
-DOCS = ['diagnostics', 'syntax']
+# sections. The guide goes first and the diagnostic reference below it: the contents tree should
+# read like a manual, not like an implementation panel. A slug names the same section in every
+# language -- that is what lets the viewer keep your place when the interface language changes --
+# so the list is the contract and the script refuses a document with more sections than names.
+DOCS = ['syntax', 'diagnostics']
 
 DOC_SLUGS = {
     'diagnostics': [

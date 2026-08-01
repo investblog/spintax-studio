@@ -203,14 +203,17 @@ end;
 function SpxHelpFind(ALang: Integer; const AQuery: string;
   ACaseSensitive: Boolean): TSpxHelpHits;
 var
-  page, n, at, stop: Integer;
-  html, line, anchor, lastAnchor, onLine: string;
+  page, n, at, stop, exactPage: Integer;
+  html, line, anchor, lastAnchor, onLine, codeQuery, exactAnchor: string;
   lastPage: Integer;
 
   procedure Add(APage: Integer; const AAnchor: string);
+  var i: Integer;
   begin
     { One hit per article. A second match in the same one would scroll to the same place. }
     if (APage = lastPage) and (AAnchor = lastAnchor) then Exit;
+    for i := 0 to n - 1 do
+      if (Result[i].Page = APage) and (Result[i].Anchor = AAnchor) then Exit;
     lastPage := APage;
     lastAnchor := AAnchor;
     SetLength(Result, n + 1);
@@ -225,6 +228,13 @@ begin
   lastPage := -1;
   lastAnchor := #1;   { not a possible id, so the first hit is never swallowed }
   if Trim(AQuery) = '' then Exit;
+  { A diagnostic code is a direct address as well as searchable text. With the guide above the
+    reference in the contents tree, a text scan can meet a prose mention first; a reader who
+    typed the exact code should still land on the article that code names. }
+  codeQuery := Trim(AQuery);
+  if not ACaseSensitive then codeQuery := LowerCase(codeQuery);
+  if SpxHelpTargetFor(ALang, codeQuery, exactPage, exactAnchor) then
+    Add(exactPage, exactAnchor);
   for page := 0 to SpxHelpPageCount(ALang) - 1 do
   begin
     { THE TITLE COUNTS. It is what the contents tree shows and what a reader searches for first,

@@ -4844,8 +4844,9 @@ begin
      viewer can go: a page and the article inside it. *)
   hits := SpxHelpFind(0, 'plural.arity', False);
   CheckTrue('help/find/a code is found', Length(hits) > 0);
+  SpxHelpTargetFor(0, 'plural.arity', p_, s_);
   CheckTrue('help/find/and lands on its own article',
-            (hits[0].Anchor = 'plural.arity') or (hits[0].Page = SpxHelpPageIndex(0, 'plurals')));
+            (hits[0].Anchor = s_) or (hits[0].Page = p_));
 
   { THE TITLE IS SEARCHABLE. The first version of this check proved nothing and its comment was
     wrong with it: it claimed the title is not in the page's HTML, and the generator writes it as
