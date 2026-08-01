@@ -86,7 +86,10 @@ const
 
       'iz pomoći', 'Umetni u moj dokument',
 
-      'O programu'
+      'O programu',
+
+      'Još nema makroa — upišite u dokument #set %name% = vrijednost i koristite %name% u tekstu.',
+      'Još nema umetanja — #include "fragment" povlači drugu datoteku, i samo s početka retka.'
   );
 
 implementation

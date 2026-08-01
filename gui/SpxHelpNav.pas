@@ -148,6 +148,26 @@ function SpxHelpFind(ALang: Integer; const AQuery: string;
   it against the markdown, which is the only way to know the stripping did not eat text. }
 function SpxHelpPlainText(ALang, APage: Integer): string;
 
+(* WHERE AN EMPTY PANEL SENDS THE READER.
+
+  A panel with nothing in it looks like a panel that is not working, and usually it is simply
+  right: a document that defines no macros has no macros to list. So an empty group says how to
+  GET the thing rather than that the thing is missing, and the sentence is a link to the chapter
+  that explains it.
+
+  THE TARGET IS A SLUG, not a page number, and that is what makes it survive: a slug names the
+  same chapter in every language, so one constant serves fourteen interfaces and the reader
+  lands on the chapter rather than on whatever happens to be page five. The suite holds every
+  one of these to that -- a slug no document has would be a link that silently opens the front
+  page, which is the kind of failure nobody reports because it looks like a decision. *)
+type
+  TSpxHelpHint = (spxHintDefinitions, spxHintIncludes);
+
+{ The chapter an empty group points at. No anchor: these open the CHAPTER, not an article
+  inside it, because a reader who has never written a macro has not met the vocabulary an
+  article assumes. }
+function SpxHelpHintSlug(AHint: TSpxHelpHint): string;
+
 implementation
 
 function SpxHelpOffersInsert(AHelpShowing: Boolean; AExample, ARows: Integer): Boolean;
@@ -193,6 +213,20 @@ end;
 function Holds(const AText, AQuery: string; ACaseSensitive: Boolean): Boolean;
 begin
   Result := Length(SpxFindAll(AText, AQuery, ACaseSensitive)) > 0;
+end;
+
+function SpxHelpHintSlug(AHint: TSpxHelpHint): string;
+begin
+  case AHint of
+    { `#set` and `#def` live in the macros chapter, which is where a reader who has written
+      neither has to start. }
+    spxHintDefinitions: Result := 'macros';
+    { And `#include` in the fragments chapter, with the rule the panel itself cannot show:
+      it is a directive only from the START of a line. }
+    spxHintIncludes: Result := 'fragments';
+  else
+    Result := '';
+  end;
 end;
 
 function SpxHelpPlainText(ALang, APage: Integer): string;

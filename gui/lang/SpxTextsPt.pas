@@ -85,7 +85,10 @@ const
 
       'da ajuda', 'Inserir no meu documento',
 
-      'Sobre'
+      'Sobre',
+
+      'Ainda não há macros — escreva #set %name% = valor no documento e use %name% no texto.',
+      'Ainda não há inclusões — #include "fragmento" traz outro ficheiro, e apenas no início da linha.'
   );
 
 implementation

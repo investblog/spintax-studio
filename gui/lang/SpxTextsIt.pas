@@ -85,7 +85,10 @@ const
 
       'dalla guida', 'Inserisci nel mio documento',
 
-      'Informazioni'
+      'Informazioni',
+
+      'Ancora nessuna macro — scriva #set %name% = valore nel documento e usi %name% nel testo.',
+      'Ancora nessuna inclusione — #include "frammento" richiama un altro file, e solo a inizio riga.'
   );
 
 implementation

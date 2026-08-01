@@ -84,7 +84,10 @@ const
 
       'yardımdan', 'Belgeme ekle',
 
-      'Hakkında'
+      'Hakkında',
+
+      'Henüz makro yok — belgeye #set %name% = değer yazın, sonra metinde %name% kullanın.',
+      'Henüz ekleme yok — #include "parça" başka bir dosyayı çeker, ve yalnızca satır başından.'
   );
 
 implementation

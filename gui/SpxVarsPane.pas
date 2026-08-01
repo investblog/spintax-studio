@@ -25,7 +25,7 @@ interface
 
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, LCLType,
-  SpxStudio, SpxUi, SpxStrIds, SpxStrings;
+  SpxStudio, SpxUi, SpxStrIds, SpxStrings, SpxHelpNav;
 
 type
   TSpxJumpEvent = procedure(Line, Column: Integer) of object;
@@ -45,6 +45,10 @@ type
     back `casinoprefix` and the panel used to show that. The window can tell -- its scanner
     reads the real text -- so it fills in the spelling for the names it is handed. }
   TSpxSpellEvent = procedure(ANames: TStringList) of object;
+  { An empty group asked to be explained. The pane names WHICH question rather than a page:
+    where that chapter is, and in which of the help's languages, is the window's business and
+    SpxHelpNav's. }
+  TSpxHintEvent = procedure(AHint: TSpxHelpHint) of object;
   { A DEFINITION'S VALUE, edited in its row -- the first thing in this panel that rewrites the
     DOCUMENT rather than the session. Returns whether the edit was applied: editor-core reads
     every edit back through the engine and refuses one whose result would say something else,
@@ -56,6 +60,11 @@ type
     FDefs: TStringGrid;
     FRuntime: TStringGrid;
     FDefsLabel: TLabel;
+    { WHAT AN EMPTY GROUP SAYS INSTEAD OF NOTHING. A grid with no rows reads as a panel that
+      is not working, and most of the time it is simply right: a document that defines no
+      macros has none to list. So the empty state says how to GET one, and the sentence is a
+      link into the chapter that teaches it. }
+    FDefsHint: TLabel;
     FRuntimeLabel: TLabel;
     FRuntimeBox: TPanel;
     FSplit: TSplitter;
@@ -64,6 +73,7 @@ type
     FIncBox: TPanel;
     FInc: TStringGrid;
     FIncLabel: TLabel;
+    FIncHint: TLabel;
     FIncSplit: TSplitter;
     FIncRows: TSpxIncludeInfos;
     FRows: TSpxVarInfos;          // the definitions, in the order the grid shows them
@@ -77,6 +87,7 @@ type
     FSig: string;                 // what the grids currently show
     FIncSig: string;              // and what the include group currently shows
     FOnJump: TSpxJumpEvent;
+    FOnHint: TSpxHintEvent;
     FOnFindRef: TSpxFindRefEvent;
     FOnDefine: TSpxDefineEvent;
     FOnSpell: TSpxSpellEvent;
@@ -104,6 +115,8 @@ type
     procedure LiteralToggled(Sender: TObject; ACol, ARow: Integer; AState: TCheckboxState);
     function KindName(Kind: TSpxVarKind): string;
     procedure FitLastColumn(AGrid: TStringGrid);
+    procedure StyleHint(ALabel: TLabel; AHint: TSpxHelpHint);
+    procedure HintClicked(Sender: TObject);
     procedure SetRuntimeHeaders;
   protected
     procedure Resize; override;
@@ -125,6 +138,8 @@ type
       any more. }
     function RuntimeValues: TSpxVarPairs;
     property OnJump: TSpxJumpEvent read FOnJump write FOnJump;
+    { Clicking an empty group's sentence opens the chapter it names. }
+    property OnHint: TSpxHintEvent read FOnHint write FOnHint;
     { Clicking a session row's NAME asks for the first place the document references it. }
     property OnFindRef: TSpxFindRefEvent read FOnFindRef write FOnFindRef;
     { Ctrl+clicking it asks for a definition in the document instead. }
@@ -156,6 +171,15 @@ begin
   FDefsLabel.Parent := Self;
   FDefsLabel.Align := alTop;
   FDefsLabel.Caption := Tr(sVarsDefinitions);
+
+  FDefsHint := TLabel.Create(Self);
+  FDefsHint.Parent := Self;
+  FDefsHint.Align := alTop;
+  FDefsHint.WordWrap := True;
+  FDefsHint.BorderSpacing.Around := Px(Self, 4);
+  FDefsHint.Visible := False;
+  FDefsHint.Caption := Tr(sVarsHintDefs);
+  StyleHint(FDefsHint, spxHintDefinitions);
 
   FDefs := TStringGrid.Create(Self);
   FDefs.Parent := Self;
@@ -326,6 +350,40 @@ begin
   FIncLabel.Parent := FIncBox;
   FIncLabel.Align := alTop;
   FIncLabel.Caption := Tr(sVarsIncludes);
+
+  { ON THE PANEL, WHERE THE GROUP WOULD BE, and not inside it. The include group is GONE
+    rather than empty when a document includes nothing -- that decision is about the TABLE,
+    which would take a third of the panel to say nothing -- so the hint takes its place at the
+    bottom instead of forcing the box to be visible and then resized around a wrapped label.
+    The two are never up together. }
+  FIncHint := TLabel.Create(Self);
+  FIncHint.Parent := Self;
+  FIncHint.Top := 30000;
+  FIncHint.Align := alBottom;
+  FIncHint.WordWrap := True;
+  FIncHint.BorderSpacing.Around := Px(Self, 4);
+  FIncHint.Visible := False;
+  FIncHint.Caption := Tr(sVarsHintIncludes);
+  StyleHint(FIncHint, spxHintIncludes);
+end;
+
+{ A sentence that is a link, and looks like one: the system's hot colour and a hand. Not the
+  brand magenta the help page wears -- that page is unthemed and ours, this panel is the
+  system's chrome, and a link on it should be the colour the rest of the desktop uses. The
+  Tag carries which hint it is, so one handler serves both. }
+procedure TSpxVarsPane.StyleHint(ALabel: TLabel; AHint: TSpxHelpHint);
+begin
+  ALabel.Font.Color := clHotLight;
+  ALabel.Font.Style := [fsUnderline];
+  ALabel.Cursor := crHandPoint;
+  ALabel.ShowHint := True;
+  ALabel.Tag := Ord(AHint);
+  ALabel.OnClick := @HintClicked;
+end;
+
+procedure TSpxVarsPane.HintClicked(Sender: TObject);
+begin
+  if Assigned(FOnHint) then FOnHint(TSpxHelpHint((Sender as TLabel).Tag));
 end;
 
 { The session grid's headers, in the only place LCL reads them from. All three, including the
@@ -341,6 +399,8 @@ end;
 procedure TSpxVarsPane.Retranslate;
 begin
   FDefsLabel.Caption := Tr(sVarsDefinitions);
+  FDefsHint.Caption := Tr(sVarsHintDefs);
+  FIncHint.Caption := Tr(sVarsHintIncludes);
   FRuntimeLabel.Caption := Tr(sVarsSession);
   FDefs.Cells[0, 0] := Tr(sColKind);
   FDefs.Cells[1, 0] := Tr(sColName);
@@ -488,6 +548,9 @@ begin
     end;
   end;
   SetLength(FRows, defRow);
+  { AND WHAT THE GROUP SAYS WHEN IT HAS NOTHING. The grid keeps its header row, so "empty" is
+    one row, not none. }
+  FDefsHint.Visible := FDefs.RowCount <= 1;
   finally
     spell.Free;
   end;
@@ -625,6 +688,9 @@ begin
     for an invisible panel is a line drawn across the window. }
   FIncBox.Visible := Length(AIncludes) > 0;
   FIncSplit.Visible := FIncBox.Visible;
+  { One or the other, never both: the table when there is something to table, the sentence
+    when there is not. }
+  FIncHint.Visible := not FIncBox.Visible;
   if not FIncBox.Visible then Exit;
 
   FInc.RowCount := Length(AIncludes) + 1;

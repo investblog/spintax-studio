@@ -109,7 +109,17 @@ type
     sHelpExampleFrom, sHelpExampleInsert,
 
     { ── the About box: its menu item and its own caption ── }
-    sMenuAbout
+    sMenuAbout,
+
+    { ── WHAT AN EMPTY GROUP SAYS. A panel with nothing in it reads as a panel that is not
+      working, and usually it is simply right: a document that defines no macros has none to
+      list. So each of these says how to GET the thing rather than that the thing is missing,
+      and the line is a link to the chapter that explains it (SpxHelpNav's hint slugs).
+
+      `%name%` STAYS LATIN in all fourteen. The engine's variable names are ASCII word
+      characters, so a hint showing a Cyrillic name would teach something the engine does not
+      do -- the same fact the help documents record from the other side. ── }
+    sVarsHintDefs, sVarsHintIncludes
   );
 
 implementation

@@ -94,7 +94,10 @@ const
 
       'aus der Hilfe', 'In mein Dokument einfügen',
 
-      'Über das Programm'
+      'Über das Programm',
+
+      'Noch keine Makros — schreiben Sie #set %name% = Wert ins Dokument und verwenden Sie %name% im Text.',
+      'Noch nichts eingebunden — #include "Fragment" holt eine andere Datei, und nur am Zeilenanfang.'
   );
 
 implementation

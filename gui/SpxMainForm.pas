@@ -332,6 +332,7 @@ type
     procedure RerollHelpExample(Sender: TObject);
     procedure HelpCloseClicked(Sender: TObject);
     procedure BrandClicked(Sender: TObject);
+    procedure VarsHintClicked(AHint: TSpxHelpHint);
     procedure OpenHelpAtCaret;
     procedure ClampPanes;
     procedure ShowPanel(APage: Integer; AWanted: Boolean);
@@ -731,6 +732,7 @@ begin
   FVars.Parent := sheetVars;
   FVars.Align := alClient;
   FVars.OnJump := @VarJump;
+  FVars.OnHint := @VarsHintClicked;
   FVars.OnFindRef := @VarFindRef;
   FVars.OnDefine := @VarDefine;
   FVars.OnSpell := @VarSpell;
@@ -1597,6 +1599,18 @@ begin
   { THE BRAND, at the rail's foot. The hint is the domain and is not translated: a domain is
     the same word everywhere, and the mark beside it is the site's own. }
   FRail.SetBrand(SPX_SITE_HOST, @BrandClicked);
+end;
+
+{ An empty group asked to be explained: open the chapter it names, in the help language this
+  interface resolves to. The pane names the QUESTION and nothing else -- which page answers it
+  is SpxHelpNav's business, and the page number differs per language. }
+procedure TSpxMainForm.VarsHintClicked(AHint: TSpxHelpHint);
+var page: Integer;
+begin
+  page := SpxHelpPageIndex(FTopics.HelpLang, SpxHelpHintSlug(AHint));
+  if page < 0 then Exit;
+  if not HelpShowing then OpenHelpPane('');
+  GoToHelp(page, '');
 end;
 
 procedure TSpxMainForm.BrandClicked(Sender: TObject);

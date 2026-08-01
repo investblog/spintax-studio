@@ -4338,6 +4338,7 @@ var
   ctxRep: TSpxReport;
   ctxRows: TSpxPanelRows;
   hits: TSpxHelpHits;
+  hint: TSpxHelpHint;
 
   { How many rows an example draws under ITS OWN document's conditions -- the locale, the seed
     and the fragment set the fixture declared. Which is what the window has when it decides
@@ -4754,6 +4755,18 @@ begin
                 LongestUnbreakable(html) <= 44);
     end;
   end;
+
+  (* EVERY EMPTY-PANEL LINK RESOLVES, IN EVERY HELP LANGUAGE. A slug no document has would open
+     the front page instead of the chapter -- a failure that looks like a decision, so nobody
+     reports it. Held here beside the codes and for the same reason. *)
+  for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
+    for hint := Low(TSpxHelpHint) to High(TSpxHelpHint) do
+    begin
+      CheckTrue('help/hint/' + SpxHelpLangCode(lang) + '/' + SpxHelpHintSlug(hint) +
+                ' is a slug at all', SpxHelpHintSlug(hint) <> '');
+      CheckTrue('help/hint/' + SpxHelpLangCode(lang) + '/' + SpxHelpHintSlug(hint) +
+                ' names a chapter', SpxHelpPageIndex(lang, SpxHelpHintSlug(hint)) >= 0);
+    end;
 
   { A slug names the same section in every language -- which is what lets the viewer keep the
     reader's place across a language switch. }

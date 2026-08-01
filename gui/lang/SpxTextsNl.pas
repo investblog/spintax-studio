@@ -89,7 +89,10 @@ const
 
       'uit de Help', 'In mijn document invoegen',
 
-      'Over'
+      'Over',
+
+      'Nog geen macro''s — schrijf #set %name% = waarde in het document en gebruik %name% in de tekst.',
+      'Nog niets ingevoegd — #include "fragment" haalt een ander bestand op, en alleen aan het begin van een regel.'
   );
 
 implementation

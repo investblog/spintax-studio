@@ -184,7 +184,9 @@ const
       reason -- and the button holds a whole verb phrase in fourteen languages }
     0, 0,
     { the About box: a menu item and a dialog caption, both of which size themselves }
-    0
+    0,
+    { the empty-group hints: whole sentences, wrapped in a panel that is as wide as it is }
+    0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

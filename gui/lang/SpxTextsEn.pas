@@ -90,7 +90,10 @@ const
 
       'from the help', 'Insert into my document',
 
-      'About'
+      'About',
+
+      'No macros yet — write #set %name% = value in the document, then use %name% in the text.',
+      'Nothing included yet — #include "fragment" pulls in another file, and only from the start of a line.'
   );
 
 implementation
