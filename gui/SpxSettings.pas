@@ -127,9 +127,10 @@ begin
     Exit;
   end;
   {$ENDIF}
-  { Not Windows, or a machine that will not say where its profile is: the RTL's own answer,
-    which is right everywhere the CI runs. }
-  Result := ExcludeTrailingPathDelimiter(GetAppConfigDir(False));
+  { Not Windows, or a machine that will not say where its profile is: keep the product name
+    fixed here too. GetAppConfigDir(False) includes Application.Title,
+    which makes tests and renamed binaries write to different folders. }
+  Result := IncludeTrailingPathDelimiter(GetUserDir) + '.config' + PathDelim + 'spintax-studio';
 end;
 
 function SpxPrefsPath: string;
