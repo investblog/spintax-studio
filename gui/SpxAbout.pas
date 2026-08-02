@@ -39,8 +39,13 @@ function SpxAboutObliged(AIndex: Integer): string;
 implementation
 
 const
-  ABOUT_LINE: array[0..42] of string = (
+  ABOUT_LINE: array[0..47] of string = (
     'REQUIRES ATTRIBUTION IN THE SHIPPED APPLICATION',
+    '',
+    'Spintax Studio -- Apache License 2.0',
+    '  Apache License 2.0',
+    '  Copyright (c) 2026 301.st. <https://301.st/>',
+    '  SPINTAX language reference: <https://spintax.net/>',
     '',
     'Material Design Icons -- Apache License 2.0',
     '  the font glyphs used by the application controls: diagnostics,',
@@ -63,7 +68,7 @@ const
     'Free Pascal RTL and FCL -- modified LGPL (LGPL with the static-linking exception)',
     '  modified LGPL (LGPL with the static-linking exception).',
     '  The exception exists precisely so a statically linked executable may be distributed under its',
-    '  own terms; ours is MIT and no further obligation follows.',
+    '  own terms; Studio is Apache-2.0 and no further obligation follows.',
     '',
     'Lazarus LCL -- modified LGPL',
     '  modified LGPL, same exception, same conclusion.',
@@ -94,7 +99,8 @@ const
     'MIT'
   );
 
-  ABOUT_OBLIGED: array[0..1] of string = (
+  ABOUT_OBLIGED: array[0..2] of string = (
+    'Spintax Studio',
     'Material Design Icons',
     'Twemoji'
   );

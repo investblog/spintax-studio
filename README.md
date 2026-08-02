@@ -1,7 +1,7 @@
 # Spintax Studio
 
 [![CI](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
 
 A native Windows editor for spintax templates, in the shape of a translator: two panes,
 your template on the left, a live render on the right. The engine that decides what comes
@@ -9,6 +9,9 @@ out — and whether the template is even valid — is [`spintax-win`](https://gi
 the same one published for JavaScript, PHP and Python, embedded in-process. The first
 release is an offline editor: write a template, see its render, inspect diagnostics and
 variables, generate variants, and export them.
+
+Studio is developed by [301.st](https://301.st/); the SPINTAX language reference and engine
+family live at [spintax.net](https://spintax.net/).
 
 > **R0 is the offline Windows release.** The source of truth is [`docs/spec.md`](docs/spec.md)
 > and release work is tracked in [`docs/TODO.md`](docs/TODO.md). The application includes
@@ -57,4 +60,5 @@ Syntax reference: https://spintax.net
 
 ## License
 
-MIT.
+Spintax Studio is licensed under the [Apache License 2.0](LICENSE). The engine in `engine/`
+and the other family engines remain MIT-licensed under their own repositories and notices.

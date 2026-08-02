@@ -1,14 +1,21 @@
 # Third-party notices
 
-Spintax Studio is MIT-licensed (see [LICENSE](LICENSE)). It ships as one executable with
+Spintax Studio is licensed under the Apache License 2.0 (see [LICENSE](LICENSE)). It ships as one executable with
 everything it needs inside it, so this file lists what that executable carries besides our own
 code, and what each licence asks of us in return.
+
+The project is developed by [301.st](https://301.st/); the SPINTAX language reference is at
+<https://spintax.net/>. Distributed derivatives must retain this notice.
 
 The entries are grouped by what they oblige. Anything here that requires attribution must also
 appear in the application's About box — the About box is the copy a user can actually read, and
 this file is the copy an audit can.
 
 ## Requires attribution in the shipped application
+
+**Spintax Studio** — Apache License 2.0
+Copyright (c) 2026 301.st. <https://301.st/>
+SPINTAX language reference: <https://spintax.net/>
 
 **Material Design Icons** — the font glyphs used by the application controls: diagnostics,
 variables, variants, the group editor, reroll, copy, preview modes, search/navigation and
@@ -28,7 +35,7 @@ disagree the choice is recorded, one line per language, in `scripts/make-flags.p
 
 **Free Pascal RTL and FCL** — modified LGPL (LGPL with the static-linking exception).
 The exception exists precisely so a statically linked executable may be distributed under its
-own terms; ours is MIT and no further obligation follows.
+own terms; Studio is Apache-2.0 and no further obligation follows.
 
 **Lazarus LCL** — modified LGPL, same exception, same conclusion.
 <https://www.lazarus-ide.org/>
