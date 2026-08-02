@@ -30,13 +30,19 @@ The application does not include generative AI in this release.
 ## Captured screenshots
 
 Captured from the English release executable at 1500x890, with no personal documents or
-account information visible:
+account information visible. Five frames are light and five are dark so the listing shows
+the editor in both supported themes:
 
-1. [`assets/store/spintax-01-valid.png`](../assets/store/spintax-01-valid.png) — valid template and live page preview.
-2. [`assets/store/spintax-02-error.png`](../assets/store/spintax-02-error.png) — invalid template with the marked source location and diagnostic message.
-3. [`assets/store/spintax-03-variables.png`](../assets/store/spintax-03-variables.png) — definitions and rendered result.
-4. [`assets/store/spintax-04-variants.png`](../assets/store/spintax-04-variants.png) — generated variants with export controls.
-5. [`assets/store/spintax-05-help.png`](../assets/store/spintax-05-help.png) — built-in help open on a diagnostic article.
+1. [`assets/store/spintax-01-diagnostics.png`](../assets/store/spintax-01-diagnostics.png) - a real syntax error with source position and engine diagnostic.
+2. [`assets/store/spintax-02-variables.png`](../assets/store/spintax-02-variables.png) - document definitions, session values and the Includes teaching link.
+3. [`assets/store/spintax-03-variants.png`](../assets/store/spintax-03-variants.png) - 20 generated variants with seed and export actions.
+4. [`assets/store/spintax-04-group.png`](../assets/store/spintax-04-group.png) - the group editor opened from the tool rail beside the caret.
+5. [`assets/store/spintax-05-help.png`](../assets/store/spintax-05-help.png) - a valid help example selected in the Choices article and rendered on the right.
+6. [`assets/store/spintax-06-dark-workspace.png`](../assets/store/spintax-06-dark-workspace.png) - the live editor and preview in the dark theme.
+7. [`assets/store/spintax-07-dark-variables.png`](../assets/store/spintax-07-dark-variables.png) - variables panel in the dark theme.
+8. [`assets/store/spintax-08-dark-variants.png`](../assets/store/spintax-08-dark-variants.png) - generated variants and export actions in the dark theme.
+9. [`assets/store/spintax-09-dark-group.png`](../assets/store/spintax-09-dark-group.png) - editable group alternatives in the dark theme.
+10. [`assets/store/spintax-10-dark-help.png`](../assets/store/spintax-10-dark-help.png) - the help topic tree and a rendered example while the editor is dark.
 
 Use the final Store logo assets supplied by the brand rather than a screenshot of the editor
 icon. Do not advertise AI, cloud models, telemetry, or an online service in the R0 listing.
