@@ -24,15 +24,21 @@ family live at [spintax.net](https://spintax.net/).
 ```sh
 git clone --recurse-submodules https://github.com/investblog/spintax-studio.git
 cd spintax-studio
-sh ./build.sh          # Free Pascal 3.2.2+; builds the app too when Lazarus is present
+sh ./build.sh          # Free Pascal 3.2.2+; builds the Windows GUI when Lazarus is present
 ./tests/studio_tests
 ```
 
 `build.sh` builds the console suite with `fpc` and the application with `lazbuild`. If Lazarus
-is not installed, the console suite still verifies the editor-core. The engine is a git
-submodule pinned to a released tag
+is not installed, the console suite still verifies the editor-core. The engine and editor-core
+compile on Ubuntu; the R0 GUI is currently supported, tested and distributed only on Windows
+x64. The engine is a git submodule pinned to a released tag
 ([ADR 0001](docs/decisions/0001-engine-as-submodule.md)); a plain clone needs
 `git submodule update --init` before the build finds `unit Spintax`.
+
+Platform scope:
+
+- **Windows x64:** complete Studio GUI and Microsoft Store package.
+- **Ubuntu:** engine, editor-core and console tests; no supported GUI build in R0.
 
 ## Principles
 
