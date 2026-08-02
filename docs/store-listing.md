@@ -52,7 +52,13 @@ icon. Do not advertise AI, cloud models, telemetry, or an online service in the 
 
 - Package: `build/spintax-studio.msixupload`.
 - Architecture: `x64`; device family: `Windows.Desktop`.
+- Listing language: `English (United States)`; leave `What's new in this version` blank for the first submission.
+- Website: `https://spintax.studio/`.
+- Support contact: `https://301.st/contact`.
+- Additional license terms: leave blank to use Microsoft's Standard Application License Terms. The repository's MIT license remains the source license for the code.
 - Privacy policy: publish [`https://spintax.studio/privacy.html`](https://spintax.studio/privacy.html)
   at a public HTTPS URL and enter that URL in Partner Center.
+- Pricing: `Free`; audience: public; discoverability: available and discoverable in the Store.
+- Complete the IARC age-rating questionnaire and choose the appropriate app category in Partner Center.
 - Accessibility declaration: leave unchecked for R0; the current build has not passed the
   required UI Automation and assistive-technology scenarios.
