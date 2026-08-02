@@ -314,6 +314,12 @@ end;
 procedure SpxApplyEditorFont(AFont: TFont; const AFamily: string; APoints: Integer);
 begin
   if AFont = nil then Exit;
+  { SynEdit paints through the Windows GDI text path. Leaving Quality at LCL's fqDefault
+    delegates the rasterizer choice to the inherited control/font, which made the otherwise
+    sharp editor look soft on this desktop. Keep the base face normal-weight; syntax emphasis
+    belongs to the highlighter attributes, not to the editor's inherited font. }
+  AFont.Quality := fqCleartype;
+  AFont.Style := [];
   if AFamily <> '' then AFont.Name := AFamily;
   if APoints > 0 then AFont.Size := APoints;
 end;
