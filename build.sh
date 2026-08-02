@@ -1,10 +1,8 @@
 #!/bin/sh
 # Build Studio's test binaries. Requires Free Pascal 3.2.2+ and the engine submodule.
 #
-# There is no application target yet: M0 is editor-core and is verified without a window
-# (spec §9). When M1 adds the Lazarus project this script grows a `lazbuild` step; until
-# then a green build means "the pinned engine and this layer compile and their assertions
-# hold", which is exactly what the hooks and CI gate.
+# The console suite verifies editor-core without a window. When Lazarus is present, the same
+# command also builds the Windows application, which is the artifact used by the MSIX step.
 set -e
 
 # Neither installer on Windows puts fpc on PATH, and dying with "fpc: command not found" next

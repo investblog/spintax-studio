@@ -10,12 +10,13 @@ this file is the copy an audit can.
 
 ## Requires attribution in the shipped application
 
-**Material Design Icons** — the four glyphs on the tool rail (diagnostics, variables, variants,
-the group editor).
+**Material Design Icons** — the font glyphs used by the application controls: diagnostics,
+variables, variants, the group editor, reroll, copy, preview modes, search/navigation and
+editor controls. The help and insert-example cells are drawn by the project and are not MDI
+glyphs.
 Apache License 2.0, © Pictogrammers and contributors. <https://pictogrammers.com/library/mdi/>
-Only the four glyphs listed in `scripts/make-icons.py` are used; they are rendered from the
-project's webfont into `assets/icons/` and embedded as `gui/SpxIcons.pas`. The font itself is
-not redistributed.
+The MDI cells listed in `scripts/make-icons.py` are rendered from the project's webfont into
+`assets/icons/` and embedded as `gui/SpxIcons.pas`. The font itself is not redistributed.
 
 **Twemoji** — the fourteen flags beside the interface languages.
 CC-BY 4.0, © 2020 Twitter, Inc and other contributors. <https://github.com/twitter/twemoji>

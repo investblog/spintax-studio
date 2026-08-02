@@ -12,11 +12,11 @@ MSIX product, and the three fields below are copied from its Product identity pa
 rejects an upload whose manifest disagrees with them, so they are transcribed rather than
 chosen, and the one thing to keep in step by hand is the VERSION, which comes from the file.
 
-THE TILES ARE BUILD OUTPUT, not committed artefacts. They are resized from the brand raster the
-application icon already uses, and they live only in the staging folder: unlike the icons and
-the help, they do not travel inside the executable, and a second copy in the tree would be a
-second thing to keep in step. Everything above 180 px is refused rather than upscaled -- the
-same rule make-appicon.py states, and for the same reason.
+THE TILES ARE BUILD OUTPUT, not committed artefacts. They are resized from the 310 px brand
+raster and live only in the staging folder: unlike the icons and the help, they do not travel
+inside the executable, and a second copy in the tree would be a second thing to keep in step.
+The 310 px source is a transparent render of the vendored vector mark, so the manifest's
+310x310 and 310x150 roles are real assets rather than upscaled 180 px icons.
 
 Pillow for the images, stdlib for the rest. Run by hand, like the other image generators; CI
 has neither Pillow nor the Windows SDK.
@@ -25,6 +25,7 @@ Usage:  python scripts/make-msix.py [--out DIR]
 
 Writes: build/msix/            -- the staged package (manifest + exe + Assets)
         build/spintax-studio.msix
+        build/spintax-studio.msixupload -- Store upload wrapper around the MSIX
 """
 import argparse
 import glob
@@ -34,11 +35,12 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 
 from PIL import Image
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCE = os.path.join(HERE, 'assets', 'brand', 'spintax-mark-180.png')
+SOURCE = os.path.join(HERE, 'assets', 'brand', 'spintax-mark-310.png')
 TEMPLATE = os.path.join(HERE, 'packaging', 'AppxManifest.xml.in')
 EXE = os.path.join(HERE, 'spintax-studio.exe')
 
@@ -75,8 +77,8 @@ TILES = [
 # The manifest also names three by role; they are the same pictures under the names it wants.
 ROLE_TILES = [
     ('SmallTile.png', 71, 71),
-    ('LargeTile.png', 180, 180),      # 310 would be an upscale: refused, see below
-    ('WideTile.png', 180, 88),
+    ('LargeTile.png', 310, 310),
+    ('WideTile.png', 310, 150),
 ]
 
 
@@ -109,6 +111,8 @@ def mark():
         im = im.convert('RGBA')
     if im.width != im.height:
         fail('the brand raster is %dx%d; a tile is drawn from a square mark' % (im.size))
+    if im.width < 310:
+        fail('the brand raster is %d px; Store tile roles need a 310 px source' % im.width)
     return im
 
 
@@ -169,6 +173,19 @@ def main():
         fail('MakeAppx refused the package (exit %d)' % run.returncode)
 
     print('%-30s %d bytes' % (os.path.relpath(package, HERE), os.path.getsize(package)))
+    # Partner Center accepts .msix directly, but Microsoft recommends the upload wrapper.
+    # Symbols are optional for this native FPC build; keeping the wrapper to one package makes
+    # it deterministic and leaves room for a future .appxsym without changing the MSIX itself.
+    upload = os.path.join(args.out, 'spintax-studio.msixupload')
+    if os.path.exists(upload):
+        os.remove(upload)
+    with zipfile.ZipFile(upload, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.write(package, os.path.basename(package))
+    with zipfile.ZipFile(upload, 'r') as archive:
+        names = archive.namelist()
+        if names != [os.path.basename(package)]:
+            fail('the upload wrapper contains %s; expected only the MSIX' % names)
+    print('%-30s %d bytes' % (os.path.relpath(upload, HERE), os.path.getsize(upload)))
     print('%s / %s / %s' % (IDENTITY_NAME, PUBLISHER, version))
     print('family %s, Store ID %s' % (PACKAGE_FAMILY, STORE_ID))
 

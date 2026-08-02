@@ -5,9 +5,8 @@ on:
     branches: ['**']
   pull_request:
 
-# No release job yet: there is no application to ship (spec §9 — M0 is editor-core, M1 is
-# the first window). When there is, it follows the engine's model — tag-driven, gated by
-# everything below, and only on an explicit command.
+# Release publishing is intentionally separate from CI. A release remains tag-driven and
+# requires an explicit submission; this workflow verifies the source and Windows build.
 
 jobs:
   build:
