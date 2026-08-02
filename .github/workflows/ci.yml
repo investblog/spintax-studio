@@ -63,7 +63,7 @@ jobs:
         run: |
           mkdir -p lib/.syntax-check
           for f in src/*.pas tests/*.dpr; do
-            fpc -Mdelphi -Sew -vw -vm4046 -Fusrc -Fugui -Fuengine/src -FUlib/.syntax-check -Cn "$f"
+            fpc -Mdelphi -Sew -vw -vm4046 -Fusrc -Fugui -Fugui/lang -Fuengine/src -FUlib/.syntax-check -Cn "$f"
           done
 
       # Studio's own assertions: the host contract (codepage, PostProcess) and the engine
