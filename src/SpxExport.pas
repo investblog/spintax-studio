@@ -539,7 +539,9 @@ var
     { Streams have no source filesystem mode. Without explicit Unix attributes, FPC's
       unzipper recreates the entry with mode 000 on macOS, making the workbook unreadable. }
     entry := zip.Entries.AddFileEntry(ms, AName);
-    entry.Attributes := UNIX_FILE or UNIX_DEFAULT;
+    { Keep only permission bits. FPC 3.2.2's Darwin unzipper passes the Unix type bits
+      straight to chmod, which can leave the extracted XML mode 000. }
+    entry.Attributes := UNIX_RUSR or UNIX_WUSR or UNIX_RGRP or UNIX_ROTH;
     {$ELSE}
     zip.Entries.AddFileEntry(ms, AName);
     {$ENDIF}
