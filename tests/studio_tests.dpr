@@ -28,6 +28,7 @@ uses
     on Unix fails at run time with "This binary has no thread support compiled in". The GUI
     entry point does the same; the suite needs it because it exercises the engine worker. }
   {$IFDEF UNIX}cthreads,{$ENDIF}
+  {$IFDEF DARWIN}BaseUnix,{$ENDIF}
   { zipper for reading an exported .xlsx back apart -- the writer is only worth as much as
     the check that opens what it wrote. }
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
@@ -6711,6 +6712,30 @@ begin
   RemoveDir(Dir);
 end;
 
+{$IFDEF DARWIN}
+{ FPC 3.2.2's Darwin unzipper reads the central-directory Unix attributes without
+  undoing the 16-bit shift made by its zipper. It extracts files as mode 000. The
+  export assertion is about archive contents, so normalize only this test tree. }
+procedure MakeTreeReadable(const Dir: string);
+var sr: TSearchRec; base: string;
+begin
+  if not DirectoryExists(Dir) then Exit;
+  base := IncludeTrailingPathDelimiter(Dir);
+  if FindFirst(base + '*', faAnyFile, sr) = 0 then
+  try
+    repeat
+      if (sr.Name = '.') or (sr.Name = '..') then Continue;
+      if (sr.Attr and faDirectory) <> 0 then
+        MakeTreeReadable(base + sr.Name)
+      else
+        FpChmod(base + sr.Name, 420);
+    until FindNext(sr) <> 0;
+  finally
+    FindClose(sr);
+  end;
+end;
+{$ENDIF}
+
 { ── 8e. writing a set out ─────────────────────────────────────────────────── }
 
 { An exported part, PARSED rather than searched. A substring check cannot tell a well-formed
@@ -6894,6 +6919,7 @@ begin
       unzip.OutputPath := InDir(dir, 'unzipped');
       CreateDir(unzip.OutputPath);
       unzip.UnZipAllFiles;
+      {$IFDEF DARWIN}MakeTreeReadable(unzip.OutputPath);{$ENDIF}
       ok := True;
     except
       { A zip that will not open is the one failure mode that needs no interpretation. }
@@ -6974,6 +7000,7 @@ begin
         unzip.FileName := path;
         unzip.OutputPath := InDir(dir, 'unzipped2');
         unzip.UnZipAllFiles;
+        {$IFDEF DARWIN}MakeTreeReadable(unzip.OutputPath);{$ENDIF}
       finally
         unzip.Free;
       end;
