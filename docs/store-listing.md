@@ -33,10 +33,10 @@ Captured from the English release executable at 1500x890, with no personal docum
 account information visible:
 
 1. [`assets/store/spintax-01-valid.png`](../assets/store/spintax-01-valid.png) — valid template and live page preview.
-2. [`assets/store/spintax-03-error.png`](../assets/store/spintax-03-error.png) — invalid template with the marked source location and diagnostic message.
-3. [`assets/store/spintax-04-variables.png`](../assets/store/spintax-04-variables.png) — definitions and rendered result.
-4. [`assets/store/spintax-05-variants.png`](../assets/store/spintax-05-variants.png) — generated variants with export controls.
-5. [`assets/store/spintax-06-help.png`](../assets/store/spintax-06-help.png) — built-in help open on a diagnostic article.
+2. [`assets/store/spintax-02-error.png`](../assets/store/spintax-02-error.png) — invalid template with the marked source location and diagnostic message.
+3. [`assets/store/spintax-03-variables.png`](../assets/store/spintax-03-variables.png) — definitions and rendered result.
+4. [`assets/store/spintax-04-variants.png`](../assets/store/spintax-04-variants.png) — generated variants with export controls.
+5. [`assets/store/spintax-05-help.png`](../assets/store/spintax-05-help.png) — built-in help open on a diagnostic article.
 
 Use the final Store logo assets supplied by the brand rather than a screenshot of the editor
 icon. Do not advertise AI, cloud models, telemetry, or an online service in the R0 listing.
