@@ -13,10 +13,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Windows is the product's platform, Linux is the cheap early signal. Both legs
-        # earn their keep: the two things most likely to break in this stack are the
-        # byte-string codepage and the line terminator, and they are platform-bound.
-        os: [ubuntu-latest, windows-latest]
+        # Windows is the product's platform; Linux and macOS are early signals for the
+        # engine/editor-core. All three earn their keep because byte strings, line endings
+        # and profile paths are platform-bound.
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -30,6 +30,10 @@ jobs:
       - name: Install Free Pascal (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y fpc
+
+      - name: Install Free Pascal (macOS)
+        if: runner.os == 'macOS'
+        run: brew install fpc
 
       - name: Install Free Pascal (Windows)
         if: runner.os == 'Windows'
@@ -87,11 +91,11 @@ jobs:
       # catch the other one -- the GENERATOR changed and nobody re-ran it, leaving a unit that
       # matches its input and no longer matches the script. Regenerating and diffing does.
       #
-      # Linux only, and it costs nothing there: make-help.py imports the standard library and
-      # nothing else, deliberately, because this runner has Python but no Pillow (the icon and
-      # flag generators do need Pillow, which is why their output is simply committed).
+      # Non-Windows only, and it costs nothing there: make-help.py imports the standard library
+      # and nothing else, deliberately, because these runners have Python but no Pillow (the
+      # icon and flag generators do need Pillow, which is why their output is simply committed).
       - name: The help unit is the generator's output
-        if: runner.os == 'Linux'
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           python3 scripts/make-help.py
@@ -104,7 +108,7 @@ jobs:
       #
       # It needs the submodule, because the engine's version comes from its tag.
       - name: The About unit is the generator's output
-        if: runner.os == 'Linux'
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           # THE TAGS FIRST. actions/checkout clones the submodule at depth 1, and when the pin
