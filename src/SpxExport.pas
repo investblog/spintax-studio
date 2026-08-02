@@ -524,7 +524,7 @@ var
 
   procedure AddPart(const AName, AContent: string);
   var ms: TMemoryStream;
-    {$IFDEF UNIX}
+    {$IF Defined(UNIX) or Defined(DARWIN)}
     entry: TZipFileEntry;
     {$ENDIF}
   begin
@@ -535,7 +535,7 @@ var
     streams.Add(ms);
     if Length(AContent) > 0 then ms.WriteBuffer(AContent[1], Length(AContent));
     ms.Position := 0;
-    {$IFDEF UNIX}
+    {$IF Defined(UNIX) or Defined(DARWIN)}
     { Streams have no source filesystem mode. Without explicit Unix attributes, FPC's
       unzipper recreates the entry with mode 000 on macOS, making the workbook unreadable. }
     entry := zip.Entries.AddFileEntry(ms, AName);
