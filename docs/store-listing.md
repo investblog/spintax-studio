@@ -11,21 +11,82 @@ describes the shipped product, not the repository or future AI work.
 
 ## Short description
 
-Write, validate, preview and export spintax templates on Windows.
+Write, validate, preview, generate and export spintax templates in a focused offline Windows editor.
 
 ## Description
 
-Spintax Studio is a native Windows editor for spintax templates.
+Spintax Studio is a native Windows workspace for writing controlled, reusable text templates.
 
-Write a template on the left and see the rendered result on the right. The editor highlights
-the language's brackets and syntax, while the diagnostics panel points to errors and warnings
-reported by the same engine used by the Spintax family of libraries.
+Write once. See what it means.
 
-Inspect variables and includes, edit groups, generate reproducible variants, and export the
-result. Built-in help explains the syntax and links a diagnostic to the relevant article.
+The editor and live preview sit side by side, so every change is visible immediately. Write
+your template on the left and inspect the rendered result on the right. Alternatives, groups,
+variables, directives and markup remain readable in the source while the preview shows the
+actual text produced by the engine.
 
-R0 is offline and does not require an account, a network connection, a model key or a runtime.
-The application does not include generative AI in this release.
+Fix problems at the source.
+
+Spintax Studio does not guess whether a template is valid. The same SPINTAX engine family used
+by the JavaScript, PHP and Python implementations validates the document and reports the exact
+problem. Bracket matching, syntax highlighting, line and column positions, and a dedicated
+diagnostics panel help you move from "something is wrong" to the place that needs attention.
+
+Learn the language while you work.
+
+Built-in help is part of the application, not a web page you have to find. Each topic explains
+the construct in plain language, shows a working example, and connects diagnostics to the
+relevant article. Select a valid example and see its result in the preview; select a repair
+and make the corrected form yours.
+
+See the structure behind the text.
+
+Inspect variable definitions and references, session values, includes and their resolution
+status. Open the group editor beside the caret when a nested choice needs attention. The panels
+are designed for understanding a template, not just producing another random output.
+
+Generate variants you can reproduce.
+
+Create a set of variants locally, review the generated text, and use a seed when you need the
+same result again. Export one variant per line as plain text or send a complete set to an XLSX
+workbook. The result is yours to inspect, edit and use in your own workflow.
+
+Built for local work.
+
+Spintax Studio works offline. R0 requires no account, cloud service, model key, telemetry,
+browser, Node.js, PHP or Python runtime. Your templates and exports stay on your computer;
+the application does not send them anywhere. It is a focused Windows editor for authors,
+localization workflows, SEO content teams and anyone who needs controlled variation instead
+of opaque paraphrasing.
+
+Spintax Studio is open source and built around the SPINTAX language and engine family. Learn
+the language and explore the engines at spintax.net.
+
+## Product features
+
+Partner Center displays these as bullets. Enter each line as a separate feature; do not include
+the line numbers or bullet characters in the Store form. Each feature stays below Microsoft's
+200-character limit.
+
+1. Native Windows spintax editor for writing and maintaining reusable text templates
+2. Two-pane live preview: edit the template on the left and inspect the rendered result on the right
+3. Spintax syntax highlighting with bracket matching for alternatives, groups, variables and directives
+4. Precise validation diagnostics with line and column positions for faster error fixing
+5. Built-in offline help with tested examples, correct forms and repair guidance
+6. Variable inspector for definitions, references, session values and undefined names
+7. Include inspector showing targets, positions and resolution status
+8. Visual group editor for alternatives and nested spintax groups
+9. Permutation tools for ordering alternatives and choosing controlled subsets
+10. Plural forms and language-aware content patterns for reusable templates
+11. Deterministic variant generation with seed support for repeatable results
+12. Variant list for reviewing generated outputs before export
+13. Plain text export with one generated variant per line
+14. XLSX spreadsheet export with XML-safe text and UTF-8 content
+15. Light and dark themes for a comfortable editing workspace
+16. Multilingual interface with 14 available UI languages
+17. Offline by design: no account, cloud service, API key, telemetry or runtime required
+18. Windows x64 desktop app with no browser, Node.js, PHP or Python runtime required
+19. Local-first workflow for SEO content, localization workflows and reusable product copy
+20. Open-source Apache-2.0 Studio built around the SPINTAX engine family
 
 ## Captured screenshots
 
