@@ -129,3 +129,21 @@ optional external authoring workflow above must remain clearly external to the a
 - Complete the IARC age-rating questionnaire and choose the appropriate app category in Partner Center.
 - Accessibility declaration: leave unchecked for R0; the current build has not passed the
   required UI Automation and assistive-technology scenarios.
+
+## Notes for Certification
+
+Paste the following text into the Partner Center certification notes field:
+
+```text
+Spintax Studio is an offline Windows x64 desktop editor for SPINTAX templates. No account, credentials, network connection, model key, subscription, or external service is required for testing.
+
+1. Install the MSIX package and launch Spintax Studio from the Start menu.
+2. The app opens with a built-in demo template. Edit the document in the left editor pane and confirm that the rendered preview updates in the right pane.
+3. Enter an invalid bracket or directive and confirm that the diagnostics panel reports the problem and its source position. Restore the document or restart the app when finished.
+4. Open Help from the toolbar or Help menu. Select a valid example and confirm that it renders in the preview. The example can also be inserted into the document with the help action.
+5. Open the Variables/Includes panel and the Variants panel from the left tool rail. Generate a small set of variants, optionally enable a seed, and select a generated result for preview.
+6. Use the export actions to save TXT and XLSX output to a local folder selected by the tester.
+7. Optionally use File > Open to load a local template file. This is not required because the built-in demo covers the main workflow.
+
+The application has no sign-in, license activation, telemetry, analytics, or backend. It performs no network requests during normal use. The About/site action only opens the user's browser after an explicit click and is not required to test the product. Optional AI authoring resources at spintax.net are external to the application and require no credentials in Studio.
+```
