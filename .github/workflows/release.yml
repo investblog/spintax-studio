@@ -1,0 +1,76 @@
+name: Package release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install Free Pascal
+        shell: pwsh
+        run: |
+          choco install freepascal -y --no-progress
+          "C:\tools\freepascal\bin\i386-win32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "C:\tools\freepascal\bin\i386-win32\fpcmkcfg.exe" `
+            -d "basepath=C:\tools\freepascal" `
+            -o "C:\tools\freepascal\bin\i386-win32\fpc.cfg"
+
+      - name: Install Lazarus
+        run: choco install lazarus -y --no-progress
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install packaging dependencies
+        run: python -m pip install Pillow
+
+      - name: Check tag and package version
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          $expected = "v$version"
+          if ($env:GITHUB_REF_NAME -ne $expected) {
+            throw "Tag $env:GITHUB_REF_NAME does not match VERSION $version; expected $expected"
+          }
+
+      - name: Build and run the release gate
+        shell: bash
+        run: |
+          export PATH="/c/lazarus:$PATH"
+          sh ./build.sh
+          ./tests/studio_tests
+          ./tests/studio_tests_checked
+
+      - name: Build the MSIX upload package
+        shell: bash
+        run: |
+          python scripts/make-msix.py
+          sha256sum build/spintax-studio.msix build/spintax-studio.msixupload > build/SHA256SUMS
+
+      - name: Create a draft GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            build/spintax-studio.msixupload `
+            build/spintax-studio.msix `
+            build/SHA256SUMS `
+            --repo $env:GITHUB_REPOSITORY `
+            --title "Spintax Studio $env:GITHUB_REF_NAME" `
+            --draft `
+            --verify-tag `
+            --generate-notes
