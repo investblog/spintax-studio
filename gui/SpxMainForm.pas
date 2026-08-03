@@ -799,7 +799,10 @@ begin
   FDiagSplit.Parent := FBody;
   FDiagSplit.Top := 10000;        { above the tab strip: see the note on FStatus }
   FDiagSplit.Align := alBottom;
-  FDiagSplit.MinSize := Px(Self, 80);       { neither the panes nor the strip may be dragged to nothing }
+  FDiagSplit.Height := Px(Self, 8);         { a five-pixel grip disappeared into the page frame }
+  FDiagSplit.Beveled := True;
+  FDiagSplit.MinSize := Px(Self, 120);      { keep both grids useful while the panel is resized }
+  FBottom.Constraints.MinHeight := Px(Self, 120);
 
   { The editor's SIDE, not the editor alone. The find bar goes above it, and both belong to
     the template rather than to the window -- a bar parented to the form would stretch across
