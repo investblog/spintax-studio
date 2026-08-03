@@ -37,17 +37,28 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
 
-## What R0 still needs (re-checked 2026-08-02)
+## Where R0 is (re-checked 2026-08-03)
+
+**Submitted to the Microsoft Store and in review.** Tag `v0.1.0.0`; the MSIX is built from the
+tagged commit by `.github/workflows/release.yml`, WACK passes against the exact candidate, and
+the record is in [`release-validation.md`](release-validation.md).
+
+**One fix is NOT in the reviewed package.** `0e512d3` makes the horizontal splitter visible and
+grabbable — it was five pixels and sank into the page frame — and it landed ten hours after the
+tag. Deferred to the next release by the owner's decision rather than by oversight. A tag is
+what ships, so `git log v0.1.0.0..HEAD` is the list of what a submitted build does not have.
+
+The block below is the state as it stood going in, kept because items 2 and 4 are still live:
 
 The product scope is closed: M0, M1, M2 and M3 are complete. The built-in help and About box
 are part of the application, and the current release is deliberately **Windows-only,
 offline-only and without generative AI**. The remaining work is submission preparation, not
 another product milestone:
 
-1. **Run the release gate on the exact candidate.** Build the checked and optimised suites,
-   build the x64 GUI, regenerate the About unit, run the full suite, pack MSIX, validate it,
-   install it in a clean test profile and exercise the primary path: open, edit, diagnose,
-   preview, generate, export, help and About.
+1. ~~Run the release gate on the exact candidate.~~ **Done 2026-08-03.** Suite green in both
+   binaries, x64 GUI built, MSIX packed and validated, WACK passed. Store artwork is rendered
+   into `assets/store/`, which is gitignored: Partner Center reads it, the build does not, and
+   `assets/brand/` is the tracked mark it derives from.
 2. **Finish the Partner Center draft.** Verify the reserved package identity against the
    generated manifest, choose the category and age rating, provide the Store listing from
    [`store-listing.md`](store-listing.md), add screenshots and publish the hosted privacy
