@@ -24,12 +24,17 @@ your template on the left and inspect the rendered result on the right. Alternat
 variables, directives and markup remain readable in the source while the preview shows the
 actual text produced by the engine.
 
-Fix problems at the source.
+From a brief to a working template.
 
-Spintax Studio does not guess whether a template is valid. The same SPINTAX engine family used
-by the JavaScript, PHP and Python implementations validates the document and reports the exact
-problem. Bracket matching, syntax highlighting, line and column positions, and a dedicated
-diagnostics panel help you move from "something is wrong" to the place that needs attention.
+You do not have to hand-write every variation. Visit spintax.net for the SPINTAX syntax
+reference, examples and AI authoring skills. Give ChatGPT, Claude or another model your brief
+and ask it to prepare a richly varied template instead of composing every alternative by hand.
+Bring that draft into Studio and take control: preview what it actually produces, find and fix
+syntax problems, refine the choices, and generate reproducible variants locally.
+
+R0 does not call an AI service, send your documents to the cloud or require a model key. AI is
+an optional way to create the first draft; Studio is the offline workspace where you inspect,
+correct and finish the template.
 
 Learn the language while you work.
 
@@ -107,7 +112,8 @@ the editor in both supported themes:
 10. `build/store-submission/spintax-10-dark-help.png` - the help topic tree and a rendered example while the editor is dark.
 
 Use the final Store logo assets supplied by the brand rather than a screenshot of the editor
-icon. Do not advertise AI, cloud models, telemetry, or an online service in the R0 listing.
+icon. Do not present AI, cloud models, telemetry or an online service as part of Studio R0; the
+optional external authoring workflow above must remain clearly external to the application.
 
 ## Submission notes
 
