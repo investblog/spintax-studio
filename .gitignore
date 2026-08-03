@@ -80,6 +80,14 @@ Win64/
 Debug/
 Release/
 
+# Store listing artwork -- tiles, promo, box and poster art, and the SVGs they render from.
+# Rendered for Partner Center rather than built into the product: nothing in the application
+# or in scripts/make-msix.py reads them, and the package takes its own tiles from
+# assets/brand/. They are large, binary, and regenerated whenever the listing changes, so a
+# source repo is the wrong place to keep them. The MARK they all derive from is tracked --
+# assets/brand/ -- which is the part a clone actually needs.
+assets/store/
+
 # Agent working state, not the product. It is instructions for the tooling that builds
 # the app, not something a reader of this repository needs. It stays ON DISK so a session
 # opened here still gets its charter; only the repository is kept free of it — the same
