@@ -94,7 +94,7 @@ the line numbers or bullet characters in the Store form. Each feature stays belo
 17. Offline by design: no account, cloud service, API key, telemetry or runtime required
 18. Windows x64 desktop app with no browser, Node.js, PHP or Python runtime required
 19. Local-first workflow for SEO content, localization workflows and reusable product copy
-20. Open-source Apache-2.0 Studio built around the SPINTAX engine family
+20. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 
 ## Captured screenshots
 
@@ -125,7 +125,11 @@ optional external authoring workflow above must remain clearly external to the a
 - Listing language: `English (United States)`; leave `What's new in this version` blank for the first submission.
 - Website: `https://spintax.studio/`.
 - Support contact: `https://301.st/contact`.
-- Additional license terms: leave blank to use Microsoft's Standard Application License Terms. The repository's MIT license remains the source license for the code.
+- Additional license terms: **must not be left blank.** The source license is
+  GPL-3.0-or-later (with the section 7 exception in `NOTICE.md`), and Microsoft's Standard
+  Application License Terms restrict copying and redistribution in ways the GPL does not allow to
+  be added. Enter the project's own terms, or a URL to `LICENSE`, so the package is conveyed under
+  the licence it is actually under. *(R0 shipped with this field blank — see the note at the end.)*
 - Privacy policy: hosted at [`https://spintax.studio/privacy.html`](https://spintax.studio/privacy.html)
   and entered in Partner Center.
 - Pricing: `Free`; audience: public; discoverability: available and discoverable in the Store.
@@ -173,3 +177,11 @@ code change:
 
 Both are deliberate-looking choices rather than errors, so they are recorded rather than
 "fixed"; decide them with the next submission.
+
+**The licence on the live page is out of date.** R0 was submitted while the repository said
+Apache-2.0, so feature bullet 20 on the published listing reads *"Open-source Apache-2.0 Studio"*
+and the "Additional license terms" field is blank, which puts the package under Microsoft's
+Standard Application License Terms. The project is GPL-3.0-or-later as of 2026-08-04. Both are
+Partner Center edits and neither needs a new package; make them with the next submission at the
+latest. The shipped `0.1.0.0` executable also carries `LegalCopyright="MIT"` in its version
+resource — that one does need a rebuild, and it is fixed in the tree.

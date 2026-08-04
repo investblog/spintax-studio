@@ -39,12 +39,14 @@ function SpxAboutObliged(AIndex: Integer): string;
 implementation
 
 const
-  ABOUT_LINE: array[0..47] of string = (
+  ABOUT_LINE: array[0..53] of string = (
     'REQUIRES ATTRIBUTION IN THE SHIPPED APPLICATION',
     '',
-    'Spintax Studio -- Apache License 2.0',
-    '  Apache License 2.0',
+    'Spintax Studio -- GNU General Public License v3.0 or later',
+    '  GNU General Public License v3.0 or later',
     '  Copyright (c) 2026 301.st. <https://301.st/>',
+    '  Additional permission under GPL v3 section 7 for the MPL-1.1 components it links (SynEdit and',
+    '  IPro); the grant is at the top of NOTICE.md.',
     '  SPINTAX language reference: <https://spintax.net/>',
     '',
     'Material Design Icons -- Apache License 2.0',
@@ -68,7 +70,8 @@ const
     'Free Pascal RTL and FCL -- modified LGPL (LGPL with the static-linking exception)',
     '  modified LGPL (LGPL with the static-linking exception).',
     '  The exception exists precisely so a statically linked executable may be distributed under its',
-    '  own terms; Studio is Apache-2.0 and no further obligation follows.',
+    '  own terms; Studio is GPL-3.0-or-later, which the LGPL permits combining with in any case, and no',
+    '  further obligation follows.',
     '',
     'Lazarus LCL -- modified LGPL',
     '  modified LGPL, same exception, same conclusion.',
@@ -81,7 +84,10 @@ const
     '  MPL 1.1 (the HTML preview; unmodified).',
     '  MPL 1.1 covers the files themselves: a change to either component''s source would have to be',
     '  published. We use both as they ship, so nothing here is ours to publish — if that ever stops',
-    '  being true, this line stops being true with it.',
+    '  being true, this line stops being true with it. MPL 1.1 does not combine with the GPL on its own,',
+    '  which is what the additional permission at the top of this file is for: SynEdit''s own headers',
+    '  offer "GPL Version 2 or later" as an alternative and would not need it, IPro''s offer nothing of',
+    '  the kind and do.',
     '',
     'THE ENGINE',
     '',
@@ -90,7 +96,8 @@ const
     '  (`engine/`, pinned by tag). Its notice is its own file, in its own repository.'
   );
 
-  ABOUT_LICENCE: array[0..5] of string = (
+  ABOUT_LICENCE: array[0..6] of string = (
+    'GNU General Public License v3.0 or later',
     'Apache License 2.0',
     'CC-BY 4.0',
     'modified LGPL (LGPL with the static-linking exception)',

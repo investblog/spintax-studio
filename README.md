@@ -1,7 +1,7 @@
 # Spintax Studio
 
 [![CI](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml)
-[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-green.svg)](LICENSE)
 [![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-Spintax%20Studio-0078D4)](https://apps.microsoft.com/detail/9mw3ch7b530p)
 
 A native Windows editor for spintax templates, in the shape of a translator: two panes,
@@ -76,5 +76,11 @@ Syntax reference: https://spintax.net
 
 ## License
 
-Spintax Studio is licensed under the [Apache License 2.0](LICENSE). The engine in `engine/`
-and the other family engines remain MIT-licensed under their own repositories and notices.
+Spintax Studio is licensed under the [GNU General Public License, version 3 or later](LICENSE),
+Copyright (c) 2026 301.st, **with an additional permission under GPL v3 section 7** for the
+MPL-1.1 components it links — SynEdit and TurboPower IPro. The grant, and why IPro needs it while
+SynEdit does not, are at the top of [NOTICE.md](NOTICE.md), which is also the file the
+application's About box is generated from.
+
+The engine in `engine/` and the other family engines remain MIT-licensed under their own
+repositories and notices; the engine is a submodule, not a copy, and nothing here relicenses it.

@@ -8,8 +8,9 @@
       <RevisionNr Value="0"/>
       <BuildNr Value="0"/>
       <StringTable CompanyName="spintax.net" FileDescription="Spintax Studio"
-        InternalName="spintax-studio" LegalCopyright="MIT" OriginalFilename="spintax-studio.exe"
-        ProductName="Spintax Studio" ProductVersion="0.1.0.0"/>
+        InternalName="spintax-studio" LegalCopyright="Copyright (C) 2026 301.st. GPL-3.0-or-later"
+        OriginalFilename="spintax-studio.exe" ProductName="Spintax Studio"
+        ProductVersion="0.1.0.0"/>
     </VersionInfo>
     <Version Value="12"/>
     <General>

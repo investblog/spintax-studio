@@ -110,7 +110,8 @@ def parse_notice():
     #
     # Longest first, so `modified LGPL (LGPL with the static-linking exception)` is not read as
     # the `modified LGPL` that is a prefix of it.
-    known = sorted(['Apache License 2.0', 'CC-BY 4.0', 'MPL 1.1',
+    known = sorted(['GNU General Public License v3.0 or later',
+                    'Apache License 2.0', 'CC-BY 4.0', 'MPL 1.1',
                     'modified LGPL (LGPL with the static-linking exception)',
                     'modified LGPL', 'MIT'], key=len, reverse=True)
     for group in groups:

@@ -1,8 +1,26 @@
 # Third-party notices
 
-Spintax Studio is licensed under the Apache License 2.0 (see [LICENSE](LICENSE)). It ships as one executable with
+Spintax Studio is licensed under the GNU General Public License, version 3 or later (see
+[LICENSE](LICENSE)), with the additional permission stated below. It ships as one executable with
 everything it needs inside it, so this file lists what that executable carries besides our own
 code, and what each licence asks of us in return.
+
+**The additional permission**, which is part of the licence of Spintax Studio's own code and
+travels with it:
+
+> **Additional permission under GNU GPL version 3 section 7.** As a special exception, the
+> copyright holder of Spintax Studio gives you permission to combine Spintax Studio with the
+> components covered by the Mozilla Public License 1.1 that this program links — SynEdit and
+> TurboPower Internet Professional (IPro) — and to convey the resulting work. You may keep those
+> components under the terms of the MPL 1.1; the terms of the GNU GPL version 3 continue to apply
+> to the rest of the work. If you modify this program, you may extend this exception to your
+> version, but you are not obliged to do so.
+
+The exception is needed because MPL 1.1 and the GPL are not compatible on their own. SynEdit
+offers "GPL Version 2 or later" as an alternative to the MPL in every file header and so needs no
+exception; **IPro does not** — the phrase "General Public License" appears nowhere in that
+component — and it is linked into the shipped executable for the HTML preview. Rather than carry a
+grant that covers one and not the other, this one names both.
 
 The project is developed by [301.st](https://301.st/); the SPINTAX language reference is at
 <https://spintax.net/>. Distributed derivatives must retain this notice.
@@ -13,8 +31,10 @@ this file is the copy an audit can.
 
 ## Requires attribution in the shipped application
 
-**Spintax Studio** — Apache License 2.0
+**Spintax Studio** — GNU General Public License v3.0 or later
 Copyright (c) 2026 301.st. <https://301.st/>
+Additional permission under GPL v3 section 7 for the MPL-1.1 components it links (SynEdit and
+IPro); the grant is at the top of NOTICE.md.
 SPINTAX language reference: <https://spintax.net/>
 
 **Material Design Icons** — the font glyphs used by the application controls: diagnostics,
@@ -35,7 +55,8 @@ disagree the choice is recorded, one line per language, in `scripts/make-flags.p
 
 **Free Pascal RTL and FCL** — modified LGPL (LGPL with the static-linking exception).
 The exception exists precisely so a statically linked executable may be distributed under its
-own terms; Studio is Apache-2.0 and no further obligation follows.
+own terms; Studio is GPL-3.0-or-later, which the LGPL permits combining with in any case, and no
+further obligation follows.
 
 **Lazarus LCL** — modified LGPL, same exception, same conclusion.
 <https://www.lazarus-ide.org/>
@@ -44,7 +65,10 @@ own terms; Studio is Apache-2.0 and no further obligation follows.
 **TurboPower Internet Professional (IPro)** — MPL 1.1 (the HTML preview; unmodified).
 MPL 1.1 covers the files themselves: a change to either component's source would have to be
 published. We use both as they ship, so nothing here is ours to publish — if that ever stops
-being true, this line stops being true with it.
+being true, this line stops being true with it. MPL 1.1 does not combine with the GPL on its own,
+which is what the additional permission at the top of this file is for: SynEdit's own headers
+offer "GPL Version 2 or later" as an alternative and would not need it, IPro's offer nothing of
+the kind and do.
 
 ## The engine
 

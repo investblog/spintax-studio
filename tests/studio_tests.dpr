@@ -4348,6 +4348,18 @@ begin
     Check('about/the resource carries the version the box shows', name_, SPX_VERSION);
     CheckTrue('about/and its string table repeats it',
               Pos('ProductVersion="' + SPX_VERSION + '"', body.Text) > 0);
+
+    { AND ITS COPYRIGHT FIELD NAMES A HOLDER, NOT A LICENCE. `LegalCopyright` is what Explorer's
+      Details tab shows, and the shipped 0.1.0.0 carried the bare word `MIT` there while LICENSE
+      said Apache-2.0 and the About box agreed with LICENSE: three answers about one product, and
+      the only one a user can see was the wrong one. The wording is not pinned -- the holder is,
+      against the About box, so a relicence cannot leave the executable behind again. }
+    at := Pos('LegalCopyright="', body.Text);
+    CheckTrue('about/the resource declares a copyright', at > 0);
+    name_ := Copy(body.Text, at + Length('LegalCopyright="'), 300);
+    name_ := Copy(name_, 1, Pos('"', name_) - 1);
+    CheckTrue('about/the copyright field names the holder [' + name_ + ']',
+              Pos('301.st', name_) > 0);
   finally
     body.Free;
   end;
