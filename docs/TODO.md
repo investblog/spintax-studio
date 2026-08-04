@@ -74,8 +74,10 @@ is a deliberate state and not a backlog of things anyone forgot.
    Standard Application License Terms — those restrict redistribution in ways the GPL does not
    permit adding. Enter the project's own terms, or a URL to `LICENSE`.
 
-Also due with that submission, from the notes further down: website and support URI on the
-listing (`spintax.net`, where the draft asked for `spintax.studio` and `301.st/contact`).
+**Not on the list, and not an oversight:** the listing's website and support URI both point at
+`spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
+decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store
+listing sends people to, and `spintax.net` is fully working. Leave it until that changes.
 
 The block below is the state as it stood going in, kept because item 4 is still live:
 

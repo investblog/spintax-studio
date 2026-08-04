@@ -123,8 +123,12 @@ optional external authoring workflow above must remain clearly external to the a
 - Package: `build/spintax-studio.msixupload`.
 - Architecture: `x64`; device family: `Windows.Desktop`.
 - Listing language: `English (United States)`; leave `What's new in this version` blank for the first submission.
-- Website: `https://spintax.studio/`.
-- Support contact: `https://301.st/contact`.
+- Website: `https://spintax.net` — **deliberate, decided 2026-08-04.** The draft asked for
+  `https://spintax.studio/`; that site is not ready to be the address a Store listing sends
+  people to, and `spintax.net` is fully working. Revisit when the studio site is.
+- Support contact: `https://spintax.net` — same decision. The draft asked for
+  `https://301.st/contact`; the listing therefore offers no direct contact route, which becomes
+  an obligation only when R1 ships live generative AI (spec §11).
 - Additional license terms: **must not be left blank.** The source license is
   GPL-3.0-or-later (with the section 7 exception in `NOTICE.md`), and Microsoft's Standard
   Application License Terms restrict copying and redistribution in ways the GPL does not allow to
@@ -167,16 +171,12 @@ marked otherwise:
 - Age rating ESRB *Everyone*; the accessibility declaration is off (`Accessible: false`).
 - Package family `301.SpintaxStudio_jnd8jmenjzsm0`, ≈ 2.54 MB.
 
-**Two fields differ from the draft above**, and changing them is a Partner Center edit, not a
-code change:
-
-- Website is `https://spintax.net`, where the draft asked for `https://spintax.studio/` — the
-  product's own site, which is live and already links back to this listing.
-- Support URI is `https://spintax.net`, where the draft asked for `https://301.st/contact` —
-  the listing therefore offers no direct contact route for a problem report.
-
-Both are deliberate-looking choices rather than errors, so they are recorded rather than
-"fixed"; decide them with the next submission.
+**Two fields differ from what the draft first asked for** — website and support URI are both
+`https://spintax.net`, where it named `https://spintax.studio/` and `https://301.st/contact`.
+Measured from the storefront rather than assumed, and then **kept**: the owner's decision of
+2026-08-04 is that `spintax.studio` is not ready to be the address a Store listing sends people
+to, while `spintax.net` works completely. The submission notes above now say so, so the next
+submission does not "correct" them back.
 
 **The licence on the live page is out of date.** R0 was submitted while the repository said
 Apache-2.0, so feature bullet 20 on the published listing reads *"Open-source Apache-2.0 Studio"*
