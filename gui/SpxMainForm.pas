@@ -295,6 +295,8 @@ type
     { Where the mark is, measured from the BAR rather than remembered from the last paint, so
       the pixels drawn and the pixels clicked cannot come from two different numbers. }
     function CompanyRect: TRect;
+    function CompanyGlyphRect: TRect;
+    function CraftedWidth: Integer;
     procedure LayoutStatus;
     procedure StatusDrawPanel(AStatusBar: TStatusBar; APanel: TStatusPanel;
       const ARect: TRect);
@@ -476,6 +478,12 @@ const
     makes Studio. Same two forms, and the host is a domain, so it is not translated either. }
   SPX_COMPANY_HOST = '301.st';
   SPX_COMPANY_URL = 'https://301.st';
+  { THE ONE PIECE OF INTERFACE TEXT THAT IS NOT TRANSLATED, and deliberately: it is a
+    signature rather than a sentence -- the line under a picture that says who made it -- and
+    it is read as part of the mark beside it. Everything the window SAYS goes through
+    SpxStrIds and fourteen files; this is nearer to SpxLangName, which is not translated
+    either because a name is the same word in every language. Owner's decision, 2026-08-04. }
+  SPX_CRAFTED = 'Crafted at';
 
 type
   { The markup manager is protected on TSynEditBase; a descendant declared here reaches it
@@ -2368,14 +2376,46 @@ begin
   FCoImgs := SpxImagesFrom(Self, FCoImgs, p, len, w, h, 1, ink);
 end;
 
+(* THE SIGNATURE'S WIDTH, from an offscreen canvas rather than from a control. A control does
+   not know the width of text it has not been given yet -- the window has paid for that lesson
+   with a label whose Width described the PREVIOUS caption -- and the status bar's own Canvas is
+   only dependably alive inside its paint. A bitmap with the bar's font answers at any time. *)
+function TSpxMainForm.CraftedWidth: Integer;
+var bmp: TBitmap;
+begin
+  if FStatus = nil then Exit(0);
+  bmp := TBitmap.Create;
+  try
+    bmp.Canvas.Font.Assign(FStatus.Font);
+    Result := bmp.Canvas.TextWidth(SPX_CRAFTED);
+  finally
+    bmp.Free;
+  end;
+end;
+
+{ The WHOLE link -- the signature, a gap, and the mark -- because that is what a reader aims
+  at. One rectangle, computed from the bar, used by the paint and by the hit test: two
+  rectangles is how the two stop agreeing. Full bar height, so the target is comfortable
+  rather than sixteen pixels tall. }
 function TSpxMainForm.CompanyRect: TRect;
-var m: Integer;
 begin
   Result := Rect(0, 0, 0, 0);
   if (FStatus = nil) or (FCoImgs = nil) then Exit;
-  m := Px(Self, 6);
-  Result.Right := FStatus.ClientWidth - m;
-  Result.Left := Result.Right - FCoImgs.Width;
+  Result.Right := FStatus.ClientWidth - Px(Self, 6);
+  Result.Left := Result.Right - FCoImgs.Width - Px(Self, 5) - CraftedWidth;
+  Result.Top := 0;
+  Result.Bottom := FStatus.ClientHeight;
+end;
+
+{ Where the mark sits inside that: hard right, and centred on the bar. }
+function TSpxMainForm.CompanyGlyphRect: TRect;
+var r: TRect;
+begin
+  Result := Rect(0, 0, 0, 0);
+  if FCoImgs = nil then Exit;
+  r := CompanyRect;
+  Result.Right := r.Right;
+  Result.Left := r.Right - FCoImgs.Width;
   Result.Top := (FStatus.ClientHeight - FCoImgs.Height) div 2;
   Result.Bottom := Result.Top + FCoImgs.Height;
 end;
@@ -2387,7 +2427,8 @@ var take: Integer;
 begin
   if (FStatus = nil) or (FStatus.Panels.Count < 2) then Exit;
   EnsureCompanyMark;
-  if FCoImgs = nil then take := 0 else take := FCoImgs.Width + Px(Self, 12);
+  if FCoImgs = nil then take := 0
+  else take := FCoImgs.Width + Px(Self, 5) + CraftedWidth + Px(Self, 12);
   take := FStatus.ClientWidth - take;
   if take < 0 then take := 0;
   FStatus.Panels[0].Width := take;
@@ -2395,14 +2436,27 @@ end;
 
 procedure TSpxMainForm.StatusDrawPanel(AStatusBar: TStatusBar; APanel: TStatusPanel;
   const ARect: TRect);
-var r: TRect;
+var whole, g: TRect; y: Integer;
 begin
   if (APanel = nil) or (APanel.Index <> 1) or (FCoImgs = nil) then Exit;
-  { ARect is the panel's; the mark's own rectangle is measured from the bar so the hit test can
-    ask for it too. It lies inside ARect as long as LayoutStatus has left the room, and that is
-    the only thing the two have to agree about. }
-  r := CompanyRect;
-  FCoImgs.Draw(AStatusBar.Canvas, r.Left, r.Top, 0);
+  { ARect is the panel's; the link's own rectangle is measured from the bar so the hit test can
+    ask for the same one. It lies inside ARect as long as LayoutStatus has left the room, and
+    that is the only thing the two have to agree about. }
+  whole := CompanyRect;
+  g := CompanyGlyphRect;
+  with AStatusBar.Canvas do
+  begin
+    Font.Assign(AStatusBar.Font);
+    { A SIGNATURE IS QUIETER THAN A STATUS. clGrayText is the system's own word for secondary,
+      so it stays legible in a contrast theme where a hand-picked grey would not -- and the
+      sentence at the other end of the bar keeps the full-strength ink, which is what says
+      which of the two is the message. }
+    Font.Color := clGrayText;
+    Brush.Style := bsClear;
+    y := (AStatusBar.ClientHeight - TextHeight(SPX_CRAFTED)) div 2;
+    TextOut(whole.Left, y, SPX_CRAFTED);
+  end;
+  FCoImgs.Draw(AStatusBar.Canvas, g.Left, g.Top, 0);
 end;
 
 procedure TSpxMainForm.StatusResized(Sender: TObject);
