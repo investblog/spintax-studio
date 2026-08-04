@@ -35,7 +35,7 @@ uses
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
-  SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxSevIcons;
+  SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxCompanyMark, SpxSevIcons;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
   SpxStudio in '..\src\SpxStudio.pas',
@@ -56,6 +56,7 @@ uses
   SpxHelpNav in '..\gui\SpxHelpNav.pas',
   SpxAbout in '..\gui\SpxAbout.pas',
   SpxBrandMark in '..\gui\SpxBrandMark.pas',
+  SpxCompanyMark in '..\gui\SpxCompanyMark.pas',
   SpxSevIcons in '..\gui\SpxSevIcons.pas';
   {$ENDIF}
 
@@ -4189,8 +4190,8 @@ end;
    build. Read from the SOURCE rather than from a list kept beside it, because a list would be
    the thing that goes stale.
 
-   The single outbound action is counted too. The policy says "exactly one place", and names it;
-   a second OpenURL would make that sentence false while every other check stayed green. *)
+   The outbound actions are counted too. The policy says how many places there are and names
+   each; another OpenURL would make that sentence false while every other check stayed green. *)
 procedure TestOfflineClaim;
 const
   { Unit names that mean a socket is being opened. Whole words, matched inside a uses clause
@@ -4246,6 +4247,11 @@ begin
   CheckTrue('offline/the privacy policy is where the Store will point', Length(text_) > 400);
   CheckTrue('offline/and it still promises nothing is collected',
             Pos('collect, transmit or store any', text_) > 0);
+  { AND NAMES EVERY MARK THAT LEAVES. The count below would go on passing if a link were moved
+    from one brand to another, so the page is asked for both by name -- a reader checking the
+    policy against the window has to find what they clicked in it. }
+  CheckTrue('offline/the policy names the spintax.net mark', Pos('spintax.net', text_) > 0);
+  CheckTrue('offline/the policy names the 301.st mark', Pos('301.st', text_) > 0);
 
   dirs[0] := 'src';
   dirs[1] := 'gui';
@@ -4284,9 +4290,12 @@ begin
       FindClose(rec);
     end;
   end;
-  { EXACTLY ONE, because the policy says so in as many words. A second one is not a defect in
-    itself -- it is a sentence in a published document becoming false. }
-  Check('offline/exactly one place hands a URL to the shell', IntToStr(opens), '1');
+  { EXACTLY TWO, because the policy says so in as many words -- the spintax.net ribbon on the
+    rail and the 301.st mark in the status bar. A third is not a defect in itself; it is a
+    sentence in a published document becoming false, which is why this number moves only
+    together with the page. It read one until 2026-08-04, and the count is what forced the page
+    to be edited when the second link was added rather than after somebody noticed. }
+  Check('offline/exactly two places hand a URL to the shell', IntToStr(opens), '2');
   { Belt and braces: nothing in the product opens a process either. }
   stop := 0;
   for d := 0 to High(dirs) do
@@ -4495,6 +4504,70 @@ begin
     if (i mod 25) = 0 then
       CheckTrue(Format('brand/a frame fits the rail at %d%%', [i]),
                 SpxMarkPickWidth(Round(36 * i / 100)) <= Round(36 * i / 100));
+end;
+
+(* THE COMPANY MARK, held the same way and for the same reason -- with the axes swapped. This
+   one hangs in a status bar, whose HEIGHT the system font decides, so a frame is named by its
+   height and the width follows. Everything below is TestBrandMark's argument read in the other
+   direction, and it is written out rather than shared because the two differ in exactly the
+   thing a shared helper would have had to be told. *)
+procedure TestCompanyMark;
+var i, w, h, len, wanted, prevH: Integer; p: Pointer; ratio, srcRatio: Double;
+begin
+  CheckTrue('company/there are frames', Length(SPX_CO_HEIGHTS) > 0);
+
+  prevH := 0;
+  for i := Low(SPX_CO_HEIGHTS) to High(SPX_CO_HEIGHTS) do
+  begin
+    CheckTrue(Format('company/height %d comes after %d', [SPX_CO_HEIGHTS[i], prevH]),
+              SPX_CO_HEIGHTS[i] > prevH);
+    prevH := SPX_CO_HEIGHTS[i];
+  end;
+
+  { Near-square, which is what says the vendored render is the 301 mark and not the ribbon --
+    the two generators write the same shape of unit and a swapped source would otherwise ship. }
+  srcRatio := SpxCompanyWidth(SPX_CO_HEIGHTS[High(SPX_CO_HEIGHTS)]) /
+              SPX_CO_HEIGHTS[High(SPX_CO_HEIGHTS)];
+  CheckTrue(Format('company/the mark is near-square, not the ribbon [%.3f]', [srcRatio]),
+            (srcRatio > 0.9) and (srcRatio < 1.3));
+
+  for i := Low(SPX_CO_HEIGHTS) to High(SPX_CO_HEIGHTS) do
+  begin
+    h := SPX_CO_HEIGHTS[i];
+    w := SpxCompanyWidth(h);
+    CheckTrue(Format('company/%d has a width', [h]), w > 0);
+    p := SpxCompanyPng(h, len);
+    CheckTrue(Format('company/%d is a png', [h]),
+              (p <> nil) and (len > 8) and (PByte(p)[0] = $89) and (PByte(p)[1] = Ord('P')));
+    { The bytes' OWN account of themselves, against the table. }
+    Check(Format('company/%d is %d px wide', [h, w]), IntToStr(PngWidth(p, len)), IntToStr(w));
+    Check(Format('company/%d is %d px tall', [h, h]), IntToStr(PngHeight(p, len)), IntToStr(h));
+    ratio := w / h;
+    CheckTrue(Format('company/%d keeps the aspect [%.3f vs %.3f]', [h, ratio, srcRatio]),
+              Abs(ratio - srcRatio) < 0.15);
+  end;
+
+  p := SpxCompanyPng(SPX_CO_HEIGHTS[High(SPX_CO_HEIGHTS)] + 1, len);
+  CheckTrue('company/an unknown height has no frame', (p = nil) and (len = 0));
+  Check('company/and no width either',
+        IntToStr(SpxCompanyWidth(SPX_CO_HEIGHTS[High(SPX_CO_HEIGHTS)] + 1)), '0');
+
+  { Never TALLER than asked for: the bar's height is not negotiable, and one pixel proud of it
+    is a clipped mark. }
+  for wanted := SPX_CO_HEIGHTS[Low(SPX_CO_HEIGHTS)] to 100 do
+    if SpxCompanyPickHeight(wanted) > wanted then
+      Check(Format('company/the frame fits a %dpx bar', [wanted]),
+            IntToStr(SpxCompanyPickHeight(wanted)), IntToStr(wanted));
+  Check('company/under the floor gets the shortest frame',
+        IntToStr(SpxCompanyPickHeight(1)), IntToStr(SPX_CO_HEIGHTS[Low(SPX_CO_HEIGHTS)]));
+
+  { A status bar is about 23 px at 100% and scales with the system font; the window asks for
+    that less 7 px of air. Every scaling Windows offers has a frame for it. }
+  for i := 100 to 200 do
+    if (i mod 25) = 0 then
+      CheckTrue(Format('company/a frame fits the bar at %d%%', [i]),
+                SpxCompanyPickHeight(Round(23 * i / 100) - Round(7 * i / 100)) <=
+                Round(23 * i / 100) - Round(7 * i / 100));
 end;
 
 procedure TestHelpUnit;
@@ -7195,6 +7268,7 @@ begin
   TestOfflineClaim;
   TestAbout;
   TestBrandMark;
+  TestCompanyMark;
   TestHelpUnit;
   TestSessionValues;
   TestFind;

@@ -73,6 +73,17 @@ is a deliberate state and not a backlog of things anyone forgot.
 4. **Listing, "Additional license terms"** is blank, which conveys the package under Microsoft's
    Standard Application License Terms — those restrict redistribution in ways the GPL does not
    permit adding. Enter the project's own terms, or a URL to `LICENSE`.
+5. **The 301ST mark in the status bar**, done 2026-08-04 — a link to <https://301.st> at the
+   right end, opposite the spintax.net ribbon on the rail: the company in one corner, the
+   language and engine family in the other. The glyph is generated into the executable by
+   `scripts/make-companymark.py` from `assets/brand/301.svg`, sliced to the system ink because
+   the status bar is the one strip the theme never touches.
+
+   **It makes the product's outbound actions two, so the privacy policy changed with it** —
+   `docs/privacy.md` now names both marks, and the suite's count moved from one to two in the
+   same commit, which is what the count is for. The hosted copy at
+   <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
+   Microsoft's own snapshot of that text updates only with the submission.
 
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's

@@ -23,11 +23,12 @@ application, and we have no way to find out from it.
 Nothing the application sends. Every part of it — the editor, validation, rendering, the
 variant generator, export and the built-in help — works with no network connection at all.
 
-There is exactly one place where the application reaches outside itself, and it does not
-transmit anything when it does: clicking the **spintax.net** mark at the bottom of the tool
-rail asks Windows to open that address in whatever browser you use. That is a request your
-browser makes, under whatever privacy terms your browser and that website carry; the
-application makes no request of its own and sends nothing with it.
+There are exactly two places where the application reaches outside itself, and neither
+transmits anything when it does: clicking the **spintax.net** mark at the bottom of the tool
+rail, or the **301.st** mark at the right end of the status bar, asks Windows to open that
+address in whatever browser you use. That is a request your browser makes, under whatever
+privacy terms your browser and that website carry; the application makes no request of its own
+and sends nothing with it.
 
 ## What is stored, and where
 

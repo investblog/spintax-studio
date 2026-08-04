@@ -26,7 +26,7 @@ uses
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
-  SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented,
+  SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented, SpxCompanyMark,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
@@ -193,6 +193,11 @@ type
     FWarnMarkup: TSpxDiagMarkup;
     FPreview: TSpxPreviewPane;
     FStatus: TStatusBar;
+    { The company mark that sits at the right end of the status bar, and the ink it was last
+      sliced with -- part of the cache key for the reason EnsureSmallIcons gives: a desktop can
+      change its colours without changing its scaling. }
+    FCoImgs: TImageList;
+    FCoInk: TColor;
     FDebounce: TTimer;
     FEngine: TSpxEngineThread;
     FNextId: Int64;
@@ -286,6 +291,21 @@ type
     procedure BuildMenu;
     procedure EnsureFlags;
     procedure EnsureSmallIcons;
+    procedure EnsureCompanyMark;
+    { Where the mark is, measured from the BAR rather than remembered from the last paint, so
+      the pixels drawn and the pixels clicked cannot come from two different numbers. }
+    function CompanyRect: TRect;
+    procedure LayoutStatus;
+    procedure StatusDrawPanel(AStatusBar: TStatusBar; APanel: TStatusPanel;
+      const ARect: TRect);
+    procedure StatusResized(Sender: TObject);
+    procedure StatusMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure StatusMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer);
+    procedure CompanyClicked;
+    { The one place the status text is written, because there is now more than one panel and
+      the text is no longer the whole bar. }
+    procedure SetStatusText(const AText: string);
     procedure ShowFindBar;
     procedure HideFindBar;
     procedure FindTextChanged(Sender: TObject);
@@ -450,6 +470,12 @@ const
     same word in every one of the fourteen languages. The URL is what the shell is handed. }
   SPX_SITE_HOST = 'spintax.net';
   SPX_SITE_URL = 'https://spintax.net';
+
+  { The company, which is a different thing from the brand above and sits in the opposite
+    corner for that reason: spintax.net is the language and the engine family, 301ST is who
+    makes Studio. Same two forms, and the host is a domain, so it is not translated either. }
+  SPX_COMPANY_HOST = '301.st';
+  SPX_COMPANY_URL = 'https://301.st';
 
 type
   { The markup manager is protected on TSynEditBase; a descendant declared here reaches it
@@ -724,8 +750,30 @@ begin
   FStatus := TStatusBar.Create(Self);
   FStatus.Parent := FBody;
   FStatus.Top := 30000;
-  FStatus.SimplePanel := True;
-  FStatus.SimpleText := Tr(sStatusReady);
+  (* TWO PANELS RATHER THAN THE SIMPLE ONE, because the bar now carries a link as well as a
+     sentence and the link has to have somewhere the text cannot run into. The second panel is
+     owner-drawn: a status bar is a NATIVE control, so a TSpeedButton parented to it -- which is
+     what the rail's mark is -- would be a TGraphicControl whose parent never paints it. The
+     glyph goes on through the OS's own draw path instead, which is the one that works here.
+
+     AND THE SIZE GRIP GOES. It occupies exactly the corner the mark was asked for, and the
+     window is still resizable from all four borders without it. *)
+  FStatus.SimplePanel := False;
+  FStatus.SizeGrip := False;
+  FStatus.Panels.Add;                { [0] the sentence }
+  FStatus.Panels.Add;                { [1] the mark, right-aligned inside it }
+  { NEITHER PANEL WEARS A BEVEL. A bar with one simple panel had no divider, and two bevelled
+    ones drew a sunken cell around the mark -- measured off a photograph, a grey rule two pixels
+    to its left, which reads as a cell rather than as a link. pbNone keeps the strip looking the
+    way it looked before it had a second thing in it. }
+  FStatus.Panels[0].Bevel := pbNone;
+  FStatus.Panels[1].Bevel := pbNone;
+  FStatus.Panels[1].Style := psOwnerDraw;
+  FStatus.OnDrawPanel := @StatusDrawPanel;
+  FStatus.OnResize := @StatusResized;
+  FStatus.OnMouseMove := @StatusMouseMove;
+  FStatus.OnMouseUp := @StatusMouseUp;
+  SetStatusText(Tr(sStatusReady));
 
   { The bottom strip, created before the two panes so it owns that space and they divide
     what is left. Two tabs rather than two more panels: the window is already a two-pane
@@ -2250,6 +2298,9 @@ begin
   EnsureFlags;
   EnsureSmallIcons;
   EnsureSevIcons;
+  { The bar's height follows the system font, which follows the scaling, so the mark is re-picked
+    and the sentence's panel re-measured against the new one. }
+  LayoutStatus;
   if FRail <> nil then FRail.Rescale;
   { The switch's width is its captions', and a caption's width is the display's. }
   LayoutTopStrip;
@@ -2287,6 +2338,109 @@ begin
   FIconInk := ink;
   p := SpxIconStrip(size_, len);
   FSmallIcons := SpxImagesFrom(Self, FSmallIcons, p, len, size_, size_, SPX_ICON_COUNT, ink);
+end;
+
+(* THE COMPANY MARK, at the height the bar leaves it. A status bar's height comes down from the
+   system font and is not ours to set, so the glyph is picked to fit what is there rather than
+   the other way round -- which is why SpxCompanyMark names its frames by height where the
+   rail's ribbon names them by width.
+
+   THE INK IS THE SYSTEM'S, always, and not only under high contrast the way the rail's tools
+   are. The rail draws on chrome this window paints and can therefore rely on what it painted;
+   the status bar is the one strip the theme never touches, so it wears the desktop's colours
+   and a mark on it has to wear them too. Same cache key as the tools: height AND ink, because
+   a desktop can change its colours without changing its scaling. *)
+procedure TSpxMainForm.EnsureCompanyMark;
+var h, w, len: Integer; p: Pointer; ink: TColor;
+begin
+  if FStatus = nil then Exit;
+  { Air above and below, so the glyph is a mark in a bar and not a bar-height block. }
+  h := SpxCompanyPickHeight(FStatus.ClientHeight - Px(Self, 7));
+  w := SpxCompanyWidth(h);
+  { A height with no frame is not a height to build from -- the same guard, and for the same
+    reason, as the rail's BuildBrand. }
+  if w = 0 then Exit;
+  ink := ColorToRGB(clBtnText);
+  if (FCoImgs <> nil) and (FCoImgs.Height = h) and (FCoInk = ink) then Exit;
+  FCoInk := ink;
+  p := SpxCompanyPng(h, len);
+  if p = nil then Exit;
+  FCoImgs := SpxImagesFrom(Self, FCoImgs, p, len, w, h, 1, ink);
+end;
+
+function TSpxMainForm.CompanyRect: TRect;
+var m: Integer;
+begin
+  Result := Rect(0, 0, 0, 0);
+  if (FStatus = nil) or (FCoImgs = nil) then Exit;
+  m := Px(Self, 6);
+  Result.Right := FStatus.ClientWidth - m;
+  Result.Left := Result.Right - FCoImgs.Width;
+  Result.Top := (FStatus.ClientHeight - FCoImgs.Height) div 2;
+  Result.Bottom := Result.Top + FCoImgs.Height;
+end;
+
+{ The sentence gets everything the mark does not. Panel widths, not control bounds: nothing
+  here re-enters the form's layout, which is what makes this safe to call from a resize. }
+procedure TSpxMainForm.LayoutStatus;
+var take: Integer;
+begin
+  if (FStatus = nil) or (FStatus.Panels.Count < 2) then Exit;
+  EnsureCompanyMark;
+  if FCoImgs = nil then take := 0 else take := FCoImgs.Width + Px(Self, 12);
+  take := FStatus.ClientWidth - take;
+  if take < 0 then take := 0;
+  FStatus.Panels[0].Width := take;
+end;
+
+procedure TSpxMainForm.StatusDrawPanel(AStatusBar: TStatusBar; APanel: TStatusPanel;
+  const ARect: TRect);
+var r: TRect;
+begin
+  if (APanel = nil) or (APanel.Index <> 1) or (FCoImgs = nil) then Exit;
+  { ARect is the panel's; the mark's own rectangle is measured from the bar so the hit test can
+    ask for it too. It lies inside ARect as long as LayoutStatus has left the room, and that is
+    the only thing the two have to agree about. }
+  r := CompanyRect;
+  FCoImgs.Draw(AStatusBar.Canvas, r.Left, r.Top, 0);
+end;
+
+procedure TSpxMainForm.StatusResized(Sender: TObject);
+begin
+  LayoutStatus;
+end;
+
+{ A hand and a hint over the mark, and neither anywhere else on the bar: the rest of it is a
+  sentence, and a sentence that offers a hand is a sentence that lies about being clickable. }
+procedure TSpxMainForm.StatusMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var over: Boolean;
+begin
+  if FStatus = nil then Exit;
+  over := PtInRect(CompanyRect, Point(X, Y));
+  if over then FStatus.Cursor := crHandPoint else FStatus.Cursor := crDefault;
+  FStatus.Hint := SPX_COMPANY_HOST;
+  FStatus.ShowHint := over;
+end;
+
+procedure TSpxMainForm.StatusMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if (Button = mbLeft) and PtInRect(CompanyRect, Point(X, Y)) then CompanyClicked;
+end;
+
+procedure TSpxMainForm.CompanyClicked;
+begin
+  { THE SECOND PLACE THIS PRODUCT REACHES OUTSIDE ITSELF, and like the first it does not reach:
+    it hands a URL to the shell. BrandClicked says the rest, and docs/privacy.md counts both --
+    the suite holds that count to the sentence in the policy, so a third one cannot appear
+    without the page being edited to match. }
+  OpenURL(SPX_COMPANY_URL);
+end;
+
+procedure TSpxMainForm.SetStatusText(const AText: string);
+begin
+  if (FStatus = nil) or (FStatus.Panels.Count < 1) then Exit;
+  FStatus.Panels[0].Text := AText;
 end;
 
 (* THE LEVEL, AS A GLYPH BESIDE THE WORD. The backlog asked for the rows to be COLOURED, and
@@ -2700,7 +2854,7 @@ begin
     { The panel puts the row back; this says why, in the one place the window talks to the user
       without a dialog. The next render overwrites it with the verdict, which is the right
       lifetime for a message about an edit that did not happen. }
-    FStatus.SimpleText := Tr(sDefValueRefused);
+    SetStatusText(Tr(sDefValueRefused));
     Exit;
   end;
   FEditor.BeginUndoBlock;
@@ -3638,6 +3792,12 @@ begin
     unreadable, and the page has to be fed again for a colour to reach it: IPro copies these
     into the document at load (iphtml.pas:6178-6204), so they are load-time rather than live. }
   if FHelp <> nil then FHelp.SetLinkColor(SpxHelpLink(hc));
+  { The bar is the one strip the theme does not touch, so the mark on it follows the DESKTOP
+    rather than the palette above -- and this is the moment the desktop is known to have
+    changed. Re-slicing only when the ink actually moved is EnsureCompanyMark's business; the
+    repaint is asked for here because a refilled list does not invalidate the native bar. }
+  EnsureCompanyMark;
+  if FStatus <> nil then FStatus.Invalidate;
   FEditor.Invalidate;
 end;
 
@@ -4256,14 +4416,14 @@ begin
   if FStatus = nil then Exit;
   if not FHaveResult then
   begin
-    FStatus.SimpleText := Tr(sStatusReady);
+    SetStatusText(Tr(sStatusReady));
     Exit;
   end;
   if FResErrors > 0 then s := Format(Tr(sStatusErrors), [FResErrors])
   else if FResWarnings > 0 then s := Format(Tr(sStatusWithWarnings), [FResWarnings])
   else s := Tr(sStatusValid);
   if FResNotes > 0 then s := s + Format(Tr(sStatusNotes), [FResNotes]);
-  FStatus.SimpleText := Format(Tr(sStatusElapsed), [s, FResElapsed]);
+  SetStatusText(Format(Tr(sStatusElapsed), [s, FResElapsed]));
 end;
 
 { Idempotent on purpose. Closing the MAIN form neither hides nor frees it -- LCL only calls
