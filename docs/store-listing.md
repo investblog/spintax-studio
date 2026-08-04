@@ -1,10 +1,13 @@
 ---
 type: release-artifact
-status: draft
+status: published
 product: spintax-studio
 ---
 
-# Microsoft Store listing draft
+# Microsoft Store listing
+
+**Live since 2026-08-04:** <https://apps.microsoft.com/detail/9mw3ch7b530p>. This file is the
+copy that was submitted; what the live page actually carries is recorded at the end.
 
 This is the R0 listing copy. Keep it separate from the developer README: the Store page
 describes the shipped product, not the repository or future AI work.
@@ -123,8 +126,8 @@ optional external authoring workflow above must remain clearly external to the a
 - Website: `https://spintax.studio/`.
 - Support contact: `https://301.st/contact`.
 - Additional license terms: leave blank to use Microsoft's Standard Application License Terms. The repository's MIT license remains the source license for the code.
-- Privacy policy: publish [`https://spintax.studio/privacy.html`](https://spintax.studio/privacy.html)
-  at a public HTTPS URL and enter that URL in Partner Center.
+- Privacy policy: hosted at [`https://spintax.studio/privacy.html`](https://spintax.studio/privacy.html)
+  and entered in Partner Center.
 - Pricing: `Free`; audience: public; discoverability: available and discoverable in the Store.
 - Complete the IARC age-rating questionnaire and choose the appropriate app category in Partner Center.
 - Accessibility declaration: leave unchecked for R0; the current build has not passed the
@@ -147,3 +150,26 @@ Spintax Studio is an offline Windows x64 desktop editor for SPINTAX templates. N
 
 The application has no sign-in, license activation, telemetry, analytics, or backend. It performs no network requests during normal use. The About/site action only opens the user's browser after an explicit click and is not required to test the product. Optional AI authoring resources at spintax.net are external to the application and require no credentials in Studio.
 ```
+
+## What the live listing actually carries
+
+Read back from the storefront on 2026-08-04, not from the submission form — the page is the
+only place these values can be confirmed. Everything below matches the draft unless it is
+marked otherwise:
+
+- Title `Spintax Studio`, short title `Spintax`, publisher `301`, category *Developer tools*,
+  price `Free`, platform `x64`, listing language `English (United States)`.
+- Description and all twenty feature bullets are the text above, unchanged.
+- Age rating ESRB *Everyone*; the accessibility declaration is off (`Accessible: false`).
+- Package family `301.SpintaxStudio_jnd8jmenjzsm0`, ≈ 2.54 MB.
+
+**Two fields differ from the draft above**, and changing them is a Partner Center edit, not a
+code change:
+
+- Website is `https://spintax.net`, where the draft asked for `https://spintax.studio/` — the
+  product's own site, which is live and already links back to this listing.
+- Support URI is `https://spintax.net`, where the draft asked for `https://301.st/contact` —
+  the listing therefore offers no direct contact route for a problem report.
+
+Both are deliberate-looking choices rather than errors, so they are recorded rather than
+"fixed"; decide them with the next submission.

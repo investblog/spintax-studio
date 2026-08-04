@@ -660,6 +660,11 @@ Layout §3 (кнопки `[Generate] [Fix]`, вкладки провайдеро
 
 ## 11. Дистрибуция и Microsoft Store
 
+> **Статус: R0 опубликован в Store 2026-08-04** — <https://apps.microsoft.com/detail/9mw3ch7b530p>
+> (бесплатно, publisher `301`, категория *Developer tools*, x64, тег `v0.1.0.0`). Целевой путь
+> ниже — MSIX — пройден с первой подачи; фактические поля листинга и результат сертификации
+> записаны в [`release-validation.md`](release-validation.md) и [`store-listing.md`](store-listing.md).
+
 Store принимает обычные **Win32-приложения**, не только UWP, поэтому Lazarus/LCL — не
 блокер. Главный риск не технический, а **policy вокруг AI/контента** (см. ниже).
 

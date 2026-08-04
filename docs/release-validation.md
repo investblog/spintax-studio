@@ -1,6 +1,8 @@
 # R0 Release Validation
 
-Date: 2026-08-03
+Date: 2026-08-03 (validation) · 2026-08-04 (published)
+
+**Outcome: live in the Microsoft Store** — <https://apps.microsoft.com/detail/9mw3ch7b530p>.
 
 ## Candidate
 
@@ -41,8 +43,25 @@ browser action or HTML entity support would change product behavior solely to si
 positive. The WACK report is kept locally under `build/wack/`; generated build evidence is not
 tracked.
 
-## Remaining submission work
+## Certification and publication
 
-The package is ready for Partner Center upload once the account-side identity comparison and
-the public HTTPS privacy-policy URL are confirmed. Keep the accessibility declaration off for
-R0; UI Automation support for the editor and diagnostics remains a post-release slice.
+Certification passed on the first submission; the listing went live on **2026-08-04**
+(`ReleaseDateUtc` `2026-08-04T10:32:03Z`, last updated `10:31:53Z`). As the storefront reports
+it:
+
+- Listing: <https://apps.microsoft.com/detail/9mw3ch7b530p>
+- Title `Spintax Studio`, publisher `301` (publisher id `93915800`), category *Developer tools*
+- Price `Free`; platform `x64`; package family name `301.SpintaxStudio_jnd8jmenjzsm0`
+- Download size ≈ 2.54 MB; listing language `English (United States)`
+- Age rating: ESRB *Everyone* (IARC questionnaire)
+- `Accessible: false` — the declaration is off, as decided in
+  [ADR 0009](decisions/0009-accessibility-on-a-toolkit-with-no-bridge.md). UI Automation
+  support for the editor and diagnostics remains a post-release slice.
+
+The two account-side blockers named before submission are closed: the reserved identity matched
+the generated manifest, and the privacy policy is hosted at
+<https://spintax.studio/privacy.html> (the storefront also serves its own snapshot of the text,
+which does not follow later edits to the site).
+
+The published package is the `v0.1.0.0` tag, so `git log v0.1.0.0..HEAD` is what users do not
+have yet.

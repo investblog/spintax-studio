@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/investblog/spintax-studio/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+[![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-Spintax%20Studio-0078D4)](https://apps.microsoft.com/detail/9mw3ch7b530p)
 
 A native Windows editor for spintax templates, in the shape of a translator: two panes,
 your template on the left, a live render on the right. The engine that decides what comes
@@ -13,11 +14,19 @@ variables, generate variants, and export them.
 Studio is developed by [301.st](https://301.st/); the SPINTAX language reference and engine
 family live at [spintax.net](https://spintax.net/).
 
-> **R0 is the offline Windows release.** The source of truth is [`docs/spec.md`](docs/spec.md)
-> and release work is tracked in [`docs/TODO.md`](docs/TODO.md). The application includes
-> bracket-aware editing, live page/source preview, validation diagnostics, variables and
-> include inspection, variant generation and export, a group editor, and built-in help.
-> Generative AI is not part of R0.
+> **R0 is the offline Windows release, published in the Microsoft Store on 2026-08-04.**
+> The source of truth is [`docs/spec.md`](docs/spec.md) and release work is tracked in
+> [`docs/TODO.md`](docs/TODO.md). The application includes bracket-aware editing, live
+> page/source preview, validation diagnostics, variables and include inspection, variant
+> generation and export, a group editor, and built-in help. Generative AI is not part of R0.
+
+## Install
+
+**[Get Spintax Studio from the Microsoft Store](https://apps.microsoft.com/detail/9mw3ch7b530p)** —
+free, Windows 10 1809 or later on x64, about 2.5 MB. The Store hosts, signs and updates the
+package; nothing else has to be installed to run it.
+
+The rest of this file is for building from source.
 
 ## Building
 
@@ -37,7 +46,8 @@ x64. The engine is a git submodule pinned to a released tag
 
 Platform scope:
 
-- **Windows x64:** complete Studio GUI and Microsoft Store package.
+- **Windows x64:** complete Studio GUI and the published
+  [Microsoft Store package](https://apps.microsoft.com/detail/9mw3ch7b530p).
 - **Ubuntu:** engine, editor-core and console tests; no supported GUI build in R0.
 
 ## Principles

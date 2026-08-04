@@ -37,18 +37,22 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
 
-## Where R0 is (re-checked 2026-08-03)
+## Where R0 is (re-checked 2026-08-04)
 
-**Submitted to the Microsoft Store and in review.** Tag `v0.1.0.0`; the MSIX is built from the
-tagged commit by `.github/workflows/release.yml`, WACK passes against the exact candidate, and
-the record is in [`release-validation.md`](release-validation.md).
+**Published in the Microsoft Store** — <https://apps.microsoft.com/detail/9mw3ch7b530p>.
+Certification passed and the listing went live on 2026-08-04 (`ReleaseDateUtc`
+`2026-08-04T10:32:03Z`), free, publisher `301`, category *Developer tools*, x64, package
+family `301.SpintaxStudio_jnd8jmenjzsm0`, ~2.5 MB. Tag `v0.1.0.0`; the MSIX was built from
+the tagged commit by `.github/workflows/release.yml`, WACK passed against the exact
+candidate, and the record is in [`release-validation.md`](release-validation.md).
 
-**One fix is NOT in the reviewed package.** `0e512d3` makes the horizontal splitter visible and
-grabbable — it was five pixels and sank into the page frame — and it landed ten hours after the
-tag. Deferred to the next release by the owner's decision rather than by oversight. A tag is
-what ships, so `git log v0.1.0.0..HEAD` is the list of what a submitted build does not have.
+**One fix is NOT in the published package.** `0e512d3` makes the horizontal splitter visible
+and grabbable — it was five pixels and sank into the page frame — and it landed ten hours
+after the tag. Deferred to the next release by the owner's decision rather than by oversight.
+A tag is what ships, so `git log v0.1.0.0..HEAD` is the list of what the build now on users'
+machines does not have; it is the first item for `v0.1.1.0`.
 
-The block below is the state as it stood going in, kept because items 2 and 4 are still live:
+The block below is the state as it stood going in, kept because item 4 is still live:
 
 The product scope is closed: M0, M1, M2 and M3 are complete. The built-in help and About box
 are part of the application, and the current release is deliberately **Windows-only,
@@ -59,10 +63,11 @@ another product milestone:
    binaries, x64 GUI built, MSIX packed and validated, WACK passed. Store artwork is rendered
    into `assets/store/`, which is gitignored: Partner Center reads it, the build does not, and
    `assets/brand/` is the tracked mark it derives from.
-2. **Finish the Partner Center draft.** Verify the reserved package identity against the
-   generated manifest, choose the category and age rating, provide the Store listing from
-   [`store-listing.md`](store-listing.md), add screenshots and publish the hosted privacy
-   policy URL. These are account and content tasks, not code tasks.
+2. ~~Finish the Partner Center draft.~~ **Done — the listing is live.** Identity matched,
+   category *Developer tools*, IARC rating ESRB *Everyone*, the copy and features from
+   [`store-listing.md`](store-listing.md), screenshots uploaded, and the privacy policy hosted
+   at <https://spintax.studio/privacy.html>. Two listing fields ended up different from the
+   draft — see the *What the live listing actually carries* note there.
 3. **Run Windows App Certification Kit (WACK)** against the release package. **Done
    2026-08-03:** the exact MSIX candidate passes WACK with no partial run. The optional
    blocked-executable test reports the deliberate browser launch and SynEdit's `&reg;`
@@ -1487,21 +1492,26 @@ Submission tasks (after a demoable build):
       page names rather than omits. The suite reads every shipped unit's uses clause and fails
       the build on a network unit, so the page cannot quietly stop being true.
 
-      **Still to do: host it at a public HTTPS URL and enter that URL in Partner Center.**
-      Expand it when BYOK AI (R1) adds network, and again for a managed tier.
+      **Hosted 2026-08-04 at <https://spintax.studio/privacy.html>** and entered in Partner
+      Center; the storefront serves its own snapshot of the text beside the listing. Expand it
+      when BYOK AI (R1) adds network, and again for a managed tier — and republish both copies,
+      because the Store snapshot does not follow the site.
 - [x] **No purchases in R0** — no paywall, trial, or IAP; a free offline app keeps the first
       submission out of financial policy too.
 - [ ] **AI disclosure + report path** — **R1+ only** (once live generative AI ships): disclose
       in listing + Partner Center, and give an in-app/listing contact for reporting problematic
       AI output. R0 ships no AI, so this obligation does not apply to the first submission.
-- [ ] **Store listing** — use [`store-listing.md`](store-listing.md): honest product copy,
-      screenshots of template → preview → export, and the final logo assets. Do not paste the
-      developer README into the listing.
+- [x] **Store listing — live 2026-08-04**, <https://apps.microsoft.com/detail/9mw3ch7b530p>.
+      Copy, the twenty feature bullets and the ten screenshots came from
+      [`store-listing.md`](store-listing.md); the developer README was not pasted into it.
+      What the listing actually carries is recorded at the end of that file.
 - [x] **Windows App Certification Kit** — exact candidate passed on 2026-08-03; the report and
       interpretation are recorded in [`release-validation.md`](release-validation.md).
 
 Decisions owed **before the relevant submission** (not switchable later):
-- Partner Center account type — individual vs company (company for commercial), before R0.
+- ~~Partner Center account type — individual vs company, before R0.~~ Settled by the account
+  that published R0: the listing's publisher is `301` (publisher id `93915800`). Commerce
+  (R2+) has to be checked against the type that account actually is before any billing.
 - **Paid managed-AI tier needs its own ADR** before any billing (R2+): Store IAP vs
   third-party purchase API (Stripe/…), prices/terms, cancellation, Partner Center disclosure.
   See spec §10/§11.
