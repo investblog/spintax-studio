@@ -181,7 +181,12 @@ Both are deliberate-looking choices rather than errors, so they are recorded rat
 **The licence on the live page is out of date.** R0 was submitted while the repository said
 Apache-2.0, so feature bullet 20 on the published listing reads *"Open-source Apache-2.0 Studio"*
 and the "Additional license terms" field is blank, which puts the package under Microsoft's
-Standard Application License Terms. The project is GPL-3.0-or-later as of 2026-08-04. Both are
-Partner Center edits and neither needs a new package; make them with the next submission at the
-latest. The shipped `0.1.0.0` executable also carries `LegalCopyright="MIT"` in its version
-resource — that one does need a rebuild, and it is fixed in the tree.
+Standard Application License Terms. The project is GPL-3.0-or-later as of 2026-08-04. The shipped
+`0.1.0.0` executable also carries `LegalCopyright="MIT"` in its version resource; that one is
+fixed in the tree and needs a rebuild.
+
+**None of it is submitted on its own.** Owner's decision, 2026-08-04: the two listing fields need
+no new package, but changing them is still a review cycle, and a review cycle for two lines of
+text is not worth taking. They ride with `v0.1.1.0` together with the rebuilt executable — see
+*What `v0.1.1.0` carries* in [`TODO.md`](TODO.md). Until then the live page stays as it is on
+purpose.

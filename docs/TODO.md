@@ -46,28 +46,36 @@ family `301.SpintaxStudio_jnd8jmenjzsm0`, ~2.5 MB. Tag `v0.1.0.0`; the MSIX was 
 the tagged commit by `.github/workflows/release.yml`, WACK passed against the exact
 candidate, and the record is in [`release-validation.md`](release-validation.md).
 
-**One fix is NOT in the published package.** `0e512d3` makes the horizontal splitter visible
-and grabbable — it was five pixels and sank into the page frame — and it landed ten hours
-after the tag. Deferred to the next release by the owner's decision rather than by oversight.
-A tag is what ships, so `git log v0.1.0.0..HEAD` is the list of what the build now on users'
-machines does not have; it is the first item for `v0.1.1.0`.
-
 **The licence changed after the release: GPL-3.0-or-later, 2026-08-04** (was Apache-2.0),
 copyright holder unchanged — `301.st`. `LICENSE` is the verbatim GPLv3 text and `NOTICE.md`
 carries an **additional permission under GPL v3 section 7** for the MPL-1.1 components the
 executable links. That permission is not decoration: SynEdit's headers offer "GPL Version 2 or
 later" as an alternative to the MPL and would combine with the GPL on their own, but **IPro's
 do not** — the phrase "General Public License" appears in no file of that component, and it is
-linked in for the HTML preview. Three follow-ups, none of them blocking:
+linked in for the HTML preview. The engine submodule stays MIT under its own repository;
+nothing here relicenses it.
 
-1. **Partner Center, no new package needed:** feature bullet 20 on the live listing still reads
-   "Open-source Apache-2.0 Studio", and "Additional license terms" is blank, which conveys the
-   package under Microsoft's Standard Application License Terms — those restrict redistribution
-   in ways the GPL does not permit adding.
-2. **Needs a rebuild:** the shipped `0.1.0.0` executable's version resource says
-   `LegalCopyright="MIT"` — a licence name in a copyright field, and wrong on both counts. Fixed
-   in the tree and gated by the suite; it reaches users with the next package.
-3. The engine submodule stays MIT under its own repository. Nothing here relicenses it.
+### What `v0.1.1.0` carries (nothing is submitted before it)
+
+**Owner's decision, 2026-08-04: no separate Store update.** Two of these are listing-only edits
+that need no new package, but a listing edit is still a review cycle — and spending one on two
+lines of text is not worth it. Everything below goes in one submission, whenever the next
+version is cut. Until then the published `0.1.0.0` and its live listing stay as they are, which
+is a deliberate state and not a backlog of things anyone forgot.
+
+1. **`0e512d3` — the horizontal splitter**, visible and grabbable; it was five pixels and sank
+   into the page frame. Landed ten hours after the tag, so the build on users' machines does
+   not have it. A tag is what ships: `git log v0.1.0.0..HEAD` is the running list.
+2. **`LegalCopyright` in the executable's version resource** said `MIT` — a licence name in a
+   copyright field, and the wrong licence. Fixed in the tree and gated by the suite; it needs a
+   rebuild to reach anyone, which is exactly what the next version is.
+3. **Listing, feature bullet 20** still reads "Open-source Apache-2.0 Studio".
+4. **Listing, "Additional license terms"** is blank, which conveys the package under Microsoft's
+   Standard Application License Terms — those restrict redistribution in ways the GPL does not
+   permit adding. Enter the project's own terms, or a URL to `LICENSE`.
+
+Also due with that submission, from the notes further down: website and support URI on the
+listing (`spintax.net`, where the draft asked for `spintax.studio` and `301.st/contact`).
 
 The block below is the state as it stood going in, kept because item 4 is still live:
 
