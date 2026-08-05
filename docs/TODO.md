@@ -33,7 +33,13 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       binary with no cross-compiler juggling. The console suite still builds with whatever
       `fpc` is on PATH (i386 locally, whatever CI has), which is the point of keeping
       editor-core GUI-free.
-- [ ] **Thesaurus for the synonym feature** — a local base (which one?) or LLM-only. (M4)
+- [x] **Thesaurus for the synonym feature — LLM-only, decided 2026-08-05.** There will be no
+      local base. A thesaurus answers without seeing the sentence the word lands in: not its
+      sense there, not agreement, not register — and in Russian not even the morphology needed
+      to put the synonym in the right form. Everything that makes a substitution usable is
+      contextual, and a weak model already does it. The price, stated rather than discovered:
+      **no provider, no synonyms** — the one feature in the product that does not work offline,
+      and in M4 it has to read as disabled rather than broken. (spec §4.1, §4.5, §10)
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
 
@@ -119,8 +125,10 @@ another product milestone:
    would therefore overstate the tested experience. UIA text support for SynEdit is a post-R0
    slice, not a release blocker.
 
-Not R0: M4 and the managed AI tier, a thesaurus, persistence for the LLM loop, the other help
+Not R0: M4 and the managed AI tier, persistence for the LLM loop, the other help
 languages, RTL, the mini-context strip, the help silence whitelist, and the rename refactor.
+(A thesaurus stood in this list until 2026-08-05; it is not deferred, it is dropped — see the
+open decisions above.)
 The empty-panel links and the `spx-good` examples remain worthwhile post-R0 help work, but they
 must not reopen the release scope.
 
@@ -708,7 +716,11 @@ the managed tier are later releases.
       filter on generation.
 - [ ] **M4 — LLM loop.** `TLlmProvider` + adapters + `TAuthoringLoop` (Generate / Verify /
       Fix), the authoring-prompt as system, a local model via localhost, synonyms through
-      the same layer. Keys local, zero telemetry.
+      the same layer — **and only through it**, since the thesaurus was dropped on 2026-08-05.
+      Keys local, zero telemetry. The provider is therefore the difference between a feature
+      that is off and one that is missing: with none configured, synonyms and the loop are
+      disabled controls with a reason attached, and everything else in the window still works
+      with no network at all.
 
       Its icon is already in the sprite: `SPX_ICON_AI` (`robot-outline`), put there on
       2026-07-29 at the user's request so the choice is made calmly rather than in the hour
