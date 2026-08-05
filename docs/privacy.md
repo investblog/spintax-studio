@@ -20,15 +20,18 @@ application, and we have no way to find out from it.
 
 ## What leaves your computer
 
-Nothing the application sends. Every part of it — the editor, validation, rendering, the
-variant generator, export and the built-in help — works with no network connection at all.
+Nothing. The application makes no network request of any kind — not at startup, not while you
+work, not on exit. Every part of it — the editor, validation, rendering, the variant generator,
+export and the built-in help — runs with no network connection at all, and there is nothing in
+it that could make one.
 
-There are exactly two places where the application reaches outside itself, and neither
-transmits anything when it does: clicking the **spintax.net** mark at the bottom of the tool
-rail, or the **301.st** mark at the right end of the status bar, asks Windows to open that
-address in whatever browser you use. That is a request your browser makes, under whatever
-privacy terms your browser and that website carry; the application makes no request of its own
-and sends nothing with it.
+**The two links in the window are not an exception, because a link is not a request.** The
+**spintax.net** mark at the bottom of the tool rail and the **301.st** mark at the right end of
+the status bar do one thing when you click them: they ask Windows to open that address. Windows
+hands it to whatever browser you use, and the browser is what then visits the site — under your
+browser's terms and that site's, exactly as if you had typed the address yourself. The
+application is not part of that exchange and sends nothing into it. Nothing is opened unless you
+click.
 
 ## What is stored, and where
 

@@ -156,7 +156,7 @@ Spintax Studio is an offline Windows x64 desktop editor for SPINTAX templates. N
 6. Use the export actions to save TXT and XLSX output to a local folder selected by the tester.
 7. Optionally use File > Open to load a local template file. This is not required because the built-in demo covers the main workflow.
 
-The application has no sign-in, license activation, telemetry, analytics, or backend. It performs no network requests during normal use. The About/site action only opens the user's browser after an explicit click and is not required to test the product. Optional AI authoring resources at spintax.net are external to the application and require no credentials in Studio.
+The application has no sign-in, license activation, telemetry, analytics, or backend. It makes no network requests at all. It carries two brand links -- spintax.net on the tool rail and 301.st in the status bar -- which, when clicked, ask Windows to open that address in the tester's own browser; the application itself opens no connection and neither link is required to test the product. Optional AI authoring resources at spintax.net are external to the application and require no credentials in Studio.
 ```
 
 ## What the live listing actually carries

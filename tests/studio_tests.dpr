@@ -4190,8 +4190,10 @@ end;
    build. Read from the SOURCE rather than from a list kept beside it, because a list would be
    the thing that goes stale.
 
-   The outbound actions are counted too. The policy says how many places there are and names
-   each; another OpenURL would make that sentence false while every other check stayed green. *)
+   The links are counted too, and counting them is NOT a claim that they are network traffic:
+   handing an address to the shell is the user's own act, and the request that follows is their
+   browser's. What the count defends is the ENUMERATION -- the policy names each mark, so a
+   third one would make the page's list false while every other check stayed green. *)
 procedure TestOfflineClaim;
 const
   { Unit names that mean a socket is being opened. Whole words, matched inside a uses clause
@@ -4290,12 +4292,12 @@ begin
       FindClose(rec);
     end;
   end;
-  { EXACTLY TWO, because the policy says so in as many words -- the spintax.net ribbon on the
-    rail and the 301.st mark in the status bar. A third is not a defect in itself; it is a
-    sentence in a published document becoming false, which is why this number moves only
-    together with the page. It read one until 2026-08-04, and the count is what forced the page
-    to be edited when the second link was added rather than after somebody noticed. }
-  Check('offline/exactly two places hand a URL to the shell', IntToStr(opens), '2');
+  { EXACTLY TWO, because the policy names two -- the spintax.net ribbon on the rail and the
+    301.st mark in the status bar. A third is not a defect in itself; it is a list in a
+    published document becoming incomplete, which is why this number moves only together with
+    the page. It read one until 2026-08-04, and the count is what forced the page to be edited
+    when the second link was added rather than after somebody noticed. }
+  Check('offline/exactly two links hand an address to the shell', IntToStr(opens), '2');
   { Belt and braces: nothing in the product opens a process either. }
   stop := 0;
   for d := 0 to High(dirs) do

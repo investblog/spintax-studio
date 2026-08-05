@@ -79,9 +79,12 @@ is a deliberate state and not a backlog of things anyone forgot.
    `scripts/make-companymark.py` from `assets/brand/301.svg`, sliced to the system ink because
    the status bar is the one strip the theme never touches.
 
-   **It makes the product's outbound actions two, so the privacy policy changed with it** —
-   `docs/privacy.md` now names both marks, and the suite's count moved from one to two in the
-   same commit, which is what the count is for. The hosted copy at
+   **It is the window's second link, so the privacy policy's list changed with it** — and the
+   policy now draws the line the old wording smudged: a link is not a network request. The
+   application opens no socket at all; clicking a mark hands an address to Windows, and the
+   browser is what visits the site, exactly as if the address had been typed. `docs/privacy.md`
+   names both marks and says that in as many words; the suite's count moved from one to two in
+   the same commit, which is what the count is for. The hosted copy at
    <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
    Microsoft's own snapshot of that text updates only with the submission.
 
@@ -1526,9 +1529,11 @@ Submission tasks (after a demoable build):
 
 - [x] **Privacy policy text — written 2026-08-01, `docs/privacy.md`.** Every sentence is a fact
       about the code rather than a promise: no unit in the product links an HTTP client or a
-      socket, and there is exactly ONE outbound action (OpenURL on the brand link), which the
-      page names rather than omits. The suite reads every shipped unit's uses clause and fails
-      the build on a network unit, so the page cannot quietly stop being true.
+      socket, and the brand links (one then, two since 2026-08-04) are named rather than
+      omitted. The suite reads every shipped unit's uses clause and fails the build on a
+      network unit, so the page cannot quietly stop being true. *(It called those links
+      "outbound actions" until 2026-08-05; they are not. Handing an address to the shell is the
+      user's act and the request is their browser's — the page draws that line now.)*
 
       **Hosted 2026-08-04 at <https://spintax.studio/privacy.html>** and entered in Partner
       Center; the storefront serves its own snapshot of the text beside the listing. Expand it

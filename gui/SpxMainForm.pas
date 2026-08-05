@@ -1759,9 +1759,10 @@ end;
 
 procedure TSpxMainForm.BrandClicked(Sender: TObject);
 begin
-  { THE ONE PLACE THIS PRODUCT REACHES OUTSIDE ITSELF, and it does not reach: it hands a URL to
-    the shell, which opens whatever browser the machine has. The application makes no request,
-    so R0 stays offline in the sense that matters -- editor, validation, render and export work
+  { A LINK, WHICH IS NOT A NETWORK REQUEST: it hands an address to the shell, which opens
+    whatever browser the machine has, and the browser is what visits the site -- the same
+    exchange as the user typing the address, with this application not in it. So R0 stays
+    offline in the sense that matters -- editor, validation, render and export work
     with no network and no key (spec §1, §11), and nothing here changes that. The help pane has
     no link like this -- its generator refuses to write any href but `ex:N`, and the pane
     ignores anything else without a word -- so this is the deliberate exception the reader asked
@@ -2484,10 +2485,11 @@ end;
 
 procedure TSpxMainForm.CompanyClicked;
 begin
-  { THE SECOND PLACE THIS PRODUCT REACHES OUTSIDE ITSELF, and like the first it does not reach:
-    it hands a URL to the shell. BrandClicked says the rest, and docs/privacy.md counts both --
-    the suite holds that count to the sentence in the policy, so a third one cannot appear
-    without the page being edited to match. }
+  { THE SECOND LINK, AND A LINK IS NOT A REQUEST: this hands an address to the shell, Windows
+    gives it to the user's browser, and the browser is what visits the site. Nothing here opens
+    a socket -- the suite proves that separately, by reading every shipped unit's uses clause.
+    BrandClicked says the rest, and docs/privacy.md names both marks; the suite holds their
+    count to the page, so a third cannot appear without the page being edited to match. }
   OpenURL(SPX_COMPANY_URL);
 end;
 
