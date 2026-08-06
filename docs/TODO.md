@@ -1608,6 +1608,31 @@ Decisions owed **before the relevant submission** (not switchable later):
 
 ## To report to the engine
 
+- [ ] **The converter's bracket rule expires the day SER gains `[]` — WAIT for that release,
+      do not pre-empt it.** GSA replied on 2026-08-06 that they will implement rather than
+      adopt, and that `[]` and `{?xyz?}` are the two they want. From the moment `[]` ships in
+      SER, a bracket in a SER template stops meaning one thing. Measured today, against the
+      converter as it stands:
+
+      ```
+      SER source :  Order [red|green|blue] now.
+      converted  :  Order %__gsa_l1%red|green|blue%__gsa_l2% now.
+      rendered   :  Order [red|green|blue] now.      { literal -- brackets lifted as BBCode }
+      natively   :  Order green blue red now.        { what the author will then mean }
+      ```
+
+      Not corrupt, and visible rather than silent — but not what the template says. **There is
+      nothing to fix before then:** today SER has no `[]`, so protecting the bracket is right,
+      and a rule written now would be written against a guess. His `[]` may or may not carry
+      the `<sep=…>` config, and that decides what counts as a permutation.
+
+      The rule when it comes: a bracket group with a top-level `|` is a permutation; one that
+      is a single token, or `/token`, optionally `=value`, is a BBCode tag; brackets straight
+      after `#name` are a macro and are already handled. **It belongs in the engine's converter,
+      not here** — Studio's side is convert, session variables, warn, and none of that changes.
+      The payoff grows with the difficulty: whatever SER renders natively needs no conversion
+      at all.
+
 - [ ] **Post-process rewrites a value the host neutralised.** Measured 2026-08-06 on
       `v0.4.0`, and it is not a converter question — the value goes straight through
       `TSpContext.Vars`, neutralised the way `SpNeutralize` is documented for:
