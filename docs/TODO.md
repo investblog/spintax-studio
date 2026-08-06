@@ -213,6 +213,185 @@ is a deliberate state and not a backlog of things anyone forgot.
    notice in full on the same screen — a second click would weaken an obligation NOTICE.md
    states in as many words.
 
+12. **The variants panel says how many variants the template can make**, done 2026-08-07 — the
+   GTW number, *«Max возможных вариантов»*, beside the count you are asking for. `src/SpxCount.pas`
+   computes it from the editor's OWN token scan (`SpxTokens`), so a construct is whatever the
+   highlighter and the group editor already think it is, and no second parser exists to drift.
+   It runs on the engine thread with the render, because counting reads the directive prelude
+   through the engine.
+
+   **Cost, measured against the render of the same document rather than in isolation** — which
+   is the only comparison that decides anything, since both run in one job:
+
+   | document | render | count | on top |
+   |---|---|---|---|
+   | 8 KB, 200 choices | 4.5 ms | 0.6 ms | 14% |
+   | 78 KB, 2000 choices | 45 ms | 8.9 ms | 20% |
+   | 86 KB, no constructs | 42 ms | 3.8 ms | 9% |
+
+   (Re-measured after the second review's fixes, which cost about a millisecond on the middle
+   row: one `Pos` per line for the loose-`#include` detector.)
+
+   **No cache, and that is a measurement rather than a preference.** The count started at
+   18.2 ms on 100 KB and is 8.2 — the saving came from deleting a redundant engine pass, not
+   from remembering answers. What is left is 6–16% on top of a render, and a memo could only
+   skip it on a job whose document has not changed — a reroll, a seed change, a fragment
+   preview — every one of which pays the full render anyway. A cache there would buy a tenth of
+   a job it cannot skip, in exchange for three invalidation conditions (the text, the session
+   values, the template set) that are exactly where a stale-cache bug lives. Worth revisiting
+   only if the engine's render gets much cheaper than the scan, which is the opposite of the
+   direction it has been moving.
+
+   **Every rule in it was settled by ENUMERATION, not by reasoning**, and that is what the
+   suite does too. Counted from `TestVariantCount`, not estimated:
+
+   - **31 `CheckCounted`** — rendered with 20 000 seeds through the real engine, distinct
+     outputs counted, arithmetic must equal them;
+   - **9 `CheckFloor`** — also enumerated, but asserting the promise rather than the number:
+     when the panel says *at least N*, `N ≤ what the engine really makes`, and the answer must
+     not claim to be exact;
+   - **13 `CheckSays`** — a written-down number, for the cases that cannot be enumerated by
+     construction: where a variant and a distinct text differ on purpose (a `#def`, `{a|a}`),
+     and the saturation ceiling.
+
+   *(This paragraph has now been wrong TWICE about its own arithmetic — "twenty" when there
+   were 16, then "25 and 15" when there were 29 and 14, in the sentence scolding the first
+   miscount. Both times a reviewer counted and I had not. A claim about the evidence is a claim
+   like any other, and the reason it kept slipping is that it was written from memory of what I
+   had just added instead of from the file.)*
+
+   Four of the first nine answers were wrong and the enumeration said so — `[a|b|c]` is 6 and
+   the counter said 24, `#set` used twice is 4 and it said 16. The permutation is not `n!` once
+   its options carry variants: it is `Σ k!·e_k`, the elementary symmetric polynomial over the
+   option counts, which also gives the 12 of `[<minsize=2>a|b|c]` for free.
+
+   **What it will not promise, and says so.** A conditional, a plural, an `#include` the set
+   has not got, and now any include the scanner and the engine disagree about, are each decided
+   by something other than chance: each counts as one and the panel says *at least*, because
+   supplying a value can only add. The ceiling is a trillion and reads *at least* for the same
+   reason. And what is counted is a VARIANT — one filled-in template — which is not the same as
+   a text that reads differently: `{a|a}` is two variants and one text, recorded as a check so
+   it is a decision rather than a bug someone finds later. The API comment claimed "distinct
+   texts" until the review read it against that check.
+
+   Three defects found before review, all by measurement and each worth its line: a "counts are
+   never zero" guard in the multiply made `e_k = 0` behave as 1 and inflated every permutation;
+   the directive prelude was counted as body text; and offsets rebuilt by adding line lengths
+   were one byte short per line under CRLF, so every `%x%` after line one was read past its
+   start and the macro was never found. The last passed a probe written with `#10` and failed
+   the suite written with `LineEnding` — a document with the line ending the APP will hand it,
+   or the measurement is of a file nobody has. The counter now carries each token's text and
+   has no offsets at all.
+
+   **And five more the FIRST outside review found, every one reproduced before it was
+   believed** — worth recording as a class, because the suite was green through all of them and
+   each is a template the author of the counter did not think to ask about:
+
+   1. **Session values were skipped entirely.** A reader who types `{aa|bb}` into the Variables
+      panel doubles the template, and the counter ignored runtime variables by name. Worse, a
+      session value **outranks** a same-named `#set`: the engine lays the host's table over the
+      definitions (`Spintax.pas:3145-3151`) and never rolls a `#def` the host has named. So the
+      counter was reading a value the render would not use.
+   2. **The permutation's size range is four asymmetric branches, not one rule.**
+      `Spintax.pas:1830-1837`: only-maxsize starts at **one**, `minsize=0` is a value rather
+      than an absence, and a contradictory pair **widens** to the whole set. The first version
+      folded all four into "absent means n" and clamped the wrong end — 6 for
+      `[<maxsize=2>a|b|c]` where the engine makes 9, 6 for `[<minsize=0>a|b|c]` where it makes
+      15. Now copied from the engine's source, with -1 for absent for the same reason it is
+      -1 there.
+   3. **`#def` was multiplied into the option it was written in.** The engine rolls every
+      definition once, before the body, dependencies first, used or not
+      (`Spintax.pas:3162-3184`) — so it multiplies the DOCUMENT. Written the old way,
+      `{%d%|%d%}` came out 3: neither the four draws there are nor the two texts that emerge.
+   4. **Masking the directive prelude by editor LINE broke the five-terminator model** — the
+      charter's own "two line models" trap, walked straight into. `#set %x% = qq` U+2028
+      `{aa|bb}` is a directive and a choice on one editor line, and blanking the line threw the
+      choice away. The engine reports each directive's span, so the span is what is masked now,
+      code points converted to bytes.
+   5. **An `#include` whose target sits on the next line is invisible to the token scan** and
+      resolves perfectly well in the engine — 2 counted where 6 exist, and called exact. Fixed
+      not by teaching this file a second rule about where a target may sit, but by counting the
+      occurrences the ENGINE reports and comparing: they disagree, the answer becomes a floor.
+      That holds for every future divergence, not only this one.
+
+   The sixth finding was that `src/SpxCount.pas` was never `git add`ed — the one defect no
+   amount of testing would have caught, since every gate ran on the working tree.
+
+   ▁▁▁
+
+   **A SECOND review, on the fixed code, found six more — and they share ONE root cause worth
+   more than the list.** `SpxTokens` is a PRESENTATION scan, and its own header promises only
+   that it will never claim a construct the engine does not see. It promises nothing in the
+   other direction. This file took "no second parser" as a guarantee of agreement when it is
+   only a guarantee of one-sidedness, reconciled exactly one divergence (`#include`
+   occurrences) and read every other scanner opinion as engine truth. All six, reproduced
+   before they were believed:
+
+   1. **An unterminated `/#` deleted the rest of the document from the count and still said
+      *exact*.** The engine changed here in `v0.5.0` — the charter records it — and an
+      unterminated opener is now ordinary text; the scanner still swallows to end of document.
+      This is not an edge case: it is the state of the document for every keystroke between
+      typing `/#` and typing `#/`. The scan's own final state (`InComment`) says when it
+      happened, so the answer is a floor now.
+   2. **A `#def` inside an INCLUDED fragment was rolled once for the whole document.**
+      `ResolveIncludes` renders the whole template again per occurrence, so the fragment's
+      definition rolls once per include — and two fragments that both define `%d%` are two
+      different macros. One flat name-keyed list across the recursion answered 2 where the
+      engine makes 4, and 2 where it makes 6. The scope now belongs to the document, and an
+      included fragment is one. *The suite's own `include-twice` used a fragment with no `#def`
+      in it, which is exactly why it was green.*
+   3. **A closer of the wrong kind was accepted.** `[a|b|c|d|e}` reported **120 exact** for a
+      template the engine prints verbatim as one text. `SpxTokens.SpxMatchBracket` is careful
+      about mismatched kinds; the walk was not.
+   4. **The documented floor was not a floor.** `#include "f" junk` is not an include (the
+      engine's anchor allows only trailing whitespace) and renders as one literal line — the
+      counter resolved the fragment anyway and said *at least 2* about a document that makes 1.
+      A floor above the truth is worse than no floor. The reconciliation now runs BEFORE the
+      walk and, when the scanner and engine disagree about how many includes exist, no include
+      is resolved at all.
+   5. **An `#include` can resolve without being a directive in the source.** `ResolveIncludes`
+      runs over the RENDERED text, so `{pp|#include "f"}` resolves when that option is drawn —
+      the engine reports no directive, the scanner sees plain text, the two agree, and both are
+      looking at the wrong thing. Nothing short of rendering settles it, so what is detected is
+      the possibility: body text carrying the word. A commented-out `#include` is a COMMENT
+      token and does not trip it, which is the case that rules out a plain textual search.
+   6. **A conditional threw away its branches' CONTENTS, not just the branch selection** — a
+      document wrapped in one `{?lang?…|…}` reported "at least 1" however large it was. The
+      biggest branch is the honest floor: some value selects it. **And the first version of
+      that fix treated a plural the same way and was wrong** — measured: a plural form holding
+      a construct makes the engine refuse the whole thing and print the source verbatim, one
+      text, where the same shape written as a conditional makes two. The suite caught it in one
+      run *because the floor is enumerated rather than written down*, which is the argument for
+      `CheckFloor` existing at all.
+
+   Two wiring defects came with them. **With the help open, the Variants panel showed the help
+   example's count** — or "Possible variants: 1" before anything was clicked — beside a Generate
+   button still generating from the reader's document; `Res.HelpSet` is the guard `ShowOffer`
+   and `ShowVariant` already carry, for the same "two routes into one pane" reason. And the word
+   **"texts"** had crept back into four places after the first review took it out of the unit
+   header, including this item's own heading.
+
+   Also fixed while in there: a macro chain past the engine's `MAX_VARIABLE_DEPTH` of 50 was
+   over-counted (the guard costs nothing — the expansion stack IS the depth), and
+   `PermutationCount` ran its inner loop over the full range where `e_k` is still zero, which
+   was 101 ms at 3 000 options.
+
+   **A seventh turned up while fixing the third**, and it belongs with them: a REDEFINED macro
+   was counted from its FIRST definition and the engine takes the LAST — 2 against 3 for a
+   two-line document. It was there because the counter asked `SpxExtractModel` for its macros,
+   and that structure exists for the PANEL: flattened, deduplicated, ordered for a grid. The
+   engine keeps `#set` and `#def` in separate maps, each last-wins, and lays the definitions
+   over the sets — so a `#def` beats a `#set` of the same name whichever order they are written
+   in. Building the table from the directive list directly fixes it, satisfies the charter's
+   "values come from `SpExtractDirectives`" more exactly than the wrapper did, and removes the
+   second whole-document pass that made it slow. *«Разве нельзя переопределять переменную?» was
+   the first question a reader of this project ever asked* (2026-07-29), which is a fair measure
+   of how exotic the shape is.
+
+   Shown in the top strip's second half, which the progress line owns during a run: the two are
+   never wanted at once. Measured on screen in both languages and in all three states — exact,
+   *at least*, and mid-run — not read off the properties.
+
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
 decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store
@@ -1544,11 +1723,11 @@ grew out of, noted where they attach. Recorded 2026-07-28 from two screenshots o
       everything else. Buttons alone break on the first unusual request; a field alone means
       typing the same sentence ten times a day. Reserve the space at the bottom of the panel
       when the panel is built, so M4 does not re-cut the layout.
-- [ ] **Show how many variants the template can produce.** (M3.) GTW puts *«Max возможных
-      вариантов: 241 864 704»* next to *«Сгенерировано: 50»*, which is the number that tells
-      an author whether their template is thin. Honest only while the document has no
-      `#include` and no conditional — decide then whether to show an exact count, a lower
-      bound, or nothing at all in those cases.
+- [x] **Show how many variants the template can produce.** (M3.) **Done 2026-08-07** — see
+      item 12 of *What `v0.1.1.0` carries*. The open question in this line was answered by
+      measurement rather than by choice: an `#include` the set CAN resolve is counted exactly
+      (the fragment is counted too), and only an unresolvable one, a conditional or a plural
+      turns the answer into a lower bound.
 - [ ] **A length filter on generation.** (M3.) GTW generates with *«Длина текста от 50 до
       Unlimited»*. Cheap next to the render loop and it is a real editorial constraint.
 - Confirms M3's shape rather than adding to it: its *«Удалить похожие»* is our shingle dedup

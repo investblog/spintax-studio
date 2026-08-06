@@ -99,7 +99,10 @@ const
       'Importar plantilla GSA…',
       'Plantillas GSA|*.txt;*.spintax|Todos los archivos|*.*',
       'Elementos extraídos de la plantilla a variables: %d.',
-      'Son valores de sesión: aparecen en el panel de variables y NO se guardan con el documento. La representación se hace sin posprocesado, para que la plantilla siga siendo la que escribió GSA.'
+      'Son valores de sesión: aparecen en el panel de variables y NO se guardan con el documento. La representación se hace sin posprocesado, para que la plantilla siga siendo la que escribió GSA.',
+
+      'Variantes posibles: %s',
+      'Variantes posibles: al menos %s'
   );
 
 implementation

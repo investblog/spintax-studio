@@ -98,7 +98,10 @@ const
       'Uvezi GSA predložak…',
       'GSA predlošci|*.txt;*.spintax|Sve datoteke|*.*',
       'Iz predloška izdvojeno u varijable: %d.',
-      'To su vrijednosti sesije: vide se u panelu varijabli i NE spremaju se uz dokument. Prikaz se računa bez naknadne obrade, pa predložak ostaje onakav kakvim ga je GSA napisao.'
+      'To su vrijednosti sesije: vide se u panelu varijabli i NE spremaju se uz dokument. Prikaz se računa bez naknadne obrade, pa predložak ostaje onakav kakvim ga je GSA napisao.',
+
+      'Mogućih varijanti: %s',
+      'Mogućih varijanti: najmanje %s'
   );
 
 implementation

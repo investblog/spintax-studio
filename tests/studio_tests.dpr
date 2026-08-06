@@ -34,7 +34,7 @@ uses
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
-  SpxGsaImport,
+  SpxGsaImport, SpxCount,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
   SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxCompanyMark, SpxSevIcons;
   {$ELSE}
@@ -47,6 +47,7 @@ uses
   SpxHtmlScan in '..\src\SpxHtmlScan.pas',
   SpxGroups in '..\src\SpxGroups.pas',
   SpxGsaImport in '..\src\SpxGsaImport.pas',
+  SpxCount in '..\src\SpxCount.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxStrings in '..\gui\SpxStrings.pas',
@@ -4496,6 +4497,330 @@ end;
    reader must be the readable text (`[`, `/#`), while what the engine receives must be the
    neutralised form the converter meant. `SpxValueForEngine` is what makes the second true, so
    the round trip is asserted rather than assumed. *)
+(* ---------------------------------------------------------------------------
+   THE VARIANT COUNT, CHECKED BY ENUMERATION.
+
+   The counter is arithmetic over the editor's own token scan, and arithmetic is exactly the
+   kind of thing that is convincingly wrong. So nothing here is compared against a number
+   this file believes: every small template below is RENDERED with thousands of seeds through
+   the real engine, the distinct outputs are collected, and the count has to equal how many
+   there were. When the two disagree the engine is right by construction.
+
+   Post-processing is off for the enumeration, and deliberately: it capitalizes and re-spaces,
+   so it can MERGE two structurally different results into one text and make an honest count
+   look too big. The window shows the structural number -- how many ways the template can be
+   filled in -- which is what an author is asking when they ask how thin the template is.
+   --------------------------------------------------------------------------- *)
+procedure TestVariantCount;
+var
+  ctx: TSpxContext;
+  vars: TStrMap;
+  set_: TSpxTemplateSet;
+  lit: TSpxVarPair;
+  big: string;
+  i: Integer;
+
+  { Every distinct text this template makes, over enough seeds that missing one is not a
+    realistic outcome: for a construct of n variants the seeds needed to see them all is
+    about n·ln n, and n here is at most a few dozen against 20 000 seeds. }
+  function Enumerate(const Tmpl: string): Integer;
+  var
+    list: TSpxVariantList;
+    seen: TStringList;
+    i: Integer;
+  begin
+    seen := TStringList.Create;
+    list := SpxRenderBatch(Tmpl, ctx, 20000, 1);
+    try
+      seen.Sorted := True;
+      seen.Duplicates := dupIgnore;
+      seen.CaseSensitive := True;
+      for i := 0 to list.Count - 1 do seen.Add(list[i].Text);
+      Result := seen.Count;
+    finally
+      list.Free;
+      seen.Free;
+    end;
+  end;
+
+  procedure CheckCounted(const name, Tmpl: string);
+  var c: TSpxCount; n: Integer;
+  begin
+    c := SpxCountVariants(Tmpl, ctx);
+    n := Enumerate(Tmpl);
+    Check('count/' + name, IntToStr(c.Value), IntToStr(n));
+    CheckTrue('count/' + name + '/exact', c.Exact);
+  end;
+
+  (* THE PROMISE, GATED INSTEAD OF ASSERTED. When the panel says "at least N" the only thing
+     that makes the sentence true is N <= what the template really produces, and a written-down
+     number cannot check that -- it only records what the counter said on the day. So these
+     enumerate too, and compare with <= rather than =.
+
+     A review found the counter reporting "at least 2" about a document that makes 1
+     (`#include "f" junk`, which is not an include at all), so this is the check that class of
+     defect fails against. It also insists the answer is NOT marked exact: a case that lands
+     here is one the counter has admitted it cannot promise. *)
+  procedure CheckFloor(const name, Tmpl: string);
+  var c: TSpxCount; n: Integer;
+  begin
+    c := SpxCountVariants(Tmpl, ctx);
+    n := Enumerate(Tmpl);
+    Inc(Checks);
+    if c.Value > n then
+    begin
+      Inc(Failures);
+      Writeln('FAIL count/', name, ': said at least ', c.Value, ', engine makes ', n);
+    end;
+    Check('count/' + name + '/is-a-bound', BoolToStr(c.Exact, True), BoolToStr(False, True));
+  end;
+
+  procedure CheckSays(const name, Tmpl: string; want: Int64; wantExact: Boolean);
+  var c: TSpxCount;
+  begin
+    c := SpxCountVariants(Tmpl, ctx);
+    Check('count/' + name, IntToStr(c.Value), IntToStr(want));
+    Check('count/' + name + '/exact', BoolToStr(c.Exact, True), BoolToStr(wantExact, True));
+  end;
+
+begin
+  vars := TStrMap.Create;
+  try
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+
+    { ---- what the count means, every line of it enumerated ---- }
+    CheckCounted('plain', 'no constructs at all');
+    CheckCounted('choice', '{aa|bb|cc}');
+    CheckCounted('two-choices', '{aa|bb} and {cc|dd}');
+    { The help says this one makes four, in both languages. It says so because this line
+      renders it and counts what came out. }
+    CheckCounted('help-example', '{a|b} and {c|d}');
+    CheckCounted('nested', '{aa|bb{cc|dd|ee}}');
+    CheckCounted('empty-option', '{aa|}');
+    CheckCounted('perm', '[aa|bb|cc]');
+    CheckCounted('perm-subset', '[<minsize=2>aa|bb|cc]');
+    CheckCounted('perm-inner', '[aa|{bb|cc}]');
+    CheckCounted('set-twice', '#set %x% = {aa|bb}' + LineEnding + '%x% %x%');
+    { One draw used twice: here ways and texts agree, so it can be enumerated. }
+    CheckCounted('def-twice', '#def %x% = {aa|bb}' + LineEnding + '%x% %x%');
+    CheckCounted('comment-hides', '/# {aa|bb} #/ {cc|dd|ee}');
+
+    { A permutation inside a choice and the other way round: the arithmetic composes, or it
+      is not arithmetic. }
+    CheckCounted('perm-in-choice', '{aa|[bb|cc]}');
+    CheckCounted('choice-in-perm', '[{aa|bb}|{cc|dd}]');
+    CheckCounted('perm-max', '[<minsize=1;maxsize=2>aa|bb|cc]');
+    CheckCounted('set-in-set', '#set %a% = {aa|bb}' + LineEnding +
+                               '#set %b% = %a% {cc|dd}' + LineEnding + '%b%');
+
+    { A resolved `#include` counts the fragment, and the answer stays a promise -- the set
+      knows the target, so nothing is unknown about it. }
+    set_ := TSpxTemplateSet.Create;
+    try
+      set_.AddOrSetValue('frag', '{cc|dd|ee}');
+      ctx := SpxContext('en', vars, set_);
+      ctx.PostProcess := False;
+      CheckSays('include-known', '#include "frag"' + LineEnding + '{aa|bb}', 6, True);
+      { Twice, and each occurrence rolls again -- the same rule as `#set`. }
+      CheckSays('include-twice', '#include "frag"' + LineEnding + '#include "frag"', 9, True);
+    finally
+      ctx := SpxContext('en', vars);
+      ctx.PostProcess := False;
+      set_.Free;
+    end;
+
+    (* WHAT THE NUMBER COUNTS, stated as a check because it is a decision and not an
+       accident: it counts the WAYS the template can be filled in, not how many different
+       texts come out. `{aa|aa}` is two ways and one text. Collapsing them would mean
+       rendering every combination, which is the thing the number exists to avoid doing, and
+       it would also lie in the other direction -- two options that happen to match here can
+       stop matching after one edit. GTW's «Max возможных вариантов» counts the same way. *)
+    CheckSays('duplicate-options', '{aa|aa}', 2, True);
+
+    (* ---- WHAT AN OUTSIDE REVIEW FOUND, each reproduced before it was believed and each a
+       failure of this file's own coverage: every one of them was invisible to a suite that
+       only ever asked the counter about templates the counter's author had in mind. ---- *)
+
+    { The permutation's SIZE RANGE is four asymmetric branches in the engine
+      (`Spintax.pas:1830-1837`), not one rule with defaults. Only-maxsize starts at ONE;
+      minsize=0 is a value and not an absence; and a contradictory pair WIDENS. }
+    CheckCounted('perm-maxsize-only', '[<maxsize=2>aa|bb|cc]');
+    CheckCounted('perm-minsize-zero', '[<minsize=0>aa|bb|cc]');
+    CheckCounted('perm-min-over-max', '[<minsize=3;maxsize=2>aa|bb|cc]');
+    CheckCounted('perm-both', '[<minsize=1;maxsize=2>aa|bb|cc]');
+
+    { A directive ends at any of FIVE terminators; the editor counts THREE. So this is one
+      editor line carrying a directive AND a choice, and masking the line threw the choice
+      away. U+2028 is E2 80 A8. }
+    CheckCounted('u2028-then-body', '#set %x% = qq'#$E2#$80#$A8'{aa|bb} %x%');
+
+    { An `#include` whose target is on the next line: the engine resolves it, the presentation
+      scanner does not see it, and the honest answer is a floor rather than a wrong promise. }
+    set_ := TSpxTemplateSet.Create;
+    try
+      set_.AddOrSetValue('frag', '{cc|dd|ee}');
+      ctx := SpxContext('en', vars, set_);
+      ctx.PostProcess := False;
+      CheckSays('include-next-line', '#include' + LineEnding + '"frag"' + LineEnding +
+                                     '{aa|bb}', 2, False);
+    finally
+      ctx := SpxContext('en', vars);
+      ctx.PostProcess := False;
+      set_.Free;
+    end;
+    (* ---- A SESSION VALUE IS A TEMPLATE, AND IT OUTRANKS THE DOCUMENT ----
+
+       Both measured against the engine, which overlays the host's table on top of the `#set`
+       definitions (`Spintax.pas:3145-3151`). The counter used to skip runtime variables
+       altogether, so a reader who typed `{aa|bb}` into the Variables panel was told the
+       template had half the variants it has. *)
+    vars.AddOrSetValue('x', '{aa|bb}');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckCounted('session-value', '%x% and {cc|dd}');
+    { And re-rolled at every use, exactly like a `#set`. }
+    CheckCounted('session-twice', '%x% %x%');
+    { The document says `qq`; the session says otherwise, and the session is what renders. }
+    vars.AddOrSetValue('y', '{ee|ff}');
+    CheckCounted('session-outranks-set', '#set %y% = qq' + LineEnding + '%y%');
+    (* A LITERAL session value means itself, and needs no special case here: the window hands
+       it over neutralised, so its braces are already sentinels by the time anything counts
+       them. This check is the proof that the absence of a special case is correct rather than
+       an oversight -- it goes through SpxValueForEngine exactly as the window does. *)
+    lit.Name := 'z';
+    lit.Value := '{gg|hh}';
+    lit.Literal := True;
+    vars.AddOrSetValue('z', SpxValueForEngine(lit));
+    CheckCounted('session-literal', '%z% and {cc|dd}');
+    vars.Clear;
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    (* ---- A `#def` IS ONE DRAW FOR THE DOCUMENT, wherever it is written ----
+
+       The engine rolls every definition once, before the body, dependencies first, and
+       whether the body uses it or not (`Spintax.pas:3162-3184`). So it multiplies the
+       document once and NOT the option it happens to sit in. These two cannot be enumerated
+       against the engine, because they are the case where ways and distinct texts genuinely
+       differ: the second makes three texts and the first two, while both have four draws.
+       That is the same rule `duplicate-options` records, seen from the other side.
+
+       The version that multiplied a `#def` into the enclosing option answered 3 for the
+       first of these -- neither the draws nor the texts, which is how an outside review
+       found it. *)
+    CheckSays('def-both-alts', '#def %d% = {aa|bb}' + LineEnding + '{%d%|%d%}', 4, True);
+    CheckSays('def-one-alt', '#def %d% = {aa|bb}' + LineEnding + '{%d%|plain}', 4, True);
+    { A definition nothing references is not a draw the reader can see, so it is not counted. }
+    CheckSays('def-unused', '#def %d% = {aa|bb}' + LineEnding + '{cc|dd}', 2, True);
+
+    (* ---- A REDEFINED MACRO IS THE LAST ONE, and a `#def` beats a `#set` ----
+
+       `ExtractDirectives` keeps the two kinds in separate maps, each last-wins
+       (`Spintax.pas:1227`), and the render lays the definitions over the sets. Reading the
+       FIRST match out of a flat list answered 2 where the engine makes 3 -- found here, not
+       by review, while replacing that list with the engine's own two layers. Redefining a
+       variable is the first question a reader of this project ever asked, so it is not an
+       exotic shape. *)
+    CheckCounted('redefined-set', '#set %x% = {aa|bb}' + LineEnding +
+                                  '#set %x% = {cc|dd|ee}' + LineEnding + '%x%');
+    CheckCounted('redefined-def', '#def %x% = {aa|bb}' + LineEnding +
+                                  '#def %x% = {cc|dd|ee}' + LineEnding + '%x%');
+    { Whichever order they are written in: the `#def` is rolled after the sets are laid down. }
+    CheckCounted('def-beats-set', '#set %x% = {aa|bb}' + LineEnding +
+                                  '#def %x% = {cc|dd|ee}' + LineEnding + '%x%');
+    CheckCounted('def-beats-set-reversed', '#def %x% = {cc|dd|ee}' + LineEnding +
+                                           '#set %x% = {aa|bb}' + LineEnding + '%x%');
+
+    (* ---- WHAT THE SECOND REVIEW FOUND. Every one reproduced against the engine before it
+       was believed, and every one the same shape: `SpxTokens` is a PRESENTATION scan whose own
+       header only promises never to claim a construct the engine does not see -- it promises
+       nothing in the other direction, and this file had been reading its opinion as engine
+       truth. Where the two can disagree, the answer is now a floor. ---- *)
+
+    { An unterminated `/#` is ordinary text to the engine since v0.5.0 and still a comment to
+      the scanner, so everything below it vanished from the count -- which is the state of the
+      document for every keystroke between typing the opener and the closer. }
+    CheckFloor('open-comment', '{aa|bb}' + LineEnding + '/# note' + LineEnding + '{cc|dd}');
+    CheckFloor('open-comment-inline', 'xx /# note {cc|dd}');
+    { A terminated one is not affected: the engine drops it too. }
+    CheckCounted('closed-comment', '/# {aa|bb} #/ {cc|dd|ee}');
+
+    { A closer of the wrong kind is not a closer. This reported 120 for a template the engine
+      renders verbatim as one text. }
+    CheckFloor('bracket-closed-by-brace', '[aa|bb|cc|dd|ee}');
+    CheckFloor('brace-closed-by-bracket', '{aa|bb|cc]');
+
+    { A macro chain deeper than the engine's MAX_VARIABLE_DEPTH renders the unexpanded name. }
+    big := '#set %v0% = {aa|bb}' + LineEnding;
+    for i := 1 to 60 do
+      big := big + '#set %v' + IntToStr(i) + '% = %v' + IntToStr(i - 1) + '%' + LineEnding;
+    CheckFloor('macro-chain-past-50', big + '%v60%');
+
+    { The input picks the branch, but the branch still holds what is inside it. This answered
+      one, which is what a whole document wrapped in a single conditional would have shown. }
+    CheckFloor('conditional-branch-contents', '{?v?{aa|bb}|{cc|dd}}');
+    { And a plural is NOT a conditional: a form holding a construct makes the engine print the
+      whole thing verbatim, so the biggest form is not a floor there. Measured; this line is
+      what failed when the first fix treated the two alike. }
+    CheckFloor('plural-form-contents', '{plural 2: {aa|bb}|{cc|dd}}');
+    CheckFloor('plural-plain-forms', '{plural 2: one|many}');
+
+    set_ := TSpxTemplateSet.Create;
+    try
+      set_.AddOrSetValue('f', '{aa|bb}');
+      set_.AddOrSetValue('frag', '#def %d% = {aa|bb}' + LineEnding + '%d%');
+      set_.AddOrSetValue('frag2', '#def %d% = {cc|dd|ee}' + LineEnding + '%d%');
+      ctx := SpxContext('en', vars, set_);
+      ctx.PostProcess := False;
+
+      (* A FRAGMENT IS ITS OWN DOCUMENT. `ResolveIncludes` renders the whole thing again per
+         occurrence, so a `#def` inside a fragment is rolled once PER INCLUDE -- and two
+         fragments that both define `%d%` do not share a macro. One flat name-keyed list
+         across the whole recursion answered 2 for each of these. *)
+      CheckCounted('def-in-fragment-twice', '#include "frag"' + LineEnding + '#include "frag"');
+      CheckCounted('def-in-two-fragments', '#include "frag"' + LineEnding + '#include "frag2"');
+
+      { Trailing junk is not an include -- the engine's anchor allows only whitespace -- so the
+        line is one literal text. Resolving the fragment anyway put the count ABOVE the truth,
+        which is the one thing a floor may never do. }
+      CheckFloor('include-with-junk', '#include "f" junk');
+      { And an include can resolve without being a directive in the source at all:
+        ResolveIncludes runs over the RENDERED text. }
+      CheckFloor('include-inside-an-option', '{pp|#include "f"}');
+    finally
+      ctx := SpxContext('en', vars);
+      ctx.PostProcess := False;
+      set_.Free;
+    end;
+
+    { ---- and what it refuses to promise ---- }
+
+    { A conditional is decided by the value, not by chance: with the variable unset the
+      template makes ONE text, and setting it can only add. So one, and a bound. }
+    CheckSays('conditional', '{?v?yes|no}', 1, False);
+    CheckSays('plural', '{plural 2: one|many}', 1, False);
+    { An include the set cannot resolve renders empty -- one text now, more if the fragment
+      ever arrives. }
+    CheckSays('unknown-include', '#include "gone"' + LineEnding + '{aa|bb}', 2, False);
+    { A construct multiplied by an unpromised one keeps the bound. }
+    CheckSays('mixed', '{aa|bb}{?v?yes|no}{cc|dd}', 4, False);
+
+    { Neither of these renders -- the engine refuses them -- but both used to be a way to hang
+      the window while it counted. One text, and not a promise. }
+    CheckSays('macro-self', '#set %a% = %a% x' + LineEnding + '%a%', 1, False);
+    CheckSays('macro-mutual', '#set %a% = %b%' + LineEnding + '#set %b% = %a%' +
+                              LineEnding + '%a%', 1, False);
+
+    { The ceiling is not a wrap: fifty three-way choices is 3^50, far past Int64 if it were
+      allowed to run, and the answer has to stay a number the window can print. }
+    big := '';
+    for i := 1 to 50 do big := big + '{aa|bb|cc}';
+    CheckSays('ceiling', big, SPX_COUNT_CEILING, True);
+  finally
+    vars.Free;
+  end;
+end;
+
 procedure TestGsaImport;
 var
   res: TSpxGsaResult;
@@ -7476,6 +7801,7 @@ begin
   TestOfflineClaim;
   TestAbout;
   TestGsaImport;
+  TestVariantCount;
   TestBrandMark;
   TestCompanyMark;
   TestHelpUnit;

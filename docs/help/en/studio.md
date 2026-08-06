@@ -69,6 +69,23 @@ little template of its own.
 before exporting. Near-duplicates can be dropped as they are produced, and a seed makes the
 whole set reproducible: the same seed and the same template give the same variants tomorrow.
 
+Beside those controls the panel says how many variants the template can make at all:
+`{a|b} and {c|d}` makes four. That number is what tells you a template is thin before you
+generate fifty and find out by reading them.
+
+It is an exact count only while every choice is left to chance. A conditional, a plural, or an
+`#include` whose target the set has not got is decided by something else — a value you supply,
+a number, a fragment that may yet arrive — so the panel says **at least** instead. That is the
+honest word: supplying a value can only add texts, never remove any. A number far too large to
+read stops at a trillion and says **at least** for the same reason.
+
+A variant is one filled-in template — one choice made at every construct — and that is not
+the same as a text that reads differently. `{a|a}` is two variants and one text, deliberately:
+the two options can stop matching after a single edit, and collapsing them would mean
+generating every combination first, which is the work the number exists to save you. A `#def`
+counts the same way: the engine draws it once per render whether the branch you took uses it
+or not.
+
 Export writes them out as plain text, one variant per line, or as an XLSX workbook.
 
 ## The group editor

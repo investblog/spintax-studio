@@ -28,7 +28,8 @@ interface
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, ComCtrls, Grids, Spin, Dialogs,
   Graphics, FileUtil,
-  Spintax, SpxStudio, SpxDedupe, SpxExport, SpxEngineThread, SpxUi, SpxStrIds, SpxStrings;
+  Spintax, SpxStudio, SpxCount, SpxDedupe, SpxExport, SpxEngineThread, SpxUi, SpxStrIds,
+  SpxStrings;
 
 type
   { What the panel needs from the form to start a batch. The form owns the document, the
@@ -73,6 +74,17 @@ type
       rebuild that line, and 'останавливаю…' would sit in an English window until the batch
       reported back. }
     FStopping: Boolean;
+    (* WHAT THE TEMPLATE CAN MAKE, as a finished sentence in the language it was built in.
+
+       It shares the progress line's slot on purpose, and the strip is not re-cut for it: the
+       two are never wanted at once. A run is happening or it is not; while it is, the reader
+       is watching variants land, and the ceiling they came from is the question they asked
+       BEFORE pressing Generate. So the line says the count when idle and the progress while
+       running, and the count comes back when the run ends. *)
+    FPossible: string;
+    { The count itself, kept so a language switch can rebuild the sentence from it. }
+    FCount_: TSpxCount;
+    FHavePossible: Boolean;
     FStale: Boolean;
     FStalePending: Boolean;
     FOnGenerate: TSpxGenerateEvent;
@@ -91,6 +103,9 @@ type
     procedure AddRow(const V: TSpxVariant);
     procedure UpdateButtons;
     procedure SayProgress;
+    { The one place the shared line is written, so the two sentences cannot both think they
+      own it. }
+    procedure SayTopLine;
     { The status line and its hint in one move. They must not drift apart: the hint exists
       because the longest report outgrows the row even stretched, so a hint left over from an
       earlier run is a tooltip that describes a set the user has already replaced. }
@@ -112,6 +127,9 @@ type
     procedure BatchProgress(const P: TSpxBatchProgress);
     { The document changed under a set that is already generated. }
     procedure MarkStale;
+    { How many variants the open document can produce, as the worker counted it -- see
+      SpxCount's header for why that word and not "texts". }
+    procedure SetPossible(const ACount: TSpxCount);
     { Every caption re-read, after the interface language changes. }
     procedure Retranslate;
     property OnGenerate: TSpxGenerateEvent read FOnGenerate write FOnGenerate;
@@ -355,12 +373,10 @@ begin
   { The progress line is one of three sentences, and which one is state rather than text --
     hence FStopping. Without this the line stays in the previous language: during a run the
     next variant repaints it, but after Stop nothing does until the batch reports back. }
-  if FRunning then
-  begin
-    if FStopping then FProgress.Caption := Tr(sStopping)
-    else if FReport.Tried > 0 then SayProgress
-    else FProgress.Caption := Tr(sWorking);
-  end;
+  { The count was built as a sentence in the previous language, so it is rebuilt rather than
+    kept -- unlike the finished report below, which the pane cannot rebuild. }
+  if FHavePossible then SetPossible(FCount_);
+  SayTopLine;
 
   { Only the idle line is rewritten. A run in flight says 'working…' with a count behind it,
     and translating the panel is no reason to tell the user nothing has been generated while
@@ -500,6 +516,54 @@ begin
     [FReport.Generated, FReport.Requested, FReport.Dropped, FReport.Tried]);
 end;
 
+procedure TSpxVariantsPane.SayTopLine;
+begin
+  if FRunning then
+  begin
+    if FStopping then FProgress.Caption := Tr(sStopping)
+    else if FReport.Tried > 0 then SayProgress
+    else FProgress.Caption := Tr(sWorking);
+  end
+  else
+    FProgress.Caption := FPossible;
+end;
+
+(* THE NUMBER, GROUPED THE WAY A PERSON READS IT -- 241 864 704, not 241864704, which is what
+   GTW does and what makes the difference between "thin" and "enormous" visible without
+   counting digits. The space is a NON-BREAKING one so the line never wraps inside the number.
+
+   The separator is not taken from the locale: `ThousandSeparator` is the OS's, and this window
+   is translated into fourteen languages that the OS is not necessarily set to. A space groups
+   digits in every one of them, and no language reads it as a decimal point. *)
+function GroupDigits(V: Int64): string;
+var s: string; i, n: Integer;
+begin
+  s := IntToStr(V);
+  Result := '';
+  n := 0;
+  for i := Length(s) downto 1 do
+  begin
+    Result := s[i] + Result;
+    Inc(n);
+    if (n mod 3 = 0) and (i > 1) then Result := #$C2#$A0 + Result;   { U+00A0, UTF-8 }
+  end;
+end;
+
+procedure TSpxVariantsPane.SetPossible(const ACount: TSpxCount);
+begin
+  FCount_ := ACount;
+  FHavePossible := True;
+  { EXACT is a promise and the panel makes it or it does not. A conditional, a plural or an
+    include the set has not got are all decided by something other than chance, so the honest
+    answer is a floor -- and the SATURATED case is a floor too, for a different reason: the
+    counter stopped adding, it did not finish. Both say "at least", which is true of both. }
+  if FCount_.Exact and not FCount_.Saturated then
+    FPossible := Format(Tr(sPossible), [GroupDigits(FCount_.Value)])
+  else
+    FPossible := Format(Tr(sPossibleAtLeast), [GroupDigits(FCount_.Value)]);
+  SayTopLine;
+end;
+
 procedure TSpxVariantsPane.SayReport(ACancelled: Boolean);
 begin
   if ACancelled then
@@ -524,7 +588,8 @@ begin
   if P.Done then
   begin
     FRunning := False;
-    FProgress.Caption := '';
+    { Not blanked: the run is over, so the line goes back to what the template can make. }
+    SayTopLine;
     SayReport(P.Cancelled);
     UpdateButtons;
     { An edit that arrived mid-run is announced now, on top of the report rather than

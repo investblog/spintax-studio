@@ -135,7 +135,14 @@ type
       two things the summary has to say — what was lifted out of the template, and that those
       values live for this session only. The refusal list needs no string of its own: it is
       the engine's `name=text`, shown as it came. ── }
-    sMenuGsaImport, sMenuGsaOpen, sGsaFilter, sGsaLifted, sGsaSessionOnly
+    sMenuGsaImport, sMenuGsaOpen, sGsaFilter, sGsaLifted, sGsaSessionOnly,
+
+    { ── HOW MANY VARIANTS THE TEMPLATE CAN MAKE, which is the question an author asks before
+      they ask for fifty of them. Two sentences rather than one with a word slotted in: the
+      qualifier lands in a different place in a different language, and "at least" is not a
+      word every one of these fourteen spells with one. The number itself is not translated —
+      it is grouped in code, the way GTW writes it. ── }
+    sPossible, sPossibleAtLeast
   );
 
 implementation

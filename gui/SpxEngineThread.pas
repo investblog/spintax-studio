@@ -21,7 +21,8 @@ unit SpxEngineThread;
 interface
 
 uses
-  Classes, SysUtils, SyncObjs, Spintax, SpxStudio, SpxFiles, SpxDedupe, SpxHelpText;
+  Classes, SysUtils, SyncObjs, Spintax, SpxStudio, SpxCount, SpxFiles, SpxDedupe,
+  SpxHelpText;
 
 type
   { TSpxVarPairs (what the panel sends) and TSpxVarInfos (what it receives) are declared in
@@ -134,6 +135,13 @@ type
       set to look in -- a new file has none -- and telling a user "missing" in the second case
       would be a plain lie. Only this thread knows: it owns FSet. }
     HaveSet: Boolean;
+    { How many VARIANTS the template can make (SpxCount -- a variant is one filled-in
+      template, which is not the same as a text that reads differently). Computed HERE and
+      not in the panel
+      because counting reads the directive prelude through the engine, and the UI thread does
+      not touch the engine -- the same rule the preview and the model already follow. It also
+      needs FSet to resolve an `#include`, which only this thread owns. }
+    Count: TSpxCount;
   end;
 
   TSpxJobDone = procedure(const Res: TSpxJobResult) of object;
@@ -654,6 +662,10 @@ begin
     finally
       model.Free;
     end;
+
+    { The count is about the DOCUMENT, so a fragment render does not change it: narrowing the
+      preview to a selection must not make the panel say the template got smaller. }
+    FResult.Count := SpxCountVariants(Job.Text, ctx);
   finally
     vars.Free;
   end;

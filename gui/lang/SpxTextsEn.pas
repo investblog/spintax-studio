@@ -102,7 +102,10 @@ const
       'Import GSA template…',
       'GSA templates|*.txt;*.spintax|All files|*.*',
       '%d constructs were lifted out of the template into variables.',
-      'They are session values: they are shown in the Variables panel and are NOT saved with the document. Rendering also runs without post-processing, so the template stays exactly as GSA wrote it.'
+      'They are session values: they are shown in the Variables panel and are NOT saved with the document. Rendering also runs without post-processing, so the template stays exactly as GSA wrote it.',
+
+      'Possible variants: %s',
+      'Possible variants: at least %s'
   );
 
 implementation

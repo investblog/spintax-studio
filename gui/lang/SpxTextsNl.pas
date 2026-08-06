@@ -101,7 +101,10 @@ const
       'GSA-sjabloon importeren…',
       'GSA-sjablonen|*.txt;*.spintax|Alle bestanden|*.*',
       'Uit het sjabloon naar variabelen gehaald: %d.',
-      'Dit zijn sessiewaarden: ze staan in het variabelenpaneel en worden NIET met het document opgeslagen. Er wordt zonder nabewerking gerenderd, zodat het sjabloon blijft zoals GSA het schreef.'
+      'Dit zijn sessiewaarden: ze staan in het variabelenpaneel en worden NIET met het document opgeslagen. Er wordt zonder nabewerking gerenderd, zodat het sjabloon blijft zoals GSA het schreef.',
+
+      'Mogelijke varianten: %s',
+      'Mogelijke varianten: minstens %s'
   );
 
 implementation

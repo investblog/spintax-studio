@@ -116,7 +116,7 @@ const
     'docs/help/ru/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..5] of string = (
-    '550ca5a6638e3e37', '5f4bc9e4682feee2', 'b8a606a10c367fd3', '6ebc7d94e9dfbd21', '3a4a41399f059476', '716fe1af3c660e4c'
+    '62cf9f279e03b021', '5f4bc9e4682feee2', 'b8a606a10c367fd3', 'ab33512fa68fefcc', '3a4a41399f059476', '716fe1af3c660e4c'
   );
   HELP_DOC_LOCALE: array[0..5] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru'
@@ -231,15 +231,15 @@ const
     0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..59] of Integer = (
-    0, 7, 14, 20, 23, 26, 35, 40, 46, 58, 77, 87, 94, 101, 110, 114, 128, 146, 148, 158, 165, 176, 192, 216, 234, 253, 264, 277, 290, 298, 305, 312, 319, 325, 328, 331, 340, 345, 351, 363, 382, 392, 399, 407, 416, 420, 434, 460, 462, 473, 479, 492, 508, 532, 550, 569, 580, 593, 613, 621
+    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 80, 90, 97, 104, 113, 117, 131, 149, 151, 161, 168, 179, 195, 219, 237, 256, 267, 280, 293, 301, 308, 315, 322, 331, 334, 337, 346, 351, 357, 369, 388, 398, 405, 413, 422, 426, 440, 466, 468, 479, 485, 498, 514, 538, 556, 575, 586, 599, 619, 627
   );
   HELP_LAST: array[0..59] of Integer = (
-    6, 13, 19, 22, 25, 34, 39, 45, 57, 76, 86, 93, 100, 109, 113, 127, 145, 147, 157, 164, 175, 191, 215, 233, 252, 263, 276, 289, 297, 304, 311, 318, 324, 327, 330, 339, 344, 350, 362, 381, 391, 398, 406, 415, 419, 433, 459, 461, 472, 478, 491, 507, 531, 549, 568, 579, 592, 612, 620, 626
+    6, 13, 22, 25, 28, 37, 42, 48, 60, 79, 89, 96, 103, 112, 116, 130, 148, 150, 160, 167, 178, 194, 218, 236, 255, 266, 279, 292, 300, 307, 314, 321, 330, 333, 336, 345, 350, 356, 368, 387, 397, 404, 412, 421, 425, 439, 465, 467, 478, 484, 497, 513, 537, 555, 574, 585, 598, 618, 626, 632
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..626] of string = (
+  HELP_LINE: array[0..632] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -293,6 +293,21 @@ const
       ' in the list before exporting. Near-duplicates can be dropped as they are produced, an' +
       'd a seed makes the whole set reproducible: the same seed and the same template give th' +
       'e same variants tomorrow.</p>',
+    '<p>Beside those controls the panel says how many variants the template can make at all' +
+      ': <code>{a|b} and {c|d}</code> makes four. That number is what tells you a template is' +
+      ' thin before you generate fifty and find out by reading them.</p>',
+    '<p>It is an exact count only while every choice is left to chance. A conditional, a pl' +
+      'ural, or an <code>#include</code> whose target the set has not got is decided by somet' +
+      'hing else — a value you supply, a number, a fragment that may yet arrive — so the pane' +
+      'l says <b>at least</b> instead. That is the honest word: supplying a value can only ad' +
+      'd texts, never remove any. A number far too large to read stops at a trillion and says' +
+      ' <b>at least</b> for the same reason.</p>',
+    '<p>A variant is one filled-in template — one choice made at every construct — and that' +
+      ' is not the same as a text that reads differently. <code>{a|a}</code> is two variants ' +
+      'and one text, deliberately: the two options can stop matching after a single edit, and' +
+      ' collapsing them would mean generating every combination first, which is the work the ' +
+      'number exists to save you. A <code>#def</code> counts the same way: the engine draws i' +
+      't once per render whether the branch you took uses it or not.</p>',
     '<p>Export writes them out as plain text, one variant per line, or as an XLSX workbook.' +
       '</p>',
     '<h2 id="groups">The group editor</h2>',
@@ -1014,6 +1029,22 @@ const
       'чтите список до экспорта. Похожие можно отбрасывать прямо при генерации, а сид делает ' +
       'весь набор воспроизводимым: тот же сид и тот же шаблон завтра дадут те же варианты.</p' +
       '>',
+    '<p>Рядом с этими полями панель говорит, сколько вариантов шаблон может дать вообще: <c' +
+      'ode>{a|b} and {c|d}</code> даёт четыре. Это то самое число, по которому видно, что шаб' +
+      'лон беден, — до того, как сгенерировать полсотни и понять это чтением.</p>',
+    '<p>Точное оно, только пока каждый выбор оставлен случаю. Условие, форма числа и <code>' +
+      '#include</code>, цели которого в наборе нет, решаются не случаем — значением, которое ' +
+      'вы подставите, числом, фрагментом, который ещё может появиться, — и тогда панель говор' +
+      'ит <b>не менее</b>. Это честное слово: подставленное значение может только добавить те' +
+      'ксты, но не убрать. Число, слишком большое, чтобы его читать, останавливается на трилл' +
+      'ионе и говорит <b>не менее</b> по той же причине.</p>',
+    '<p>Вариант — это один заполненный шаблон, по одному выбору в каждой конструкции, и это' +
+      ' не то же самое, что текст, который читается иначе. <code>{a|a}</code> — это два вариа' +
+      'нта и один текст, и так задумано: два одинаковых варианта перестанут совпадать после п' +
+      'ервой же правки, а чтобы схлопнуть их сейчас, пришлось бы сначала сгенерировать все со' +
+      'четания — ту самую работу, ради экономии которой число и существует. <code>#def</code>' +
+      ' считается так же: движок бросает его один раз на рендер, независимо от того, пользует' +
+      'ся им выбранная ветка или нет.</p>',
     '<p>Экспорт сохраняет их обычным текстом, по варианту на строку, или книгой XLSX.</p>',
     '<h2 id="groups">Редактор групп</h2>',
     '<p>Поставьте курсор внутрь <code>{a|b|c}</code> и откройте редактор групп на полосе ин' +

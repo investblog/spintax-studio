@@ -215,7 +215,11 @@ const
 
     { the GSA import: two menu items (a menu grows to fit), a dialog filter that Windows
       parses rather than lays out, and two sentences in a message box that wraps them }
-    0, 0, 0, 0, 0
+    0, 0, 0, 0, 0,
+
+    { the possible-variant count: both carry %s, which a budgeted string may not do at all,
+      and both are drawn into a label the strip already sizes }
+    0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

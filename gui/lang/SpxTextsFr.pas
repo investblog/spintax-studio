@@ -106,7 +106,10 @@ const
       'Importer un modèle GSA…',
       'Modèles GSA|*.txt;*.spintax|Tous les fichiers|*.*',
       'Éléments extraits du modèle vers des variables : %d.',
-      'Ce sont des valeurs de session : elles figurent dans le panneau des variables et ne sont PAS enregistrées avec le document. Le rendu se fait sans post-traitement, afin que le modèle reste tel que GSA l''a écrit.'
+      'Ce sont des valeurs de session : elles figurent dans le panneau des variables et ne sont PAS enregistrées avec le document. Le rendu se fait sans post-traitement, afin que le modèle reste tel que GSA l''a écrit.',
+
+      'Variantes possibles : %s',
+      'Variantes possibles : au moins %s'
   );
 
 implementation

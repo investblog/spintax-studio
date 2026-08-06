@@ -4581,6 +4581,13 @@ begin
             SpxHelpOffersInsert(HelpShowing, FHelpExample, Length(Res.Rows)));
   FVars.SetModel(Res.Vars);
   FVars.SetIncludes(Res.Includes, Res.HaveSet);
+  (* AND NOT WHEN THE ANSWER IS ABOUT THE HELP. With the help open this job's text is the
+     example under the caret -- or an empty string before anything is clicked, which counts as
+     one -- so the Variants panel read "Possible variants: 1" beside a Generate button that
+     still generates from the reader's own document. `Res.HelpSet` is the same guard ShowOffer
+     and ShowVariant already carry, and for the same reason: the pane has two routes in and a
+     rule stated on one of them describes whichever ran last. *)
+  if not Res.HelpSet then FSet.SetPossible(Res.Count);
   FErrorMarkup.SetMarks(Res.Marks);
   FWarnMarkup.SetMarks(Res.Marks);
   FEditor.Invalidate;
