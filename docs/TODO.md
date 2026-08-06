@@ -19,7 +19,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
-      at `engine/`, pinned to tag `v0.4.1`. Clone with `--recurse-submodules`.
+      at `engine/`, pinned to tag `v0.5.0`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
       twice the same day). The family resolves includes **inside render**, behind a host
@@ -108,8 +108,8 @@ is a deliberate state and not a backlog of things anyone forgot.
    <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
    Microsoft's own snapshot of that text updates only with the submission.
 
-6. **The engine moved to `v0.4.1`**, 2026-08-06 (was `v0.3.3`, which is what R0 shipped
-   against; `v0.4.0` was pinned for a few hours and replaced — see below). Nothing Studio can see changed, and that was checked rather than read off a
+6. **The engine moved to `v0.5.0`**, 2026-08-06 (was `v0.3.3`, which is what R0 shipped
+   against; `v0.4.0` and `v0.4.1` were each pinned for part of the day — see below). Nothing Studio can see changed, and that was checked rather than read off a
    changelog: the engine's whole `interface` section is byte-identical between the two tags.
    What is inside is a render speed-up — 64 KB of plain text carrying no spintax went from
    15 ms to 2.5 ms by the engine's own measurement, which is the live preview's exact path —
@@ -126,7 +126,22 @@ is a deliberate state and not a backlog of things anyone forgot.
    partially overlapping tag sets (`{#A a|#B b}` then `{#A c|#C d}`) were translated as
    independent groups instead of refused. Both are Studio checks now, and both were proved to
    FAIL on `v0.4.0` by putting the submodule back on it. The engine proper is unchanged
-   between the two tags; only `Spintax.Gsa` moved.
+   between those two tags; only `Spintax.Gsa` moved.
+
+   **Then `v0.5.0`, and this one changes behaviour Studio documents.** The interface only GREW
+   — nothing removed, and `SpCompile` / `SpRenderCompiled` / `TSpTemplate` / `ESpintax` added —
+   but an unterminated `/#` is ordinary text now where it used to swallow the document. Four
+   checks failed on the bump and every one of them was right to: two gated help examples that
+   documented the old rule, and two group-editor checks. The editor itself needed no change,
+   because it decides by reading an edit back through the engine: it now accepts
+   `#set %x% = A /# oops` in a document with no `#/` (the value means itself) and still refuses
+   it in a document that has one further down (the pair would eat the group). Help rewritten to
+   the measurement, including the counter-example that shows what the pairing costs.
+
+   **`SpCompile` is not adopted yet and is worth its own slice:** parse once, render many. By
+   the engine's own timing, building and destroying the node tree is 84% of an article's
+   render, and this window rebuilds it on every keystroke of the preview and once per variant
+   in a batch. Both are exactly the shape that API is for.
 
 7. **GSA SER import**, done 2026-08-06 — off by default, `View` → `GSA import` reveals
    `File` → `Import GSA template…`. Editor-core in `src/SpxGsaImport.pas`, gated without a
@@ -1663,8 +1678,13 @@ Decisions owed **before the relevant submission** (not switchable later):
       The payoff grows with the difficulty: whatever SER renders natively needs no conversion
       at all.
 
-- [ ] **Post-process rewrites a value the host neutralised.** Measured 2026-08-06 on
-      `v0.4.0`, and it is not a converter question — the value goes straight through
+- [ ] **Post-process rewrites a value the host neutralised.** **Answered, not fixed:** on
+      `v0.5.0` the engine documents the rule instead — `docs(gsa): render a converted template
+      with PostProcess=False, and say why`, plus a warning where `PostProcess` is introduced —
+      and the behaviour still reproduces exactly as measured below. That is a legitimate answer
+      (Studio's own rule does not depend on a fix), so this stays open only as the record of a
+      known sharp edge for any other host. Measured 2026-08-06 on
+      `v0.4.0` and again on `v0.5.0`, and it is not a converter question — the value goes straight through
       `TSpContext.Vars`, neutralised the way `SpNeutralize` is documented for:
 
       ```pascal

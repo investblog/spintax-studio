@@ -3550,8 +3550,8 @@ const
   HELP_DOCS: array[0..5] of THelpDoc = (
     (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Codes: True;  Good: 5),
     (Path: 'docs/help/ru/diagnostics.md'; Examples: 36; Codes: True;  Good: 7),
-    (Path: 'docs/help/en/syntax.md';      Examples: 32; Codes: False; Good: 30),
-    (Path: 'docs/help/ru/syntax.md';      Examples: 35; Codes: False; Good: 33),
+    (Path: 'docs/help/en/syntax.md';      Examples: 33; Codes: False; Good: 30),
+    (Path: 'docs/help/ru/syntax.md';      Examples: 36; Codes: False; Good: 33),
     { The product itself, added 2026-08-06 -- a reader who opens the help was being told how
       the LANGUAGE works and never what this program is. It carries one example, because it is
       about the window rather than the syntax, and that one is gated like every other. }
@@ -6184,8 +6184,11 @@ begin
         EditSpanText('#set %x% =' + #10 + 'т', 0, 'A'), '[]');
   { A REFUSAL REPORTS NO PLACE -- 0..0, asserted on the NUMBERS. A caller that spliced a leaked
     span after a False would write into a document the function had just refused to change. }
+  { The refused case is a value whose comment can PAIR with a closer further down: engine
+    `v0.5.0` made an unterminated `/#` ordinary text, so a lone one is no longer a refusal --
+    see the note where that is measured. }
   Check('edit/a-refused-value-reports-no-span',
-        EditSpan('#set %x% = A'#10'т', 0, 'A /# oops'), 'refused 0..0');
+        EditSpan('#set %x% = A'#10'т #/ у', 0, 'A /# oops'), 'refused 0..0');
   Check('edit/a-refused-index-reports-no-span', EditSpan('#set %x% = A'#10'т', 9, 'Б'),
         'refused 0..0');
   { An include has a target, not a value -- and therefore no value span. }
@@ -6267,11 +6270,27 @@ begin
   Check('edit/value-can-be-emptied', EditValue(doc, 0, ''), '#set %x% = '#10);
   Check('edit/the-engine-reads-the-empty-value', DirSig(EditValue(doc, 0, '')), 'set:x=;');
 
-  { THE WRITTEN TEXT IS NOT TRUSTED. Each of these spliced happily and reported success
-    until the edit was read back through the engine. The first is the worst: an unterminated
-    comment swallows the rest of the file, and the render collapses to nothing. }
+  (* THE WRITTEN TEXT IS NOT TRUSTED. Each of these spliced happily and reported success until
+     the edit was read back through the engine.
+
+     AND THAT CHECK SURVIVED THE ENGINE CHANGING UNDER IT, which is the reason it is written
+     this way rather than as a list of forbidden characters. Until `v0.5.0` an unterminated
+     `/#` swallowed the rest of the file, so a value carrying one was always a refusal; in
+     `v0.5.0` it is ordinary text. Nothing here was edited to follow — the read-back simply
+     started accepting the harmless case and goes on refusing the harmful one, which is a
+     property of the document rather than of the value:
+
+       `#set %x% = A /# oops` with no `#/` later   -> accepted, and the value means itself
+       the same edit with a `#/` further down      -> refused, because the two would pair and
+                                                      eat the group and everything between
+
+     Both measured on `v0.5.0` before this was rewritten. *)
   doc := '#set %x% = A'#10'корпус текста'#10'%x% и ещё'#10;
+  CheckTrue('edit/a lone unterminated comment is now harmless text',
+            EditValue(doc, 0, 'A /# oops') <> '<refused>');
+  doc := '#set %x% = A'#10'корпус #/ текста'#10'%x% и ещё'#10;
   Check('edit/a-value-that-opens-a-comment', EditValue(doc, 0, 'A /# oops'), '<refused>');
+  doc := '#set %x% = A'#10'корпус текста'#10'%x% и ещё'#10;
   Check('edit/a-value-with-a-line-break', EditValue(doc, 0, 'один'#10'два'), '<refused>');
   Check('edit/a-value-with-a-carriage-return', EditValue(doc, 0, 'один'#13'два'), '<refused>');
   Check('edit/an-empty-name', EditName(doc, 0, ''), '<refused>');

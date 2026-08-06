@@ -361,11 +361,22 @@ under another the same template answers `One br two`. A closing tag (`</b>`), a 
 (`<br/>`), one carrying attributes (`<br class="x">`) and a tag in the middle of an item are all
 left alone.
 
-**An unclosed comment swallows everything after it**, silently:
+**An unclosed comment is ordinary text** — it opens nothing, and the `/#` is printed:
 
 ```spx-good
-before /# rest of it  →  Before
+before /# rest of it  →  Before /# rest of it
 ```
+
+But it is still half of a pair. If a `#/` appears further down the document, the two find each
+other and everything between them goes — including whatever the author wrote in between:
+
+```
+{a /# oops|b} middle #/ tail  →  {a tail
+```
+
+The choice above lost its second alternative and its closing brace, and no diagnostic says so:
+this is what the text MEANS, not a mistake the engine can see. When a `/#` is meant literally,
+the safe place for it is a variable's value rather than the template body.
 
 ## Where to look next
 
