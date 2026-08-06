@@ -38,7 +38,15 @@ from PIL import Image
 
 # What Windows asks for: 16 in the title bar, 32 alt-tab, 48 in Explorer, the rest for the
 # larger views and for high-dpi versions of the small ones.
-SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128]
+# THE SIZES THE SHELL ACTUALLY ASKS FOR, not a tidy doubling. Windows does not scale an icon
+# up to fill a cell: when the exact size is missing it takes the nearest SMALLER frame and
+# draws it in the corner of the space, which is what a reader reported on 2026-08-06 as the
+# taskbar icon "not being centred" -- measured off the screenshot, a 24 px glyph sitting high
+# and left inside a larger highlight with empty space at the bottom right. The frame itself was
+# centred all along (alpha centroid dead centre in every size).
+#
+# 24/30/36/42/48 are the taskbar at 100/125/150/175/200%, 16/20/24/28/32 the small views.
+SIZES = [16, 20, 24, 28, 30, 32, 36, 40, 42, 48, 64, 96, 128]
 
 RT_ICON = 3
 RT_GROUP_ICON = 14
