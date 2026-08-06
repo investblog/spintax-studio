@@ -2011,6 +2011,35 @@ begin
     CheckTrue('thread/a-defaulted-result-is-about-no-example',
               not Default(TSpxJobResult).HelpSet);
 
+    (* AND THE COSMETIC STAGE, THROUGH THE WORKER RATHER THAN BESIDE IT. An outside review on
+       2026-08-06 pointed at the gap and was right about it: the GSA checks call the engine
+       directly, so nothing gated the one hop that actually decides a converted template's
+       fate -- the window sets NoPostProcess on the job, and the worker has to turn that into
+       `TSpContext.PostProcess`.
+
+       Written NEGATIVE for the reason the field is: these records are filled by hand, and a
+       Boolean nobody set is False. The first check is the default -- an ordinary job is
+       post-processed -- and the second is the GSA document's. `a,b` is the smallest text that
+       tells them apart: the typographer gives it a space AND a capital, and neither happens
+       when the stage is off. *)
+    job.Id := 10;
+    job.Text := 'a,b';
+    job.Fragment := '';
+    job.HelpSet := False;
+    job.HelpExample := -1;
+    job.Seeded := False;
+    job.NoPostProcess := False;
+    th.Post(job);
+    CheckTrue('thread/delivers-the-tenth', PumpUntil(probe, 10, 5000));
+    Check('thread/an ordinary job is post-processed', probe.Last.Preview, 'A, b');
+
+    job.Id := 11;
+    job.NoPostProcess := True;
+    th.Post(job);
+    CheckTrue('thread/delivers-the-eleventh', PumpUntil(probe, 11, 5000));
+    Check('thread/a GSA job is rendered verbatim', probe.Last.Preview, 'a,b');
+    job.NoPostProcess := False;
+
     { LATEST WINS. Fifty edits arrive faster than fifty renders can run, so the queue holds
       one job and the rest are replaced unrendered. Without that, a fast typist would build
       a backlog the UI then walks through one stale preview at a time. }
