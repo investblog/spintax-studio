@@ -14,7 +14,7 @@ template will behave the same way on your server as it does in this window.
 
 The **Where** column is a line and a column. Clicking the row puts the caret there.
 
-> Every example below was run through `spintax-win v0.3.3`, and the right-hand side is exactly
+> Every example below was run through `spintax-win v0.4.0`, and the right-hand side is exactly
 > what it returned. Nothing here is remembered or guessed.
 
 ## How to read the examples

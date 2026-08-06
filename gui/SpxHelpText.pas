@@ -114,7 +114,7 @@ const
     'docs/help/ru/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..3] of string = (
-    '605c61c6f231a069', '18de7309d6cea043', 'b61b55bc16b9ee83', '0effac0c5cdb4ad4'
+    'cdc2b8aab2363a59', 'b8a606a10c367fd3', 'd035385da24243eb', '716fe1af3c660e4c'
   );
   HELP_DOC_LOCALE: array[0..3] of string = (
     'en', 'en', 'ru', 'ru'
@@ -235,7 +235,7 @@ const
       'y name, a <b>condition</b>, a <b>count</b> that picks the right word form, and an <b>i' +
       'nclude</b> that pulls in another template. Comments are a seventh mark that produces n' +
       'othing at all.</p>',
-    '<blockquote>Every example below was run through <code>spintax-win v0.3.3</code>, and t' +
+    '<blockquote>Every example below was run through <code>spintax-win v0.4.0</code>, and t' +
       'he right-hand side is exactly what it returned. Nothing here is remembered or guessed.' +
       '</blockquote>',
     '<p>The other document in this help, <b>What the Diagnostics tab is telling you</b>, is' +
@@ -496,7 +496,7 @@ const
     '</table>',
     '<p>The <b>Where</b> column is a line and a column. Clicking the row puts the caret the' +
       're.</p>',
-    '<blockquote>Every example below was run through <code>spintax-win v0.3.3</code>, and t' +
+    '<blockquote>Every example below was run through <code>spintax-win v0.4.0</code>, and t' +
       'he right-hand side is exactly what it returned. Nothing here is remembered or guessed.' +
       '</blockquote>',
     '<h2 id="reading">How to read the examples</h2>',
@@ -851,7 +851,7 @@ const
       'кольких кусков, <b>макрос</b>, который объявляют один раз и зовут по имени, <b>условие' +
       '</b>, <b>счёт</b>, подбирающий нужную форму слова, и <b>включение</b> другого шаблона.' +
       ' Комментарий — седьмая разметка, не дающая ничего.</p>',
-    '<blockquote>Каждый пример ниже прогнан через <code>spintax-win v0.3.3</code>, и справа' +
+    '<blockquote>Каждый пример ниже прогнан через <code>spintax-win v0.4.0</code>, и справа' +
       ' стоит ровно то, что он вернул. Здесь ничего не вспомнено и не угадано.</blockquote>',
     '<p>Второй документ этой справки, <b>Что говорит вкладка диагностики</b>, — про то, что' +
       ' идёт не так. Этот — про то, что конструкции делают, когда всё так, включая несколько ' +
@@ -1120,7 +1120,7 @@ const
       'т: вставка по кругу, регистр цели, служебный символ</td></tr>',
     '</table>',
     '<p>Столбец «Место» — строка и колонка. Щелчок по строке ставит туда курсор.</p>',
-    '<blockquote>Все примеры ниже прогнаны через движок <code>spintax-win v0.3.3</code>, и ' +
+    '<blockquote>Все примеры ниже прогнаны через движок <code>spintax-win v0.4.0</code>, и ' +
       'в колонке «выводит» написано ровно то, что он вернул. Ничего не выдумано и не пересказ' +
       'ано по памяти.</blockquote>',
     '<h2 id="reading">Как читать примеры</h2>',

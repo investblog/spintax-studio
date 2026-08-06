@@ -8,7 +8,7 @@ There are six of them, and that is the whole language: a **choice** between alte
 **count** that picks the right word form, and an **include** that pulls in another template.
 Comments are a seventh mark that produces nothing at all.
 
-> Every example below was run through `spintax-win v0.3.3`, and the right-hand side is exactly
+> Every example below was run through `spintax-win v0.4.0`, and the right-hand side is exactly
 > what it returned. Nothing here is remembered or guessed.
 
 The other document in this help, **What the Diagnostics tab is telling you**, is about what goes

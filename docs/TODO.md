@@ -19,7 +19,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
-      at `engine/`, pinned to tag `v0.3.3`. Clone with `--recurse-submodules`.
+      at `engine/`, pinned to tag `v0.4.0`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
       twice the same day). The family resolves includes **inside render**, behind a host
@@ -42,6 +42,20 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       and in M4 it has to read as disabled rather than broken. (spec §4.1, §4.5, §10)
 - [ ] **Persistence** — keep the LLM-loop history and generated variant sets between
       sessions, or treat them as session-only. (M4 / M3)
+- [ ] **Import GSA SER templates?** — an opportunity the engine opened on 2026-08-06, not a
+      commitment. `spintax-win v0.4.0` ships `src/Spintax.Gsa.pas`: `SpGsaToSpintax` converts an
+      existing GSA Search Engine Ranker template into this family's syntax, reports what it
+      refuses in an `Unsupported` list rather than guessing, and lifts what it cannot fix in
+      place — BBCode, fragment URLs, `#file[...]` — out into host variables. It sits outside
+      `unit Spintax`, has its own suite, and adds nothing to the engine's public surface, so
+      linking it is Studio's decision alone and costs the engine nothing either way.
+
+      What it would BUY: an author with a library of SER templates gets them in without
+      retyping, and the conversion is verified the way everything else here is — by rendering
+      the result through the real engine. What it would COST: a second dialect on screen (the
+      refusal list has to be SHOWN, not swallowed), converter-invented variables appearing in
+      the variables panel, and a support surface for a product we do not control. Decide before
+      M4 rather than during it.
 
 ## Where R0 is (re-checked 2026-08-04)
 
@@ -94,7 +108,17 @@ is a deliberate state and not a backlog of things anyone forgot.
    <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
    Microsoft's own snapshot of that text updates only with the submission.
 
-6. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
+6. **The engine moved to `v0.4.0`**, 2026-08-06 (was `v0.3.3`, which is what R0 shipped
+   against). Nothing Studio can see changed, and that was checked rather than read off a
+   changelog: the engine's whole `interface` section is byte-identical between the two tags.
+   What is inside is a render speed-up — 64 KB of plain text carrying no spintax went from
+   15 ms to 2.5 ms by the engine's own measurement, which is the live preview's exact path —
+   and `src/Spintax.Gsa.pas`, an optional converter that is **not** part of `unit Spintax`.
+   The suite is green on the new engine in both binaries, and the help documents' claim that
+   their examples were rendered by a named version was re-pointed at `v0.4.0`, which the
+   example gate had just re-proved by running every one of them again.
+
+7. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
    and nothing else — the reader's words were "it tells you nothing about the product and looks
    broken, just technical" — and all three causes were in this repository rather than in
    NOTICE.md: the loudest thing on screen was the audit rubric `REQUIRES ATTRIBUTION IN THE
