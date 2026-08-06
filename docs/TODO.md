@@ -57,7 +57,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       the variables panel, and a support surface for a product we do not control. Decide before
       M4 rather than during it.
 
-## Where R0 is (re-checked 2026-08-04)
+## Where R0 is (published), and what `v0.1.1.0` carries (re-checked 2026-08-06)
 
 **Published in the Microsoft Store** — <https://apps.microsoft.com/detail/9mw3ch7b530p>.
 Certification passed and the listing went live on 2026-08-04 (`ReleaseDateUtc`
@@ -1072,7 +1072,7 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       заэкранированы. Измерено — нет: проверка границы слова латинская, поэтому и `сайт.рф`
       выходит как `Сайт. Рф`. Исправлено там же, с примерами в ограждениях.
 
-- [ ] ~~**СПРАВОЧНИКА ЯЗЫКА НЕТ**~~ (закрыто выше) — и это, а не следующая UX-мелочь, была самая большая дыра R0.
+- [x] ~~**СПРАВОЧНИКА ЯЗЫКА НЕТ**~~ (закрыто выше) — и это, а не следующая UX-мелочь, была самая большая дыра R0.
       Измерено 2026-07-31** по вопросу пользователя и странице
       [spintax.net/docs/syntax](https://spintax.net/docs/syntax).
 
@@ -1246,7 +1246,7 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       другое — «этот проект». Обе теперь вендорены (`assets/brand/`), лента вместе с растром,
       потому что растеризовать SVG на сборочной машине нечем.
 
-- [ ] ~~**ОКНО «О ПРОГРАММЕ» — план, 2026-07-30.**~~ (сделано выше) Меньше по объёму и обязательно до первой
+- [x] ~~**ОКНО «О ПРОГРАММЕ» — план, 2026-07-30.**~~ (сделано выше) Меньше по объёму и обязательно до первой
       подачи: единственное место, где пользователь читает атрибуции из `NOTICE.md` (MDI
       Apache-2.0, Twemoji CC-BY 4.0, и почему LGPL у LCL/RTL не достаёт до MIT-бинарника).
       Лицензионная обязанность, не любезность.
@@ -1389,7 +1389,7 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       session. Measured on the real worker, 121 records dropped. If a second caller ever
       appears, it needs a batch id of its own, never the shared one.
 
-- [ ] ~~**A separator on a middle line may appear one caret move late.**~~ *(closed 2026-08-01:
+- [x] ~~**A separator on a middle line may appear one caret move late.**~~ *(closed 2026-08-01:
       `KeepSeps` now invalidates the lines that GAIN a separator, mirroring what `ClearSeps`
       already did for the ones that lose one. The parent invalidates only the two bracket
       lines — `syneditmarkupbracket.pp:200-225` — so nothing else would have.)*

@@ -83,7 +83,8 @@ Spintax Studio is licensed under the [GNU General Public License, version 3 or l
 Copyright (c) 2026 301.st, **with an additional permission under GPL v3 section 7** for the
 MPL-1.1 components it links — SynEdit and TurboPower IPro. The grant, and why IPro needs it while
 SynEdit does not, are at the top of [NOTICE.md](NOTICE.md), which is also the file the
-application's About box is generated from.
+application's About box is generated from. The reasoning, and what it costs in the Store, are
+in [ADR 0010](docs/decisions/0010-gpl3-and-the-mpl-linking-exception.md).
 
 The engine in `engine/` and the other family engines remain MIT-licensed under their own
 repositories and notices; the engine is a submodule, not a copy, and nothing here relicenses it.
