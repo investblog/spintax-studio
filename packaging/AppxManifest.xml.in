@@ -62,6 +62,31 @@
                          Square310x310Logo="Assets\LargeTile.png"
                          Wide310x150Logo="Assets\WideTile.png" />
       </uap:VisualElements>
+      <!--
+        THE FILE TYPE, CLAIMED DECLARATIVELY. `.spintax` is this application's own extension
+        (SpxFiles.SPX_EXT), and nothing else on a machine claims it. Declaring it here rather
+        than writing registry keys is the whole point of the MSIX path: the association appears
+        on install, disappears on uninstall, and needs no elevation — which is also what makes
+        it acceptable to Store certification.
+
+        The application already opens a path handed to it on the command line
+        (SpxMainForm.pas:559), so a double-click works the moment this exists; nothing in the
+        code has to change.
+
+        Name is the association's identifier and must be lower-case alphanumeric — it is not
+        shown to anyone. DisplayName is what Explorer's type column says.
+      -->
+      <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="spintax">
+            <uap:DisplayName>Spintax template</uap:DisplayName>
+            <uap:Logo>Assets\Square44x44Logo.png</uap:Logo>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.spintax</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
     </Application>
   </Applications>
 

@@ -151,7 +151,25 @@ is a deliberate state and not a backlog of things anyone forgot.
    session variables and are not saved with the document — the dialog says so, and so does the
    help.
 
-8. **The Store tile was off-centre**, corrected 2026-08-06. `spintax-mark-310.png` — the file
+8. **`.spintax` is claimed as a file type**, added 2026-08-06 — declared in the manifest, not
+   written into the registry, which is what the MSIX path is for: the association appears on
+   install, goes on uninstall, needs no elevation, and passes certification. Nothing in the code
+   had to change, because the window already opens a path handed to it on the command line
+   (`SpxMainForm.pas:559`). MakeAppx accepts the manifest and the package builds.
+
+   **Two things are NOT settled and neither blocks the release:**
+   - the file's icon is the app's own 44×44 logo, so a `.spintax` file in Explorer looks exactly
+     like Studio itself. A document-shaped mark — a page carrying the hexagon — would tell them
+     apart, and is an asset somebody has to draw;
+   - double-clicking a second `.spintax` while Studio is open starts a SECOND window. That is
+     ordinary for editors; making it hand the file to the running instance is a named mutex and
+     a `WM_COPYDATA` hop, which is real work and its own decision.
+
+   **Not verified end to end yet:** proving the double-click opens Studio needs the package
+   installed locally, and this package's identity is the one the Store copy already has. Worth
+   doing deliberately, on the owner's say-so, rather than as a side effect of a test.
+
+9. **The Store tile was off-centre**, corrected 2026-08-06. `spintax-mark-310.png` — the file
    `make-msix.py` builds the `310x310` and `310x150` tiles from — had the mark at the top left of
    its canvas: 212×244 of ink in 310×310, margins L19 R79 T3 B63. The published package carries
    it; the corrected tile ships with this version. The `.ico` was never affected (it is built
@@ -159,7 +177,7 @@ is a deliberate state and not a backlog of things anyone forgot.
    different thing entirely — Windows drawing a smaller frame in the corner of a bigger cell,
    fixed by emitting the sizes the shell asks for.
 
-9. **The help got a document about the PRODUCT**, done 2026-08-06, and it is now the first
+10. **The help got a document about the PRODUCT**, done 2026-08-06, and it is now the first
    thing in the contents. Until then the help described the LANGUAGE and the DIAGNOSTICS and
    never the program: a reader who opened it was told how to read an example before being told
    what the two panes are. The reader's complaint, in as many words. `docs/help/{en,ru}/studio.md`
@@ -171,7 +189,7 @@ is a deliberate state and not a backlog of things anyone forgot.
    cannot appear in prose.** Menu paths written `View → GSA import` were read by the suite as
    ungated examples and failed the build, which is the check working.
 
-10. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
+11. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
    and nothing else — the reader's words were "it tells you nothing about the product and looks
    broken, just technical" — and all three causes were in this repository rather than in
    NOTICE.md: the loudest thing on screen was the audit rubric `REQUIRES ATTRIBUTION IN THE
