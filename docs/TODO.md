@@ -151,7 +151,15 @@ is a deliberate state and not a backlog of things anyone forgot.
    session variables and are not saved with the document — the dialog says so, and so does the
    help.
 
-8. **The help got a document about the PRODUCT**, done 2026-08-06, and it is now the first
+8. **The Store tile was off-centre**, corrected 2026-08-06. `spintax-mark-310.png` — the file
+   `make-msix.py` builds the `310x310` and `310x150` tiles from — had the mark at the top left of
+   its canvas: 212×244 of ink in 310×310, margins L19 R79 T3 B63. The published package carries
+   it; the corrected tile ships with this version. The `.ico` was never affected (it is built
+   from `spintax-mark-180.png`, which is centred), and the app icon's own complaint was a
+   different thing entirely — Windows drawing a smaller frame in the corner of a bigger cell,
+   fixed by emitting the sizes the shell asks for.
+
+9. **The help got a document about the PRODUCT**, done 2026-08-06, and it is now the first
    thing in the contents. Until then the help described the LANGUAGE and the DIAGNOSTICS and
    never the program: a reader who opened it was told how to read an example before being told
    what the two panes are. The reader's complaint, in as many words. `docs/help/{en,ru}/studio.md`
@@ -163,7 +171,7 @@ is a deliberate state and not a backlog of things anyone forgot.
    cannot appear in prose.** Menu paths written `View → GSA import` were read by the suite as
    ungated examples and failed the build, which is the check working.
 
-9. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
+10. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
    and nothing else — the reader's words were "it tells you nothing about the product and looks
    broken, just technical" — and all three causes were in this repository rather than in
    NOTICE.md: the loudest thing on screen was the audit rubric `REQUIRES ATTRIBUTION IN THE
