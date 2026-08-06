@@ -84,6 +84,43 @@ ICONS = [
     # cells, not the whole webfont. It is the "keep this example" action in the help preview:
     # a small document with a plus, not "copy", because pressing it changes the editor.
     ('SPX_ICON_INSERT', DRAWN_INSERT, 'insert the help example into the document'),
+    # ── THE MENU BAR, 2026-08-06. Added because a menu item that can carry a picture and does
+    # not is a menu that reads as a list of words, and because the panels' items CANNOT have
+    # one: on a checked item LCL draws the ICON in the check rectangle and never draws the tick
+    # (win32wsmenus.pp:862-895 -- the icon branch comes first and only the else draws a mark),
+    # so a picture there would replace the state it is meant to sit beside. The icons therefore
+    # go where there is no toggle -- File and Help almost entirely, Edit's actions, and the
+    # View items that are plain commands.
+    #
+    # Outline forms throughout, matching the set above rather than MDI's filled variants: this
+    # strip is recoloured to the system ink and a filled glyph at 16 px next to an outline one
+    # reads as bolder rather than as different.
+    ('SPX_ICON_NEW', 'file-outline', 'File > New -- an empty document'),
+    ('SPX_ICON_OPEN', 'folder-open-outline', 'File > Open'),
+    ('SPX_ICON_SAVE', 'content-save-outline', 'File > Save'),
+    ('SPX_ICON_SAVE_AS', 'content-save-edit-outline', 'File > Save as -- save under a new name'),
+    # The template SET is the folder beside the document, so a folder that is being re-read.
+    ('SPX_ICON_RELOAD', 'folder-sync-outline', 'File > Reload set'),
+    # NOT `import`, which is an arrow entering a bracket -- at 16 px that is the same picture
+    # as `exit-to-app` two lines below, and the two would sit five items apart in one menu.
+    # Looked at, magnified, before either reached the window. This one carries a document,
+    # which is what is being imported.
+    ('SPX_ICON_IMPORT', 'file-import-outline', 'File > Import GSA template'),
+    ('SPX_ICON_EXIT', 'exit-to-app', 'File > Exit'),
+    ('SPX_ICON_ABOUT', 'information-outline', 'Help > About'),
+    # The Edit menu's remaining actions. `code-brackets` is `code-braces` drawn with the other
+    # pair, which is exactly the relation the two wrap commands have to each other.
+    ('SPX_ICON_BRACKETS', 'code-brackets', 'Edit > wrap the selection in [ ]'),
+    ('SPX_ICON_ZOOM_IN', 'magnify-plus-outline', 'Edit > zoom in'),
+    ('SPX_ICON_ZOOM_OUT', 'magnify-minus-outline', 'Edit > zoom out'),
+    # Reset. `magnify-remove-outline` is the same magnifier with a cross, which reads as
+    # "stop magnifying" rather than as "make it smaller" -- the minus glyph above already
+    # owns that meaning and the two must not be confusable.
+    ('SPX_ICON_ZOOM_RESET', 'magnify-remove-outline', 'Edit > back to the normal size'),
+    ('SPX_ICON_LANG', 'translate', 'View > the interface language submenu'),
+    # The brand link, and the only item in these menus that leaves the application: the glyph
+    # says so, which is worth more here than the brand would be.
+    ('SPX_ICON_LINK', 'open-in-new', 'Help > the site link'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that
@@ -104,7 +141,7 @@ def codepoints(css_path):
     css = io.open(css_path, encoding='utf-8').read()
     out = {}
     for _, name, _ in ICONS:
-        if name == DRAWN_HELP:
+        if name in (DRAWN_HELP, DRAWN_INSERT):
             continue
         at = css.find('.mdi-' + name + '::before')
         if at < 0:

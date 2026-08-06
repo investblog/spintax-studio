@@ -2002,6 +2002,30 @@ procedure TSpxMainForm.BuildMenu;
     AParent.Add(Result);
   end;
 
+  (* THE SAME ITEM, WEARING ITS PICTURE. Separate from Item rather than an extra argument
+     with a default, because the two are different questions: every item has a caption and a
+     handler, and only SOME items can have a glyph at all.
+
+     WHICH ONES CANNOT: a checked or a radio item, and the reason is exact rather than a
+     guess about a shared gutter. `win32wsmenus.pp:862-895` branches on the ICON first: an
+     item that has one gets the icon drawn in the check rectangle, and when it is also checked
+     it gets a themed background box around that icon -- the tick itself is never drawn. The
+     `else if Checked` branch below it is the only one that draws a mark. So a picture on the
+     rail-side pair, the three panels or the GSA switch would not compete with the tick, it
+     would REPLACE it with a faint rectangle, and the tick is the one thing those items exist
+     to show. That is why the icons below stop where the toggles start.
+
+     The bitmap rides ON the item and not through the menu's image list: `bar.Images` is the
+     FLAGS, indexed by language, so an index into it here would draw a flag. The same reason
+     the even-panes item has carried its glyph this way since it got one. *)
+  function IconItem(AParent: TMenuItem; const ACaption: string; AKey: Word;
+    AShift: TShiftState; AHandler: TNotifyEvent; AIcon: Integer): TMenuItem;
+  begin
+    Result := Item(AParent, ACaption, AKey, AShift, AHandler);
+    if (FSmallIcons <> nil) and (AIcon >= 0) and (AIcon < FSmallIcons.Count) then
+      FSmallIcons.GetBitmap(AIcon, Result.Bitmap);
+  end;
+
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
   fileMenu, editMenu, viewMenu, helpMenu, langMenu, fontMenu, sideItem: TMenuItem;
@@ -2031,10 +2055,11 @@ begin
   fileMenu.Caption := Tr(sMenuFile);
   bar.Items.Add(fileMenu);
 
-  Item(fileMenu, Tr(sMenuNew), Ord('N'), [ssCtrl], @NewClicked);
-  Item(fileMenu, Tr(sMenuOpen), Ord('O'), [ssCtrl], @OpenClicked);
-  Item(fileMenu, Tr(sMenuSave), Ord('S'), [ssCtrl], @SaveClicked);
-  Item(fileMenu, Tr(sMenuSaveAs), Ord('S'), [ssCtrl, ssShift], @SaveAsClicked);
+  IconItem(fileMenu, Tr(sMenuNew), Ord('N'), [ssCtrl], @NewClicked, SPX_ICON_NEW);
+  IconItem(fileMenu, Tr(sMenuOpen), Ord('O'), [ssCtrl], @OpenClicked, SPX_ICON_OPEN);
+  IconItem(fileMenu, Tr(sMenuSave), Ord('S'), [ssCtrl], @SaveClicked, SPX_ICON_SAVE);
+  IconItem(fileMenu, Tr(sMenuSaveAs), Ord('S'), [ssCtrl, ssShift], @SaveAsClicked,
+           SPX_ICON_SAVE_AS);
   Item(fileMenu, '-', 0, [], nil);
   { The set is read when the document is opened or saved, not on every keystroke. A fragment
     changed by another program is therefore invisible until this is used -- which is why the
@@ -2043,10 +2068,10 @@ begin
     carrying an import for a product they do not use is clutter they cannot switch off. The
     switch is in the View menu beside the other things that change what this window shows. }
   if FPrefs.GsaImport then
-    Item(fileMenu, Tr(sMenuGsaOpen), 0, [], @GsaImportClicked);
-  Item(fileMenu, Tr(sMenuReloadSet), 0, [], @ReloadSetClicked);
+    IconItem(fileMenu, Tr(sMenuGsaOpen), 0, [], @GsaImportClicked, SPX_ICON_IMPORT);
+  IconItem(fileMenu, Tr(sMenuReloadSet), 0, [], @ReloadSetClicked, SPX_ICON_RELOAD);
   Item(fileMenu, '-', 0, [], nil);
-  Item(fileMenu, Tr(sMenuExit), 0, [], @ExitClicked);
+  IconItem(fileMenu, Tr(sMenuExit), 0, [], @ExitClicked, SPX_ICON_EXIT);
 
   { Every key action gets a place in a menu, not only a shortcut: a hotkey nobody can find
     is a hotkey nobody uses. }
@@ -2065,12 +2090,16 @@ begin
   { Ctrl+F and F3 are what the hand reaches for, and both are in the menu because a hotkey
     nobody can find is a hotkey nobody uses. F3 works from the editor as well as from the
     box, so stepping does not require going back to the field. }
-  Item(editMenu, Tr(sMenuFind), Ord('F'), [ssCtrl], @FindMenuClicked);
-  Item(editMenu, Tr(sMenuFindNext), VK_F3, [], @FindNextClicked);
-  Item(editMenu, Tr(sMenuFindPrev), VK_F3, [ssShift], @FindPrevClicked);
+  { The same three glyphs the find bar wears, so the menu and the bar name one action with one
+    picture rather than teaching it twice. }
+  IconItem(editMenu, Tr(sMenuFind), Ord('F'), [ssCtrl], @FindMenuClicked, SPX_ICON_SEARCH);
+  IconItem(editMenu, Tr(sMenuFindNext), VK_F3, [], @FindNextClicked, SPX_ICON_NEXT);
+  IconItem(editMenu, Tr(sMenuFindPrev), VK_F3, [ssShift], @FindPrevClicked, SPX_ICON_PREV);
   Item(editMenu, '-', 0, [], nil);
-  Item(editMenu, Tr(sMenuWrapBraces), Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked);
-  Item(editMenu, Tr(sMenuWrapBrackets), Ord('P'), [ssCtrl, ssShift], @WrapBracketsClicked);
+  IconItem(editMenu, Tr(sMenuWrapBraces), Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked,
+           SPX_ICON_GROUP);
+  IconItem(editMenu, Tr(sMenuWrapBrackets), Ord('P'), [ssCtrl, ssShift],
+           @WrapBracketsClicked, SPX_ICON_BRACKETS);
   { The zoom, in a menu as well as on the wheel -- the project's rule: a hotkey nobody can
     find is a hotkey nobody uses. Ctrl+= rather than Ctrl++ because that is the key a person
     presses; Ctrl+- and Ctrl+0 are the pair everyone else uses for the same three actions.
@@ -2082,12 +2111,14 @@ begin
     Ctrl+Shift+0 still SETS marker 0, so the pair would then be half-broken rather than
     absent. }
   Item(editMenu, '-', 0, [], nil);
-  Item(editMenu, Tr(sZoomIn), 187, [ssCtrl], @ZoomInClicked);       { VK_OEM_PLUS }
-  Item(editMenu, Tr(sZoomOut), 189, [ssCtrl], @ZoomOutClicked);     { VK_OEM_MINUS }
-  Item(editMenu, Tr(sZoomReset), Ord('0'), [ssCtrl], @ZoomResetClicked);
+  IconItem(editMenu, Tr(sZoomIn), 187, [ssCtrl], @ZoomInClicked, SPX_ICON_ZOOM_IN);   { VK_OEM_PLUS }
+  IconItem(editMenu, Tr(sZoomOut), 189, [ssCtrl], @ZoomOutClicked, SPX_ICON_ZOOM_OUT); { VK_OEM_MINUS }
+  IconItem(editMenu, Tr(sZoomReset), Ord('0'), [ssCtrl], @ZoomResetClicked,
+           SPX_ICON_ZOOM_RESET);
   Item(editMenu, '-', 0, [], nil);
-  Item(editMenu, Tr(sMenuReroll), Ord('R'), [ssCtrl], @RerollClicked);
-  Item(editMenu, Tr(sMenuCopyResult), Ord('C'), [ssCtrl, ssShift], @CopyClicked);
+  IconItem(editMenu, Tr(sMenuReroll), Ord('R'), [ssCtrl], @RerollClicked, SPX_ICON_REROLL);
+  IconItem(editMenu, Tr(sMenuCopyResult), Ord('C'), [ssCtrl, ssShift], @CopyClicked,
+           SPX_ICON_COPY);
   (* PUT THIS EXAMPLE IN MY DOCUMENT -- the second command in this window that a pointer was
      the only way to reach. Its button lives in the preview's offer strip and is a
      TSpeedButton, so the keyboard could not have it.
@@ -2103,7 +2134,8 @@ begin
      No shortcut: the command is live only while the help is open on an example, and a global
      key for a mode-specific action is one a reader presses and sees nothing happen. *)
   Item(editMenu, '-', 0, [], nil);
-  FInsertItem := Item(editMenu, Tr(sHelpExampleInsert), 0, [], @InsertHelpExample);
+  FInsertItem := IconItem(editMenu, Tr(sHelpExampleInsert), 0, [], @InsertHelpExample,
+                          SPX_ICON_INSERT);
   { KEPT rather than computed here. The bar is rebuilt on a language change, a panel toggle, a
     theme switch -- and on none of the paths that decide whether there IS an example, so a state
     read at build time is a state read at the wrong moment. ShowOffer owns both now. }
@@ -2134,7 +2166,7 @@ begin
     reached from the keyboard at all -- and since the tab strip went, the items below are the
     only route to the three panels as well as to this one. }
   Item(viewMenu, '-', 0, [], nil);
-  Item(viewMenu, Tr(sTabGroup), 0, [], @RailGroupClicked);
+  IconItem(viewMenu, Tr(sTabGroup), 0, [], @RailGroupClicked, SPX_ICON_GROUP);
   { THE THREE PANELS. The tab strip used to be their keyboard route and their names; with it
     gone this is both. A fourth state is expressible and real -- none of them ticked means the
     block is collapsed -- which is why these are radio items in a group of their own rather
@@ -2249,6 +2281,10 @@ begin
   Item(viewMenu, '-', 0, [], nil);
   langMenu := TMenuItem.Create(Self);
   langMenu.Caption := Tr(sMenuLanguage);
+  { A SUBMENU CAN WEAR ONE, because it is not a toggle: the items INSIDE it are the radio
+    group, and each of those carries its language's flag already. }
+  if (FSmallIcons <> nil) and (SPX_ICON_LANG < FSmallIcons.Count) then
+    FSmallIcons.GetBitmap(SPX_ICON_LANG, langMenu.Bitmap);
   viewMenu.Add(langMenu);
   for lang := Low(TSpxLang) to High(TSpxLang) do
   begin
@@ -2275,11 +2311,11 @@ begin
     too -- and F1 was unused anywhere in this project and SynEdit binds no command to it, so
     nothing is displaced. No GroupIndex: these are not radio items, and 0 is the default that
     would silently join whatever radio group is added to this menu next. }
-  Item(helpMenu, Tr(sHelpContents), VK_F1, [], @HelpMenuClicked);
+  IconItem(helpMenu, Tr(sHelpContents), VK_F1, [], @HelpMenuClicked, SPX_ICON_HELP);
   { The attributions live behind this and nowhere else in the window. NOTICE.md calls the About
     box "the copy a user can actually read", which makes this menu item the licence obligation
     rather than a courtesy. No shortcut: it is opened on purpose, once. }
-  Item(helpMenu, Tr(sMenuAbout), 0, [], @AboutClicked);
+  IconItem(helpMenu, Tr(sMenuAbout), 0, [], @AboutClicked, SPX_ICON_ABOUT);
   (* THE SITE, AND IT IS HERE BECAUSE IT WAS NOWHERE ELSE. The mark at the foot of the tool
      rail is a TSpeedButton -- a TGraphicControl, which can never hold the keyboard -- and it
      was the one command in this window with no menu item and no shortcut at all: reachable by
@@ -2291,7 +2327,8 @@ begin
 
      No shortcut. It leaves the application for a browser, and a hotkey that does that is a
      hotkey somebody presses by accident. *)
-  Item(helpMenu, SPX_SITE_HOST, 0, [], @BrandClicked);
+  { The only item in these menus that leaves the application, and the glyph says so. }
+  IconItem(helpMenu, SPX_SITE_HOST, 0, [], @BrandClicked, SPX_ICON_LINK);
 
   Self.Menu := bar;
   if Height <> keepHeight then Height := keepHeight;
