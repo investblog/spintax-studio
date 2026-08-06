@@ -118,7 +118,27 @@ is a deliberate state and not a backlog of things anyone forgot.
    their examples were rendered by a named version was re-pointed at `v0.4.0`, which the
    example gate had just re-proved by running every one of them again.
 
-7. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
+7. **GSA SER import**, done 2026-08-06 — off by default, `View` → `GSA import` reveals
+   `File` → `Import GSA template…`. Editor-core in `src/SpxGsaImport.pas`, gated without a
+   window; the window half is a setting, a menu item and a summary that names every refusal.
+   **A converted template renders with the cosmetic stage off** (spec §4.7), carried as data
+   from `TSpxGsaResult.PostProcess` through `TSpxContext` to the job. The lifted values are
+   session variables and are not saved with the document — the dialog says so, and so does the
+   help.
+
+8. **The help got a document about the PRODUCT**, done 2026-08-06, and it is now the first
+   thing in the contents. Until then the help described the LANGUAGE and the DIAGNOSTICS and
+   never the program: a reader who opened it was told how to read an example before being told
+   what the two panes are. The reader's complaint, in as many words. `docs/help/{en,ru}/studio.md`
+   covers the panes, the panels, the group editor, the settings and the GSA import, and its one
+   example is gated like every other — which caught both of them being wrong the first time
+   (`{Hi|Hello} there.` renders `Hi there.` under the fixture, not `Hello there.`).
+
+   Also learned, and now obeyed: **`→` in this help means "and the engine returned", so it
+   cannot appear in prose.** Menu paths written `View → GSA import` were read by the suite as
+   ungated examples and failed the build, which is the check working.
+
+9. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
    and nothing else — the reader's words were "it tells you nothing about the product and looks
    broken, just technical" — and all three causes were in this repository rather than in
    NOTICE.md: the loudest thing on screen was the audit rubric `REQUIRES ATTRIBUTION IN THE

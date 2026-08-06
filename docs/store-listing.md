@@ -71,7 +71,9 @@ the language and explore the engines at spintax.net.
 
 ## Product features
 
-Partner Center displays these as bullets. Enter each line as a separate feature; do not include
+Partner Center displays these as bullets. Bullet 21 arrived with the GSA import on 2026-08-06
+and is **not on the live page yet** — it goes up with the same Partner Center visit as the
+licence corrections below. Enter each line as a separate feature; do not include
 the line numbers or bullet characters in the Store form. Each feature stays below Microsoft's
 200-character limit.
 
@@ -95,6 +97,7 @@ the line numbers or bullet characters in the Store form. Each feature stays belo
 18. Windows x64 desktop app with no browser, Node.js, PHP or Python runtime required
 19. Local-first workflow for SEO content, localization workflows and reusable product copy
 20. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
+21. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
 ## Captured screenshots
 

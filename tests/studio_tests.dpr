@@ -3518,11 +3518,16 @@ type
   end;
 
 const
-  HELP_DOCS: array[0..3] of THelpDoc = (
+  HELP_DOCS: array[0..5] of THelpDoc = (
     (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Codes: True;  Good: 5),
     (Path: 'docs/help/ru/diagnostics.md'; Examples: 36; Codes: True;  Good: 7),
     (Path: 'docs/help/en/syntax.md';      Examples: 32; Codes: False; Good: 30),
-    (Path: 'docs/help/ru/syntax.md';      Examples: 35; Codes: False; Good: 33));
+    (Path: 'docs/help/ru/syntax.md';      Examples: 35; Codes: False; Good: 33),
+    { The product itself, added 2026-08-06 -- a reader who opens the help was being told how
+      the LANGUAGE works and never what this program is. It carries one example, because it is
+      about the window rather than the syntax, and that one is gated like every other. }
+    (Path: 'docs/help/en/studio.md';      Examples: 1;  Codes: False; Good: 1),
+    (Path: 'docs/help/ru/studio.md';      Examples: 1;  Codes: False; Good: 1));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
 function HelpLabel(const APath: string): string;
@@ -5445,14 +5450,15 @@ begin
     begin
       if RowsOfHelpExample(i, j) = 0 then Inc(ins);
     end;
-    { Across BOTH of the language's documents. The diagnostics document is mostly
+    { Across ALL of the language's documents. The diagnostics document is mostly
       counter-examples -- 11 of its 33 are clean in English, 15 of 36 in Russian -- and the
       language reference is the other way round, because it demonstrates constructs that work.
-      Exact, so a new counter-example cannot arrive without being counted. }
+      The product guide adds exactly one, which is clean. Exact, so a new counter-example
+      cannot arrive without being counted. }
     if SpxHelpLangCode(i) = 'en' then
-      Check('help/offer/en/clean example count', IntToStr(ins), '41')
+      Check('help/offer/en/clean example count', IntToStr(ins), '42')
     else
-      Check('help/offer/ru/clean example count', IntToStr(ins), '48');
+      Check('help/offer/ru/clean example count', IntToStr(ins), '49');
   end;
 end;
 

@@ -64,9 +64,15 @@ PAGE_LIMIT = 24 * 1024
 # read like a manual, not like an implementation panel. A slug names the same section in every
 # language -- that is what lets the viewer keep your place when the interface language changes --
 # so the list is the contract and the script refuses a document with more sections than names.
-DOCS = ['syntax', 'diagnostics']
+# The product first: a reader who opens the help wants to know what this program is before
+# being told how the language works, and long before being told how to read an example. That
+# ordering was a reader's complaint, 2026-08-06.
+DOCS = ['studio', 'syntax', 'diagnostics']
 
 DOC_SLUGS = {
+    'studio': [
+        'studio', 'panes', 'panels', 'groups', 'settings', 'gsa',
+    ],
     'diagnostics': [
         'about', 'reading', 'brackets', 'definitions', 'variables', 'includes',
         'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq',
