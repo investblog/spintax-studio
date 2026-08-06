@@ -207,6 +207,10 @@ const
     { the About box: a menu item and a dialog caption, both of which size themselves }
     0,
     { the empty-group hints: whole sentences, wrapped in a panel that is as wide as it is }
+    0, 0,
+
+    { the About box: a paragraph that wraps in a label as wide as the dialog, and a heading
+      over the attributions. Neither sits in a computed slot, so neither has a width to keep }
     0, 0
   );
 

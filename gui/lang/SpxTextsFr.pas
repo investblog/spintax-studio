@@ -97,7 +97,10 @@ const
       'À propos',
 
       'Aucune macro pour l''instant — écrivez #set %name% = valeur dans le document, puis utilisez %name% dans le texte.',
-      'Rien d''inclus pour l''instant — #include "fragment" tire un autre fichier, et seulement en début de ligne.'
+      'Rien d''inclus pour l''instant — #include "fragment" tire un autre fichier, et seulement en début de ligne.',
+
+      'Écrivez un modèle à gauche et voyez à droite ce qu''il produit. Validation, variables, inclusions, génération de variantes et export : tout hors ligne, sans compte, sans réseau, sans runtime.',
+      'Licences et remerciements'
   );
 
 implementation

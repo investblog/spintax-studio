@@ -93,7 +93,10 @@ const
       'About',
 
       'No macros yet — write #set %name% = value in the document, then use %name% in the text.',
-      'Nothing included yet — #include "fragment" pulls in another file, and only from the start of a line.'
+      'Nothing included yet — #include "fragment" pulls in another file, and only from the start of a line.',
+
+      'Write a template on the left and see what it renders on the right. Validation, variables, includes, variant generation and export — all offline: no account, no network, no runtime.',
+      'Licences and credits'
   );
 
 implementation

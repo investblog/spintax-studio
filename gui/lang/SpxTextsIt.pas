@@ -88,7 +88,10 @@ const
       'Informazioni',
 
       'Ancora nessuna macro — scriva #set %name% = valore nel documento e usi %name% nel testo.',
-      'Ancora nessuna inclusione — #include "frammento" richiama un altro file, e solo a inizio riga.'
+      'Ancora nessuna inclusione — #include "frammento" richiama un altro file, e solo a inizio riga.',
+
+      'Scrivi un modello a sinistra e guarda a destra che cosa produce. Convalida, variabili, inclusioni, generazione di varianti ed esportazione: tutto offline, senza account, senza rete e senza runtime.',
+      'Licenze e riconoscimenti'
   );
 
 implementation

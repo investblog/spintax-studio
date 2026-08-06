@@ -1,5 +1,17 @@
 (*
- * SpxAboutForm -- the About box: the mark, the two versions, and the attributions.
+ * SpxAboutForm -- the About box: what this program is, and what it is obliged to credit.
+ *
+ * IT USED TO BE THE SECOND HALF ONLY, and the reader said so: "it tells you nothing about the
+ * product and looks broken -- just technical". Three separate causes, all of them here or in
+ * the generator, none of them in NOTICE.md:
+ *   - the loudest thing in the window was `REQUIRES ATTRIBUTION IN THE SHIPPED APPLICATION`,
+ *     a rubric for an audit shouted at somebody who wanted to know what the program does;
+ *   - the text was wrapped once in the file at ~95 columns and again by the memo, which is
+ *     what left `SynEdit and`, `IPro)` and `glyphs.` alone on lines;
+ *   - and nothing said what Studio IS.
+ * So the box now leads with a sentence in the READER's language, then the licence and the two
+ * addresses, and only then the notice -- which is still in full, on the same screen, because
+ * NOTICE.md asks for exactly that and a second click would weaken it.
  *
  * WHY THIS IS THE ONE SECONDARY WINDOW. ADR 0008 argued the help out of a window and into a
  * panel, and the reasoning holds for anything a reader keeps open while working. This is the
@@ -23,6 +35,7 @@ interface
 
 uses
   Classes, SysUtils, Types, Forms, Controls, StdCtrls, ExtCtrls, Graphics,
+  LCLIntf, LCLType,
   SpxStrIds, SpxStrings, SpxAbout;
 
 { Open it. SYSTEM-COLOURED, like the rest of the chrome: SpxTheme states the rule -- LCL has no
@@ -41,10 +54,18 @@ type
     FMark: TImage;
     FTitle: TLabel;
     FVersion: TLabel;
+    FWhat: TLabel;
+    FMeta: TLabel;
+    FRule: TBevel;
+    FCredits: TLabel;
     FText: TMemo;
     FClose: TButton;
     procedure CloseClicked(Sender: TObject);
     procedure PickMark;
+    { A wrapped label's height, measured on an offscreen canvas rather than read back off the
+      control: a label does not know its own size until a layout pass it has not had yet, and
+      this window places everything below the paragraph relative to its bottom. }
+    function WrapHeight(const AText: string; AWidth: Integer; AFont: TFont): Integer;
   protected
     procedure DoAutoAdjustLayout(const AMode: TLayoutAdjustmentPolicy;
       const AXProportion, AYProportion: Double); override;
@@ -61,6 +82,8 @@ begin
   Position := poOwnerFormCenter;
   BorderStyle := bsDialog;
   Width := 520;
+  { The height is computed in Fill, once the paragraph has been measured in the language the
+    window is being shown in. This is only what the form is born with. }
   Height := 460;
 
   FMark := TImage.Create(Self);
@@ -93,9 +116,33 @@ begin
     needs to know which engine answered here. }
   FVersion.Caption := SPX_VERSION + '  ·  spintax-win ' + SPX_ENGINE_VERSION;
 
+  { WHAT THE PROGRAM IS, in the reader's own language and first on the screen. Everything
+    below it is English by necessity -- a licence text is not translated -- and that is the
+    line this window was missing entirely. }
+  FWhat := TLabel.Create(Self);
+  FWhat.Parent := Self;
+  FWhat.WordWrap := True;
+  FWhat.AutoSize := False;
+
+  { The licence and the two addresses, in the system's grey: a detail line, not a heading. The
+    licence NAME comes from the generated table rather than from a literal here -- there is one
+    copy of it, in NOTICE.md, and this window is not going to become the second. }
+  FMeta := TLabel.Create(Self);
+  FMeta.Parent := Self;
+  FMeta.WordWrap := True;
+  FMeta.AutoSize := False;
+  FMeta.Font.Color := clGrayText;
+
+  FRule := TBevel.Create(Self);
+  FRule.Parent := Self;
+  FRule.Shape := bsTopLine;
+
+  FCredits := TLabel.Create(Self);
+  FCredits.Parent := Self;
+  FCredits.Font.Color := clGrayText;
+
   FText := TMemo.Create(Self);
   FText.Parent := Self;
-  FText.SetBounds(24, 100, 472, 296);
   FText.ReadOnly := True;
   FText.ScrollBars := ssAutoVertical;
   FText.WordWrap := True;
@@ -103,11 +150,27 @@ begin
 
   FClose := TButton.Create(Self);
   FClose.Parent := Self;
-  FClose.SetBounds(396, 410, 100, 28);
   FClose.Caption := Tr(sClose);
   FClose.OnClick := @CloseClicked;
   FClose.Cancel := True;
   FClose.Default := True;
+end;
+
+function TSpxAboutForm.WrapHeight(const AText: string; AWidth: Integer; AFont: TFont): Integer;
+var bmp: TBitmap; r: TRect;
+begin
+  bmp := TBitmap.Create;
+  try
+    bmp.Canvas.Font.Assign(AFont);
+    r := Rect(0, 0, AWidth, 10000);
+    { DT_CALCRECT measures instead of drawing, and DT_WORDBREAK makes it measure the wrap this
+      label will do rather than one long line. }
+    DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), r,
+             DT_CALCRECT or DT_WORDBREAK or DT_NOPREFIX);
+    Result := r.Bottom - r.Top;
+  finally
+    bmp.Free;
+  end;
 end;
 
 { AND PICKED AGAIN WHEN THE SIZE CHANGES. The .ico carries nine frames from 16 to 128 and a
@@ -143,12 +206,46 @@ begin
 end;
 
 procedure TSpxAboutForm.Fill;
-var i: Integer; body: TStringList;
+const
+  L = 24;                 { the left margin every block shares }
+  W = 472;                { and the width, which is the form's less both margins }
+var
+  i, y, h: Integer;
+  body: TStringList;
 begin
   Caption := Tr(sMenuAbout);
   { The version line is the one thing set apart, and by the SYSTEM's grey rather than a
     palette's: it is a detail beside the name, not a heading. }
   FVersion.Font.Color := clGrayText;
+
+  { THE TEXT FIRST, THE GEOMETRY AFTER IT, because the paragraph's height is the language's:
+    the same sentence is three lines in German and two in English, and every block below it
+    starts where it ends. Nothing here is a guess at a line count. }
+  FWhat.Caption := Tr(sAboutWhat);
+  FMeta.Caption := SpxAboutLicence(0) + '   ·   spintax.net   ·   301.st';
+  FCredits.Caption := Tr(sAboutCredits);
+
+  y := 100;
+  h := WrapHeight(FWhat.Caption, W, FWhat.Font);
+  FWhat.SetBounds(L, y, W, h);
+
+  y := y + h + 10;
+  h := WrapHeight(FMeta.Caption, W, FMeta.Font);
+  FMeta.SetBounds(L, y, W, h);
+
+  y := y + h + 14;
+  FRule.SetBounds(L, y, W, 2);
+
+  y := y + 10;
+  h := WrapHeight(FCredits.Caption, W, FCredits.Font);
+  FCredits.SetBounds(L, y, W, h);
+
+  { The notice takes what is left, and the window grows to keep it a fixed size rather than
+    letting a long translation eat it. }
+  y := y + h + 6;
+  FText.SetBounds(L, y, W, 230);
+  ClientHeight := y + 230 + 58;
+  FClose.SetBounds(ClientWidth - L - 100, ClientHeight - 44, 100, 28);
 
   body := TStringList.Create;
   try

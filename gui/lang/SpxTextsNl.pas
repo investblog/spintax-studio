@@ -92,7 +92,10 @@ const
       'Over',
 
       'Nog geen macro''s — schrijf #set %name% = waarde in het document en gebruik %name% in de tekst.',
-      'Nog niets ingevoegd — #include "fragment" haalt een ander bestand op, en alleen aan het begin van een regel.'
+      'Nog niets ingevoegd — #include "fragment" haalt een ander bestand op, en alleen aan het begin van een regel.',
+
+      'Schrijf links een sjabloon en zie rechts wat het oplevert. Validatie, variabelen, includes, variantgeneratie en export: allemaal offline, zonder account, zonder netwerk en zonder runtime.',
+      'Licenties en dankbetuigingen'
   );
 
 implementation

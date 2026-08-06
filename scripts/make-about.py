@@ -164,12 +164,46 @@ def main():
     for group in groups:
         if lines:
             lines.append('')
-        lines.append(group['title'].upper())
+        # NOT UPPERCASED. It used to be, and in the box the loudest thing on the screen was
+        # `REQUIRES ATTRIBUTION IN THE SHIPPED APPLICATION` -- a rubric for an audit, shouted
+        # at a reader who wanted to know what the program is. The words are NOTICE.md's; the
+        # volume was this script's.
+        lines.append(group['title'])
         for e in group['entries']:
             lines.append('')
             lines.append('%s -- %s' % (e['name'], e['licence']))
-            for b in e['body']:
-                lines.append('  ' + b)
+            # ONE PARAGRAPH PER ENTRY, not the file's own line breaks. NOTICE.md is wrapped at
+            # about 95 columns for reading as a file; the box then wrapped it a SECOND time
+            # against a narrower memo, which is what left `SynEdit and`, `IPro)` and `glyphs.`
+            # sitting alone on lines and made the window look broken. Joined here, wrapped
+            # once by the control that knows its own width.
+            #
+            # And the licence is dropped when the body merely repeats it: six of the seven
+            # entries declare it on the `**Name**` line, which this already prints, so
+            # printing the body line too said `GNU General Public License v3.0 or later`
+            # twice in a row under the product's own name.
+            # Compared without a trailing stop, because a declaration is written as prose
+            # ends: six entries name the licence bare and the seventh writes `modified LGPL
+            # (LGPL with the static-linking exception).` -- and an exact match let that one
+            # through, so the Free Pascal entry said its licence twice while the others said
+            # it once. Measured in the generated text, not reasoned about.
+            body = [b for b in e['body']
+                    if b.strip().rstrip('.') != e['licence'].rstrip('.')]
+            # And where the entry's first fragment BEGINS with the licence and then carries a
+            # parenthetical -- `MPL 1.1 (the editor component; unmodified).`, `modified LGPL,
+            # same exception, same conclusion.` -- only the prefix is the repeat. Dropping the
+            # whole fragment would take the parenthetical with it; this takes the name and
+            # leaves what the name was introducing. First fragment only: the MDI and Twemoji
+            # entries name their licence again further down, and that occurrence is the
+            # copyright notice itself, which is the thing the licence obliges us to show.
+            if body and body[0].startswith(e['licence']):
+                rest = body[0][len(e['licence']):].lstrip(' ,;:-—')
+                if rest:
+                    body[0] = rest[0].upper() + rest[1:] if rest[0].isalpha() else rest
+                else:
+                    body = body[1:]
+            if body:
+                lines.append('  ' + ' '.join(body))
             if e['licence'] not in licences:
                 licences.append(e['licence'])
             if group['title'] == ATTRIBUTION_HEADING:

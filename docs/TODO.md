@@ -94,6 +94,17 @@ is a deliberate state and not a backlog of things anyone forgot.
    <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
    Microsoft's own snapshot of that text updates only with the submission.
 
+6. **The About box says what the product is**, done 2026-08-06. It was the attribution notice
+   and nothing else — the reader's words were "it tells you nothing about the product and looks
+   broken, just technical" — and all three causes were in this repository rather than in
+   NOTICE.md: the loudest thing on screen was the audit rubric `REQUIRES ATTRIBUTION IN THE
+   SHIPPED APPLICATION` in capitals; the text was wrapped once in the file and again by the
+   memo, which is what stranded `SynEdit and`, `IPro)` and `glyphs.` on lines of their own; and
+   nothing said what Studio does. The box now opens with a sentence **in the reader's own
+   language** (`sAboutWhat`, all fourteen), then the licence and the two addresses, then the
+   notice in full on the same screen — a second click would weaken an obligation NOTICE.md
+   states in as many words.
+
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
 decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store

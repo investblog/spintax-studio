@@ -119,7 +119,16 @@ type
       `%name%` STAYS LATIN in all fourteen. The engine's variable names are ASCII word
       characters, so a hint showing a Cyrillic name would teach something the engine does not
       do -- the same fact the help documents record from the other side. ── }
-    sVarsHintDefs, sVarsHintIncludes
+    sVarsHintDefs, sVarsHintIncludes,
+
+    { ── THE ABOUT BOX'S OWN WORDS. Everything else that box shows is generated from
+      NOTICE.md and is English by necessity -- a licence text is not translated. These two are
+      not that: the first says what this program IS, which was the whole complaint about the
+      box ("it tells you nothing about the product"), and the second is the heading over the
+      attributions. Prose for the reader follows the reader's language; the notice under it
+      does not, and the difference is deliberate. `Crafted at` in the status bar is the third
+      case again -- a signature, not a sentence. ── }
+    sAboutWhat, sAboutCredits
   );
 
 implementation

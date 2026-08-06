@@ -88,7 +88,10 @@ const
       'Sobre',
 
       'Ainda não há macros — escreva #set %name% = valor no documento e use %name% no texto.',
-      'Ainda não há inclusões — #include "fragmento" traz outro ficheiro, e apenas no início da linha.'
+      'Ainda não há inclusões — #include "fragmento" traz outro ficheiro, e apenas no início da linha.',
+
+      'Escreva um modelo à esquerda e veja à direita o que ele produz. Validação, variáveis, inclusões, geração de variantes e exportação: tudo offline, sem conta, sem rede e sem runtime.',
+      'Licenças e créditos'
   );
 
 implementation

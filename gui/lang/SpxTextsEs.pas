@@ -90,7 +90,10 @@ const
       'Acerca de',
 
       'Aún no hay macros — escriba #set %name% = valor en el documento y use %name% en el texto.',
-      'Aún no hay inclusiones — #include "fragmento" trae otro archivo, y solo al principio de la línea.'
+      'Aún no hay inclusiones — #include "fragmento" trae otro archivo, y solo al principio de la línea.',
+
+      'Escriba una plantilla a la izquierda y vea a la derecha lo que produce. Validación, variables, inclusiones, generación de variantes y exportación: todo sin conexión, sin cuenta, sin red y sin runtime.',
+      'Licencias y créditos'
   );
 
 implementation

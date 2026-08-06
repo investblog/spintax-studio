@@ -87,7 +87,10 @@ const
       'Hakkında',
 
       'Henüz makro yok — belgeye #set %name% = değer yazın, sonra metinde %name% kullanın.',
-      'Henüz ekleme yok — #include "parça" başka bir dosyayı çeker, ve yalnızca satır başından.'
+      'Henüz ekleme yok — #include "parça" başka bir dosyayı çeker, ve yalnızca satır başından.',
+
+      'Solda bir şablon yazın, sağda ne ürettiğini görün. Doğrulama, değişkenler, dahil edilen dosyalar, varyant üretimi ve dışa aktarma: tümü çevrimdışı — hesap, ağ ve çalışma zamanı gerekmez.',
+      'Lisanslar ve teşekkürler'
   );
 
 implementation

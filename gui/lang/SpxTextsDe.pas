@@ -97,7 +97,10 @@ const
       'Über das Programm',
 
       'Noch keine Makros — schreiben Sie #set %name% = Wert ins Dokument und verwenden Sie %name% im Text.',
-      'Noch nichts eingebunden — #include "Fragment" holt eine andere Datei, und nur am Zeilenanfang.'
+      'Noch nichts eingebunden — #include "Fragment" holt eine andere Datei, und nur am Zeilenanfang.',
+
+      'Links schreiben Sie eine Vorlage, rechts sehen Sie, was sie erzeugt. Prüfung, Variablen, Includes, Variantengenerierung und Export: alles offline, ohne Konto, ohne Netz, ohne Laufzeitumgebung.',
+      'Lizenzen und Danksagungen'
   );
 
 implementation

@@ -94,7 +94,10 @@ const
       'O programu',
 
       'Još nema makroa — upišite u dokument #set %name% = vrijednost i koristite %name% u tekstu.',
-      'Još nema umetanja — #include "fragment" povlači drugu datoteku, i samo s početka reda.'
+      'Još nema umetanja — #include "fragment" povlači drugu datoteku, i samo s početka reda.',
+
+      'Predložak pišete lijevo, a desno vidite šta proizvodi. Provjera, varijable, uključivanja, generisanje varijanti i izvoz: sve offline, bez računa, bez mreže i bez izvršnog okruženja.',
+      'Licence i zahvale'
   );
 
 implementation
