@@ -91,6 +91,29 @@ type
     Templates: TSpxTemplateSet;
     RngMode: TSpxRngMode;
     Seed: LongWord;
+    (* ▁▁▁ THE COSMETIC STAGE, AND THE ONE DOCUMENT THAT MUST NOT HAVE IT ▁▁▁
+
+       TRUE for everything this editor normally shows, and that is not a default anybody may
+       quietly change: the right pane is WYSIWYG against the engines that ship the text, and a
+       preview without post-processing lies about spacing and capitalisation (spec §7). Both
+       constructors set it True; `Default(TSpxContext)` would leave it False, which is the
+       engine's own zeroed default and the trap this project has already paid for once.
+
+       **FALSE FOR A CONVERTED GSA TEMPLATE, ALWAYS.** A GSA document is not prose of ours to
+       tidy -- it is somebody else's template, usually on its way back to GSA -- and the
+       post-processor rewrites it. Measured on `v0.4.0`, with the value handed straight through
+       `Vars` exactly as the engine's contract demands:
+
+         #file[l.txt,1,S]  ->  #file[l.txt,1, S]     a space inside a macro
+         a,b               ->  A, b                  a space AND a capital
+
+       Neutralising protects a value from the PARSER and not at all from the typographer, so
+       the only way to keep a converted template verbatim is to leave the stage off. That is
+       reported to the engine (docs/TODO.md) and it is not what makes this rule right: even
+       with the engine fixed, applying prose conventions to a foreign template is the wrong
+       thing to do. `SpxGsaImport` therefore returns `PostProcess = False` in its result, so a
+       caller carries the rule as DATA rather than as a paragraph it has to have read. *)
+    PostProcess: Boolean;
   end;
 
   { One generated variant and the seed that produced it. The seed travels with the text
@@ -819,6 +842,9 @@ begin
   Result.Templates := Templates;
   Result.RngMode := spxRandom;
   Result.Seed := 0;
+  { The cosmetic stage is ON for every document this constructor builds. A GSA import turns it
+    off deliberately and says so in its own result -- see the field's note. }
+  Result.PostProcess := True;
 end;
 
 function SpxSeededContext(const Locale: string; Vars: TStrMap; Seed: LongWord;
@@ -842,7 +868,11 @@ begin
   Result := Default(TSpContext);
   Result.Locale := Ctx.Locale;
   Result.Vars := Ctx.Vars;
-  Result.PostProcess := True;   // never left to the record's zeroed default (spec §7)
+  { THE CALLER'S, not a constant. It was `True` here until 2026-08-06, which is right for
+    every document but one: a converted GSA template renders with the stage OFF, or the
+    typographer rewrites text that is not ours to tidy. Both constructors set it True, so
+    nothing that does not ask for it can lose it. }
+  Result.PostProcess := Ctx.PostProcess;
   Result.Rng := Rng;
   Result.IncludeResolver := Resolver;
 end;

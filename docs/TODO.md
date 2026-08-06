@@ -1608,6 +1608,37 @@ Decisions owed **before the relevant submission** (not switchable later):
 
 ## To report to the engine
 
+- [ ] **Post-process rewrites a value the host neutralised.** Measured 2026-08-06 on
+      `v0.4.0`, and it is not a converter question — the value goes straight through
+      `TSpContext.Vars`, neutralised the way `SpNeutralize` is documented for:
+
+      ```pascal
+      vars.AddOrSetValue('v', SpNeutralize('#file[l.txt,1,S]'));
+      ctx.Vars := vars;  ctx.PostProcess := True;
+      SpRender('%v%', ctx)   →  #file[l.txt,1, S]     { a space inside the macro }
+      ```
+
+      | value handed in | rendered | what happened |
+      |---|---|---|
+      | `#file[l.txt,1,S]` | `#file[l.txt,1, S]` | space after the comma |
+      | `a,b` | `A, b` | space **and a capital** |
+      | `x,y,z` | `X, y, z` | both, twice |
+      | `1,5` | `1,5` | intact — a comma between digits is shielded |
+      | `one.two` | `one.two` | intact — the domain rule |
+      | `[b]` | `[b]` | intact — neutralising did protect it from the PARSER |
+
+      With `PostProcess := False` every value is returned verbatim. So the sentinels do their
+      documented job against parsing and none at all against typography: a host that marks a
+      value literal is asking for text that is not to be touched, and gets prose conventions
+      applied to it anyway. Whether restored regions should be exempt from post-processing is
+      the engine's decision; the measurement is the report.
+
+      **It reaches Studio today, with no GSA involved:** the variables panel's `Literal` flag
+      goes through `SpxValueForEngine` → `SpNeutralize`, so any literal session value carrying
+      `,` before a letter — or simply starting lower-case — is shown rewritten in the preview.
+      Found while measuring the GSA converter, which is where it is visible in its ugliest
+      form, but it belongs to neither the converter nor this application.
+
 - [ ] **A directive after content leaves its LF behind when the line ends CRLF.** Measured
       2026-07-28, reduced by delta debugging from a real 116 KB template to four lines:
 

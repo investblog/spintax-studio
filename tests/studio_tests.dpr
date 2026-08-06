@@ -34,6 +34,7 @@ uses
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
+  SpxGsaImport,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
   SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxCompanyMark, SpxSevIcons;
   {$ELSE}
@@ -45,6 +46,7 @@ uses
   SpxExport in '..\src\SpxExport.pas',
   SpxHtmlScan in '..\src\SpxHtmlScan.pas',
   SpxGroups in '..\src\SpxGroups.pas',
+  SpxGsaImport in '..\src\SpxGsaImport.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxStrings in '..\gui\SpxStrings.pas',
@@ -4444,6 +4446,121 @@ end;
    The same discipline as TestSprites, which checks the language flags the same way for the same
    reason: they are 4:3, so their height is a fact rather than a copy of their width, and this
    mark is 2.25:1. Square glyphs are the icon strip's case, not the product's rule. *)
+(* THE GSA IMPORT, and what is checked is CONVERT-THEN-RENDER rather than the converted text.
+   The engine's own suite makes that point and paid for it: a converter's output looks right in
+   a diff and is wrong in a renderer, which is the only place it matters. So every case here
+   renders the document with the variables the import produced, exactly the way the window
+   will, and compares the OUTPUT with the GSA template's meaning.
+
+   The values are checked too, and they are the reason this unit exists: what the panel shows a
+   reader must be the readable text (`[`, `/#`), while what the engine receives must be the
+   neutralised form the converter meant. `SpxValueForEngine` is what makes the second true, so
+   the round trip is asserted rather than assumed. *)
+procedure TestGsaImport;
+var
+  res: TSpxGsaResult;
+  ctx: TSpContext;
+  vars: TStrMap;
+  rng: TFirstRng;
+  i, lifted: Integer;
+  out_, v: string;
+
+  { The window's own path: session values through SpxValueForEngine into TSpContext.Vars. }
+  function RenderWith(const ADoc: string; const APairs: TSpxVarPairs;
+                      APost: Boolean): string;
+  var k: Integer;
+  begin
+    vars := TStrMap.Create;
+    rng := TFirstRng.Create;
+    try
+      for k := 0 to High(APairs) do
+        vars.AddOrSetValue(APairs[k].Name, SpxValueForEngine(APairs[k]));
+      ctx := Default(TSpContext);
+      ctx.PostProcess := APost;
+      ctx.Vars := vars;
+      ctx.Rng := rng;
+      Result := SpRender(ADoc, ctx);
+    finally
+      rng.Free;
+      vars.Free;
+    end;
+  end;
+
+begin
+  { NOTHING IN, NOTHING OUT -- and no exception either: the window will call this on whatever
+    file the reader picked. }
+  res := SpxImportGsa('');
+  Check('gsa/empty source gives an empty document', res.Doc, '');
+  Check('gsa/empty source lifts nothing', IntToStr(Length(res.Vars)), '0');
+  { THE RULE, AS DATA. A converted GSA template renders with the cosmetic stage off, and the
+    result says so rather than leaving it to a caller who read a comment. Asserted even on the
+    empty import, because that is the call a window makes on a file it could not parse. }
+  CheckTrue('gsa/an import always says post-process is off', not res.PostProcess);
+
+  { A template with no GSA construct at all comes back as itself, with nothing lifted: the
+    import must not rewrite what it does not have to. }
+  res := SpxImportGsa('Plain {a|b} text.');
+  Check('gsa/a plain template is untouched', res.Doc, 'Plain {a|b} text.');
+  Check('gsa/and lifts nothing', IntToStr(Length(res.Vars)), '0');
+
+  { THE FOUR SHAPES THE ENGINE'S RELEASE NOTES NAME, in one template. Post-process OFF, because
+    this asserts what the conversion preserves and the post-processor is prose typography --
+    it rewrites even a neutralised value, which is recorded as a defect to report. }
+  res := SpxImportGsa('Read [b]this[/b]. See http://x.io/#top and #file[l.txt,1,S].');
+  CheckTrue('gsa/the result asks for no post-processing', not res.PostProcess);
+  out_ := RenderWith(res.Doc, res.Vars, res.PostProcess);
+  Check('gsa/BBCode, a fragment URL and a macro all survive a render',
+        out_, 'Read [b]this[/b]. See http://x.io/#top and #file[l.txt,1,S].');
+  CheckTrue('gsa/and something was lifted to do it', Length(res.Vars) > 0);
+
+  { WITHOUT the variables the same document shows placeholders -- visibly incomplete, never
+    plausible and wrong. That is the engine's design and the reason the dialog warns. }
+  out_ := RenderWith(res.Doc, nil, res.PostProcess);
+  CheckTrue('gsa/without its variables the document shows a placeholder',
+            Pos('%', out_) > 0);
+  CheckTrue('gsa/and does not silently lose the brackets', out_ <> 'Read [b]this[/b].');
+
+  { The values are READABLE in the panel and NEUTRALISED at the engine. }
+  lifted := 0;
+  for i := 0 to High(res.Vars) do
+  begin
+    v := res.Vars[i].Value;
+    CheckTrue('gsa/a lifted value carries no raw sentinel [' + res.Vars[i].Name + ']',
+              v = SpSafetyRestore(v));
+    CheckTrue('gsa/a lifted value is literal [' + res.Vars[i].Name + ']', res.Vars[i].Literal);
+    Check('gsa/and reaches the engine neutralised [' + res.Vars[i].Name + ']',
+          SpxValueForEngine(res.Vars[i]), SpNeutralize(v));
+    Inc(lifted);
+  end;
+  CheckTrue('gsa/every lifted value was checked', lifted > 0);
+
+  { A REFUSAL IS REPORTED, NOT TRANSLATED. A domain-bound block selects on the target URL,
+    which is host context and not a spin, so the engine hands it back -- and its original text
+    survives as the variable's value. }
+  res := SpxImportGsa('Ship to {#.de|#.com} today.');
+  Check('gsa/the refused block is reported', IntToStr(Length(res.Refused)), '1');
+  CheckTrue('gsa/and it names the variable it became', res.Refused[0].Name <> '');
+  Check('gsa/the original text is kept verbatim', res.Refused[0].Original, '{#.de|#.com}');
+  out_ := RenderWith(res.Doc, res.Vars, res.PostProcess);
+  Check('gsa/a refusal renders as the GSA text it was', out_, 'Ship to {#.de|#.com} today.');
+
+  { AND WHY THE RULE EXISTS, pinned so nobody turns the stage back on as a tidy-up. The same
+    document, rendered WITH post-processing, is edited: this is the engine defect reported in
+    docs/TODO.md, and if the engine fixes it this check is what will say so. }
+  res := SpxImportGsa('A #file[l.txt,1,S] B');
+  CheckTrue('gsa/post-processing would rewrite the macro',
+            RenderWith(res.Doc, res.Vars, True) <> RenderWith(res.Doc, res.Vars, False));
+  Check('gsa/and with the stage off it is verbatim',
+        RenderWith(res.Doc, res.Vars, res.PostProcess), 'A #file[l.txt,1,S] B');
+
+  { ORDER IS STABLE, because a dictionary's is not: two imports of one template must give the
+    panel the same rows in the same places. }
+  res := SpxImportGsa('[b]a[/b] [i]b[/i] #file[x.txt,1,S]');
+  for i := 1 to High(res.Vars) do
+    CheckTrue('gsa/variables come back sorted [' + res.Vars[i].Name + ']',
+              CompareStr(res.Vars[i - 1].Name, res.Vars[i].Name) < 0);
+end;
+
 procedure TestBrandMark;
 var i, w, h, len, wanted, prevW: Integer; p: Pointer; ratio, srcRatio: Double;
 begin
@@ -7269,6 +7386,7 @@ begin
   TestHelpSilences;
   TestOfflineClaim;
   TestAbout;
+  TestGsaImport;
   TestBrandMark;
   TestCompanyMark;
   TestHelpUnit;
