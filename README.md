@@ -7,7 +7,10 @@
 A native Windows editor for spintax templates, in the shape of a translator: two panes,
 your template on the left, a live render on the right. The engine that decides what comes
 out — and whether the template is even valid — is [`spintax-win`](https://github.com/investblog/spintax-win),
-the same one published for JavaScript, PHP and Python, embedded in-process. The first
+embedded in-process: the Pascal member of a family whose JavaScript, PHP and Python engines are
+independent implementations held to one shared corpus. The same language and the same verdicts,
+not the same code — and cross-engine RNG parity is an explicit non-goal, so a seed reproduces
+your own work rather than another engine's draw. The first
 release is an offline editor: write a template, see its render, inspect diagnostics and
 variables, generate variants, and export them.
 

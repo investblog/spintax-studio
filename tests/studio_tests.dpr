@@ -4564,6 +4564,35 @@ begin
   Check('gsa/and with the stage off it is verbatim',
         RenderWith(res.Doc, res.Vars, res.PostProcess), 'A #file[l.txt,1,S] B');
 
+  (* TWO MACROS THAT DIFFER ONLY IN CASE ARE TWO MACROS. Found by an outside review on
+     2026-08-06 and reproduced here before it was believed: on engine `v0.4.0` these two
+     `#file` macros shared one variable, and the render answered `A.txt` for BOTH -- a SER
+     template that pulls from two lists came back pulling twice from one, silently. Fixed in
+     `v0.4.1` by keying the lifted text case-sensitively.
+
+     It is a Studio test and not only the engine's because this suite is what stands between
+     the pin and a reader: the version can move under us, and a check that only ever tried one
+     `#file[l.txt,…]` could not tell the two engines apart. It could not, and did not -- 8163
+     checks passed over the defect. *)
+  res := SpxImportGsa('A: #file[A.txt,1,S] and B: #file[a.txt,1,S]');
+  Check('gsa/two macros differing only in case are two variables',
+        IntToStr(Length(res.Vars)), '2');
+  out_ := RenderWith(res.Doc, res.Vars, res.PostProcess);
+  Check('gsa/and each keeps its own file name', out_,
+        'A: #file[A.txt,1,S] and B: #file[a.txt,1,S]');
+
+  (* AND A CONVERSION THAT CANNOT BE FAITHFUL IS REFUSED, NOT GUESSED. Tag sets that only
+     PARTIALLY overlap -- `#A` in both blocks, `#B` and `#C` in one each -- describe a
+     correlation this syntax cannot express, and `v0.4.0` translated them anyway, into two
+     independent groups: it rendered `a then c` with nothing reported. `v0.4.1` hands both
+     blocks back untranslated, which is the converter's stated contract and the reason a
+     refusal list exists at all. *)
+  res := SpxImportGsa('{#A a|#B b} then {#A c|#C d}');
+  Check('gsa/partially overlapping tag sets are refused',
+        IntToStr(Length(res.Refused)), '2');
+  out_ := RenderWith(res.Doc, res.Vars, res.PostProcess);
+  Check('gsa/and the GSA text survives verbatim', out_, '{#A a|#B b} then {#A c|#C d}');
+
   { ORDER IS STABLE, because a dictionary's is not: two imports of one template must give the
     panel the same rows in the same places. }
   res := SpxImportGsa('[b]a[/b] [i]b[/i] #file[x.txt,1,S]');

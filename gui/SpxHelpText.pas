@@ -116,7 +116,7 @@ const
     'docs/help/ru/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..5] of string = (
-    '409ab86968f59689', 'cdc2b8aab2363a59', 'b8a606a10c367fd3', '0b8544ecd207ac8a', 'd035385da24243eb', '716fe1af3c660e4c'
+    '550ca5a6638e3e37', 'cdc2b8aab2363a59', 'b8a606a10c367fd3', '6ebc7d94e9dfbd21', 'd035385da24243eb', '716fe1af3c660e4c'
   );
   HELP_DOC_LOCALE: array[0..5] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru'
@@ -231,15 +231,15 @@ const
     0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..59] of Integer = (
-    0, 6, 13, 19, 22, 25, 34, 39, 45, 57, 76, 86, 93, 100, 109, 113, 127, 142, 144, 154, 161, 172, 188, 212, 230, 249, 260, 273, 286, 294, 301, 307, 314, 320, 323, 326, 335, 340, 346, 358, 377, 387, 394, 402, 411, 415, 429, 452, 454, 465, 471, 484, 500, 524, 542, 561, 572, 585, 605, 613
+    0, 7, 14, 20, 23, 26, 35, 40, 46, 58, 77, 87, 94, 101, 110, 114, 128, 143, 145, 155, 162, 173, 189, 213, 231, 250, 261, 274, 287, 295, 302, 309, 316, 322, 325, 328, 337, 342, 348, 360, 379, 389, 396, 404, 413, 417, 431, 454, 456, 467, 473, 486, 502, 526, 544, 563, 574, 587, 607, 615
   );
   HELP_LAST: array[0..59] of Integer = (
-    5, 12, 18, 21, 24, 33, 38, 44, 56, 75, 85, 92, 99, 108, 112, 126, 141, 143, 153, 160, 171, 187, 211, 229, 248, 259, 272, 285, 293, 300, 306, 313, 319, 322, 325, 334, 339, 345, 357, 376, 386, 393, 401, 410, 414, 428, 451, 453, 464, 470, 483, 499, 523, 541, 560, 571, 584, 604, 612, 618
+    6, 13, 19, 22, 25, 34, 39, 45, 57, 76, 86, 93, 100, 109, 113, 127, 142, 144, 154, 161, 172, 188, 212, 230, 249, 260, 273, 286, 294, 301, 308, 315, 321, 324, 327, 336, 341, 347, 359, 378, 388, 395, 403, 412, 416, 430, 453, 455, 466, 472, 485, 501, 525, 543, 562, 573, 586, 606, 614, 620
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..618] of string = (
+  HELP_LINE: array[0..620] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -249,10 +249,16 @@ const
       'pressing: what you see on the right is what the engine returns for what is on the left' +
       ' at that moment.</p>',
     '<p><small><tt>locale: en<br>seed: 7<br>empty: (empty)</tt></small></p>',
-    '<p>The engine is the same one published for JavaScript, PHP and Python, built into thi' +
-      's program. That matters for one reason: the preview is not an approximation of what yo' +
-      'ur template means. It is the answer, from the same code that will render it wherever y' +
-      'ou use it next.</p>',
+    '<p>The engine is built into this program, and it is the Pascal member of a family: the' +
+      ' same language is also published for JavaScript, PHP and Python. The four are independ' +
+      'ent programs held to one shared set of test fixtures, so what a template MEANS is the ' +
+      'same in all of them — the constructs, the verdict on whether it is valid, the finishin' +
+      'g touches. A template this window calls valid is valid there.</p>',
+    '<p>What is not promised, and the difference matters when you compare: the random draw.' +
+      ' A seed makes the preview repeatable HERE — the same seed and the same template give t' +
+      'he same text tomorrow — but the same seed in the JavaScript engine may pick a differen' +
+      't alternative. Seeds are for reproducing your own work, not for matching another engin' +
+      'e''s.</p>',
     '<p>Everything here works with no network connection. There is no account, no sign-in a' +
       'nd nothing to switch on: open the program and it is running.</p>',
     '<h2 id="panes">The two panes</h2>',
@@ -953,10 +959,16 @@ const
       'торые он даёт, и он перерисовывается по мере набора. Нажимать между ними нечего: справ' +
       'а стоит то, что движок вернул для того, что слева, прямо сейчас.</p>',
     '<p><small><tt>locale: ru<br>seed: 7<br>empty: (пусто)</tt></small></p>',
-    '<p>Движок — тот же, что опубликован для JavaScript, PHP и Python, встроенный в програм' +
-      'му. Это важно по одной причине: предпросмотр не приближение к тому, что означает ваш ш' +
-      'аблон. Это ответ, от того же кода, который отрендерит его там, где вы им дальше воспол' +
-      'ьзуетесь.</p>',
+    '<p>Движок встроен в программу, и он — паскалевский участник семьи: тот же язык опублик' +
+      'ован также для JavaScript, PHP и Python. Это четыре независимые программы, которые дер' +
+      'жат одним общим набором фикстур, поэтому <b>смысл</b> шаблона у них одинаковый — конст' +
+      'рукции, вердикт «валидно или нет», завершающие правки. Шаблон, который это окно считае' +
+      'т валидным, валиден и там.</p>',
+    '<p>Чего никто не обещает, и это важно при сравнении: совпадения случайного выбора. Сид' +
+      ' делает предпросмотр повторяемым <b>здесь</b> — тот же сид и тот же шаблон завтра даду' +
+      'т тот же текст, — но тот же сид в движке на JavaScript может выбрать другую альтернати' +
+      'ву. Сид нужен, чтобы воспроизвести свою же работу, а не чтобы совпасть с чужим движком' +
+      '.</p>',
     '<p>Всё здесь работает без сети. Ни аккаунта, ни входа, ни чего-либо, что надо включить' +
       ': открыли — работает.</p>',
     '<h2 id="panes">Две панели</h2>',

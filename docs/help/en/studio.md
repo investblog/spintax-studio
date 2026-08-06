@@ -14,9 +14,16 @@ seed: 7
 empty: (empty)
 ```
 
-The engine is the same one published for JavaScript, PHP and Python, built into this program.
-That matters for one reason: the preview is not an approximation of what your template means.
-It is the answer, from the same code that will render it wherever you use it next.
+The engine is built into this program, and it is the Pascal member of a family: the same
+language is also published for JavaScript, PHP and Python. The four are independent programs
+held to one shared set of test fixtures, so what a template MEANS is the same in all of them —
+the constructs, the verdict on whether it is valid, the finishing touches. A template this
+window calls valid is valid there.
+
+What is not promised, and the difference matters when you compare: the random draw. A seed makes
+the preview repeatable HERE — the same seed and the same template give the same text tomorrow —
+but the same seed in the JavaScript engine may pick a different alternative. Seeds are for
+reproducing your own work, not for matching another engine's.
 
 Everything here works with no network connection. There is no account, no sign-in and nothing
 to switch on: open the program and it is running.

@@ -19,7 +19,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
-      at `engine/`, pinned to tag `v0.4.0`. Clone with `--recurse-submodules`.
+      at `engine/`, pinned to tag `v0.4.1`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
       twice the same day). The family resolves includes **inside render**, behind a host
@@ -108,8 +108,8 @@ is a deliberate state and not a backlog of things anyone forgot.
    <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
    Microsoft's own snapshot of that text updates only with the submission.
 
-6. **The engine moved to `v0.4.0`**, 2026-08-06 (was `v0.3.3`, which is what R0 shipped
-   against). Nothing Studio can see changed, and that was checked rather than read off a
+6. **The engine moved to `v0.4.1`**, 2026-08-06 (was `v0.3.3`, which is what R0 shipped
+   against; `v0.4.0` was pinned for a few hours and replaced — see below). Nothing Studio can see changed, and that was checked rather than read off a
    changelog: the engine's whole `interface` section is byte-identical between the two tags.
    What is inside is a render speed-up — 64 KB of plain text carrying no spintax went from
    15 ms to 2.5 ms by the engine's own measurement, which is the live preview's exact path —
@@ -117,6 +117,16 @@ is a deliberate state and not a backlog of things anyone forgot.
    The suite is green on the new engine in both binaries, and the help documents' claim that
    their examples were rendered by a named version was re-pointed at `v0.4.0`, which the
    example gate had just re-proved by running every one of them again.
+
+   **And then `v0.4.1`, because an outside review found `v0.4.0`'s converter defective** —
+   which this suite could not have caught, since it only ever imported a single
+   `#file[l.txt,…]`. Two defects, both reproduced here before they were believed:
+   `#file[A.txt,1,S]` and `#file[a.txt,1,S]` shared one variable and rendered as `A.txt`
+   twice — a SER template pulling from two lists came back pulling twice from one; and
+   partially overlapping tag sets (`{#A a|#B b}` then `{#A c|#C d}`) were translated as
+   independent groups instead of refused. Both are Studio checks now, and both were proved to
+   FAIL on `v0.4.0` by putting the submodule back on it. The engine proper is unchanged
+   between the two tags; only `Spintax.Gsa` moved.
 
 7. **GSA SER import**, done 2026-08-06 — off by default, `View` → `GSA import` reveals
    `File` → `Import GSA template…`. Editor-core in `src/SpxGsaImport.pas`, gated without a
