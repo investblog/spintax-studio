@@ -198,6 +198,12 @@ def main():
             # copyright notice itself, which is the thing the licence obliges us to show.
             if body and body[0].startswith(e['licence']):
                 rest = body[0][len(e['licence']):].lstrip(' ,;:-—')
+                # `MPL 1.1 (the editor component; unmodified).` leaves a fragment that OPENS
+                # with a bracket, and `(the editor component; unmodified).` on its own reads
+                # like a stray aside. When the whole remainder is that one parenthesis, it is
+                # unwrapped into the sentence it was always trying to be.
+                if rest.startswith('(') and rest.rstrip('.').endswith(')'):
+                    rest = rest.rstrip('.')[1:-1].strip() + '.'
                 if rest:
                     body[0] = rest[0].upper() + rest[1:] if rest[0].isalpha() else rest
                 else:

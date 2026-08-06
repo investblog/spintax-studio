@@ -66,6 +66,8 @@ type
       control: a label does not know its own size until a layout pass it has not had yet, and
       this window places everything below the paragraph relative to its bottom. }
     function WrapHeight(const AText: string; AWidth: Integer; AFont: TFont): Integer;
+    { And the notice's own wrapping, done here rather than left to the memo -- see Fill. }
+    procedure WrapInto(ADest: TStrings; const AText, AIndent: string; AWidth: Integer);
   protected
     procedure DoAutoAdjustLayout(const AMode: TLayoutAdjustmentPolicy;
       const AXProportion, AYProportion: Double); override;
@@ -173,6 +175,61 @@ begin
   end;
 end;
 
+(* THE NOTICE IS WRAPPED HERE, not by the memo, and the reason is one the memo cannot fix: a
+   TMemo has no hanging indent. An entry's body is written with two leading spaces so it sits
+   under its heading, and when the memo broke that paragraph the SECOND line came back flush
+   left -- under the entry's NAME rather than under its text, which is what the reader saw as
+   the lines falling apart.
+
+   So the wrap is greedy, by measured word widths, into a width the window knows and the memo
+   does not have to guess at, and EVERY line of the paragraph carries the indent -- the block
+   sits under its heading instead of sliding out from under it on the second line. WordWrap
+   stays ON as a net: if a measurement is ever a few pixels optimistic the memo still breaks
+   the line rather than clipping it, and the only loss is the indent on that one line.
+
+   A word longer than the whole width -- a URL -- is placed alone and left to the memo, which
+   is the one case where breaking mid-word beats a line that runs off the edge. *)
+procedure TSpxAboutForm.WrapInto(ADest: TStrings; const AText, AIndent: string;
+  AWidth: Integer);
+var
+  bmp: TBitmap;
+  p, q, indentW: Integer;
+  word_, line, cand: string;
+begin
+  bmp := TBitmap.Create;
+  try
+    bmp.Canvas.Font.Assign(FText.Font);
+    indentW := bmp.Canvas.TextWidth(AIndent);
+    line := '';
+    p := 1;
+    { SPLIT BY HAND, on spaces and nothing else, because TStringList.DelimitedText EDITS THE
+      TEXT. `StrictDelimiter` does not turn quoting off: measured on this very sentence,
+      `headers offer "GPL Version 2 or later" as an alternative` comes back as six items of
+      which one is `GPL Version 2 or later` -- the run merged and **the quotation marks gone**.
+      A routine that lays text out is not allowed to alter it, and this text is a licence
+      notice. Nothing about the wrapping needs a parser, so it does not have one. }
+    while p <= Length(AText) do
+    begin
+      q := p;
+      while (q <= Length(AText)) and (AText[q] <> ' ') do Inc(q);
+      word_ := Copy(AText, p, q - p);
+      p := q + 1;
+      if word_ = '' then Continue;
+      if line = '' then cand := word_ else cand := line + ' ' + word_;
+      if (line <> '') and (bmp.Canvas.TextWidth(cand) + indentW > AWidth) then
+      begin
+        ADest.Add(AIndent + line);
+        line := word_;
+      end
+      else
+        line := cand;
+    end;
+    if line <> '' then ADest.Add(AIndent + line);
+  finally
+    bmp.Free;
+  end;
+end;
+
 { AND PICKED AGAIN WHEN THE SIZE CHANGES. The .ico carries nine frames from 16 to 128 and a
   form is CONSTRUCTED at 96 dpi -- LCL applies the monitor's afterwards, which is the lesson the
   main window's AutoAdjustLayout already records. Picked once for a literal 64, a 150% desktop
@@ -247,10 +304,31 @@ begin
   ClientHeight := y + 230 + 58;
   FClose.SetBounds(ClientWidth - L - 100, ClientHeight - 44, 100, 28);
 
+  { THE WIDTH THE NOTICE IS WRAPPED TO, and it is the memo's INSIDE: the frame takes a couple
+    of pixels each side and the vertical scroll bar is always there, because this text has never
+    fitted without one. Asked of the system rather than assumed, and then a few pixels of slack,
+    so a measurement that is optimistic by a hair does not hand the line back to the memo. }
   body := TStringList.Create;
   try
-    for i := 0 to SpxAboutLineCount - 1 do body.Add(SpxAboutLine(i));
+    h := FText.Width - GetSystemMetrics(SM_CXVSCROLL) - 12;
+    for i := 0 to SpxAboutLineCount - 1 do
+    begin
+      { A body paragraph is the one thing that needs breaking; a heading or a `Name -- Licence`
+        line is short by construction and goes through as it is. }
+      if Copy(SpxAboutLine(i), 1, 2) = '  ' then
+        WrapInto(body, Trim(SpxAboutLine(i)), '  ', h)
+      else
+        body.Add(SpxAboutLine(i));
+    end;
     FText.Lines.Assign(body);
+    {$IFDEF SPX_ABOUT_TRACE}
+    { What the box will actually show, written where a GUI-subsystem probe can read it: this
+      window has no console at all, and the question -- whose wrap is on screen, mine or the
+      memo's -- cannot be answered from the outside. }
+    body.Insert(0, Format('-- wrap width %d px, memo %d px, scrollbar %d px --',
+                          [h, FText.Width, GetSystemMetrics(SM_CXVSCROLL)]));
+    body.SaveToFile(GetEnvironmentVariable('SPX_ABOUT_TRACE'));
+    {$ENDIF}
   finally
     body.Free;
   end;
