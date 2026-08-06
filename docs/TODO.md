@@ -157,13 +157,26 @@ is a deliberate state and not a backlog of things anyone forgot.
    had to change, because the window already opens a path handed to it on the command line
    (`SpxMainForm.pas:559`). MakeAppx accepts the manifest and the package builds.
 
-   **Two things are NOT settled and neither blocks the release:**
-   - the file's icon is the app's own 44×44 logo, so a `.spintax` file in Explorer looks exactly
-     like Studio itself. A document-shaped mark — a page carrying the hexagon — would tell them
-     apart, and is an asset somebody has to draw;
-   - double-clicking a second `.spintax` while Studio is open starts a SECOND window. That is
-     ordinary for editors; making it hand the file to the running instance is a named mutex and
-     a `WM_COPYDATA` hop, which is real work and its own decision.
+   **The file's icon is the app's own logo, and that is fine.** The "app and document should
+   look different" convention is weak for a Store app: the executable lives in `WindowsApps`
+   and never sits in a folder beside the reader's templates, so there is nothing to confuse it
+   with. No new artwork is owed.
+
+   **What IS thin is the asset SET, and it is polish rather than a defect.** The manifest points
+   at one `Square44x44Logo.png`, the package carries no `resources.pri` (11 entries: manifest,
+   exe, seven PNGs), so a `targetsize-256` variant would simply be ignored — Windows takes the
+   literal path. Explorer draws a file icon up to 256 px in the extra-large view, where a 44 px
+   source is scaled almost six times. Compared side by side against a fresh vector render: the
+   upscale is soft at the edges and the mark sits slightly small, but the flat geometry and
+   heavy outlines hide it well, and 16/32/48 — every list and details view — are unaffected.
+   **Not worth changing the packaging pipeline for now:** that pipeline produced a certified
+   package, and adding MakePri means re-running WACK for a gain confined to one view. When it
+   is done, do it whole — targetsize 16/24/32/48/256 rendered from the vector, plus the PRI.
+
+   **A second double-click opens a second window, and that is the right answer, not a gap.**
+   Studio is single-document: one window, one template. Handing the file to a running instance
+   would mean either replacing the open document — losing the reader's place and prompting about
+   unsaved work — or growing tabs, which is a different product. Closed rather than open.
 
    **Not verified end to end yet:** proving the double-click opens Studio needs the package
    installed locally, and this package's identity is the one the Store copy already has. Worth
