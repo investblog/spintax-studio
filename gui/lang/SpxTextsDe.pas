@@ -100,7 +100,13 @@ const
       'Noch nichts eingebunden — #include "Fragment" holt eine andere Datei, und nur am Zeilenanfang.',
 
       'Links schreiben Sie eine Vorlage, rechts sehen Sie, was sie erzeugt. Prüfung, Variablen, Includes, Variantengenerierung und Export: alles offline, ohne Konto, ohne Netz, ohne Laufzeitumgebung.',
-      'Lizenzen und Danksagungen'
+      'Lizenzen und Danksagungen',
+
+      'GSA-Import',
+      'GSA-Vorlage importieren…',
+      'GSA-Vorlagen|*.txt;*.spintax|Alle Dateien|*.*',
+      'Aus der Vorlage in Variablen ausgelagert: %d.',
+      'Es sind Sitzungswerte: Sie stehen in der Variablen-Ansicht und werden NICHT mit dem Dokument gespeichert. Gerendert wird ohne Nachbearbeitung, damit die Vorlage genau so bleibt, wie GSA sie geschrieben hat.'
   );
 
 implementation

@@ -58,6 +58,17 @@ type
       document's: the two are separate settings now, and a panel with Russian headers over
       English findings is what deriving it from the locale produced. }
     UiLang: TSpxLang;
+    (* THE COSMETIC STAGE, per document rather than per build -- and NEGATIVE on purpose.
+       Everything this editor normally shows is post-processed; a converted GSA template is
+       not, because it is not ours to tidy (spec §4.7).
+
+       Written as `No…` so the SAFE answer is the zero one. A positive `PostProcess` was
+       written first and the suite caught it within the minute: these records are filled field
+       by field by their callers, three of which do not know this field exists, and a Boolean
+       they do not set is False -- so every one of them quietly lost the cosmetic stage. The
+       charter already carries this lesson about the engine's own `Default(TSpContext)`; it
+       applies to any record a caller builds by hand. *)
+    NoPostProcess: Boolean;
     { A selection to preview on its own, in the DOCUMENT's scope -- its `#set`/`#def` lines,
       the runtime context and the locale all still apply (spec §4.2). Empty means the whole
       document, which is the ordinary case. Only the PREVIEW narrows: diagnostics keep
@@ -148,6 +159,8 @@ type
     Count: Integer;
     SeedBase: LongWord;
     Opts: TSpxDedupeOpts;
+    { Same rule and the same polarity as the render job's, for the same reason. }
+    NoPostProcess: Boolean;
   end;
 
   { One step's worth of news. Accepted says whether the variant just rendered went into the
@@ -455,6 +468,7 @@ begin
   end;
   try
     ctx := SpxSeededContext(req.Locale, vars, seed, FSet);
+    ctx.PostProcess := not req.NoPostProcess;
     batch := SpxRenderBatch(req.Text, ctx, 1, seed);
     try
       if batch.Count = 0 then v := Default(TSpxVariant) else v := batch[0];
@@ -595,6 +609,7 @@ begin
   try
     if Job.Seeded then ctx := SpxSeededContext(Job.Locale, vars, Job.Seed, FSet)
     else ctx := SpxContext(Job.Locale, vars, FSet);
+    ctx.PostProcess := not Job.NoPostProcess;
 
     FResult := Default(TSpxJobResult);
     FResult.Id := Job.Id;

@@ -211,7 +211,11 @@ const
 
     { the About box: a paragraph that wraps in a label as wide as the dialog, and a heading
       over the attributions. Neither sits in a computed slot, so neither has a width to keep }
-    0, 0
+    0, 0,
+
+    { the GSA import: two menu items (a menu grows to fit), a dialog filter that Windows
+      parses rather than lays out, and two sentences in a message box that wraps them }
+    0, 0, 0, 0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

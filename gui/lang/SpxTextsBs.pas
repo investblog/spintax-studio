@@ -97,7 +97,13 @@ const
       'Još nema umetanja — #include "fragment" povlači drugu datoteku, i samo s početka reda.',
 
       'Predložak pišete lijevo, a desno vidite šta proizvodi. Provjera, varijable, uključivanja, generisanje varijanti i izvoz: sve offline, bez računa, bez mreže i bez izvršnog okruženja.',
-      'Licence i zahvale'
+      'Licence i zahvale',
+
+      'GSA uvoz',
+      'Uvezi GSA predložak…',
+      'GSA predlošci|*.txt;*.spintax|Sve datoteke|*.*',
+      'Iz predloška izdvojeno u varijable: %d.',
+      'To su vrijednosti sesije: vide se u panelu varijabli i NE čuvaju se uz dokument. Prikaz se računa bez naknadne obrade, pa predložak ostaje onakav kakvim ga je GSA napisao.'
   );
 
 implementation

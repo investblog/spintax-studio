@@ -64,6 +64,13 @@ type
       would mean a group editor at 900 px because someone widened the help once. Both in
       96-dpi units, like SlideWidth, for the reason SlideResized gives. }
     HelpWidth: Integer;
+    (* THE GSA IMPORT, OFF UNTIL ASKED FOR. `Spintax.Gsa` converts a GSA Search Engine Ranker
+       template into this family's syntax (spec §4.7), and most authors have never seen GSA:
+       a File menu carrying an import for a product they do not use is clutter they cannot
+       turn off. So the menu item appears only when this is on, and this is off by default --
+       the same shape as any other optional dialect, and the reason it is a SETTING rather
+       than an always-visible action. *)
+    GsaImport: Boolean;
   end;
 
 const
@@ -113,6 +120,8 @@ begin
   Result.Theme := spxThemeLight;
   Result.SlideWidth := SPX_SLIDE_DEFAULT;
   Result.HelpWidth := SPX_HELP_DEFAULT;
+  { OFF. A reader who has never used GSA should not find its import in their File menu. }
+  Result.GsaImport := False;
 end;
 
 function SpxConfigDir: string;
@@ -187,6 +196,8 @@ begin
       else if key = 'rail.right' then Result.RailRight := ReadBool(val, Result.RailRight)
       else if key = 'preview.source' then
         Result.PreviewSource := ReadBool(val, Result.PreviewSource)
+      else if key = 'gsa.import' then
+        Result.GsaImport := ReadBool(val, Result.GsaImport)
       else if key = 'panel' then
       begin
         if TryStrToInt(val, n) then Result.Panel := Clamp(n, -1, 2);
@@ -233,6 +244,7 @@ begin
     lines.Add('lang.follow=' + WriteBool(APrefs.LangFollow));
     lines.Add('rail.right=' + WriteBool(APrefs.RailRight));
     lines.Add('preview.source=' + WriteBool(APrefs.PreviewSource));
+    lines.Add('gsa.import=' + WriteBool(APrefs.GsaImport));
     lines.Add('panel=' + IntToStr(APrefs.Panel));
     lines.Add('font.size=' + IntToStr(APrefs.FontSize));
     lines.Add('font.family=' + APrefs.FontFamily);

@@ -171,6 +171,12 @@ type
       a value left over from a variable the user has since defined is not a runtime value
       any more. }
     function RuntimeValues: TSpxVarPairs;
+    { The values an IMPORT produced, put in as if the reader had typed them (spec §4.7). The
+      session store is REPLACED rather than added to: the pairs belong to the document that
+      just arrived, and a value left over from the previous one would be a name this template
+      never mentions -- which RuntimeValues would drop anyway, silently, one render later.
+      Literal travels with each pair, because a lifted GSA value means itself. }
+    procedure SetRuntimeValues(const APairs: TSpxVarPairs);
     property OnJump: TSpxJumpEvent read FOnJump write FOnJump;
     { Clicking an empty group's sentence opens the chapter it names. }
     property OnHint: TSpxHintEvent read FOnHint write FOnHint;
@@ -646,6 +652,24 @@ begin
     end;
   SetLength(all, n);
   Result := SpxKeepRuntime(FModel, all);
+end;
+
+procedure TSpxVarsPane.SetRuntimeValues(const APairs: TSpxVarPairs);
+var i: Integer; name_: string;
+begin
+  FValues.Clear;
+  FLiteral.Clear;
+  for i := 0 to High(APairs) do
+  begin
+    name_ := LowerCase(APairs[i].Name);
+    if name_ = '' then Continue;
+    FValues.Values[name_] := APairs[i].Value;
+    if APairs[i].Literal then FLiteral.Values[name_] := '1';
+  end;
+  { The grid is rebuilt from the MODEL, which the next render produces -- so nothing is drawn
+    here. What must happen now is the render itself, because the document and its values
+    arrived together and the preview is currently showing neither. }
+  if Assigned(FOnRuntimeChanged) then FOnRuntimeChanged(Self);
 end;
 
 { The author says this value is text, not a template. Recorded per NAME rather than per row,

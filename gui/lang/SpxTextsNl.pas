@@ -95,7 +95,13 @@ const
       'Nog niets ingevoegd — #include "fragment" haalt een ander bestand op, en alleen aan het begin van een regel.',
 
       'Schrijf links een sjabloon en zie rechts wat het oplevert. Validatie, variabelen, includes, variantgeneratie en export: allemaal offline, zonder account, zonder netwerk en zonder runtime.',
-      'Licenties en dankbetuigingen'
+      'Licenties en dankbetuigingen',
+
+      'GSA-import',
+      'GSA-sjabloon importeren…',
+      'GSA-sjablonen|*.txt;*.spintax|Alle bestanden|*.*',
+      'Uit het sjabloon naar variabelen gehaald: %d.',
+      'Dit zijn sessiewaarden: ze staan in het variabelenpaneel en worden NIET met het document opgeslagen. Er wordt zonder nabewerking gerenderd, zodat het sjabloon blijft zoals GSA het schreef.'
   );
 
 implementation

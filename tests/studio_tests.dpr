@@ -2902,6 +2902,7 @@ begin
     p.FontFamily := 'Consolas';
     p.Theme := spxThemeDark;
     p.SlideWidth := 420;
+    p.GsaImport := True;
     CheckTrue('settings/saving-says-it-worked', SpxSavePrefsTo(path, p));
     q := SpxLoadPrefsFrom(path);
     Check('settings/lang-survives', q.Lang, 'tr');
@@ -2913,6 +2914,11 @@ begin
     Check('settings/font-family-survives', q.FontFamily, 'Consolas');
     CheckTrue('settings/theme-survives', q.Theme = spxThemeDark);
     Check('settings/slide-width-survives', IntToStr(q.SlideWidth), '420');
+    CheckTrue('settings/gsa-import-survives', q.GsaImport);
+    { AND IT IS OFF UNTIL SOMEBODY ASKS. A reader who has never used GSA must not find its
+      import in their File menu, so the default is the one thing about this setting that a
+      later edit must not quietly change. }
+    CheckTrue('settings/gsa-import-is-off-by-default', not SpxDefaultPrefs.GsaImport);
 
     { a collapsed block is -1 and must not be clamped away }
     p.Panel := -1;

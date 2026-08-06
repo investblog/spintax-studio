@@ -128,7 +128,14 @@ type
       attributions. Prose for the reader follows the reader's language; the notice under it
       does not, and the difference is deliberate. `Crafted at` in the status bar is the third
       case again -- a signature, not a sentence. ── }
-    sAboutWhat, sAboutCredits
+    sAboutWhat, sAboutCredits,
+
+    { ── THE GSA IMPORT (spec §4.7), which is off until the reader turns it on. Five strings:
+      the switch in the View menu, the File item it reveals, the file dialog's filter, and the
+      two things the summary has to say — what was lifted out of the template, and that those
+      values live for this session only. The refusal list needs no string of its own: it is
+      the engine's `name=text`, shown as it came. ── }
+    sMenuGsaImport, sMenuGsaOpen, sGsaFilter, sGsaLifted, sGsaSessionOnly
   );
 
 implementation

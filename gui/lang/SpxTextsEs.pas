@@ -93,7 +93,13 @@ const
       'Aún no hay inclusiones — #include "fragmento" trae otro archivo, y solo al principio de la línea.',
 
       'Escriba una plantilla a la izquierda y vea a la derecha lo que produce. Validación, variables, inclusiones, generación de variantes y exportación: todo sin conexión, sin cuenta, sin red y sin runtime.',
-      'Licencias y créditos'
+      'Licencias y créditos',
+
+      'Importar GSA',
+      'Importar plantilla GSA…',
+      'Plantillas GSA|*.txt;*.spintax|Todos los archivos|*.*',
+      'Elementos extraídos de la plantilla a variables: %d.',
+      'Son valores de sesión: aparecen en el panel de variables y NO se guardan con el documento. La representación se hace sin posprocesado, para que la plantilla siga siendo la que escribió GSA.'
   );
 
 implementation

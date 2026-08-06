@@ -91,7 +91,13 @@ const
       'Ainda não há inclusões — #include "fragmento" traz outro ficheiro, e apenas no início da linha.',
 
       'Escreva um modelo à esquerda e veja à direita o que ele produz. Validação, variáveis, inclusões, geração de variantes e exportação: tudo offline, sem conta, sem rede e sem runtime.',
-      'Licenças e créditos'
+      'Licenças e créditos',
+
+      'Importar GSA',
+      'Importar modelo GSA…',
+      'Modelos GSA|*.txt;*.spintax|Todos os ficheiros|*.*',
+      'Elementos extraídos do modelo para variáveis: %d.',
+      'São valores de sessão: aparecem no painel de variáveis e NÃO são guardados com o documento. A renderização corre sem pós-processamento, para o modelo ficar tal como o GSA o escreveu.'
   );
 
 implementation

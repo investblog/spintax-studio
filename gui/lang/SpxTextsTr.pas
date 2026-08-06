@@ -90,7 +90,13 @@ const
       'Henüz ekleme yok — #include "parça" başka bir dosyayı çeker, ve yalnızca satır başından.',
 
       'Solda bir şablon yazın, sağda ne ürettiğini görün. Doğrulama, değişkenler, dahil edilen dosyalar, varyant üretimi ve dışa aktarma: tümü çevrimdışı — hesap, ağ ve çalışma zamanı gerekmez.',
-      'Lisanslar ve teşekkürler'
+      'Lisanslar ve teşekkürler',
+
+      'GSA içe aktarma',
+      'GSA şablonu içe aktar…',
+      'GSA şablonları|*.txt;*.spintax|Tüm dosyalar|*.*',
+      'Şablondan değişkenlere çıkarılan öğe: %d.',
+      'Bunlar oturum değerleridir: Değişkenler panelinde görünür ve belgeyle birlikte KAYDEDİLMEZ. Şablonun GSA''nın yazdığı gibi kalması için son işlem uygulanmadan işlenir.'
   );
 
 implementation

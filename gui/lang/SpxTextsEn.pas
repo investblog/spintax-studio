@@ -96,7 +96,13 @@ const
       'Nothing included yet — #include "fragment" pulls in another file, and only from the start of a line.',
 
       'Write a template on the left and see what it renders on the right. Validation, variables, includes, variant generation and export — all offline: no account, no network, no runtime.',
-      'Licences and credits'
+      'Licences and credits',
+
+      'GSA import',
+      'Import GSA template…',
+      'GSA templates|*.txt;*.spintax|All files|*.*',
+      '%d constructs were lifted out of the template into variables.',
+      'They are session values: they are shown in the Variables panel and are NOT saved with the document. Rendering also runs without post-processing, so the template stays exactly as GSA wrote it.'
   );
 
 implementation

@@ -91,7 +91,13 @@ const
       'Ancora nessuna inclusione — #include "frammento" richiama un altro file, e solo a inizio riga.',
 
       'Scrivi un modello a sinistra e guarda a destra che cosa produce. Convalida, variabili, inclusioni, generazione di varianti ed esportazione: tutto offline, senza account, senza rete e senza runtime.',
-      'Licenze e riconoscimenti'
+      'Licenze e riconoscimenti',
+
+      'Importazione GSA',
+      'Importa modello GSA…',
+      'Modelli GSA|*.txt;*.spintax|Tutti i file|*.*',
+      'Elementi estratti dal modello in variabili: %d.',
+      'Sono valori di sessione: compaiono nel pannello delle variabili e NON vengono salvati con il documento. Il rendering avviene senza post-elaborazione, così il modello resta quello scritto da GSA.'
   );
 
 implementation

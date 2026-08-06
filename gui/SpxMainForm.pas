@@ -26,7 +26,7 @@ uses
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
   SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
-  SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented, SpxCompanyMark,
+  SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented, SpxCompanyMark, SpxGsaImport,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
@@ -192,6 +192,10 @@ type
     FErrorMarkup: TSpxDiagMarkup;
     FWarnMarkup: TSpxDiagMarkup;
     FPreview: TSpxPreviewPane;
+    { TRUE for a document that came from a GSA import, and it decides one thing: the render
+      runs without the cosmetic stage (spec §4.7). Per DOCUMENT, so opening anything else
+      clears it -- LoadDocument and NewClicked both do. }
+    FGsaDoc: Boolean;
     FStatus: TStatusBar;
     { The company mark that sits at the right end of the status bar, and the ink it was last
       sliced with -- part of the cache key for the reason EnsureSmallIcons gives: a desktop can
@@ -360,6 +364,8 @@ type
     procedure HelpToolClicked(Sender: TObject);
     procedure HelpMenuClicked(Sender: TObject);
     procedure AboutClicked(Sender: TObject);
+    procedure GsaToggleClicked(Sender: TObject);
+    procedure GsaImportClicked(Sender: TObject);
     procedure HelpPaneClosed(Sender: TObject);
     procedure DiagDoubleClicked(Sender: TObject);
     procedure HelpDeferred(Data: PtrInt);
@@ -2033,6 +2039,11 @@ begin
   { The set is read when the document is opened or saved, not on every keystroke. A fragment
     changed by another program is therefore invisible until this is used -- which is why the
     command exists rather than a silent rescan the user cannot ask for. }
+  { THE IMPORT APPEARS ONLY WHEN ASKED FOR. Most authors have never seen GSA, and a File menu
+    carrying an import for a product they do not use is clutter they cannot switch off. The
+    switch is in the View menu beside the other things that change what this window shows. }
+  if FPrefs.GsaImport then
+    Item(fileMenu, Tr(sMenuGsaOpen), 0, [], @GsaImportClicked);
   Item(fileMenu, Tr(sMenuReloadSet), 0, [], @ReloadSetClicked);
   Item(fileMenu, '-', 0, [], nil);
   Item(fileMenu, Tr(sMenuExit), 0, [], @ExitClicked);
@@ -2145,6 +2156,14 @@ begin
   { The same action the splitter's double click performs, named and reachable without knowing
     the gesture exists. The icon rides ON the item rather than through the menu's image list:
     that list is the flags, indexed by language, so an index into it here would draw a flag. }
+  { A CHECK ITEM AND NOT A RADIO ONE, so it needs no GroupIndex of its own: an option that is
+    on or off is not a choice between siblings, which is the distinction the rail's pair and
+    the preview's modes had to be taught the hard way. }
+  Item(viewMenu, '-', 0, [], nil);
+  sideItem := Item(viewMenu, Tr(sMenuGsaImport), 0, [], @GsaToggleClicked);
+  sideItem.AutoCheck := False;
+  sideItem.Checked := FPrefs.GsaImport;
+
   Item(viewMenu, '-', 0, [], nil);
   sideItem := Item(viewMenu, Tr(sSplitEven), 0, [], @SplitEvenNow);
   if (FSmallIcons <> nil) and (SPX_ICON_EVEN < FSmallIcons.Count) then
@@ -3173,6 +3192,7 @@ begin
   StopBatchForDocument;
   s := SpxReadTextFile(APath);
   FPath := APath;
+  FGsaDoc := False;
   FEol := SpxDetectEol(s);
   FTrailingEol := SpxEndsWithEol(s);
   FEditor.Text := s;
@@ -3230,6 +3250,7 @@ begin
   if not AskSave then Exit;
   StopBatchForDocument;
   FPath := '';
+  FGsaDoc := False;
   FEol := SPX_DEFAULT_EOL;
   FTrailingEol := True;
   FEditor.Text := '';
@@ -3518,6 +3539,8 @@ begin
   job.ReloadSet := FReloadSet;
   FReloadSet := False;
   job.Vars := FVars.RuntimeValues;
+  { NOT a constant: a converted GSA template renders verbatim. }
+  job.NoPostProcess := FGsaDoc;
   { A selection previews on its own -- in the document's scope, which is editor-core's job,
     not ours. WHICH selections count is also editor-core's, and gated there: none at all and
     the one a jump made to show a finding do not. Whether the fragment is worth rendering
@@ -3555,6 +3578,7 @@ begin
     req.DocSlug := SpxSlugOf(FPath);
   end;
   req.Vars := FVars.RuntimeValues;
+  req.NoPostProcess := FGsaDoc;
   req.Count := Count;
   req.SeedBase := SeedBase;
   req.Opts := Opts;
@@ -4235,6 +4259,77 @@ begin
   if (not HelpShowing) or (FHelpExample < 0) then Exit;
   FHelpRandom := True;
   RequestRender;
+end;
+
+procedure TSpxMainForm.GsaToggleClicked(Sender: TObject);
+begin
+  FPrefs.GsaImport := not FPrefs.GsaImport;
+  SavePrefs;
+  { The File menu gains or loses an item, and the tick has to move: both are BuildMenu's, the
+    same as every other setting that changes what this menu bar says. }
+  BuildMenu;
+end;
+
+(* AN IMPORT, NOT AN OPEN, and the difference is in what it leaves behind. The file on disk is
+   GSA's and stays GSA's -- this window never writes back to it -- so what arrives is an
+   UNTITLED document with unsaved changes, which is what File > New produces and what Save As
+   will ask about.
+
+   THREE THINGS TRAVEL TOGETHER and the order matters. The text goes into the editor; the
+   lifted values go into the session store, because they cannot live in the document (spec
+   §4.7, and SpxGsaImport's header says why at length); and FGsaDoc turns the cosmetic stage
+   off for this document alone. SetRuntimeValues fires the render, so it goes LAST -- with the
+   flag already set and the text already in, or the first preview is the one thing this whole
+   feature exists to avoid: a GSA template shown as something else. *)
+procedure TSpxMainForm.GsaImportClicked(Sender: TObject);
+var
+  dlg: TOpenDialog;
+  src, msg: string;
+  res: TSpxGsaResult;
+  i: Integer;
+begin
+  if not AskSave then Exit;
+  src := '';
+  dlg := TOpenDialog.Create(Self);
+  try
+    dlg.Title := Tr(sMenuGsaOpen);
+    dlg.Filter := Tr(sGsaFilter);
+    dlg.Options := dlg.Options + [ofFileMustExist];
+    if not dlg.Execute then Exit;
+    src := SpxReadTextFile(dlg.FileName);
+  finally
+    dlg.Free;
+  end;
+
+  res := SpxImportGsa(src);
+  StopBatchForDocument;
+  FPath := '';
+  FGsaDoc := not res.PostProcess;   { the result carries the rule; this obeys it }
+  FEol := SpxDetectEol(src);
+  FTrailingEol := SpxEndsWithEol(src);
+  FEditor.Text := res.Doc;
+  { MODIFIED, deliberately: nothing on disk holds this text yet. Closing without saving must
+    ask, the same as it would for anything else typed and not saved. }
+  FEditor.Modified := True;
+  FEditor.CaretXY := Point(1, 1);
+  FReloadSet := True;
+  UpdateCaption;
+  FVars.SetRuntimeValues(res.Vars);
+
+  { WHAT WAS LIFTED, AND THAT IT DOES NOT SURVIVE THE SESSION. Said once, here, because the
+    panel shows the values without saying where they came from or that they are temporary. }
+  msg := Format(Tr(sGsaLifted), [Length(res.Vars)]) + LineEnding + LineEnding +
+         Tr(sGsaSessionOnly);
+  { AND EVERY REFUSAL BY NAME. The engine hands these back rather than translating them into a
+    rule nobody agreed to; swallowing the list here would undo exactly that care. The original
+    text is the variable's value, so the document still renders as the GSA template said. }
+  if Length(res.Refused) > 0 then
+  begin
+    msg := msg + LineEnding + LineEnding;
+    for i := 0 to High(res.Refused) do
+      msg := msg + LineEnding + '%' + res.Refused[i].Name + '% = ' + res.Refused[i].Original;
+  end;
+  MessageDlg(Tr(sMenuGsaOpen), msg, mtInformation, [mbOk], 0);
 end;
 
 procedure TSpxMainForm.AboutClicked(Sender: TObject);
