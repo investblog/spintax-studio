@@ -116,7 +116,7 @@ const
     'docs/help/ru/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..5] of string = (
-    '62cf9f279e03b021', '5f4bc9e4682feee2', '66c7a5ec018bd5b0', 'ab33512fa68fefcc', '3a4a41399f059476', '514bcfffc01b4072'
+    '62cf9f279e03b021', '5f4bc9e4682feee2', '2503587615309520', 'ab33512fa68fefcc', '3a4a41399f059476', '7ff876a98a9c6421'
   );
   HELP_DOC_LOCALE: array[0..5] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru'
@@ -231,15 +231,15 @@ const
     0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..59] of Integer = (
-    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 80, 90, 97, 104, 113, 117, 131, 149, 151, 161, 168, 179, 195, 219, 237, 256, 267, 280, 293, 301, 308, 315, 322, 331, 334, 337, 346, 351, 357, 369, 388, 398, 405, 413, 422, 426, 440, 466, 468, 479, 485, 498, 514, 538, 556, 575, 586, 599, 619, 627
+    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 80, 90, 97, 104, 113, 117, 131, 149, 151, 161, 168, 179, 195, 219, 240, 259, 270, 283, 296, 304, 311, 318, 325, 334, 337, 340, 349, 354, 360, 372, 391, 401, 408, 416, 425, 429, 443, 469, 471, 482, 488, 501, 517, 541, 562, 581, 592, 605, 625, 633
   );
   HELP_LAST: array[0..59] of Integer = (
-    6, 13, 22, 25, 28, 37, 42, 48, 60, 79, 89, 96, 103, 112, 116, 130, 148, 150, 160, 167, 178, 194, 218, 236, 255, 266, 279, 292, 300, 307, 314, 321, 330, 333, 336, 345, 350, 356, 368, 387, 397, 404, 412, 421, 425, 439, 465, 467, 478, 484, 497, 513, 537, 555, 574, 585, 598, 618, 626, 632
+    6, 13, 22, 25, 28, 37, 42, 48, 60, 79, 89, 96, 103, 112, 116, 130, 148, 150, 160, 167, 178, 194, 218, 239, 258, 269, 282, 295, 303, 310, 317, 324, 333, 336, 339, 348, 353, 359, 371, 390, 400, 407, 415, 424, 428, 442, 468, 470, 481, 487, 500, 516, 540, 561, 580, 591, 604, 624, 632, 638
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..632] of string = (
+  HELP_LINE: array[0..638] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -785,6 +785,15 @@ const
     '<p>Not a diagnostic, and that is the point: an <code>#include</code> in the middle of ' +
       'a line is <b>not</b> an include. The engine reads it as ordinary text and says nothing' +
       ', because there is nothing to complain about — you wrote text and got text.</p>',
+    '<p><b>The target may sit on a later line, though</b>, and that surprises people the ot' +
+      'her way round. The gap the engine allows between the keyword and its target includes l' +
+      'ine breaks, so this is one include and it works:</p>',
+    '<p><small><tt>#include<br>"frag"</tt></small></p>',
+    '<p>Blank lines in between are fine too. What is not allowed is anything else: a word b' +
+      'efore the target, or anything but spaces after it, and the whole thing goes back to be' +
+      'ing text. The editor colours the target on its own line, but leaves the keyword plain ' +
+      'until the target actually arrives — it will not promise you a directive it cannot yet ' +
+      'see the end of.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — no such target i' +
       'n the set</h3>',
     '<p><small><tt><a href="ex:47">#include "nosuch"</a><br>→&nbsp; (empty)</tt></small></p' +
@@ -1537,6 +1546,14 @@ const
       'br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Посреди строки <code>#include</code> — обычный текст, и <b>никакой диагностики не б' +
       'удет</b>: движок просто не увидел там директиву.</p>',
+    '<p><b>А вот цель может стоять строкой ниже</b> — и это удивляет с другой стороны. Зазо' +
+      'р, который движок допускает между словом и целью, включает переводы строк, так что это' +
+      ' одна вставка, и она работает:</p>',
+    '<p><small><tt>#include<br>"frag"</tt></small></p>',
+    '<p>Пустые строки между ними тоже можно. Нельзя всё остальное: слово перед целью или чт' +
+      'о-нибудь кроме пробелов после неё — и всё снова становится текстом. Редактор красит це' +
+      'ль на её собственной строке, а само слово оставляет обычным, пока цель не пришла: он н' +
+      'е обещает директиву, конца которой ещё не видит.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — такой цели нет в' +
       ' наборе</h3>',
     '<p><small><tt><a href="ex:50">#include "нетакого"</a><br>→&nbsp; (пусто)</tt></small><' +

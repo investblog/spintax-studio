@@ -1215,9 +1215,61 @@ begin
     this as include(frag), and the scanner deliberately leaves it plain rather than paint a
     keyword before knowing whether a target ever follows. Pinned so the boundary is visible
     and cannot move by accident. }
+
+  (* ---- AND THE TARGET ON A LATER LINE IS NOW READ, which is what the state above is for.
+
+     The keyword is still `text`, deliberately and permanently: a forward-only scan cannot know
+     while it looks at `#include` whether a target ever arrives, and SynEdit does not re-paint a
+     line backwards. What changed is that the TARGET is claimed once it does arrive -- the half
+     that says which file, and the half SpxCount needed to stop calling these documents a lower
+     bound. ---- *)
   st := Default(TSpxScanState); st.LineEmpty := True;
-  Check('scan/include-target-on-the-next-line-is-a-known-gap',
-        Scan('#include', st), 'text(#include)0');
+  Check('scan/include-keyword-alone-waits', Scan('#include', st), 'text(#include)0');
+  CheckTrue('scan/include-keyword-alone-sets-the-wait', st.IncludeOpen);
+  Check('scan/include-target-on-the-next-line', Scan('"frag"', st), 'str("frag")0');
+  CheckTrue('scan/include-target-ends-the-wait', not st.IncludeOpen);
+
+  { Leading gap on the target's line is part of the anchor's run, not content. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('#include', st);
+  Check('scan/include-target-after-indent', Scan('   "frag"', st), 'text(   )0 str("frag")0');
+
+  { A whitespace-only line between the two keeps the wait: the anchor's class is `+`. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('#include', st);
+  Scan('  ', st);
+  CheckTrue('scan/include-wait-survives-a-blank-line', st.IncludeOpen);
+  Check('scan/include-target-after-a-blank-line', Scan('"frag"', st), 'str("frag")0');
+
+  { Anything else ends the wait and was never an include -- measured, the engine reports none. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('#include', st);
+  Check('scan/include-then-prose-is-text', Scan('x "frag"', st), 'text(x "frag")0');
+  CheckTrue('scan/include-then-prose-ends-the-wait', not st.IncludeOpen);
+
+  { The engine allows only gap behind the target -- `#include` LF `"frag" junk` is no include
+    at all -- so a target with prose behind it is not claimed either. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('#include', st);
+  Check('scan/include-target-with-junk-is-text', Scan('"frag" junk', st),
+        'text("frag" junk)0');
+
+  { A trailing tab is gap and does not spoil it. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('#include', st);
+  Check('scan/include-target-with-trailing-gap', Scan('"frag"'#9, st),
+        'str("frag")0 text('#9')0');
+
+  { Not line-leading is not a directive, so nothing waits. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('text #include', st);
+  CheckTrue('scan/mid-line-include-does-not-wait', not st.IncludeOpen);
+
+  { The wait crosses SynEdit's range pointer, or it does not survive a repaint. }
+  st := Default(TSpxScanState); st.LineEmpty := True;
+  Scan('#include', st);
+  Check('scan/the-wait-packs-and-unpacks',
+        BoolToStr(SpxUnpackState(SpxPackState(st)).IncludeOpen, True), BoolToStr(True, True));
 
   { The wide gap belongs to #include alone. For #set/#def the engine rejects a vertical tab
     outright -- measured, it reports no directive -- so the colouring must not be generous
@@ -4662,8 +4714,22 @@ begin
       set_.AddOrSetValue('frag', '{cc|dd|ee}');
       ctx := SpxContext('en', vars, set_);
       ctx.PostProcess := False;
-      CheckSays('include-next-line', '#include' + LineEnding + '"frag"' + LineEnding +
-                                     '{aa|bb}', 2, False);
+      (* An `#include` whose target is on the next line. This was the counter's own reason to
+         call a document a lower bound, and it is exact now: the scanner carries the wait, so
+         the target arrives as a target. What is NOT claimed is the keyword's colour -- see
+         SpxTokens -- which the count never needed. *)
+      CheckCounted('include-next-line', '#include' + LineEnding + '"frag"' + LineEnding +
+                                        '{aa|bb}');
+      CheckCounted('include-next-line-indented', '#include' + LineEnding + '   "frag"');
+      CheckCounted('include-after-a-blank-line', '#include' + LineEnding + LineEnding +
+                                                 '"frag"');
+      { And the shapes that are not includes are counted as the one text they are. }
+      CheckCounted('include-then-prose', '#include' + LineEnding + 'x "frag"');
+      CheckCounted('include-alone', '#include');
+      (* Measured and deliberately not claimed: the engine strips comments before it looks for
+         directives, so this IS an include to it and the scanner does not follow it there.
+         A floor, not a wrong promise. *)
+      CheckFloor('include-target-behind-a-comment', '#include' + LineEnding + '/# c #/ "frag"');
     finally
       ctx := SpxContext('en', vars);
       ctx.PostProcess := False;

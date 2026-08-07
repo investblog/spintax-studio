@@ -69,6 +69,20 @@ type
       opened on an earlier line keeps the logical line open, newline and all. Without this
       bit a highlighter confirms a macro definition the engine never made. }
     LineEmpty: Boolean;
+    (* A line-leading `#include` is WAITING FOR ITS TARGET, which the family's anchor allows
+       to begin on a later line: the gap is `[ \t\n\r\f\x0B]+`, newlines included, so
+       `#include` LF `"frag"` is one directive to the engine (measured, and its span comes
+       back as L1..L2). Any number of whitespace-only lines may sit in between.
+
+       WHAT THIS DOES NOT DO, and it is a decision rather than an omission: it does not paint
+       the KEYWORD. A scan that runs forward one line at a time cannot know, while it is
+       looking at `#include`, whether a target ever arrives -- and SynEdit never re-scans a
+       line backwards, so a keyword painted optimistically stays painted when the next line
+       turns out to be prose. This file's contract is that it never claims a construct the
+       engine does not see; it promises nothing in the other direction. So the keyword stays
+       plain and the TARGET is painted, which is the half that carries the meaning -- which
+       file -- and the half `SpxCount` needs to stop calling such a document a lower bound. *)
+    IncludeOpen: Boolean;
     Depth: Integer;
   end;
 
@@ -193,6 +207,7 @@ begin
   Result := State.Depth and SPX_DEPTH_MASK;
   if State.InComment then Result := Result or (1 shl 16);
   if State.LineEmpty then Result := Result or (1 shl 17);
+  if State.IncludeOpen then Result := Result or (1 shl 18);
 end;
 
 function SpxUnpackState(Value: PtrInt): TSpxScanState;
@@ -200,6 +215,7 @@ begin
   Result.Depth := Value and SPX_DEPTH_MASK;
   Result.InComment := (Value and (1 shl 16)) <> 0;
   Result.LineEmpty := (Value and (1 shl 17)) <> 0;
+  Result.IncludeOpen := (Value and (1 shl 18)) <> 0;
 end;
 
 function SpxSeparatorsOf(const Text: string; AOpen, AClose: Integer): TSpxOffsets;
@@ -677,6 +693,23 @@ begin
   Result := i - p + 1;
 end;
 
+{ The include anchor's gap class, `[ \t\n\r\f\x0B]` minus the newline members -- those are
+  what the line split already consumed. }
+function IsIncludeGap(c: Char): Boolean;
+begin
+  Result := (c = ' ') or (c = #9) or (c = #11) or (c = #12);
+end;
+
+{ True when everything from `from` to the end of the line is gap, so an `#include` before it
+  is still waiting rather than finished or spoiled. An empty remainder counts. }
+function GapToEnd(const Line: string; from: Integer): Boolean;
+var i: Integer;
+begin
+  for i := from to Length(Line) do
+    if not IsIncludeGap(Line[i]) then Exit(False);
+  Result := True;
+end;
+
 { The `#set` / `#def` / `#include` head, if this line starts with one. Returns the length of
   the keyword and leaves the rest of the line to the ordinary scan -- a directive VALUE is
   spintax like any other text, and colouring it as one is the point. }
@@ -762,6 +795,13 @@ var
     q := p;
     while (q <= n) and ((Line[q] = ' ') or (Line[q] = #9)) do Inc(q);
     if (q > n) or (Line[q] <> '#') then Exit;
+    { `#include` with nothing but gap behind it on this line: the target is allowed to begin
+      further down, so remember the wait and leave the keyword unpainted (see IncludeOpen). }
+    if (Copy(Line, q, 8) = '#include') and GapToEnd(Line, q + 8) then
+    begin
+      State.IncludeOpen := True;
+      Exit;
+    end;
     klen := DirectiveKeywordLength(Line, q);
     if klen = 0 then Exit;
     FlushText(q);
@@ -807,6 +847,50 @@ begin
     begin
       Mark(sptComment, 1, n);
       Exit;
+    end;
+  end;
+
+  (* THE WAITING INCLUDE'S TARGET, if this line carries it.
+
+     Three outcomes, and the middle one is why this is a state and not a look-ahead: the line
+     is all gap and the wait continues; the line opens with the quoted target and the wait is
+     over; or the line is something else and there was never an include at all.
+
+     After the target the engine allows only gap before the directive ends -- `#include` LF
+     `"frag" junk` is NOT an include, measured -- so a target with anything else behind it is
+     not claimed either.
+
+     MEASURED AND DELIBERATELY NOT CLAIMED: the engine strips comments before it looks for
+     directives, so `#include` LF `/# c #/ "frag"` and `#include` LF `"frag" /# c #/` are both
+     real includes to it and neither is painted here. Claiming them would mean running the
+     comment scanner inside this decision, and a comment that opens without closing carries
+     the question onto further lines. Under-claiming is what this file is allowed to do;
+     `SpxCount` reconciles its own count against the engine's and calls such a document a
+     lower bound rather than a wrong promise. *)
+  if State.IncludeOpen then
+  begin
+    q := p;
+    while (q <= n) and IsIncludeGap(Line[q]) do Inc(q);
+    if q > n then
+    begin
+      { All gap: still waiting. The line is ordinary text and the state survives it. }
+      FlushText(n + 1);
+      Exit;
+    end;
+    State.IncludeOpen := False;
+    if Line[q] = '"' then
+    begin
+      len := q + 1;
+      while (len <= n) and (Line[len] <> '"') do Inc(len);
+      if (len <= n) and GapToEnd(Line, len + 1) then
+      begin
+        FlushText(q);
+        Mark(sptString, q, len - q + 1);
+        p := len + 1;
+        runStart := p;
+        FlushText(n + 1);
+        Exit;
+      end;
     end;
   end;
 

@@ -229,6 +229,20 @@ Not a diagnostic, and that is the point: an `#include` in the middle of a line i
 include. The engine reads it as ordinary text and says nothing, because there is nothing to
 complain about — you wrote text and got text.
 
+**The target may sit on a later line, though**, and that surprises people the other way round.
+The gap the engine allows between the keyword and its target includes line breaks, so this is
+one include and it works:
+
+```
+#include
+"frag"
+```
+
+Blank lines in between are fine too. What is not allowed is anything else: a word before the
+target, or anything but spaces after it, and the whole thing goes back to being text. The editor
+colours the target on its own line, but leaves the keyword plain until the target actually
+arrives — it will not promise you a directive it cannot yet see the end of.
+
 ### `include.unknown-target` — no such target in the set
 
 ```

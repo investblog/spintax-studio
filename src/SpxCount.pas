@@ -453,7 +453,13 @@ begin
         else
         begin
           t.Text := '';
-          if lineHasInclude and (t.Kind = sptText) and
+          (* ...and NOT the keyword of an include still waiting for its target. Since
+             `SpxTokens` learned to carry that wait, a line-leading `#include` with the target
+             further down arrives here as ordinary text on purpose -- the scanner will not
+             paint a keyword it cannot yet confirm -- and reading it as a loose mention made
+             every such document a lower bound again. The state says which it is: the scan
+             leaves IncludeOpen set exactly when this line was that keyword. *)
+          if lineHasInclude and (t.Kind = sptText) and (not state.IncludeOpen) and
              (Pos('#include', Copy(masked, line[j].Start, line[j].Length)) > 0) then
             ALooseInclude := True;
           (* A PERMUTATION CONFIG THAT RUNS PAST THE END OF THE LINE. The scanner wants the

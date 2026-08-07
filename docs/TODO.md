@@ -432,6 +432,14 @@ is a deliberate state and not a backlog of things anyone forgot.
    `tests/SpxJson.pas` is the engine's own harness and Studio does not build a corpus runner, so
    that part of the release is not ours.
 
+14. **The include target on a later line is read** (2026-08-07) — the last known gap in the
+   scanner, and it closed the counter's own debt with it. `#include` on one line and `"frag"` on
+   the next is one directive to the engine; the editor now colours that target, and the variant
+   count for such a document is exact instead of *at least*. The keyword itself stays plain and
+   always will: a forward-only scan cannot confirm a directive whose end it has not reached, and
+   SynEdit does not re-paint a line backwards. The help says so in both languages, in the
+   section that already explained why a mid-line `#include` is not one.
+
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
 decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store
@@ -944,15 +952,27 @@ the managed tier are later releases.
       are skipped forward, and only blanks can be there: a comment is not consumed, so
       `/# c #/#set` already reports the `#` itself. Six checks, code points not bytes.
 
-- [ ] **Highlighter gap — an include target on the following line.** The family's anchor
-      allows `[ \t\n\r\f\x0B]+` between `#include` and its target, so the target may begin on
-      the next line; measured, the engine reports `include(frag)` for `#include`+LF+`"frag"`.
-      The scanner colours only the same-line members (space, tab, VT, FF) and leaves the rest
-      plain, because painting the keyword would mean claiming a directive before knowing
-      whether a quoted target ever arrives — a wrong colour, which is the worse error here.
-      Closing it needs a continuation flag in `TSpxScanState` (bit 18 is free) and a rule for
-      un-painting when the target never comes. Pinned by
-      `scan/include-target-on-the-next-line-is-a-known-gap`.
+- [x] **Highlighter gap — an include target on the following line.** **Closed 2026-08-07**,
+      and the shape of the fix is the interesting part: the continuation flag went into
+      `TSpxScanState` at bit 18 as planned, but the *un-painting* half of the plan turned out
+      to be impossible and unnecessary in the same breath. SynEdit scans forward and never
+      re-paints a line backwards, so a keyword painted optimistically on line one cannot be
+      taken back when line two turns out to be prose — there is no un-painting to write.
+
+      So the keyword stays plain **permanently**, by decision rather than by omission, and the
+      TARGET is what is now claimed once it arrives. That is the half that carries the meaning
+      (which file), the half the diagnostics already underline, and the half `SpxCount` needed:
+      a document with `#include` LF `"frag"` used to be a lower bound because the counter could
+      not see the include, and it is exact now. The file's contract survives intact — it still
+      never claims a construct the engine does not see, and it is still allowed to miss one.
+
+      Measured and deliberately NOT followed: the engine strips comments before it looks for
+      directives, so `#include` LF `/# c #/ "frag"` and `#include` LF `"frag" /# c #/` are real
+      includes to it. Claiming those would mean running the comment scanner inside the
+      decision, and an unterminated comment carries the question onto further lines. They stay
+      a floor. Twelve scanner checks and six counter checks gate the boundary; the old pin
+      `scan/include-target-on-the-next-line-is-a-known-gap` is gone, replaced by
+      `scan/include-target-on-the-next-line`, which asserts the opposite.
 - [x] **Layout that survives a resize** (2026-07-27). Rules this project follows, each of them
       paid for by something that actually looked broken:
       - **a control that paints its own content must be repainted when it grows.**
