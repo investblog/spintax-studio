@@ -51,6 +51,16 @@ interface.
 
 ## Brackets
 
+**Put the caret on a bracket and the construct shows itself whole:** where it starts, where it
+ends, and **every one of its separators**. Nested groups do not light up with it — they have
+separators of their own, and those come on when the caret stands on their bracket. It is the
+quickest way to see where the thing you are editing ends, especially on a long line where the
+`}` has gone two screens to the right.
+
+A separator is not only `|`. In a shuffle, `[a<br>|b]` has two: the engine reads `<br>` as a
+separator placed **before the next** element, and the highlight shows it along with the rest,
+because it is part of how the construct is built.
+
 ### `bracket.unclosed` — a bracket is opened and never closed
 
 ```
@@ -149,9 +159,15 @@ tab, under **Session values**.
 section and press **F2** (or just start typing); **Enter** applies, **Escape** abandons. The edit
 goes **into the document**, in one undo step: `Ctrl+Z` puts it back.
 
+The name and the kind (`#set` or `#def`) cannot be edited — a decision, not an unfinished corner.
+Renaming from a cell breaks every reference to the variable in the document, and deleting the row
+would carry away the comment and the indentation with it. Both of those belong in the text, where
+you can see what you are doing.
+
 Exactly the value changes. The indentation, the extra spaces, the case of the name and a trailing
-comment all stay as they were — the file is in git, and reformatting a line would show up there
-as your change.
+comment all stay as they were — `   #set  %Brand%   =   Acme   /# tail #/` comes back from an
+edit differing only in `Acme`. The file is in git, and reformatting a line would show up there as
+your change.
 
 **A refusal means the engine would read the line differently.** The edit is not applied silently:
 the engine reads the result back, and if it does not say what was asked, the document is left
@@ -324,6 +340,11 @@ before it counts the forms, stopping before the question of arity arises.
 That is why the example at the top of this article defines `%n%` first. Without it the output
 would be empty whatever the number of forms, and would demonstrate nothing about arity at all.
 
+The panel and the output are answering different questions here, and that is not a contradiction:
+the row is put there by the **validator**, which counts the forms in the text and has no interest
+in the count; the emptiness comes from the **render**, which has an order of its own. Give the
+count a number, as the first example does, and you see what arity actually does.
+
 ### `plural.count-macro` — the count comes from `#set`, and that rerolls on every reference
 
 ```
@@ -464,7 +485,8 @@ Both halves are live in **both** locales — the rule never asks what language y
 shields the next word in an English document, `Ltd.` shields it in a Russian one, and an English
 author who writes `no.` or `st.` mid-sentence is using a Russian-length list without knowing it.
 
-It bites in one place: a sentence that legitimately begins after `No.`, `St.` or `Co.` comes out
+(This part is about English text: the words below are the Latin half of the engine's list, and a
+document in another alphabet meets a different one.) It bites in one place: a sentence that legitimately begins after `No.`, `St.` or `Co.` comes out
 lowercase. Rewrite the sentence rather than fighting the rule — the same shielding is what keeps
 `e.g. this` from being capitalised mid-sentence, which is far commoner.
 
@@ -517,6 +539,15 @@ hello %café% and %name%      →  Hello %café% and %name%
 Both came through unchanged, and that is the trap: only the second drew a row in the panel. The
 first is silent, so nothing tells you it will never be substituted. Rename it.
 
+**Why is the same error shown twice?**
+A circle of definitions draws a row for every reference that closes it — two places to look at,
+sometimes three. `#set %x% = %y% %y%` against `#set %y% = %x%` is three rows, two of them on the
+first line. They are not duplicates and they are not merged.
+
+**The panel says error and the output looks right. Which is it?**
+Both. That happens with a redefined name: the render is correct — the last value wins — and the
+document is ambiguous. The verdict is about the document, not about this particular output.
+
 **I switched the locale and the document turned red.**
 That is the locale doing its job. The demo document is English and its plural blocks carry two
 forms; switch the locale to Russian and those two forms become an arity error, because Russian
@@ -524,5 +555,8 @@ asks for three. The locale belongs to the **document**, which is why Studio does
 when you change the language of the interface.
 
 **Is the preview the same as what my server will produce?**
-Yes, with one condition: the same engine version and the same locale. That is the whole reason the
-preview runs the real `spintax-win` rather than an approximation of it.
+With the same engine, the same version, the same locale and the same values — yes, exactly, and
+that is the whole reason the preview runs the real `spintax-win` rather than an approximation of
+it. With a **different** engine of the family — the JavaScript, PHP or Python one — what carries
+across is the verdict and the set of texts the template can produce, not which of them a given
+seed picks. Reproducing an exact draw is a promise the family does not make.

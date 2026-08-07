@@ -116,7 +116,7 @@ const
     'docs/help/ru/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..5] of string = (
-    '827dad11c9cc9f1f', '86168cd464b4d93f', '884b7b9bc65fa4c2', '27c9f591fca72a43', 'f01f5d2b717dab2a', 'dfdbc4df729b316c'
+    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0'
   );
   HELP_DOC_LOCALE: array[0..5] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru'
@@ -231,15 +231,15 @@ const
     0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..59] of Integer = (
-    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 190, 206, 230, 252, 271, 285, 298, 311, 319, 326, 333, 340, 349, 352, 355, 364, 369, 375, 387, 412, 422, 429, 437, 446, 450, 464, 494, 496, 507, 513, 526, 542, 566, 588, 607, 621, 634, 654, 662
+    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670
   );
   HELP_LAST: array[0..59] of Integer = (
-    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 189, 205, 229, 251, 270, 284, 297, 310, 318, 325, 332, 339, 348, 351, 354, 363, 368, 374, 386, 411, 421, 428, 436, 445, 449, 463, 493, 495, 506, 512, 525, 541, 565, 587, 606, 620, 633, 653, 661, 667
+    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..667] of string = (
+  HELP_LINE: array[0..676] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -683,6 +683,16 @@ const
       'interface.</p>',
     '<hr>',
     '<h2 id="brackets">Brackets</h2>',
+    '<p><b>Put the caret on a bracket and the construct shows itself whole:</b> where it st' +
+      'arts, where it ends, and <b>every one of its separators</b>. Nested groups do not ligh' +
+      't up with it — they have separators of their own, and those come on when the caret sta' +
+      'nds on their bracket. It is the quickest way to see where the thing you are editing en' +
+      'ds, especially on a long line where the <code>}</code> has gone two screens to the rig' +
+      'ht.</p>',
+    '<p>A separator is not only <code>|</code>. In a shuffle, <code>[a&lt;br&gt;|b]</code> ' +
+      'has two: the engine reads <code>&lt;br&gt;</code> as a separator placed <b>before the ' +
+      'next</b> element, and the highlight shows it along with the rest, because it is part o' +
+      'f how the construct is built.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — a bracket is opened and neve' +
       'r closed</h3>',
     '<p><small><tt><a href="ex:39">a price {cheap|dear</a><br>→&nbsp; A price {cheap|dear</' +
@@ -753,9 +763,15 @@ const
       'in the upper section and press <b>F2</b> (or just start typing); <b>Enter</b> applies,' +
       ' <b>Escape</b> abandons. The edit goes <b>into the document</b>, in one undo step: <co' +
       'de>Ctrl+Z</code> puts it back.</p>',
+    '<p>The name and the kind (<code>#set</code> or <code>#def</code>) cannot be edited — a' +
+      ' decision, not an unfinished corner. Renaming from a cell breaks every reference to th' +
+      'e variable in the document, and deleting the row would carry away the comment and the ' +
+      'indentation with it. Both of those belong in the text, where you can see what you are ' +
+      'doing.</p>',
     '<p>Exactly the value changes. The indentation, the extra spaces, the case of the name ' +
-      'and a trailing comment all stay as they were — the file is in git, and reformatting a ' +
-      'line would show up there as your change.</p>',
+      'and a trailing comment all stay as they were — <code>   #set  %Brand%   =   Acme   /# ' +
+      'tail #/</code> comes back from an edit differing only in <code>Acme</code>. The file i' +
+      's in git, and reformatting a line would show up there as your change.</p>',
     '<p><b>A refusal means the engine would read the line differently.</b> The edit is not ' +
       'applied silently: the engine reads the result back, and if it does not say what was as' +
       'ked, the document is left alone and the status bar says so. Three real causes: <code>/' +
@@ -885,6 +901,11 @@ const
     '<p>That is why the example at the top of this article defines <code>%n%</code> first. ' +
       'Without it the output would be empty whatever the number of forms, and would demonstra' +
       'te nothing about arity at all.</p>',
+    '<p>The panel and the output are answering different questions here, and that is not a ' +
+      'contradiction: the row is put there by the <b>validator</b>, which counts the forms in' +
+      ' the text and has no interest in the count; the emptiness comes from the <b>render</b>' +
+      ', which has an order of its own. Give the count a number, as the first example does, a' +
+      'nd you see what arity actually does.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — the count comes from <co' +
       'de>#set</code>, and that rerolls on every reference</h3>',
     '<p><small><tt><a href="ex:59">#set %n% = {1|2}</a><br><a href="ex:59">%n% {plural %n%:' +
@@ -992,10 +1013,12 @@ const
       ' set. So <code>руб.</code> shields the next word in an English document, <code>Ltd.</c' +
       'ode> shields it in a Russian one, and an English author who writes <code>no.</code> or' +
       ' <code>st.</code> mid-sentence is using a Russian-length list without knowing it.</p>',
-    '<p>It bites in one place: a sentence that legitimately begins after <code>No.</code>, ' +
-      '<code>St.</code> or <code>Co.</code> comes out lowercase. Rewrite the sentence rather ' +
-      'than fighting the rule — the same shielding is what keeps <code>e.g. this</code> from ' +
-      'being capitalised mid-sentence, which is far commoner.</p>',
+    '<p>(This part is about English text: the words below are the Latin half of the engine' +
+      '''s list, and a document in another alphabet meets a different one.) It bites in one p' +
+      'lace: a sentence that legitimately begins after <code>No.</code>, <code>St.</code> or ' +
+      '<code>Co.</code> comes out lowercase. Rewrite the sentence rather than fighting the ru' +
+      'le — the same shielding is what keeps <code>e.g. this</code> from being capitalised mi' +
+      'd-sentence, which is far commoner.</p>',
     '<hr>',
     '<h2 id="correct">What the correct form looks like</h2>',
     '<p><small><tt><a href="ex:68">a price {cheap|dear}</a><br>→&nbsp; A price cheap</tt></' +
@@ -1026,14 +1049,26 @@ const
     '<p>Both came through unchanged, and that is the trap: only the second drew a row in th' +
       'e panel. The first is silent, so nothing tells you it will never be substituted. Renam' +
       'e it.</p>',
+    '<p><b>Why is the same error shown twice?</b> A circle of definitions draws a row for e' +
+      'very reference that closes it — two places to look at, sometimes three. <code>#set %x%' +
+      ' = %y% %y%</code> against <code>#set %y% = %x%</code> is three rows, two of them on th' +
+      'e first line. They are not duplicates and they are not merged.</p>',
+    '<p><b>The panel says error and the output looks right. Which is it?</b> Both. That hap' +
+      'pens with a redefined name: the render is correct — the last value wins — and the docu' +
+      'ment is ambiguous. The verdict is about the document, not about this particular output' +
+      '.</p>',
     '<p><b>I switched the locale and the document turned red.</b> That is the locale doing ' +
       'its job. The demo document is English and its plural blocks carry two forms; switch th' +
       'e locale to Russian and those two forms become an arity error, because Russian asks fo' +
       'r three. The locale belongs to the <b>document</b>, which is why Studio does not chang' +
       'e it when you change the language of the interface.</p>',
-    '<p><b>Is the preview the same as what my server will produce?</b> Yes, with one condit' +
-      'ion: the same engine version and the same locale. That is the whole reason the preview' +
-      ' runs the real <code>spintax-win</code> rather than an approximation of it.</p>',
+    '<p><b>Is the preview the same as what my server will produce?</b> With the same engine' +
+      ', the same version, the same locale and the same values — yes, exactly, and that is th' +
+      'e whole reason the preview runs the real <code>spintax-win</code> rather than an appro' +
+      'ximation of it. With a <b>different</b> engine of the family — the JavaScript, PHP or ' +
+      'Python one — what carries across is the verdict and the set of texts the template can ' +
+      'produce, not which of them a given seed picks. Reproducing an exact draw is a promise ' +
+      'the family does not make.</p>',
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>Это редактор шаблонов. Шаблон — обычный текст, в котором несколько мест размечено, ' +
       'и один шаблон способен дать множество разных текстов; ради этого его и пишут вместо то' +
@@ -1399,8 +1434,10 @@ const
       'да бы перестановка эту пару ни поставила. Закрывающий тег (<code>&lt;/b&gt;</code>), с' +
       'амозакрывающийся (<code>&lt;br/&gt;</code>), тег с атрибутами (<code>&lt;br class="x"&' +
       'gt;</code>) и тег в середине элемента остаются нетронутыми.</p>',
-    '<p><b>Кириллический домен не заслоняется.</b> Латинский выходит как набран, а <code>.р' +
-      'ф</code> движок разбирает на два предложения:</p>',
+    '<p><b>Кириллический домен не заслоняется.</b> (Это молчание — про русский текст: прове' +
+      'рка «середина ли это слова» у движка латинская, так что дальше речь о том, с чем сталк' +
+      'иваются именно кириллические авторы.) Латинский выходит как набран, а <code>.рф</code>' +
+      ' движок разбирает на два предложения:</p>',
     '<p><small><tt><a href="ex:37">сайт.рф наши цены низкие</a><br>→&nbsp; Сайт. Рф наши це' +
       'ны низкие</tt></small></p>',
     '<p>Это правило семейства, а не особенность здешнего движка: проверка границы слова спр' +
@@ -1468,6 +1505,10 @@ const
       'ано.</p>',
     '<p><small><tt>locale: ru<br>seed: 7<br>empty: (пусто)<br>include frag: фрагмент<br>inc' +
       'lude loop: #include "loop"<br>include Intro: вступление</tt></small></p>',
+    '<p><b>Локаль здесь <code>ru</code>, и она решает две вещи:</b> сколько форм множествен' +
+      'ного числа ждёт движок и какая форма достаётся какому числу. Русскому, украинскому, бе' +
+      'лорусскому, сербскому, хорватскому и боснийскому нужно три формы, английскому — две. Л' +
+      'окаль берётся из переключателя над правой панелью, а не из языка интерфейса.</p>',
     '<p><code>seed</code> фиксирует случайный выбор: без него перечисления и перестановки д' +
       'авали бы каждый раз другой ответ, и пример нечего было бы проверять.</p>',
     '<hr>',
@@ -1602,6 +1643,10 @@ const
       'ления ссылаются по кругу</h3>',
     '<p><small><tt><a href="ex:52">#set %x% = %y%</a><br><a href="ex:52">#set %y% = %x%</a>' +
       '<br><a href="ex:52">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p>Каждая сторона разворачивается ровно <b>один раз</b> и останавливается: <code>%x%</' +
+      'code> стал <code>%y%</code>, а не <code>%x%</code>. Движок раскручивает круг, а не ход' +
+      'ит по нему, и выживает второе имя из круга — поставьте в документ <code>%x% %y%</code>' +
+      ', и он выведет <code>%y% %x%</code>, пару наоборот.</p>',
     '<p>Ошибка выдаётся на <b>каждую ссылку, замыкающую круг</b>, а не одна на круг и не од' +
       'на на определение. Определение, называющее круг дважды, получает две строки на своей с' +
       'троке: <code>#set %x% = %y% %y%</code> против <code>#set %y% = %x%</code> — это три ош' +
@@ -1831,8 +1876,10 @@ const
       'ает его как текст и <b>не выдаёт никакой диагностики</b>. А <code>#set %имя% = Мир</co' +
       'de> — это уже <code>set.malformed</code>. Значения при этом любые: <code>#set %city% =' +
       ' Москва</code> совершенно нормально.</p>',
-    '<p><b>Почему одна и та же ошибка показана дважды?</b> Круговые ссылки выдаются на кажд' +
-      'ое участвующее определение — это два разных места, которые нужно посмотреть.</p>',
+    '<p><b>Почему одна и та же ошибка показана дважды?</b> Круг определений выдаёт строку н' +
+      'а каждую ссылку, которая его замыкает, — два разных места, а иногда и три. <code>#set ' +
+      '%x% = %y% %y%</code> против <code>#set %y% = %x%</code> — это три строки, две из них н' +
+      'а первой. Это не дубликаты, и они не сливаются.</p>',
     '<p><b>Почему в панели «ошибка», а вывод выглядит правильно?</b> Так бывает при повторн' +
       'ом определении: рендер корректен (побеждает последнее значение), но документ неоднозна' +
       'чен. Вердикт про документ, а не про конкретный вывод.</p>',
@@ -1843,6 +1890,12 @@ const
       'этом говорит. Так ведёт себя и демо-документ, с которым открывается Studio: он английс' +
       'кий, и на локали <code>ru</code> его <code>{plural %pages%: page|pages}</code> — уже о' +
       'шибка.</p>',
+    '<p><b>Совпадает ли предпросмотр с тем, что выдаст мой сервер?</b> На том же движке, то' +
+      'й же версии, той же локали и с теми же значениями — да, в точности, и ровно ради этого' +
+      ' предпросмотр гоняет настоящий <code>spintax-win</code>, а не его приближение. На <b>д' +
+      'ругом</b> движке семьи — на JavaScript, PHP или Python — переносится вердикт и набор т' +
+      'екстов, которые шаблон может дать, но не то, какой из них выберет конкретное зерно. Во' +
+      'спроизвести именно эту выборку семья не обещает.</p>',
     '<p><b>Почему абзац просто исчез?</b> Две частые причины, и обе выше: неизвестная цель ' +
       '<code>#include</code> и вставка по кругу. Обе выводят пустоту. Третья, на которую дума' +
       'ют чаще всего, — неверное число форм у множественного числа — <b>не</b> пустота: движо' +
