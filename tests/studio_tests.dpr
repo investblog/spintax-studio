@@ -5017,6 +5017,60 @@ begin
        they are exact again, and the pair below is what holds it: the same document with and
        without a closer must count differently, because a closer really does take a group out
        of the template. A floor would pass both and prove neither. *)
+    (* ---- WHAT THE THIRD REVIEW FOUND. Four more, and the shape is the one this file keeps
+       re-learning: a rule of the ENGINE'S that this walk mirrors, mirrored short. Every one
+       reproduced by rendering before it was believed, and every one is enumerated here rather
+       than written down, because a number recorded today only proves what I measured today.
+       Two of the four broke the FLOOR, which is the single promise the panel makes. ---- *)
+
+    { An empty permutation option is not an option: the engine drops any part that trims empty
+      (`Spintax.pas:1589-1596`), so a trailing `|` left while editing a list cost a factor of
+      three -- reported as exact. An ENUMERATION keeps them, and the pair is what holds the
+      difference. }
+
+    CheckCounted('perm-empty-option-middle', '[aa||bb]');
+    CheckCounted('perm-empty-option-trailing', '[aa|bb|]');
+    CheckCounted('perm-blank-option', '[aa| |bb]');
+    CheckCounted('perm-all-options-empty', '[|]');
+    { The engine lifts a trailing `<...>` out of the part BEFORE trimming it, so this one is
+      empty too -- which is why a separator token is not "ink". }
+    CheckCounted('perm-option-that-is-only-a-separator', '[aa|<bb>|cc]');
+    CheckCounted('enum-keeps-its-empty-options', '{aa||bb}');
+    CheckCounted('enum-keeps-a-trailing-empty-option', '{aa|bb|}');
+
+    (* A CLOSER CLOSES THE NEAREST OPEN FRAME OF ITS OWN KIND, not the top one:
+       `FindMatchingClose` counts one bracket kind and walks past the other. `[aa{bb|cc]dd}`
+       is ONE text -- the permutation's content is `aa{bb|cc`, whose brace is literal -- and
+       this walk closed the brace on the `]`, kept the split before it, and promised "at least
+       two". A closer with no frame of its kind open drives the engine's split counter
+       negative, after which `|` stops separating: `{xx]yy|zz}` is one text, not two. *)
+    CheckFloor('closer-reaches-past-an-unclosed-brace', '[aa{bb|cc]dd}');
+    CheckFloor('stray-closer-stops-the-split', '{xx]yy|zz}');
+    CheckFloor('stray-closer-keeps-the-splits-before-it', '{aa|bb]cc|dd}');
+    CheckFloor('brace-closer-inside-a-permutation', '[xx}yy|zz]');
+
+    { A permutation config may begin on the line AFTER the `[`: `ParsePermConfig` ltrims first
+      and PHP's blank class contains #10. The scanner will not follow one across a line, and
+      an unread config moves the answer BOTH ways -- `maxsize=1` over three options is 3 where
+      the plain reading is 6, `minsize=2` is 12 -- so the permutation counts 1 and says so. }
+    CheckFloor('config-on-the-line-after-the-bracket',
+               '[' + LineEnding + '<maxsize=1>aa|bb|cc]');
+    CheckFloor('config-on-the-line-after-can-also-be-bigger',
+               '[' + LineEnding + '<minsize=2>aa|bb|cc]');
+    { And the same-line reading is untouched, which is the half a blanket fix would have lost. }
+    CheckCounted('config-on-the-bracket-own-line', '[<maxsize=1>aa|bb|cc]');
+    CheckCounted('markup-after-the-bracket-is-not-a-config', '[<b>bold|xx]');
+
+    (* A plural picks a form; it is never a choice. The engine's gate is `plural ` plus a `:`
+       ANYWHERE after it, so a head broken across a line or over a `|` is still a plural -- and
+       arrived here as a free choice worth two and three. The trailing space is what keeps
+       `plural|other` the ordinary two-way choice it is.
+
+       Star-parens: this one has to quote a language made of braces. *)
+    CheckFloor('plural-head-across-a-line', '{plural 2' + LineEnding + ': one|many}');
+    CheckFloor('plural-head-across-a-pipe', '{plural 2|3: one|many}');
+    CheckCounted('plural-without-the-space-is-a-choice', '{plural|other}');
+
     CheckCounted('open-comment', '{aa|bb}' + LineEnding + '/# note' + LineEnding + '{cc|dd}');
     CheckCounted('open-comment-inline', 'xx /# note {cc|dd}');
     CheckCounted('closed-comment-eats-the-group',

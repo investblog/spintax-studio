@@ -101,6 +101,28 @@ type
       permutation config. Copying every TEXT token's characters as well was most of a 100 KB
       document copied into twenty thousand short strings, for nothing. }
     Text: string;
+    (* DOES THIS TOKEN PUT ANYTHING IN THE OPTION IT SITS IN? A permutation option whose text
+       trims empty is DROPPED by the engine, never rendered and never counted
+       (`Spintax.pas:1589-1596`: `trimmed := PhpTrim(part); if trimmed <> '' then ... Add`).
+       So `[a||b]` is two options and two texts, where this walk counted three and reported
+       six -- as exact.
+
+       One bit rather than the option's characters, for the reason the Text field above is
+       restricted: a 100 KB document must not be copied to answer it. Comments are not ink
+       because `StripComments` has already run when the engine trims; a trailing `<...>` is
+       not ink because `extractTrailingSep` lifts it out of the part BEFORE the trim, which is
+       why `[a|<b>|c]` is two options and not three.
+
+       Nor is the option's own PUNCTUATION ink -- the `|` that ends it or the `]` that ends
+       the last one. Counting those was the first version of this, and it marked every empty
+       option non-empty a moment before it was closed, so the fix did nothing at all and the
+       measurement said so. *)
+    HasInk: Boolean;
+    { Synthesised beside a `[` whose config this walk could not read -- see the tell in
+      TokeniseAll. The permutation then contributes 1, because an unread config moves the
+      answer in BOTH directions: `maxsize=1` over three options is 3 where the plain reading
+      is 6, and `minsize=2` is 12. }
+    UnknownConfig: Boolean;
   end;
   TCTokList = specialize TList<TCTok>;
 
@@ -121,6 +143,18 @@ type
     Options: array of Int64;
     Current: Int64;
     MinSize, MaxSize: Integer;   { permutation subset limits; -1 = unset, as the engine }
+    (* A CLOSER OF THE WRONG KIND HAS BEEN SEEN INSIDE THIS FRAME, so the engine has stopped
+       splitting its options and so must this walk. `SplitTopLevel` (`Spintax.pas:644-666`)
+       decrements the brace and bracket counters UNCONDITIONALLY -- they may go negative --
+       and splits on `|` only while BOTH are zero. So a `]` inside `{...}` takes the bracket
+       counter to -1 and every `|` after it stops being a separator. *)
+    Broken: Boolean;
+    { This permutation's config was there and unreadable. }
+    ConfigUnknown: Boolean;
+    (* Has the option being read put anything in? A permutation drops the ones that did not;
+       an enumeration keeps them, and an enumeration of two empties really is three. See
+       TCTok.HasInk. Star-parens: the example it wants to show is made of braces. *)
+    OptInk: Boolean;
   end;
 
 { Multiply, and stop at the ceiling rather than wrapping.
@@ -376,7 +410,8 @@ var
   line: TSpxTokenList;
   masked: string;
   i, j, k, b1, b2: Integer;
-  lastCloserLine: Integer;
+  lastCloserLine, bracketLine: Integer;
+  head: TCTok;
   lineHasInclude: Boolean;
   prevKind: TSpxTokenKind;
   slice: string;
@@ -399,6 +434,7 @@ var
 
 begin
   AIncludes := 0;
+  bracketLine := -1;
   AOpenComment := False;
   ALooseInclude := False;
   AOpenConfig := False;
@@ -451,7 +487,19 @@ begin
       lineHasInclude := Pos('#include', masked) > 0;
       for j := 0 to line.Count - 1 do
       begin
+        { Fresh each time: the record is reused across the loop, and a field that is only
+          assigned on some paths otherwise carries the previous token's value -- which is how
+          `UnknownConfig` first arrived as garbage and turned every same-line permutation into
+          a floor of 1. }
+        t := Default(TCTok);
         t.Kind := line[j].Kind;
+        { Ink: see TCTok.HasInk. Everything structural counts; a text run counts only when it
+          is not all blank, and the two kinds the engine lifts out of a part before trimming
+          it never do. }
+        t.HasInk := not (t.Kind in [sptComment, sptTrailingSep, sptPermConfig,
+                                    sptPipe, sptBraceClose, sptBracketClose]);
+        if (t.Kind = sptText) and t.HasInk then
+          t.HasInk := Trim(Copy(masked, line[j].Start, line[j].Length)) <> '';
         { Only the kinds whose characters are read later; see TCTok. }
         if t.Kind in [sptVariable, sptString, sptPermConfig] then
           t.Text := Copy(masked, line[j].Start, line[j].Length)
@@ -477,9 +525,49 @@ begin
           begin
             slice := Copy(masked, line[j].Start, line[j].Length);
             if (Pos('<', slice) > 0) and (Pos('>', slice) = 0) then AOpenConfig := True;
+
+            (* AND A CONFIG THAT BEGINS ON THE LINE AFTER THE `[`, which is a whole config and
+               not a cut-off one, so the tell above never fires. The engine reaches it because
+               `ParsePermConfig` runs `PhpLtrim` first and `PHP_WS` contains #10
+               (`Spintax.pas:274`, `:1502`) -- the newline is simply blank space before the
+               `<`. The scanner will not follow a config across a line and says so.
+
+               Restricted to a DIFFERENT line on purpose. Same-line text beginning with `<`
+               that the scanner declined -- `[<b>bold|x]` -- is markup the engine declines
+               too, and the two already agree; widening this to every `<` would turn those
+               into floors for nothing. *)
+            if (bracketLine >= 0) and (i <> bracketLine) and
+               (Copy(TrimLeft(slice), 1, 1) = '<') then
+            begin
+              AOpenConfig := True;
+              head := Default(TCTok);
+              head.Kind := sptPermConfig;
+              head.UnknownConfig := True;
+              Tokens.Add(head);
+            end;
+          end;
+          (* A `{plural ...}` WHOSE HEAD THE SCANNER COULD NOT READ. `PluralHeadLength` wants
+             the keyword and its `:` on one line with no `|` or `}` in between; the engine's
+             gate is `Copy(content,1,7) = 'plural '` and a `:` ANYWHERE in the rest
+             (`Spintax.pas:1614-1618`). So `{plural 2` LF `: one|many}` and
+             `{plural 2|3: one|many}` are plurals to the engine -- one variant each, since a
+             plural picks a form rather than offering a choice -- and arrived here as free
+             choices worth 2 and 3, as exact.
+
+             A synthetic head token rather than a new rule: the walk already knows what to do
+             with one, including making the answer a floor. Requiring the trailing space is
+             what keeps `{plural|other}` an ordinary two-way choice, which is what it is. *)
+          if (prevKind = sptBraceOpen) and (t.Kind = sptText) and
+             (Copy(masked, line[j].Start, 7) = 'plural ') then
+          begin
+            head := Default(TCTok);
+            head.Kind := sptPluralHead;
+            head.HasInk := True;
+            Tokens.Add(head);
           end;
         end;
         prevKind := t.Kind;
+        if t.Kind = sptBracketOpen then bracketLine := i;
         Tokens.Add(t);
       end;
     end;
@@ -592,7 +680,8 @@ function CountText(const Doc: string; const Ctx: TSpxContext; Defs: TCMacros;
 var
   tokens: TCTokList;
   frames: array of TFrame;
-  top, i, k, mn, mx: Integer;
+  top, i, j, k, mn, mx: Integer;
+  wantKind: TSpxTokenKind;
   owned: TCMacros;
   dirs: TSpDirectiveList;
   t: TCTok;
@@ -604,6 +693,17 @@ var
   ownTotal: Int64;
   totalHere: PInt64;
   c: Int64;
+
+  { Record the option just read -- unless it is a permutation option with nothing in it,
+    which the engine never adds to its list at all. }
+  procedure CloseOption;
+  var m: Integer;
+  begin
+    if (frames[top].Kind = sptBracketOpen) and (not frames[top].OptInk) then Exit;
+    m := Length(frames[top].Options);
+    SetLength(frames[top].Options, m + 1);
+    frames[top].Options[m] := frames[top].Current;
+  end;
 
   procedure Push(AKind: TSpxTokenKind; AFree: Boolean);
   begin
@@ -690,6 +790,10 @@ begin
     for i := 0 to tokens.Count - 1 do
     begin
       t := tokens[i];
+      { Anything that puts characters in the option being read marks it, so a permutation can
+        tell an empty option from one that merely has no choice in it. An opener counts for
+        the frame it sits IN, before it becomes a frame of its own. }
+      if (top >= 0) and t.HasInk then frames[top].OptInk := True;
       case t.Kind of
         sptBraceOpen:
           { A conditional or a plural is decided by the input, so it is NOT a free choice: its
@@ -707,36 +811,66 @@ begin
         sptPermConfig:
           if (top >= 0) and (frames[top].Kind = sptBracketOpen) then
           begin
-            mn := -1; mx := -1;
-            ReadPermConfig(t.Text, mn, mx);
-            frames[top].MinSize := mn;
-            frames[top].MaxSize := mx;
+            if t.UnknownConfig then
+              frames[top].ConfigUnknown := True
+            else
+            begin
+              mn := -1; mx := -1;
+              ReadPermConfig(t.Text, mn, mx);
+              frames[top].MinSize := mn;
+              frames[top].MaxSize := mx;
+            end;
           end;
         sptPipe:
-          if top >= 0 then
+          { Not a separator once the frame is broken -- see TFrame.Broken. Its content goes
+            on accumulating into Current, which is right: the chunk after the break is one
+            option and whatever constructs it holds still render. }
+          if (top >= 0) and (not frames[top].Broken) then
           begin
-            k := Length(frames[top].Options);
-            SetLength(frames[top].Options, k + 1);
-            frames[top].Options[k] := frames[top].Current;
+            CloseOption;
             frames[top].Current := 1;
+            frames[top].OptInk := False;
           end;
         sptBraceClose, sptBracketClose:
-          (* A CLOSER OF THE WRONG KIND IS NOT A CLOSER. A bracket opened and closed by a
-             brace is five options and a brace, which the engine renders verbatim as one text
-             -- and this popped the bracket frame anyway and reported 120, as a promise.
-             `SpxTokens.SpxMatchBracket` is careful about exactly this ("mismatched kinds: the
-             validator's business, not a pair to draw") and the walk was not. Ignore it: the
-             frame stays open, and the leftover handling below makes the answer a floor.
+          (* WHICH FRAME A CLOSER CLOSES: the nearest open one OF ITS OWN KIND, which is not
+             always the top one, and neither of the two things this walk used to do.
 
-             Written with star-parens because the example it wants to quote is made of braces,
-             and the charter has paid for that lesson twice. *)
-          if (top >= 0) and
-             (((t.Kind = sptBraceClose) and (frames[top].Kind = sptBraceOpen)) or
-              ((t.Kind = sptBracketClose) and (frames[top].Kind = sptBracketOpen))) then
+             `FindMatchingClose` (`Spintax.pas:626-640`) counts only its own bracket kind, so
+             a `]` reaches past an unclosed `{` and closes the `[` underneath -- and the frames
+             it reached past were never constructs at all. Matching the top frame ONLY had two
+             failure modes, both measured:
+
+               `[aa|bb|cc|dd|ee}`   popped the bracket on a brace and reported 120 as a
+                                    promise, where the engine renders one text
+               `[a{b|c]d}`          closed the BRACE on the `]`, kept the split before it and
+                                    said "at least 2" -- the engine's permutation content is
+                                    `a{b|c`, whose `{` is literal, so it makes ONE
+
+             The second broke the floor, which is this unit's one unconditional promise.
+
+             And a closer with no frame of its kind open is not merely ignorable: the engine's
+             `SplitTopLevel` drives a counter NEGATIVE on it and then splits no further, so
+             the frame it lands in stops taking `|` as a separator (see TFrame.Broken).
+
+             Written with star-parens because the examples it quotes are made of braces, and
+             the charter has paid for that lesson twice. *)
           begin
-            k := Length(frames[top].Options);
-            SetLength(frames[top].Options, k + 1);
-            frames[top].Options[k] := frames[top].Current;
+            if t.Kind = sptBraceClose then wantKind := sptBraceOpen
+                                      else wantKind := sptBracketOpen;
+            j := top;
+            while (j >= 0) and (frames[j].Kind <> wantKind) do Dec(j);
+
+            if (j >= 0) and (j < top) then
+            begin
+              { Whatever the skipped frames accumulated is not a choice anybody makes. }
+              top := j;
+              SetLength(frames, top + 1);
+              Exact := False;
+            end;
+
+            if j >= 0 then
+            begin
+            CloseOption;
             if not frames[top].Free then
             begin
               (* A CONDITIONAL'S INPUT PICKS THE BRANCH -- but the branch still has whatever is
@@ -759,8 +893,17 @@ begin
                   if frames[top].Options[k] > c then c := frames[top].Options[k];
             end
             else if frames[top].Kind = sptBracketOpen then
-              c := PermutationCount(frames[top].Options,
-                                    frames[top].MinSize, frames[top].MaxSize)
+            begin
+              if frames[top].ConfigUnknown then
+              begin
+                { One is the only number that cannot be wrong here. }
+                c := 1;
+                Exact := False;
+              end
+              else
+                c := PermutationCount(frames[top].Options,
+                                      frames[top].MinSize, frames[top].MaxSize);
+            end
             else
             begin
               c := 0;
@@ -770,6 +913,14 @@ begin
             Dec(top);
             SetLength(frames, top + 1);
             Into(c);
+            end
+            else if top >= 0 then
+            begin
+              frames[top].Broken := True;
+              { The engine refuses this document anyway -- the panel says
+                `bracket.mismatched` -- so from here the number is a floor. }
+              Exact := False;
+            end;
           end;
         sptVariable:
           begin
