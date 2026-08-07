@@ -440,6 +440,69 @@ is a deliberate state and not a backlog of things anyone forgot.
    SynEdit does not re-paint a line backwards. The help says so in both languages, in the
    section that already explained why a mid-line `#include` is not one.
 
+15. **The help was reviewed by MEASUREMENT before being translated** (2026-08-07), because a
+   wrong sentence translated twelve times is thirteen wrong sentences. Only arrow examples are
+   gated; roughly 150 declarative sentences were checked by nothing at all. Every claim that
+   could be rendered was rendered, at each document's own fixture, and the verdicts follow.
+
+   **Wrong, and corrected from the measurement:**
+
+   - **The provenance line named `spintax-win v0.4.0`** — in all four of
+     `{en,ru}/{syntax,diagnostics}.md`, in the sentence whose whole job is to tell the reader
+     the examples are real. Two engine bumps went past it. It no longer names a version at all:
+     the examples are re-rendered by the suite on every build, so what is true forever is *"run
+     through the engine this copy ships with, every time the program is built"* — and the
+     version itself is one click away in About. **A fact that must be edited on every bump is a
+     claim that will go stale again**, which is the general form worth keeping.
+   - **"A `<…>` block holding no `=` is the separator itself"** — false in both directions, and
+     in both languages. `[<xmaxsize=1>…]` holds an `=` and is still the separator;
+     `[<maxsize 2>…]` holds a key and no `=` and is also the separator. The rule is a KEY, at a
+     word boundary, followed by `=`. Rewritten with both traps as examples — and the second one
+     turned up something the document had never said: the panel calls `xmaxsize` an unknown key
+     while the render treats the whole block as a separator. The diagnostic and the output are
+     answering different questions.
+   - **EN said "URLs, e-mail addresses, bare domains and decimal numbers are shielded"** with no
+     qualification, where RU has said *латинские* for weeks. Measured: `сайт.рф` comes out
+     `Сайт. Рф`, and `т.е.` comes out `Т. Е.`. The word-boundary check is ASCII
+     (`Spintax.pas:1836-1840`). EN now carries the limit, in both places it belongs.
+   - **EN's "46 entries, most of them Russian"** is true and vague where RU is exact. Counted
+     from `Spintax.Unicode.inc`: **46 entries, 29 Cyrillic, 17 Latin.** EN now says 29.
+   - **"A `minsize` above the `maxsize` is accepted without a word"** stopped there, which
+     invites the wrong inference. The floor wins: the ceiling is raised to meet it. Shown.
+   - **`permutation.unknown-key` described only the rarer case.** An unknown key ALONE makes the
+     whole block a separator; an unknown key BESIDE a real one is simply dropped and the config
+     is obeyed — `[<sep=", ";foo=1>a|b|c]` gives `B, c, a`, with the same diagnostic. That is
+     the likelier mistake and the document had the reader expecting the other outcome.
+   - **`note.cycle` never said which file its row is against.** It is the fragment's, so nothing
+     is underlined in the open document.
+   - **Two closed enumerations in the product guide were short.** Settings named six of the
+     eleven things the app actually remembers (`SpxSettings` writes lang, lang.follow,
+     rail.right, preview.source, gsa.import, panel, font.size, font.family, slide.width,
+     help.width, theme); export named two of its three buttons.
+
+   **Ungated claims turned into checked bytes.** The generator has always supported multi-line
+   templates, which nobody had used for this: the split-line `#include` block added days earlier
+   was a behavioural claim shown as a fence with no arrow, and is now
+   `#include` / `"frag"` → `Fragment`, compared byte for byte. Same for `[<and>red|green]`, which
+   was asserted inside a sentence. Proved the new gate bites: changing that expected output to
+   `(empty)` fails exactly one named check and nothing else.
+
+   **Right, and left alone — which is most of it.** Plural arity per locale (en 2; ru, uk, be,
+   sr, hr, bs 3); `maxsize` above the count quietly reduced; the fragment's `variable.undefined`
+   reported against the fragment at line 1 with no squiggle in the document — all three parts;
+   a `#set` count giving `plural.count-macro` and an empty render; a wrong arity printing the
+   construct back in wide braces; `set.malformed` and `def.malformed` each drawing two rows;
+   `definition.duplicate-name` pointing at the second definition; `note.case-mismatch` drawing
+   both a note and an error; `#def` as a count drawing nothing at all; an untaken branch costing
+   no random draw (measured with a counting RNG: `{Lite|{Plus|Max}}` takes exactly one);
+   one include row per occurrence; exact target matching; comments removed before anything else,
+   not nesting, and keeping the logical line open.
+
+   **One finding was mine and wrong.** The document says a tagged separator "under another seed
+   answers `One br two`" — an output that is honest, flagged as another seed, and therefore not
+   a defect. It gained a companion that shows the behaviour at this document's own seed instead
+   of describing an unreachable one.
+
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
 decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store

@@ -8,8 +8,10 @@ There are six of them, and that is the whole language: a **choice** between alte
 **count** that picks the right word form, and an **include** that pulls in another template.
 Comments are a seventh mark that produces nothing at all.
 
-> Every example below was run through `spintax-win v0.4.0`, and the right-hand side is exactly
-> what it returned. Nothing here is remembered or guessed.
+> Every example below is run through the engine this copy of Studio ships with, every time the
+> program is built, and the right-hand side is exactly what it returned. Nothing here is
+> remembered or guessed; an answer that stopped being true would stop the build. The engine's
+> version is in **Help**, **About**.
 
 The other document in this help, **What the Diagnostics tab is telling you**, is about what goes
 wrong. This one is about what the constructs do when nothing goes wrong — including the several
@@ -92,8 +94,25 @@ set in a `<…>` block immediately after the opening bracket.
 [<, >red|green|blue]  →  Green, blue, red
 ```
 
-A `<…>` block holding no `=` is the separator itself. Write it out in full when you want two
-different ones:
+A `<…>` block is the separator itself unless it **names a setting**: one of `sep`, `lastsep`,
+`minsize` or `maxsize`, standing as its own word, with an `=` after it. Everything else in that
+position is a separator, however much it looks like a setting — a key without its `=`:
+
+```spx-good
+[<maxsize 2>red|green|blue]  →  Greenmaxsize 2bluemaxsize 2red
+```
+
+or a key with something glued to the front of it:
+
+```
+[<xmaxsize=1>red|green|blue]  →  Greenxmaxsize=1bluexmaxsize=1red
+```
+
+That second one is worth a second look: the panel **does** call `xmaxsize` an unknown key, and the
+engine still prints the whole block between the items. The diagnostic and the output are
+answering different questions.
+
+Write the settings out in full when you want two different separators:
 
 ```spx-good
 [<sep=", ";lastsep=" and ">red|green|blue]  →  Green, blue and red
@@ -117,8 +136,13 @@ order. Equal values take exactly that many. **With neither, all of them — but 
 ```
 
 Three items, a ceiling of three, and one piece came out. Write `minsize` too when you mean "all
-of them, at most three". A `maxsize` above the number of items is quietly reduced to it, and a
-`minsize` above the `maxsize` is accepted without a word.
+of them, at most three". A `maxsize` above the number of items is quietly reduced to it. A
+`minsize` above the `maxsize` is accepted without a word, and the floor wins — the ceiling is
+raised to meet it rather than the other way round:
+
+```spx-good
+[<minsize=3;maxsize=1>red|green|blue]  →  Green blue red
+```
 
 ### A separator between two items
 
@@ -281,7 +305,9 @@ one. two. three.  →  One. Two. Three.
 
 That is why the examples in this help so often answer with a capital where the template has a
 small letter. A dot after an abbreviation the engine knows does not end a sentence, and neither
-does anything shaped like `e.g.` or `U.S.`:
+does anything shaped like `e.g.` or `U.S.` — **in Latin letters**, which is a real limit and not
+a hedge: the check for "is this the middle of a word" is an ASCII one, so the multi-dot form is
+recognised in `e.g.` and not in its Cyrillic equivalent.
 
 ```spx-good
 e.g. this stays lower  →  e.g. this stays lower
@@ -297,7 +323,7 @@ Any other word ends a sentence, however short — length has nothing to do with 
 Xyz. our prices are low  →  Xyz. Our prices are low
 ```
 
-The list the engine knows has 46 entries, most of them Russian, and the other document goes
+The list the engine knows has 46 entries, **29 of them Cyrillic**, and the other document goes
 through it under **A silence in every language**.
 
 The second everyday one is that runs of spaces collapse to one. That is what lets you leave an
@@ -305,8 +331,12 @@ empty option without counting the spaces around it.
 
 The rest, in one breath: a space before `,;:!?.` is dropped and one is inserted after it; the
 whole output is trimmed; the capital arrives after a line break and after a block tag as well as
-after a full stop; and URLs, e-mail addresses, bare domains and decimal numbers are shielded and
-come out exactly as typed.
+after a full stop; and URLs with a scheme, e-mail addresses, bare domains and decimal numbers are
+shielded and come out exactly as typed.
+
+The last of those carries the same ASCII limit as the abbreviations above. A bare domain is
+shielded when it is written in Latin letters; `сайт.рф` is not, and the tidy-up puts a space and
+a capital inside it. The other document's chapter on abbreviations has the measurements.
 
 ```spx-good
 hello , world  →  Hello, world
@@ -346,8 +376,14 @@ between `?1x?yes` and `no`:
 ```
 
 The block at the head of the **first** item is the separator — that is the syntax the shuffles
-chapter opens with, and `[<and>red|green]` answers `Green and red`. Anywhere after a `|` it is
-plain text, and a separator between two items goes at the **end** of the first.
+chapter opens with:
+
+```spx-good
+[<and>red|green]  →  Green and red
+```
+
+Anywhere after a `|` it is plain text, and a separator between two items goes at the **end** of
+the first.
 
 **A bare tag at the end of an item is taken as that pair's separator** and printed as its own
 text:
@@ -356,10 +392,16 @@ text:
 [one<br>|two]  →  Two one
 ```
 
-Under this seed the two landed in the other order, so the separator did not come out at all;
-under another the same template answers `One br two`. A closing tag (`</b>`), a self-closing one
-(`<br/>`), one carrying attributes (`<br class="x">`) and a tag in the middle of an item are all
-left alone.
+Under this seed the two landed in the other order, so the separator did not come out at all. With
+a third item there is somewhere for it to land, and it appears:
+
+```spx-good
+[red|green<br>|blue]  →  Green br blue red
+```
+
+The `<br>` sits between `green` and what follows it, wherever the shuffle puts that pair. A
+closing tag (`</b>`), a self-closing one (`<br/>`), one carrying attributes (`<br class="x">`)
+and a tag in the middle of an item are all left alone.
 
 **An unclosed comment is ordinary text** — it opens nothing, and the `/#` is printed:
 

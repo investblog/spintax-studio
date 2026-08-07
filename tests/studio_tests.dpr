@@ -3601,10 +3601,10 @@ type
 
 const
   HELP_DOCS: array[0..5] of THelpDoc = (
-    (Path: 'docs/help/en/diagnostics.md'; Examples: 33; Codes: True;  Good: 5),
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 36; Codes: True;  Good: 7),
-    (Path: 'docs/help/en/syntax.md';      Examples: 33; Codes: False; Good: 30),
-    (Path: 'docs/help/ru/syntax.md';      Examples: 36; Codes: False; Good: 33),
+    (Path: 'docs/help/en/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 38; Codes: True;  Good: 8),
+    (Path: 'docs/help/en/syntax.md';      Examples: 38; Codes: False; Good: 34),
+    (Path: 'docs/help/ru/syntax.md';      Examples: 41; Codes: False; Good: 37),
     { The product itself, added 2026-08-06 -- a reader who opens the help was being told how
       the LANGUAGE works and never what this program is. It carries one example, because it is
       about the window rather than the syntax, and that one is gated like every other. }
@@ -5935,9 +5935,9 @@ begin
       The product guide adds exactly one, which is clean. Exact, so a new counter-example
       cannot arrive without being counted. }
     if SpxHelpLangCode(i) = 'en' then
-      Check('help/offer/en/clean example count', IntToStr(ins), '42')
+      Check('help/offer/en/clean example count', IntToStr(ins), '47')
     else
-      Check('help/offer/ru/clean example count', IntToStr(ins), '49');
+      Check('help/offer/ru/clean example count', IntToStr(ins), '54');
   end;
 end;
 

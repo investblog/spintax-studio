@@ -86,7 +86,8 @@ generating every combination first, which is the work the number exists to save 
 counts the same way: the engine draws it once per render whether the branch you took uses it
 or not.
 
-Export writes them out as plain text, one variant per line, or as an XLSX workbook.
+Export writes them out three ways: as an XLSX workbook, as plain text with one variant per line,
+or as one file per variant in a folder you choose.
 
 ## The group editor
 
@@ -99,9 +100,10 @@ refuses, it says so and leaves the document alone.
 
 ## Settings
 
-The View menu holds them, and they are remembered between sessions: which side the tool strip
-is on, the theme, the editor's font and size, which panel is open, and the width of the panels
-that slide out.
+The View menu holds them, and every one is remembered between sessions: the interface language
+and whether it follows the template, which side the tool strip is on, the theme, the editor's
+font and size, whether the preview shows the page or the source, the GSA import switch, which
+panel is open, and the widths of the panels that slide out.
 
 The interface speaks fourteen languages, chosen in the same menu. That is separate from the
 language of your template, which is what decides plural forms and is set above the right pane.

@@ -14,8 +14,10 @@ template will behave the same way on your server as it does in this window.
 
 The **Where** column is a line and a column. Clicking the row puts the caret there.
 
-> Every example below was run through `spintax-win v0.4.0`, and the right-hand side is exactly
-> what it returned. Nothing here is remembered or guessed.
+> Every example below is run through the engine this copy of Studio ships with, every time the
+> program is built, and the right-hand side is exactly what it returned. Nothing here is
+> remembered or guessed; an answer that stopped being true would stop the build. The engine's
+> version is in **Help**, **About**.
 
 ## How to read the examples
 
@@ -233,9 +235,9 @@ complain about — you wrote text and got text.
 The gap the engine allows between the keyword and its target includes line breaks, so this is
 one include and it works:
 
-```
+```spx-good
 #include
-"frag"
+"frag"                       →  Fragment
 ```
 
 Blank lines in between are fine too. What is not allowed is anything else: a word before the
@@ -283,6 +285,10 @@ If `loop.spintax` contains `#include "loop"`, then:
 
 The engine substitutes nothing rather than infinity. The note is there so you know why the
 paragraph vanished.
+
+The row is against **`loop`**, not against the document you are looking at — the circle is the
+fragment's, and that is where the caret goes when you click it. Nothing is underlined in the
+open document, because there is nothing wrong with the line you wrote.
 
 ---
 
@@ -360,7 +366,19 @@ wide braces instead.
 ```
 
 The known keys are `minsize`, `maxsize`, `sep` and `lastsep`. An unknown one is not a setting —
-it becomes the separator between the elements, which is what the output shows.
+and when it is the only thing in the block, the whole block is not a config at all: it becomes
+the separator between the elements, which is what the output shows.
+
+**With a real key beside it the outcome is completely different**, and this is the likelier
+mistake — one key mistyped among several:
+
+```
+[<sep=", ";foo=1>a|b|c]      →  B, c, a
+```
+
+The block is a config, `sep` is obeyed, the unknown key is simply dropped, and the panel says the
+same thing about it either way. So the diagnostic tells you a key was not understood; it does not
+tell you what happened next. Read the output for that.
 
 ### `permutation.minsize-not-integer` — minsize is not a whole number
 
