@@ -25,7 +25,7 @@ unit SpxHelpText;
 interface
 
 const
-  SPX_HELP_LANG_COUNT = 7;
+  SPX_HELP_LANG_COUNT = 8;
   { The document KINDS this build knows, whether or not a language carries them. }
   SPX_HELP_KIND_COUNT = 3;
 
@@ -90,24 +90,24 @@ function SpxHelpExampleOf(const AHref: string): Integer;
 implementation
 
 const
-  HELP_LANG: array[0..6] of string = (
-    'en', 'ru', 'de', 'fr', 'es', 'it', 'pt'
+  HELP_LANG: array[0..7] of string = (
+    'en', 'ru', 'de', 'fr', 'es', 'it', 'pt', 'nl'
   );
   HELP_KIND_SLUG: array[0..2] of string = (
     'studio', 'syntax', 'diagnostics'
   );
 
   { Each language's documents: a span into the tables below. }
-  HELP_DOC_FIRST: array[0..6] of Integer = (
-    0, 3, 6, 9, 12, 15, 18
+  HELP_DOC_FIRST: array[0..7] of Integer = (
+    0, 3, 6, 9, 12, 15, 18, 21
   );
-  HELP_DOC_LAST: array[0..6] of Integer = (
-    2, 5, 8, 11, 14, 17, 20
+  HELP_DOC_LAST: array[0..7] of Integer = (
+    2, 5, 8, 11, 14, 17, 20, 23
   );
-  HELP_DOC_KIND: array[0..20] of Integer = (
-    0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2
+  HELP_DOC_KIND: array[0..23] of Integer = (
+    0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2
   );
-  HELP_DOC_PATH: array[0..20] of string = (
+  HELP_DOC_PATH: array[0..23] of string = (
     'docs/help/en/studio.md',
     'docs/help/en/syntax.md',
     'docs/help/en/diagnostics.md',
@@ -128,24 +128,32 @@ const
     'docs/help/it/diagnostics.md',
     'docs/help/pt/studio.md',
     'docs/help/pt/syntax.md',
-    'docs/help/pt/diagnostics.md'
+    'docs/help/pt/diagnostics.md',
+    'docs/help/nl/studio.md',
+    'docs/help/nl/syntax.md',
+    'docs/help/nl/diagnostics.md'
   );
-  HELP_DOC_DIGEST: array[0..20] of string = (
-    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf', 'a13813d94022fc79', 'f97317079554607c', 'cba1e24e3fd02d3c', '2ac60637deec5293', 'a171652427448b1d', '2edce4acd51627d2', 'ad5ac9e54fecd8bb', '6c95fb9944927410', '08805b1be3656cd9', 'c32ef23f68968452', '6c578908ab8c6c29', 'bff3ba7c06efe1c3'
+  HELP_DOC_DIGEST: array[0..23] of string = (
+    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf', 'a13813d94022fc79', 'f97317079554607c', 'cba1e24e3fd02d3c', '2ac60637deec5293', 'a171652427448b1d', '2edce4acd51627d2', 'ad5ac9e54fecd8bb', '6c95fb9944927410', '08805b1be3656cd9', 'c32ef23f68968452', '6c578908ab8c6c29', 'bff3ba7c06efe1c3', 'aea105784f6a931e', 'bd89c7e36c9cf6c8', 'f2b72eeadf6781cc'
   );
-  HELP_DOC_LOCALE: array[0..20] of string = (
-    'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt'
+  HELP_DOC_LOCALE: array[0..23] of string = (
+    'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl'
   );
-  HELP_DOC_SEED: array[0..20] of LongWord = (
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
+  HELP_DOC_SEED: array[0..23] of LongWord = (
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
   );
-  HELP_INC_FIRST: array[0..20] of Integer = (
-    0, 0, 2, 5, 5, 7, 10, 10, 12, 15, 15, 17, 20, 20, 22, 25, 25, 27, 30, 30, 32
+  HELP_INC_FIRST: array[0..23] of Integer = (
+    0, 0, 2, 5, 5, 7, 10, 10, 12, 15, 15, 17, 20, 20, 22, 25, 25, 27, 30, 30, 32, 35, 35, 37
   );
-  HELP_INC_LAST: array[0..20] of Integer = (
-    -1, 1, 4, 4, 6, 9, 9, 11, 14, 14, 16, 19, 19, 21, 24, 24, 26, 29, 29, 31, 34
+  HELP_INC_LAST: array[0..23] of Integer = (
+    -1, 1, 4, 4, 6, 9, 9, 11, 14, 14, 16, 19, 19, 21, 24, 24, 26, 29, 29, 31, 34, 34, 36, 39
   );
-  HELP_INC_NAME: array[0..34] of string = (
+  HELP_INC_NAME: array[0..39] of string = (
+    'intro',
+    'shout',
+    'frag',
+    'loop',
+    'Intro',
     'intro',
     'shout',
     'frag',
@@ -182,7 +190,7 @@ const
     'loop',
     'Intro'
   );
-  HELP_INC_TEXT: array[0..34] of string = (
+  HELP_INC_TEXT: array[0..39] of string = (
     'Welcome to {Acme|Globex}.',
     'The %brand% is here.',
     'Fragment',
@@ -217,20 +225,25 @@ const
     'A %marca% está aqui.',
     'Fragmento',
     '#include "loop"',
-    'Introdução'
+    'Introdução',
+    'Welkom bij {Acme|Globex}.',
+    'Het %merk% is er.',
+    'Fragment',
+    '#include "loop"',
+    'Inleiding'
   );
 
   { Each language's pages: a span into the tables below. }
-  HELP_PAGE_FIRST: array[0..6] of Integer = (
-    0, 30, 60, 90, 120, 150, 180
+  HELP_PAGE_FIRST: array[0..7] of Integer = (
+    0, 30, 60, 90, 120, 150, 180, 210
   );
-  HELP_PAGE_LAST: array[0..6] of Integer = (
-    29, 59, 89, 119, 149, 179, 209
+  HELP_PAGE_LAST: array[0..7] of Integer = (
+    29, 59, 89, 119, 149, 179, 209, 239
   );
-  HELP_SLUG: array[0..209] of string = (
-    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..239] of string = (
+    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
   );
-  HELP_TITLE: array[0..209] of string = (
+  HELP_TITLE: array[0..239] of string = (
     'Spintax Studio',
     'The two panes',
     'The panels along the bottom',
@@ -440,21 +453,51 @@ const
     'Notas do Studio sem nada para mostrar',
     'Um silêncio em todas as línguas: as abreviaturas',
     'Que aspecto tem a forma correcta',
-    'Perguntas frequentes'
+    'Perguntas frequentes',
+    'Spintax Studio',
+    'De twee helften',
+    'De panelen onderaan',
+    'De groepseditor',
+    'Instellingen',
+    'Een GSA-sjabloon inlezen',
+    'De taal, constructie voor constructie',
+    'Hoe de voorbeelden te lezen',
+    'Keuzes',
+    'Schudbeurten',
+    'Macro''s',
+    'Voorwaarden',
+    'Telling',
+    'Fragmenten',
+    'Opmerkingen',
+    'Wat de machine op het eind gladstrijkt',
+    'Stiltes',
+    'Waar hierna te kijken',
+    'Wat het tabblad Diagnose u vertelt',
+    'Hoe de voorbeelden te lezen',
+    'Haken',
+    'Vastleggingen',
+    'Variabelen',
+    'Invoegingen',
+    'Getalsvormen',
+    'Schudbeurten',
+    'Studio-aantekeningen zonder iets te tonen',
+    'Een stilte in elke taal: afkortingen',
+    'Hoe de juiste vorm eruitziet',
+    'Veelgestelde vragen'
   );
-  HELP_PAGE_DOC: array[0..209] of Integer = (
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_PAGE_DOC: array[0..239] of Integer = (
+    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
-  HELP_FIRST: array[0..209] of Integer = (
-    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003, 1012, 1019, 1026, 1035, 1038, 1041, 1050, 1055, 1061, 1073, 1098, 1108, 1115, 1122, 1131, 1135, 1150, 1178, 1180, 1190, 1197, 1210, 1226, 1251, 1273, 1293, 1307, 1320, 1333, 1341, 1350, 1357, 1364, 1373, 1376, 1379, 1388, 1393, 1399, 1411, 1436, 1446, 1453, 1460, 1469, 1473, 1488, 1516, 1518, 1528, 1535, 1548, 1564, 1589, 1611, 1631, 1645, 1658, 1671, 1679, 1688, 1695, 1702, 1711, 1714, 1717, 1726, 1731, 1737, 1749, 1774, 1784, 1791, 1798, 1807, 1811, 1826, 1854, 1856, 1866, 1873, 1886, 1902, 1927, 1949, 1969, 1983, 1996, 2009, 2017, 2026, 2033, 2040, 2049, 2052, 2055, 2064, 2069, 2075, 2087, 2112, 2122, 2129, 2136, 2145, 2149, 2164, 2194, 2196, 2206, 2213, 2226, 2242, 2267, 2289, 2309, 2323, 2336, 2349, 2357
+  HELP_FIRST: array[0..239] of Integer = (
+    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003, 1012, 1019, 1026, 1035, 1038, 1041, 1050, 1055, 1061, 1073, 1098, 1108, 1115, 1122, 1131, 1135, 1150, 1178, 1180, 1190, 1197, 1210, 1226, 1251, 1273, 1293, 1307, 1320, 1333, 1341, 1350, 1357, 1364, 1373, 1376, 1379, 1388, 1393, 1399, 1411, 1436, 1446, 1453, 1460, 1469, 1473, 1488, 1516, 1518, 1528, 1535, 1548, 1564, 1589, 1611, 1631, 1645, 1658, 1671, 1679, 1688, 1695, 1702, 1711, 1714, 1717, 1726, 1731, 1737, 1749, 1774, 1784, 1791, 1798, 1807, 1811, 1826, 1854, 1856, 1866, 1873, 1886, 1902, 1927, 1949, 1969, 1983, 1996, 2009, 2017, 2026, 2033, 2040, 2049, 2052, 2055, 2064, 2069, 2075, 2087, 2112, 2122, 2129, 2136, 2145, 2149, 2164, 2194, 2196, 2206, 2213, 2226, 2242, 2267, 2289, 2309, 2323, 2336, 2349, 2357, 2366, 2373, 2380, 2389, 2392, 2395, 2404, 2409, 2415, 2427, 2452, 2462, 2469, 2476, 2485, 2489, 2504, 2529, 2531, 2541, 2548, 2561, 2577, 2602, 2624, 2644, 2658, 2671, 2684, 2692
   );
-  HELP_LAST: array[0..209] of Integer = (
-    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011, 1018, 1025, 1034, 1037, 1040, 1049, 1054, 1060, 1072, 1097, 1107, 1114, 1121, 1130, 1134, 1149, 1177, 1179, 1189, 1196, 1209, 1225, 1250, 1272, 1292, 1306, 1319, 1332, 1340, 1349, 1356, 1363, 1372, 1375, 1378, 1387, 1392, 1398, 1410, 1435, 1445, 1452, 1459, 1468, 1472, 1487, 1515, 1517, 1527, 1534, 1547, 1563, 1588, 1610, 1630, 1644, 1657, 1670, 1678, 1687, 1694, 1701, 1710, 1713, 1716, 1725, 1730, 1736, 1748, 1773, 1783, 1790, 1797, 1806, 1810, 1825, 1853, 1855, 1865, 1872, 1885, 1901, 1926, 1948, 1968, 1982, 1995, 2008, 2016, 2025, 2032, 2039, 2048, 2051, 2054, 2063, 2068, 2074, 2086, 2111, 2121, 2128, 2135, 2144, 2148, 2163, 2193, 2195, 2205, 2212, 2225, 2241, 2266, 2288, 2308, 2322, 2335, 2348, 2356, 2365
+  HELP_LAST: array[0..239] of Integer = (
+    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011, 1018, 1025, 1034, 1037, 1040, 1049, 1054, 1060, 1072, 1097, 1107, 1114, 1121, 1130, 1134, 1149, 1177, 1179, 1189, 1196, 1209, 1225, 1250, 1272, 1292, 1306, 1319, 1332, 1340, 1349, 1356, 1363, 1372, 1375, 1378, 1387, 1392, 1398, 1410, 1435, 1445, 1452, 1459, 1468, 1472, 1487, 1515, 1517, 1527, 1534, 1547, 1563, 1588, 1610, 1630, 1644, 1657, 1670, 1678, 1687, 1694, 1701, 1710, 1713, 1716, 1725, 1730, 1736, 1748, 1773, 1783, 1790, 1797, 1806, 1810, 1825, 1853, 1855, 1865, 1872, 1885, 1901, 1926, 1948, 1968, 1982, 1995, 2008, 2016, 2025, 2032, 2039, 2048, 2051, 2054, 2063, 2068, 2074, 2086, 2111, 2121, 2128, 2135, 2144, 2148, 2163, 2193, 2195, 2205, 2212, 2225, 2241, 2266, 2288, 2308, 2322, 2335, 2348, 2356, 2365, 2372, 2379, 2388, 2391, 2394, 2403, 2408, 2414, 2426, 2451, 2461, 2468, 2475, 2484, 2488, 2503, 2528, 2530, 2540, 2547, 2560, 2576, 2601, 2623, 2643, 2657, 2670, 2683, 2691, 2700
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..2365] of string = (
+  HELP_LINE: array[0..2700] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -6456,17 +6499,879 @@ const
       ' não uma aproximação. Com <b>outro</b> motor da família — o de JavaScript, PHP ou Pyth' +
       'on — transportam-se o veredicto e o conjunto de textos que o modelo pode dar, mas não ' +
       'qual deles uma dada semente tira. Repetir esse sorteio exacto a família não o promete.' +
-      '</p>'
+      '</p>',
+    '<h1 id="studio">Spintax Studio</h1>',
+    '<p>Dit programma is een editor voor sjablonen. Een sjabloon is gewone tekst met een pa' +
+      'ar gemarkeerde plekken erin, en één sjabloon kan heel veel verschillende teksten oplev' +
+      'eren — dat is de hele reden om er een te schrijven in plaats van de teksten zelf.</p>',
+    '<p>Het venster bestaat uit twee helften. Links staat uw sjabloon, wat u bewerkt. Recht' +
+      's staat een van de teksten die eruit komen, opnieuw getekend terwijl u typt. Ertussen ' +
+      'valt niets in te drukken: wat u rechts ziet is wat de machine op dat moment teruggeeft' +
+      ' voor wat er links staat.</p>',
+    '<p><small><tt>locale: nl<br>seed: 7<br>empty: (leeg)</tt></small></p>',
+    '<p>De machine zit in dit programma en is het Pascal-lid van een familie: dezelfde taal' +
+      ' verschijnt ook voor JavaScript, PHP en Python. De vier zijn zelfstandige programma''s' +
+      ' die aan één gedeelde reeks testgevallen worden gehouden, zodat wat een sjabloon BETEK' +
+      'ENT in alle vier gelijk is: de constructies, het oordeel over de geldigheid, de afwerk' +
+      'ing. Een sjabloon dat dit venster geldig noemt, is daar ook geldig.</p>',
+    '<p>Wat niet wordt beloofd, en het verschil telt bij vergelijken: de loting. Een startg' +
+      'etal maakt de voorvertoning HIER herhaalbaar — hetzelfde startgetal en hetzelfde sjabl' +
+      'oon geven morgen dezelfde tekst —, maar hetzelfde startgetal in de JavaScript-machine ' +
+      'kan een ander alternatief trekken. Startgetallen dienen om uw eigen werk te herhalen, ' +
+      'niet om een andere machine te treffen.</p>',
+    '<p>Alles hier werkt zonder netwerkverbinding. Er is geen account, geen aanmelding en n' +
+      'iets om aan te zetten: open het programma en het draait.</p>',
+    '<h2 id="panes">De twee helften</h2>',
+    '<p>Links wordt getypt. De rechterhelft tekent na een korte pauze opnieuw, zodat de voo' +
+      'rvertoning een zin volgt en niet elke letter.</p>',
+    '<p>Een sjabloon met een keuze erin heeft geen enkel antwoord, en de voorvertoning toon' +
+      't er een:</p>',
+    '<p><small><tt><a href="ex:0">{Hallo|Goedendag} allemaal.</a><br>→&nbsp; Hallo allemaal' +
+      '.</tt></small></p>',
+    '<p><b>Opnieuw loten</b> boven de rechterhelft haalt de volgende. Wilt u altijd dezelfd' +
+      'e — terwijl u twee wijzigingen vergelijkt bijvoorbeeld — vink dan <b>Startgetal</b> aa' +
+      'n, en de voorvertoning staat stil tot u het weer uitvinkt of het getal verandert.</p>',
+    '<p>De rechterhelft toont ofwel de <b>pagina</b> ofwel de <b>broncode</b>. Sjablonen zi' +
+      'jn meestal HTML, en de twee vragen «hoe ziet dit eruit» en «welke opmaak kwam eruit» b' +
+      'eantwoorden elkaar niet: een kapotte tag geeft een licht scheve opmaak waar het oog ov' +
+      'erheen kijkt, terwijl proza vol tags niet als proza leest. De schakelaar boven de helf' +
+      't wisselt waar u naar kijkt.</p>',
+    '<p>Selecteer een deel van het sjabloon en alleen dat deel wordt weergegeven — binnen h' +
+      'et bereik van het hele document, zodat een fragment dat een bovenaan gedefinieerde var' +
+      'iabele gebruikt eruit komt zoals het op zijn plaats zal doen.</p>',
+    '<h2 id="panels">De panelen onderaan</h2>',
+    '<p>De werkbalk aan de zijkant opent drie panelen, één tegelijk.</p>',
+    '<p><b>Diagnose</b> somt op wat de machine verkeerd vond, telkens met de regel en de ko' +
+      'lom waar het begint. Een klik op een regel zet de cursor daar. Het is hetzelfde oordee' +
+      'l dat de machine overal elders geeft, geen tweede mening van de editor — daarom wordt ' +
+      'een sjabloon dat dit paneel geldig noemt door de andere machines aanvaard.</p>',
+    '<p><b>Variabelen</b> toont de namen die uw document definieert en de namen die het all' +
+      'een gebruikt. Een naam die het gebruikt en die niets definieert kunt u hier voor de se' +
+      'ssie invullen: schrijf er een waarde naast en de voorvertoning pakt hem op. Vink <b>Le' +
+      'tterlijk</b> aan wanneer de waarde tekst is die zichzelf betekent en niet op zijn beur' +
+      't een klein sjabloon.</p>',
+    '<p><b>Varianten</b> maakt veel teksten in één keer. Zeg hoeveel, maak ze aan en lees z' +
+      'e in de lijst voordat u exporteert. Bijna-doublures kunnen tijdens het maken worden we' +
+      'ggelaten, en een startgetal maakt de hele partij herhaalbaar: hetzelfde startgetal en ' +
+      'hetzelfde sjabloon geven morgen dezelfde varianten.</p>',
+    '<p>Naast die velden zegt het paneel hoeveel varianten het sjabloon in totaal kan oplev' +
+      'eren: <code>{a|b} en {c|d}</code> levert er vier. Dat getal vertelt u dat een sjabloon' +
+      ' mager is voordat u er vijftig maakt en het al lezend merkt.</p>',
+    '<p>Het is alleen een exact getal zolang elke keuze aan het toeval wordt overgelaten. E' +
+      'en voorwaarde, een getalsvorm of een <code>#include</code> waarvan de verzameling het ' +
+      'doel niet heeft, wordt door iets anders beslist — een waarde die u aanlevert, een geta' +
+      'l, een fragment dat misschien nog komt —, en dan zegt het paneel <b>ten minste</b>. Da' +
+      't is het eerlijke woord: een waarde aanleveren kan alleen teksten toevoegen, nooit weg' +
+      'nemen. Een getal dat veel te groot is om te lezen stopt bij een biljoen en zegt om dez' +
+      'elfde reden <b>ten minste</b>.</p>',
+    '<p>Een variant is één ingevuld sjabloon — bij elke constructie één gemaakte keuze — en' +
+      ' dat is niet hetzelfde als een tekst die anders leest. <code>{a|a}</code> zijn twee va' +
+      'rianten en één tekst, en dat is met opzet: de twee mogelijkheden kunnen na één wijzigi' +
+      'ng uit elkaar lopen, en ze samennemen zou betekenen dat eerst elke combinatie wordt ge' +
+      'maakt, en dat is precies het werk dat dit getal u bespaart. Een <code>#def</code> telt' +
+      ' op dezelfde manier: de machine trekt hem één keer per weergave, of de genomen tak hem' +
+      ' nu gebruikt of niet.</p>',
+    '<p>De export schrijft ze op drie manieren weg: als XLSX-werkmap, als platte tekst met ' +
+      'één variant per regel, of als één bestand per variant in een map naar keuze.</p>',
+    '<h2 id="groups">De groepseditor</h2>',
+    '<p>Zet de cursor in een <code>{a|b|c}</code> en open de groepseditor vanuit de werkbal' +
+      'k. Hij somt de alternatieven als regels op: wijzig ze, voeg er een toe, haal er een we' +
+      'g, en het document wordt overeenkomstig herschreven.</p>',
+    '<p>Hij weigert wijzigingen die veranderen wat de groep BETEKENT in plaats van wat hij ' +
+      'zegt: een <code>|</code> getypt in een alternatief zou van één mogelijkheid twee maken' +
+      ', en een <code>}</code> zou de groep te vroeg sluiten. Als hij weigert, zegt hij het e' +
+      'n laat hij het document met rust.</p>',
+    '<h2 id="settings">Instellingen</h2>',
+    '<p>Ze staan in het menu Beeld, en elke wordt tussen sessies onthouden: de taal van de ' +
+      'interface en of die het sjabloon volgt, aan welke kant de werkbalk staat, het thema, h' +
+      'et lettertype van de editor en de grootte ervan, of de voorvertoning de pagina of de b' +
+      'roncode toont, de schakelaar voor de GSA-import, welk paneel open staat en de breedtes' +
+      ' van de panelen die uitschuiven.</p>',
+    '<p>De interface spreekt veertien talen, gekozen in datzelfde menu. Dat staat los van d' +
+      'e taal van uw sjabloon, die de getalsvormen bepaalt en boven de rechterhelft wordt ing' +
+      'esteld.</p>',
+    '<h2 id="gsa">Een GSA-sjabloon inlezen</h2>',
+    '<p>Dit stuk staat uit tot u het aanzet, onder <b>Beeld</b>, <b>GSA-import</b>, omdat d' +
+      'e meeste mensen die sjablonen schrijven de GSA Search Engine Ranker nooit hebben gebru' +
+      'ikt. Staat het aan, dan leest <b>Bestand</b>, <b>GSA-sjabloon inlezen…</b> een SER-sja' +
+      'bloon en zet het om in deze taal.</p>',
+    '<p>De omzetting is op een bepaalde manier voorzichtig. Wat zij niet getrouw kan uitdru' +
+      'kken weigert zij en meldt zij, in plaats van het stilletjes te veranderen in iets dat ' +
+      'weergeeft. Constructies die verkeerd gelezen zouden worden als ze in de tekst bleven —' +
+      ' BBCode-haken, een <code>#</code> in een link, een <code>#file[...]</code>-macro — wor' +
+      'den in variabelen ondergebracht, en de samenvatting zegt hoeveel.</p>',
+    '<p>Twee dingen om te weten over het resultaat:</p>',
+    '<ul>',
+    '<li><b>De ondergebrachte waarden zijn sessiewaarden.</b> Ze verschijnen in het paneel ' +
+      'Variabelen en worden niet met het document bewaard. Bewaar het omgezette sjabloon, ope' +
+      'n het morgen, en u ziet <code>%…%</code> waar de ondergebrachte tekst stond. Uit het i' +
+      'ngelezen bestand gaat niets verloren — dat blijft onaangeroerd —, maar het omgezette d' +
+      'ocument staat niet op zichzelf.</li>',
+    '<li><b>Het wordt weergegeven zonder de afwerkingsronde.</b> Elk ander document hier kr' +
+      'ijgt de afwerking die de taalgids beschrijft; een omgezet sjabloon niet, want het is n' +
+      'iet onze tekst om glad te strijken. Hij is van iemand anders, meestal op weg terug naa' +
+      'r GSA, en moet teken voor teken overleven.</li>',
+    '</ul>',
+    '<p>Het ingelezen document is naamloos en niet bewaard, als een nieuw document. Het bes' +
+      'tand dat u koos blijft precies zoals het was.</p>',
+    '<h1 id="language">De taal, constructie voor constructie</h1>',
+    '<p>Een sjabloon is gewone tekst met een paar gemarkeerde plekken erin. Alles wat niet ' +
+      'gemarkeerd is komt er onveranderd uit; de markeringen zijn wat een sjabloon in staat s' +
+      'telt veel teksten op te leveren.</p>',
+    '<p>Het zijn er zes, en dat is de hele taal: een <b>keuze</b> tussen alternatieven, een' +
+      ' <b>schudbeurt</b> van meerdere stukken, een <b>macro</b> die u één keer vastlegt en o' +
+      'p naam gebruikt, een <b>voorwaarde</b>, een <b>telling</b> die de juiste woordvorm pak' +
+      't, en een <b>invoeging</b> die een ander sjabloon binnenhaalt. Opmerkingen zijn een ze' +
+      'vende markering die helemaal niets oplevert.</p>',
+    '<blockquote>Elk voorbeeld hieronder gaat bij elke bouw van het programma door de machi' +
+      'ne die deze kopie van Studio meebrengt, en rechts staat precies wat zij teruggaf. Niet' +
+      's hier is onthouden of geraden; een antwoord dat niet langer klopte zou de bouw stilze' +
+      'tten. De versie van de machine staat onder <b>Help</b>, <b>Over</b>.</blockquote>',
+    '<p>Het andere document in deze help, <b>Wat het tabblad Diagnose u vertelt</b>, gaat o' +
+      'ver wat er misgaat. Dit gaat over wat de constructies doen wanneer er niets misgaat — ' +
+      'met inbegrip van de verschillende plekken waar een sjabloon iets verrassends doet en n' +
+      'iets het meldt.</p>',
+    '<h2 id="reading-syntax">Hoe de voorbeelden te lezen</h2>',
+    '<p>De pijl <code>→</code> scheidt het sjabloon van wat de machine teruggaf. <code>(lee' +
+      'g)</code> betekent dat zij helemaal niets afdrukte. Tekst na de uitvoer, met drie spat' +
+      'ies ervoor, is een aantekening en geen deel van het antwoord.</p>',
+    '<p>De omstandigheden worden genoemd en niet stilzwijgend aangenomen, want zonder ze zo' +
+      'u de helft van de antwoorden hieronder niet te herhalen zijn:</p>',
+    '<p><small><tt>locale: nl<br>seed: 7<br>empty: (leeg)<br>include intro: Welkom bij {Acm' +
+      'e|Globex}.<br>include shout: Het %merk% is er.</tt></small></p>',
+    '<p><code>seed</code> legt de loting vast. Een sjabloon met een keuze erin heeft geen e' +
+      'nkel antwoord, dus een voorbeeld zonder startgetal zou bij elke doorgang iets anders a' +
+      'fdrukken en er viel niets te controleren. In het venster is het het vakje <b>Startgeta' +
+      'l</b> boven de rechterhelft; vink het aan en er verschijnt een getalveld naast, en de ' +
+      'voorvertoning staat stil terwijl u werkt.</p>',
+    '<p><code>locale</code> bepaalt de getalsvormen, en het is de keuzelijst boven de recht' +
+      'erhelft, niet de taal van de interface. Het Nederlands en het Engels vragen twee vorme' +
+      'n; het Russisch, het Oekraïens, het Wit-Russisch, het Servisch, het Kroatisch en het B' +
+      'osnisch vragen er drie.</p>',
+    '<h2 id="choices">Keuzes</h2>',
+    '<p>Accolades met <code>|</code> ertussen: de machine pakt er <b>één</b>.</p>',
+    '<p><small><tt><a href="ex:1">Een {kleine|grote} kamer.</a><br>→&nbsp; Een kleine kamer' +
+      '.</tt></small></p>',
+    '<p>De trekking is willekeurig, dus hetzelfde sjabloon geeft bij een andere doorgang <c' +
+      'ode>Een grote kamer.</code> De keuze zelf laat de tekst eromheen met rust — al reikt d' +
+      'e afwerking die tegen het einde van dit document wordt beschreven er wel toe.</p>',
+    '<h3 id="choices-0">Nesting</h3>',
+    '<p>Een keuze kan een andere bevatten, tot elke diepte.</p>',
+    '<p><small><tt><a href="ex:2">Acme {Pro {Plus|Max}|Lite}</a><br>→&nbsp; Acme Pro Plus</' +
+      'tt></small></p>',
+    '<p>De binnenste keuze wordt alleen gemaakt als de buitenste de tak pakt waarin hij sta' +
+      'at: valt <code>Lite</code>, dan wordt <code>Plus|Max</code> nooit geraadpleegd — en, m' +
+      'eetbaar, er wordt niet eens een willekeurig getal voor gevraagd.</p>',
+    '<h3 id="choices-1">Een lege mogelijkheid</h3>',
+    '<p>Een mogelijkheid mag leeg zijn. Het is de gewone manier om iets slechts af en toe t' +
+      'e laten verschijnen.</p>',
+    '<p><small><tt><a href="ex:3">Een {|heel }grote kamer.</a><br>→&nbsp; Een grote kamer.<' +
+      '/tt></small></p>',
+    '<p>De spatie in de mogelijkheid schrijven, <code>{|heel }</code> in plaats van <code>{' +
+      '|heel} </code>, is gewoonte en geen voorschrift: de afwerking trekt de dubbele spatie ' +
+      'hoe dan ook samen.</p>',
+    '<h2 id="shuffles">Schudbeurten</h2>',
+    '<p>Vierkante haken pakken meerdere stukken, kiezen hoeveel, zetten ze in willekeurige ' +
+      'volgorde en voegen ze samen.</p>',
+    '<p><small><tt><a href="ex:4">[rood|groen|blauw]</a><br>→&nbsp; Groen blauw rood</tt></' +
+      'small></p>',
+    '<p>Aan zichzelf overgelaten pakt hij ze allemaal en voegt ze met één spatie samen. Al ' +
+      'het overige over een schudbeurt wordt vastgelegd in een <code>&lt;…&gt;</code>-blok di' +
+      'rect achter de openende haak.</p>',
+    '<h3 id="shuffles-0">Het scheidingsteken</h3>',
+    '<p><small><tt><a href="ex:5">[&lt;, &gt;rood|groen|blauw]</a><br>→&nbsp; Groen, blauw,' +
+      ' rood</tt></small></p>',
+    '<p>Een <code>&lt;…&gt;</code>-blok is zelf het scheidingsteken, tenzij het <b>een inst' +
+      'elling noemt</b>: een van <code>sep</code>, <code>lastsep</code>, <code>minsize</code>' +
+      ' of <code>maxsize</code>, als eigen woord en met een <code>=</code> erachter. Al het o' +
+      'verige op die plek is een scheidingsteken, hoezeer het ook op een instelling lijkt — e' +
+      'en sleutel zonder zijn <code>=</code>:</p>',
+    '<p><small><tt><a href="ex:6">[&lt;maxsize 2&gt;rood|groen|blauw]</a><br>→&nbsp; Groenm' +
+      'axsize 2blauwmaxsize 2rood</tt></small></p>',
+    '<p>of een sleutel waar vooraan iets aan vastgeplakt zit:</p>',
+    '<p><small><tt><a href="ex:7">[&lt;xmaxsize=1&gt;rood|groen|blauw]</a><br>→&nbsp; Groen' +
+      'xmaxsize=1blauwxmaxsize=1rood</tt></small></p>',
+    '<p>De tweede verdient een tweede blik: het paneel noemt <code>xmaxsize</code> <b>wel d' +
+      'egelijk</b> een onbekende sleutel, en de machine drukt het hele blok toch tussen de st' +
+      'ukken af. De diagnose en de uitvoer beantwoorden verschillende vragen.</p>',
+    '<p>Schrijf de instellingen voluit wanneer u twee verschillende scheidingstekens wilt:<' +
+      '/p>',
+    '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" en "&gt;rood|groen|blauw]</a><br>' +
+      '→&nbsp; Groen, blauw en rood</tt></small></p>',
+    '<p><code>sep</code> gaat tussen de stukken en <code>lastsep</code> voor het laatste.</' +
+      'p>',
+    '<h3 id="shuffles-1">Hoeveel</h3>',
+    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;rood|groen|blauw]</a><br>→&nb' +
+      'sp; Groen blauw</tt></small></p>',
+    '<p><code>minsize</code> is de vloer en <code>maxsize</code> het plafond; het aantal er' +
+      'tussen is willekeurig, net als de volgorde. Gelijke waarden pakken er precies zoveel. ' +
+      '<b>Zonder allebei alle, maar met alleen <code>maxsize</code> ligt de vloer op één</b>,' +
+      ' wat mensen verrast:</p>',
+    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+      'p>',
+    '<p>Drie stukken, een plafond van drie, en er kwam er één uit. Schrijf ook <code>minsiz' +
+      'e</code> wanneer u «alle, hoogstens drie» bedoelt. Een <code>maxsize</code> boven het ' +
+      'aantal stukken wordt stilletjes tot dat aantal verlaagd. Een <code>minsize</code> bove' +
+      'n de <code>maxsize</code> wordt zonder een woord aanvaard, en de vloer wint: het plafo' +
+      'nd wordt naar hem opgetrokken en niet andersom:</p>',
+    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;rood|groen|blauw]</a><br>→&n' +
+      'bsp; Groen blauw rood</tt></small></p>',
+    '<h3 id="shuffles-2">Een scheidingsteken tussen twee stukken</h3>',
+    '<p>Een <code>&lt;…&gt;</code> dat <b>tussen</b> twee stukken wordt geschreven, is het ' +
+      'scheidingsteken van dat paar.</p>',
+    '<p><small><tt><a href="ex:12">[rood|groen&lt;en&gt;|blauw]</a><br>→&nbsp; Groen en bla' +
+      'uw rood</tt></small></p>',
+    '<p>Het hoort bij het stuk <b>erna</b> en reist met dat stuk door de schudbeurt mee, du' +
+      's het duikt op waar dat stuk terechtkomt en niet op een vaste plek in de uitvoer. Een ' +
+      '<code>&lt;…&gt;</code> na het <b>laatste</b> stuk is helemaal geen scheidingsteken en ' +
+      'wordt als tekst afgedrukt:</p>',
+    '<p><small><tt><a href="ex:13">[rood|groen|blauw&lt;en&gt;]</a><br>→&nbsp; Groen blauw&' +
+      'lt;en&gt; rood</tt></small></p>',
+    '<h2 id="macros">Macro''s</h2>',
+    '<p><code>#set</code> geeft een stuk tekst een naam. De naam wordt als <code>%naam%</co' +
+      'de> gebruikt, en de aanwijzing moet het eerste op haar regel zijn — spaties en tabs er' +
+      'voor mogen, verder niets.</p>',
+    '<p><small><tt><a href="ex:14">#set %stad% = Utrecht</a><br><a href="ex:14">Vlucht naar' +
+      ' %stad%.</a><br>→&nbsp; Vlucht naar Utrecht.</tt></small></p>',
+    '<p>Namen bestaan uit Latijnse letters, cijfers en <code>_</code>. Een naam in een ande' +
+      'r alfabet is geen naam, waarover het andere document spreekt onder <code>set.malformed' +
+      '</code>. Een trema of accent hoort dus niet in een naam; in een waarde wel.</p>',
+    '<h3 id="macros-0"><code>#set</code> loot opnieuw, <code>#def</code> loot één keer</h3>',
+    '<p>Dat is het hele verschil tussen de twee, en het blijkt alleen wanneer de waarde een' +
+      ' keuze bevat.</p>',
+    '<p><small><tt><a href="ex:15">#set %keuze% = {A|B}</a><br><a href="ex:15">%keuze% %keu' +
+      'ze% %keuze%</a><br>→&nbsp; A A B</tt></small></p>',
+    '<p><small><tt><a href="ex:16">#def %keuze% = {A|B}</a><br><a href="ex:16">%keuze% %keu' +
+      'ze% %keuze%</a><br>→&nbsp; A A A</tt></small></p>',
+    '<p>Beide voorbeelden liepen onder hetzelfde startgetal. <code>#set</code> bewaart het ' +
+      'sjabloon en loot het bij elk gebruik; <code>#def</code> loot één keer en houdt het ant' +
+      'woord. Gebruik <code>#def</code> voor iets dat met zichzelf moet overeenstemmen — een ' +
+      'merk, een stad, een naam, een aantal — en <code>#set</code> voor afwisseling.</p>',
+    '<p>Eén startgetal kan de twee niet uit elkaar houden: er zijn startgetallen waarbij <c' +
+      'ode>#set</code> toevallig drie keer dezelfde mogelijkheid pakt en de twee er gelijk ui' +
+      'tzien. Goed om te weten voordat u uit één voorvertoning concludeert dat een vastleggin' +
+      'g niet werkt.</p>',
+    '<h2 id="conditions">Voorwaarden</h2>',
+    '<p><code>{?naam?dan|anders}</code> vraagt of een macro een waarde heeft.</p>',
+    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?we hebben %n%|no' +
+      'g niets}</a><br>→&nbsp; We hebben 5</tt></small></p>',
+    '<p>De helft <code>anders</code> mag ontbreken — <code>{?naam?dan}</code> drukt niets a' +
+      'f wanneer het antwoord nee is. Een <code>!</code> draait de vraag om:</p>',
+    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?vreemde|vri' +
+      'end}</a><br>→&nbsp; Vriend</tt></small></p>',
+    '<p>Een waarde hebben betekent <b>ten minste één teken hebben dat geen spatie is</b>. E' +
+      'en macro die op niets is gezet, of alleen op spaties, telt als zonder waarde.</p>',
+    '<p>De naam van een voorwaarde moet met een letter of <code>_</code> <b>beginnen</b>, w' +
+      'at strenger is dan bij een macro — en het hoofdstuk over de stiltes zegt waarin een na' +
+      'am verandert die met een cijfer begint.</p>',
+    '<h2 id="counting">Telling</h2>',
+    '<p><code>{plural %n%: …}</code> pakt de woordvorm die bij een getal hoort.</p>',
+    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: bes' +
+      'tand|bestanden}</a><br>→&nbsp; 1 bestand</tt></small></p>',
+    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: bes' +
+      'tand|bestanden}</a><br>→&nbsp; 5 bestanden</tt></small></p>',
+    '<p>De telling is hier met opzet een <code>#def</code> en geen <code>#set</code>, en de' +
+      ' regel is het bewaren waard: <b>maak van de telling een gewoon cijfer of een <code>#de' +
+      'f</code>, nooit een <code>#set</code>.</b> Wat vanuit een <code>#set</code> op de plek' +
+      ' van de telling aankomt is de bewaarde TEKST, <code>{5|5}</code> en niet <code>5</code' +
+      '> — dus geen getal — waardoor de hele constructie niets oplevert en het paneel <code>p' +
+      'lural.count-macro</code> zegt. De telling en de vorm kunnen elkaar niet tegenspreken: ' +
+      'in plaats daarvan verdwijnt het woord.</p>',
+    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+      ' bestand|bestanden}</a><br>→&nbsp; 5</tt></small></p>',
+    '<p>Hoeveel vormen er zijn bepaalt de locale en niet u: onder <code>nl</code> zijn het ' +
+      'er twee, onder <code>ru</code> drie. Het verkeerde aantal is een fout die het paneel m' +
+      'eldt (<code>plural.arity</code>), en de machine drukt dan de hele constructie terug af' +
+      ' met de accolades vervangen door brede <code>｛｝</code>, zodat men het niet voor uitvoe' +
+      'r aanziet.</p>',
+    '<h2 id="fragments">Fragmenten</h2>',
+    '<p><code>#include "naam"</code> zet op die plek een ander sjabloon neer, en de aanwijz' +
+      'ing moet het eerste op haar regel zijn — ook hier mogen spaties en tabs ervoor.</p>',
+    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Welkom bij Acme.</tt></s' +
+      'mall></p>',
+    '<p>Het fragment wordt als eigen sjabloon weergegeven, dus een keuze erin wordt opnieuw' +
+      ' gemaakt: <code>intro</code> bevat <code>{Acme|Globex}</code> en antwoordt met de een ' +
+      'of de ander.</p>',
+    '<p>De naam wordt <b>precies</b> vergeleken. <code>Intro</code> en <code>intro</code> z' +
+      'ijn twee verschillende fragmenten, en onder Windows is dat gemakkelijk mis te hebben o' +
+      'mdat het het bestandssysteem niets kan schelen. Een ontbrekend doel geeft niets weer e' +
+      'n het paneel zegt <code>include.unknown-target</code>; een doel dat alleen in hoofdlet' +
+      'ters verschilt krijgt een Studio-aantekening met de naam die u waarschijnlijk bedoelde' +
+      '.</p>',
+    '<h3 id="fragments-0">Een fragment ziet uw macro''s niet</h3>',
+    '<p>Het wordt als eigen sjabloon weergegeven: het heeft de waarden van de sessie, maar ' +
+      'niet de <code>#set</code> en <code>#def</code> van het document dat het binnenhaalde.<' +
+      '/p>',
+    '<p><small><tt><a href="ex:23">#set %merk% = Acme</a><br><a href="ex:23">#include "shou' +
+      't"</a><br>→&nbsp; Het %merk% is er.</tt></small></p>',
+    '<p><code>shout</code> is <code>Het %merk% is er.</code>, en de naam moet in het fragme' +
+      'nt zelf worden vastgelegd. Dit is geen stilte — het paneel zegt wel degelijk <code>var' +
+      'iable.undefined</code> — maar het zegt het tegen <b><code>shout</code></b>, op regel 1' +
+      ' van dat bestand, en in het document waar u naar kijkt verschijnt geen kringellijn, om' +
+      'dat de positie bij een andere buffer hoort. Lees de kolom <b>Bestand</b> wanneer een w' +
+      'aarschuwing over een regel lijkt te gaan die u niet hebt geschreven.</p>',
+    '<h2 id="remarks">Opmerkingen</h2>',
+    '<p><code>/# … #/</code> is een opmerking: alles tussen de tekens wordt verwijderd voor' +
+      'dat er iets anders gebeurt.</p>',
+    '<p><small><tt><a href="ex:24">concept /# nog niet zeker #/ klaar</a><br>→&nbsp; Concep' +
+      't klaar</tt></small></p>',
+    '<p>Opmerkingen nesten niet. De eerste <code>#/</code> sluit de opmerking, wat er ook v' +
+      'oor stond, dus een opmerking om een tekst heen die zelf <code>#/</code> bevat eindigt ' +
+      'eerder dan hij eruitziet.</p>',
+    '<h2 id="tidying">Wat de machine op het eind gladstrijkt</h2>',
+    '<p>De uitvoer is niet helemaal de tekst die de constructies opleverden. Op het eind ov' +
+      'erkomt haar het een en ander; twee dingen komt u dagelijks tegen.</p>',
+    '<p>De eerste letter van elke zin wordt een hoofdletter:</p>',
+    '<p><small><tt><a href="ex:25">een. twee. drie.</a><br>→&nbsp; Een. Twee. Drie.</tt></s' +
+      'mall></p>',
+    '<p>Daarom antwoorden de voorbeelden in deze help zo vaak met een hoofdletter waar het ' +
+      'sjabloon een kleine letter heeft. Een punt na een afkorting die de machine kent beëind' +
+      'igt geen zin, en evenmin doet iets dat de vorm van <code>e.g.</code> of <code>U.S.</co' +
+      'de> heeft dat — <b>in Latijnse letters</b>, wat een echte grens is en geen slag om de ' +
+      'arm: de controle «zitten we midden in een woord» is een ASCII-controle.</p>',
+    '<p><small><tt><a href="ex:26">Dr. onze prijzen zijn laag</a><br>→&nbsp; Dr. onze prijz' +
+      'en zijn laag</tt></small></p>',
+    '<p><small><tt><a href="ex:27">o.a. dit blijft klein</a><br>→&nbsp; o.a. dit blijft kle' +
+      'in</tt></small></p>',
+    '<p>Elk ander woord beëindigt een zin, hoe kort ook — met lengte heeft het niets te mak' +
+      'en:</p>',
+    '<p><small><tt><a href="ex:28">Xyz. onze prijzen zijn laag</a><br>→&nbsp; Xyz. Onze pri' +
+      'jzen zijn laag</tt></small></p>',
+    '<p>De lijst die de machine kent heeft 46 ingangen, <b>29 daarvan Cyrillisch</b>, en he' +
+      't andere document loopt hem langs onder <b>Een stilte in elke taal</b>. Voor Nederland' +
+      'se tekst staat het belangrijkste verderop bij de stiltes: de lijst is niet op het Nede' +
+      'rlands ingesteld.</p>',
+    '<p>Het tweede alledaagse is dat reeksen spaties tot één samenvallen. Dat is wat u een ' +
+      'lege mogelijkheid laat staan zonder de spaties eromheen te tellen.</p>',
+    '<p>De rest in één adem: een spatie voor <code>,;:!?.</code> valt weg en er wordt er ee' +
+      'n achter gezet; de hele uitvoer wordt aan de randen bijgesneden; de hoofdletter komt o' +
+      'ok na een regeleinde en na een bloktag, niet alleen na een punt; en adressen met schem' +
+      'a, e-mailadressen, kale domeinen en decimale getallen zijn beschermd en komen er preci' +
+      'es uit zoals ze zijn getypt.</p>',
+    '<p>Voor dat laatste geldt dezelfde ASCII-grens als voor de afkortingen hierboven. Een ' +
+      'kaal domein is beschermd als het in Latijnse letters is geschreven; <code>сайт.рф</cod' +
+      'e> is dat niet, en de afwerking zet er een spatie en een hoofdletter in.</p>',
+    '<p><small><tt><a href="ex:29">hallo , wereld</a><br>→&nbsp; Hallo, wereld</tt></small>' +
+      '</p>',
+    '<p><small><tt><a href="ex:30">een.twee</a><br>→&nbsp; een.twee</tt></small></p>',
+    '<h2 id="silences">Stiltes</h2>',
+    '<p>Elk geval hieronder geeft weer, levert iets anders op dan het eruitziet en trekt <b' +
+      '>geen enkele diagnose</b>. Ze staan hier bijeen omdat niets anders in het venster ze o' +
+      'oit zal noemen.</p>',
+    '<p><b>De Nederlandse afkortingen staan niet in de lijst van de machine.</b> Het is de ' +
+      'stilte waar Nederlandse schrijvers als eerste tegenaan lopen. Beschermd zijn alleen de' +
+      ' woorden die met de Latijnse helft van de lijst samenvallen — <code>Dr.</code> en <cod' +
+      'e>Prof.</code> hierboven —, terwijl <code>Dhr.</code>, <code>nr.</code>, <code>blz.</c' +
+      'ode>, <code>bijv.</code> en <code>bv.</code> een zin beëindigen en het volgende woord ' +
+      'een hoofdletter geven:</p>',
+    '<p><small><tt><a href="ex:31">bijv. dit blijft klein</a><br>→&nbsp; Bijv. Dit blijft k' +
+      'lein</tt></small></p>',
+    '<p>De vormen met meerdere punten hebben er geen last van: <code>o.a.</code> en <code>a' +
+      '.u.b.</code> gaan door de regel voor meerdere punten en blijven onaangeroerd. Voor de ' +
+      'losse woorden helpt alleen herformuleren of de punt vermijden.</p>',
+    '<p><b>Een <code>#include</code> dat niet alleen op zijn regel staat is gewone tekst.</' +
+      'b></p>',
+    '<p><small><tt><a href="ex:32">Ervoor. #include "intro"</a><br>→&nbsp; Ervoor. #include' +
+      ' "intro"</tt></small></p>',
+    '<p>Hetzelfde geldt voor een aanwijzing met iets erachter en voor <code>#include"intro"' +
+      '</code> zonder spatie. De regel is die van de familie en niet die van deze machine, en' +
+      ' zij is het die een aanwijzing herkenbaar maakt zonder de hele regel te ontleden.</p>',
+    '<p><b>Een voorwaarde waarvan de naam met een cijfer begint is geen voorwaarde.</b> Zij' +
+      ' wordt een gewone keuze tussen <code>?1x?ja</code> en <code>nee</code>:</p>',
+    '<p><small><tt><a href="ex:33">{?1x?ja|nee}</a><br>→&nbsp; ?1x? Ja</tt></small></p>',
+    '<p><b>Een <code>&lt;…&gt;</code> aan het hoofd van een later stuk is geen scheidingste' +
+      'ken</b> en wordt afgedrukt zoals het er staat:</p>',
+    '<p><small><tt><a href="ex:34">[rood|&lt;en&gt;groen]</a><br>→&nbsp; &lt;en&gt;Groen ro' +
+      'od</tt></small></p>',
+    '<p>Het blok aan het hoofd van het <b>eerste</b> stuk is wél het scheidingsteken — dat ' +
+      'is de schrijfwijze waarmee het hoofdstuk over schudbeurten opent:</p>',
+    '<p><small><tt><a href="ex:35">[&lt;en&gt;rood|groen]</a><br>→&nbsp; Groen en rood</tt>' +
+      '</small></p>',
+    '<p>Overal na een <code>|</code> is het gewone tekst, en een scheidingsteken tussen twe' +
+      'e stukken hoort aan het <b>einde</b> van het eerste.</p>',
+    '<p><b>Een kale tag aan het einde van een stuk wordt voor het scheidingsteken van dat p' +
+      'aar aangezien</b> en als eigen tekst afgedrukt:</p>',
+    '<p><small><tt><a href="ex:36">[een&lt;br&gt;|twee]</a><br>→&nbsp; Twee een</tt></small' +
+      '></p>',
+    '<p>Onder dit startgetal vielen de twee in de andere volgorde, dus het scheidingsteken ' +
+      'kwam er helemaal niet uit. Met een derde stuk is er plaats voor, en het verschijnt:</p' +
+      '>',
+    '<p><small><tt><a href="ex:37">[rood|groen&lt;br&gt;|blauw]</a><br>→&nbsp; Groen br bla' +
+      'uw rood</tt></small></p>',
+    '<p>Het <code>&lt;br&gt;</code> staat tussen <code>groen</code> en wat erop volgt, waar' +
+      ' de schudbeurt dat paar ook neerzet. Een sluitende tag (<code>&lt;/b&gt;</code>), een ' +
+      'zelfsluitende (<code>&lt;br/&gt;</code>), een met attributen (<code>&lt;br class="x"&g' +
+      't;</code>) en een tag midden in een stuk blijven allemaal onaangeroerd.</p>',
+    '<p><b>Een niet-gesloten opmerking is gewone tekst</b> — hij opent niets, en de <code>/' +
+      '#</code> wordt afgedrukt:</p>',
+    '<p><small><tt><a href="ex:38">ervoor /# de rest hiervan</a><br>→&nbsp; Ervoor /# de re' +
+      'st hiervan</tt></small></p>',
+    '<p>Maar hij is nog altijd de helft van een paar. Verschijnt er verderop in het documen' +
+      't een <code>#/</code>, dan vinden de twee elkaar en gaat alles ertussen weg — met inbe' +
+      'grip van wat de schrijver ertussen schreef:</p>',
+    '<p><small><tt><a href="ex:39">{a /# oeps|b} midden #/ staart</a><br>→&nbsp; {a staart<' +
+      '/tt></small></p>',
+    '<p>De keuze hierboven verloor haar tweede alternatief en haar sluitende accolade, en g' +
+      'een diagnose zegt het: dit is wat de tekst BETEKENT, en geen fout die de machine kan z' +
+      'ien. Wanneer een <code>/#</code> letterlijk is bedoeld, is de veilige plek ervoor de w' +
+      'aarde van een variabele en niet de romp van het sjabloon.</p>',
+    '<h2 id="next">Waar hierna te kijken</h2>',
+    '<p>Het andere document, <b>Wat het tabblad Diagnose u vertelt</b>, heeft één artikel p' +
+      'er regel die het paneel kan tonen — wat zij betekent, wat haar veroorzaakt en wat de m' +
+      'achine met het sjabloon doet zolang zij er staat. Druk op F1 met de cursor in een cons' +
+      'tructie en de help opent bij het hoofdstuk van die constructie <b>in dat document</b>:' +
+      ' een accolade bij <b>Haken</b>, een <code>[…]</code> bij <b>Schudbeurten</b>, een <cod' +
+      'e>#set</code>-regel bij <b>Vastleggingen</b>.</p>',
+    '<h1 id="about">Wat het tabblad Diagnose u vertelt</h1>',
+    '<p>Elke regel in dat tabblad is een oordeel van de <b>machine</b>, en hetzelfde oordee' +
+      'l dat u van de JavaScript-, PHP- of Python-uitvoering zou krijgen — vier zelfstandige ' +
+      'machines die aan één gedeeld corpus worden gehouden. Het is niet Studio''s mening over' +
+      ' uw sjabloon. Noemt de machine hier iets een fout, dan noemt elke andere machine van d' +
+      'e familie het ook een fout, en uw sjabloon zal zich op uw server gedragen als in dit v' +
+      'enster.</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th>wat er staat</th><th>wie het zegt</th><th>wat het betekent</th></tr>',
+    '<tr><td><b>fout</b></td><td>de machine</td><td>het sjabloon doet niet wat het lijkt te' +
+      ' doen</td></tr>',
+    '<tr><td><b>waarschuwing</b></td><td>de machine</td><td>het geeft weer, maar waarschijn' +
+      'lijk niet zoals bedoeld</td></tr>',
+    '<tr><td><b>Studio-aantekening</b></td><td>Studio</td><td>de machine zei niets, en het ' +
+      'is toch het zeggen waard: een invoeging in een cirkel, een doel met andere hoofdletter' +
+      's, een stuurteken</td></tr>',
+    '</table>',
+    '<p>De kolom <b>Waar</b> is regel en kolom. Een klik op de regel zet de cursor daar.</p' +
+      '>',
+    '<blockquote>Elk voorbeeld hieronder gaat bij elke bouw van het programma door de machi' +
+      'ne die deze kopie van Studio meebrengt, en rechts staat precies wat zij teruggaf. Niet' +
+      's hier is onthouden of geraden; een antwoord dat niet langer klopte zou de bouw stilze' +
+      'tten. De versie van de machine staat onder <b>Help</b>, <b>Over</b>.</blockquote>',
+    '<h2 id="reading">Hoe de voorbeelden te lezen</h2>',
+    '<p>De pijl <code>→</code> scheidt het sjabloon van wat de machine teruggaf. <code>⏎</c' +
+      'ode> is een regeleinde binnen een uitvoer, <code>(leeg)</code> betekent dat zij helema' +
+      'al niets afdrukte, en <code>…</code> markeert een uitvoer die te lang is om volledig t' +
+      'e tonen. Tekst na de uitvoer, met drie spaties ervoor, is een aantekening en geen deel' +
+      ' van het antwoord.</p>',
+    '<p>De omstandigheden waaronder de voorbeelden liepen staan hier en niet verstopt in de' +
+      ' tests — zonder ze zijn sommige antwoorden niet te herhalen. De verzameling sjablonen ' +
+      'telt het zwaarst: anders zou <code>#include "frag"</code> → <code>Fragment</code> rust' +
+      'en op iets dat dit document nooit zegt.</p>',
+    '<p><small><tt>locale: nl<br>seed: 7<br>empty: (leeg)<br>include frag: Fragment<br>incl' +
+      'ude loop: #include "loop"<br>include Intro: Inleiding</tt></small></p>',
+    '<p><code>seed</code> legt de loting vast: zonder hem zou een keuze of een schudbeurt e' +
+      'lke keer anders antwoorden en viel er niets te controleren.</p>',
+    '<p><b>De locale is hier <code>nl</code>, en zij bepaalt twee dingen:</b> hoeveel getal' +
+      'svormen de machine verwacht en welke vorm bij welk getal hoort. Het Nederlands en het ' +
+      'Engels vragen er twee. Het Russisch, het Oekraïens, het Wit-Russisch, het Servisch, he' +
+      't Kroatisch en het Bosnisch vragen er drie. De locale komt van de keuzelijst boven de ' +
+      'rechterhelft, niet van de taal van de interface.</p>',
+    '<hr>',
+    '<h2 id="brackets">Haken</h2>',
+    '<p><b>Zet de cursor op een haak en de constructie toont zich in haar geheel:</b> waar ' +
+      'zij begint, waar zij eindigt, en <b>elk van haar scheidingstekens</b>. Geneste groepen' +
+      ' lichten niet mee op — die hebben eigen scheidingstekens, en die komen wanneer de curs' +
+      'or op hun haak staat. Het is de snelste manier om te zien waar eindigt wat u bewerkt, ' +
+      'vooral in een lange regel waar de <code>}</code> twee schermen naar rechts is verdwene' +
+      'n.</p>',
+    '<p>Een scheidingsteken is niet alleen <code>|</code>. In een schudbeurt heeft <code>[a' +
+      '&lt;br&gt;|b]</code> er twee: de machine leest <code>&lt;br&gt;</code> als scheidingst' +
+      'eken dat <b>voor het volgende</b> stuk staat, en de markering toont het samen met de r' +
+      'est, omdat het deel uitmaakt van hoe de constructie gebouwd is.</p>',
+    '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — een haak wordt geopend en no' +
+      'oit gesloten</h3>',
+    '<p><small><tt><a href="ex:40">een prijs {laag|hoog</a><br>→&nbsp; Een prijs {laag|hoog' +
+      '</tt></small></p>',
+    '<p>De machine raadt niet waar u wilde sluiten. De tekst blijft zoals hij is, accolade ' +
+      'en al, en de keuze vindt nooit plaats.</p>',
+    '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — gesloten door een haak v' +
+      'an een andere soort</h3>',
+    '<p><small><tt><a href="ex:41">een prijs {laag|hoog]</a><br>→&nbsp; Een prijs {laag|hoo' +
+      'g]</tt></small></p>',
+    '<p><code>{</code> wacht op <code>}</code> en <code>[</code> wacht op <code>]</code>. E' +
+      'en schudbeurt die door een accolade wordt gesloten is geen schudbeurt.</p>',
+    '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — een slui' +
+      'tende haak zonder iets open</h3>',
+    '<p><small><tt><a href="ex:42">een prijs laag} en alles</a><br>→&nbsp; Een prijs laag} ' +
+      'en alles</tt></small></p>',
+    '<p>Hij blijft er als tekst staan. Meestal is het een haak die van een wijziging is ove' +
+      'rgebleven.</p>',
+    '<hr>',
+    '<h2 id="definitions">Vastleggingen</h2>',
+    '<h3 id="set.malformed"><code>set.malformed</code> — deze <code>#set</code>-regel volgt' +
+      ' de regel niet</h3>',
+    '<p><small><tt><a href="ex:43">#set stad = Utrecht</a><br><a href="ex:43">in %stad%</a>' +
+      '<br>→&nbsp; #set stad = Utrecht ⏎ In %stad%</tt></small></p>',
+    '<p><b>De naam hoort tussen procenttekens:</b> <code>#set %stad% = Utrecht</code>. Het ' +
+      'is de meest voorkomende eerste fout, en hij zet meteen twee regels in het paneel — de ' +
+      'misvormde regel zelf en «deze variabele is nergens vastgelegd», want er is geen vastle' +
+      'gging gebeurd en <code>%stad%</code> is van niemand.</p>',
+    '<p>Kijk naar de uitvoer: de mislukte aanwijzing bleef <b>zoals geschreven</b> in de te' +
+      'kst staan. De machine las hem niet als aanwijzing, dus is het een gewone regel en komt' +
+      ' hij in het resultaat.</p>',
+    '<h3 id="def.malformed"><code>def.malformed</code> — deze <code>#def</code>-regel volgt' +
+      ' de regel niet</h3>',
+    '<p><small><tt><a href="ex:44">#def paginas = {1|3}</a><br><a href="ex:44">%paginas%</a' +
+      '><br>→&nbsp; #def paginas = 1 ⏎ %paginas%</tt></small></p>',
+    '<p>Dezelfde regel en dezelfde prijs. <code>#def</code> verschilt van <code>#set</code>' +
+      ' niet in de schrijfwijze maar in <b>wanneer</b> de waarde wordt uitgevouwen: <code>#se' +
+      't</code> vouwt hem bij elke vermelding opnieuw uit, <code>#def</code> één keer per wee' +
+      'rgave. Een schrijffout kost u beide.</p>',
+    '<p>En kijk goed: de <code>{1|3}</code> in de mislukte aanwijzing <b>heeft een mogelijk' +
+      'heid getrokken</b>. De regel werd gewone tekst — en gewone tekst wordt weergegeven als' +
+      ' gewone tekst, accolades en al. Een misvormde regel staat niet uit; hij houdt alleen o' +
+      'p een aanwijzing te zijn.</p>',
+    '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — deze naam ' +
+      'is hierboven al vastgelegd</h3>',
+    '<p><small><tt><a href="ex:45">#set %x% = eerste</a><br><a href="ex:45">#set %x% = twee' +
+      'de</a><br><a href="ex:45">%x%</a><br>→&nbsp; Tweede</tt></small></p>',
+    '<p>Het werkt — de <b>laatste</b> vastlegging wint — maar de machine noemt het een fout' +
+      ': een document waarin een naam twee keer wordt gezet leest dubbelzinnig, en over een m' +
+      'aand weet u niet meer welke van de twee regels de levende is. De fout wijst de <b>twee' +
+      'de</b> vastlegging aan; de eerste staat hoger.</p>',
+    '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
+      '> in de waarde van een vastlegging</h3>',
+    '<p><small><tt><a href="ex:46">#def %x% = #include "frag"</a><br><a href="ex:46">%x%</a' +
+      '><br>→&nbsp; Fragment</tt></small></p>',
+    '<p>Een invoeging in een waarde vouwt zich op een ander moment uit dan u zou verwachten' +
+      ', en de familie verbiedt het. Zet het <code>#include</code> op een eigen regel.</p>',
+    '<hr>',
+    '<h2 id="variables">Variabelen</h2>',
+    '<h3 id="variable.undefined"><code>variable.undefined</code> — deze variabele is nergen' +
+      's vastgelegd</h3>',
+    '<p><small><tt><a href="ex:47">hallo, %naam%</a><br>→&nbsp; Hallo, %naam%</tt></small><' +
+      '/p>',
+    '<p>Een waarschuwing en geen fout: de machine drukt de naam af zoals hij er staat. Dat ' +
+      'is met opzet — de waarde kan van buiten komen, van het gastprogramma. In Studio levert' +
+      ' u zulke waarden aan op het tabblad Variabelen, onder <b>Sessiewaarden</b>.</p>',
+    '<p><b>De waarde van een vastlegging is in het paneel te wijzigen.</b> Ga in het bovens' +
+      'te deel op de kolom Waarde staan en druk op <b>F2</b> (of begin gewoon te typen); <b>E' +
+      'nter</b> past toe, <b>Esc</b> laat het varen. De wijziging gaat <b>het document in</b>' +
+      ', in één stap ongedaan maken: <code>Ctrl+Z</code> zet haar terug.</p>',
+    '<p>De naam en de soort (<code>#set</code> of <code>#def</code>) zijn niet te wijzigen ' +
+      '— een besluit, geen onafgemaakte hoek. Vanuit een cel hernoemen breekt elke vermelding' +
+      ' van de variabele in het document, en de regel verwijderen zou de opmerking en de insp' +
+      'ringing meenemen. Beide horen in de tekst thuis, waar u ziet wat u doet.</p>',
+    '<p>Precies de waarde verandert. De inspringing, de extra spaties, de hoofdletters van ' +
+      'de naam en een opmerking aan het einde van de regel blijven zoals ze waren: <code>   #' +
+      'set  %Merk%   =   Acme   /# rest #/</code> komt uit een wijziging terug en verschilt a' +
+      'lleen in <code>Acme</code>. Het bestand staat in git, en een regel opnieuw opmaken zou' +
+      ' daar als uw wijziging verschijnen.</p>',
+    '<p><b>Een weigering betekent dat de machine de regel anders zou lezen.</b> De wijzigin' +
+      'g wordt niet stilzwijgend toegepast: de machine leest het resultaat terug, en zegt het' +
+      ' niet wat er gevraagd werd, dan blijft het document met rust en zegt de statusbalk het' +
+      '. Drie echte oorzaken: een <code>/#</code> in de waarde opent een opmerking die de res' +
+      't van het bestand opeet, een regeleinde beëindigt de aanwijzing te vroeg, en een opmer' +
+      'king <b>in</b> de aanwijzing maakt de regel niet stuksgewijs wijzigbaar — die wijzigt ' +
+      'u in de tekst.</p>',
+    '<p><b>Twee gebaren op de naam van een variabele.</b> De naam in het paneel is een verw' +
+      'ijzing en geen etiket:</p>',
+    '<ul>',
+    '<li><b>een klik op de naam</b> brengt de cursor naar de eerste plek waar het document ' +
+      'die variabele gebruikt, en de regel licht even op. Datzelfde woord in een opmerking of' +
+      ' als doel van een <code>#include</code> telt <b>niet</b> — het paneel brengt u waar de' +
+      ' variabele echt werkt.</li>',
+    '<li><b>Ctrl+klik</b> schrijft een vastlegging in het document en opent er de groepsedi' +
+      'tor op. De waarde die u al hebt getypt trekt er als eerste mogelijkheid in:</li>',
+    '</ul>',
+    '<p><small><tt><a href="ex:48">#set %merk% = {Vulkan}</a><br><a href="ex:48">casino %me' +
+      'rk%</a><br>→&nbsp; Casino Vulkan</tt></small></p>',
+    '<p>Het verschil tussen de twee is wat het sluiten van het venster overleeft. Een sessi' +
+      'ewaarde niet: die staat niet in het bestand, niet in git, en geen andere machine van d' +
+      'e familie ziet haar. Een vastlegging wel, en alleen een vastlegging brengt deze waarsc' +
+      'huwing voorgoed tot zwijgen. Eén <code>Ctrl+Z</code> zet het document terug.</p>',
+    '<p><b>Een sessiewaarde is eerst een sjabloon en geen tekst.</b> Dat is wat de machine ' +
+      'met elke waarde van het gastprogramma doet, en de voorvertoning moet met de server ove' +
+      'reenkomen — dus <code>{laag|hoog}</code> getypt in het waardeveld geeft een keuze en n' +
+      'iet die elf tekens. Bedoelde u de tekst zelf, vink dan <b>als tekst</b> aan in de derd' +
+      'e kolom: dan blijven accolades en procenttekens tekens.</p>',
+    '<h3 id="variable.self-reference"><code>variable.self-reference</code> — de vastlegging' +
+      ' noemt zichzelf</h3>',
+    '<p><small><tt><a href="ex:49">#set %x% = a %x% b</a><br><a href="ex:49">%x%</a><br>→&n' +
+      'bsp; A a a … %x% … b b b</tt></small></p>',
+    '<p>Vijftig niveaus, dan stoppen. De machine vouwt uit tot de dieptegrens en houdt op, ' +
+      'met <code>%x%</code> in het midden. Geen lus, en ook niet wat u wilde.</p>',
+    '<p>De <code>…</code> hierboven is de afkorting van dit document en niet die van de mac' +
+      'hine. De echte uitvoer is 207 tekens lang en draagt aan elke kant <b>eenenvijftig</b> ' +
+      'letters in plaats van vijftig: het vijftigste niveau stopt en laat de waarde staan zoa' +
+      'ls hij is, en de waarde bevat er van elk één meer.</p>',
+    '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — de vas' +
+      'tleggingen noemen elkaar in een cirkel</h3>',
+    '<p><small><tt><a href="ex:50">#set %x% = %y%</a><br><a href="ex:50">#set %y% = %x%</a>' +
+      '<br><a href="ex:50">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p>Elke kant vouwt zich precies <b>één keer</b> uit en houdt dan op: <code>%x%</code> ' +
+      'werd <code>%y%</code> en niet <code>%x%</code>. De machine rolt de cirkel af in plaats' +
+      ' van hem rond te gaan, en wat overblijft is de andere naam uit de cirkel — zet <code>%' +
+      'x% %y%</code> in een document en het geeft <code>%y% %x%</code>, het paar omgedraaid.<' +
+      '/p>',
+    '<p>Het paneel tekent een regel voor <b>elke vermelding die de cirkel sluit</b>, niet é' +
+      'én regel voor de cirkel en niet één per vastlegging. Een vastlegging die de cirkel twe' +
+      'e keer noemt krijgt twee regels op haar eigen regel: <code>#set %x% = %y% %y%</code> t' +
+      'egen <code>#set %y% = %x%</code> zijn drie fouten, twee daarvan op de eerste. De regel' +
+      's worden niet samengevoegd. En de positie ligt op de vastlegging die echt geldt: is de' +
+      ' naam twee keer vastgelegd, dan is dat de <b>laatste</b>.</p>',
+    '<hr>',
+    '<h2 id="includes">Invoegingen</h2>',
+    '<h3 id="includes-0"><code>#include</code> werkt alleen aan het begin van een regel</h3' +
+      '>',
+    '<p><small><tt><a href="ex:51">ervoor #include "frag" erna</a><br>→&nbsp; Ervoor #inclu' +
+      'de "frag" erna</tt></small></p>',
+    '<p><small><tt><a href="ex:52">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
+    '<p>Geen diagnose, en dat is nu juist het punt: een <code>#include</code> midden in een' +
+      ' regel is <b>geen</b> invoeging. De machine leest het als gewone tekst en zegt niets, ' +
+      'want er valt niets te klagen — u schreef tekst en kreeg tekst.</p>',
+    '<p><b>Het doel mag echter een regel lager staan</b>, en dat verrast van de andere kant' +
+      '. De ruimte die de machine tussen het woord en zijn doel toestaat omvat regeleindes, d' +
+      'us dit is een invoeging en zij werkt:</p>',
+    '<p><small><tt><a href="ex:53">#include</a><br><a href="ex:53">"frag"</a><br>→&nbsp; Fr' +
+      'agment</tt></small></p>',
+    '<p>Lege regels ertussen mogen ook. Al het overige mag niet: een woord vóór het doel of' +
+      ' iets anders dan spaties erachter, en het geheel is weer tekst. De editor kleurt het d' +
+      'oel op zijn eigen regel maar laat het woord gewoon tot het doel is gekomen: hij beloof' +
+      't geen aanwijzing waarvan hij het einde nog niet ziet.</p>',
+    '<h3 id="include.unknown-target"><code>include.unknown-target</code> — geen doel met di' +
+      'e naam in de verzameling</h3>',
+    '<p><small><tt><a href="ex:54">#include "geen"</a><br>→&nbsp; (leeg)</tt></small></p>',
+    '<p>Doelen zijn de <code>.spintax</code>-bestanden in de map van het geopende document.' +
+      ' Een onbekend doel vouwt zich uit tot niets — de alinea verdwijnt in plaats van kapot ' +
+      'te gaan, en dat is precies waarom het zo gemakkelijk te missen is.</p>',
+    '<p><b>Daarom heeft het tabblad Variabelen een derde afdeling, Invoegingen.</b> Zij som' +
+      't elk <code>#include</code> van het document op en, voor elk, of de verzameling zijn d' +
+      'oel heeft — één regel per voorkomen, dus een twee keer genoemd doel zijn twee regels. ' +
+      'De afdeling verschijnt alleen als het document invoegingen heeft. Een klik op een rege' +
+      'l brengt de cursor naar het <code>#include</code> dat dat doel noemt.</p>',
+    '<p>De markering heeft <b>drie</b> waarden, en de derde telt: «geen verzameling» beteke' +
+      'nt niet «het fragment ontbreekt», maar «er is nog nergens te kijken». De verzameling i' +
+      's de map naast het document, en een niet-bewaard document heeft geen map — tot de eers' +
+      'te keer bewaren is elk doel dus zo gemarkeerd. «ONTBREEKT» verschijnt alleen wanneer e' +
+      'r een map is en het bestand er werkelijk niet in zit.</p>',
+    '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — het doel bestaat, met an' +
+      'dere hoofdletters</h3>',
+    '<p><small><tt><a href="ex:55">#include "intro"</a><br>→&nbsp; (leeg)</tt></small></p>',
+    '<p>De verzameling bevat <code>Intro.spintax</code> — en de machine zegt toch dat er ge' +
+      'en doel met die naam is, terwijl Studio zijn aantekening over de hoofdletters toevoegt' +
+      '. Die tellen: <code>intro</code> en <code>Intro</code> zijn verschillende doelen. Wind' +
+      'ows zou het bestand in beide gevallen openen, en juist daarom kijkt Studio in de verza' +
+      'meling en niet in het bestandssysteem: anders zou de voorvertoning de server over hetz' +
+      'elfde document tegenspreken.</p>',
+    '<h3 id="note.cycle"><code>note.cycle</code> — een invoeging in een cirkel</h3>',
+    '<p>Bevat <code>loop.spintax</code> zelf <code>#include "loop"</code>, dan:</p>',
+    '<p><small><tt><a href="ex:56">#include "loop"</a><br>→&nbsp; (leeg)</tt></small></p>',
+    '<p>De machine zet niets neer in plaats van oneindigheid. De aantekening is er zodat u ' +
+      'weet waarom de alinea verdampte.</p>',
+    '<p>De regel staat op naam van <b><code>loop</code></b> en niet van het document waar u' +
+      ' naar kijkt — de cirkel is die van het fragment, en daar gaat de cursor bij het klikke' +
+      'n heen. In het geopende document is niets onderstreept, want aan de regel die u schree' +
+      'f mankeert niets.</p>',
+    '<hr>',
+    '<h2 id="plurals">Getalsvormen</h2>',
+    '<h3 id="plural.arity"><code>plural.arity</code> — niet zoveel vormen als de locale vra' +
+      'agt</h3>',
+    '<p><small><tt><a href="ex:57">#set %n% = 5</a><br><a href="ex:57">%n% {plural %n%: din' +
+      'g|dingen|dingens}</a><br>→&nbsp; 5 ｛plural 5: ding|dingen|dingens｝</tt></small></p>',
+    '<p><b>Geen leegte — de machine drukt de hele constructie af</b>, met de accolades verv' +
+      'angen door brede <code>｛｝</code>. Zo zegt zij «ik heb dit gezien en kon het niet toepa' +
+      'ssen». Onopvallend zou niemand dat noemen, en maar goed ook: een in stilte verdampte a' +
+      'linea zou meer tijd kosten om te vinden.</p>',
+    '<p>Het Nederlands vraagt twee vormen, het Russisch drie. Onder de locale van dit docum' +
+      'ent is <code>{plural %n%: ding|dingen}</code> de juiste.</p>',
+    '<p><b>Leegte komt door iets anders, en de twee zijn gemakkelijk te verwarren.</b> Verg' +
+      'elijk deze twee, die alleen verschillen in hoeveel vormen ze dragen:</p>',
+    '<p><small><tt><a href="ex:58">{plural %n%: ding|dingen}</a><br>→&nbsp; (leeg)&nbsp;&nb' +
+      'sp; twee vormen: juist voor het Nederlands<br><a href="ex:59">{plural %n%: ding|dingen' +
+      '|dingens}</a><br>→&nbsp; (leeg)&nbsp;&nbsp; drie vormen: onjuist voor het Nederlands</' +
+      'tt></small></p>',
+    '<p>Beide drukken niets af, en het paneel behandelt ze verschillend: de eerste trekt al' +
+      'leen <code>variable.undefined</code>, de tweede trekt ook <code>plural.arity</code>. D' +
+      'us <b>leegte is niet het kenmerk van een fout in het aantal vormen</b> — zij komt hier' +
+      ' doordat <code>%n%</code> niet is vastgelegd, en de machine controleert de telling voo' +
+      'rdat zij de vormen telt, en houdt dus op voordat de vraag naar het aantal zich stelt.<' +
+      '/p>',
+    '<p>Daarom legt het voorbeeld boven aan dit artikel <code>%n%</code> eerst vast. Zonder' +
+      ' dat zou de uitvoer bij elk aantal vormen leeg zijn en over het aantal helemaal niets ' +
+      'tonen.</p>',
+    '<p>Het paneel en de uitvoer beantwoorden hier verschillende vragen, en dat is geen teg' +
+      'enspraak: de regel wordt gezet door de <b>controle</b>, die de vormen in de tekst telt' +
+      ' en zich om de telling niet bekommert; de leegte komt van de <b>weergave</b>, die een ' +
+      'eigen volgorde heeft. Geef de telling een cijfer, zoals het eerste voorbeeld doet, en ' +
+      'u ziet wat het aantal vormen werkelijk doet.</p>',
+    '<h3 id="plural.count-macro"><code>plural.count-macro</code> — de telling komt uit een ' +
+      '<code>#set</code>, en die loot bij elke vermelding opnieuw</h3>',
+    '<p><small><tt><a href="ex:60">#set %n% = {1|2}</a><br><a href="ex:60">%n% {plural %n%:' +
+      ' ding|dingen}</a><br>→&nbsp; 1</tt></small></p>',
+    '<p>Kijk wat er overbleef: <b>het getal werd afgedrukt en het zelfstandig naamwoord nie' +
+      't.</b> De telling moet een getal zijn wanneer de vorm wordt gekozen, en een <code>#set' +
+      '</code> waarvan de waarde zelf een keuze is wordt er nooit een — de machine zet de waa' +
+      'rde neer <b>zonder haar weer te geven</b>, zodat op de plek van de telling de letterli' +
+      'jke tekst <code>{1|2}</code> belandt. De telling en de vorm kunnen elkaar niet tegensp' +
+      'reken; de machine laat in plaats daarvan het woord vallen.</p>',
+    '<p><code>#def</code> gedraagt zich anders en vouwt zijn waarde één keer per weergave u' +
+      'it, zodat de plek van de telling een getal krijgt:</p>',
+    '<p><small><tt><a href="ex:61">#def %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
+      ' ding|dingen}</a><br>→&nbsp; 1 ding</tt></small></p>',
+    '<p>Voor die is er helemaal geen regel in het paneel. Vandaar de regel: maak van de tel' +
+      'ling een gewoon cijfer of een <code>#def</code>, nooit een <code>#set</code>.</p>',
+    '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — haken binnen de ' +
+      'vormen</h3>',
+    '<p><small><tt><a href="ex:62">{plural %n%: {ding|zaak}|dingen}</a><br>→&nbsp; ｛plural ' +
+      '%n%: ｛ding|zaak｝|dingen｝</tt></small></p>',
+    '<p>Vormen zijn eenvoudige tekst. Een keuze erin wordt niet uitgevouwen, en in plaats d' +
+      'aarvan wordt de hele constructie tussen brede accolades afgedrukt.</p>',
+    '<hr>',
+    '<h2 id="permutations">Schudbeurten</h2>',
+    '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — onbekende sleu' +
+      'tel in de instelling</h3>',
+    '<p><small><tt><a href="ex:63">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+      'small></p>',
+    '<p>De bekende sleutels zijn <code>minsize</code>, <code>maxsize</code>, <code>sep</cod' +
+      'e> en <code>lastsep</code>. Een onbekende is geen instelling — en wanneer hij het enig' +
+      'e in het blok is, is het hele blok helemaal geen instelling: het wordt het scheidingst' +
+      'eken tussen de stukken, wat de uitvoer laat zien.</p>',
+    '<p><b>Staat er een echte sleutel naast, dan is de afloop volstrekt anders</b>, en dat ' +
+      'is de waarschijnlijkere fout — één van meerdere sleutels verkeerd getypt:</p>',
+    '<p><small><tt><a href="ex:64">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+      '></small></p>',
+    '<p>Het blok is een instelling, <code>sep</code> wordt opgevolgd, de onbekende sleutel ' +
+      'simpelweg laten vallen, en het paneel zegt er in beide gevallen hetzelfde over. De dia' +
+      'gnose vertelt u dus dat een sleutel niet begrepen is; zij vertelt u niet wat er daarna' +
+      ' gebeurde. Lees daarvoor de uitvoer.</p>',
+    '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
+      '— minsize is geen heel getal</h3>',
+    '<p><small><tt><a href="ex:65">[&lt;minsize=twee&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+      'mall></p>',
+    '<p>Een niet-numerieke waarde valt samen met haar grens weg, en de standaardwaarde geld' +
+      't — namelijk alle stukken.</p>',
+    '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
+      '— maxsize is geen heel getal</h3>',
+    '<p><small><tt><a href="ex:66">[&lt;maxsize=veel&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+      'mall></p>',
+    '<p>Precies hetzelfde van het andere eind: de bovengrens verdwijnt, en de uitvoer bevat' +
+      ' weer elk stuk.</p>',
+    '<hr>',
+    '<h2 id="notes">Studio-aantekeningen zonder iets te tonen</h2>',
+    '<p>De drie aantekeningen hieronder zijn in dit document niet met een voorbeeld te tone' +
+      'n, en de reden is telkens een andere en wordt genoemd. Een artikel hebben ze toch: de ' +
+      'help is <b>elke</b> regel die het paneel kan tonen een antwoord schuldig, anders leidt' +
+      ' een regel in het paneel nergens heen.</p>',
+    '<h3 id="note.raw-sentinel"><code>note.raw-sentinel</code> — een stuurteken in de tekst' +
+      '</h3>',
+    '<p>De tekens U+E000–U+E005 zijn wat de machine voor haar eigen opmaak gebruikt, en zij' +
+      ' <b>verwijdert</b> ze voor het ontleden. Zijn ze in uw sjabloon terechtgekomen — meest' +
+      'al geplakt uit een andere editor — dan zegt Studio het: noch de voorvertoning noch de ' +
+      'server zal ze tonen.</p>',
+    '<p>Hier staat met opzet geen voorbeeld: die tekens zijn onzichtbaar, en een regel die ' +
+      'ze draagt zou leeg lijken. Er zou niets te zien zijn.</p>',
+    '<h3 id="note.unknown-target"><code>note.unknown-target</code> — de verzameling is leeg' +
+      ', er valt niets aan af te meten</h3>',
+    '<p>Zij verschijnt wanneer de verzameling naast het document <b>leeg</b> is: geen enkel' +
+      ' sjabloon behalve dit. Er is niets om het doel aan te toetsen, dus Studio zegt niet «g' +
+      'een doel met die naam» — het zegt dat het niet kan antwoorden. Leg één sjabloon in die' +
+      ' map en de aantekening maakt plaats voor het gewone <code>include.unknown-target</code' +
+      '>, dat inhoudelijk antwoordt.</p>',
+    '<p>Een nooit bewaard document heeft <b>helemaal</b> geen verzameling, en dat is een de' +
+      'rde geval en niet dit: invoegingen blijven dan letterlijk in de uitvoer staan en het p' +
+      'aneel zegt er niets over. Bewaar het document en ze beginnen te werken.</p>',
+    '<p>Hier staat geen voorbeeld omdat het niet kan: de verzameling van dit document staat' +
+      ' hierboven genoemd en is niet leeg.</p>',
+    '<h3 id="note.too-deep"><code>note.too-deep</code> — invoegingen te diep genest</h3>',
+    '<p>De machine stopt bij het twintigste niveau geneste <code>#include</code> en zet daa' +
+      'ronder niets meer neer. De grens is die van de familie: de JavaScript-, PHP- en Python' +
+      '-machines doen hetzelfde, dus een document dat hem raakt gedraagt zich overal gelijk.<' +
+      '/p>',
+    '<p>Hier staat geen voorbeeld vanwege de omvang: er een tonen zou eenentwintig bestande' +
+      'n vergen.</p>',
+    '<hr>',
+    '<h2 id="abbreviations">Een stilte in elke taal: afkortingen</h2>',
+    '<h3 id="abbreviations-0">Een afkorting laat het volgende woord klein</h3>',
+    '<p><small><tt><a href="ex:67">Dr. onze prijzen zijn laag</a><br>→&nbsp; Dr. onze prijz' +
+      'en zijn laag<br><a href="ex:68">Xyz. onze prijzen zijn laag</a><br>→&nbsp; Xyz. Onze p' +
+      'rijzen zijn laag</tt></small></p>',
+    '<p>Twee regels die in één woord verschillen, en het tweede woord van elk geeft u de re' +
+      'gel: na <code>Dr.</code> blijft de zin klein, na <code>Xyz.</code> krijgt hij een hoof' +
+      'dletter. De machine zet een hoofdletter na een punt — behalve na een afkorting die zij' +
+      ' kent, en na alles met de vorm van <code>e.g.</code> of <code>U.S.</code>. Zij is stil' +
+      ': geen diagnose, geen waarschuwing, en de enige manier om het te merken is de uitvoer ' +
+      'lezen.</p>',
+    '<p><b>De lijst is niet Nederlands, en ook niet Engels.</b> Zij heeft 46 ingangen, en 2' +
+      '9 daarvan zijn Russisch:</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th></th><th></th></tr>',
+    '<tr><td>Latijns</td><td><code>etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ave' +
+      ' blvd</code></td></tr>',
+    '<tr><td>Cyrillisch</td><td><code>соц эл см ср ст ул пр пер г р руб коп тыс млн млрд тр' +
+      'лн доп напр прим изд обл респ стр табл рис мин макс тел факс</code></td></tr>',
+    '</table>',
+    '<p>Beide helften gelden in <b>elke</b> locale — de regel vraagt nooit welke taal u heb' +
+      't ingesteld. <code>руб.</code> beschermt dus het volgende woord in een Nederlands docu' +
+      'ment, en <code>Dr.</code> beschermt het in een Russisch.</p>',
+    '<p>Voor Nederlandse tekst is het gevolg eenvoudig en onaangenaam: van de afkortingen d' +
+      'ie u dagelijks schrijft staan alleen <code>Dr.</code> en <code>Prof.</code> in de lijs' +
+      't, omdat ze toevallig met de Latijnse helft samenvallen. <code>Dhr.</code>, <code>nr.<' +
+      '/code>, <code>blz.</code>, <code>bijv.</code> en <code>bv.</code> staan er niet in en ' +
+      'beëindigen een zin. De vormen met meerdere punten — <code>o.a.</code>, <code>a.u.b.</c' +
+      'ode> — hebben er geen last van; voor de losse woorden helpt alleen herformuleren.</p>',
+    '<hr>',
+    '<h2 id="correct">Hoe de juiste vorm eruitziet</h2>',
+    '<p><small><tt><a href="ex:69">een prijs {laag|hoog}</a><br>→&nbsp; Een prijs laag</tt>' +
+      '</small></p>',
+    '<p><small><tt><a href="ex:70">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+      't></small></p>',
+    '<p><small><tt><a href="ex:71">#set %vip% = 1</a><br><a href="ex:71">{?vip?voor u|voor ' +
+      'iedereen}</a><br>→&nbsp; Voor u</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %n% = 5</a><br><a href="ex:72">%n% {plural %n%: art' +
+      'ikel|artikelen}</a><br>→&nbsp; 5 artikelen</tt></small></p>',
+    '<p><small><tt><a href="ex:73">ervoor /# een notitie #/ erna</a><br>→&nbsp; Ervoor erna' +
+      '</tt></small></p>',
+    '<p>Vijf constructies, vijf schone regels: een keuze, een schudbeurt met instellingen, ' +
+      'een voorwaarde, een getalsvorm met een getal ervoor en een opmerking. Geen ervan zet i' +
+      'ets in het paneel.</p>',
+    '<hr>',
+    '<h2 id="faq">Veelgestelde vragen</h2>',
+    '<p><b>Waarom is de alinea zomaar verdwenen?</b> Twee veelvoorkomende oorzaken, beide h' +
+      'ierboven: een onbekend <code>#include</code>-doel en een invoeging in een cirkel. Beid' +
+      'e drukken niets af. De derde, die men het eerst verdenkt — het verkeerde aantal getals' +
+      'vormen — drukt <b>niet</b> niets af: de machine drukt de hele constructie tussen brede' +
+      ' accolades <code>｛｝</code> af. Leegte komt daar van een niet-numerieke telling en niet' +
+      ' van het aantal vormen.</p>',
+    '<p><b>Waarom werkt mijn variabele met een trema in de naam niet?</b> Namen bestaan uit' +
+      ' Latijnse letters, cijfers en het onderstrepingsteken. <code>%één%</code> is helemaal ' +
+      'geen vermelding van een variabele — de machine leest het als tekst en zegt niets, want' +
+      ' vanuit haar oogpunt valt er niets te melden:</p>',
+    '<p><small><tt><a href="ex:74">hallo %één% en %naam%</a><br>→&nbsp; Hallo %één% en %naa' +
+      'm%</tt></small></p>',
+    '<p>Beide kwamen ongewijzigd door, en daar zit de valstrik: alleen de tweede trok een r' +
+      'egel in het paneel. De eerste is stil, dus niets vertelt u dat hij nooit zal worden in' +
+      'gevuld. Hernoem hem. In de <b>waarde</b> daarentegen geven trema''s en accenten geen e' +
+      'nkel probleem.</p>',
+    '<p><b>Waarom wordt dezelfde fout twee keer getoond?</b> Een cirkel van vastleggingen t' +
+      'rekt een regel voor elke vermelding die hem sluit — twee plekken om naar te kijken, so' +
+      'ms drie. Het zijn geen doublures en ze worden niet samengevoegd.</p>',
+    '<p><b>Het paneel zegt fout en de uitvoer lijkt goed. Hoe zit het?</b> Allebei. Dat geb' +
+      'eurt bij een twee keer vastgelegde naam: de weergave klopt — de laatste waarde wint — ' +
+      'en het document is dubbelzinnig. Het oordeel gaat over het document en niet over deze ' +
+      'ene uitvoer.</p>',
+    '<p><b>Ik heb de locale gewisseld en het document werd rood.</b> Dat is de locale die h' +
+      'aar werk doet. Het demonstratiedocument is Engels en zijn getalsvormen dragen er twee;' +
+      ' zet de locale op Russisch en die twee vormen worden een fout in het aantal, omdat het' +
+      ' Russisch er drie vraagt. Het Nederlands vraagt er twee net als het Engels, dus onder ' +
+      '<code>nl</code> blijft het demonstratiedocument rustig. De locale hoort bij het <b>doc' +
+      'ument</b>, en daarom wijzigt Studio haar niet wanneer u de taal van de interface wisse' +
+      'lt.</p>',
+    '<p><b>Komt de voorvertoning overeen met wat mijn server zal produceren?</b> Met dezelf' +
+      'de machine, dezelfde versie, dezelfde locale en dezelfde waarden — ja, precies, en jui' +
+      'st daarvoor laat de voorvertoning de echte <code>spintax-win</code> draaien en geen be' +
+      'nadering ervan. Met een <b>andere</b> machine van de familie — die voor JavaScript, PH' +
+      'P of Python — dragen het oordeel en de verzameling teksten die het sjabloon kan opleve' +
+      'ren over, maar niet welke daarvan een gegeven startgetal trekt. Diezelfde trekking her' +
+      'halen belooft de familie niet.</p>'
   );
 
   { The templates the `ex:N` links point at, verbatim as the fixture ran them. }
-  HELP_EX_FIRST: array[0..6] of Integer = (
-    0, 74, 154, 229, 306, 383, 460
+  HELP_EX_FIRST: array[0..7] of Integer = (
+    0, 74, 154, 229, 306, 383, 460, 538
   );
-  HELP_EX_LAST: array[0..6] of Integer = (
-    73, 153, 228, 305, 382, 459, 537
+  HELP_EX_LAST: array[0..7] of Integer = (
+    73, 153, 228, 305, 382, 459, 537, 612
   );
-  HELP_EX_TEMPLATE: array[0..537] of string = (
+  HELP_EX_TEMPLATE: array[0..612] of string = (
     '{Hi|Hello} there.',
     'A {small|large} room.',
     'Acme {Pro {Plus|Max}|Lite}',
@@ -7342,23 +8247,177 @@ const
       #10 +
       '%n% {plural %n%: artigo|artigos}',
     'antes /# uma nota #/ depois',
-    'olá %endereço% e %nome%'
+    'olá %endereço% e %nome%',
+    '{Hallo|Goedendag} allemaal.',
+    'Een {kleine|grote} kamer.',
+    'Acme {Pro {Plus|Max}|Lite}',
+    'Een {|heel }grote kamer.',
+    '[rood|groen|blauw]',
+    '[<, >rood|groen|blauw]',
+    '[<maxsize 2>rood|groen|blauw]',
+    '[<xmaxsize=1>rood|groen|blauw]',
+    '[<sep=", ";lastsep=" en ">rood|groen|blauw]',
+    '[<minsize=2;maxsize=2>rood|groen|blauw]',
+    '[<maxsize=3>a|b|c]',
+    '[<minsize=3;maxsize=1>rood|groen|blauw]',
+    '[rood|groen<en>|blauw]',
+    '[rood|groen|blauw<en>]',
+    '#set %stad% = Utrecht' +
+      #10 +
+      'Vlucht naar %stad%.',
+    '#set %keuze% = {A|B}' +
+      #10 +
+      '%keuze% %keuze% %keuze%',
+    '#def %keuze% = {A|B}' +
+      #10 +
+      '%keuze% %keuze% %keuze%',
+    '#set %n% = 5' +
+      #10 +
+      '{?n?we hebben %n%|nog niets}',
+    '#set %vip% = 1' +
+      #10 +
+      '{?!vip?vreemde|vriend}',
+    '#def %n% = 1' +
+      #10 +
+      '%n% {plural %n%: bestand|bestanden}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: bestand|bestanden}',
+    '#set %n% = {5|5}' +
+      #10 +
+      '%n% {plural %n%: bestand|bestanden}',
+    '#include "intro"',
+    '#set %merk% = Acme' +
+      #10 +
+      '#include "shout"',
+    'concept /# nog niet zeker #/ klaar',
+    'een. twee. drie.',
+    'Dr. onze prijzen zijn laag',
+    'o.a. dit blijft klein',
+    'Xyz. onze prijzen zijn laag',
+    'hallo , wereld',
+    'een.twee',
+    'bijv. dit blijft klein',
+    'Ervoor. #include "intro"',
+    '{?1x?ja|nee}',
+    '[rood|<en>groen]',
+    '[<en>rood|groen]',
+    '[een<br>|twee]',
+    '[rood|groen<br>|blauw]',
+    'ervoor /# de rest hiervan',
+    '{a /# oeps|b} midden #/ staart',
+    'een prijs {laag|hoog',
+    'een prijs {laag|hoog]',
+    'een prijs laag} en alles',
+    '#set stad = Utrecht' +
+      #10 +
+      'in %stad%',
+    '#def paginas = {1|3}' +
+      #10 +
+      '%paginas%',
+    '#set %x% = eerste' +
+      #10 +
+      '#set %x% = tweede' +
+      #10 +
+      '%x%',
+    '#def %x% = #include "frag"' +
+      #10 +
+      '%x%',
+    'hallo, %naam%',
+    '#set %merk% = {Vulkan}' +
+      #10 +
+      'casino %merk%',
+    '#set %x% = a %x% b' +
+      #10 +
+      '%x%',
+    '#set %x% = %y%' +
+      #10 +
+      '#set %y% = %x%' +
+      #10 +
+      '%x%',
+    'ervoor #include "frag" erna',
+    '#include "frag"',
+    '#include' +
+      #10 +
+      '"frag"',
+    '#include "geen"',
+    '#include "intro"',
+    '#include "loop"',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: ding|dingen|dingens}',
+    '{plural %n%: ding|dingen}',
+    '{plural %n%: ding|dingen|dingens}',
+    '#set %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: ding|dingen}',
+    '#def %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: ding|dingen}',
+    '{plural %n%: {ding|zaak}|dingen}',
+    '[<foo=1>a|b|c]',
+    '[<sep=", ";foo=1>a|b|c]',
+    '[<minsize=twee>a|b|c]',
+    '[<maxsize=veel>a|b|c]',
+    'Dr. onze prijzen zijn laag',
+    'Xyz. onze prijzen zijn laag',
+    'een prijs {laag|hoog}',
+    '[<minsize=2;sep=", ">a|b|c]',
+    '#set %vip% = 1' +
+      #10 +
+      '{?vip?voor u|voor iedereen}',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: artikel|artikelen}',
+    'ervoor /# een notitie #/ erna',
+    'hallo %één% en %naam%'
   );
-  HELP_EX_DOC: array[0..537] of Integer = (
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_EX_DOC: array[0..612] of Integer = (
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
-  HELP_ANCHOR_FIRST: array[0..6] of Integer = (
-    0, 31, 62, 93, 124, 155, 186
+  HELP_ANCHOR_FIRST: array[0..7] of Integer = (
+    0, 31, 62, 93, 124, 155, 186, 217
   );
-  HELP_ANCHOR_LAST: array[0..6] of Integer = (
-    30, 61, 92, 123, 154, 185, 216
+  HELP_ANCHOR_LAST: array[0..7] of Integer = (
+    30, 61, 92, 123, 154, 185, 216, 247
   );
-  HELP_ANCHOR_PAGE: array[0..216] of Integer = (
-    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
+  HELP_ANCHOR_PAGE: array[0..247] of Integer = (
+    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
   );
-  HELP_ANCHOR_ID: array[0..216] of string = (
+  HELP_ANCHOR_ID: array[0..247] of string = (
+    'choices-0',
+    'choices-1',
+    'shuffles-0',
+    'shuffles-1',
+    'shuffles-2',
+    'macros-0',
+    'fragments-0',
+    'bracket.unclosed',
+    'bracket.mismatched',
+    'bracket.unexpected-closing',
+    'set.malformed',
+    'def.malformed',
+    'definition.duplicate-name',
+    'def.include-in-value',
+    'variable.undefined',
+    'variable.self-reference',
+    'variable.circular-reference',
+    'includes-0',
+    'include.unknown-target',
+    'note.case-mismatch',
+    'note.cycle',
+    'plural.arity',
+    'plural.count-macro',
+    'plural.nested-brackets',
+    'permutation.unknown-key',
+    'permutation.minsize-not-integer',
+    'permutation.maxsize-not-integer',
+    'note.raw-sentinel',
+    'note.unknown-target',
+    'note.too-deep',
+    'abbreviations-0',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -7577,7 +8636,7 @@ const
     'note.too-deep',
     'abbreviations-0'
   );
-  HELP_ANCHOR_TITLE: array[0..216] of string = (
+  HELP_ANCHOR_TITLE: array[0..247] of string = (
     'Nesting',
     'An empty option',
     'The separator',
@@ -7798,10 +8857,42 @@ const
     '`note.raw-sentinel` — um caractere de controlo no texto',
     '`note.unknown-target` — o conjunto está vazio, não há com que julgar',
     '`note.too-deep` — inclusões encaixadas fundo demais',
-    'Uma abreviatura deixa em minúscula a palavra seguinte'
+    'Uma abreviatura deixa em minúscula a palavra seguinte',
+    'Nesting',
+    'Een lege mogelijkheid',
+    'Het scheidingsteken',
+    'Hoeveel',
+    'Een scheidingsteken tussen twee stukken',
+    '`#set` loot opnieuw, `#def` loot één keer',
+    'Een fragment ziet uw macro''s niet',
+    '`bracket.unclosed` — een haak wordt geopend en nooit gesloten',
+    '`bracket.mismatched` — gesloten door een haak van een andere soort',
+    '`bracket.unexpected-closing` — een sluitende haak zonder iets open',
+    '`set.malformed` — deze `#set`-regel volgt de regel niet',
+    '`def.malformed` — deze `#def`-regel volgt de regel niet',
+    '`definition.duplicate-name` — deze naam is hierboven al vastgelegd',
+    '`def.include-in-value` — `#include` in de waarde van een vastlegging',
+    '`variable.undefined` — deze variabele is nergens vastgelegd',
+    '`variable.self-reference` — de vastlegging noemt zichzelf',
+    '`variable.circular-reference` — de vastleggingen noemen elkaar in een cirkel',
+    '`#include` werkt alleen aan het begin van een regel',
+    '`include.unknown-target` — geen doel met die naam in de verzameling',
+    '`note.case-mismatch` — het doel bestaat, met andere hoofdletters',
+    '`note.cycle` — een invoeging in een cirkel',
+    '`plural.arity` — niet zoveel vormen als de locale vraagt',
+    '`plural.count-macro` — de telling komt uit een `#set`, en die loot bij elke vermelding' +
+      ' opnieuw',
+    '`plural.nested-brackets` — haken binnen de vormen',
+    '`permutation.unknown-key` — onbekende sleutel in de instelling',
+    '`permutation.minsize-not-integer` — minsize is geen heel getal',
+    '`permutation.maxsize-not-integer` — maxsize is geen heel getal',
+    '`note.raw-sentinel` — een stuurteken in de tekst',
+    '`note.unknown-target` — de verzameling is leeg, er valt niets aan af te meten',
+    '`note.too-deep` — invoegingen te diep genest',
+    'Een afkorting laat het volgende woord klein'
   );
-  HELP_ANCHOR_CODE: array[0..216] of Boolean = (
-    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
+  HELP_ANCHOR_CODE: array[0..247] of Boolean = (
+    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
   );
 
 function SpxHelpLangCode(ALang: Integer): string;
