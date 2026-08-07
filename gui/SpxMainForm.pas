@@ -925,6 +925,11 @@ begin
   FHelp.Visible := False;
   FHelp.OnRunExample := @RunHelpExample;
   FEditor.Text := SpxDemoTemplate;
+  { A wholesale assignment does not reach EditorChanged (measured, twice -- see the
+    charter), so the highlighter is told here or it paints the previous document's
+    answer about where the last `#/` is. }
+  if FHighlighter <> nil then
+    FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
   FEditor.OnChange := @EditorChanged;
   FEditor.OnStatusChange := @SelectionChanged;
   { The demo's paragraphs run past 500 characters, and a template pane that opens on
@@ -2994,17 +2999,19 @@ var
   state: TSpxScanState;
   toks: TSpxTokenList;
   i, line, k, at: Integer;
+  lastCloser: Integer;
   text_, raw, key: string;
 begin
   if (FEditor = nil) or (ANames = nil) or (ANames.Count = 0) then Exit;
   state := Default(TSpxScanState);
+  lastCloser := SpxLastCloserLine(FEditor.Lines);
   toks := TSpxTokenList.Create;
   try
     for line := 0 to FEditor.Lines.Count - 1 do
     begin
       text_ := FEditor.Lines[line];
       toks.Clear;
-      SpxScanLine(text_, state, toks);
+      SpxScanLine(text_, state, toks, line < lastCloser);
       for i := 0 to toks.Count - 1 do
         if toks[i].Kind = sptVariable then
         begin
@@ -3045,11 +3052,13 @@ var
   state: TSpxScanState;
   toks: TSpxTokenList;
   i, line, k: Integer;
+  lastCloser: Integer;
   text_, want: string;
 begin
   if (FEditor = nil) or (AName = '') then Exit;
   want := LowerCase(AName);
   state := Default(TSpxScanState);
+  lastCloser := SpxLastCloserLine(FEditor.Lines);
   { A fresh line's state must start where the previous one ended -- a comment opened three
     lines up is still open -- so the whole document is walked in order rather than only the
     lines that might match. }
@@ -3059,7 +3068,7 @@ begin
     begin
       text_ := FEditor.Lines[line];
       toks.Clear;
-      SpxScanLine(text_, state, toks);
+      SpxScanLine(text_, state, toks, line < lastCloser);
       for i := 0 to toks.Count - 1 do
         if toks[i].Kind = sptVariable then
         begin
@@ -3233,6 +3242,11 @@ begin
   FEol := SpxDetectEol(s);
   FTrailingEol := SpxEndsWithEol(s);
   FEditor.Text := s;
+  { A wholesale assignment does not reach EditorChanged (measured, twice -- see the
+    charter), so the highlighter is told here or it paints the previous document's
+    answer about where the last `#/` is. }
+  if FHighlighter <> nil then
+    FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
   FEditor.Modified := False;
   FEditor.CaretXY := Point(1, 1);
   FReloadSet := True;
@@ -3291,6 +3305,11 @@ begin
   FEol := SPX_DEFAULT_EOL;
   FTrailingEol := True;
   FEditor.Text := '';
+  { A wholesale assignment does not reach EditorChanged (measured, twice -- see the
+    charter), so the highlighter is told here or it paints the previous document's
+    answer about where the last `#/` is. }
+  if FHighlighter <> nil then
+    FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
   FEditor.Modified := False;
   FReloadSet := True;
   UpdateCaption;
@@ -3341,6 +3360,13 @@ end;
 
 procedure TSpxMainForm.EditorChanged(Sender: TObject);
 begin
+  { WHERE THE LAST `#/` IS -- pushed on every keystroke, not on the debounced render, because
+    SynEdit repaints on its own schedule and a stale answer here is a visibly wrong colour.
+    One walk of the line list, which is the same order of work as the repaint it feeds; the
+    scan itself cannot look ahead, so somebody has to (see SpxTokens). }
+  if FHighlighter <> nil then
+    FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
+
   { Restart the window on every keystroke: the render that matters is the one after the
     user stops. }
   FDebounce.Enabled := False;
@@ -4345,6 +4371,11 @@ begin
   FEol := SpxDetectEol(src);
   FTrailingEol := SpxEndsWithEol(src);
   FEditor.Text := res.Doc;
+  { A wholesale assignment does not reach EditorChanged (measured, twice -- see the
+    charter), so the highlighter is told here or it paints the previous document's
+    answer about where the last `#/` is. }
+  if FHighlighter <> nil then
+    FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
   { MODIFIED, deliberately: nothing on disk holds this text yet. Closing without saving must
     ask, the same as it would for anything else typed and not saved. }
   FEditor.Modified := True;

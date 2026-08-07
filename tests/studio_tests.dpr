@@ -1063,7 +1063,11 @@ end;
 
 { ── 6. the tokenizer the editor colours by ───────────────────────────────── }
 
-function Scan(const line: string; var st: TSpxScanState): string;
+{ ACloserAhead says whether a `#/` sits on a LATER line of the document these lines belong
+  to -- the one thing a line cannot answer for itself. The default is the safe one: a line
+  handed over on its own has no later line. }
+function Scan(const line: string; var st: TSpxScanState;
+  ACloserAhead: Boolean = False): string;
 const KIND: array[TSpxTokenKind] of string =
   ('text', 'comment', 'dir', 'str', 'var', '{', '}', '[', ']', '|', 'cond', 'plural', 'cfg',
    'tsep');
@@ -1071,7 +1075,7 @@ var toks: TSpxTokenList; i: Integer;
 begin
   toks := TSpxTokenList.Create;
   try
-    SpxScanLine(line, st, toks);
+    SpxScanLine(line, st, toks, ACloserAhead);
     Result := '';
     for i := 0 to toks.Count - 1 do
     begin
@@ -1104,7 +1108,7 @@ begin
   st.LineEmpty := True;
   toks := TSpxTokenList.Create;
   try
-    SpxScanLine(line, st, toks);
+    SpxScanLine(line, st, toks, False);
     Result := True;
     expect := 1;
     for i := 0 to toks.Count - 1 do
@@ -1123,7 +1127,7 @@ var
   st: TSpxScanState;
   toks: TSpxTokenList;
   lines: TStringList;
-  i: Integer;
+  i, lastCloser: Integer;
   deep: string;
   seenKinds: set of TSpxTokenKind;
 begin
@@ -1154,9 +1158,11 @@ begin
 
   { State crosses lines: a comment stays open... }
   st := Default(TSpxScanState); st.LineEmpty := True;
-  Check('scan/comment-opens', Scan('до /# начало', st), 'text(до )0 comment(/# начало)0');
+  Check('scan/comment-opens', Scan('до /# начало', st, True),
+        'text(до )0 comment(/# начало)0');
   CheckTrue('scan/comment-state-carries', st.InComment);
-  Check('scan/comment-continues', Scan('всё ещё внутри', st), 'comment(всё ещё внутри)0');
+  Check('scan/comment-continues', Scan('всё ещё внутри', st, True),
+        'comment(всё ещё внутри)0');
   Check('scan/comment-closes', Scan('конец #/ хвост', st),
         'comment(конец #/)0 text( хвост)0');
   CheckTrue('scan/comment-state-cleared', not st.InComment);
@@ -1180,12 +1186,12 @@ begin
       * a comment that opened at the very start IS transparent, and the #set after it is a
         real directive. }
   st := Default(TSpxScanState); st.LineEmpty := True;
-  Scan('до /# начало', st);
+  Scan('до /# начало', st, True);
   Check('scan/set-after-text-and-comment-is-not-a-directive',
         Scan('конец #/ #set %x% = 1', st),
         'comment(конец #/)0 text( #set )0 var(%x%)0 text( = 1)0');
   st := Default(TSpxScanState); st.LineEmpty := True;
-  Scan('/# начало', st);
+  Scan('/# начало', st, True);
   Check('scan/set-after-only-a-comment-is-a-directive',
         Scan('конец #/ #set %x% = 1', st),
         'comment(конец #/)0 text( )0 dir(#set)0 text( )0 var(%x%)0 text( = 1)0');
@@ -1419,11 +1425,11 @@ begin
   st := Default(TSpxScanState); st.LineEmpty := True;
   toks := TSpxTokenList.Create;
   try
-    SpxScanLine(deep, st, toks);
+    SpxScanLine(deep, st, toks, False);
     CheckTrue('scan/deep-nesting-is-capped', st.Depth = SPX_MAX_DEPTH);
     CheckTrue('scan/deep-nesting-emits-every-brace', toks.Count = 300);
     { ...and comes back down. An asymmetric Push/Pop only shows on the way out. }
-    SpxScanLine(StringOfChar('}', 300), st, toks);
+    SpxScanLine(StringOfChar('}', 300), st, toks, False);
     CheckTrue('scan/deep-nesting-unwinds-to-zero', st.Depth = 0);
   finally
     toks.Free;
@@ -1448,8 +1454,9 @@ begin
     lines.Text := SpxDemoTemplate;
     st := Default(TSpxScanState);
     st.LineEmpty := True;
+    lastCloser := SpxLastCloserLine(lines);
     for i := 0 to lines.Count - 1 do
-      SpxScanLine(lines[i], st, toks);
+      SpxScanLine(lines[i], st, toks, i < lastCloser);
     CheckTrue('demo/scan-ends-balanced', (st.Depth = 0) and (not st.InComment));
     CheckTrue('demo/scan-produced-tokens', toks.Count > lines.Count);
 
@@ -5001,11 +5008,19 @@ begin
        nothing in the other direction, and this file had been reading its opinion as engine
        truth. Where the two can disagree, the answer is now a floor. ---- *)
 
-    { An unterminated `/#` is ordinary text to the engine since v0.5.0 and still a comment to
-      the scanner, so everything below it vanished from the count -- which is the state of the
-      document for every keystroke between typing the opener and the closer. }
-    CheckFloor('open-comment', '{aa|bb}' + LineEnding + '/# note' + LineEnding + '{cc|dd}');
-    CheckFloor('open-comment-inline', 'xx /# note {cc|dd}');
+    (* An unterminated `/#` is ordinary text to the engine since v0.5.0. The scanner went on
+       treating it as a comment, so everything below it vanished from the count -- the state of
+       the document for every keystroke between typing the opener and the closer -- and these
+       two were downgraded to floors to stop the count LYING while that was true.
+
+       The scanner was fixed instead (SpxTokens now takes the answer the line cannot see), so
+       they are exact again, and the pair below is what holds it: the same document with and
+       without a closer must count differently, because a closer really does take a group out
+       of the template. A floor would pass both and prove neither. *)
+    CheckCounted('open-comment', '{aa|bb}' + LineEnding + '/# note' + LineEnding + '{cc|dd}');
+    CheckCounted('open-comment-inline', 'xx /# note {cc|dd}');
+    CheckCounted('closed-comment-eats-the-group',
+                 '{aa|bb}' + LineEnding + '/# note' + LineEnding + '{cc|dd} #/ tail');
     { A terminated one is not affected: the engine drops it too. }
     CheckCounted('closed-comment', '/# {aa|bb} #/ {cc|dd|ee}');
 
@@ -6258,9 +6273,25 @@ begin
   { An opening brace starts a nested group that swallows the pipe after it. }
   Check('groups/refuses-an-opening-brace',
         WriteVariants('{a|b}', 2, ['x{y', 'z']), 'refused');
-  { `/#` opens a comment that eats the closer and everything after it. }
-  Check('groups/refuses-a-comment-opener',
-        WriteVariants('{a|b}', 2, ['x/#y', 'z']), 'refused');
+  (* `/#` IS HALF OF A PAIR, AND THE OTHER HALF DECIDES.
+
+     Engine v0.5.0 made an unterminated `/#` ordinary text, so whether this edit is harmful
+     is a property of the whole DOCUMENT, not of the variant. Both halves are checked here
+     because a rule stated once will be re-derived wrongly:
+
+       * no `#/` anywhere -- the group still means two options and renders `X/#y`, so the
+         edit says exactly what was asked and is allowed;
+       * a `#/` further down -- the two find each other, `{x/#y|z} later #/ tail` renders
+         `{x tail` with `bracket.unclosed`, and the group loses its second option and its
+         closing brace, so the edit is refused.
+
+     Measured through the engine, both. The editor is not consulting a list of forbidden
+     characters; it reads the result back, which is why it needed no change when the engine's
+     rule moved -- only the scanner underneath it did. *)
+  Check('groups/allows-a-comment-opener-with-no-closer',
+        WriteVariants('{a|b}', 2, ['x/#y', 'z']), '{x/#y|z}');
+  Check('groups/refuses-a-comment-opener-that-finds-its-closer',
+        WriteVariants('{a|b} later #/ tail', 2, ['x/#y', 'z']), 'refused');
   { Asking for NO variants is not expressible: an empty group is one empty variant. }
   Check('groups/refuses-an-empty-list', WriteVariants('{a|b}', 2, []), 'refused');
   (* An empty variant is fine, though: a choice between nothing and b. *)

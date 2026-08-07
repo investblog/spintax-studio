@@ -103,10 +103,38 @@ const
   SPX_MAX_DEPTH = 255;
   SPX_DEPTH_MASK = $FFFF;
 
-{ Scan ONE line (without its terminator). State goes in as the previous line left it and
-  comes out ready for the next. Tokens are appended, never cleared, so a caller can scan a
-  document into one list. }
-procedure SpxScanLine(const Line: string; var State: TSpxScanState; Tokens: TSpxTokenList);
+(* ▁▁▁ THE ONE THING A LINE CANNOT ANSWER FOR ITSELF ▁▁▁
+
+   `/#` opens a comment only when a `#/` comes after it -- ANYWHERE after it, to the end of
+   the document. Engine `v0.5.0` made that explicit (`Spintax.pas:955-975`): an opener with
+   no closer is not a match, the `/` stays the ordinary character it is, and scanning resumes
+   at the next position the way a regex retries. Before that the engine swallowed the rest of
+   the document, and this scanner still implemented THAT world.
+
+   A forward-only line scan cannot see the closer, so it is handed in. `ACloserAhead` means
+   "a `#/` occurs on some LATER line"; a closer on THIS line the scan finds by itself. There
+   is deliberately no default value -- every call site has to decide, because the two wrong
+   answers fail in opposite directions:
+
+     wrongly True   -- an ordinary `http://example.com/#top` greys out the rest of the
+                       document, and `Depth` never comes back down because the `}` that
+                       would have closed a group is inside the phantom comment
+     wrongly False  -- a real multi-line comment is painted as code for its second line on
+
+   Callers that hold the whole text answer it exactly, with SpxLastCloserLine below. *)
+procedure SpxScanLine(const Line: string; var State: TSpxScanState; Tokens: TSpxTokenList;
+  ACloserAhead: Boolean);
+
+{ Index of the LAST line carrying a `#/`, or -1 when none does. A line walker then passes
+  `ACloserAhead := LineIndex < Result` -- which is right even when the only `#/` sits on the
+  same line BEFORE the `/#`, because that line is not "later" than itself and the scan's own
+  same-line search starts after the opener. }
+function SpxLastCloserLine(ALines: TStrings): Integer;
+
+{ The same answer for a walker that steps byte offsets rather than a TStrings: the offset of
+  the last `#/` in Text, or 0 when there is none. Compare it against the first byte of the
+  NEXT line. }
+function SpxLastCloserOffset(const Text: string): Integer;
 
 { For SynEdit's Range pointer, which is where a highlighter's between-line state must live. }
 function SpxPackState(const State: TSpxScanState): PtrInt;
@@ -225,12 +253,14 @@ var
   at, nl, n, i, want: Integer;
   line: string;
   absStart: Integer;
+  lastCloser: Integer;
 begin
   Result := nil;
   n := 0;
   want := -1;
   if (AOpen < 1) or (AClose <= AOpen) or (AClose > Length(Text)) then Exit;
   state := Default(TSpxScanState);
+  lastCloser := SpxLastCloserOffset(Text);
   toks := TSpxTokenList.Create;
   try
     at := 1;
@@ -241,7 +271,8 @@ begin
       line := Copy(Text, at, nl - at);
       absStart := at;
       toks.Clear;
-      SpxScanLine(line, state, toks);
+      { "on a LATER line" is "at or past the first byte of the next one". }
+      SpxScanLine(line, state, toks, lastCloser >= nl);
       for i := 0 to toks.Count - 1 do
       begin
         { The token's offset in the DOCUMENT, which is the only coordinate a caller has. }
@@ -743,7 +774,25 @@ begin
   end;
 end;
 
-procedure SpxScanLine(const Line: string; var State: TSpxScanState; Tokens: TSpxTokenList);
+function SpxLastCloserOffset(const Text: string): Integer;
+var i: Integer;
+begin
+  Result := 0;
+  for i := Length(Text) - 1 downto 1 do
+    if (Text[i] = '#') and (Text[i + 1] = '/') then Exit(i);
+end;
+
+function SpxLastCloserLine(ALines: TStrings): Integer;
+var i: Integer;
+begin
+  Result := -1;
+  if ALines = nil then Exit;
+  for i := ALines.Count - 1 downto 0 do
+    if Pos('#/', ALines[i]) > 0 then Exit(i);
+end;
+
+procedure SpxScanLine(const Line: string; var State: TSpxScanState; Tokens: TSpxTokenList;
+  ACloserAhead: Boolean);
 var
   p, n, runStart, len, q: Integer;
   { The SPLIT level, counted the way the engine's SplitTopLevel counts it, for this line
@@ -903,28 +952,37 @@ begin
       '/':
         if (p < n) and (Line[p + 1] = '#') then
         begin
-          FlushText(p);
           { Runs to `#/` or to the end of the line, and then the next line continues it. }
           len := p + 2;
           while (len <= n) and not ((Line[len] = '#') and (len < n) and (Line[len + 1] = '/')) do
             Inc(len);
-          if len <= n then
+
+          if len <= n then                        { closed on this line }
           begin
+            FlushText(p);
             Mark(sptComment, p, len + 2 - p);
             p := len + 2;
-          end
-          else
+            runStart := p;
+            { The comment is gone from the logical line, so what follows may still be its
+              head. }
+            TryDirectiveHead;
+            Continue;
+          end;
+
+          if ACloserAhead then                    { closed on a later line }
           begin
+            FlushText(p);
             Mark(sptComment, p, n - p + 1);
             State.InComment := True;
             p := n + 1;
+            runStart := p;
+            Continue;
           end;
-          runStart := p;
-          { The comment is gone from the logical line, so what follows may still be its
-            head. Harmless when the comment ran to the end of the line: there is nothing
-            left to test. }
-          TryDirectiveHead;
-          Continue;
+
+          { Closed NOWHERE, so the engine never opened a comment here and neither do we.
+            Falling out of the case leaves `Inc(p)` at the foot of the loop to step one byte
+            past the `/`, which is the engine's own retry-at-the-next-position -- so a
+            well-formed `/# ... #/` beginning inside this failed opener is still found. }
         end;
       '%':
         begin

@@ -30,6 +30,7 @@ type
     FTokens: TSpxTokenList;
     FIndex: Integer;
     FState: TSpxScanState;
+    FCloserLine: Integer;
     FTextAttr: TSynHighlighterAttributes;
     FCommentAttr: TSynHighlighterAttributes;
     FDirectiveAttr: TSynHighlighterAttributes;
@@ -49,6 +50,19 @@ type
       what they are painted in. }
     procedure ApplyPalette(const APalette: TSpxPalette);
     destructor Destroy; override;
+    (* WHERE THE `#/` IS, WHICH A LINE CANNOT KNOW.
+
+       `/#` opens a comment only when a `#/` comes after it somewhere in the document
+       (engine `Spintax.pas:955-975`), and SynEdit hands this highlighter one line at a time,
+       forward only. So the owner of the document pushes the answer in: the index of the last
+       line carrying a `#/`, from SpxLastCloserLine.
+
+       It starts at -1 -- "no closer anywhere" -- because the two wrong answers are not
+       symmetric. Believing in a closer that does not exist greys out the rest of the document
+       from an ordinary `http://example.com/#top` and freezes the nesting depth with it;
+       disbelieving one that does exist mis-paints the second line of a real comment. An
+       editor that never pushes gets the containable mistake. *)
+    procedure SetCloserLine(AValue: Integer);
     procedure SetLine(const NewValue: String; LineNumber: Integer); override;
     procedure Next; override;
     function GetEol: Boolean; override;
@@ -77,6 +91,7 @@ constructor TSpxSynHighlighter.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FTokens := TSpxTokenList.Create;
+  FCloserLine := -1;   { believe in no comment closer until the document says otherwise }
 
   { The names and the styles are fixed here; the COLOURS come from the palette, so there is
     one table of them (SpxTheme) rather than a set per theme scattered through a constructor.
@@ -146,13 +161,18 @@ begin
   Result := FTokens[FIndex];
 end;
 
+procedure TSpxSynHighlighter.SetCloserLine(AValue: Integer);
+begin
+  FCloserLine := AValue;
+end;
+
 procedure TSpxSynHighlighter.SetLine(const NewValue: String; LineNumber: Integer);
 begin
   inherited;
   FLineText := NewValue;
   FTokens.Clear;
   FIndex := 0;
-  SpxScanLine(FLineText, FState, FTokens);
+  SpxScanLine(FLineText, FState, FTokens, LineNumber < FCloserLine);
 end;
 
 procedure TSpxSynHighlighter.Next;

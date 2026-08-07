@@ -376,6 +376,7 @@ var
   line: TSpxTokenList;
   masked: string;
   i, j, k, b1, b2: Integer;
+  lastCloserLine: Integer;
   lineHasInclude: Boolean;
   prevKind: TSpxTokenKind;
   slice: string;
@@ -437,11 +438,15 @@ begin
       end;
 
     state := Default(TSpxScanState);
+    { Whether a `/#` opens a comment depends on a `#/` the line cannot see; the whole document
+      is right here, so answer it exactly. Masked lines, not the raw ones: a `#/` inside a
+      directive's span is not one the body's scan may close on. }
+    lastCloserLine := SpxLastCloserLine(lines);
     for i := 0 to lines.Count - 1 do
     begin
       masked := lines[i];
       line.Clear;
-      SpxScanLine(masked, state, line);
+      SpxScanLine(masked, state, line, i < lastCloserLine);
       { One Pos over the rare line that mentions the word at all -- see ALooseInclude below. }
       lineHasInclude := Pos('#include', masked) > 0;
       for j := 0 to line.Count - 1 do

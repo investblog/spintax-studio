@@ -141,7 +141,7 @@ var
   stack: array of TOpenBracket;
   stackLineFrom, stackDepth: array of Integer;
   stackState: array of TSpxScanState;
-  top, i, k, n, lineStart, tokStart, mismatchAt: Integer;
+  top, i, k, n, lastCloser, lineStart, tokStart, mismatchAt: Integer;
   line: string;
   done: Boolean;
 begin
@@ -164,6 +164,7 @@ begin
   toks := TSpxTokenList.Create;
   try
     n := Length(Text);
+    lastCloser := SpxLastCloserOffset(Text);
     lineStart := 1;
     while (lineStart <= n + 1) and not done do
     begin
@@ -172,7 +173,7 @@ begin
       line := Copy(Text, lineStart, i - lineStart);
       stBefore := st;
       toks.Clear;
-      SpxScanLine(line, st, toks);
+      SpxScanLine(line, st, toks, lastCloser >= i + 1);
       for k := 0 to toks.Count - 1 do
       begin
         tokStart := lineStart + toks[k].Start - 1;
@@ -231,7 +232,7 @@ var
   st: TSpxScanState;
   toks: TSpxTokenList;
   line: string;
-  k, nVars, cut, tokStart, i, n, lineStart, depth, lineFrom: Integer;
+  k, nVars, cut, tokStart, i, n, lastCloser, lineStart, depth, lineFrom: Integer;
   openKind: TSpxTokenKind;
   seenBody: Boolean;
 begin
@@ -253,6 +254,7 @@ begin
   toks := TSpxTokenList.Create;
   try
     n := Length(Text);
+    lastCloser := SpxLastCloserOffset(Text);
     lineStart := lineFrom;
     while lineStart <= n do
     begin
@@ -260,7 +262,7 @@ begin
       while (i <= n) and (Text[i] <> #13) and (Text[i] <> #10) do Inc(i);
       line := Copy(Text, lineStart, i - lineStart);
       toks.Clear;
-      SpxScanLine(line, st, toks);
+      SpxScanLine(line, st, toks, lastCloser >= i + 1);
       for k := 0 to toks.Count - 1 do
       begin
         tokStart := lineStart + toks[k].Start - 1;
