@@ -545,6 +545,36 @@ is a deliberate state and not a backlog of things anyone forgot.
    documents running parallel, or it is not registered and falls back to English. That is what
    makes a half-translated document impossible, and it is the intended pressure.
 
+17. **The help now answers in all fourteen interface languages** (2026-08-07). Twelve folders
+   added after the machinery was fixed, one at a time, each costing exactly what item 16 promised:
+   a folder of three documents, one entry in `LANGS`, three `HELP_DOCS` rows and one
+   `HELP_LANG_FACTS` row. No test needed editing for any of them.
+
+   **Every document was MEASURED, not translated.** Each language's arrow examples were rendered
+   through the pinned engine before a word was written, which is the only reason the silences
+   chapters disagree with each other — and they disagree a lot, because the engine's abbreviation
+   list is 46 entries of which 29 are Russian and the word-boundary check is ASCII
+   (`Spintax.pas:1836-1840`):
+
+   - **Latin script is shielded and Cyrillic is not.** Croatian and Bosnian get `dr.`, `prof.`,
+     `mr.` from the Latin half, `d.o.o.` from the multi-dot form, and `stranica.hr` and even
+     `jedan.dva` untouched as bare domains. Ukrainian, Belarusian and Serbian get none of that:
+     `т.д.` comes apart into `Т. Д.`, `сайт.бел` into `Сайт. Бел`.
+   - **Serbian sits on the boundary and shows it best.** `г.`, `ул.`, `стр.`, `тел.` shield
+     because they coincide with the Russian half; `бр.`, `нпр.`, `итд.`, `тзв.` do not. And
+     `dr.` shields while ћирилично `др.` does not — one word, two scripts, two behaviours.
+   - **Turkish's silence is the most visible of the fourteen:** `i` uppercases to `I`, not `İ`.
+
+   **The measurement also caught a false claim in three documents I had just written.** The
+   `set.malformed` article says the mistake puts TWO rows in the panel; that is true wherever the
+   example uses a Latin name and false where it uses a Cyrillic one, because a Cyrillic name is
+   not a variable and the second row never appears. Measured `[set.malformed]` alone against the
+   claimed pair, in uk, be and sr. The examples now use a Latin name, as ru already did.
+
+   It was PROSE, not a gated example, which is why it survived being written three times — the
+   same class the charter records twice already. The gate compares the bytes on either side of an
+   arrow and nothing else; a sentence beside one is still on trust.
+
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
 decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store
