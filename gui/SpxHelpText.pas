@@ -25,7 +25,7 @@ unit SpxHelpText;
 interface
 
 const
-  SPX_HELP_LANG_COUNT = 8;
+  SPX_HELP_LANG_COUNT = 9;
   { The document KINDS this build knows, whether or not a language carries them. }
   SPX_HELP_KIND_COUNT = 3;
 
@@ -90,24 +90,24 @@ function SpxHelpExampleOf(const AHref: string): Integer;
 implementation
 
 const
-  HELP_LANG: array[0..7] of string = (
-    'en', 'ru', 'de', 'fr', 'es', 'it', 'pt', 'nl'
+  HELP_LANG: array[0..8] of string = (
+    'en', 'ru', 'de', 'fr', 'es', 'it', 'pt', 'nl', 'tr'
   );
   HELP_KIND_SLUG: array[0..2] of string = (
     'studio', 'syntax', 'diagnostics'
   );
 
   { Each language's documents: a span into the tables below. }
-  HELP_DOC_FIRST: array[0..7] of Integer = (
-    0, 3, 6, 9, 12, 15, 18, 21
+  HELP_DOC_FIRST: array[0..8] of Integer = (
+    0, 3, 6, 9, 12, 15, 18, 21, 24
   );
-  HELP_DOC_LAST: array[0..7] of Integer = (
-    2, 5, 8, 11, 14, 17, 20, 23
+  HELP_DOC_LAST: array[0..8] of Integer = (
+    2, 5, 8, 11, 14, 17, 20, 23, 26
   );
-  HELP_DOC_KIND: array[0..23] of Integer = (
-    0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2
+  HELP_DOC_KIND: array[0..26] of Integer = (
+    0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2
   );
-  HELP_DOC_PATH: array[0..23] of string = (
+  HELP_DOC_PATH: array[0..26] of string = (
     'docs/help/en/studio.md',
     'docs/help/en/syntax.md',
     'docs/help/en/diagnostics.md',
@@ -131,24 +131,32 @@ const
     'docs/help/pt/diagnostics.md',
     'docs/help/nl/studio.md',
     'docs/help/nl/syntax.md',
-    'docs/help/nl/diagnostics.md'
+    'docs/help/nl/diagnostics.md',
+    'docs/help/tr/studio.md',
+    'docs/help/tr/syntax.md',
+    'docs/help/tr/diagnostics.md'
   );
-  HELP_DOC_DIGEST: array[0..23] of string = (
-    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf', 'a13813d94022fc79', 'f97317079554607c', 'cba1e24e3fd02d3c', '2ac60637deec5293', 'a171652427448b1d', '2edce4acd51627d2', 'ad5ac9e54fecd8bb', '6c95fb9944927410', '08805b1be3656cd9', 'c32ef23f68968452', '6c578908ab8c6c29', 'bff3ba7c06efe1c3', 'aea105784f6a931e', 'bd89c7e36c9cf6c8', 'f2b72eeadf6781cc'
+  HELP_DOC_DIGEST: array[0..26] of string = (
+    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf', 'a13813d94022fc79', 'f97317079554607c', 'cba1e24e3fd02d3c', '2ac60637deec5293', 'a171652427448b1d', '2edce4acd51627d2', 'ad5ac9e54fecd8bb', '6c95fb9944927410', '08805b1be3656cd9', 'c32ef23f68968452', '6c578908ab8c6c29', 'bff3ba7c06efe1c3', 'aea105784f6a931e', 'bd89c7e36c9cf6c8', 'f2b72eeadf6781cc', '573101ecb765ab77', 'b3da8cd65b776379', '1426514362a3982e'
   );
-  HELP_DOC_LOCALE: array[0..23] of string = (
-    'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl'
+  HELP_DOC_LOCALE: array[0..26] of string = (
+    'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr'
   );
-  HELP_DOC_SEED: array[0..23] of LongWord = (
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
+  HELP_DOC_SEED: array[0..26] of LongWord = (
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
   );
-  HELP_INC_FIRST: array[0..23] of Integer = (
-    0, 0, 2, 5, 5, 7, 10, 10, 12, 15, 15, 17, 20, 20, 22, 25, 25, 27, 30, 30, 32, 35, 35, 37
+  HELP_INC_FIRST: array[0..26] of Integer = (
+    0, 0, 2, 5, 5, 7, 10, 10, 12, 15, 15, 17, 20, 20, 22, 25, 25, 27, 30, 30, 32, 35, 35, 37, 40, 40, 42
   );
-  HELP_INC_LAST: array[0..23] of Integer = (
-    -1, 1, 4, 4, 6, 9, 9, 11, 14, 14, 16, 19, 19, 21, 24, 24, 26, 29, 29, 31, 34, 34, 36, 39
+  HELP_INC_LAST: array[0..26] of Integer = (
+    -1, 1, 4, 4, 6, 9, 9, 11, 14, 14, 16, 19, 19, 21, 24, 24, 26, 29, 29, 31, 34, 34, 36, 39, 39, 41, 44
   );
-  HELP_INC_NAME: array[0..39] of string = (
+  HELP_INC_NAME: array[0..44] of string = (
+    'intro',
+    'shout',
+    'frag',
+    'loop',
+    'Intro',
     'intro',
     'shout',
     'frag',
@@ -190,7 +198,7 @@ const
     'loop',
     'Intro'
   );
-  HELP_INC_TEXT: array[0..39] of string = (
+  HELP_INC_TEXT: array[0..44] of string = (
     'Welcome to {Acme|Globex}.',
     'The %brand% is here.',
     'Fragment',
@@ -230,20 +238,25 @@ const
     'Het %merk% is er.',
     'Fragment',
     '#include "loop"',
-    'Inleiding'
+    'Inleiding',
+    '{Acme|Globex} şirketine hoş geldiniz.',
+    '%marka% burada.',
+    'Parça',
+    '#include "loop"',
+    'Giriş'
   );
 
   { Each language's pages: a span into the tables below. }
-  HELP_PAGE_FIRST: array[0..7] of Integer = (
-    0, 30, 60, 90, 120, 150, 180, 210
+  HELP_PAGE_FIRST: array[0..8] of Integer = (
+    0, 30, 60, 90, 120, 150, 180, 210, 240
   );
-  HELP_PAGE_LAST: array[0..7] of Integer = (
-    29, 59, 89, 119, 149, 179, 209, 239
+  HELP_PAGE_LAST: array[0..8] of Integer = (
+    29, 59, 89, 119, 149, 179, 209, 239, 269
   );
-  HELP_SLUG: array[0..239] of string = (
-    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..269] of string = (
+    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
   );
-  HELP_TITLE: array[0..239] of string = (
+  HELP_TITLE: array[0..269] of string = (
     'Spintax Studio',
     'The two panes',
     'The panels along the bottom',
@@ -483,21 +496,51 @@ const
     'Studio-aantekeningen zonder iets te tonen',
     'Een stilte in elke taal: afkortingen',
     'Hoe de juiste vorm eruitziet',
-    'Veelgestelde vragen'
+    'Veelgestelde vragen',
+    'Spintax Studio',
+    'İki yarım',
+    'Alttaki paneller',
+    'Grup düzenleyici',
+    'Ayarlar',
+    'GSA şablonu içe aktarma',
+    'Dil, yapı yapı',
+    'Örnekler nasıl okunur',
+    'Seçimler',
+    'Karıştırmalar',
+    'Makrolar',
+    'Koşullar',
+    'Sayım',
+    'Parçalar',
+    'Açıklamalar',
+    'Makinenin sonda düzelttikleri',
+    'Sessizlikler',
+    'Sonra nereye bakmalı',
+    'Tanı sekmesi size ne söylüyor',
+    'Örnekler nasıl okunur',
+    'Ayraçlar',
+    'Tanımlar',
+    'Değişkenler',
+    'Eklemeler',
+    'Sayı biçimleri',
+    'Karıştırmalar',
+    'Gösterecek bir şeyi olmayan Studio notları',
+    'Her dilde bir sessizlik: kısaltmalar',
+    'Doğru biçim neye benzer',
+    'Sık sorulanlar'
   );
-  HELP_PAGE_DOC: array[0..239] of Integer = (
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_PAGE_DOC: array[0..269] of Integer = (
+    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
-  HELP_FIRST: array[0..239] of Integer = (
-    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003, 1012, 1019, 1026, 1035, 1038, 1041, 1050, 1055, 1061, 1073, 1098, 1108, 1115, 1122, 1131, 1135, 1150, 1178, 1180, 1190, 1197, 1210, 1226, 1251, 1273, 1293, 1307, 1320, 1333, 1341, 1350, 1357, 1364, 1373, 1376, 1379, 1388, 1393, 1399, 1411, 1436, 1446, 1453, 1460, 1469, 1473, 1488, 1516, 1518, 1528, 1535, 1548, 1564, 1589, 1611, 1631, 1645, 1658, 1671, 1679, 1688, 1695, 1702, 1711, 1714, 1717, 1726, 1731, 1737, 1749, 1774, 1784, 1791, 1798, 1807, 1811, 1826, 1854, 1856, 1866, 1873, 1886, 1902, 1927, 1949, 1969, 1983, 1996, 2009, 2017, 2026, 2033, 2040, 2049, 2052, 2055, 2064, 2069, 2075, 2087, 2112, 2122, 2129, 2136, 2145, 2149, 2164, 2194, 2196, 2206, 2213, 2226, 2242, 2267, 2289, 2309, 2323, 2336, 2349, 2357, 2366, 2373, 2380, 2389, 2392, 2395, 2404, 2409, 2415, 2427, 2452, 2462, 2469, 2476, 2485, 2489, 2504, 2529, 2531, 2541, 2548, 2561, 2577, 2602, 2624, 2644, 2658, 2671, 2684, 2692
+  HELP_FIRST: array[0..269] of Integer = (
+    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003, 1012, 1019, 1026, 1035, 1038, 1041, 1050, 1055, 1061, 1073, 1098, 1108, 1115, 1122, 1131, 1135, 1150, 1178, 1180, 1190, 1197, 1210, 1226, 1251, 1273, 1293, 1307, 1320, 1333, 1341, 1350, 1357, 1364, 1373, 1376, 1379, 1388, 1393, 1399, 1411, 1436, 1446, 1453, 1460, 1469, 1473, 1488, 1516, 1518, 1528, 1535, 1548, 1564, 1589, 1611, 1631, 1645, 1658, 1671, 1679, 1688, 1695, 1702, 1711, 1714, 1717, 1726, 1731, 1737, 1749, 1774, 1784, 1791, 1798, 1807, 1811, 1826, 1854, 1856, 1866, 1873, 1886, 1902, 1927, 1949, 1969, 1983, 1996, 2009, 2017, 2026, 2033, 2040, 2049, 2052, 2055, 2064, 2069, 2075, 2087, 2112, 2122, 2129, 2136, 2145, 2149, 2164, 2194, 2196, 2206, 2213, 2226, 2242, 2267, 2289, 2309, 2323, 2336, 2349, 2357, 2366, 2373, 2380, 2389, 2392, 2395, 2404, 2409, 2415, 2427, 2452, 2462, 2469, 2476, 2485, 2489, 2504, 2529, 2531, 2541, 2548, 2561, 2577, 2602, 2624, 2644, 2658, 2671, 2684, 2692, 2701, 2708, 2715, 2724, 2727, 2730, 2739, 2744, 2750, 2762, 2787, 2797, 2804, 2811, 2820, 2824, 2839, 2866, 2868, 2878, 2885, 2898, 2914, 2939, 2961, 2981, 2995, 3008, 3021, 3029
   );
-  HELP_LAST: array[0..239] of Integer = (
-    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011, 1018, 1025, 1034, 1037, 1040, 1049, 1054, 1060, 1072, 1097, 1107, 1114, 1121, 1130, 1134, 1149, 1177, 1179, 1189, 1196, 1209, 1225, 1250, 1272, 1292, 1306, 1319, 1332, 1340, 1349, 1356, 1363, 1372, 1375, 1378, 1387, 1392, 1398, 1410, 1435, 1445, 1452, 1459, 1468, 1472, 1487, 1515, 1517, 1527, 1534, 1547, 1563, 1588, 1610, 1630, 1644, 1657, 1670, 1678, 1687, 1694, 1701, 1710, 1713, 1716, 1725, 1730, 1736, 1748, 1773, 1783, 1790, 1797, 1806, 1810, 1825, 1853, 1855, 1865, 1872, 1885, 1901, 1926, 1948, 1968, 1982, 1995, 2008, 2016, 2025, 2032, 2039, 2048, 2051, 2054, 2063, 2068, 2074, 2086, 2111, 2121, 2128, 2135, 2144, 2148, 2163, 2193, 2195, 2205, 2212, 2225, 2241, 2266, 2288, 2308, 2322, 2335, 2348, 2356, 2365, 2372, 2379, 2388, 2391, 2394, 2403, 2408, 2414, 2426, 2451, 2461, 2468, 2475, 2484, 2488, 2503, 2528, 2530, 2540, 2547, 2560, 2576, 2601, 2623, 2643, 2657, 2670, 2683, 2691, 2700
+  HELP_LAST: array[0..269] of Integer = (
+    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011, 1018, 1025, 1034, 1037, 1040, 1049, 1054, 1060, 1072, 1097, 1107, 1114, 1121, 1130, 1134, 1149, 1177, 1179, 1189, 1196, 1209, 1225, 1250, 1272, 1292, 1306, 1319, 1332, 1340, 1349, 1356, 1363, 1372, 1375, 1378, 1387, 1392, 1398, 1410, 1435, 1445, 1452, 1459, 1468, 1472, 1487, 1515, 1517, 1527, 1534, 1547, 1563, 1588, 1610, 1630, 1644, 1657, 1670, 1678, 1687, 1694, 1701, 1710, 1713, 1716, 1725, 1730, 1736, 1748, 1773, 1783, 1790, 1797, 1806, 1810, 1825, 1853, 1855, 1865, 1872, 1885, 1901, 1926, 1948, 1968, 1982, 1995, 2008, 2016, 2025, 2032, 2039, 2048, 2051, 2054, 2063, 2068, 2074, 2086, 2111, 2121, 2128, 2135, 2144, 2148, 2163, 2193, 2195, 2205, 2212, 2225, 2241, 2266, 2288, 2308, 2322, 2335, 2348, 2356, 2365, 2372, 2379, 2388, 2391, 2394, 2403, 2408, 2414, 2426, 2451, 2461, 2468, 2475, 2484, 2488, 2503, 2528, 2530, 2540, 2547, 2560, 2576, 2601, 2623, 2643, 2657, 2670, 2683, 2691, 2700, 2707, 2714, 2723, 2726, 2729, 2738, 2743, 2749, 2761, 2786, 2796, 2803, 2810, 2819, 2823, 2838, 2865, 2867, 2877, 2884, 2897, 2913, 2938, 2960, 2980, 2994, 3007, 3020, 3028, 3037
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..2700] of string = (
+  HELP_LINE: array[0..3037] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -7361,17 +7404,837 @@ const
       'nadering ervan. Met een <b>andere</b> machine van de familie — die voor JavaScript, PH' +
       'P of Python — dragen het oordeel en de verzameling teksten die het sjabloon kan opleve' +
       'ren over, maar niet welke daarvan een gegeven startgetal trekt. Diezelfde trekking her' +
-      'halen belooft de familie niet.</p>'
+      'halen belooft de familie niet.</p>',
+    '<h1 id="studio">Spintax Studio</h1>',
+    '<p>Bu program şablonlar için bir düzenleyicidir. Şablon, içinde birkaç işaretli yer bu' +
+      'lunan sıradan metindir ve tek bir şablon pek çok farklı metin üretebilir — metinleri t' +
+      'ek tek yazmak yerine bir şablon yazmanın bütün anlamı budur.</p>',
+    '<p>Pencere iki yarımdan oluşur. Solda sizin şablonunuz, düzenlediğiniz şey. Sağda onda' +
+      'n çıkan metinlerden biri, siz yazarken yeniden çizilir. Aralarında basılacak bir şey y' +
+      'oktur: sağda gördüğünüz, o anda solda duran için makinenin geri verdiğidir.</p>',
+    '<p><small><tt>locale: tr<br>seed: 7<br>empty: (boş)</tt></small></p>',
+    '<p>Makine bu programın içindedir ve bir ailenin Pascal üyesidir: aynı dil JavaScript, ' +
+      'PHP ve Python için de yayımlanır. Dördü de tek bir ortak sınama kümesine tutulan bağım' +
+      'sız programlardır, bu yüzden bir şablonun NE ANLAMA GELDİĞİ hepsinde aynıdır: yapılar,' +
+      ' geçerlilik hükmü, son rötuşlar. Bu pencerenin geçerli dediği bir şablon orada da geçe' +
+      'rlidir.</p>',
+    '<p>Söz verilmeyen ve karşılaştırırken önem kazanan şey: kura. Bir tohum önizlemeyi BUR' +
+      'ADA yinelenebilir kılar — aynı tohum ve aynı şablon yarın da aynı metni verir — ama ay' +
+      'nı tohum JavaScript makinesinde başka bir seçenek çekebilir. Tohumlar kendi işinizi ye' +
+      'niden üretmek içindir, başka bir makineyi tutturmak için değil.</p>',
+    '<p>Buradaki her şey ağ bağlantısı olmadan çalışır. Hesap yok, oturum açma yok ve açıla' +
+      'cak bir şey yok: programı açın, çalışıyor.</p>',
+    '<h2 id="panes">İki yarım</h2>',
+    '<p>Sola yazılır. Sağ yarım kısa bir duraklamadan sonra yeniden çizilir, böylece önizle' +
+      'me her harfi değil bir cümleyi izler.</p>',
+    '<p>İçinde seçim bulunan bir şablonun tek bir yanıtı yoktur ve önizleme bunlardan birin' +
+      'i gösterir:</p>',
+    '<p><small><tt><a href="ex:0">{Merhaba|Selam} herkese.</a><br>→&nbsp; Merhaba herkese.<' +
+      '/tt></small></p>',
+    '<p>Sağ yarımın üstündeki <b>Yeniden çek</b> bir sonrakini getirir. Hep aynısını istiyo' +
+      'rsanız — iki değişikliği karşılaştırırken diyelim — <b>Tohum</b> kutusunu işaretleyin,' +
+      ' önizleme siz işareti kaldırana veya sayıyı değiştirene kadar durur.</p>',
+    '<p>Sağ yarım ya <b>sayfayı</b> ya da <b>kaynağı</b> gösterir. Şablonlar çoğunlukla HTM' +
+      'L''dir ve «bu nasıl görünüyor» ile «hangi biçimleme çıktı» soruları birbirini yanıtlam' +
+      'az: bozuk bir etiket gözün atladığı hafif eğri bir yerleşim verir, etiket dolu bir düz' +
+      'yazı ise düzyazı gibi okunmaz. Yarımın üstündeki anahtar neye baktığınızı değiştirir.<' +
+      '/p>',
+    '<p>Şablonun bir bölümünü seçin, yalnız o bölüm işlenir — belgenin bütününün kapsamında' +
+      ', böylece yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl çıkacak' +
+      'sa öyle çıkar.</p>',
+    '<h2 id="panels">Alttaki paneller</h2>',
+    '<p>Yandaki araç şeridi üç paneli, her seferinde birini açar.</p>',
+    '<p><b>Tanı</b> makinenin yanlış bulduklarını, her birini başladığı satır ve sütunla bi' +
+      'rlikte sıralar. Bir satıra tıklamak imleci oraya koyar. Bu, makinenin başka her yerde ' +
+      'verdiği hükmün ta kendisidir, düzenleyicinin ikinci bir görüşü değil — bu yüzden bu pa' +
+      'nelin geçerli dediği bir şablonu öteki makineler de kabul eder.</p>',
+    '<p><b>Değişkenler</b> belgenizin tanımladığı adları ve yalnızca kullandığı adları göst' +
+      'erir. Kullandığı ve hiçbir şeyin tanımlamadığı bir adı burada oturum için doldurabilir' +
+      'siniz: yanına bir değer yazın, önizleme onu alır. Değer kendi kendini anlatan bir meti' +
+      'nse, kendi başına küçük bir şablon değilse, <b>Düz metin</b> kutusunu işaretleyin.</p>',
+    '<p><b>Çeşitlemeler</b> bir seferde çok sayıda metin üretir. Kaç tane olduğunu söyleyin' +
+      ', üretin ve dışa aktarmadan önce listede okuyun. Neredeyse aynı olanlar üretilirken el' +
+      'enebilir ve bir tohum bütün partiyi yinelenebilir kılar: aynı tohum ve aynı şablon yar' +
+      'ın da aynı çeşitlemeleri verir.</p>',
+    '<p>Bu alanların yanında panel, şablonun toplamda kaç çeşitleme verebileceğini söyler: ' +
+      '<code>{a|b} ve {c|d}</code> dört tane eder. Bu sayı, elli tane üretip okuyarak fark et' +
+      'meden önce şablonun zayıf olduğunu size söyler.</p>',
+    '<p>Yalnızca her seçim rastlantıya bırakıldığı sürece kesin bir sayıdır. Bir koşul, bir' +
+      ' sayı biçimi ya da kümenin hedefini bulundurmadığı bir <code>#include</code> başka bir' +
+      ' şeyce belirlenir — sizin vereceğiniz bir değerce, bir sayıca, belki gelecek bir parça' +
+      'ca — ve o zaman panel <b>en az</b> der. Dürüst söz budur: bir değer vermek metin ancak' +
+      ' ekler, hiç eksiltmez. Okunamayacak kadar büyük bir sayı bir trilyonda durur ve aynı n' +
+      'edenle <b>en az</b> der.</p>',
+    '<p>Bir çeşitleme, doldurulmuş bir şablondur — her yapıda yapılmış bir seçim — ve bu, b' +
+      'aşka türlü okunan bir metinle aynı şey değildir. <code>{a|a}</code> iki çeşitleme ve t' +
+      'ek bir metindir, hem de bilerek: iki olasılık tek bir düzenlemeden sonra ayrışabilir v' +
+      'e onları birleştirmek önce bütün bileşimleri üretmek demek olurdu — yani bu sayının si' +
+      'ze tam da kazandırdığı iş. Bir <code>#def</code> de aynı şekilde sayılır: makine onu h' +
+      'er işlemede bir kez çeker, gittiğiniz dal onu kullansa da kullanmasa da.</p>',
+    '<p>Dışa aktarma bunları üç yolla yazar: XLSX çalışma kitabı olarak, satır başına bir ç' +
+      'eşitleme düşen düz metin olarak ya da seçtiğiniz bir klasörde çeşitleme başına bir dos' +
+      'ya olarak.</p>',
+    '<h2 id="groups">Grup düzenleyici</h2>',
+    '<p>İmleci bir <code>{a|b|c}</code> içine koyun ve araç şeridinden grup düzenleyiciyi a' +
+      'çın. Seçenekleri satırlar olarak sıralar: değiştirin, bir tane ekleyin, bir tane çıkar' +
+      'ın; belge buna göre yeniden yazılır.</p>',
+    '<p>Grubun ne SÖYLEDİĞİNİ değil ne ANLAMA GELDİĞİNİ değiştirecek düzenlemeleri geri çev' +
+      'irir: bir seçeneğin içine yazılan bir <code>|</code> bir olasılığı ikiye böler, bir <c' +
+      'ode>}</code> ise grubu erkenden kapatır. Geri çevirdiğinde bunu söyler ve belgeye doku' +
+      'nmaz.</p>',
+    '<h2 id="settings">Ayarlar</h2>',
+    '<p>Görünüm menüsündedirler ve her biri oturumlar arasında hatırlanır: arayüzün dili ve' +
+      ' şablonu izleyip izlemediği, araç şeridinin hangi yanda olduğu, tema, düzenleyicinin y' +
+      'azı tipi ve boyutu, önizlemenin sayfayı mı kaynağı mı gösterdiği, GSA içe aktarma anah' +
+      'tarı, hangi panelin açık olduğu ve açılıp kapanan panellerin genişlikleri.</p>',
+    '<p>Arayüz on dört dil konuşur, aynı menüden seçilir. Bu, sayı biçimlerini belirleyen v' +
+      'e sağ yarımın üstünden ayarlanan şablon dilinden ayrıdır.</p>',
+    '<h2 id="gsa">GSA şablonu içe aktarma</h2>',
+    '<p>Bu parça siz açana dek kapalıdır, <b>Görünüm</b>, <b>GSA içe aktarma</b> altında; ç' +
+      'ünkü şablon yazanların çoğu GSA Search Engine Ranker''ı hiç kullanmamıştır. Açıkken <b' +
+      '>Dosya</b>, <b>GSA şablonu içe aktar…</b> bir SER şablonunu okur ve bu dile çevirir.</' +
+      'p>',
+    '<p>Çeviri belirli bir biçimde temkinlidir. Sadakatle ifade edemediğini sessizce işlene' +
+      'n bir şeye dönüştürmek yerine geri çevirir ve size söyler. Metinde kalsa yanlış okunac' +
+      'ak yapılar — BBCode köşeli ayraçları, bir bağlantı içindeki <code>#</code>, bir <code>' +
+      '#file[...]</code> makrosu — değişkenlere taşınır ve özet kaç tane olduğunu söyler.</p>',
+    '<p>Sonuç hakkında bilinmesi gereken iki şey:</p>',
+    '<ul>',
+    '<li><b>Taşınan değerler oturum değerleridir.</b> Değişkenler panelinde görünürler ve b' +
+      'elgeyle birlikte kaydedilmezler. Çevrilmiş şablonu kaydedin, yarın açın; taşınan metni' +
+      'n durduğu yerde <code>%…%</code> görürsünüz. İçe aktardığınız dosyadan hiçbir şey yitm' +
+      'ez — o el değmemiş kalır — ama çevrilmiş belge kendi başına yeterli değildir.</li>',
+    '<li><b>Son rötuş geçişi olmadan işlenir.</b> Buradaki başka her belge dil kılavuzunda ' +
+      'anlatılan son rötuşları alır; çevrilmiş bir şablon almaz, çünkü düzeltmek bizim metnim' +
+      'iz değildir. Başkasınındır, çoğunlukla GSA''ya geri dönüş yolundadır ve karakteri kara' +
+      'kterine sağ çıkmalıdır.</li>',
+    '</ul>',
+    '<p>İçe aktarılan belge adsız ve kaydedilmemiştir, yeni bir belge gibi. Seçtiğiniz dosy' +
+      'a tam olarak olduğu gibi kalır.</p>',
+    '<h1 id="language">Dil, yapı yapı</h1>',
+    '<p>Şablon, içinde birkaç işaretli yer bulunan sıradan metindir. İşaretli olmayan her ş' +
+      'ey olduğu gibi çıkar; bir şablonun çok sayıda metin üretebilmesini sağlayan işaretlerd' +
+      'ir.</p>',
+    '<p>Altı tanedirler ve dilin tamamı budur: seçenekler arasında bir <b>seçim</b>, birkaç' +
+      ' parçanın <b>karıştırılması</b>, bir kez tanımlayıp adıyla kullandığınız bir <b>makro<' +
+      '/b>, bir <b>koşul</b>, doğru sözcük biçimini alan bir <b>sayım</b> ve başka bir şablon' +
+      'u içeri getiren bir <b>ekleme</b>. Açıklamalar, hiçbir şey üretmeyen yedinci bir işare' +
+      'ttir.</p>',
+    '<blockquote>Aşağıdaki her örnek, program her derlendiğinde Studio''nun bu kopyasının g' +
+      'etirdiği makineden geçer ve sağda tam olarak onun geri verdiği durur. Burada hiçbir şe' +
+      'y hatırlanmış ya da tahmin edilmiş değildir; doğru olmaktan çıkan bir yanıt derlemeyi ' +
+      'durdurur. Makinenin sürümü <b>Yardım</b>, <b>Hakkında</b> altındadır.</blockquote>',
+    '<p>Bu yardımdaki öteki belge, <b>Tanı sekmesi size ne söylüyor</b>, ters gidenleri anl' +
+      'atır. Bu belge, hiçbir şey ters gitmediğinde yapıların ne yaptığını anlatır — bir şabl' +
+      'onun şaşırtıcı bir şey yaptığı ve hiçbir şeyin bunu bildirmediği birkaç yer de dahil.<' +
+      '/p>',
+    '<h2 id="reading-syntax">Örnekler nasıl okunur</h2>',
+    '<p><code>→</code> oku şablonu makinenin geri verdiğinden ayırır. <code>(boş)</code>, h' +
+      'içbir şey yazmadığı anlamına gelir. Çıktıdan sonra üç boşlukla ayrılmış metin bir nott' +
+      'ur, yanıtın parçası değil.</p>',
+    '<p>Koşullar varsayılmak yerine belirtilmiştir, çünkü onlar olmadan aşağıdaki yanıtları' +
+      'n yarısı yeniden üretilemez:</p>',
+    '<p><small><tt>locale: tr<br>seed: 7<br>empty: (boş)<br>include intro: {Acme|Globex} şi' +
+      'rketine hoş geldiniz.<br>include shout: %marka% burada.</tt></small></p>',
+    '<p><code>seed</code> kurayı sabitler. İçinde seçim bulunan bir şablonun tek yanıtı yok' +
+      'tur, dolayısıyla tohumsuz bir örnek her geçişte başka bir şey yazardı ve denetlenecek ' +
+      'bir şey kalmazdı. Pencerede bu, sağ yarımın üstündeki <b>Tohum</b> kutusudur; işaretle' +
+      'yin, yanında bir sayı alanı belirir ve siz çalışırken önizleme durur.</p>',
+    '<p><code>locale</code> sayı biçimlerini belirler ve arayüzün dili değil, sağ yarımın ü' +
+      'stündeki seçicidir. Türkçe ve İngilizce iki biçim ister; Rusça, Ukraynaca, Belarusça, ' +
+      'Sırpça, Hırvatça ve Boşnakça üç ister.</p>',
+    '<h2 id="choices">Seçimler</h2>',
+    '<p>Aralarında <code>|</code> bulunan kaşlı ayraçlar: makine <b>birini</b> alır.</p>',
+    '<p><small><tt><a href="ex:1">{Küçük|Büyük} bir oda.</a><br>→&nbsp; Küçük bir oda.</tt>' +
+      '</small></p>',
+    '<p>Çekiliş rastgeledir, bu yüzden aynı şablon başka bir geçişte <code>Büyük bir oda.</' +
+      'code> verir. Seçimin kendisi çevresindeki metne dokunmaz — bu belgenin sonuna doğru an' +
+      'latılan son rötuş yine de ona uzansa bile.</p>',
+    '<h3 id="choices-0">İç içelik</h3>',
+    '<p>Bir seçim başka bir seçim içerebilir, istenen derinlikte.</p>',
+    '<p><small><tt><a href="ex:2">Acme {Pro {Plus|Max}|Lite}</a><br>→&nbsp; Acme Pro Plus</' +
+      'tt></small></p>',
+    '<p>İçteki seçim yalnızca dıştaki onun bulunduğu dalı aldığında yapılır: <code>Lite</co' +
+      'de> çıkarsa <code>Plus|Max</code> hiç sorulmaz — ve ölçülebilir biçimde, ona rastgele ' +
+      'bir sayı bile sorulmaz.</p>',
+    '<h3 id="choices-1">Boş bir olasılık</h3>',
+    '<p>Bir olasılık boş olabilir. Bir şeyin yalnızca zaman zaman görünmesini sağlamanın ol' +
+      'ağan yolu budur.</p>',
+    '<p><small><tt><a href="ex:3">{|Çok }büyük bir oda.</a><br>→&nbsp; Büyük bir oda.</tt><' +
+      '/small></p>',
+    '<p>Boşluğu olasılığın içine yazmak, <code>{|Çok } </code> yerine <code>{|Çok }</code>,' +
+      ' alışkanlıktır, kural değil: son rötuş çift boşluğu her hâlükârda tekleştirir.</p>',
+    '<h2 id="shuffles">Karıştırmalar</h2>',
+    '<p>Köşeli ayraçlar birkaç parça alır, kaç tane olacağını seçer, onları rastgele sıraya' +
+      ' dizer ve birleştirir.</p>',
+    '<p><small><tt><a href="ex:4">[kırmızı|yeşil|mavi]</a><br>→&nbsp; Yeşil mavi kırmızı</t' +
+      't></small></p>',
+    '<p>Kendi hâline bırakılırsa hepsini alır ve tek boşlukla birleştirir. Bir karıştırmayl' +
+      'a ilgili başka her şey, açan ayracın hemen ardındaki bir <code>&lt;…&gt;</code> bloğun' +
+      'da ayarlanır.</p>',
+    '<h3 id="shuffles-0">Ayırıcı</h3>',
+    '<p><small><tt><a href="ex:5">[&lt;, &gt;kırmızı|yeşil|mavi]</a><br>→&nbsp; Yeşil, mavi' +
+      ', kırmızı</tt></small></p>',
+    '<p>Bir <code>&lt;…&gt;</code> bloğu, <b>bir ayar adlandırmadıkça</b> ayırıcının kendis' +
+      'idir: <code>sep</code>, <code>lastsep</code>, <code>minsize</code> veya <code>maxsize<' +
+      '/code>''dan biri, kendi başına bir sözcük olarak ve ardında bir <code>=</code> ile. O ' +
+      'konumdaki başka her şey ayırıcıdır, ne kadar ayara benzerse benzesin — <code>=</code> ' +
+      'işareti olmayan bir anahtar:</p>',
+    '<p><small><tt><a href="ex:6">[&lt;maxsize 2&gt;kırmızı|yeşil|mavi]</a><br>→&nbsp; Yeşi' +
+      'lmaxsize 2mavimaxsize 2kırmızı</tt></small></p>',
+    '<p>ya da önüne bir şey yapışmış bir anahtar:</p>',
+    '<p><small><tt><a href="ex:7">[&lt;xmaxsize=1&gt;kırmızı|yeşil|mavi]</a><br>→&nbsp; Yeş' +
+      'ilxmaxsize=1mavixmaxsize=1kırmızı</tt></small></p>',
+    '<p>İkincisi ikinci bir bakışı hak eder: panel <code>xmaxsize</code>''a bilinmeyen anah' +
+      'tar <b>diyor</b> ve makine yine de bloğun tamamını parçaların arasına yazıyor. Tanı il' +
+      'e çıktı ayrı soruları yanıtlıyor.</p>',
+    '<p>İki ayrı ayırıcı istediğinizde ayarları açıkça yazın:</p>',
+    '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" ve "&gt;kırmızı|yeşil|mavi]</a><b' +
+      'r>→&nbsp; Yeşil, mavi ve kırmızı</tt></small></p>',
+    '<p><code>sep</code> parçaların arasına, <code>lastsep</code> sonuncudan önce girer.</p' +
+      '>',
+    '<h3 id="shuffles-1">Kaç tane</h3>',
+    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;kırmızı|yeşil|mavi]</a><br>→&' +
+      'nbsp; Yeşil mavi</tt></small></p>',
+    '<p><code>minsize</code> taban, <code>maxsize</code> tavandır; aradaki sayı da sıra gib' +
+      'i rastgeledir. Eşit değerler tam olarak o kadarını alır. <b>İkisi de yoksa hepsi — ama' +
+      ' yalnız <code>maxsize</code> varsa taban bire iner</b>, ki bu şaşırtır:</p>',
+    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+      'p>',
+    '<p>Üç parça, üç tavan ve bir tanesi çıktı. «Hepsi, en çok üç» demek istiyorsanız <code' +
+      '>minsize</code> de yazın. Parça sayısını aşan bir <code>maxsize</code> sessizce o sayı' +
+      'ya indirilir. <code>maxsize</code>''ı aşan bir <code>minsize</code> tek söz edilmeden ' +
+      'kabul edilir ve taban kazanır: tavan ona yükseltilir, tersi değil:</p>',
+    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;kırmızı|yeşil|mavi]</a><br>→' +
+      '&nbsp; Yeşil mavi kırmızı</tt></small></p>',
+    '<h3 id="shuffles-2">İki parça arasında bir ayırıcı</h3>',
+    '<p>İki parçanın <b>arasına</b> yazılan bir <code>&lt;…&gt;</code>, o çiftin ayırıcısıd' +
+      'ır.</p>',
+    '<p><small><tt><a href="ex:12">[kırmızı|yeşil&lt;ve&gt;|mavi]</a><br>→&nbsp; Yeşil ve m' +
+      'avi kırmızı</tt></small></p>',
+    '<p>Kendisinden <b>sonraki</b> parçaya aittir ve karıştırma boyunca onunla birlikte yol' +
+      'culuk eder; bu yüzden çıktıda sabit bir yerde değil, o parça nereye düşerse orada beli' +
+      'rir. <b>Son</b> parçadan sonraki bir <code>&lt;…&gt;</code> hiç ayırıcı değildir ve me' +
+      'tin olarak yazılır:</p>',
+    '<p><small><tt><a href="ex:13">[kırmızı|yeşil|mavi&lt;ve&gt;]</a><br>→&nbsp; Yeşil mavi' +
+      '&lt;ve&gt; kırmızı</tt></small></p>',
+    '<h2 id="macros">Makrolar</h2>',
+    '<p><code>#set</code> bir metin parçasına ad verir. Ad <code>%ad%</code> biçiminde kull' +
+      'anılır ve yönerge kendi satırındaki ilk şey olmalıdır — önünde boşluk ve sekme olabili' +
+      'r, başka bir şey olamaz.</p>',
+    '<p><small><tt><a href="ex:14">#set %sehir% = Ankara</a><br><a href="ex:14">%sehir% uçu' +
+      'şu.</a><br>→&nbsp; Ankara uçuşu.</tt></small></p>',
+    '<p>Adlar Latin harfleri, rakamlar ve <code>_</code> işaretinden oluşur. Başka bir alfa' +
+      'bedeki bir ad, ad değildir; öteki belge bunu <code>set.malformed</code> altında anlatı' +
+      'r. Türkçeye özgü harfler bu yüzden bir ada girmez; bir değere girer.</p>',
+    '<h3 id="macros-0"><code>#set</code> yeniden çeker, <code>#def</code> bir kez çeker</h3' +
+      '>',
+    '<p>İkisi arasındaki bütün fark budur ve yalnızca değer bir seçim içerdiğinde görünür.<' +
+      '/p>',
+    '<p><small><tt><a href="ex:15">#set %secim% = {A|B}</a><br><a href="ex:15">%secim% %sec' +
+      'im% %secim%</a><br>→&nbsp; A A B</tt></small></p>',
+    '<p><small><tt><a href="ex:16">#def %secim% = {A|B}</a><br><a href="ex:16">%secim% %sec' +
+      'im% %secim%</a><br>→&nbsp; A A A</tt></small></p>',
+    '<p>İki örnek de aynı tohum altında koştu. <code>#set</code> şablonu saklar ve her kull' +
+      'anımda yeniden çeker; <code>#def</code> bir kez çeker ve yanıtı tutar. Kendisiyle uyuş' +
+      'ması gereken bir şey için — bir marka, bir şehir, bir ad, bir sayı — <code>#def</code>' +
+      ' kullanın, çeşitlilik için <code>#set</code>.</p>',
+    '<p>Tek bir tohum ikisini ayırt etmeye yetmez: <code>#set</code>in rastlantıyla üç kez ' +
+      'aynı olasılığı çektiği tohumlar vardır ve ikisi aynı görünür. Tek bir önizlemeden bir ' +
+      'tanımın çalışmadığı sonucunu çıkarmadan önce bilmekte yarar var.</p>',
+    '<h2 id="conditions">Koşullar</h2>',
+    '<p><code>{?ad?ise|değilse}</code> bir makronun değeri olup olmadığını sorar.</p>',
+    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?elimizde %n% var' +
+      '|henüz yok}</a><br>→&nbsp; Elimizde 5 var</tt></small></p>',
+    '<p><code>değilse</code> yarısı yazılmayabilir — yanıt hayırsa <code>{?ad?ise}</code> h' +
+      'içbir şey yazmaz. Bir <code>!</code> soruyu ters çevirir:</p>',
+    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?yabancı|dos' +
+      't}</a><br>→&nbsp; Dost</tt></small></p>',
+    '<p>Değeri olmak, <b>boşluk olmayan en az bir karakteri olmak</b> demektir. Hiçbir şeye' +
+      ' ya da yalnızca boşluklara ayarlanmış bir makro değersiz sayılır.</p>',
+    '<p>Bir koşulun adı bir harf ya da <code>_</code> ile <b>başlamalıdır</b>; bu, bir makr' +
+      'oya göre daha sıkıdır — ve sessizlikler bölümü, rakamla başlayan bir adın neye dönüştü' +
+      'ğünü söyler.</p>',
+    '<h2 id="counting">Sayım</h2>',
+    '<p><code>{plural %n%: …}</code> bir sayıya uyan sözcük biçimini alır.</p>',
+    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: dos' +
+      'ya|dosyalar}</a><br>→&nbsp; 1 dosya</tt></small></p>',
+    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: dos' +
+      'ya|dosyalar}</a><br>→&nbsp; 5 dosyalar</tt></small></p>',
+    '<p>Sayı burada bilerek bir <code>#def</code>tir, <code>#set</code> değil; kural akılda' +
+      ' tutmaya değer: <b>sayıyı düz bir rakam ya da bir <code>#def</code> yapın, asla <code>' +
+      '#set</code> değil.</b> Bir <code>#set</code>ten sayı yerine ulaşan şey saklanan METİNd' +
+      'ir, <code>5</code> değil <code>{5|5}</code> — yani sayı değildir, dolayısıyla yapının ' +
+      'tamamı hiçbir şey üretmez ve panel <code>plural.count-macro</code> der. Sayı ile biçim' +
+      ' birbiriyle çelişemez: bunun yerine sözcük yok olur.</p>',
+    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+      ' dosya|dosyalar}</a><br>→&nbsp; 5</tt></small></p>',
+    '<p>Kaç biçim olduğuna siz değil yerel ayar karar verir: <code>tr</code> altında iki, <' +
+      'code>ru</code> altında üç. Yanlış sayı panelin bildirdiği bir hatadır (<code>plural.ar' +
+      'ity</code>) ve makine o zaman yapının tamamını, kaşlı ayraçlar geniş <code>｛｝</code> i' +
+      'le değiştirilmiş olarak geri yazar; böylece çıktı sanılmaz.</p>',
+    '<h2 id="fragments">Parçalar</h2>',
+    '<p><code>#include "ad"</code> o noktaya başka bir şablon koyar ve yönerge kendi satırı' +
+      'ndaki ilk şey olmalıdır — burada da önünde boşluk ve sekme olabilir.</p>',
+    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Acme şirketine hoş geldi' +
+      'niz.</tt></small></p>',
+    '<p>Parça kendi şablonu olarak işlenir, bu yüzden içindeki bir seçim yeniden yapılır: <' +
+      'code>intro</code>, <code>{Acme|Globex}</code> içerir ve biri ya da öteki ile yanıt ver' +
+      'ir.</p>',
+    '<p>Ad <b>tam olarak</b> karşılaştırılır. <code>Intro</code> ile <code>intro</code> iki' +
+      ' ayrı parçadır ve Windows''ta bunu karıştırmak kolaydır, çünkü dosya sistemi umursamaz' +
+      '. Eksik bir hedef hiçbir şey olarak işlenir ve panel <code>include.unknown-target</cod' +
+      'e> der; yalnızca büyük-küçük harfte ayrılan bir hedef, muhtemelen kastettiğiniz adı sö' +
+      'yleyen bir Studio notu alır.</p>',
+    '<h3 id="fragments-0">Bir parça sizin makrolarınızı görmez</h3>',
+    '<p>Kendi şablonu olarak işlenir: oturumun değerlerine sahiptir, ama onu içeri getiren ' +
+      'belgenin <code>#set</code> ve <code>#def</code> tanımlarına değil.</p>',
+    '<p><small><tt><a href="ex:23">#set %marka% = Acme</a><br><a href="ex:23">#include "sho' +
+      'ut"</a><br>→&nbsp; %marka% burada.</tt></small></p>',
+    '<p><code>shout</code>, <code>%marka% burada.</code> demektir ve adın parçanın kendi iç' +
+      'inde tanımlanması gerekir. Bu bir sessizlik değildir — panel <code>variable.undefined<' +
+      '/code> diyor — ama bunu o dosyanın 1. satırında <b><code>shout</code></b> için söyler ' +
+      've baktığınız belgede hiçbir dalgalı çizgi belirmez, çünkü konum başka bir tampona ait' +
+      'tir. Bir uyarı yazmadığınız bir satırla ilgiliymiş gibi göründüğünde <b>Dosya</b> sütu' +
+      'nunu okuyun.</p>',
+    '<h2 id="remarks">Açıklamalar</h2>',
+    '<p><code>/# … #/</code> bir açıklamadır: işaretlerin arasındaki her şey, başka herhang' +
+      'i bir şeyden önce kaldırılır.</p>',
+    '<p><small><tt><a href="ex:24">taslak /# emin değilim #/ hazır</a><br>→&nbsp; Taslak ha' +
+      'zır</tt></small></p>',
+    '<p>Açıklamalar iç içe geçmez. İlk <code>#/</code> açıklamayı kapatır, öncesinde ne olu' +
+      'rsa olsun; bu yüzden kendisi <code>#/</code> içeren bir metnin çevresine sarılmış bir ' +
+      'açıklama, göründüğünden önce biter.</p>',
+    '<h2 id="tidying">Makinenin sonda düzelttikleri</h2>',
+    '<p>Çıktı, yapıların ürettiği metnin tam olarak kendisi değildir. Sonda ona birkaç şey ' +
+      'olur; ikisiyle her gün karşılaşırsınız.</p>',
+    '<p>Her cümlenin ilk harfi büyütülür:</p>',
+    '<p><small><tt><a href="ex:25">bir. iki. üç.</a><br>→&nbsp; Bir. Iki. Üç.</tt></small><' +
+      '/p>',
+    '<p>Bu yüzden bu yardımdaki örnekler, şablonda küçük harf varken çok kez büyük harfle y' +
+      'anıt verir. Makinenin bildiği bir kısaltmadan sonraki nokta bir cümleyi bitirmez; <cod' +
+      'e>e.g.</code> ya da <code>U.S.</code> biçiminde olan bir şey de bitirmez — <b>Latin ha' +
+      'rfleriyle</b>, ki bu gerçek bir sınırdır, bir kaçamak değil: «bir sözcüğün ortasında m' +
+      'ıyız» denetimi bir ASCII denetimidir.</p>',
+    '<p><small><tt><a href="ex:26">vs. fiyatlarımız düşük</a><br>→&nbsp; vs. fiyatlarımız d' +
+      'üşük</tt></small></p>',
+    '<p><small><tt><a href="ex:27">Dr. fiyatlarımız düşük</a><br>→&nbsp; Dr. fiyatlarımız d' +
+      'üşük</tt></small></p>',
+    '<p>Başka her sözcük bir cümleyi bitirir, ne kadar kısa olursa olsun — uzunluğun bununl' +
+      'a ilgisi yoktur:</p>',
+    '<p><small><tt><a href="ex:28">Xyz. fiyatlarımız düşük</a><br>→&nbsp; Xyz. Fiyatlarımız' +
+      ' düşük</tt></small></p>',
+    '<p>Makinenin bildiği liste 46 girdilidir, <b>29''u Kiril</b>, ve öteki belge onu <b>He' +
+      'r dilde bir sessizlik</b> başlığı altında baştan sona gezer. Türkçe metin için asıl ön' +
+      'emli olan aşağıda, sessizliklerdedir: liste Türkçeye göre ayarlanmamıştır.</p>',
+    '<p>Her günkü ikinci şey, boşluk dizilerinin teke inmesidir. Boş bir olasılığı çevresin' +
+      'deki boşlukları saymadan bırakabilmenizi sağlayan budur.</p>',
+    '<p>Gerisi bir solukta: <code>,;:!?.</code> önündeki bir boşluk atılır ve arkasına bir ' +
+      'tane konur; çıktının tamamı kenarlarından budanır; büyük harf yalnızca noktadan sonra ' +
+      'değil, satır sonundan ve blok etiketinden sonra da gelir; ve şemalı adresler, e-posta ' +
+      'adresleri, çıplak alan adları ve ondalık sayılar korunur ve tam olarak yazıldıkları gi' +
+      'bi çıkar.</p>',
+    '<p>Bunların sonuncusu yukarıdaki kısaltmalarla aynı ASCII sınırını taşır. Çıplak bir a' +
+      'lan adı Latin harfleriyle yazılmışsa korunur; <code>сайт.рф</code> korunmaz ve son röt' +
+      'uş içine bir boşluk ve bir büyük harf sokar.</p>',
+    '<p><small><tt><a href="ex:29">merhaba , dünya</a><br>→&nbsp; Merhaba, dünya</tt></smal' +
+      'l></p>',
+    '<p><small><tt><a href="ex:30">bir.iki</a><br>→&nbsp; bir.iki</tt></small></p>',
+    '<h2 id="silences">Sessizlikler</h2>',
+    '<p>Aşağıdaki her durum işlenir, göründüğünden başka bir şey üretir ve <b>hiçbir tanı</' +
+      'b> doğurmaz. Buraya toplanmışlardır, çünkü pencerede başka hiçbir şey onlardan hiç söz' +
+      ' etmeyecek.</p>',
+    '<p><b>Noktalı <code>i</code> büyütülürken noktasını yitirir.</b> Türkçe yazanların ilk' +
+      ' çarpacağı sessizlik budur ve en görünür olanıdır: makinenin cümle başındaki büyütmesi' +
+      ' <code>i</code> harfini <code>İ</code> değil <code>I</code> yapar, çünkü kural ASCII''' +
+      'nin kuralıdır ve yerel ayarı hiç sormaz.</p>',
+    '<p><small><tt><a href="ex:31">işte bu bir cümle. işte diğeri</a><br>→&nbsp; Işte bu bi' +
+      'r cümle. Işte diğeri</tt></small></p>',
+    '<p>Yukarıdaki <code>bir. iki. üç.</code> örneğinde de aynısı görülür: <code>iki</code>' +
+      ', <code>İki</code> değil <code>Iki</code> olur. Hiçbir tanı bunu söylemez, çünkü makin' +
+      'e için ortada bir yanlış yoktur. Cümleyi başka bir harfle başlatmaktan ya da büyük har' +
+      'fi kendiniz yazmaktan başka çare yoktur.</p>',
+    '<p><b>Türkçe kısaltmalar makinenin listesinde değildir.</b> Yalnızca listenin Latin ya' +
+      'rısıyla çakışan sözcükler korunur — yukarıdaki <code>vs.</code>, <code>Dr.</code> ve <' +
+      'code>Prof.</code> ile ayrıca <code>No.</code> —, buna karşılık <code>vb.</code>, <code' +
+      '>sf.</code> ve <code>Sn.</code> bir cümleyi bitirir ve sonraki sözcüğü büyütür:</p>',
+    '<p><small><tt><a href="ex:32">vb. fiyatlarımız düşük</a><br>→&nbsp; Vb. Fiyatlarımız d' +
+      'üşük</tt></small></p>',
+    '<p><b>Kendi satırında yalnız olmayan bir <code>#include</code> sıradan metindir.</b></' +
+      'p>',
+    '<p><small><tt><a href="ex:33">Önce. #include "intro"</a><br>→&nbsp; Önce. #include "in' +
+      'tro"</tt></small></p>',
+    '<p>Aynısı, arkasında bir şey bulunan bir yönerge için ve boşluksuz <code>#include"intr' +
+      'o"</code> için de geçerlidir. Kural bu makinenin değil ailenin kuralıdır ve bir yönerg' +
+      'eyi bütün satırı çözümlemeden tanınır kılan da odur.</p>',
+    '<p><b>Adı rakamla başlayan bir koşul, koşul değildir.</b> <code>?1x?evet</code> ile <c' +
+      'ode>hayır</code> arasında sıradan bir seçime dönüşür:</p>',
+    '<p><small><tt><a href="ex:34">{?1x?evet|hayır}</a><br>→&nbsp; ?1x? Evet</tt></small></' +
+      'p>',
+    '<p><b>Sonraki bir parçanın başındaki <code>&lt;…&gt;</code> ayırıcı değildir</b> ve ol' +
+      'duğu gibi yazılır:</p>',
+    '<p><small><tt><a href="ex:35">[kırmızı|&lt;ve&gt;yeşil]</a><br>→&nbsp; &lt;ve&gt;Yeşil' +
+      ' kırmızı</tt></small></p>',
+    '<p><b>İlk</b> parçanın başındaki blok ise ayırıcıdır — karıştırmalar bölümünün açıldığ' +
+      'ı yazım budur:</p>',
+    '<p><small><tt><a href="ex:36">[&lt;ve&gt;kırmızı|yeşil]</a><br>→&nbsp; Yeşil ve kırmız' +
+      'ı</tt></small></p>',
+    '<p>Bir <code>|</code> işaretinden sonra her yerde sıradan metindir ve iki parça arasın' +
+      'daki bir ayırıcı, birincinin <b>sonuna</b> yazılır.</p>',
+    '<p><b>Bir parçanın sonundaki çıplak bir etiket, o çiftin ayırıcısı sayılır</b> ve kend' +
+      'i metni olarak yazılır:</p>',
+    '<p><small><tt><a href="ex:37">[bir&lt;br&gt;|iki]</a><br>→&nbsp; Iki bir</tt></small><' +
+      '/p>',
+    '<p>Bu tohum altında ikisi öteki sırayla düştü, bu yüzden ayırıcı hiç çıkmadı. Üçüncü b' +
+      'ir parçayla düşeceği bir yer olur ve görünür:</p>',
+    '<p><small><tt><a href="ex:38">[kırmızı|yeşil&lt;br&gt;|mavi]</a><br>→&nbsp; Yeşil br m' +
+      'avi kırmızı</tt></small></p>',
+    '<p><code>&lt;br&gt;</code>, <code>yeşil</code> ile ondan sonra geleni arasında durur, ' +
+      'karıştırma o çifti nereye koyarsa koysun. Kapanan bir etiket (<code>&lt;/b&gt;</code>)' +
+      ', kendi kendini kapatan bir etiket (<code>&lt;br/&gt;</code>), öznitelikli bir etiket ' +
+      '(<code>&lt;br class="x"&gt;</code>) ve bir parçanın ortasındaki bir etiket olduğu gibi' +
+      ' kalır.</p>',
+    '<p><b>Kapatılmamış bir açıklama sıradan metindir</b> — hiçbir şey açmaz ve <code>/#</c' +
+      'ode> yazılır:</p>',
+    '<p><small><tt><a href="ex:39">önce /# bunun geri kalanı</a><br>→&nbsp; Önce /# bunun g' +
+      'eri kalanı</tt></small></p>',
+    '<p>Ama yine de bir çiftin yarısıdır. Belgenin ilerisinde bir <code>#/</code> belirirse' +
+      ' ikisi birbirini bulur ve aralarındaki her şey gider — yazarın araya yazdıkları da dah' +
+      'il:</p>',
+    '<p><small><tt><a href="ex:40">{a /# hop|b} orta #/ kuyruk</a><br>→&nbsp; {a kuyruk</tt' +
+      '></small></p>',
+    '<p>Yukarıdaki seçim ikinci seçeneğini ve kapanan ayracını yitirdi ve hiçbir tanı bunu ' +
+      'söylemiyor: metnin ANLAMI budur, makinenin görebileceği bir yanlış değil. Bir <code>/#' +
+      '</code> gerçekten kastediliyorsa onun güvenli yeri şablonun gövdesi değil bir değişken' +
+      'in değeridir.</p>',
+    '<h2 id="next">Sonra nereye bakmalı</h2>',
+    '<p>Öteki belge, <b>Tanı sekmesi size ne söylüyor</b>, panelin gösterebileceği her satı' +
+      'r için bir madde taşır: ne anlama geldiği, neyin yol açtığı ve o dururken makinenin şa' +
+      'blonla ne yaptığı. İmleç bir yapının içindeyken F1''e basın; yardım o yapının bölümünd' +
+      'e <b>o belgede</b> açılır: bir kaşlı ayraç <b>Ayraçlar</b>''da, bir <code>[…]</code> <' +
+      'b>Karıştırmalar</b>''da, bir <code>#set</code> satırı <b>Tanımlar</b>''da.</p>',
+    '<h1 id="about">Tanı sekmesi size ne söylüyor</h1>',
+    '<p>O sekmedeki her satır <b>makinenin</b> hükmüdür ve JavaScript, PHP ya da Python ger' +
+      'çeklemesinden alacağınız hükmün aynısıdır — tek bir ortak külliyata tutulan dört bağım' +
+      'sız makine. Studio''nun şablonunuz hakkındaki görüşü değildir. Makine burada bir şeye ' +
+      'hata diyorsa, ailedeki her makine de ona hata der ve şablonunuz sunucunuzda bu pencere' +
+      'deki gibi davranır.</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th>ne yazıyor</th><th>kim söylüyor</th><th>ne demek</th></tr>',
+    '<tr><td><b>hata</b></td><td>makine</td><td>şablon göründüğü şeyi yapmayacak</td></tr>',
+    '<tr><td><b>uyarı</b></td><td>makine</td><td>işleniyor, ama büyük olasılıkla kastettiği' +
+      'niz gibi değil</td></tr>',
+    '<tr><td><b>Studio notu</b></td><td>Studio</td><td>makine bir şey söylemedi ve yine de ' +
+      'söylemeye değer: daire çizen bir ekleme, büyük-küçük harfi farklı bir hedef, bir denet' +
+      'im karakteri</td></tr>',
+    '</table>',
+    '<p><b>Nerede</b> sütunu satır ve sütundur. Satıra tıklamak imleci oraya koyar.</p>',
+    '<blockquote>Aşağıdaki her örnek, program her derlendiğinde Studio''nun bu kopyasının g' +
+      'etirdiği makineden geçer ve sağda tam olarak onun geri verdiği durur. Burada hiçbir şe' +
+      'y hatırlanmış ya da tahmin edilmiş değildir; doğru olmaktan çıkan bir yanıt derlemeyi ' +
+      'durdurur. Makinenin sürümü <b>Yardım</b>, <b>Hakkında</b> altındadır.</blockquote>',
+    '<h2 id="reading">Örnekler nasıl okunur</h2>',
+    '<p><code>→</code> oku şablonu makinenin geri verdiğinden ayırır. <code>⏎</code> bir çı' +
+      'ktı içindeki satır sonudur, <code>(boş)</code> hiçbir şey yazmadığı anlamına gelir ve ' +
+      '<code>…</code> tümüyle gösterilemeyecek kadar uzun bir çıktıyı imler. Çıktıdan sonra ü' +
+      'ç boşlukla ayrılmış metin bir nottur, yanıtın parçası değil.</p>',
+    '<p>Örneklerin hangi koşullarda koştuğu sınamalarda gizli değil buradadır — onlar olmad' +
+      'an bazı yanıtlar yeniden üretilemez. En çok şablon kümesi önemlidir: yoksa <code>#incl' +
+      'ude "frag"</code> → <code>Parça</code> bu belgenin hiç söylemediği bir şeye dayanırdı.' +
+      '</p>',
+    '<p><small><tt>locale: tr<br>seed: 7<br>empty: (boş)<br>include frag: Parça<br>include ' +
+      'loop: #include "loop"<br>include Intro: Giriş</tt></small></p>',
+    '<p><code>seed</code> kurayı sabitler: onsuz bir seçim ya da bir karıştırma her seferin' +
+      'de başka türlü yanıt verir ve denetlenecek bir şey kalmazdı.</p>',
+    '<p><b>Yerel ayar burada <code>tr</code> ve iki şeye karar veriyor:</b> makinenin kaç s' +
+      'ayı biçimi beklediğine ve hangi biçimin hangi sayıya gittiğine. Türkçe ve İngilizce ik' +
+      'i ister. Rusça, Ukraynaca, Belarusça, Sırpça, Hırvatça ve Boşnakça üç ister. Yerel aya' +
+      'r, arayüzün dilinden değil, sağ yarımın üstündeki seçiciden gelir.</p>',
+    '<hr>',
+    '<h2 id="brackets">Ayraçlar</h2>',
+    '<p><b>İmleci bir ayracın üstüne koyun, yapı kendini bütün olarak gösterir:</b> nerede ' +
+      'başladığını, nerede bittiğini ve <b>ayırıcılarının her birini</b>. İç içe gruplar onun' +
+      'la birlikte yanmaz — kendi ayırıcıları vardır ve onlar, imleç kendi ayraçlarının üstün' +
+      'e geldiğinde gelir. Düzenlediğiniz şeyin nerede bittiğini görmenin en hızlı yolu budur' +
+      ', hele <code>}</code> iki ekran sağa gitmiş uzun bir satırda.</p>',
+    '<p>Ayırıcı yalnız <code>|</code> değildir. Bir karıştırmada <code>[a&lt;br&gt;|b]</cod' +
+      'e> iki tane taşır: makine <code>&lt;br&gt;</code> işaretini <b>sonraki</b> parçanın ön' +
+      'üne konmuş bir ayırıcı olarak okur ve vurgulama onu ötekilerle birlikte gösterir, çünk' +
+      'ü yapının kuruluşunun bir parçasıdır.</p>',
+    '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — bir ayraç açılıp hiç kapatıl' +
+      'mamış</h3>',
+    '<p><small><tt><a href="ex:41">bir fiyat {ucuz|pahalı</a><br>→&nbsp; Bir fiyat {ucuz|pa' +
+      'halı</tt></small></p>',
+    '<p>Makine nerede kapatmak istediğinizi tahmin etmez. Metin ayracıyla birlikte olduğu g' +
+      'ibi kalır ve seçim hiç gerçekleşmez.</p>',
+    '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — başka türden bir ayraçla' +
+      ' kapatılmış</h3>',
+    '<p><small><tt><a href="ex:42">bir fiyat {ucuz|pahalı]</a><br>→&nbsp; Bir fiyat {ucuz|p' +
+      'ahalı]</tt></small></p>',
+    '<p><code>{</code> işareti <code>}</code> bekler, <code>[</code> işareti <code>]</code>' +
+      ' bekler. Kaşlı ayraçla kapatılan bir karıştırma karıştırma değildir.</p>',
+    '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — açık hiç' +
+      'bir şey yokken kapatan bir ayraç</h3>',
+    '<p><small><tt><a href="ex:43">bir fiyat ucuz} ve hepsi</a><br>→&nbsp; Bir fiyat ucuz} ' +
+      've hepsi</tt></small></p>',
+    '<p>Metin olarak orada kalır. Çoğunlukla bir düzenlemeden artakalmış bir ayraçtır.</p>',
+    '<hr>',
+    '<h2 id="definitions">Tanımlar</h2>',
+    '<h3 id="set.malformed"><code>set.malformed</code> — bu <code>#set</code> satırı kurala' +
+      ' uymuyor</h3>',
+    '<p><small><tt><a href="ex:44">#set sehir = Ankara</a><br><a href="ex:44">%sehir% içind' +
+      'e</a><br>→&nbsp; #set sehir = Ankara ⏎ %sehir% içinde</tt></small></p>',
+    '<p><b>Ad yüzde işaretlerinin arasına yazılır:</b> <code>#set %sehir% = Ankara</code>. ' +
+      'En sık yapılan ilk yanlış budur ve panele bir anda iki satır koyar — bozuk satırın ken' +
+      'disi ve «bu değişken hiçbir yerde tanımlı değil», çünkü hiçbir tanım gerçekleşmedi ve ' +
+      '<code>%sehir%</code> kimsenin değil.</p>',
+    '<p>Çıktıya bakın: başarısız yönerge metinde <b>yazıldığı gibi</b> kaldı. Makine onu yö' +
+      'nerge olarak okumadı, yani sıradan bir satırdır ve sonuca girer.</p>',
+    '<h3 id="def.malformed"><code>def.malformed</code> — bu <code>#def</code> satırı kurala' +
+      ' uymuyor</h3>',
+    '<p><small><tt><a href="ex:45">#def sayfalar = {1|3}</a><br><a href="ex:45">%sayfalar%<' +
+      '/a><br>→&nbsp; #def sayfalar = 1 ⏎ %sayfalar%</tt></small></p>',
+    '<p>Aynı kural ve aynı bedel. <code>#def</code>, <code>#set</code>ten yazılışıyla değil' +
+      ', değerin <b>ne zaman</b> açıldığıyla ayrılır: <code>#set</code> onu her anımsatmada y' +
+      'eniden açar, <code>#def</code> işleme başına bir kez. Bir yazım yanlışı size ikisine b' +
+      'irden mal olur.</p>',
+    '<p>Ve dikkatle bakın: başarısız yönergedeki <code>{1|3}</code> <b>bir olasılık çekti</' +
+      'b>. Satır sıradan metne dönüştü — ve sıradan metin, ayraçlarıyla birlikte sıradan meti' +
+      'n gibi işlenir. Bozuk bir satır kapatılmış değildir; yalnızca yönerge olmaktan çıkar.<' +
+      '/p>',
+    '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — bu ad yuka' +
+      'rıda zaten tanımlı</h3>',
+    '<p><small><tt><a href="ex:46">#set %x% = birinci</a><br><a href="ex:46">#set %x% = iki' +
+      'nci</a><br><a href="ex:46">%x%</a><br>→&nbsp; Ikinci</tt></small></p>',
+    '<p>Çalışır — <b>son</b> tanım kazanır — ama makine buna hata der: bir adın iki kez kon' +
+      'duğu bir belge çift anlamlı okunur ve bir ay sonra iki satırdan hangisinin canlı olduğ' +
+      'unu hatırlamazsınız. Hata <b>ikinci</b> tanımı gösterir; birincisi daha yukarıdadır.</' +
+      'p>',
+    '<h3 id="def.include-in-value"><code>def.include-in-value</code> — bir tanımın değeri i' +
+      'çinde <code>#include</code></h3>',
+    '<p><small><tt><a href="ex:47">#def %x% = #include "frag"</a><br><a href="ex:47">%x%</a' +
+      '><br>→&nbsp; Parça</tt></small></p>',
+    '<p>Bir değerin içindeki ekleme beklediğinizden başka bir anda açılır ve aile bunu yasa' +
+      'klar. <code>#include</code> işaretini kendi satırına koyun.</p>',
+    '<hr>',
+    '<h2 id="variables">Değişkenler</h2>',
+    '<h3 id="variable.undefined"><code>variable.undefined</code> — bu değişken hiçbir yerde' +
+      ' tanımlı değil</h3>',
+    '<p><small><tt><a href="ex:48">merhaba, %ad%</a><br>→&nbsp; Merhaba, %ad%</tt></small><' +
+      '/p>',
+    '<p>Hata değil, uyarı: makine adı olduğu gibi yazar. Bu bilerekdir — değer dışarıdan, k' +
+      'onak programdan gelebilir. Studio''da bu tür değerleri Değişkenler sekmesinde, <b>Otur' +
+      'um değerleri</b> altında verirsiniz.</p>',
+    '<p><b>Bir tanımın değeri panelde düzenlenebilir.</b> Üst bölümde Değer sütununa gelin ' +
+      've <b>F2</b>''ye basın (ya da doğrudan yazmaya başlayın); <b>Enter</b> uygular, <b>Esc' +
+      '</b> vazgeçer. Düzenleme tek bir geri alma adımında <b>belgeye</b> gider: <code>Ctrl+Z' +
+      '</code> onu geri koyar.</p>',
+    '<p>Ad ve tür (<code>#set</code> ya da <code>#def</code>) düzenlenemez — bu bir karardı' +
+      'r, yarım kalmış bir köşe değil. Bir hücreden ad değiştirmek belgedeki bütün anımsatmal' +
+      'arı koparır, satırı silmek ise açıklamayı ve girintiyi de birlikte götürür. İkisi de m' +
+      'etne aittir, ne yaptığınızı gördüğünüz yere.</p>',
+    '<p>Tam olarak değer değişir. Girinti, fazladan boşluklar, addaki büyük-küçük harfler v' +
+      'e satır sonundaki bir açıklama olduğu gibi kalır: <code>   #set  %Marka%   =   Acme   ' +
+      '/# kuyruk #/</code> bir düzenlemeden yalnız <code>Acme</code> bakımından farklı döner.' +
+      ' Dosya git''tedir ve bir satırı yeniden biçimlendirmek orada sizin değişikliğiniz olar' +
+      'ak görünürdü.</p>',
+    '<p><b>Geri çevirme, makinenin satırı başka türlü okuyacağı anlamına gelir.</b> Düzenle' +
+      'me sessizce uygulanmaz: makine sonucu geri okur ve istenen şeyi söylemiyorsa belgeye d' +
+      'okunulmaz ve durum çubuğu bunu söyler. Üç gerçek neden: değerdeki bir <code>/#</code> ' +
+      'dosyanın geri kalanını yiyen bir açıklama açar, bir satır sonu yönergeyi erken bitirir' +
+      ' ve yönergenin <b>içindeki</b> bir açıklama satırı parça parça düzenlenemez kılar — on' +
+      'u metinde düzenleyin.</p>',
+    '<p><b>Bir değişkenin adı üzerinde iki hareket.</b> Paneldeki ad bir bağlantıdır, bir e' +
+      'tiket değil:</p>',
+    '<ul>',
+    '<li><b>ada tıklamak</b> imleci, belgenin o değişkeni kullandığı ilk yere götürür ve sa' +
+      'tır bir an yanar. Aynı sözcük bir açıklamanın içinde ya da bir <code>#include</code> h' +
+      'edefi olarak <b>sayılmaz</b> — panel sizi değişkenin gerçekten çalıştığı yere götürür.' +
+      '</li>',
+    '<li><b>Ctrl+tık</b> belgeye bir tanım yazar ve üzerinde grup düzenleyiciyi açar. Daha ' +
+      'önce yazdığınız değer ilk olasılık olarak içeri girer:</li>',
+    '</ul>',
+    '<p><small><tt><a href="ex:49">#set %marka% = {Vulkan}</a><br><a href="ex:49">kumarhane' +
+      ' %marka%</a><br>→&nbsp; Kumarhane Vulkan</tt></small></p>',
+    '<p>İkisi arasındaki fark, pencereyi kapatmaktan neyin sağ çıktığıdır. Bir oturum değer' +
+      'i çıkmaz: dosyada yoktur, git''te yoktur ve ailedeki başka hiçbir makine onu görmez. B' +
+      'ir tanım çıkar ve bu uyarıyı temelli susturan yalnızca bir tanımdır. Bir <code>Ctrl+Z<' +
+      '/code> belgeyi geri alır.</p>',
+    '<p><b>Bir oturum değeri önce şablondur, metin değil.</b> Makine konak programdan gelen' +
+      ' her değere bunu yapar ve önizlemenin sunucuyla örtüşmesi gerekir — dolayısıyla değer ' +
+      'alanına yazılan <code>{ucuz|pahalı}</code> bir seçim verir, o on üç karakteri değil. M' +
+      'etnin kendisini kastediyorsanız üçüncü sütunda <b>metin olarak</b> kutusunu işaretleyi' +
+      'n: o zaman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.</p>',
+    '<h3 id="variable.self-reference"><code>variable.self-reference</code> — tanım kendi ke' +
+      'ndini anıyor</h3>',
+    '<p><small><tt><a href="ex:50">#set %x% = a %x% b</a><br><a href="ex:50">%x%</a><br>→&n' +
+      'bsp; A a a … %x% … b b b</tt></small></p>',
+    '<p>Elli düzey, sonra duruş. Makine derinlik sınırına kadar açar ve durur, <code>%x%</c' +
+      'ode> işaretini ortada bırakır. Döngü değildir ve istediğiniz şey de değildir.</p>',
+    '<p>Yukarıdaki <code>…</code> bu belgenin kısaltmasıdır, makinenin değil. Gerçek çıktı ' +
+      '207 karakterdir ve her yanda elli yerine <b>elli bir</b> harf taşır: ellinci düzey dur' +
+      'ur ve değeri olduğu gibi bırakır, değerin içinde de her birinden bir tane daha vardır.' +
+      '</p>',
+    '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — tanıml' +
+      'ar birbirini daire çizerek anıyor</h3>',
+    '<p><small><tt><a href="ex:51">#set %x% = %y%</a><br><a href="ex:51">#set %y% = %x%</a>' +
+      '<br><a href="ex:51">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p>Her yan tam <b>bir kez</b> açılır ve sonra durur: <code>%x%</code>, <code>%x%</code' +
+      '> değil <code>%y%</code> oldu. Makine daireyi dolaşmak yerine çözer ve sağ kalan, dair' +
+      'edeki öteki addır — bir belgeye <code>%x% %y%</code> koyun, <code>%y% %x%</code> verir' +
+      ', çift ters çevrilmiş olarak.</p>',
+    '<p>Panel, <b>daireyi kapatan her anımsatma için</b> bir satır çizer; daire için bir sa' +
+      'tır ya da tanım başına bir satır değil. Daireyi iki kez anan bir tanım kendi satırında' +
+      ' iki satır alır: <code>#set %x% = %y% %y%</code> ile <code>#set %y% = %x%</code> üç ha' +
+      'ta eder, ikisi birinci satırda. Satırlar birleştirilmez. Ve konum, gerçekten geçerli o' +
+      'lan tanımın üstündedir: ad iki kez tanımlıysa bu <b>sonuncusudur</b>.</p>',
+    '<hr>',
+    '<h2 id="includes">Eklemeler</h2>',
+    '<h3 id="includes-0"><code>#include</code> yalnızca satır başında çalışır</h3>',
+    '<p><small><tt><a href="ex:52">önce #include "frag" sonra</a><br>→&nbsp; Önce #include ' +
+      '"frag" sonra</tt></small></p>',
+    '<p><small><tt><a href="ex:53">#include "frag"</a><br>→&nbsp; Parça</tt></small></p>',
+    '<p>Hiçbir tanı yok ve asıl mesele de bu: satırın ortasındaki bir <code>#include</code>' +
+      ' ekleme <b>değildir</b>. Makine onu sıradan metin olarak okur ve bir şey söylemez, çün' +
+      'kü yakınılacak bir şey yoktur — metin yazdınız, metin aldınız.</p>',
+    '<p><b>Hedef ise bir satır aşağıda durabilir</b> ve bu, öteki yandan şaşırtır. Makineni' +
+      'n sözcük ile hedefi arasında bıraktığı boşluk satır sonlarını da içerir, dolayısıyla b' +
+      'u bir eklemedir ve çalışır:</p>',
+    '<p><small><tt><a href="ex:54">#include</a><br><a href="ex:54">"frag"</a><br>→&nbsp; Pa' +
+      'rça</tt></small></p>',
+    '<p>Aralarında boş satırlar da olabilir. Başka her şey olamaz: hedeften önce bir sözcük' +
+      ' ya da ardından boşluktan başka bir şey — ve bütünü yine metne döner. Düzenleyici hede' +
+      'fi kendi satırında renklendirir ama hedef gelene dek sözcüğü sıradan bırakır: sonunu h' +
+      'enüz görmediği bir yönerge sözü vermez.</p>',
+    '<h3 id="include.unknown-target"><code>include.unknown-target</code> — kümede bu adda h' +
+      'edef yok</h3>',
+    '<p><small><tt><a href="ex:55">#include "hicbiri"</a><br>→&nbsp; (boş)</tt></small></p>',
+    '<p>Hedefler, açık belgenin klasöründeki <code>.spintax</code> dosyalarıdır. Bilinmeyen' +
+      ' bir hedef hiçliğe açılır — paragraf bozulmak yerine yok olur, ki bunu gözden kaçırmak' +
+      ' tam da bu yüzden kolaydır.</p>',
+    '<p><b>Değişkenler sekmesinin üçüncü bir bölümü, Eklemeler, bu yüzden vardır.</b> Belge' +
+      'deki her <code>#include</code> işaretini ve her biri için kümenin hedefi bulundurup bu' +
+      'lundurmadığını sıralar — geçiş başına bir satır, yani iki kez anılan bir hedef iki sat' +
+      'ır eder. Bölüm yalnızca belgede ekleme varsa görünür. Bir satıra tıklamak imleci o hed' +
+      'efi anan <code>#include</code> işaretine götürür.</p>',
+    '<p>İşaretin <b>üç</b> değeri vardır ve üçüncüsü önemlidir: «küme yok», «parça eksik» d' +
+      'emek değildir, «henüz bakılacak bir yer yok» demektir. Küme, belgenin yanındaki klasör' +
+      'dür ve kaydedilmemiş bir belgenin klasörü yoktur — ilk kayda kadar her hedef böyle iml' +
+      'enir. «EKSİK» yalnızca bir klasör varken ve dosya gerçekten orada değilken görünür.</p' +
+      '>',
+    '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — hedef var, ama başka büy' +
+      'ük-küçük harfle</h3>',
+    '<p><small><tt><a href="ex:56">#include "intro"</a><br>→&nbsp; (boş)</tt></small></p>',
+    '<p>Kümede <code>Intro.spintax</code> vardır — ve makine yine de böyle bir hedef olmadı' +
+      'ğını söyler, Studio ise büyük-küçük harf notunu ekler. Bunlar önemlidir: <code>intro</' +
+      'code> ile <code>Intro</code> ayrı hedeflerdir. Windows dosyayı iki durumda da açardı; ' +
+      'Studio''nun dosya sistemine değil kümeye bakmasının nedeni tam da budur: yoksa önizlem' +
+      'e aynı belge üzerinde sunucuyla çelişirdi.</p>',
+    '<h3 id="note.cycle"><code>note.cycle</code> — daire çizen bir ekleme</h3>',
+    '<p><code>loop.spintax</code> dosyası kendisi <code>#include "loop"</code> içeriyorsa:<' +
+      '/p>',
+    '<p><small><tt><a href="ex:57">#include "loop"</a><br>→&nbsp; (boş)</tt></small></p>',
+    '<p>Makine sonsuzluk yerine hiçbir şey koyar. Not, paragrafın neden yok olduğunu bilesi' +
+      'niz diye oradadır.</p>',
+    '<p>Satır, baktığınız belgeye değil <b><code>loop</code></b> üzerine kesilmiştir — dair' +
+      'e parçanındır ve tıklandığında imleç oraya gider. Açık belgede hiçbir şey altı çizili ' +
+      'değildir, çünkü yazdığınız satırda bir yanlış yoktur.</p>',
+    '<hr>',
+    '<h2 id="plurals">Sayı biçimleri</h2>',
+    '<h3 id="plural.arity"><code>plural.arity</code> — yerel ayarın istediği kadar biçim yo' +
+      'k</h3>',
+    '<p><small><tt><a href="ex:58">#set %n% = 5</a><br><a href="ex:58">%n% {plural %n%: nes' +
+      'ne|nesneler|nesneleri}</a><br>→&nbsp; 5 ｛plural 5: nesne|nesneler|nesneleri｝</tt></sma' +
+      'll></p>',
+    '<p><b>Boşluk değil — makine yapının tamamını yazar</b>, kaşlı ayraçlar geniş <code>｛｝<' +
+      '/code> ile değiştirilmiş olarak. «Bunu gördüm ve uygulayamadım» demenin yolu budur. Bu' +
+      'na göze batmaz diyen olmaz ve iyi ki öyle: sessizce yok olan bir paragrafı bulmak daha' +
+      ' uzun sürerdi.</p>',
+    '<p>Türkçe iki biçim ister, Rusça üç. Bu belgenin yerel ayarı altında doğrusu <code>{pl' +
+      'ural %n%: nesne|nesneler}</code>.</p>',
+    '<p><b>Boşluk başka bir nedenden gelir ve ikisini karıştırmak kolaydır.</b> Yalnızca ka' +
+      'ç biçim taşıdıkları bakımından ayrılan şu ikisini karşılaştırın:</p>',
+    '<p><small><tt><a href="ex:59">{plural %n%: nesne|nesneler}</a><br>→&nbsp; (boş)&nbsp;&' +
+      'nbsp; iki biçim: Türkçe için doğru<br><a href="ex:60">{plural %n%: nesne|nesneler|nesn' +
+      'eleri}</a><br>→&nbsp; (boş)&nbsp;&nbsp; üç biçim: Türkçe için yanlış</tt></small></p>',
+    '<p>İkisi de hiçbir şey yazmaz ve panel onlara başka türlü davranır: birincisi yalnız <' +
+      'code>variable.undefined</code> çeker, ikincisi ayrıca <code>plural.arity</code> çeker.' +
+      ' Yani <b>boşluk, biçim sayısı yanlışının işareti değildir</b> — burada <code>%n%</code' +
+      '> tanımlı olmadığından gelir ve makine biçimleri saymadan önce sayıyı denetler, dolayı' +
+      'sıyla biçim sayısı sorusu ortaya çıkmadan durur.</p>',
+    '<p>Bu maddenin başındaki örnek <code>%n%</code> değişkenini bu yüzden önce tanımlar. O' +
+      'nsuz çıktı, biçim sayısı ne olursa olsun boş kalırdı ve sayı hakkında hiçbir şey göste' +
+      'rmezdi.</p>',
+    '<p>Panel ile çıktı burada ayrı soruları yanıtlar ve bu bir çelişki değildir: satırı, m' +
+      'etindeki biçimleri sayan ve sayıyla ilgilenmeyen <b>denetim</b> koyar; boşluğu ise ken' +
+      'di sırası olan <b>işleme</b> verir. Sayıya bir rakam verin, ilk örnekteki gibi, ve biç' +
+      'im sayısının gerçekte ne yaptığını görürsünüz.</p>',
+    '<h3 id="plural.count-macro"><code>plural.count-macro</code> — sayı bir <code>#set</cod' +
+      'e>ten geliyor, o da her anımsatmada yeniden çekiyor</h3>',
+    '<p><small><tt><a href="ex:61">#set %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
+      ' nesne|nesneler}</a><br>→&nbsp; 1</tt></small></p>',
+    '<p>Neyin sağ kaldığına bakın: <b>sayı yazıldı, ad yazılmadı.</b> Biçim seçilirken sayı' +
+      'nın sayı olması gerekir ve değeri kendisi bir seçim olan bir <code>#set</code> hiçbir ' +
+      'zaman sayı olmaz — makine değeri <b>işlemeden</b> yerine koyar, dolayısıyla sayı yerin' +
+      'e harfi harfine <code>{1|2}</code> metni düşer. Sayı ile biçim çelişemez; makine bunun' +
+      ' yerine sözcüğü düşürür.</p>',
+    '<p><code>#def</code> başka türlü davranır ve değerini işleme başına bir kez açar, böyl' +
+      'ece sayı yerine bir sayı gelir:</p>',
+    '<p><small><tt><a href="ex:62">#def %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
+      ' nesne|nesneler}</a><br>→&nbsp; 1 nesne</tt></small></p>',
+    '<p>Onun için panelde hiç satır yoktur. Kural buradan gelir: sayıyı düz bir rakam ya da' +
+      ' bir <code>#def</code> yapın, asla <code>#set</code> değil.</p>',
+    '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — biçimlerin içind' +
+      'e ayraçlar</h3>',
+    '<p><small><tt><a href="ex:63">{plural %n%: {nesne|şey}|nesneler}</a><br>→&nbsp; ｛plura' +
+      'l %n%: ｛nesne|şey｝|nesneler｝</tt></small></p>',
+    '<p>Biçimler düz metindir. İçlerindeki bir seçim açılmaz ve onun yerine yapının tamamı ' +
+      'geniş ayraçlar içinde yazılır.</p>',
+    '<hr>',
+    '<h2 id="permutations">Karıştırmalar</h2>',
+    '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — ayarda bilinme' +
+      'yen anahtar</h3>',
+    '<p><small><tt><a href="ex:64">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+      'small></p>',
+    '<p>Bilinen anahtarlar <code>minsize</code>, <code>maxsize</code>, <code>sep</code> ve ' +
+      '<code>lastsep</code>''tir. Bilinmeyen biri ayar değildir — ve blokta tek başınaysa blo' +
+      'ğun tamamı hiç ayar değildir: parçalar arasındaki ayırıcıya dönüşür, ki çıktının göste' +
+      'rdiği de budur.</p>',
+    '<p><b>Yanında gerçek bir anahtar varsa sonuç bambaşkadır</b> ve asıl olası yanlış budu' +
+      'r — birkaç anahtardan biri yanlış yazılmıştır:</p>',
+    '<p><small><tt><a href="ex:65">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+      '></small></p>',
+    '<p>Blok bir ayardır, <code>sep</code> uygulanır, bilinmeyen anahtar öylece düşürülür v' +
+      'e panel iki durumda da aynı şeyi söyler. Yani tanı size bir anahtarın anlaşılmadığını ' +
+      'söyler; sonra ne olduğunu söylemez. Onun için çıktıyı okuyun.</p>',
+    '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
+      '— minsize tam sayı değil</h3>',
+    '<p><small><tt><a href="ex:66">[&lt;minsize=iki&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+      'all></p>',
+    '<p>Sayı olmayan bir değer sınırıyla birlikte düşer ve varsayılan geçerli olur — yani b' +
+      'ütün parçalar.</p>',
+    '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
+      '— maxsize tam sayı değil</h3>',
+    '<p><small><tt><a href="ex:67">[&lt;maxsize=cok&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+      'all></p>',
+    '<p>Öteki uçtan tam olarak aynısı: üst sınır yok olur ve çıktı yine her parçayı taşır.<' +
+      '/p>',
+    '<hr>',
+    '<h2 id="notes">Gösterecek bir şeyi olmayan Studio notları</h2>',
+    '<p>Aşağıdaki üç not bu belgede bir örnekle gösterilemez ve nedeni her seferinde başkad' +
+      'ır ve söylenmiştir. Yine de maddeleri vardır: yardım, panelin gösterebileceği <b>her</' +
+      'b> satıra bir yanıt borçludur, yoksa paneldeki bir satır hiçbir yere götürmez.</p>',
+    '<h3 id="note.raw-sentinel"><code>note.raw-sentinel</code> — metinde bir denetim karakt' +
+      'eri</h3>',
+    '<p>U+E000–U+E005 karakterleri makinenin kendi imlemesi için kullandığı karakterlerdir ' +
+      've makine onları çözümlemeden önce <b>kaldırır</b>. Şablonunuza girmişlerse — çoğunluk' +
+      'la başka bir düzenleyiciden yapıştırılarak — Studio bunu söyler: ne önizleme ne de sun' +
+      'ucu onları gösterecektir.</p>',
+    '<p>Burada bilerek örnek yok: o karakterler görünmezdir ve onları taşıyan bir satır boş' +
+      ' görünürdü. Görülecek bir şey olmazdı.</p>',
+    '<h3 id="note.unknown-target"><code>note.unknown-target</code> — küme boş, kıyaslanacak' +
+      ' bir şey yok</h3>',
+    '<p>Belgenin yanındaki küme <b>boş</b> olduğunda görünür: bundan başka tek bir şablon b' +
+      'ile yok. Hedefi kıyaslayacak bir şey olmadığından Studio «böyle bir hedef yok» demez —' +
+      ' yanıt veremeyeceğini söyler. O klasöre tek bir şablon koyun, not yerini esasa yanıt v' +
+      'eren olağan <code>include.unknown-target</code> iletisine bırakır.</p>',
+    '<p>Hiç kaydedilmemiş bir belgenin <b>hiç</b> kümesi yoktur ve bu üçüncü bir durumdur, ' +
+      'bu değil: eklemeler o zaman çıktıda harfi harfine kalır ve panel onlar hakkında bir şe' +
+      'y söylemez. Belgeyi kaydedin, çalışmaya başlarlar.</p>',
+    '<p>Burada yapısı gereği örnek yok: bu belgenin kümesi yukarıda bildirilmiştir ve boş d' +
+      'eğildir.</p>',
+    '<h3 id="note.too-deep"><code>note.too-deep</code> — eklemeler çok derin iç içe</h3>',
+    '<p>Makine iç içe <code>#include</code> işaretlerinin yirminci düzeyinde durur ve altın' +
+      'a bir şey koymaz. Sınır ailenindir: JavaScript, PHP ve Python makineleri de aynısını y' +
+      'apar, dolayısıyla ona çarpan bir belge her yerde aynı davranır.</p>',
+    '<p>Burada boyutu yüzünden örnek yok: bir tane göstermek yirmi bir dosya isterdi.</p>',
+    '<hr>',
+    '<h2 id="abbreviations">Her dilde bir sessizlik: kısaltmalar</h2>',
+    '<h3 id="abbreviations-0">Bir kısaltma sonraki sözcüğü küçük bırakır</h3>',
+    '<p><small><tt><a href="ex:68">Dr. fiyatlarımız düşük</a><br>→&nbsp; Dr. fiyatlarımız d' +
+      'üşük<br><a href="ex:69">Xyz. fiyatlarımız düşük</a><br>→&nbsp; Xyz. Fiyatlarımız düşük' +
+      '</tt></small></p>',
+    '<p>Bir sözcük bakımından ayrılan iki satır ve her birinin ikinci sözcüğü size kuralı v' +
+      'eriyor: <code>Dr.</code> sonrasında cümle küçük kalır, <code>Xyz.</code> sonrasında bü' +
+      'yütülür. Makine noktadan sonra büyütür — bildiği bir kısaltmadan sonra ve <code>e.g.</' +
+      'code> ya da <code>U.S.</code> biçiminde olan her şeyden sonra dışında. Sessizdir: tanı' +
+      ' yok, uyarı yok ve fark etmenin tek yolu çıktıyı okumaktır.</p>',
+    '<p><b>Liste Türkçe değildir, İngilizce de değildir.</b> 46 girdisi vardır ve 29''u Rus' +
+      'çadır:</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th></th><th></th></tr>',
+    '<tr><td>Latin</td><td><code>etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ave b' +
+      'lvd</code></td></tr>',
+    '<tr><td>Kiril</td><td><code>соц эл см ср ст ул пр пер г р руб коп тыс млн млрд трлн до' +
+      'п напр прим изд обл респ стр табл рис мин макс тел факс</code></td></tr>',
+    '</table>',
+    '<p>İki yarım da <b>her</b> yerel ayarda geçerlidir — kural hangi dili ayarladığınızı h' +
+      'iç sormaz. Yani <code>руб.</code> Türkçe bir belgede sonraki sözcüğü korur ve <code>Dr' +
+      '.</code> Rusça bir belgede korur.</p>',
+    '<p>Türkçe metin için sonuç basit ve rahatsız edicidir: her gün yazdığınız kısaltmalard' +
+      'an yalnızca <code>vs.</code>, <code>Dr.</code>, <code>Prof.</code> ve <code>No.</code>' +
+      ' listededir, çünkü Latin yarısıyla çakışırlar. <code>vb.</code>, <code>sf.</code> ve <' +
+      'code>Sn.</code> listede yoktur ve bir cümleyi bitirir. Dil kılavuzu ayrıca Türkçeye öz' +
+      'gü, ölçülmüş bir sessizlik daha taşır: cümle başındaki <code>i</code> harfi <code>İ</c' +
+      'ode> değil <code>I</code> olur.</p>',
+    '<hr>',
+    '<h2 id="correct">Doğru biçim neye benzer</h2>',
+    '<p><small><tt><a href="ex:70">bir fiyat {ucuz|pahalı}</a><br>→&nbsp; Bir fiyat ucuz</t' +
+      't></small></p>',
+    '<p><small><tt><a href="ex:71">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+      't></small></p>',
+    '<p><small><tt><a href="ex:72">#set %vip% = 1</a><br><a href="ex:72">{?vip?size|herkese' +
+      '}</a><br>→&nbsp; Size</tt></small></p>',
+    '<p><small><tt><a href="ex:73">#set %n% = 5</a><br><a href="ex:73">%n% {plural %n%: ürü' +
+      'n|ürünler}</a><br>→&nbsp; 5 ürünler</tt></small></p>',
+    '<p><small><tt><a href="ex:74">önce /# bir not #/ sonra</a><br>→&nbsp; Önce sonra</tt><' +
+      '/small></p>',
+    '<p>Beş yapı, beş temiz satır: bir seçim, ayarlı bir karıştırma, bir koşul, önünde sayı' +
+      ' bulunan bir sayı biçimi ve bir açıklama. Hiçbiri panele bir şey koymaz.</p>',
+    '<hr>',
+    '<h2 id="faq">Sık sorulanlar</h2>',
+    '<p><b>Paragraf neden öylece yok oldu?</b> İki sık neden, ikisi de yukarıda: bilinmeyen' +
+      ' bir <code>#include</code> hedefi ve daire çizen bir ekleme. İkisi de hiçbir şey yazma' +
+      'z. İlk akla gelen üçüncüsü — yanlış sayıda biçim — hiçbir şey yazmamak <b>değildir</b>' +
+      ': makine yapının tamamını geniş ayraçlar <code>｛｝</code> içinde yazar. Oradaki boşluk,' +
+      ' biçim sayısından değil, sayı olmayan bir sayımdan gelir.</p>',
+    '<p><b>Türkçe harf taşıyan değişken adım neden çalışmıyor?</b> Adlar Latin harflerinden' +
+      ', rakamlardan ve alt çizgiden oluşur. <code>%şehir%</code> hiç değişken anımsatması de' +
+      'ğildir — makine onu metin olarak okur ve bir şey söylemez, çünkü ona göre bildirilecek' +
+      ' bir şey yoktur:</p>',
+    '<p><small><tt><a href="ex:75">merhaba %şehir% ve %ad%</a><br>→&nbsp; Merhaba %şehir% v' +
+      'e %ad%</tt></small></p>',
+    '<p>İkisi de değişmeden geçti ve tuzak burada: yalnızca ikincisi panelde bir satır çekt' +
+      'i. Birincisi sessizdir, dolayısıyla hiçbir şey size onun asla yerine konmayacağını söy' +
+      'lemez. Adını değiştirin. <b>Değerde</b> ise Türkçe harfler hiç sorun çıkarmaz.</p>',
+    '<p><b>Aynı hata neden iki kez gösteriliyor?</b> Bir tanım dairesi, onu kapatan her anı' +
+      'msatma için bir satır çeker — bakılacak iki yer, bazen üç. Bunlar kopya değildir ve bi' +
+      'rleştirilmezler.</p>',
+    '<p><b>Panel hata diyor ama çıktı doğru görünüyor. Hangisi?</b> İkisi de. Bu, iki kez t' +
+      'anımlanmış bir adda olur: işleme doğrudur — son değer kazanır — ve belge çift anlamlıd' +
+      'ır. Hüküm belge hakkındadır, bu tek çıktı hakkında değil.</p>',
+    '<p><b>Yerel ayarı değiştirdim ve belge kırmızıya döndü.</b> Yerel ayar işini yapıyor. ' +
+      'Tanıtım belgesi İngilizcedir ve sayı biçimleri iki tane taşır; yerel ayarı Rusçaya alı' +
+      'n, o iki biçim bir sayı hatasına dönüşür, çünkü Rusça üç ister. Türkçe de İngilizce gi' +
+      'bi iki ister, bu yüzden <code>tr</code> altında tanıtım belgesi sakin kalır. Yerel aya' +
+      'r <b>belgeye</b> aittir; Studio''nun arayüz dilini değiştirdiğinizde onu değiştirmemes' +
+      'inin nedeni budur.</p>',
+    '<p><b>Önizleme, sunucumun üreteceğiyle örtüşür mü?</b> Aynı makine, aynı sürüm, aynı y' +
+      'erel ayar ve aynı değerlerle — evet, tam olarak; önizlemenin yaklaşık bir şey değil ge' +
+      'rçek <code>spintax-win</code> çalıştırmasının nedeni de budur. Ailenin <b>başka</b> bi' +
+      'r makinesiyle — JavaScript, PHP ya da Python olanıyla — hüküm ve şablonun verebileceği' +
+      ' metinler kümesi taşınır, ama belirli bir tohumun hangisini çektiği taşınmaz. Tam o çe' +
+      'kilişi yinelemeyi aile söz vermez.</p>'
   );
 
   { The templates the `ex:N` links point at, verbatim as the fixture ran them. }
-  HELP_EX_FIRST: array[0..7] of Integer = (
-    0, 74, 154, 229, 306, 383, 460, 538
+  HELP_EX_FIRST: array[0..8] of Integer = (
+    0, 74, 154, 229, 306, 383, 460, 538, 613
   );
-  HELP_EX_LAST: array[0..7] of Integer = (
-    73, 153, 228, 305, 382, 459, 537, 612
+  HELP_EX_LAST: array[0..8] of Integer = (
+    73, 153, 228, 305, 382, 459, 537, 612, 688
   );
-  HELP_EX_TEMPLATE: array[0..612] of string = (
+  HELP_EX_TEMPLATE: array[0..688] of string = (
     '{Hi|Hello} there.',
     'A {small|large} room.',
     'Acme {Pro {Plus|Max}|Lite}',
@@ -8370,23 +9233,178 @@ const
       #10 +
       '%n% {plural %n%: artikel|artikelen}',
     'ervoor /# een notitie #/ erna',
-    'hallo %één% en %naam%'
+    'hallo %één% en %naam%',
+    '{Merhaba|Selam} herkese.',
+    '{Küçük|Büyük} bir oda.',
+    'Acme {Pro {Plus|Max}|Lite}',
+    '{|Çok }büyük bir oda.',
+    '[kırmızı|yeşil|mavi]',
+    '[<, >kırmızı|yeşil|mavi]',
+    '[<maxsize 2>kırmızı|yeşil|mavi]',
+    '[<xmaxsize=1>kırmızı|yeşil|mavi]',
+    '[<sep=", ";lastsep=" ve ">kırmızı|yeşil|mavi]',
+    '[<minsize=2;maxsize=2>kırmızı|yeşil|mavi]',
+    '[<maxsize=3>a|b|c]',
+    '[<minsize=3;maxsize=1>kırmızı|yeşil|mavi]',
+    '[kırmızı|yeşil<ve>|mavi]',
+    '[kırmızı|yeşil|mavi<ve>]',
+    '#set %sehir% = Ankara' +
+      #10 +
+      '%sehir% uçuşu.',
+    '#set %secim% = {A|B}' +
+      #10 +
+      '%secim% %secim% %secim%',
+    '#def %secim% = {A|B}' +
+      #10 +
+      '%secim% %secim% %secim%',
+    '#set %n% = 5' +
+      #10 +
+      '{?n?elimizde %n% var|henüz yok}',
+    '#set %vip% = 1' +
+      #10 +
+      '{?!vip?yabancı|dost}',
+    '#def %n% = 1' +
+      #10 +
+      '%n% {plural %n%: dosya|dosyalar}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: dosya|dosyalar}',
+    '#set %n% = {5|5}' +
+      #10 +
+      '%n% {plural %n%: dosya|dosyalar}',
+    '#include "intro"',
+    '#set %marka% = Acme' +
+      #10 +
+      '#include "shout"',
+    'taslak /# emin değilim #/ hazır',
+    'bir. iki. üç.',
+    'vs. fiyatlarımız düşük',
+    'Dr. fiyatlarımız düşük',
+    'Xyz. fiyatlarımız düşük',
+    'merhaba , dünya',
+    'bir.iki',
+    'işte bu bir cümle. işte diğeri',
+    'vb. fiyatlarımız düşük',
+    'Önce. #include "intro"',
+    '{?1x?evet|hayır}',
+    '[kırmızı|<ve>yeşil]',
+    '[<ve>kırmızı|yeşil]',
+    '[bir<br>|iki]',
+    '[kırmızı|yeşil<br>|mavi]',
+    'önce /# bunun geri kalanı',
+    '{a /# hop|b} orta #/ kuyruk',
+    'bir fiyat {ucuz|pahalı',
+    'bir fiyat {ucuz|pahalı]',
+    'bir fiyat ucuz} ve hepsi',
+    '#set sehir = Ankara' +
+      #10 +
+      '%sehir% içinde',
+    '#def sayfalar = {1|3}' +
+      #10 +
+      '%sayfalar%',
+    '#set %x% = birinci' +
+      #10 +
+      '#set %x% = ikinci' +
+      #10 +
+      '%x%',
+    '#def %x% = #include "frag"' +
+      #10 +
+      '%x%',
+    'merhaba, %ad%',
+    '#set %marka% = {Vulkan}' +
+      #10 +
+      'kumarhane %marka%',
+    '#set %x% = a %x% b' +
+      #10 +
+      '%x%',
+    '#set %x% = %y%' +
+      #10 +
+      '#set %y% = %x%' +
+      #10 +
+      '%x%',
+    'önce #include "frag" sonra',
+    '#include "frag"',
+    '#include' +
+      #10 +
+      '"frag"',
+    '#include "hicbiri"',
+    '#include "intro"',
+    '#include "loop"',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: nesne|nesneler|nesneleri}',
+    '{plural %n%: nesne|nesneler}',
+    '{plural %n%: nesne|nesneler|nesneleri}',
+    '#set %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: nesne|nesneler}',
+    '#def %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: nesne|nesneler}',
+    '{plural %n%: {nesne|şey}|nesneler}',
+    '[<foo=1>a|b|c]',
+    '[<sep=", ";foo=1>a|b|c]',
+    '[<minsize=iki>a|b|c]',
+    '[<maxsize=cok>a|b|c]',
+    'Dr. fiyatlarımız düşük',
+    'Xyz. fiyatlarımız düşük',
+    'bir fiyat {ucuz|pahalı}',
+    '[<minsize=2;sep=", ">a|b|c]',
+    '#set %vip% = 1' +
+      #10 +
+      '{?vip?size|herkese}',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: ürün|ürünler}',
+    'önce /# bir not #/ sonra',
+    'merhaba %şehir% ve %ad%'
   );
-  HELP_EX_DOC: array[0..612] of Integer = (
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_EX_DOC: array[0..688] of Integer = (
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
-  HELP_ANCHOR_FIRST: array[0..7] of Integer = (
-    0, 31, 62, 93, 124, 155, 186, 217
+  HELP_ANCHOR_FIRST: array[0..8] of Integer = (
+    0, 31, 62, 93, 124, 155, 186, 217, 248
   );
-  HELP_ANCHOR_LAST: array[0..7] of Integer = (
-    30, 61, 92, 123, 154, 185, 216, 247
+  HELP_ANCHOR_LAST: array[0..8] of Integer = (
+    30, 61, 92, 123, 154, 185, 216, 247, 278
   );
-  HELP_ANCHOR_PAGE: array[0..247] of Integer = (
-    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
+  HELP_ANCHOR_PAGE: array[0..278] of Integer = (
+    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
   );
-  HELP_ANCHOR_ID: array[0..247] of string = (
+  HELP_ANCHOR_ID: array[0..278] of string = (
+    'choices-0',
+    'choices-1',
+    'shuffles-0',
+    'shuffles-1',
+    'shuffles-2',
+    'macros-0',
+    'fragments-0',
+    'bracket.unclosed',
+    'bracket.mismatched',
+    'bracket.unexpected-closing',
+    'set.malformed',
+    'def.malformed',
+    'definition.duplicate-name',
+    'def.include-in-value',
+    'variable.undefined',
+    'variable.self-reference',
+    'variable.circular-reference',
+    'includes-0',
+    'include.unknown-target',
+    'note.case-mismatch',
+    'note.cycle',
+    'plural.arity',
+    'plural.count-macro',
+    'plural.nested-brackets',
+    'permutation.unknown-key',
+    'permutation.minsize-not-integer',
+    'permutation.maxsize-not-integer',
+    'note.raw-sentinel',
+    'note.unknown-target',
+    'note.too-deep',
+    'abbreviations-0',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -8636,7 +9654,7 @@ const
     'note.too-deep',
     'abbreviations-0'
   );
-  HELP_ANCHOR_TITLE: array[0..247] of string = (
+  HELP_ANCHOR_TITLE: array[0..278] of string = (
     'Nesting',
     'An empty option',
     'The separator',
@@ -8889,10 +9907,42 @@ const
     '`note.raw-sentinel` — een stuurteken in de tekst',
     '`note.unknown-target` — de verzameling is leeg, er valt niets aan af te meten',
     '`note.too-deep` — invoegingen te diep genest',
-    'Een afkorting laat het volgende woord klein'
+    'Een afkorting laat het volgende woord klein',
+    'İç içelik',
+    'Boş bir olasılık',
+    'Ayırıcı',
+    'Kaç tane',
+    'İki parça arasında bir ayırıcı',
+    '`#set` yeniden çeker, `#def` bir kez çeker',
+    'Bir parça sizin makrolarınızı görmez',
+    '`bracket.unclosed` — bir ayraç açılıp hiç kapatılmamış',
+    '`bracket.mismatched` — başka türden bir ayraçla kapatılmış',
+    '`bracket.unexpected-closing` — açık hiçbir şey yokken kapatan bir ayraç',
+    '`set.malformed` — bu `#set` satırı kurala uymuyor',
+    '`def.malformed` — bu `#def` satırı kurala uymuyor',
+    '`definition.duplicate-name` — bu ad yukarıda zaten tanımlı',
+    '`def.include-in-value` — bir tanımın değeri içinde `#include`',
+    '`variable.undefined` — bu değişken hiçbir yerde tanımlı değil',
+    '`variable.self-reference` — tanım kendi kendini anıyor',
+    '`variable.circular-reference` — tanımlar birbirini daire çizerek anıyor',
+    '`#include` yalnızca satır başında çalışır',
+    '`include.unknown-target` — kümede bu adda hedef yok',
+    '`note.case-mismatch` — hedef var, ama başka büyük-küçük harfle',
+    '`note.cycle` — daire çizen bir ekleme',
+    '`plural.arity` — yerel ayarın istediği kadar biçim yok',
+    '`plural.count-macro` — sayı bir `#set`ten geliyor, o da her anımsatmada yeniden çekiyo' +
+      'r',
+    '`plural.nested-brackets` — biçimlerin içinde ayraçlar',
+    '`permutation.unknown-key` — ayarda bilinmeyen anahtar',
+    '`permutation.minsize-not-integer` — minsize tam sayı değil',
+    '`permutation.maxsize-not-integer` — maxsize tam sayı değil',
+    '`note.raw-sentinel` — metinde bir denetim karakteri',
+    '`note.unknown-target` — küme boş, kıyaslanacak bir şey yok',
+    '`note.too-deep` — eklemeler çok derin iç içe',
+    'Bir kısaltma sonraki sözcüğü küçük bırakır'
   );
-  HELP_ANCHOR_CODE: array[0..247] of Boolean = (
-    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
+  HELP_ANCHOR_CODE: array[0..278] of Boolean = (
+    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
   );
 
 function SpxHelpLangCode(ALang: Integer): string;
