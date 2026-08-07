@@ -25,7 +25,7 @@ unit SpxHelpText;
 interface
 
 const
-  SPX_HELP_LANG_COUNT = 12;
+  SPX_HELP_LANG_COUNT = 13;
   { The document KINDS this build knows, whether or not a language carries them. }
   SPX_HELP_KIND_COUNT = 3;
 
@@ -90,24 +90,24 @@ function SpxHelpExampleOf(const AHref: string): Integer;
 implementation
 
 const
-  HELP_LANG: array[0..11] of string = (
-    'en', 'ru', 'de', 'fr', 'es', 'it', 'pt', 'nl', 'tr', 'uk', 'be', 'sr'
+  HELP_LANG: array[0..12] of string = (
+    'en', 'ru', 'de', 'fr', 'es', 'it', 'pt', 'nl', 'tr', 'uk', 'be', 'sr', 'hr'
   );
   HELP_KIND_SLUG: array[0..2] of string = (
     'studio', 'syntax', 'diagnostics'
   );
 
   { Each language's documents: a span into the tables below. }
-  HELP_DOC_FIRST: array[0..11] of Integer = (
-    0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33
+  HELP_DOC_FIRST: array[0..12] of Integer = (
+    0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36
   );
-  HELP_DOC_LAST: array[0..11] of Integer = (
-    2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35
+  HELP_DOC_LAST: array[0..12] of Integer = (
+    2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
   );
-  HELP_DOC_KIND: array[0..35] of Integer = (
-    0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2
+  HELP_DOC_KIND: array[0..38] of Integer = (
+    0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2
   );
-  HELP_DOC_PATH: array[0..35] of string = (
+  HELP_DOC_PATH: array[0..38] of string = (
     'docs/help/en/studio.md',
     'docs/help/en/syntax.md',
     'docs/help/en/diagnostics.md',
@@ -143,24 +143,32 @@ const
     'docs/help/be/diagnostics.md',
     'docs/help/sr/studio.md',
     'docs/help/sr/syntax.md',
-    'docs/help/sr/diagnostics.md'
+    'docs/help/sr/diagnostics.md',
+    'docs/help/hr/studio.md',
+    'docs/help/hr/syntax.md',
+    'docs/help/hr/diagnostics.md'
   );
-  HELP_DOC_DIGEST: array[0..35] of string = (
-    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf', 'a13813d94022fc79', 'f97317079554607c', 'cba1e24e3fd02d3c', '2ac60637deec5293', 'a171652427448b1d', '2edce4acd51627d2', 'ad5ac9e54fecd8bb', '6c95fb9944927410', '08805b1be3656cd9', 'c32ef23f68968452', '6c578908ab8c6c29', 'bff3ba7c06efe1c3', 'aea105784f6a931e', 'bd89c7e36c9cf6c8', 'f2b72eeadf6781cc', '573101ecb765ab77', 'b3da8cd65b776379', '1426514362a3982e', '63b3b631bc63a6c3', 'f6a7a52fc38720ab', 'd024fa9857995d3e', '3352ab7dbd5a86a7', '9f2342c04979c9c0', '4c98b9124d0abac1', '9f99b035c5622081', '601fbb8d6ec439f8', 'a70c071caa16ee72'
+  HELP_DOC_DIGEST: array[0..38] of string = (
+    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf', 'a13813d94022fc79', 'f97317079554607c', 'cba1e24e3fd02d3c', '2ac60637deec5293', 'a171652427448b1d', '2edce4acd51627d2', 'ad5ac9e54fecd8bb', '6c95fb9944927410', '08805b1be3656cd9', 'c32ef23f68968452', '6c578908ab8c6c29', 'bff3ba7c06efe1c3', 'aea105784f6a931e', 'bd89c7e36c9cf6c8', 'f2b72eeadf6781cc', '573101ecb765ab77', 'b3da8cd65b776379', '1426514362a3982e', '63b3b631bc63a6c3', 'f6a7a52fc38720ab', 'ca47272aa433136a', '3352ab7dbd5a86a7', '9f2342c04979c9c0', '28b58196d1106227', '9f99b035c5622081', '601fbb8d6ec439f8', '604a516c3b56753e', '4e5d9d9fe0d0272f', 'e8db63837bb7c682', 'babb3acf31b0d217'
   );
-  HELP_DOC_LOCALE: array[0..35] of string = (
-    'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr'
+  HELP_DOC_LOCALE: array[0..38] of string = (
+    'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr'
   );
-  HELP_DOC_SEED: array[0..35] of LongWord = (
-    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
+  HELP_DOC_SEED: array[0..38] of LongWord = (
+    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7
   );
-  HELP_INC_FIRST: array[0..35] of Integer = (
-    0, 0, 2, 5, 5, 7, 10, 10, 12, 15, 15, 17, 20, 20, 22, 25, 25, 27, 30, 30, 32, 35, 35, 37, 40, 40, 42, 45, 45, 47, 50, 50, 52, 55, 55, 57
+  HELP_INC_FIRST: array[0..38] of Integer = (
+    0, 0, 2, 5, 5, 7, 10, 10, 12, 15, 15, 17, 20, 20, 22, 25, 25, 27, 30, 30, 32, 35, 35, 37, 40, 40, 42, 45, 45, 47, 50, 50, 52, 55, 55, 57, 60, 60, 62
   );
-  HELP_INC_LAST: array[0..35] of Integer = (
-    -1, 1, 4, 4, 6, 9, 9, 11, 14, 14, 16, 19, 19, 21, 24, 24, 26, 29, 29, 31, 34, 34, 36, 39, 39, 41, 44, 44, 46, 49, 49, 51, 54, 54, 56, 59
+  HELP_INC_LAST: array[0..38] of Integer = (
+    -1, 1, 4, 4, 6, 9, 9, 11, 14, 14, 16, 19, 19, 21, 24, 24, 26, 29, 29, 31, 34, 34, 36, 39, 39, 41, 44, 44, 46, 49, 49, 51, 54, 54, 56, 59, 59, 61, 64
   );
-  HELP_INC_NAME: array[0..59] of string = (
+  HELP_INC_NAME: array[0..64] of string = (
+    'intro',
+    'shout',
+    'frag',
+    'loop',
+    'Intro',
     'intro',
     'shout',
     'frag',
@@ -222,7 +230,7 @@ const
     'loop',
     'Intro'
   );
-  HELP_INC_TEXT: array[0..59] of string = (
+  HELP_INC_TEXT: array[0..64] of string = (
     'Welcome to {Acme|Globex}.',
     'The %brand% is here.',
     'Fragment',
@@ -282,20 +290,25 @@ const
     '%brand% је овде.',
     'Фрагмент',
     '#include "loop"',
-    'Увод'
+    'Увод',
+    'Dobro došli u {Acme|Globex}.',
+    '%brand% je ovdje.',
+    'Ulomak',
+    '#include "loop"',
+    'Uvod'
   );
 
   { Each language's pages: a span into the tables below. }
-  HELP_PAGE_FIRST: array[0..11] of Integer = (
-    0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330
+  HELP_PAGE_FIRST: array[0..12] of Integer = (
+    0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360
   );
-  HELP_PAGE_LAST: array[0..11] of Integer = (
-    29, 59, 89, 119, 149, 179, 209, 239, 269, 299, 329, 359
+  HELP_PAGE_LAST: array[0..12] of Integer = (
+    29, 59, 89, 119, 149, 179, 209, 239, 269, 299, 329, 359, 389
   );
-  HELP_SLUG: array[0..359] of string = (
-    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..389] of string = (
+    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
   );
-  HELP_TITLE: array[0..359] of string = (
+  HELP_TITLE: array[0..389] of string = (
     'Spintax Studio',
     'The two panes',
     'The panels along the bottom',
@@ -655,21 +668,51 @@ const
     'Studio напомене које немају шта да покажу',
     'Ћутање које сусрећу сви: скраћенице',
     'Како изгледа исправно',
-    'Често питају'
+    'Често питају',
+    'Spintax Studio',
+    'Dvije polovice',
+    'Ploče dolje',
+    'Uređivač grupa',
+    'Postavke',
+    'Uvoz GSA predloška',
+    'Jezik, konstrukcija po konstrukcija',
+    'Kako čitati primjere',
+    'Izbor',
+    'Miješanje',
+    'Makroi',
+    'Uvjeti',
+    'Brojanje',
+    'Odlomci',
+    'Komentari',
+    'Što motor poravnava na kraju',
+    'Tišina',
+    'Kamo dalje',
+    'Što kaže kartica «Dijagnostika»',
+    'Kako čitati primjere',
+    'Zagrade',
+    'Definicije',
+    'Varijable',
+    'Umetanja',
+    'Oblici množine',
+    'Miješanje',
+    'Studio napomene koje nemaju što pokazati',
+    'Tišina koju susreću svi: kratice',
+    'Kako izgleda ispravno',
+    'Često pitaju'
   );
-  HELP_PAGE_DOC: array[0..359] of Integer = (
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_PAGE_DOC: array[0..389] of Integer = (
+    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
-  HELP_FIRST: array[0..359] of Integer = (
-    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003, 1012, 1019, 1026, 1035, 1038, 1041, 1050, 1055, 1061, 1073, 1098, 1108, 1115, 1122, 1131, 1135, 1150, 1178, 1180, 1190, 1197, 1210, 1226, 1251, 1273, 1293, 1307, 1320, 1333, 1341, 1350, 1357, 1364, 1373, 1376, 1379, 1388, 1393, 1399, 1411, 1436, 1446, 1453, 1460, 1469, 1473, 1488, 1516, 1518, 1528, 1535, 1548, 1564, 1589, 1611, 1631, 1645, 1658, 1671, 1679, 1688, 1695, 1702, 1711, 1714, 1717, 1726, 1731, 1737, 1749, 1774, 1784, 1791, 1798, 1807, 1811, 1826, 1854, 1856, 1866, 1873, 1886, 1902, 1927, 1949, 1969, 1983, 1996, 2009, 2017, 2026, 2033, 2040, 2049, 2052, 2055, 2064, 2069, 2075, 2087, 2112, 2122, 2129, 2136, 2145, 2149, 2164, 2194, 2196, 2206, 2213, 2226, 2242, 2267, 2289, 2309, 2323, 2336, 2349, 2357, 2366, 2373, 2380, 2389, 2392, 2395, 2404, 2409, 2415, 2427, 2452, 2462, 2469, 2476, 2485, 2489, 2504, 2529, 2531, 2541, 2548, 2561, 2577, 2602, 2624, 2644, 2658, 2671, 2684, 2692, 2701, 2708, 2715, 2724, 2727, 2730, 2739, 2744, 2750, 2762, 2787, 2797, 2804, 2811, 2820, 2824, 2839, 2866, 2868, 2878, 2885, 2898, 2914, 2939, 2961, 2981, 2995, 3008, 3021, 3029, 3038, 3045, 3052, 3061, 3064, 3067, 3076, 3081, 3087, 3099, 3124, 3134, 3141, 3149, 3158, 3162, 3177, 3206, 3208, 3218, 3225, 3238, 3254, 3279, 3301, 3321, 3335, 3348, 3361, 3369, 3378, 3385, 3392, 3401, 3404, 3407, 3416, 3421, 3427, 3439, 3464, 3474, 3481, 3489, 3498, 3502, 3517, 3546, 3548, 3558, 3565, 3578, 3594, 3619, 3641, 3661, 3675, 3688, 3701, 3709, 3718, 3725, 3732, 3741, 3744, 3747, 3756, 3761, 3767, 3779, 3804, 3814, 3821, 3829, 3838, 3842, 3857, 3887, 3889, 3899, 3906, 3919, 3935, 3960, 3982, 4002, 4016, 4029, 4042, 4050
+  HELP_FIRST: array[0..389] of Integer = (
+    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003, 1012, 1019, 1026, 1035, 1038, 1041, 1050, 1055, 1061, 1073, 1098, 1108, 1115, 1122, 1131, 1135, 1150, 1178, 1180, 1190, 1197, 1210, 1226, 1251, 1273, 1293, 1307, 1320, 1333, 1341, 1350, 1357, 1364, 1373, 1376, 1379, 1388, 1393, 1399, 1411, 1436, 1446, 1453, 1460, 1469, 1473, 1488, 1516, 1518, 1528, 1535, 1548, 1564, 1589, 1611, 1631, 1645, 1658, 1671, 1679, 1688, 1695, 1702, 1711, 1714, 1717, 1726, 1731, 1737, 1749, 1774, 1784, 1791, 1798, 1807, 1811, 1826, 1854, 1856, 1866, 1873, 1886, 1902, 1927, 1949, 1969, 1983, 1996, 2009, 2017, 2026, 2033, 2040, 2049, 2052, 2055, 2064, 2069, 2075, 2087, 2112, 2122, 2129, 2136, 2145, 2149, 2164, 2194, 2196, 2206, 2213, 2226, 2242, 2267, 2289, 2309, 2323, 2336, 2349, 2357, 2366, 2373, 2380, 2389, 2392, 2395, 2404, 2409, 2415, 2427, 2452, 2462, 2469, 2476, 2485, 2489, 2504, 2529, 2531, 2541, 2548, 2561, 2577, 2602, 2624, 2644, 2658, 2671, 2684, 2692, 2701, 2708, 2715, 2724, 2727, 2730, 2739, 2744, 2750, 2762, 2787, 2797, 2804, 2811, 2820, 2824, 2839, 2866, 2868, 2878, 2885, 2898, 2914, 2939, 2961, 2981, 2995, 3008, 3021, 3029, 3038, 3045, 3052, 3061, 3064, 3067, 3076, 3081, 3087, 3099, 3124, 3134, 3141, 3149, 3158, 3162, 3177, 3206, 3208, 3218, 3225, 3238, 3254, 3279, 3301, 3321, 3335, 3348, 3361, 3369, 3378, 3385, 3392, 3401, 3404, 3407, 3416, 3421, 3427, 3439, 3464, 3474, 3481, 3489, 3498, 3502, 3517, 3546, 3548, 3558, 3565, 3578, 3594, 3619, 3641, 3661, 3675, 3688, 3701, 3709, 3718, 3725, 3732, 3741, 3744, 3747, 3756, 3761, 3767, 3779, 3804, 3814, 3821, 3829, 3838, 3842, 3857, 3887, 3889, 3899, 3906, 3919, 3935, 3960, 3982, 4002, 4016, 4029, 4042, 4050, 4059, 4066, 4073, 4082, 4085, 4088, 4097, 4102, 4108, 4120, 4145, 4155, 4162, 4170, 4179, 4183, 4199, 4226, 4228, 4238, 4245, 4258, 4274, 4299, 4321, 4341, 4355, 4368, 4381, 4389
   );
-  HELP_LAST: array[0..359] of Integer = (
-    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011, 1018, 1025, 1034, 1037, 1040, 1049, 1054, 1060, 1072, 1097, 1107, 1114, 1121, 1130, 1134, 1149, 1177, 1179, 1189, 1196, 1209, 1225, 1250, 1272, 1292, 1306, 1319, 1332, 1340, 1349, 1356, 1363, 1372, 1375, 1378, 1387, 1392, 1398, 1410, 1435, 1445, 1452, 1459, 1468, 1472, 1487, 1515, 1517, 1527, 1534, 1547, 1563, 1588, 1610, 1630, 1644, 1657, 1670, 1678, 1687, 1694, 1701, 1710, 1713, 1716, 1725, 1730, 1736, 1748, 1773, 1783, 1790, 1797, 1806, 1810, 1825, 1853, 1855, 1865, 1872, 1885, 1901, 1926, 1948, 1968, 1982, 1995, 2008, 2016, 2025, 2032, 2039, 2048, 2051, 2054, 2063, 2068, 2074, 2086, 2111, 2121, 2128, 2135, 2144, 2148, 2163, 2193, 2195, 2205, 2212, 2225, 2241, 2266, 2288, 2308, 2322, 2335, 2348, 2356, 2365, 2372, 2379, 2388, 2391, 2394, 2403, 2408, 2414, 2426, 2451, 2461, 2468, 2475, 2484, 2488, 2503, 2528, 2530, 2540, 2547, 2560, 2576, 2601, 2623, 2643, 2657, 2670, 2683, 2691, 2700, 2707, 2714, 2723, 2726, 2729, 2738, 2743, 2749, 2761, 2786, 2796, 2803, 2810, 2819, 2823, 2838, 2865, 2867, 2877, 2884, 2897, 2913, 2938, 2960, 2980, 2994, 3007, 3020, 3028, 3037, 3044, 3051, 3060, 3063, 3066, 3075, 3080, 3086, 3098, 3123, 3133, 3140, 3148, 3157, 3161, 3176, 3205, 3207, 3217, 3224, 3237, 3253, 3278, 3300, 3320, 3334, 3347, 3360, 3368, 3377, 3384, 3391, 3400, 3403, 3406, 3415, 3420, 3426, 3438, 3463, 3473, 3480, 3488, 3497, 3501, 3516, 3545, 3547, 3557, 3564, 3577, 3593, 3618, 3640, 3660, 3674, 3687, 3700, 3708, 3717, 3724, 3731, 3740, 3743, 3746, 3755, 3760, 3766, 3778, 3803, 3813, 3820, 3828, 3837, 3841, 3856, 3886, 3888, 3898, 3905, 3918, 3934, 3959, 3981, 4001, 4015, 4028, 4041, 4049, 4058
+  HELP_LAST: array[0..389] of Integer = (
+    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011, 1018, 1025, 1034, 1037, 1040, 1049, 1054, 1060, 1072, 1097, 1107, 1114, 1121, 1130, 1134, 1149, 1177, 1179, 1189, 1196, 1209, 1225, 1250, 1272, 1292, 1306, 1319, 1332, 1340, 1349, 1356, 1363, 1372, 1375, 1378, 1387, 1392, 1398, 1410, 1435, 1445, 1452, 1459, 1468, 1472, 1487, 1515, 1517, 1527, 1534, 1547, 1563, 1588, 1610, 1630, 1644, 1657, 1670, 1678, 1687, 1694, 1701, 1710, 1713, 1716, 1725, 1730, 1736, 1748, 1773, 1783, 1790, 1797, 1806, 1810, 1825, 1853, 1855, 1865, 1872, 1885, 1901, 1926, 1948, 1968, 1982, 1995, 2008, 2016, 2025, 2032, 2039, 2048, 2051, 2054, 2063, 2068, 2074, 2086, 2111, 2121, 2128, 2135, 2144, 2148, 2163, 2193, 2195, 2205, 2212, 2225, 2241, 2266, 2288, 2308, 2322, 2335, 2348, 2356, 2365, 2372, 2379, 2388, 2391, 2394, 2403, 2408, 2414, 2426, 2451, 2461, 2468, 2475, 2484, 2488, 2503, 2528, 2530, 2540, 2547, 2560, 2576, 2601, 2623, 2643, 2657, 2670, 2683, 2691, 2700, 2707, 2714, 2723, 2726, 2729, 2738, 2743, 2749, 2761, 2786, 2796, 2803, 2810, 2819, 2823, 2838, 2865, 2867, 2877, 2884, 2897, 2913, 2938, 2960, 2980, 2994, 3007, 3020, 3028, 3037, 3044, 3051, 3060, 3063, 3066, 3075, 3080, 3086, 3098, 3123, 3133, 3140, 3148, 3157, 3161, 3176, 3205, 3207, 3217, 3224, 3237, 3253, 3278, 3300, 3320, 3334, 3347, 3360, 3368, 3377, 3384, 3391, 3400, 3403, 3406, 3415, 3420, 3426, 3438, 3463, 3473, 3480, 3488, 3497, 3501, 3516, 3545, 3547, 3557, 3564, 3577, 3593, 3618, 3640, 3660, 3674, 3687, 3700, 3708, 3717, 3724, 3731, 3740, 3743, 3746, 3755, 3760, 3766, 3778, 3803, 3813, 3820, 3828, 3837, 3841, 3856, 3886, 3888, 3898, 3905, 3918, 3934, 3959, 3981, 4001, 4015, 4028, 4041, 4049, 4058, 4065, 4072, 4081, 4084, 4087, 4096, 4101, 4107, 4119, 4144, 4154, 4161, 4169, 4178, 4182, 4198, 4225, 4227, 4237, 4244, 4257, 4273, 4298, 4320, 4340, 4354, 4367, 4380, 4388, 4397
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..4058] of string = (
+  HELP_LINE: array[0..4397] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -8829,11 +8872,11 @@ const
     '<h2 id="definitions">Визначення</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — цей рядок <code>#set</code> написа' +
       'но не за правилом</h3>',
-    '<p><small><tt><a href="ex:46">#set місто = Київ</a><br><a href="ex:46">у %місто%</a><b' +
-      'r>→&nbsp; #set місто = Київ ⏎ У %місто%</tt></small></p>',
+    '<p><small><tt><a href="ex:46">#set misto = Київ</a><br><a href="ex:46">у %misto%</a><b' +
+      'r>→&nbsp; #set misto = Київ ⏎ У %misto%</tt></small></p>',
     '<p><b>Імʼя пишуть між знаками відсотка:</b> <code>#set %misto% = Київ</code>. Це найча' +
       'стіша перша помилка, і вона ставить у панель одразу два рядки — сам зіпсований рядок і' +
-      ' «ця змінна ніде не визначена», бо визначення не сталося, а <code>%місто%</code> ніком' +
+      ' «ця змінна ніде не визначена», бо визначення не сталося, а <code>%misto%</code> ніком' +
       'у не належить.</p>',
     '<p>Подивіться на вивід: невдала директива лишилася в тексті <b>як написана</b>. Рушій ' +
       'не прочитав її як директиву, отже це звичайний рядок, і він потрапляє в результат.</p>',
@@ -9647,11 +9690,11 @@ const
     '<h2 id="definitions">Вызначэнні</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — гэты радок <code>#set</code> напіс' +
       'аны не па правіле</h3>',
-    '<p><small><tt><a href="ex:46">#set горад = Мінск</a><br><a href="ex:46">у %горад%</a><' +
-      'br>→&nbsp; #set горад = Мінск ⏎ У %горад%</tt></small></p>',
+    '<p><small><tt><a href="ex:46">#set horad = Мінск</a><br><a href="ex:46">у %horad%</a><' +
+      'br>→&nbsp; #set horad = Мінск ⏎ У %horad%</tt></small></p>',
     '<p><b>Імя пішуць паміж знакамі працэнта:</b> <code>#set %horad% = Мінск</code>. Гэта н' +
       'айчастая першая памылка, і яна ставіць у панэль адразу два радкі — сам сапсаваны радок' +
-      ' і «гэтая зменная нідзе не вызначана», бо вызначэнне не адбылося, а <code>%горад%</cod' +
+      ' і «гэтая зменная нідзе не вызначана», бо вызначэнне не адбылося, а <code>%horad%</cod' +
       'e> нікому не належыць.</p>',
     '<p>Паглядзіце на вывад: няўдалая дырэктыва засталася ў тэксце <b>як напісана</b>. Руха' +
       'вік не прачытаў яе як дырэктыву, значыць гэта звычайны радок, і ён трапляе ў вынік.</p' +
@@ -10450,11 +10493,11 @@ const
     '<h2 id="definitions">Дефиниције</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — овај <code>#set</code> ред није на' +
       'писан по правилу</h3>',
-    '<p><small><tt><a href="ex:47">#set град = Београд</a><br><a href="ex:47">у %град%</a><' +
-      'br>→&nbsp; #set град = Београд ⏎ У %град%</tt></small></p>',
+    '<p><small><tt><a href="ex:47">#set grad = Београд</a><br><a href="ex:47">у %grad%</a><' +
+      'br>→&nbsp; #set grad = Београд ⏎ У %grad%</tt></small></p>',
     '<p><b>Име се пише између знакова процента:</b> <code>#set %grad% = Београд</code>. То ' +
       'је најчешћа прва грешка, и она ставља у панел одмах два реда — сам покварен ред и «ова' +
-      ' променљива нигде није дефинисана», јер до дефиниције није дошло, а <code>%град%</code' +
+      ' променљива нигде није дефинисана», јер до дефиниције није дошло, а <code>%grad%</code' +
       '> не припада никоме.</p>',
     '<p>Погледајте излаз: неуспела директива остала је у тексту <b>како је написана</b>. Мо' +
       'тор је није прочитао као директиву, дакле то је обичан ред, и он доспева у резултат.</' +
@@ -10784,17 +10827,826 @@ const
       'ни прави <code>spintax-win</code>, а не приближење. На <b>другом</b> мотору породице —' +
       ' за JavaScript, PHP или Python — преноси се пресуда и скуп текстова које шаблон може д' +
       'ати, али не и то који ће од њих извући конкретно семе. Поновити баш то извлачење пород' +
-      'ица не обећава.</p>'
+      'ица не обећава.</p>',
+    '<h1 id="studio">Spintax Studio</h1>',
+    '<p>Ovaj program je uređivač predložaka. Predložak je običan tekst s nekoliko označenih' +
+      ' mjesta u njemu, i jedan predložak može dati vrlo mnogo različitih tekstova; upravo se' +
+      ' zato i piše, umjesto da se tekstovi pišu jedan po jedan.</p>',
+    '<p>Prozor se sastoji od dvije polovice. Lijevo je vaš predložak, ono što uređujete. De' +
+      'sno je jedan od tekstova koji iz njega izlaze, iznova iscrtan dok tipkate. Između njih' +
+      ' nema što pritisnuti: ono što vidite desno jest ono što motor u ovom trenutku vraća za' +
+      ' ono što je napisano lijevo.</p>',
+    '<p><small><tt>locale: hr<br>seed: 7<br>empty: (prazno)</tt></small></p>',
+    '<p>Motor je ugrađen u ovaj program i Pascal je član obitelji: isti je jezik izdan i za' +
+      ' JavaScript, PHP i Python. Ta su četvorica samostalni programi koji se drže jednog zaj' +
+      'edničkog skupa provjera, pa je ono što predložak ZNAČI isto u svima: konstrukcije, pre' +
+      'suda o njegovoj ispravnosti, završno dotjerivanje. Predložak koji ovaj prozor nazove i' +
+      'spravnim ispravan je i tamo.</p>',
+    '<p>Ono što nije obećano, a razlika je važna pri usporedbi: izvlačenje. Sjeme čini preg' +
+      'led ponovljivim OVDJE — isto sjeme i isti predložak sutra daju isti tekst — ali isto s' +
+      'jeme u JavaScript motoru može izvući drugu varijantu. Sjemena služe da ponovite vlasti' +
+      'ti rad, a ne da pogodite drugi motor.</p>',
+    '<p>Sve ovdje radi bez mreže. Nema računa, nema prijave i nema što uključivati: otvorit' +
+      'e program i on radi.</p>',
+    '<h2 id="panes">Dvije polovice</h2>',
+    '<p>Tipka se lijevo. Desna se polovica iznova iscrtava nakon kratke stanke, da pregled ' +
+      'stiže za rečenicom, a ne za svakim slovom.</p>',
+    '<p>Predložak s izborom unutra nema jedan odgovor, i pregled pokazuje jedan od njih:</p' +
+      '>',
+    '<p><small><tt><a href="ex:0">{Bok|Pozdrav} svima.</a><br>→&nbsp; Bok svima.</tt></smal' +
+      'l></p>',
+    '<p><b>Druga</b> iznad desne polovice daje sljedeću. Ako vam treba uvijek ista — dok us' +
+      'poređujete dvije izmjene, recimo — kvačicom označite <b>seed</b>, i pregled će stajati' +
+      ' dok je ne skinete ili ne promijenite broj.</p>',
+    '<p>Desna polovica pokazuje ili <b>stranicu</b> ili <b>izvor</b>. Predlošci su uglavnom' +
+      ' HTML, i dva pitanja «kako ovo izgleda» i «kakva je razmetnica ispala» ne odgovaraju j' +
+      'edno na drugo: pokvaren tag daje malo krivu stranicu koju oko preskoči, a proza s tago' +
+      'vima unutra ne čita se kao proza. Prebacivač iznad polovice mijenja ono u što gledate.' +
+      '</p>',
+    '<p>Označite dio predloška i odigrat će se samo on, u okviru cijelog dokumenta, pa odlo' +
+      'mak koji koristi varijablu definiranu gore izlazi onako kako izlazi na svom mjestu.</p' +
+      '>',
+    '<h2 id="panels">Ploče dolje</h2>',
+    '<p>Traka alata sa strane otvara tri ploče, po jednu u isto vrijeme.</p>',
+    '<p><b>Dijagnostika</b> nabraja ono što motor smatra pogrešnim, svaki put s retkom i st' +
+      'upcem gdje počinje. Klik na redak vodi pokazivač tamo. To je ista presuda koju motor d' +
+      'onosi svugdje, a ne drugo mišljenje uređivača — zato predložak koji ova ploča nazove i' +
+      'spravnim prihvaćaju i ostali motori.</p>',
+    '<p><b>Varijable</b> pokazuju imena koja vaš dokument definira i ona koja samo koristi.' +
+      ' Ime koje on koristi a ništa ne definira može se popuniti ovdje za ovu sesiju: upišite' +
+      ' vrijednost pored i pregled će je pokupiti. Kvačicom označite <b>kao tekst</b> kada je' +
+      ' vrijednost tekst koji znači sam sebe, a ne mali predložak.</p>',
+    '<p><b>Varijante</b> rade mnogo tekstova odjednom. Recite koliko, napravite ih i pročit' +
+      'ajte u popisu prije izvoza. Gotovo iste mogu se odbacivati već tijekom izrade, a seed ' +
+      'čini cijeli skup ponovljivim: isto sjeme i isti predložak sutra daju iste varijante.</' +
+      'p>',
+    '<p>Pored tih polja ploča kaže koliko varijanti predložak uopće može dati: <code>{a|b} ' +
+      'i {c|d}</code> daje četiri. Taj vam broj javlja da je predložak siromašan još prije ne' +
+      'go što napravite pedeset i to primijetite čitanjem.</p>',
+    '<p>Točan je samo dok svaki izbor ostaje slučaju. Uvjet, oblik množine ili <code>#inclu' +
+      'de</code> čiji cilj skup nema rješava nešto drugo — vrijednost koju ćete podmetnuti, b' +
+      'roj, odlomak koji tek može doći — i tada ploča kaže <b>najmanje</b>. To je poštena rij' +
+      'eč: podmetnuta vrijednost može samo dodati tekstove, a ne oduzeti ih. Broj prevelik da' +
+      ' bi se čitao staje na bilijunu i kaže <b>najmanje</b> iz istog razloga.</p>',
+    '<p>Varijanta je jedan popunjen predložak, po jedan izbor u svakoj konstrukciji, i to n' +
+      'ije isto što i tekst koji se drukčije čita. <code>{a|a}</code> su dvije varijante i je' +
+      'dan tekst, i tako je zamišljeno: dvije mogućnosti mogu prestati podudarati se nakon pr' +
+      've izmjene, a da bi se svele, morale bi se najprije napraviti sve kombinacije — upravo' +
+      ' onaj posao radi čije uštede broj i postoji. <code>#def</code> se računa isto: motor g' +
+      'a izvlači jednom po odigravanju, koristila ga izabrana grana ili ne.</p>',
+    '<p>Izvoz ih čuva na tri načina: kao XLSX radnu knjigu, kao običan tekst s po jednom va' +
+      'rijantom u retku ili kao po jednu datoteku po varijanti u mapu koju odaberete.</p>',
+    '<h2 id="groups">Uređivač grupa</h2>',
+    '<p>Stavite pokazivač unutar <code>{a|b|c}</code> i otvorite uređivač grupa s trake ala' +
+      'ta. On nabraja varijante po retcima: mijenjajte ih, dodajte jednu, uklonite drugu — i ' +
+      'dokument se prepisuje u skladu s tim.</p>',
+    '<p>On odbija izmjene koje bi promijenile ono što grupa ZNAČI, a ne ono što kaže: <code' +
+      '>|</code> otipkan unutar varijante napravio bi od jedne mogućnosti dvije, a <code>}</c' +
+      'ode> bi zatvorio grupu prerano. Kada odbije, kaže to i ostavlja dokument na miru.</p>',
+    '<h2 id="settings">Postavke</h2>',
+    '<p>One su u izborniku «Prikaz», i svaka se pamti između sesija: jezik sučelja i prati ' +
+      'li predložak, s koje je strane traka alata, tema, font uređivača i njegova veličina, p' +
+      'okazuje li pregled stranicu ili izvor, prebacivač za GSA uvoz, koja je ploča otvorena ' +
+      'i širine ploča koje se izvlače.</p>',
+    '<p>Sučelje govori četrnaest jezika, izbor je na istom mjestu. To je odvojeno od jezika' +
+      ' vašeg predloška, koji rješava oblike množine i zadaje se iznad desne polovice.</p>',
+    '<h2 id="gsa">Uvoz GSA predloška</h2>',
+    '<p>Ovaj je dio isključen dok ga ne uključite, u <b>Prikaz</b>, <b>GSA uvoz</b>, jer ve' +
+      'ćina onih koji pišu predloške nikada nije koristila GSA Search Engine Ranker. Uključen' +
+      'o, <b>Datoteka</b>, <b>Uvezi GSA predložak…</b> čita SER predložak i prevodi ga na ova' +
+      'j jezik.</p>',
+    '<p>Pretvaranje je oprezno na određen način. Ono što ne može prenijeti točno, ono odbij' +
+      'a i kaže vam o tome, umjesto da tiho pretvori u nešto što će se odigrati. Konstrukcije' +
+      ' koje bi se pogrešno pročitale da ostanu u tekstu — BBCode zagrade, <code>#</code> unu' +
+      'tar poveznice, makro <code>#file[...]</code> — iznose se u varijable, i rezultat kaže ' +
+      'koliko.</p>',
+    '<p>Dvije stvari o rezultatu:</p>',
+    '<ul>',
+    '<li><b>Iznesene vrijednosti su vrijednosti sesije.</b> One se pojavljuju u ploči «Vari' +
+      'jable» i ne čuvaju se uz dokument. Spremite pretvoren predložak, otvorite ga sutra — i' +
+      ' vidjet ćete <code>%…%</code> tamo gdje je stajao iznesen tekst. Iz uvezene datoteke n' +
+      'išta nije izgubljeno — ona ostaje netaknuta — ali pretvoren dokument nije samodostatan' +
+      '.</li>',
+    '<li><b>On se odigrava bez prolaza dotjerivanja.</b> Svaki drugi dokument ovdje dobiva ' +
+      'završne poteze opisane u jezičnom priručniku; pretvoren predložak — ne, jer to nije na' +
+      'š tekst da ga glačamo. On je tuđ, najčešće na putu natrag prema GSA, i mora preživjeti' +
+      ' znak po znak.</li>',
+    '</ul>',
+    '<p>Uvezen dokument je bez naslova i nije spremljen, kao nov. Datoteka koju ste odabral' +
+      'i ostaje točno onakva kakva je bila.</p>',
+    '<h1 id="language">Jezik, konstrukcija po konstrukcija</h1>',
+    '<p>Predložak je običan tekst s nekoliko označenih mjesta u njemu. Sve što nije označen' +
+      'o izlazi kako jest; upravo oznake daju predlošku mogućnost da dade mnogo tekstova.</p>',
+    '<p>Ima ih šest, i to je cijeli jezik: <b>izbor</b> između varijanti, <b>miješanje</b> ' +
+      'nekoliko komada, <b>makro</b> koji definirate jednom i koristite po imenu, <b>uvjet</b' +
+      '>, <b>brojanje</b> koje uzima potreban oblik riječi, i <b>umetanje</b> koje unosi drug' +
+      'i predložak. Komentari su sedma oznaka, koja ne daje baš ništa.</p>',
+    '<blockquote>Svaki primjer ispod prolazi kroz motor s kojim je sklopljena ova kopija St' +
+      'udio, pri svakom sklapanju programa, i desno stoji točno ono što je on vratio. Ovdje n' +
+      'išta nije zapamćeno ni pogođeno; odgovor koji bi prestao biti istinit zaustavio bi skl' +
+      'apanje. Verzija je motora u <b>Pomoć</b>, <b>O programu</b>.</blockquote>',
+    '<p>Drugi dokument ove pomoći, <b>Što kaže kartica «Dijagnostika»</b>, govori o onome š' +
+      'to ide naopako. Ovaj govori o tome što konstrukcije rade kada je sve u redu, uključuju' +
+      'ći nekoliko mjesta gdje predložak učini nešto neočekivano i ništa o tome ne javi.</p>',
+    '<h2 id="reading-syntax">Kako čitati primjere</h2>',
+    '<p>Strelica <code>→</code> razdvaja predložak od onoga što je motor vratio. <code>(pra' +
+      'zno)</code> znači da nije ispisao ništa. Tekst nakon izlaza, odvojen s tri razmaka, na' +
+      'pomena je, a ne dio odgovora.</p>',
+    '<p>Uvjeti su imenovani, a ne podrazumijevani, jer se bez njih polovica odgovora ispod ' +
+      'ne može ponoviti:</p>',
+    '<p><small><tt>locale: hr<br>seed: 7<br>empty: (prazno)<br>include intro: Dobro došli u' +
+      ' {Acme|Globex}.<br>include shout: %brand% je ovdje.</tt></small></p>',
+    '<p><code>seed</code> učvršćuje izvlačenje. Predložak s izborom unutra nema jedan odgov' +
+      'or, pa bi primjer bez sjemena ispisivao svaki put drugo i ne bi bilo što provjeriti. U' +
+      ' prozoru je to kućica <b>seed</b> iznad desne polovice; označite je i pored će se poja' +
+      'viti polje za broj, a pregled će stajati dok radite.</p>',
+    '<p><code>locale</code> rješava oblike množine, i to je prebacivač iznad desne polovice' +
+      ', a ne jezik sučelja. Hrvatskom, srpskom, bosanskom, ruskom, ukrajinskom i bjeloruskom' +
+      ' trebaju tri oblika; engleskom — dva.</p>',
+    '<h2 id="choices">Izbor</h2>',
+    '<p>Vitičaste zagrade s <code>|</code> između: motor uzima <b>jedan</b>.</p>',
+    '<p><small><tt><a href="ex:1">{Mala|Velika} soba.</a><br>→&nbsp; Mala soba.</tt></small' +
+      '></p>',
+    '<p>Izvlačenje je slučajno, pa će isti predložak drugi put dati <code>Velika soba.</cod' +
+      'e> Sam izbor ne dira tekst oko sebe — iako dotjerivanje, opisano bliže kraju ovog doku' +
+      'menta, do njega dopire.</p>',
+    '<h3 id="choices-0">Ugniježđenost</h3>',
+    '<p>Izbor može sadržavati drugi izbor, na bilo koju dubinu.</p>',
+    '<p><small><tt><a href="ex:2">Acme {Pro {Plus|Max}|Lite}</a><br>→&nbsp; Acme Pro Plus</' +
+      'tt></small></p>',
+    '<p>Unutarnji se izbor radi samo onda kada vanjski uzme granu u kojoj on stoji: ako je ' +
+      'ispalo <code>Lite</code>, <code>Plus|Max</code> se uopće ne pita — i to je mjerljivo: ' +
+      'od njega se ne traži ni slučajan broj.</p>',
+    '<h3 id="choices-1">Prazna mogućnost</h3>',
+    '<p>Mogućnost može biti prazna. To je uobičajen način da se nešto pojavljuje samo ponek' +
+      'ad.</p>',
+    '<p><small><tt><a href="ex:3">{|Vrlo }velika soba.</a><br>→&nbsp; Velika soba.</tt></sm' +
+      'all></p>',
+    '<p>Pisati razmak unutar mogućnosti, <code>{|Vrlo }</code> umjesto <code>{|Vrlo} </code' +
+      '>, navika je, a ne zahtjev: dotjerivanje svejedno svodi dvostruki razmak na jedan.</p>',
+    '<h2 id="shuffles">Miješanje</h2>',
+    '<p>Uglate zagrade uzimaju nekoliko komada, biraju koliko, stavljaju ih u slučajan redo' +
+      'slijed i spajaju.</p>',
+    '<p><small><tt><a href="ex:4">[plava|žuta|siva]</a><br>→&nbsp; Žuta siva plava</tt></sm' +
+      'all></p>',
+    '<p>Prepušteno sebi uzima sve i spaja jednim razmakom. Sve ostalo o miješanju zadaje se' +
+      ' u bloku <code>&lt;…&gt;</code> odmah nakon otvorene zagrade.</p>',
+    '<h3 id="shuffles-0">Razdjeljivač</h3>',
+    '<p><small><tt><a href="ex:5">[&lt;, &gt;plava|žuta|siva]</a><br>→&nbsp; Žuta, siva, pl' +
+      'ava</tt></small></p>',
+    '<p>Blok <code>&lt;…&gt;</code> i jest razdjeljivač, osim ako ne <b>imenuje postavku</b' +
+      '>: jednu od <code>sep</code>, <code>lastsep</code>, <code>minsize</code> ili <code>max' +
+      'size</code>, zasebnom riječju i sa znakom <code>=</code> iza nje. Sve ostalo na tom mj' +
+      'estu jest razdjeljivač, ma koliko ličilo na postavku; ključ bez svog <code>=</code>:</' +
+      'p>',
+    '<p><small><tt><a href="ex:6">[&lt;maxsize 2&gt;plava|žuta|siva]</a><br>→&nbsp; Žutamax' +
+      'size 2sivamaxsize 2plava</tt></small></p>',
+    '<p>ili ključ kojemu je sprijeda nešto zalijepljeno:</p>',
+    '<p><small><tt><a href="ex:7">[&lt;xmaxsize=1&gt;plava|žuta|siva]</a><br>→&nbsp; Žutaxm' +
+      'axsize=1sivaxmaxsize=1plava</tt></small></p>',
+    '<p>Drugi zaslužuje drugi pogled: ploča <b>ipak</b> naziva <code>xmaxsize</code> nepozn' +
+      'atim ključem, a motor svejedno ispisuje cijeli blok između komada. Dijagnostika i izla' +
+      'z odgovaraju na različita pitanja.</p>',
+    '<p>Kada trebaju dva različita razdjeljivača, postavke se pišu u cijelosti:</p>',
+    '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" i "&gt;plava|žuta|siva]</a><br>→&' +
+      'nbsp; Žuta, siva i plava</tt></small></p>',
+    '<p><code>sep</code> ide između komada, a <code>lastsep</code> — ispred posljednjeg.</p' +
+      '>',
+    '<h3 id="shuffles-1">Koliko uzeti</h3>',
+    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;plava|žuta|siva]</a><br>→&nbs' +
+      'p; Žuta siva</tt></small></p>',
+    '<p><code>minsize</code> je donja granica, <code>maxsize</code> gornja; broj je između ' +
+      'njih slučajan, kao i redoslijed. Jednake vrijednosti uzimaju točno toliko. <b>Bez oba ' +
+      '— sve, ali sa samo <code>maxsize</code> donja je granica jedan</b>, i to iznenađuje:</' +
+      'p>',
+    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+      'p>',
+    '<p>Tri komada, strop tri, a ispao je jedan. Kada se misli «sve, ali ne više od tri», p' +
+      'išite i <code>minsize</code>. <code>maxsize</code> veći od broja komada tiho se smanju' +
+      'je na njega. <code>minsize</code> veći od <code>maxsize</code> prihvaća se bez ijedne ' +
+      'riječi, i pobjeđuje donja granica: strop se podiže do nje, a ne obrnuto:</p>',
+    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;plava|žuta|siva]</a><br>→&nb' +
+      'sp; Žuta siva plava</tt></small></p>',
+    '<h3 id="shuffles-2">Razdjeljivač između dva komada</h3>',
+    '<p><code>&lt;…&gt;</code> napisan <b>između</b> dva komada razdjeljivač je tog para.</' +
+      'p>',
+    '<p><small><tt><a href="ex:12">[plava|žuta&lt;i&gt;|siva]</a><br>→&nbsp; Žuta i siva pl' +
+      'ava</tt></small></p>',
+    '<p>On pripada komadu <b>poslije</b> sebe i putuje s njim kroz miješanje, pa iskrsne ta' +
+      'mo gdje taj komad legne, a ne na stalnom mjestu izlaza. <code>&lt;…&gt;</code> poslije' +
+      ' <b>posljednjeg</b> komada uopće nije razdjeljivač i ispisuje se kao tekst:</p>',
+    '<p><small><tt><a href="ex:13">[plava|žuta|siva&lt;i&gt;]</a><br>→&nbsp; Žuta siva&lt;i' +
+      '&gt; plava</tt></small></p>',
+    '<h2 id="macros">Makroi</h2>',
+    '<p><code>#set</code> daje ime komadu teksta. Ime se koristi kao <code>%name%</code>, i' +
+      ' direktiva mora biti prva u svom retku — razmaci i tabulatori ispred nje dopušteni su,' +
+      ' ništa više.</p>',
+    '<p><small><tt><a href="ex:14">#set %grad% = Zagreb</a><br><a href="ex:14">Grad: %grad%' +
+      '.</a><br>→&nbsp; Grad: Zagreb.</tt></small></p>',
+    '<p>Imena se sastoje od latiničnih slova, znamenki i <code>_</code>. Slovo s kvačicom s' +
+      'lovom se ovdje ne smatra: <code>%šifra%</code> nije ime i motor o tome ne kaže ništa —' +
+      ' o toj tišini niže, u poglavlju o tišinama.</p>',
+    '<h3 id="macros-0"><code>#set</code> izvlači iznova, <code>#def</code> izvlači jednom</' +
+      'h3>',
+    '<p>To je sva razlika među njima, i vidi se samo onda kada vrijednost sadrži izbor.</p>',
+    '<p><small><tt><a href="ex:15">#set %izbor% = {A|B}</a><br><a href="ex:15">%izbor% %izb' +
+      'or% %izbor%</a><br>→&nbsp; A A B</tt></small></p>',
+    '<p><small><tt><a href="ex:16">#def %izbor% = {A|B}</a><br><a href="ex:16">%izbor% %izb' +
+      'or% %izbor%</a><br>→&nbsp; A A A</tt></small></p>',
+    '<p>Oba su primjera trčala pod istim sjemenom. <code>#set</code> čuva predložak i izvla' +
+      'či ga pri svakom spomenu; <code>#def</code> izvlači jednom i drži odgovor. Uzimajte <c' +
+      'ode>#def</code> za ono što se mora slagati samo sa sobom — marka, grad, ime, količina ' +
+      '— i <code>#set</code> za raznolikost.</p>',
+    '<p>Po jednom se sjemenu ne mogu razlikovati: postoje sjemena na kojima <code>#set</cod' +
+      'e> slučajno tri puta uzme istu mogućnost i oba izgledaju isto. To vrijedi znati prije ' +
+      'nego što iz jednog pregleda zaključite da definicija ne radi.</p>',
+    '<h2 id="conditions">Uvjeti</h2>',
+    '<p><code>{?name?onda|inače}</code> pita ima li makro vrijednost.</p>',
+    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?imamo %n%|još ni' +
+      'šta}</a><br>→&nbsp; Imamo 5</tt></small></p>',
+    '<p>Polovica <code>inače</code> može se izostaviti — <code>{?name?onda}</code> ne ispis' +
+      'uje ništa kada je odgovor «ne». <code>!</code> preokreće pitanje:</p>',
+    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?stranac|pri' +
+      'jatelj}</a><br>→&nbsp; Prijatelj</tt></small></p>',
+    '<p>Imati vrijednost znači imati <b>barem jedan znak koji nije razmak</b>. Makro postav' +
+      'ljen na ništa ili samo na razmake smatra se bez vrijednosti.</p>',
+    '<p>Ime uvjeta mora <b>počinjati</b> slovom ili <code>_</code>, što je strože nego kod ' +
+      'makroa — a odjeljak o tišini kaže u što se pretvara ime koje počinje znamenkom.</p>',
+    '<h2 id="counting">Brojanje</h2>',
+    '<p><code>{plural %n%: …}</code> uzima oblik riječi koji odgovara broju.</p>',
+    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: dok' +
+      'ument|dokumenta|dokumenata}</a><br>→&nbsp; 1 dokument</tt></small></p>',
+    '<p><small><tt><a href="ex:20">#def %n% = 2</a><br><a href="ex:20">%n% {plural %n%: dok' +
+      'ument|dokumenta|dokumenata}</a><br>→&nbsp; 2 dokumenta</tt></small></p>',
+    '<p><small><tt><a href="ex:21">#def %n% = 5</a><br><a href="ex:21">%n% {plural %n%: dok' +
+      'ument|dokumenta|dokumenata}</a><br>→&nbsp; 5 dokumenata</tt></small></p>',
+    '<p>Brojač je ovdje namjerno <code>#def</code>, a ne <code>#set</code>, i pravilo vrije' +
+      'di zapamtiti: <b>radite brojač jednostavnim brojem ili <code>#def</code>-om, nikada <c' +
+      'ode>#set</code>-om.</b> Sa <code>#set</code>-om na mjesto brojača dospijeva spremljen ' +
+      'TEKST, <code>{5|5}</code>, a ne <code>5</code> — dakle ne broj — pa cijela konstrukcij' +
+      'a ne daje ništa, a ploča kaže <code>plural.count-macro</code>. Brojač i oblik ne mogu ' +
+      'proturječiti jedan drugome: umjesto toga nestaje riječ.</p>',
+    '<p><small><tt><a href="ex:22">#set %n% = {5|5}</a><br><a href="ex:22">%n% {plural %n%:' +
+      ' dokument|dokumenta|dokumenata}</a><br>→&nbsp; 5</tt></small></p>',
+    '<p>Koliko oblika, rješava lokal, a ne vi: pod <code>hr</code> ih je tri, pod <code>en<' +
+      '/code> — dva. Pogrešan je broj greška o kojoj ploča javlja (<code>plural.arity</code>)' +
+      ', i motor tada ispisuje cijelu konstrukciju natrag, zamijenivši zagrade širokima <code' +
+      '>｛｝</code> da se ne pomiješa s izlazom.</p>',
+    '<h2 id="fragments">Odlomci</h2>',
+    '<p><code>#include "name"</code> stavlja na to mjesto drugi predložak, i direktiva mora' +
+      ' biti prva u svom retku — i ovdje su razmaci i tabulatori ispred nje dopušteni.</p>',
+    '<p><small><tt><a href="ex:23">#include "intro"</a><br>→&nbsp; Dobro došli u Acme.</tt>' +
+      '</small></p>',
+    '<p>Odlomak se odigrava kao vlastiti predložak, pa se izbor unutar njega radi iznova: <' +
+      'code>intro</code> sadrži <code>{Acme|Globex}</code> i odgovara jednim ili drugim.</p>',
+    '<p>Ime se uspoređuje <b>točno</b>. <code>Intro</code> i <code>intro</code> dva su razl' +
+      'ičita odlomka, i u Windowsu je tu lako pogriješiti, jer datotečnom sustavu to nije važ' +
+      'no. Cilj koji nedostaje odigrava se kao ništa, a ploča kaže <code>include.unknown-targ' +
+      'et</code>; cilj koji se razlikuje samo po veličini slova dobiva Studio napomenu s imen' +
+      'om koje ste najvjerojatnije mislili.</p>',
+    '<h3 id="fragments-0">Odlomak ne vidi vaše makroe</h3>',
+    '<p>On se odigrava kao vlastiti predložak: ima vrijednosti sesije, ali ne i <code>#set<' +
+      '/code> i <code>#def</code> dokumenta koji ga je unio.</p>',
+    '<p><small><tt><a href="ex:24">#set %brand% = Acme</a><br><a href="ex:24">#include "sho' +
+      'ut"</a><br>→&nbsp; %brand% je ovdje.</tt></small></p>',
+    '<p><code>shout</code> je <code>%brand% je ovdje.</code>, i ime mora biti definirano u ' +
+      'samom odlomku. To nije tišina — ploča ipak kaže <code>variable.undefined</code> — ali ' +
+      'to kaže protiv <b><code>shout</code></b>, u retku 1 te datoteke, i u dokumentu u koji ' +
+      'gledate ne pojavljuje se nijedna valovita crta, jer položaj pripada drugom međuspremni' +
+      'ku. Čitajte stupac <b>Datoteka</b> kada se upozorenje naizgled tiče retka koji niste p' +
+      'isali.</p>',
+    '<h2 id="remarks">Komentari</h2>',
+    '<p><code>/# … #/</code> je komentar: sve između oznaka uklanja se prije svega ostalog.' +
+      '</p>',
+    '<p><small><tt><a href="ex:25">nacrt /# nisam siguran #/ gotovo</a><br>→&nbsp; Nacrt go' +
+      'tovo</tt></small></p>',
+    '<p>Komentari se ne ugnježđuju. Prvi <code>#/</code> zatvara komentar, što god bilo pri' +
+      'je njega, pa se komentar omotan oko teksta koji i sam sadrži <code>#/</code> završava ' +
+      'ranije nego što izgleda.</p>',
+    '<h2 id="tidying">Što motor poravnava na kraju</h2>',
+    '<p>Izlaz nije baš onaj tekst koji su dale konstrukcije. Na kraju mu se dogodi nekoliko' +
+      ' stvari; dvije susrećete svakodnevno.</p>',
+    '<p>Prvo slovo svake rečenice postaje veliko:</p>',
+    '<p><small><tt><a href="ex:26">jedan. dva. tri.</a><br>→&nbsp; Jedan. Dva. Tri.</tt></s' +
+      'mall></p>',
+    '<p>Zbog toga primjeri u ovoj pomoći tako često odgovaraju velikim slovom tamo gdje je ' +
+      'u predlošku malo. Točka nakon kratice koju motor zna ne završava rečenicu, i za hrvats' +
+      'ki su to upravo naslovi — <code>dr.</code>, <code>prof.</code> i <code>mr.</code> svi ' +
+      'su na latiničnoj polovici popisa:</p>',
+    '<p><small><tt><a href="ex:27">dr. Marić naše cijene su niske</a><br>→&nbsp; dr. Marić ' +
+      'naše cijene su niske</tt></small></p>',
+    '<p>Isto tako rečenicu ne završava ni kratica od više točaka, pa <code>d.o.o.</code> pr' +
+      'olazi cijelo:</p>',
+    '<p><small><tt><a href="ex:28">Acme d.o.o. naše cijene su niske</a><br>→&nbsp; Acme d.o' +
+      '.o. naše cijene su niske</tt></small></p>',
+    '<p>Svaka druga riječ završava rečenicu, ma koliko kratka bila — duljina tu nema nikakv' +
+      'e veze:</p>',
+    '<p><small><tt><a href="ex:29">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. Naše cijen' +
+      'e su niske</tt></small></p>',
+    '<p>Popis koji motor zna ima 46 unosa, <b>29 ćiriličnih</b>, i drugi dokument prolazi k' +
+      'roz njega pod naslovom <b>Tišina koju susreću svi</b>. Za hrvatski tekst najvažnije je' +
+      ' niže, u tišinama: popis nije sastavljen za hrvatski.</p>',
+    '<p>Drugo je svakodnevno to da se nizovi razmaka svode na jedan. Upravo to dopušta da s' +
+      'e ostavi prazna mogućnost ne računajući razmake oko nje.</p>',
+    '<p>Ostalo u jednom dahu: razmak ispred <code>,;:!?.</code> uklanja se i ubacuje se jed' +
+      'an poslije; cijeli se izlaz obrezuje po rubovima; veliko slovo dolazi i nakon preloma ' +
+      'retka i nakon blokovskog taga, a ne samo nakon točke; a adrese sa shemom, poštanske ad' +
+      'rese, gole domene i decimalni brojevi zaklonjeni su i izlaze točno onako kako su otipk' +
+      'ani.</p>',
+    '<p>Posljednje nosi istu ASCII granicu kao i kratice gore, i za hrvatski radi u vašu ko' +
+      'rist: gola je domena zaklonjena jer je pisana latinicom, dok <code>сайт.рф</code> nije' +
+      ' i dotjerivanje unutra ubacuje razmak i veliko slovo. Zbog toga i dvije riječi spojene' +
+      ' točkom prolaze netaknute — motor u njima vidi domenu:</p>',
+    '<p><small><tt><a href="ex:30">zdravo , svijete</a><br>→&nbsp; Zdravo, svijete</tt></sm' +
+      'all></p>',
+    '<p><small><tt><a href="ex:31">jedan.dva</a><br>→&nbsp; jedan.dva</tt></small></p>',
+    '<h2 id="silences">Tišina</h2>',
+    '<p>Svaki se slučaj ispod odigrava, daje nešto drugo od onoga što izgleda, i ne povlači' +
+      ' za sobom <b>nijednu dijagnostiku</b>. Skupljeni su ovdje jer ih ništa drugo u prozoru' +
+      ' nikada neće spomenuti.</p>',
+    '<p><b>Hrvatske kratice na popisu motora uglavnom ne postoje.</b> Naslovi su tamo — <co' +
+      'de>dr.</code>, <code>prof.</code>, <code>mr.</code> — ali <code>br.</code>, <code>npr.' +
+      '</code>, <code>itd.</code>, <code>tzv.</code>, <code>g.</code>, <code>ul.</code>, <cod' +
+      'e>str.</code> i <code>tel.</code> nisu, i svaki od njih završava rečenicu i sljedeću r' +
+      'iječ piše velikim slovom:</p>',
+    '<p><small><tt><a href="ex:32">npr. naše cijene su niske</a><br>→&nbsp; Npr. Naše cijen' +
+      'e su niske</tt></small></p>',
+    '<p><b>Slovo s kvačicom u imenu varijable slovom se ne smatra.</b> <code>%šifra%</code>' +
+      ' motoru uopće nije spomen varijable: on ga ispisuje kao tekst i ne kaže ništa:</p>',
+    '<p><small><tt><a href="ex:33">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
+      'll></p>',
+    '<p>Razlog je isti kao gore: provjera «je li ovo sredina riječi» u motoru je ASCII prov' +
+      'jera, i <code>š</code> za nju nije slovo. U vrijednosti su kvačice sasvim na mjestu; u' +
+      ' imenu ne rade uopće.</p>',
+    '<p><b><code>#include</code> koji ne stoji sam u svom retku običan je tekst.</b></p>',
+    '<p><small><tt><a href="ex:34">Prije. #include "intro"</a><br>→&nbsp; Prije. #include "' +
+      'intro"</tt></small></p>',
+    '<p>Isto vrijedi za direktivu s nečim iza nje i za <code>#include"intro"</code> bez raz' +
+      'maka. Pravilo pripada obitelji, a ne ovom motoru, i upravo ono čini direktivu prepozna' +
+      'tljivom bez razlaganja cijelog retka.</p>',
+    '<p><b>Uvjet čije ime počinje znamenkom uvjet nije.</b> On postaje običan izbor između ' +
+      '<code>?1x?da</code> i <code>ne</code>:</p>',
+    '<p><small><tt><a href="ex:35">{?1x?da|ne}</a><br>→&nbsp; ?1x? Da</tt></small></p>',
+    '<p><b><code>&lt;…&gt;</code> na početku komada koji nije prvi razdjeljivač nije</b> i ' +
+      'ispisuje se kako stoji:</p>',
+    '<p><small><tt><a href="ex:36">[plava|&lt;i&gt;žuta]</a><br>→&nbsp; &lt;i&gt;Žuta plava' +
+      '</tt></small></p>',
+    '<p>Blok na početku <b>prvog</b> komada upravo je razdjeljivač kojim počinje odjeljak o' +
+      ' miješanju:</p>',
+    '<p><small><tt><a href="ex:37">[&lt;i&gt;plava|žuta]</a><br>→&nbsp; Žuta i plava</tt></' +
+      'small></p>',
+    '<p>Bilo gdje nakon <code>|</code> on je običan tekst, a razdjeljivač između dva komada' +
+      ' piše se na <b>kraju</b> prvog.</p>',
+    '<p><b>Goli tag na kraju komada uzima se za razdjeljivač tog para</b> i ispisuje se vla' +
+      'stitim tekstom:</p>',
+    '<p><small><tt><a href="ex:38">[jedan&lt;br&gt;|dva]</a><br>→&nbsp; Dva jedan</tt></sma' +
+      'll></p>',
+    '<p>Na ovom je sjemenu par legao drugim redoslijedom, pa razdjeljivač uopće nije ispao.' +
+      ' S trećim komadom ima gdje leći, i pojavljuje se:</p>',
+    '<p><small><tt><a href="ex:39">[plava|žuta&lt;br&gt;|siva]</a><br>→&nbsp; Žuta br siva ' +
+      'plava</tt></small></p>',
+    '<p><code>&lt;br&gt;</code> stoji između <code>žuta</code> i onoga što slijedi, gdje go' +
+      'd miješanje taj par postavilo. Zatvoreni tag (<code>&lt;/b&gt;</code>), samozatvoreni ' +
+      '(<code>&lt;br/&gt;</code>), tag s atributima (<code>&lt;br class="x"&gt;</code>) i tag' +
+      ' usred komada ostaju netaknuti.</p>',
+    '<p><b>Nezatvoren komentar običan je tekst</b>: on ništa ne otvara, i <code>/#</code> s' +
+      'e ispisuje:</p>',
+    '<p><small><tt><a href="ex:40">prije /# ostatak ovoga</a><br>→&nbsp; Prije /# ostatak o' +
+      'voga</tt></small></p>',
+    '<p>Ali on je i dalje polovica para. Ako se dalje u dokumentu pojavi <code>#/</code>, t' +
+      'o će se dvoje pronaći i sve između njih nestat će — zajedno s onim što je autor napisa' +
+      'o među njima:</p>',
+    '<p><small><tt><a href="ex:41">{a /# ups|b} sredina #/ rep</a><br>→&nbsp; {a rep</tt></' +
+      'small></p>',
+    '<p>Izbor je gore izgubio svoju drugu varijantu i zatvorenu zagradu, i nijedna dijagnos' +
+      'tika o tome ne govori: to je ono što tekst ZNAČI, a ne greška koju motor može vidjeti.' +
+      ' Kada se <code>/#</code> misli doslovno, sigurno je mjesto za njega vrijednost varijab' +
+      'le, a ne tijelo predloška.</p>',
+    '<h2 id="next">Kamo dalje</h2>',
+    '<p>Drugi dokument, <b>Što kaže kartica «Dijagnostika»</b>, ima članak za svaki redak k' +
+      'oji ploča može prikazati: što znači, što ga izaziva i što motor radi s predloškom dok ' +
+      'taj redak postoji. Pritisnite F1 dok je pokazivač unutar konstrukcije i pomoć će se ot' +
+      'voriti na odjeljku te konstrukcije <b>u tom dokumentu</b>: vitičasta zagrada na <b>Zag' +
+      'radama</b>, <code>[…]</code> na <b>Miješanjima</b>, redak <code>#set</code> na <b>Defi' +
+      'nicijama</b>.</p>',
+    '<h1 id="about">Što kaže kartica «Dijagnostika»</h1>',
+    '<p>Svaki je redak na ovoj kartici presuda <b>motora</b>, i istu bi presudu dale implem' +
+      'entacije za JavaScript, PHP ili Python: četiri samostalna motora koji se drže jednog z' +
+      'ajedničkog korpusa. To nije mišljenje Studio o vašem predlošku. Ako motor ovdje nešto ' +
+      'nazove greškom, svaki drugi motor obitelji to također naziva greškom, i vaš će se pred' +
+      'ložak ponašati na vašem poslužitelju isto kao u ovom prozoru.</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th>što piše</th><th>tko to kaže</th><th>što to znači</th></tr>',
+    '<tr><td><b>greška</b></td><td>motor</td><td>predložak će raditi nešto drugo nego na št' +
+      'o liči</td></tr>',
+    '<tr><td><b>upozorenje</b></td><td>motor</td><td>odigrat će se, ali najvjerojatnije ne ' +
+      'onako kako ste mislili</td></tr>',
+    '<tr><td><b>Studio napomena</b></td><td>Studio</td><td>motor nije rekao ništa, a to vri' +
+      'jedi reći: umetanje u krug, cilj u drugoj veličini slova, službeni znak</td></tr>',
+    '</table>',
+    '<p>Stupac <b>Mjesto</b> jest redak i stupac. Klik na redak vodi pokazivač tamo.</p>',
+    '<blockquote>Svaki primjer ispod prolazi kroz motor s kojim je sklopljena ova kopija St' +
+      'udio, pri svakom sklapanju programa, i desno stoji točno ono što je on vratio. Ovdje n' +
+      'išta nije zapamćeno ni pogođeno; odgovor koji bi prestao biti istinit zaustavio bi skl' +
+      'apanje. Verzija je motora u <b>Pomoć</b>, <b>O programu</b>.</blockquote>',
+    '<h2 id="reading">Kako čitati primjere</h2>',
+    '<p>Strelica <code>→</code> razdvaja predložak od onoga što je motor vratio. <code>⏎</c' +
+      'ode> je prelom retka unutar izlaza, <code>(prazno)</code> znači da nije ispisao ništa,' +
+      ' a <code>…</code> označava izlaz predugačak da bi se prikazao u cijelosti. Tekst nakon' +
+      ' izlaza, odvojen s tri razmaka, napomena je, a ne dio odgovora.</p>',
+    '<p>Uvjeti pod kojima su primjeri trčali stoje ovdje, a nisu skriveni u testovima: bez ' +
+      'njih se neki odgovori ne mogu ponoviti. Najviše znači skup predložaka: inače bi <code>' +
+      '#include "frag"</code> → <code>Ulomak</code> počivao na nečemu što ovaj dokument nikad' +
+      'a ne kaže.</p>',
+    '<p><small><tt>locale: hr<br>seed: 7<br>empty: (prazno)<br>include frag: Ulomak<br>incl' +
+      'ude loop: #include "loop"<br>include Intro: Uvod</tt></small></p>',
+    '<p><code>seed</code> učvršćuje izvlačenje: bez njega bi izbor ili miješanje odgovarali' +
+      ' svaki put drukčije i ne bi bilo što provjeriti.</p>',
+    '<p><b>Lokal je ovdje <code>hr</code>, i on rješava dvije stvari:</b> koliko oblika mno' +
+      'žine motor očekuje i koji oblik kome pripada. Hrvatskom, srpskom, bosanskom, ruskom, u' +
+      'krajinskom i bjeloruskom trebaju tri. Engleskom — dva. Lokal se uzima s prebacivača iz' +
+      'nad desne polovice, a ne iz jezika sučelja.</p>',
+    '<hr>',
+    '<h2 id="brackets">Zagrade</h2>',
+    '<p><b>Stavite pokazivač na zagradu i konstrukcija će se pokazati u cijelosti:</b> gdje' +
+      ' počinje, gdje se završava i <b>svi njezini razdjeljivači</b>. Ugniježđene se grupe pr' +
+      'itom ne osvjetljavaju: one imaju svoje razdjeljivače, i oni će se upaliti kada pokaziv' +
+      'ač stane na njihovu zagradu. To je najbrži način da vidite gdje se završava ono što mi' +
+      'jenjate — osobito u dugačkom retku, gdje je <code>}</code> otišla dva zaslona udesno.<' +
+      '/p>',
+    '<p>Razdjeljivačem se ne smatra samo <code>|</code>. U miješanju <code>[a&lt;br&gt;|b]<' +
+      '/code> ih je dva: motor čita <code>&lt;br&gt;</code> kao razdjeljivač postavljen <b>is' +
+      'pred sljedećeg</b> komada, i osvjetljenje ga pokazuje zajedno s ostalima, jer on i jes' +
+      't dio građe konstrukcije.</p>',
+    '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — zagrada je otvorena i nije z' +
+      'atvorena</h3>',
+    '<p><small><tt><a href="ex:42">cijena {niska|visoka</a><br>→&nbsp; Cijena {niska|visoka' +
+      '</tt></small></p>',
+    '<p>Motor ne pogađa gdje ste htjeli zatvoriti. Tekst ostaje kako jest, zajedno sa zagra' +
+      'dom, i izbor se ne događa nikada.</p>',
+    '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — zatvorena je zagradom dr' +
+      'uge vrste</h3>',
+    '<p><small><tt><a href="ex:43">cijena {niska|visoka]</a><br>→&nbsp; Cijena {niska|visok' +
+      'a]</tt></small></p>',
+    '<p><code>{</code> čeka <code>}</code>, a <code>[</code> čeka <code>]</code>. Miješanje' +
+      ' zatvoreno vitičastom zagradom miješanje nije.</p>',
+    '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — zatvoren' +
+      'a zagrada bez otvorene</h3>',
+    '<p><small><tt><a href="ex:44">cijena niska} i to je to</a><br>→&nbsp; Cijena niska} i ' +
+      'to je to</tt></small></p>',
+    '<p>Ona ostaje tekst. Najčešće je to zagrada preostala od izmjene.</p>',
+    '<hr>',
+    '<h2 id="definitions">Definicije</h2>',
+    '<h3 id="set.malformed"><code>set.malformed</code> — ovaj <code>#set</code> redak nije ' +
+      'napisan po pravilu</h3>',
+    '<p><small><tt><a href="ex:45">#set grad = Zagreb</a><br><a href="ex:45">u %grad%</a><b' +
+      'r>→&nbsp; #set grad = Zagreb ⏎ U %grad%</tt></small></p>',
+    '<p><b>Ime se piše između znakova postotka:</b> <code>#set %grad% = Zagreb</code>. To j' +
+      'e najčešća prva greška, i ona stavlja u ploču odmah dva retka — sam pokvaren redak i «' +
+      'ova varijabla nigdje nije definirana», jer do definicije nije došlo, a <code>%grad%</c' +
+      'ode> ne pripada nikome.</p>',
+    '<p>Pogledajte izlaz: neuspjela je direktiva ostala u tekstu <b>kako je napisana</b>. M' +
+      'otor je nije pročitao kao direktivu, dakle to je običan redak, i on dospijeva u rezult' +
+      'at.</p>',
+    '<h3 id="def.malformed"><code>def.malformed</code> — ovaj <code>#def</code> redak nije ' +
+      'napisan po pravilu</h3>',
+    '<p><small><tt><a href="ex:46">#def stranice = {1|3}</a><br><a href="ex:46">%stranice%<' +
+      '/a><br>→&nbsp; #def stranice = 1 ⏎ %stranice%</tt></small></p>',
+    '<p>Isto pravilo i ista cijena. <code>#def</code> se od <code>#set</code> razlikuje ne ' +
+      'po pisanju, nego po tome <b>kada</b> se vrijednost razvija: <code>#set</code> je razvi' +
+      'ja pri svakom spomenu, <code>#def</code> — jednom po odigravanju. Greška u pisanju koš' +
+      'ta vas oba.</p>',
+    '<p>I pogledajte bolje: <code>{1|3}</code> je u neuspjeloj direktivi <b>izvukao mogućno' +
+      'st</b>. Redak je postao običan tekst, a običan se tekst odigrava kao običan tekst, zaj' +
+      'edno sa zagradama. Pokvaren redak nije isključen; on samo prestaje biti direktiva.</p>',
+    '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — ovo je ime' +
+      ' već definirano gore</h3>',
+    '<p><small><tt><a href="ex:47">#set %x% = prvo</a><br><a href="ex:47">#set %x% = drugo<' +
+      '/a><br><a href="ex:47">%x%</a><br>→&nbsp; Drugo</tt></small></p>',
+    '<p>Ono radi — pobjeđuje <b>posljednja</b> definicija — ali motor to naziva greškom: do' +
+      'kument u kojemu je ime zadano dvaput čita se dvosmisleno, i za mjesec dana nećete se s' +
+      'jetiti koji je od ta dva retka živ. Greška pokazuje na <b>drugu</b> definiciju; prva s' +
+      'toji gore.</p>',
+    '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
+      '> unutar vrijednosti definicije</h3>',
+    '<p><small><tt><a href="ex:48">#def %x% = #include "frag"</a><br><a href="ex:48">%x%</a' +
+      '><br>→&nbsp; Ulomak</tt></small></p>',
+    '<p>Umetanje se unutar vrijednosti razvija u drugom trenutku nego što biste očekivali, ' +
+      'i obitelj to zabranjuje. Stavljajte <code>#include</code> u zaseban redak.</p>',
+    '<hr>',
+    '<h2 id="variables">Varijable</h2>',
+    '<h3 id="variable.undefined"><code>variable.undefined</code> — ova varijabla nigdje nij' +
+      'e definirana</h3>',
+    '<p><small><tt><a href="ex:49">zdravo, %name%</a><br>→&nbsp; Zdravo, %name%</tt></small' +
+      '></p>',
+    '<p>Upozorenje, a ne greška: motor ispisuje ime kako jest. Tako je i zamišljeno — vrije' +
+      'dnost može doći izvana, od programa domaćina. U Studio se takve vrijednosti predaju na' +
+      ' kartici «Varijable», u odjeljku <b>Vrijednosti sesije</b>.</p>',
+    '<p><b>Vrijednost definicije može se mijenjati u ploči.</b> Stanite u gornjem dijelu na' +
+      ' stupac «Vrijednost» i pritisnite <b>F2</b> (ili jednostavno počnite tipkati); <b>Ente' +
+      'r</b> primjenjuje, <b>Esc</b> odustaje. Izmjena ide <b>u dokument</b>, jednim korakom ' +
+      'opoziva: <code>Ctrl+Z</code> je vraća natrag.</p>',
+    '<p>Ime i vrsta (<code>#set</code> ili <code>#def</code>) ne podliježu izmjeni — i to j' +
+      'e odluka, a ne nedovršen kut. Preimenovanje iz ćelije kida sve spomene varijable u dok' +
+      'umentu, a brisanje retka nosi sa sobom komentar i uvlaku. I jedno i drugo pripada teks' +
+      'tu, gdje vidite što radite.</p>',
+    '<p>Mijenja se <b>baš vrijednost</b>. Uvlaka, višak razmaka, veličina slova u imenu i k' +
+      'omentar na kraju retka ostaju kakvi su bili: <code>   #set  %Brand%   =   Acme   /# re' +
+      'p #/</code> vraća se iz izmjene razlikujući se samo u <code>Acme</code>. Datoteka leži' +
+      ' u gitu, i preformatirati redak značilo bi prikazati to tamo kao vašu izmjenu.</p>',
+    '<p><b>Odbijanje znači da bi motor pročitao redak drukčije.</b> Izmjena se ne primjenju' +
+      'je šutke: motor ponovno čita rezultat, i ako on kaže nešto drugo od traženog, dokument' +
+      ' se ostavlja na miru, a statusni redak o tome javlja. Tri stvarna razloga: <code>/#</c' +
+      'ode> u vrijednosti otvara komentar koji pojede ostatak datoteke; prelom retka završava' +
+      ' direktivu prerano; a komentar <b>unutar</b> direktive čini redak neispravnim po dijel' +
+      'ovima — taj mijenjajte u tekstu.</p>',
+    '<p><b>Dva poteza na imenu varijable.</b> Ime je u ploči poveznica, a ne natpis:</p>',
+    '<ul>',
+    '<li><b>klik na ime</b> vodi pokazivač do prvog mjesta gdje dokument koristi tu varijab' +
+      'lu, i redak na tren bljesne. Ista riječ unutar komentara ili kao cilj <code>#include</' +
+      'code> <b>ne</b> računa se: ploča vas vodi tamo gdje varijabla stvarno radi.</li>',
+    '<li><b>Ctrl+klik</b> upisuje definiciju u dokument i otvara na njoj uređivač grupa. Vr' +
+      'ijednost koju ste već otipkali ulazi tamo kao prva mogućnost:</li>',
+    '</ul>',
+    '<p><small><tt><a href="ex:50">#set %brand% = {Vulkan}</a><br><a href="ex:50">kasino %b' +
+      'rand%</a><br>→&nbsp; Kasino Vulkan</tt></small></p>',
+    '<p>Razlika je među njima ono što preživljava zatvaranje prozora. Vrijednost sesije ne ' +
+      'preživljava: nema je ni u datoteci ni u gitu, i nijedan je drugi motor obitelji ne vid' +
+      'i. Definicija preživljava, i samo definicija utišava ovo upozorenje zauvijek. Jedan <c' +
+      'ode>Ctrl+Z</code> vraća dokument.</p>',
+    '<p><b>Vrijednost je sesije najprije predložak, a ne tekst.</b> Upravo tako motor postu' +
+      'pa sa svakom vrijednošću domaćina, a pregled se mora podudarati s poslužiteljem — pa <' +
+      'code>{niska|visoka}</code> otipkano u polje vrijednosti daje izbor, a ne tih šesnaest ' +
+      'znakova. Ako ste mislili na sam tekst, kvačicom označite <b>kao tekst</b> u trećem stu' +
+      'pcu: tada vitičaste zagrade i postoci ostaju znaci.</p>',
+    '<h3 id="variable.self-reference"><code>variable.self-reference</code> — definicija upu' +
+      'ćuje sama na sebe</h3>',
+    '<p><small><tt><a href="ex:51">#set %x% = a %x% b</a><br><a href="ex:51">%x%</a><br>→&n' +
+      'bsp; A a a … %x% … b b b</tt></small></p>',
+    '<p>Pedeset razina, potom zaustavljanje. Motor razvija do granice dubine i staje, ostav' +
+      'ljajući <code>%x%</code> u sredini. To nije krug, i nije ono što ste htjeli.</p>',
+    '<p><code>…</code> je gore kratica ovog dokumenta, a ne motora. Stvarni izlaz ima 207 z' +
+      'nakova i nosi sa svake strane <b>pedeset jedno</b> slovo, a ne pedeset: pedeseta razin' +
+      'a staje i ostavlja vrijednost kako jest, a u vrijednosti je svakog po jedno više.</p>',
+    '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — defini' +
+      'cije upućuju u krug</h3>',
+    '<p><small><tt><a href="ex:52">#set %x% = %y%</a><br><a href="ex:52">#set %y% = %x%</a>' +
+      '<br><a href="ex:52">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p>Svaka se strana razvija točno <b>jednom</b> i staje: <code>%x%</code> je postao <co' +
+      'de>%y%</code>, a ne <code>%x%</code>. Motor odmotava krug, a ne hoda po njemu, i preži' +
+      'vljava drugo ime iz kruga — stavite u dokument <code>%x% %y%</code> i on će dati <code' +
+      '>%y% %x%</code>, par naopako.</p>',
+    '<p>Ploča iscrtava redak za <b>svaki spomen koji zatvara krug</b>, a ne jedan po krugu ' +
+      'i ne jedan po definiciji. Definicija koja krug imenuje dvaput dobiva dva retka na svom' +
+      ' retku: <code>#set %x% = %y% %y%</code> prema <code>#set %y% = %x%</code> — to su tri ' +
+      'greške, dvije od njih na prvom. Redci se ne slijevaju. A položaj pada na definiciju ko' +
+      'ja stvarno djeluje: ako je ime zadano dvaput, to je <b>posljednja</b>.</p>',
+    '<hr>',
+    '<h2 id="includes">Umetanja</h2>',
+    '<h3 id="includes-0"><code>#include</code> radi samo s početka retka</h3>',
+    '<p><small><tt><a href="ex:53">prije #include "frag" poslije</a><br>→&nbsp; Prije #incl' +
+      'ude "frag" poslije</tt></small></p>',
+    '<p><small><tt><a href="ex:54">#include "frag"</a><br>→&nbsp; Ulomak</tt></small></p>',
+    '<p>Nijedna dijagnostika, i u tome je cijela poanta: <code>#include</code> usred retka ' +
+      'umetanje <b>nije</b>. Motor ga čita kao običan tekst i ništa ne kaže, jer nema na što ' +
+      'se žaliti — napisali ste tekst i dobili tekst.</p>',
+    '<p><b>A cilj ipak može stajati redak niže</b>, i to iznenađuje s druge strane. Razmak ' +
+      'koji motor dopušta između riječi i cilja uključuje prelome redaka, pa je to jedno umet' +
+      'anje, i ono radi:</p>',
+    '<p><small><tt><a href="ex:55">#include</a><br><a href="ex:55">"frag"</a><br>→&nbsp; Ul' +
+      'omak</tt></small></p>',
+    '<p>Prazni su redci između njih također dopušteni. Nije dopušteno sve ostalo: riječ isp' +
+      'red cilja ili bilo što osim razmaka iza njega — i sve ponovno postaje tekst. Uređivač ' +
+      'boji cilj u njegovu vlastitom retku, a samu riječ ostavlja običnom dok cilj nije došao' +
+      ': on ne obećava direktivu čiji kraj još ne vidi.</p>',
+    '<h3 id="include.unknown-target"><code>include.unknown-target</code> — takvog cilja u s' +
+      'kupu nema</h3>',
+    '<p><small><tt><a href="ex:56">#include "nema"</a><br>→&nbsp; (prazno)</tt></small></p>',
+    '<p>Ciljevi su <code>.spintax</code> datoteke u mapi otvorenog dokumenta. Nepoznat se c' +
+      'ilj razvija u ništa: odlomak nestaje, a ne puca, i upravo je zato to tako lako previdj' +
+      'eti.</p>',
+    '<p><b>Zbog toga na kartici «Varijable» postoji treći odjeljak, «Umetanja».</b> On nabr' +
+      'aja svaki <code>#include</code> dokumenta i za svaki — ima li skup njegov cilj; po jed' +
+      'an redak po pojavljivanju, pa cilj imenovan dvaput daje dva retka. Odjeljak se pojavlj' +
+      'uje samo onda kada u dokumentu ima umetanja. Klik na redak vodi pokazivač do onog <cod' +
+      'e>#include</code> koji imenuje taj cilj.</p>',
+    '<p>Oznaka ima <b>tri</b> značenja, i treće je važno: «nema skupa» nije «odlomak nedost' +
+      'aje», nego «zasad nema gdje tražiti». Skup je mapa pored dokumenta, a nespremljen doku' +
+      'ment mapu nema; pa je do prvog spremanja svaki cilj označen upravo tako. «NEDOSTAJE» s' +
+      'e pojavljuje samo onda kada mapa postoji, a datoteke u njoj stvarno nema.</p>',
+    '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — cilj postoji, ali u drug' +
+      'oj veličini slova</h3>',
+    '<p><small><tt><a href="ex:57">#include "intro"</a><br>→&nbsp; (prazno)</tt></small></p' +
+      '>',
+    '<p>Skup sadrži <code>Intro.spintax</code> — a motor svejedno kaže da takvog cilja nema' +
+      ', dok Studio dodaje svoju napomenu o veličini slova. Veličina je slova važna: <code>in' +
+      'tro</code> i <code>Intro</code> različiti su ciljevi. Windows bi otvorio datoteku i ov' +
+      'ako i onako, i upravo zato Studio gleda u skup, a ne u datotečni sustav: inače bi preg' +
+      'led proturječio poslužitelju o istom dokumentu.</p>',
+    '<h3 id="note.cycle"><code>note.cycle</code> — umetanje u krug</h3>',
+    '<p>Ako <code>loop.spintax</code> i sam sadrži <code>#include "loop"</code>, onda:</p>',
+    '<p><small><tt><a href="ex:58">#include "loop"</a><br>→&nbsp; (prazno)</tt></small></p>',
+    '<p>Motor podmeće prazninu umjesto beskonačnosti. Napomena je potrebna da biste razumje' +
+      'li zašto je odlomak nestao.</p>',
+    '<p>Redak je ispisan na <b><code>loop</code></b>, a ne na dokument u koji gledate: krug' +
+      ' pripada odlomku, i tamo ide pokazivač pri kliku. U otvorenom dokumentu ništa nije pod' +
+      'crtano, jer je s retkom koji ste vi napisali sve u redu.</p>',
+    '<hr>',
+    '<h2 id="plurals">Oblici množine</h2>',
+    '<h3 id="plural.arity"><code>plural.arity</code> — oblika nema onoliko koliko lokal zah' +
+      'tijeva</h3>',
+    '<p><small><tt><a href="ex:59">#set %n% = 5</a><br><a href="ex:59">%n% {plural %n%: obj' +
+      'ekt|objekta}</a><br>→&nbsp; 5 ｛plural 5: objekt|objekta｝</tt></small></p>',
+    '<p><b>Nije praznina — motor ispisuje cijelu konstrukciju</b>, zamijenivši zagrade širo' +
+      'kima <code>｛｝</code>. Tako on kaže «ovo sam vidio i nisam mogao primijeniti». Neprimje' +
+      'tnim to nitko neće nazvati, i to je dobro: odlomak koji je nestao šutke tražio bi se d' +
+      'ulje.</p>',
+    '<p>Hrvatskom trebaju tri oblika, engleskom — dva. Pod lokalom ovog dokumenta ispravno ' +
+      'je <code>{plural %n%: objekt|objekta|objekata}</code>.</p>',
+    '<p><b>Praznina nastaje iz drugog razloga, i ta se dva lako pomiješaju.</b> Usporedite ' +
+      'ova dva, koja se razlikuju samo po broju oblika:</p>',
+    '<p><small><tt><a href="ex:60">{plural %n%: objekt|objekta|objekata}</a><br>→&nbsp; (pr' +
+      'azno)&nbsp;&nbsp; tri oblika: ispravno za hrvatski<br><a href="ex:61">{plural %n%: obj' +
+      'ekt|objekta}</a><br>→&nbsp; (prazno)&nbsp;&nbsp; dva oblika: neispravno za hrvatski</t' +
+      't></small></p>',
+    '<p>Oba ne ispisuju ništa, a ploča se prema njima odnosi drukčije: prvi povlači samo <c' +
+      'ode>variable.undefined</code>, drugi povlači i <code>plural.arity</code>. Dakle, <b>pr' +
+      'aznina nije znak greške u broju oblika</b> — ovdje je ona otuda što <code>%n%</code> n' +
+      'ije definirano, a motor provjerava brojač prije nego što broji oblike, pa staje još pr' +
+      'ije nego što se pitanje o broju postavi.</p>',
+    '<p>Upravo zato primjer na početku ovog članka najprije definira <code>%n%</code>. Bez ' +
+      'toga bi izlaz bio prazan pri bilo kojem broju oblika i o broju ne bi pokazao ništa.</p' +
+      '>',
+    '<p>Ploča i izlaz ovdje govore o različitom, i to nije proturječje: redak u ploču stavl' +
+      'ja <b>provjera</b>, koja broji oblike u tekstu i do brojača joj nije stalo; prazninu d' +
+      'aje <b>odigravanje</b>, koje ima svoj redoslijed. Dajte brojaču broj, kao u prvom prim' +
+      'jeru, i vidjet ćete što broj oblika stvarno radi.</p>',
+    '<h3 id="plural.count-macro"><code>plural.count-macro</code> — brojač uzima vrijednost ' +
+      'iz <code>#set</code>-a, a taj izvlači iznova pri svakom spomenu</h3>',
+    '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
+      ' objekt|objekta|objekata}</a><br>→&nbsp; 1</tt></small></p>',
+    '<p>Pogledajte što je preživjelo: <b>broj je ispisan, a imenica nije.</b> Brojač mora b' +
+      'iti broj u trenutku kada se bira oblik, a <code>#set</code> čija je vrijednost i sama ' +
+      'izbor brojem ne postaje nikada — motor podmeće vrijednost <b>ne odigravajući je</b>, p' +
+      'a na mjesto brojača leži doslovan tekst <code>{1|2}</code>. Brojač i oblik ne mogu pro' +
+      'turječiti jedan drugome; motor umjesto toga ispušta riječ.</p>',
+    '<p><code>#def</code> se ponaša drukčije i razvija svoju vrijednost jednom po odigravan' +
+      'ju, pa mjesto brojača dobiva broj:</p>',
+    '<p><small><tt><a href="ex:63">#def %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+      ' objekt|objekta|objekata}</a><br>→&nbsp; 1 objekt</tt></small></p>',
+    '<p>Za to u ploči nema nijednog retka. Otuda i pravilo: radite brojač jednostavnim broj' +
+      'em ili <code>#def</code>-om, nikada <code>#set</code>-om.</p>',
+    '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — zagrade unutar o' +
+      'blika</h3>',
+    '<p><small><tt><a href="ex:64">{plural %n%: {objekt|stvar}|objekta|objekata}</a><br>→&n' +
+      'bsp; ｛plural %n%: ｛objekt|stvar｝|objekta|objekata｝</tt></small></p>',
+    '<p>Oblici su prost tekst. Izbor se unutar njih ne razvija, i umjesto toga se cijela ko' +
+      'nstrukcija ispisuje u širokim zagradama.</p>',
+    '<hr>',
+    '<h2 id="permutations">Miješanje</h2>',
+    '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — nepoznat ključ' +
+      ' u postavci</h3>',
+    '<p><small><tt><a href="ex:65">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+      'small></p>',
+    '<p>Poznati su ključevi <code>minsize</code>, <code>maxsize</code>, <code>sep</code> i ' +
+      '<code>lastsep</code>. Nepoznat postavka nije, i kada je on u bloku jedini, cijeli blok' +
+      ' uopće nije postavka: on postaje razdjeljivač između komada, što izlaz i pokazuje.</p>',
+    '<p><b>Ako pored stoji pravi ključ, izlaz je sasvim drukčiji</b> — i to je vjerojatnija' +
+      ' greška: jedan je ključ od nekoliko otipkan pogrešno:</p>',
+    '<p><small><tt><a href="ex:66">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+      '></small></p>',
+    '<p>Blok ostaje postavka, <code>sep</code> se izvršava, nepoznat se ključ prosto odbacu' +
+      'je, a ploča u oba slučaja kaže jedno te isto. Dakle, dijagnostika javlja da ključ nije' +
+      ' shvaćen; ona ne javlja što se dalje dogodilo. O tome čitajte izlaz.</p>',
+    '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
+      '— minimum nije zadan cijelim brojem</h3>',
+    '<p><small><tt><a href="ex:67">[&lt;minsize=dva&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+      'all></p>',
+    '<p>Nebrojčana vrijednost otpada zajedno sa svojom granicom, i vrijedi uobičajeno — dak' +
+      'le svi komadi.</p>',
+    '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
+      '— maksimum nije zadan cijelim brojem</h3>',
+    '<p><small><tt><a href="ex:68">[&lt;maxsize=mnogo&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
+      'small></p>',
+    '<p>Točno isto s drugog kraja: gornja granica nestaje, i izlaz opet sadrži svaki komad.' +
+      '</p>',
+    '<hr>',
+    '<h2 id="notes">Studio napomene koje nemaju što pokazati</h2>',
+    '<p>Tri napomene ispod ne mogu se prikazati primjerom u ovom dokumentu, i razlog je sva' +
+      'ki put drugi i imenovan. Članak ipak imaju: pomoć duguje odgovor <b>svakom</b> retku k' +
+      'oji ploča može prikazati, inače redak u ploči vodi u prazno.</p>',
+    '<h3 id="note.raw-sentinel"><code>note.raw-sentinel</code> — službeni znak u tekstu</h3' +
+      '>',
+    '<p>Znakovi U+E000–U+E005 jesu ono čime motor obilježava svoje, i on ih <b>uklanja</b> ' +
+      'prije razlaganja. Ako su dospjeli u vaš predložak — uglavnom nalijepljeni iz drugog ur' +
+      'eđivača — Studio o tome javlja: neće ih prikazati ni pregled ni poslužitelj.</p>',
+    '<p>Primjera ovdje namjerno nema: ti su znakovi nevidljivi, i redak bi s njima izgledao' +
+      ' prazan. Ne bi imalo što gledati.</p>',
+    '<h3 id="note.unknown-target"><code>note.unknown-target</code> — skup je prazan, i nema' +
+      ' se po čemu suditi</h3>',
+    '<p>Ona se pojavljuje kada je skup pored dokumenta <b>prazan</b>: nijedan predložak osi' +
+      'm ovog. Cilj nema s čime usporediti, pa Studio ne kaže «takvog cilja nema» — ono kaže ' +
+      'da ne može odgovoriti. Stavite u tu mapu jedan jedini predložak i napomena će ustupiti' +
+      ' mjesto uobičajenom <code>include.unknown-target</code>, koji odgovara suštinski.</p>',
+    '<p>Nikada spremljen dokument nema skup <b>uopće</b>, i to je treći slučaj, a ne ovaj: ' +
+      'umetanja tada ostaju u izlazu doslovno, a ploča o njima ne kaže ništa. Spremite dokume' +
+      'nt i ona će početi raditi.</p>',
+    '<p>Primjera ovdje nema po konstrukciji: skup je ovog dokumenta imenovan gore, i nije p' +
+      'razan.</p>',
+    '<h3 id="note.too-deep"><code>note.too-deep</code> — umetanja su ugniježđena preduboko<' +
+      '/h3>',
+    '<p>Motor staje na dvadesetoj razini ugniježđenih <code>#include</code> i niže ne podme' +
+      'će ništa. Granica pripada obitelji: motori za JavaScript, PHP i Python rade isto, pa s' +
+      'e dokument koji u nju udari ponaša svugdje jednako.</p>',
+    '<p>Primjera nema zbog veličine: prikazati jedan koštalo bi dvadeset jednu datoteku.</p' +
+      '>',
+    '<hr>',
+    '<h2 id="abbreviations">Tišina koju susreću svi: kratice</h2>',
+    '<h3 id="abbreviations-0">Kratica ostavlja sljedeću riječ malom</h3>',
+    '<p><small><tt><a href="ex:69">dr. Marić naše cijene su niske</a><br>→&nbsp; dr. Marić ' +
+      'naše cijene su niske<br><a href="ex:70">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. ' +
+      'Naše cijene su niske</tt></small></p>',
+    '<p>Dva retka koja se razlikuju u jednoj riječi, i druga riječ svakog daje vam pravilo:' +
+      ' nakon <code>dr.</code> rečenica ostaje mala, nakon <code>Xxx.</code> — velikim slovom' +
+      '. Motor stavlja veliko slovo nakon točke — osim nakon kratice koju zna, i nakon svega ' +
+      'poput <code>e.g.</code> ili <code>d.o.o.</code> On šuti: nijedna dijagnostika, nijedno' +
+      ' upozorenje, i jedini je način da se primijeti pročitati izlaz.</p>',
+    '<p><b>Popis nije hrvatski ni engleski.</b> U njemu je 46 unosa, i 29 ih je ruskih:</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th></th><th></th></tr>',
+    '<tr><td>latinični</td><td><code>etc vs mr mrs ms dr prof sr jr inc ltd co corp no st a' +
+      've blvd</code></td></tr>',
+    '<tr><td>ćirilični</td><td><code>соц эл см ср ст ул пр пер г р руб коп тыс млн млрд трл' +
+      'н доп напр прим изд обл респ стр табл рис мин макс тел факс</code></td></tr>',
+    '</table>',
+    '<p>Obje polovice vrijede u <b>bilo kojem</b> lokalu — pravilo nikada ne pita koji ste ' +
+      'jezik postavili. Tako <code>ltd.</code> zaklanja sljedeću riječ u hrvatskom dokumentu,' +
+      ' a <code>г.</code> je zaklanja u engleskom.</p>',
+    '<p>Za hrvatski tekst posljedica je pomiješana: naslovi rade jer stoje na latiničnoj po' +
+      'lovici — <code>dr.</code>, <code>prof.</code>, <code>mr.</code> — a <code>br.</code>, ' +
+      '<code>npr.</code>, <code>itd.</code>, <code>tzv.</code>, <code>g.</code>, <code>ul.</c' +
+      'ode>, <code>str.</code> i <code>tel.</code> na popisu ne postoje i završavaju rečenicu' +
+      '. Jezični priručnik dodaje da kratica od više točaka radi u vašu korist, pa <code>d.o.' +
+      'o.</code> prolazi cijelo, i da je gola domena zaklonjena jer je pisana latinicom — a ć' +
+      'irilična nije.</p>',
+    '<hr>',
+    '<h2 id="correct">Kako izgleda ispravno</h2>',
+    '<p><small><tt><a href="ex:71">cijena {niska|visoka}</a><br>→&nbsp; Cijena niska</tt></' +
+      'small></p>',
+    '<p><small><tt><a href="ex:72">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+      't></small></p>',
+    '<p><small><tt><a href="ex:73">#set %vip% = 1</a><br><a href="ex:73">{?vip?za vas|za sv' +
+      'e}</a><br>→&nbsp; Za vas</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#set %n% = 5</a><br><a href="ex:74">%n% {plural %n%: art' +
+      'ikl|artikla|artikala}</a><br>→&nbsp; 5 artikala</tt></small></p>',
+    '<p><small><tt><a href="ex:75">prije /# bilješka #/ poslije</a><br>→&nbsp; Prije poslij' +
+      'e</tt></small></p>',
+    '<p>Pet konstrukcija, pet čistih redaka: izbor, miješanje s postavkama, uvjet, oblik mn' +
+      'ožine s brojem ispred njega i komentar. Nijedna ne stavlja u ploču ništa.</p>',
+    '<hr>',
+    '<h2 id="faq">Često pitaju</h2>',
+    '<p><b>Zašto je odlomak prosto nestao?</b> Dva česta razloga, oba gore: nepoznat cilj <' +
+      'code>#include</code> i umetanje u krug. Oba daju prazninu. Treći, na koji se najčešće ' +
+      'pomisli — pogrešan broj oblika — prazninu <b>ne</b> daje: motor ispisuje konstrukciju ' +
+      'u cijelosti u širokim zagradama <code>｛｝</code>. Prazninu tamo daje nebrojčan brojač, ' +
+      'a ne broj oblika.</p>',
+    '<p><b>Zašto moja varijabla s kvačicom u imenu ne radi?</b> Imena su varijabli samo ASC' +
+      'II latinica. <code>%šifra%</code> motoru uopće nije spomen varijable: on ga ispisuje k' +
+      'ao tekst i <b>ne izdaje nijednu dijagnostiku</b>:</p>',
+    '<p><small><tt><a href="ex:76">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
+      'll></p>',
+    '<p>Usporedite s <code>%sifra%</code>, koje redak u ploči ipak povlači. Šutljivo je baš' +
+      ' prvo — ništa vam neće reći da se ono nikada neće podmetnuti. A <code>#set %šifra% = t' +
+      'ajna</code> već je <code>set.malformed</code>. Vrijednosti su pritom bilo kakve: <code' +
+      '>#set %grad% = Đakovo</code> sasvim je normalno.</p>',
+    '<p><b>Zašto je ista greška prikazana dvaput?</b> Krug definicija povlači redak za svak' +
+      'i spomen koji ga zatvara — dva različita mjesta, ponekad tri. To nisu duplikati, i oni' +
+      ' se ne slijevaju.</p>',
+    '<p><b>Zašto u ploči piše «greška», a izlaz izgleda ispravno?</b> Tako biva pri ponovno' +
+      'j definiciji: odigravanje je korektno — pobjeđuje posljednja vrijednost — ali dokument' +
+      ' je dvosmislen. Presuda je o dokumentu, a ne o konkretnom izlazu.</p>',
+    '<p><b>Prebacio sam lokal i u dokumentu se pojavila greška. Što sam pokvario?</b> Ništa' +
+      '. Broj je oblika svojstvo JEZIKA: engleskom trebaju dva (<code>page|pages</code>), hrv' +
+      'atskom tri (<code>artikl|artikla|artikala</code>). Tekst pisan za jedan jezik pri preb' +
+      'acivanju lokala postaje neispravan za drugi, i motor o tome pošteno kaže. Tako se pona' +
+      'ša i demonstracijski dokument s kojim se Studio otvara: on je engleski, i na lokalu <c' +
+      'ode>hr</code> njegovo <code>{plural %pages%: page|pages}</code> već je greška.</p>',
+    '<p><b>Podudara li se pregled s onim što će dati moj poslužitelj?</b> Na istom motoru, ' +
+      'istoj verziji, istom lokalu i s istim vrijednostima — da, točno, i upravo zato pregled' +
+      ' goni pravi <code>spintax-win</code>, a ne približenje. Na <b>drugom</b> motoru obitel' +
+      'ji — za JavaScript, PHP ili Python — prenosi se presuda i skup tekstova koje predložak' +
+      ' može dati, ali ne i to koji će od njih izvući konkretno sjeme. Ponoviti baš to izvlač' +
+      'enje obitelj ne obećava.</p>'
   );
 
   { The templates the `ex:N` links point at, verbatim as the fixture ran them. }
-  HELP_EX_FIRST: array[0..11] of Integer = (
-    0, 74, 154, 229, 306, 383, 460, 538, 613, 689, 767, 845
+  HELP_EX_FIRST: array[0..12] of Integer = (
+    0, 74, 154, 229, 306, 383, 460, 538, 613, 689, 767, 845, 924
   );
-  HELP_EX_LAST: array[0..11] of Integer = (
-    73, 153, 228, 305, 382, 459, 537, 612, 688, 766, 844, 923
+  HELP_EX_LAST: array[0..12] of Integer = (
+    73, 153, 228, 305, 382, 459, 537, 612, 688, 766, 844, 923, 1000
   );
-  HELP_EX_TEMPLATE: array[0..923] of string = (
+  HELP_EX_TEMPLATE: array[0..1000] of string = (
     '{Hi|Hello} there.',
     'A {small|large} room.',
     'Acme {Pro {Plus|Max}|Lite}',
@@ -11984,9 +12836,9 @@ const
     'ціна {низька|висока',
     'ціна {низька|висока]',
     'ціна низька} і все',
-    '#set місто = Київ' +
+    '#set misto = Київ' +
       #10 +
-      'у %місто%',
+      'у %misto%',
     '#def сторінки = {1|3}' +
       #10 +
       '%сторінки%',
@@ -12112,9 +12964,9 @@ const
     'цана {нізкая|высокая',
     'цана {нізкая|высокая]',
     'цана нізкая} і ўсё',
-    '#set горад = Мінск' +
+    '#set horad = Мінск' +
       #10 +
-      'у %горад%',
+      'у %horad%',
     '#def старонкі = {1|3}' +
       #10 +
       '%старонкі%',
@@ -12241,9 +13093,9 @@ const
     'цена {ниска|висока',
     'цена {ниска|висока]',
     'цена ниска} и то је то',
-    '#set град = Београд' +
+    '#set grad = Београд' +
       #10 +
-      'у %град%',
+      'у %grad%',
     '#def странице = {1|3}' +
       #10 +
       '%странице%',
@@ -12302,23 +13154,181 @@ const
       #10 +
       '%n% {plural %n%: артикал|артикла|артикала}',
     'пре /# белешка #/ после',
-    'здраво, %име%'
+    'здраво, %име%',
+    '{Bok|Pozdrav} svima.',
+    '{Mala|Velika} soba.',
+    'Acme {Pro {Plus|Max}|Lite}',
+    '{|Vrlo }velika soba.',
+    '[plava|žuta|siva]',
+    '[<, >plava|žuta|siva]',
+    '[<maxsize 2>plava|žuta|siva]',
+    '[<xmaxsize=1>plava|žuta|siva]',
+    '[<sep=", ";lastsep=" i ">plava|žuta|siva]',
+    '[<minsize=2;maxsize=2>plava|žuta|siva]',
+    '[<maxsize=3>a|b|c]',
+    '[<minsize=3;maxsize=1>plava|žuta|siva]',
+    '[plava|žuta<i>|siva]',
+    '[plava|žuta|siva<i>]',
+    '#set %grad% = Zagreb' +
+      #10 +
+      'Grad: %grad%.',
+    '#set %izbor% = {A|B}' +
+      #10 +
+      '%izbor% %izbor% %izbor%',
+    '#def %izbor% = {A|B}' +
+      #10 +
+      '%izbor% %izbor% %izbor%',
+    '#set %n% = 5' +
+      #10 +
+      '{?n?imamo %n%|još ništa}',
+    '#set %vip% = 1' +
+      #10 +
+      '{?!vip?stranac|prijatelj}',
+    '#def %n% = 1' +
+      #10 +
+      '%n% {plural %n%: dokument|dokumenta|dokumenata}',
+    '#def %n% = 2' +
+      #10 +
+      '%n% {plural %n%: dokument|dokumenta|dokumenata}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: dokument|dokumenta|dokumenata}',
+    '#set %n% = {5|5}' +
+      #10 +
+      '%n% {plural %n%: dokument|dokumenta|dokumenata}',
+    '#include "intro"',
+    '#set %brand% = Acme' +
+      #10 +
+      '#include "shout"',
+    'nacrt /# nisam siguran #/ gotovo',
+    'jedan. dva. tri.',
+    'dr. Marić naše cijene su niske',
+    'Acme d.o.o. naše cijene su niske',
+    'Xxx. naše cijene su niske',
+    'zdravo , svijete',
+    'jedan.dva',
+    'npr. naše cijene su niske',
+    'zdravo, %šifra%',
+    'Prije. #include "intro"',
+    '{?1x?da|ne}',
+    '[plava|<i>žuta]',
+    '[<i>plava|žuta]',
+    '[jedan<br>|dva]',
+    '[plava|žuta<br>|siva]',
+    'prije /# ostatak ovoga',
+    '{a /# ups|b} sredina #/ rep',
+    'cijena {niska|visoka',
+    'cijena {niska|visoka]',
+    'cijena niska} i to je to',
+    '#set grad = Zagreb' +
+      #10 +
+      'u %grad%',
+    '#def stranice = {1|3}' +
+      #10 +
+      '%stranice%',
+    '#set %x% = prvo' +
+      #10 +
+      '#set %x% = drugo' +
+      #10 +
+      '%x%',
+    '#def %x% = #include "frag"' +
+      #10 +
+      '%x%',
+    'zdravo, %name%',
+    '#set %brand% = {Vulkan}' +
+      #10 +
+      'kasino %brand%',
+    '#set %x% = a %x% b' +
+      #10 +
+      '%x%',
+    '#set %x% = %y%' +
+      #10 +
+      '#set %y% = %x%' +
+      #10 +
+      '%x%',
+    'prije #include "frag" poslije',
+    '#include "frag"',
+    '#include' +
+      #10 +
+      '"frag"',
+    '#include "nema"',
+    '#include "intro"',
+    '#include "loop"',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: objekt|objekta}',
+    '{plural %n%: objekt|objekta|objekata}',
+    '{plural %n%: objekt|objekta}',
+    '#set %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: objekt|objekta|objekata}',
+    '#def %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: objekt|objekta|objekata}',
+    '{plural %n%: {objekt|stvar}|objekta|objekata}',
+    '[<foo=1>a|b|c]',
+    '[<sep=", ";foo=1>a|b|c]',
+    '[<minsize=dva>a|b|c]',
+    '[<maxsize=mnogo>a|b|c]',
+    'dr. Marić naše cijene su niske',
+    'Xxx. naše cijene su niske',
+    'cijena {niska|visoka}',
+    '[<minsize=2;sep=", ">a|b|c]',
+    '#set %vip% = 1' +
+      #10 +
+      '{?vip?za vas|za sve}',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: artikl|artikla|artikala}',
+    'prije /# bilješka #/ poslije',
+    'zdravo, %šifra%'
   );
-  HELP_EX_DOC: array[0..923] of Integer = (
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_EX_DOC: array[0..1000] of Integer = (
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
-  HELP_ANCHOR_FIRST: array[0..11] of Integer = (
-    0, 31, 62, 93, 124, 155, 186, 217, 248, 279, 310, 341
+  HELP_ANCHOR_FIRST: array[0..12] of Integer = (
+    0, 31, 62, 93, 124, 155, 186, 217, 248, 279, 310, 341, 372
   );
-  HELP_ANCHOR_LAST: array[0..11] of Integer = (
-    30, 61, 92, 123, 154, 185, 216, 247, 278, 309, 340, 371
+  HELP_ANCHOR_LAST: array[0..12] of Integer = (
+    30, 61, 92, 123, 154, 185, 216, 247, 278, 309, 340, 371, 402
   );
-  HELP_ANCHOR_PAGE: array[0..371] of Integer = (
-    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
+  HELP_ANCHOR_PAGE: array[0..402] of Integer = (
+    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
   );
-  HELP_ANCHOR_ID: array[0..371] of string = (
+  HELP_ANCHOR_ID: array[0..402] of string = (
+    'choices-0',
+    'choices-1',
+    'shuffles-0',
+    'shuffles-1',
+    'shuffles-2',
+    'macros-0',
+    'fragments-0',
+    'bracket.unclosed',
+    'bracket.mismatched',
+    'bracket.unexpected-closing',
+    'set.malformed',
+    'def.malformed',
+    'definition.duplicate-name',
+    'def.include-in-value',
+    'variable.undefined',
+    'variable.self-reference',
+    'variable.circular-reference',
+    'includes-0',
+    'include.unknown-target',
+    'note.case-mismatch',
+    'note.cycle',
+    'plural.arity',
+    'plural.count-macro',
+    'plural.nested-brackets',
+    'permutation.unknown-key',
+    'permutation.minsize-not-integer',
+    'permutation.maxsize-not-integer',
+    'note.raw-sentinel',
+    'note.unknown-target',
+    'note.too-deep',
+    'abbreviations-0',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -12692,7 +13702,7 @@ const
     'note.too-deep',
     'abbreviations-0'
   );
-  HELP_ANCHOR_TITLE: array[0..371] of string = (
+  HELP_ANCHOR_TITLE: array[0..402] of string = (
     'Nesting',
     'An empty option',
     'The separator',
@@ -13073,10 +14083,42 @@ const
     '`note.raw-sentinel` — службени знак у тексту',
     '`note.unknown-target` — скуп је празан, и нема се по чему судити',
     '`note.too-deep` — уметања су угнежђена превише дубоко',
-    'Скраћеница оставља следећу реч малом'
+    'Скраћеница оставља следећу реч малом',
+    'Ugniježđenost',
+    'Prazna mogućnost',
+    'Razdjeljivač',
+    'Koliko uzeti',
+    'Razdjeljivač između dva komada',
+    '`#set` izvlači iznova, `#def` izvlači jednom',
+    'Odlomak ne vidi vaše makroe',
+    '`bracket.unclosed` — zagrada je otvorena i nije zatvorena',
+    '`bracket.mismatched` — zatvorena je zagradom druge vrste',
+    '`bracket.unexpected-closing` — zatvorena zagrada bez otvorene',
+    '`set.malformed` — ovaj `#set` redak nije napisan po pravilu',
+    '`def.malformed` — ovaj `#def` redak nije napisan po pravilu',
+    '`definition.duplicate-name` — ovo je ime već definirano gore',
+    '`def.include-in-value` — `#include` unutar vrijednosti definicije',
+    '`variable.undefined` — ova varijabla nigdje nije definirana',
+    '`variable.self-reference` — definicija upućuje sama na sebe',
+    '`variable.circular-reference` — definicije upućuju u krug',
+    '`#include` radi samo s početka retka',
+    '`include.unknown-target` — takvog cilja u skupu nema',
+    '`note.case-mismatch` — cilj postoji, ali u drugoj veličini slova',
+    '`note.cycle` — umetanje u krug',
+    '`plural.arity` — oblika nema onoliko koliko lokal zahtijeva',
+    '`plural.count-macro` — brojač uzima vrijednost iz `#set`-a, a taj izvlači iznova pri s' +
+      'vakom spomenu',
+    '`plural.nested-brackets` — zagrade unutar oblika',
+    '`permutation.unknown-key` — nepoznat ključ u postavci',
+    '`permutation.minsize-not-integer` — minimum nije zadan cijelim brojem',
+    '`permutation.maxsize-not-integer` — maksimum nije zadan cijelim brojem',
+    '`note.raw-sentinel` — službeni znak u tekstu',
+    '`note.unknown-target` — skup je prazan, i nema se po čemu suditi',
+    '`note.too-deep` — umetanja su ugniježđena preduboko',
+    'Kratica ostavlja sljedeću riječ malom'
   );
-  HELP_ANCHOR_CODE: array[0..371] of Boolean = (
-    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
+  HELP_ANCHOR_CODE: array[0..402] of Boolean = (
+    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
   );
 
 function SpxHelpLangCode(ALang: Integer): string;
