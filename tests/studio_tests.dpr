@@ -4793,6 +4793,36 @@ begin
       set_.Free;
     end;
 
+    (* ---- THE PERMUTATION CONFIG, WHICH THE ENGINE CORRECTED IN v0.5.1 ----
+
+       Three of these are rules that MOVED with the pin, and this file was a release behind on
+       all of them the moment the submodule advanced; two more were wrong before it and neither
+       review caught them, because the counter mirrored the engine's `FindInt` and not its
+       `HasConfigKey`. A `<...>` after `[` is always the config TOKEN -- the scanner is right to
+       paint it -- but it is read as key/value only when a key is really there. *)
+
+    { No key at all: the whole thing is the separator and every option is printed. }
+    CheckCounted('perm-no-key', '[<maxsize 2>aa|bb|cc]');
+    { A key glued to a prefix is not a key -- the engine's boundary check. }
+    CheckCounted('perm-glued-key', '[<xmaxsize=1>aa|bb|cc]');
+    { The `=` is REQUIRED now. With `sep=` present this IS a config, and `maxsize 2` in it used
+      to cut the set to two; it prints all three. }
+    CheckCounted('perm-key-needs-equals', '[<sep="-" maxsize 2>aa|bb|cc]');
+    CheckCounted('perm-key-with-equals', '[<sep="-" maxsize=2>aa|bb|cc]');
+    { A failed candidate retries at the next position, the way a regex does. }
+    CheckCounted('perm-key-retries', '[<minsize foo minsize=1>aa|bb|cc]');
+    { And a wart mirrored on purpose: a plain Pos finds a key inside a quoted separator, so
+      this really is maxsize=1 in the engine too. }
+    CheckCounted('perm-key-in-quoted-sep', '[<sep="maxsize=1">aa|bb|cc]');
+    { An unterminated quote is not a separator match, and the config is not one either. }
+    CheckCounted('perm-unclosed-quote', '[<sep="X>aa|bb|cc]');
+    { HTML content is content, and must not be downgraded by the open-config detector. }
+    CheckCounted('perm-html-content', '[<li>aa|bb</li>]');
+    CheckCounted('perm-single-separator', '[<->aa|bb]');
+    { A config the line-at-a-time scan cannot finish reading: the engine looks through the whole
+      permutation, so this is a floor rather than a promise. }
+    CheckFloor('perm-config-across-lines', '[<minsize' + LineEnding + '=2>aa|bb|cc]');
+
     { ---- and what it refuses to promise ---- }
 
     { A conditional is decided by the value, not by chance: with the variable unset the

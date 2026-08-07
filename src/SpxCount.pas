@@ -54,7 +54,7 @@ unit SpxCount;
 interface
 
 uses
-  Classes, SysUtils, Generics.Collections, Spintax, SpxTokens, SpxStudio;
+  Classes, SysUtils, StrUtils, Generics.Collections, Spintax, SpxTokens, SpxStudio;
 
 const
   { Past this the number stops being information and starts being a row of digits: an author
@@ -225,31 +225,90 @@ begin
   if Result < 1 then Result := 1;
 end;
 
-{ `<minsize=2;maxsize=3>`, read the way the engine reads it (`Spintax.pas:1414-1425`): a bare
-  `Pos`, then spaces, an optional `=`, spaces, digits. Absent or unreadable is -1 -- and the
-  difference between -1 and 0 decides a range, so it is not a tidy-up. }
+(* THE PERMUTATION CONFIG, AND WHETHER IT IS ONE AT ALL.
+
+   `<...>` right after `[` is always the config TOKEN -- the engine consumes it either way, and
+   the scanner is right to paint it -- but its CONTENT is read as key/value only when a key is
+   really there. Otherwise the whole thing is the separator and the permutation prints every
+   option. Two engine functions, and this file used to mirror only the second:
+
+     HasConfigKey (`Spintax.pas:1397`) -- one of minsize / maxsize / sep / lastsep, at a WORD
+     BOUNDARY, followed after whitespace by `=`. Without it, no key is read at all. Skipping
+     this gate answered 9 for `[<maxsize 2>a|b|c]` and 3 for `[<xmaxsize=1>a|b|c]`, both of
+     which the engine renders as full permutations of 6 -- a separator that happens to contain
+     a key word is not a config, and a key word glued to a prefix is not a key.
+
+     FindInt -- `/(min|max)size\s*=\s*(\d+)/i`, and v0.5.1 corrected three things in it, all
+     measured against the JS reference: the `=` is REQUIRED (`[<sep="-" maxsize 2>a|b|c]` used
+     to cut the set to two and now prints all three), the whitespace class is JS `\s` within
+     ASCII rather than space-and-tab (so `minsize` LF `=2` is a config), and a failed candidate
+     RETRIES at the next position the way a regex does (`[<minsize foo minsize=1>…]` finds the
+     second one). Studio was one release behind on all three the moment the pin moved.
+
+   Deliberately NOT corrected: `FindInt` searches with a plain `Pos`, so a key word inside a
+   quoted separator is found -- `[<sep="maxsize=1">a|b|c]` really is maxsize=1 in the engine,
+   which is 3 in both. Mirroring means mirroring the warts. *)
+const
+  { JS `\s` within ASCII, which is what the engine spells out "for PHP parity". VT and FF are
+    IN it, and leaving them out is simply a wrong port -- the engine's own comment. }
+  CFG_WS = [' ', #9, #10, #11, #12, #13];
+
+function PermConfigHasKey(const S: string): Boolean;
+const KEYS: array[0..3] of string = ('minsize', 'maxsize', 'sep', 'lastsep');
+var low: string; k, j, e: Integer;
+begin
+  Result := False;
+  low := LowerCase(S);
+  for k := 1 to Length(low) do
+  begin
+    if (k > 1) and (low[k - 1] in ['a'..'z', '0'..'9', '_']) then Continue;
+    for j := 0 to High(KEYS) do
+      if Copy(low, k, Length(KEYS[j])) = KEYS[j] then
+      begin
+        e := k + Length(KEYS[j]);
+        while (e <= Length(low)) and (low[e] in CFG_WS) do Inc(e);
+        if (e <= Length(low)) and (low[e] = '=') then Exit(True);
+      end;
+  end;
+end;
+
 procedure ReadPermConfig(const S: string; out AMin, AMax: Integer);
 
   function Num(const Key: string): Integer;
-  var at, i: Integer; d: string;
+  var low, d: string; k, j: Integer;
   begin
     Result := -1;
-    at := Pos(Key, LowerCase(S));
-    if at = 0 then Exit;
-    i := at + Length(Key);
-    while (i <= Length(S)) and (S[i] in [' ', #9]) do Inc(i);
-    if (i <= Length(S)) and (S[i] = '=') then Inc(i);
-    while (i <= Length(S)) and (S[i] in [' ', #9]) do Inc(i);
-    d := '';
-    while (i <= Length(S)) and (S[i] in ['0'..'9']) do
+    low := LowerCase(S);
+    k := 1;
+    while True do
     begin
-      d := d + S[i];
-      Inc(i);
+      k := PosEx(Key, low, k);
+      if k = 0 then Exit;
+      j := k + Length(Key);
+      while (j <= Length(S)) and (S[j] in CFG_WS) do Inc(j);
+      if (j <= Length(S)) and (S[j] = '=') then
+      begin
+        Inc(j);
+        while (j <= Length(S)) and (S[j] in CFG_WS) do Inc(j);
+        d := '';
+        while (j <= Length(S)) and (S[j] in ['0'..'9']) do
+        begin
+          d := d + S[j];
+          Inc(j);
+        end;
+        if d <> '' then Exit(StrToIntDef(d, -1));
+      end;
+      { A regex retries at the next position; stopping at the first candidate reported
+        nothing for a config that names the key twice. }
+      Inc(k);
     end;
-    if d <> '' then Result := StrToIntDef(d, -1);
   end;
 
 begin
+  AMin := -1;
+  AMax := -1;
+  { No key means the whole `<...>` is the separator, and every option is printed. }
+  if not PermConfigHasKey(S) then Exit;
   AMin := Num('minsize');
   AMax := Num('maxsize');
 end;
@@ -310,7 +369,7 @@ end;
   `AIncludes` comes back with how many `#include` occurrences the ENGINE found, for the
   reconciliation in CountText. }
 procedure TokeniseAll(const Doc: string; Dirs: TSpDirectiveList; Tokens: TCTokList;
-  out AIncludes: Integer; out AOpenComment, ALooseInclude: Boolean);
+  out AIncludes: Integer; out AOpenComment, ALooseInclude, AOpenConfig: Boolean);
 var
   lines: TStringList;
   state: TSpxScanState;
@@ -318,6 +377,8 @@ var
   masked: string;
   i, j, k, b1, b2: Integer;
   lineHasInclude: Boolean;
+  prevKind: TSpxTokenKind;
+  slice: string;
   t: TCTok;
 
   { Blank the directive's own characters, keeping the line's length: a deletion could join
@@ -339,6 +400,8 @@ begin
   AIncludes := 0;
   AOpenComment := False;
   ALooseInclude := False;
+  AOpenConfig := False;
+  prevKind := sptText;
   lines := TStringList.Create;
   line := TSpxTokenList.Create;
   try
@@ -393,7 +456,19 @@ begin
           if lineHasInclude and (t.Kind = sptText) and
              (Pos('#include', Copy(masked, line[j].Start, line[j].Length)) > 0) then
             ALooseInclude := True;
+          (* A PERMUTATION CONFIG THAT RUNS PAST THE END OF THE LINE. The scanner wants the
+             closing `>` on the line it started (it says so), and the engine looks through the
+             whole permutation -- so `[<minsize` LF `=2>a|b|c]` is a config of 12 to the engine
+             and three plain options of 6 here. The tell is exact and needs one slice: the
+             token right after `[` opens an angle bracket it does not close. Real HTML content
+             closes its own -- `[<li>a|b</li>]` arrives as `<li>a`, which has its `>`. *)
+          if (prevKind = sptBracketOpen) and (t.Kind = sptText) then
+          begin
+            slice := Copy(masked, line[j].Start, line[j].Length);
+            if (Pos('<', slice) > 0) and (Pos('>', slice) = 0) then AOpenConfig := True;
+          end;
         end;
+        prevKind := t.Kind;
         Tokens.Add(t);
       end;
     end;
@@ -513,7 +588,7 @@ var
   name_, target, text_: string;
   isDef: Boolean;
   engineIncludes, tokenIncludes: Integer;
-  openComment, looseInclude, trustIncludes, ownScope: Boolean;
+  openComment, looseInclude, openConfig, trustIncludes, ownScope: Boolean;
   ownDefsUsed, defsHere: TStringList;
   ownTotal: Int64;
   totalHere: PInt64;
@@ -581,7 +656,7 @@ begin
     totalHere := @DefTotal;
   end;
   tokens := TCTokList.Create;
-    TokeniseAll(Doc, dirs, tokens, engineIncludes, openComment, looseInclude);
+    TokeniseAll(Doc, dirs, tokens, engineIncludes, openComment, looseInclude, openConfig);
 
     (* WHETHER AN INCLUDE MAY BE RESOLVED AT ALL, decided before the walk rather than reported
        after it. The reconciliation used to run at the end and only downgrade `Exact`, which
@@ -758,6 +833,9 @@ begin
        commented-out `#include` is a COMMENT token and does not trip this, which is the case
        that rules out a plain textual search over the document. *)
     if looseInclude then Exact := False;
+
+    { And a permutation whose config the line-at-a-time scan could not finish reading. }
+    if openConfig then Exact := False;
 
     (* WHAT THE SCANNER CANNOT SEE, ADMITTED RATHER THAN GUESSED.
 

@@ -116,7 +116,7 @@ const
     'docs/help/ru/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..5] of string = (
-    '62cf9f279e03b021', '5f4bc9e4682feee2', 'b8a606a10c367fd3', 'ab33512fa68fefcc', '3a4a41399f059476', '716fe1af3c660e4c'
+    '62cf9f279e03b021', '5f4bc9e4682feee2', '66c7a5ec018bd5b0', 'ab33512fa68fefcc', '3a4a41399f059476', '514bcfffc01b4072'
   );
   HELP_DOC_LOCALE: array[0..5] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru'
@@ -770,8 +770,12 @@ const
       '>%y%</code>, not <code>%x%</code>. The engine unwinds rather than looping, and what su' +
       'rvives is the other name in the circle — put <code>%x% %y%</code> in a document and it' +
       ' renders <code>%y% %x%</code>, the pair swapped.</p>',
-    '<p>The panel draws a row for <b>each</b> definition in the circle, not one for the cir' +
-      'cle.</p>',
+    '<p>The panel draws a row for <b>each reference that closes the circle</b>, not one row' +
+      ' for the circle and not one per definition. A definition that names the circle twice g' +
+      'ets two rows on its own line: <code>#set %x% = %y% %y%</code> against <code>#set %y% =' +
+      ' %x%</code> is three errors, two of them on the first line. The rows are not merged. A' +
+      'nd the position is on the definition that is actually live — where a name is defined t' +
+      'wice, that is the <b>last</b> one.</p>',
     '<hr>',
     '<h2 id="includes">Includes</h2>',
     '<h3 id="includes-0"><code>#include</code> only works from the start of a line</h3>',
@@ -1518,7 +1522,12 @@ const
       'ления ссылаются по кругу</h3>',
     '<p><small><tt><a href="ex:47">#set %x% = %y%</a><br><a href="ex:47">#set %y% = %x%</a>' +
       '<br><a href="ex:47">%x%</a><br>→&nbsp; %y%</tt></small></p>',
-    '<p>Ошибка выдаётся на <b>каждое</b> определение в круге.</p>',
+    '<p>Ошибка выдаётся на <b>каждую ссылку, замыкающую круг</b>, а не одна на круг и не од' +
+      'на на определение. Определение, называющее круг дважды, получает две строки на своей с' +
+      'троке: <code>#set %x% = %y% %y%</code> против <code>#set %y% = %x%</code> — это три ош' +
+      'ибки, две из них на первой строке. Строки не сливаются. А позиция — на том определении' +
+      ', которое действительно живое: если имя задано дважды, это <b>последнее</b> из них.</p' +
+      '>',
     '<hr>',
     '<h2 id="includes">Вставки</h2>',
     '<h3 id="includes-0"><code>#include</code> работает только с начала строки</h3>',

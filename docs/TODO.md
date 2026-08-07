@@ -19,7 +19,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
-      at `engine/`, pinned to tag `v0.5.0`. Clone with `--recurse-submodules`.
+      at `engine/`, pinned to tag `v0.5.1`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
       twice the same day). The family resolves includes **inside render**, behind a host
@@ -108,7 +108,7 @@ is a deliberate state and not a backlog of things anyone forgot.
    <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
    Microsoft's own snapshot of that text updates only with the submission.
 
-6. **The engine moved to `v0.5.0`**, 2026-08-06 (was `v0.3.3`, which is what R0 shipped
+6. **The engine moved to `v0.5.1`**, 2026-08-07 (was `v0.3.3`, which is what R0 shipped
    against; `v0.4.0` and `v0.4.1` were each pinned for part of the day — see below). Nothing Studio can see changed, and that was checked rather than read off a
    changelog: the engine's whole `interface` section is byte-identical between the two tags.
    What is inside is a render speed-up — 64 KB of plain text carrying no spintax went from
@@ -391,6 +391,46 @@ is a deliberate state and not a backlog of things anyone forgot.
    Shown in the top strip's second half, which the progress line owns during a run: the two are
    never wanted at once. Measured on screen in both languages and in all three states — exact,
    *at least*, and mid-run — not read off the properties.
+
+13. **The engine moved again, to `v0.5.1`** (2026-08-07, `621383d`). **API: nothing** — the
+   `interface` section is byte-identical to `v0.5.0`, checked the way this project always checks
+   it rather than read off a changelog. The engine reports corpus PASS=230 FAIL=0 SKIP=4 and
+   a local suite of 474 in both builds; the eight cases the previous pin failed are the changes
+   below. Drop-in to build, and NOT drop-in to what the window says:
+
+   **The permutation config, which Studio mirrors in `SpxCount.ReadPermConfig`.** Three rules
+   moved and the counter was a release behind on all three the instant the submodule advanced:
+   the `=` after a key is now REQUIRED (`[<sep="-" maxsize 2>a|b|c]` used to cut the set to two
+   and now prints all three), the whitespace around it is JS `\s` within ASCII rather than
+   space-and-tab, and a failed candidate RETRIES at the next position the way a regex does
+   (`[<minsize foo minsize=1>…]` finds the second one). **And two more were wrong before the
+   bump, which neither review caught:** the counter mirrored the engine's `FindInt` and not its
+   `HasConfigKey`, so a `<...>` with no real key — `[<maxsize 2>…]`, `[<xmaxsize=1>…]` — was
+   read as a config where the engine reads it as a separator and prints every option. Mirroring
+   a rule means taking on the gate that decides whether it applies, and the warts too: a key
+   word inside a quoted separator really is a key to the engine, and `[<sep="maxsize=1">a|b|c]`
+   is 3 on both sides. Ten checks now gate this, all enumerated.
+
+   Found in passing, and it is the same class one level down: a permutation config split across
+   lines (`[<minsize` LF `=2>a|b|c]`) is 12 to the engine and 6 here, because the scanner wants
+   the closing `>` on the line it started — its own documented approximation. The tell is exact
+   (the token after `[` opens an angle bracket it does not close, where real HTML content closes
+   its own), so that one is a floor now rather than a wrong promise.
+
+   **The diagnostics moved, and there nothing needed fixing except a sentence.** False
+   `set.malformed` / `def.malformed` after a VT, NUL or lone CR are gone; a name defined twice
+   now resolves to the LAST definition, which moves `variable.self-reference`,
+   `variable.circular-reference` and `plural.count-macro` in both directions; and a circular
+   reference is reported once per REFERENCE that closes the circle rather than once per
+   definition — `#set %x% = %y% %y%` against `#set %y% = %x%` is three errors, two of them on
+   the first line, anchored on the surviving definition. **Studio's panel was already right**:
+   `SpxPanelRows` sorts stably and deduplicates nothing, so two findings on one character stay
+   two rows. What was wrong was the help, which said in both languages that the panel draws a
+   row *for each definition in the circle*. Measured, then rewritten — not adjusted to match the
+   code, because the engine is what the sentence is about.
+
+   `tests/SpxJson.pas` is the engine's own harness and Studio does not build a corpus runner, so
+   that part of the release is not ours.
 
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's

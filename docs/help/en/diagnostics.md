@@ -205,7 +205,11 @@ Each side expands exactly **once** and then stops: `%x%` became `%y%`, not `%x%`
 unwinds rather than looping, and what survives is the other name in the circle — put `%x% %y%`
 in a document and it renders `%y% %x%`, the pair swapped.
 
-The panel draws a row for **each** definition in the circle, not one for the circle.
+The panel draws a row for **each reference that closes the circle**, not one row for the
+circle and not one per definition. A definition that names the circle twice gets two rows
+on its own line: `#set %x% = %y% %y%` against `#set %y% = %x%` is three errors, two of them
+on the first line. The rows are not merged. And the position is on the definition that is
+actually live — where a name is defined twice, that is the **last** one.
 
 ---
 
