@@ -3600,7 +3600,7 @@ type
   end;
 
 const
-  HELP_DOCS: array[0..26] of THelpDoc = (
+  HELP_DOCS: array[0..29] of THelpDoc = (
     (Path: 'docs/help/en/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
     (Path: 'docs/help/ru/diagnostics.md'; Examples: 38; Codes: True;  Good: 8),
     (Path: 'docs/help/en/syntax.md';      Examples: 38; Codes: False; Good: 34),
@@ -3630,6 +3630,9 @@ const
     (Path: 'docs/help/tr/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
     (Path: 'docs/help/tr/syntax.md';      Examples: 40; Codes: False; Good: 36),
     (Path: 'docs/help/tr/studio.md';      Examples: 1;  Codes: False; Good: 1),
+    (Path: 'docs/help/uk/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
+    (Path: 'docs/help/uk/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/uk/studio.md';      Examples: 1;  Codes: False; Good: 1),
     (Path: 'docs/help/ru/studio.md';      Examples: 1;  Codes: False; Good: 1));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
@@ -3987,7 +3990,7 @@ type
   end;
 
 const
-  HELP_LANG_FACTS: array[0..8] of THelpLangFacts = (
+  HELP_LANG_FACTS: array[0..9] of THelpLangFacts = (
     (Code: 'en'; CleanExamples: 47; Silences: 5),
     (Code: 'ru'; CleanExamples: 54; Silences: 7),
     (Code: 'de'; CleanExamples: 48; Silences: 6),
@@ -3996,7 +3999,8 @@ const
     (Code: 'it'; CleanExamples: 50; Silences: 6),
     (Code: 'pt'; CleanExamples: 51; Silences: 6),
     (Code: 'nl'; CleanExamples: 48; Silences: 6),
-    (Code: 'tr'; CleanExamples: 49; Silences: 8));
+    (Code: 'tr'; CleanExamples: 49; Silences: 8),
+    (Code: 'uk'; CleanExamples: 52; Silences: 8));
 
 function HelpFactsFor(const ACode: string; out AFacts: THelpLangFacts): Boolean;
 var i: Integer;

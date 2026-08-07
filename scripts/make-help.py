@@ -53,7 +53,7 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # The languages the help exists in, and the order the unit indexes them by. The interface has
 # fourteen; a language with no document here falls back to English, which is what the interface
 # strings already do for a language with no table.
-LANGS = ['en', 'ru', 'de', 'fr', 'es', 'it', 'pt', 'nl', 'tr']
+LANGS = ['en', 'ru', 'de', 'fr', 'es', 'it', 'pt', 'nl', 'tr', 'uk']
 
 # Above this a page starts costing what ADR 0004's curve says it does. Nothing is near it today
 # (the largest is about 9 KB); it is here so that growth trips a build rather than a user.
