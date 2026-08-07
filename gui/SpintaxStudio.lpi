@@ -5,12 +5,12 @@
       <UseVersionInfo Value="True"/>
       <MajorVersionNr Value="0"/>
       <MinorVersionNr Value="1"/>
-      <RevisionNr Value="0"/>
+      <RevisionNr Value="1"/>
       <BuildNr Value="0"/>
       <StringTable CompanyName="spintax.net" FileDescription="Spintax Studio"
         InternalName="spintax-studio" LegalCopyright="Copyright (C) 2026 301.st. GPL-3.0-or-later"
         OriginalFilename="spintax-studio.exe" ProductName="Spintax Studio"
-        ProductVersion="0.1.0.0"/>
+        ProductVersion="0.1.1.0"/>
     </VersionInfo>
     <Version Value="12"/>
     <General>
