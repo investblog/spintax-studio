@@ -25,7 +25,7 @@ unit SpxHelpText;
 interface
 
 const
-  SPX_HELP_LANG_COUNT = 2;
+  SPX_HELP_LANG_COUNT = 3;
   { The document KINDS this build knows, whether or not a language carries them. }
   SPX_HELP_KIND_COUNT = 3;
 
@@ -90,47 +90,55 @@ function SpxHelpExampleOf(const AHref: string): Integer;
 implementation
 
 const
-  HELP_LANG: array[0..1] of string = (
-    'en', 'ru'
+  HELP_LANG: array[0..2] of string = (
+    'en', 'ru', 'de'
   );
   HELP_KIND_SLUG: array[0..2] of string = (
     'studio', 'syntax', 'diagnostics'
   );
 
   { Each language's documents: a span into the tables below. }
-  HELP_DOC_FIRST: array[0..1] of Integer = (
-    0, 3
+  HELP_DOC_FIRST: array[0..2] of Integer = (
+    0, 3, 6
   );
-  HELP_DOC_LAST: array[0..1] of Integer = (
-    2, 5
+  HELP_DOC_LAST: array[0..2] of Integer = (
+    2, 5, 8
   );
-  HELP_DOC_KIND: array[0..5] of Integer = (
-    0, 1, 2, 0, 1, 2
+  HELP_DOC_KIND: array[0..8] of Integer = (
+    0, 1, 2, 0, 1, 2, 0, 1, 2
   );
-  HELP_DOC_PATH: array[0..5] of string = (
+  HELP_DOC_PATH: array[0..8] of string = (
     'docs/help/en/studio.md',
     'docs/help/en/syntax.md',
     'docs/help/en/diagnostics.md',
     'docs/help/ru/studio.md',
     'docs/help/ru/syntax.md',
-    'docs/help/ru/diagnostics.md'
+    'docs/help/ru/diagnostics.md',
+    'docs/help/de/studio.md',
+    'docs/help/de/syntax.md',
+    'docs/help/de/diagnostics.md'
   );
-  HELP_DOC_DIGEST: array[0..5] of string = (
-    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0'
+  HELP_DOC_DIGEST: array[0..8] of string = (
+    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf'
   );
-  HELP_DOC_LOCALE: array[0..5] of string = (
-    'en', 'en', 'en', 'ru', 'ru', 'ru'
+  HELP_DOC_LOCALE: array[0..8] of string = (
+    'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de'
   );
-  HELP_DOC_SEED: array[0..5] of LongWord = (
-    7, 7, 7, 7, 7, 7
+  HELP_DOC_SEED: array[0..8] of LongWord = (
+    7, 7, 7, 7, 7, 7, 7, 7, 7
   );
-  HELP_INC_FIRST: array[0..5] of Integer = (
-    0, 0, 2, 5, 5, 7
+  HELP_INC_FIRST: array[0..8] of Integer = (
+    0, 0, 2, 5, 5, 7, 10, 10, 12
   );
-  HELP_INC_LAST: array[0..5] of Integer = (
-    -1, 1, 4, 4, 6, 9
+  HELP_INC_LAST: array[0..8] of Integer = (
+    -1, 1, 4, 4, 6, 9, 9, 11, 14
   );
-  HELP_INC_NAME: array[0..9] of string = (
+  HELP_INC_NAME: array[0..14] of string = (
+    'intro',
+    'shout',
+    'frag',
+    'loop',
+    'Intro',
     'intro',
     'shout',
     'frag',
@@ -142,7 +150,7 @@ const
     'loop',
     'Intro'
   );
-  HELP_INC_TEXT: array[0..9] of string = (
+  HELP_INC_TEXT: array[0..14] of string = (
     'Welcome to {Acme|Globex}.',
     'The %brand% is here.',
     'Fragment',
@@ -152,20 +160,25 @@ const
     'Здесь %brand%.',
     'фрагмент',
     '#include "loop"',
-    'вступление'
+    'вступление',
+    'Willkommen bei {Acme|Globex}.',
+    'Die %marke% ist da.',
+    'Fragment',
+    '#include "loop"',
+    'Einleitung'
   );
 
   { Each language's pages: a span into the tables below. }
-  HELP_PAGE_FIRST: array[0..1] of Integer = (
-    0, 30
+  HELP_PAGE_FIRST: array[0..2] of Integer = (
+    0, 30, 60
   );
-  HELP_PAGE_LAST: array[0..1] of Integer = (
-    29, 59
+  HELP_PAGE_LAST: array[0..2] of Integer = (
+    29, 59, 89
   );
-  HELP_SLUG: array[0..59] of string = (
-    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..89] of string = (
+    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
   );
-  HELP_TITLE: array[0..59] of string = (
+  HELP_TITLE: array[0..89] of string = (
     'Spintax Studio',
     'The two panes',
     'The panels along the bottom',
@@ -225,21 +238,51 @@ const
     'Заметки Studio, которым нечего показать',
     'Молчание, которое встречают все: сокращения',
     'Как выглядит правильное',
-    'Часто спрашивают'
+    'Часто спрашивают',
+    'Spintax Studio',
+    'Die zwei Hälften',
+    'Die Tafeln am unteren Rand',
+    'Der Gruppeneditor',
+    'Einstellungen',
+    'Eine GSA-Vorlage einlesen',
+    'Die Sprache, Konstrukt für Konstrukt',
+    'Wie die Beispiele zu lesen sind',
+    'Auswahl',
+    'Mischen',
+    'Makros',
+    'Bedingungen',
+    'Zählung',
+    'Ausschnitte',
+    'Anmerkungen',
+    'Was die Maschine am Ende glättet',
+    'Stillen',
+    'Wo als Nächstes nachsehen',
+    'Was die Tafel „Diagnose" Ihnen sagt',
+    'Wie die Beispiele zu lesen sind',
+    'Klammern',
+    'Festlegungen',
+    'Variablen',
+    'Einfügungen',
+    'Zahlformen',
+    'Mischungen',
+    'Studio-Notizen ohne etwas zu zeigen',
+    'Eine Stille für jede Sprache: Abkürzungen',
+    'Wie die richtige Form aussieht',
+    'Häufig gefragt'
   );
-  HELP_PAGE_DOC: array[0..59] of Integer = (
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_PAGE_DOC: array[0..89] of Integer = (
+    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
-  HELP_FIRST: array[0..59] of Integer = (
-    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670
+  HELP_FIRST: array[0..89] of Integer = (
+    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003
   );
-  HELP_LAST: array[0..59] of Integer = (
-    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676
+  HELP_LAST: array[0..89] of Integer = (
+    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..676] of string = (
+  HELP_LINE: array[0..1011] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -1900,17 +1943,907 @@ const
       '<code>#include</code> и вставка по кругу. Обе выводят пустоту. Третья, на которую дума' +
       'ют чаще всего, — неверное число форм у множественного числа — <b>не</b> пустота: движо' +
       'к печатает конструкцию целиком в широких скобках <code>｛｝</code>. Пустоту там даёт неч' +
-      'исловой счётчик, а не число форм.</p>'
+      'исловой счётчик, а не число форм.</p>',
+    '<h1 id="studio">Spintax Studio</h1>',
+    '<p>Dieses Programm ist ein Editor für Vorlagen. Eine Vorlage ist gewöhnlicher Text mit' +
+      ' ein paar markierten Stellen darin, und eine einzige Vorlage kann sehr viele verschied' +
+      'ene Texte ergeben — genau darum schreibt man eine, statt die Texte einzeln zu schreibe' +
+      'n.</p>',
+    '<p>Das Fenster besteht aus zwei Hälften. Links steht Ihre Vorlage, das, was Sie bearbe' +
+      'iten. Rechts steht einer der Texte, die daraus entstehen, neu gezeichnet während Sie t' +
+      'ippen. Dazwischen ist nichts zu drücken: rechts sehen Sie das, was die Maschine in die' +
+      'sem Augenblick für das links Stehende zurückgibt.</p>',
+    '<p><small><tt>locale: de<br>seed: 7<br>empty: (leer)</tt></small></p>',
+    '<p>Die Maschine steckt in diesem Programm und ist das Pascal-Mitglied einer Familie: d' +
+      'ieselbe Sprache erscheint auch für JavaScript, PHP und Python. Die vier sind eigenstän' +
+      'dige Programme, die an einem gemeinsamen Satz von Prüffällen gemessen werden — was ein' +
+      'e Vorlage BEDEUTET, ist also in allen gleich: die Konstrukte, das Urteil über ihre Gül' +
+      'tigkeit, der abschließende Feinschliff. Eine Vorlage, die dieses Fenster gültig nennt,' +
+      ' ist auch dort gültig.</p>',
+    '<p>Was nicht versprochen wird, und der Unterschied zählt beim Vergleichen: die zufälli' +
+      'ge Wahl. Ein Startwert macht die Vorschau HIER wiederholbar — derselbe Startwert und d' +
+      'ieselbe Vorlage geben morgen denselben Text —, aber derselbe Startwert kann in der Jav' +
+      'aScript-Maschine eine andere Alternative ziehen. Startwerte sind dazu da, Ihre eigene ' +
+      'Arbeit zu reproduzieren, nicht dazu, eine andere Maschine zu treffen.</p>',
+    '<p>Alles hier funktioniert ohne Netzverbindung. Es gibt kein Konto, keine Anmeldung un' +
+      'd nichts einzuschalten: Programm öffnen, und es läuft.</p>',
+    '<h2 id="panes">Die zwei Hälften</h2>',
+    '<p>Getippt wird links. Die rechte Hälfte zeichnet nach einer kurzen Pause neu, damit d' +
+      'ie Vorschau einem Satz folgt und nicht jedem Buchstaben.</p>',
+    '<p>Eine Vorlage mit einer Auswahl darin hat keine einzelne Antwort, und die Vorschau z' +
+      'eigt eine davon:</p>',
+    '<p><small><tt><a href="ex:0">{Hallo|Guten Tag} zusammen.</a><br>→&nbsp; Hallo zusammen' +
+      '.</tt></small></p>',
+    '<p><b>Neu würfeln</b> über der rechten Hälfte holt die nächste. Wenn Sie immer dieselb' +
+      'e wollen — etwa während Sie zwei Änderungen vergleichen —, setzen Sie den Haken bei <b' +
+      '>Startwert</b>, und die Vorschau steht still, bis Sie ihn wieder entfernen oder die Za' +
+      'hl ändern.</p>',
+    '<p>Die rechte Hälfte zeigt entweder die <b>Seite</b> oder den <b>Quelltext</b>. Vorlag' +
+      'en sind meist HTML, und die beiden Fragen „wie sieht das aus" und „welches Markup kam ' +
+      'heraus" beantworten einander nicht: ein kaputtes Tag ergibt ein leicht schiefes Layout' +
+      ', über das das Auge hinwegsieht, während Prosa mit Tags darin sich nicht wie Prosa lie' +
+      'st. Der Schalter über der Hälfte wechselt, was Sie gerade ansehen.</p>',
+    '<p>Markieren Sie einen Teil der Vorlage, und nur dieser Teil wird gerendert — im Geltu' +
+      'ngsbereich des ganzen Dokuments, sodass ein Ausschnitt, der eine oben definierte Varia' +
+      'ble benutzt, so herauskommt, wie er es an seiner Stelle tun wird.</p>',
+    '<h2 id="panels">Die Tafeln am unteren Rand</h2>',
+    '<p>Die Werkzeugleiste an der Seite öffnet drei Tafeln, immer eine davon.</p>',
+    '<p><b>Diagnose</b> listet auf, was die Maschine beanstandet, jeweils mit Zeile und Spa' +
+      'lte des Anfangs. Ein Klick auf eine Zeile setzt den Cursor dorthin. Das ist dasselbe U' +
+      'rteil, das die Maschine überall sonst fällt, keine zweite Meinung des Editors — deshal' +
+      'b wird eine Vorlage, die diese Tafel gültig nennt, auch von den anderen Maschinen ange' +
+      'nommen.</p>',
+    '<p><b>Variablen</b> zeigt die Namen, die Ihr Dokument definiert, und die, die es nur b' +
+      'enutzt. Einen Namen, den es benutzt und den nichts definiert, können Sie hier für die ' +
+      'Sitzung ausfüllen: Schreiben Sie einen Wert daneben, und die Vorschau nimmt ihn auf. S' +
+      'etzen Sie den Haken bei <b>Literal</b>, wenn der Wert Text ist, der sich selbst meint,' +
+      ' und nicht eine kleine Vorlage für sich.</p>',
+    '<p><b>Varianten</b> erzeugt viele Texte auf einmal. Sagen Sie wie viele, erzeugen Sie ' +
+      'sie und lesen Sie sie in der Liste, bevor Sie exportieren. Beinahe-Dubletten lassen si' +
+      'ch schon beim Erzeugen verwerfen, und ein Startwert macht den ganzen Satz wiederholbar' +
+      ': derselbe Startwert und dieselbe Vorlage geben morgen dieselben Varianten.</p>',
+    '<p>Neben diesen Feldern sagt die Tafel, wie viele Varianten die Vorlage überhaupt herg' +
+      'eben kann: <code>{a|b} und {c|d}</code> ergibt vier. Diese Zahl sagt Ihnen, dass eine ' +
+      'Vorlage dünn ist, bevor Sie fünfzig Stück erzeugen und es beim Lesen merken.</p>',
+    '<p>Eine genaue Zahl ist es nur, solange jede Wahl dem Zufall überlassen bleibt. Eine B' +
+      'edingung, eine Zahlform oder ein <code>#include</code>, dessen Ziel der Satz nicht hat' +
+      ', wird von etwas anderem entschieden — von einem Wert, den Sie liefern, von einer Zahl' +
+      ', von einem Ausschnitt, der noch kommen mag —, und dann sagt die Tafel <b>mindestens</' +
+      'b>. Das ist das ehrliche Wort: einen Wert zu liefern kann Texte nur hinzufügen, niemal' +
+      's wegnehmen. Eine Zahl, die zum Lesen viel zu groß wäre, hört bei einer Billion auf un' +
+      'd sagt aus demselben Grund <b>mindestens</b>.</p>',
+    '<p>Eine Variante ist eine ausgefüllte Vorlage — an jedem Konstrukt eine getroffene Wah' +
+      'l —, und das ist nicht dasselbe wie ein Text, der sich anders liest. <code>{a|a}</code' +
+      '> sind zwei Varianten und ein Text, und zwar mit Absicht: die beiden Möglichkeiten kön' +
+      'nen nach einer einzigen Änderung verschieden sein, und sie zusammenzuziehen hieße, ers' +
+      't jede Kombination zu erzeugen — also gerade die Arbeit, die diese Zahl Ihnen ersparen' +
+      ' soll. Ein <code>#def</code> zählt genauso: die Maschine zieht es einmal je Durchgang,' +
+      ' ob der eingeschlagene Zweig es benutzt oder nicht.</p>',
+    '<p>Der Export schreibt sie auf drei Arten heraus: als XLSX-Mappe, als reinen Text mit ' +
+      'einer Variante je Zeile oder als eine Datei je Variante in einem Ordner Ihrer Wahl.</p' +
+      '>',
+    '<h2 id="groups">Der Gruppeneditor</h2>',
+    '<p>Setzen Sie den Cursor in ein <code>{a|b|c}</code> und öffnen Sie den Gruppeneditor ' +
+      'über die Werkzeugleiste. Er listet die Alternativen als Zeilen auf: ändern, eine hinzu' +
+      'fügen, eine entfernen — und das Dokument wird passend umgeschrieben.</p>',
+    '<p>Er verweigert Änderungen, die verändern würden, was die Gruppe BEDEUTET, statt was ' +
+      'sie sagt: ein in eine Alternative getipptes <code>|</code> würde aus einer Möglichkeit' +
+      ' zwei machen, und ein <code>}</code> würde die Gruppe zu früh beenden. Wenn er verweig' +
+      'ert, sagt er es und lässt das Dokument in Ruhe.</p>',
+    '<h2 id="settings">Einstellungen</h2>',
+    '<p>Sie stehen im Menü Ansicht, und jede einzelne wird über Sitzungen hinweg behalten: ' +
+      'die Sprache der Oberfläche und ob sie der Vorlage folgt, auf welcher Seite die Werkzeu' +
+      'gleiste steht, das Farbschema, Schrift und Schriftgröße des Editors, ob die Vorschau d' +
+      'ie Seite oder den Quelltext zeigt, der Schalter für den GSA-Import, welche Tafel offen' +
+      ' ist und die Breiten der Tafeln, die sich ausfahren.</p>',
+    '<p>Die Oberfläche spricht vierzehn Sprachen, gewählt im selben Menü. Das ist getrennt ' +
+      'von der Sprache Ihrer Vorlage, die über die Zahlformen entscheidet und über der rechte' +
+      'n Hälfte eingestellt wird.</p>',
+    '<h2 id="gsa">Eine GSA-Vorlage einlesen</h2>',
+    '<p>Dieses Stück ist aus, bis Sie es einschalten, unter <b>Ansicht</b>, <b>GSA-Import</' +
+      'b>, weil die meisten, die Vorlagen schreiben, den GSA Search Engine Ranker nie benutzt' +
+      ' haben. Ist es an, liest <b>Datei</b>, <b>GSA-Vorlage einlesen…</b> eine SER-Vorlage u' +
+      'nd wandelt sie in diese Sprache um.</p>',
+    '<p>Die Umwandlung ist auf eine bestimmte Weise vorsichtig. Was sie nicht getreu ausdrü' +
+      'cken kann, verweigert sie und sagt es Ihnen, statt es still in etwas zu verwandeln, da' +
+      's rendert. Konstrukte, die im Text falsch gelesen würden — BBCode-Klammern, ein <code>' +
+      '#</code> in einem Link, ein <code>#file[...]</code> Makro —, werden in Variablen ausge' +
+      'lagert, und die Zusammenfassung sagt, wie viele.</p>',
+    '<p>Zwei Dinge über das Ergebnis:</p>',
+    '<ul>',
+    '<li><b>Die ausgelagerten Werte sind Sitzungswerte.</b> Sie erscheinen in der Tafel Var' +
+      'iablen und werden nicht mit dem Dokument gespeichert. Speichern Sie die umgewandelte V' +
+      'orlage, öffnen Sie sie morgen, und Sie sehen <code>%…%</code> dort, wo der ausgelagert' +
+      'e Text stand. Aus der eingelesenen Datei geht nichts verloren — die bleibt unberührt —' +
+      ', aber das umgewandelte Dokument steht nicht für sich allein.</li>',
+    '<li><b>Es wird ohne den Feinschliff gerendert.</b> Jedes andere Dokument hier bekommt ' +
+      'die abschließenden Handgriffe, die der Sprachführer beschreibt; eine umgewandelte Vorl' +
+      'age nicht, denn sie ist nicht unser Text zum Glätten. Sie gehört jemand anderem, ist m' +
+      'eist auf dem Weg zurück zu GSA und muss Zeichen für Zeichen überstehen.</li>',
+    '</ul>',
+    '<p>Das eingelesene Dokument ist unbenannt und ungespeichert, wie ein neues. Die Datei,' +
+      ' die Sie ausgewählt haben, bleibt genau so, wie sie war.</p>',
+    '<h1 id="language">Die Sprache, Konstrukt für Konstrukt</h1>',
+    '<p>Eine Vorlage ist gewöhnlicher Text mit ein paar markierten Stellen darin. Alles, wa' +
+      's nicht markiert ist, wird unverändert ausgegeben; die Markierungen sind es, die eine ' +
+      'Vorlage viele Texte hergeben lassen.</p>',
+    '<p>Es sind sechs, und das ist die ganze Sprache: eine <b>Auswahl</b> zwischen Alternat' +
+      'iven, ein <b>Mischen</b> mehrerer Stücke, ein <b>Makro</b>, das Sie einmal festlegen u' +
+      'nd beim Namen benutzen, eine <b>Bedingung</b>, eine <b>Zählung</b>, die die richtige W' +
+      'ortform wählt, und ein <b>Einfügen</b>, das eine andere Vorlage hereinholt. Kommentare' +
+      ' sind eine siebte Markierung, die überhaupt nichts ergibt.</p>',
+    '<blockquote>Jedes Beispiel unten wird bei jedem Bau des Programms durch die Maschine g' +
+      'eschickt, die diese Kopie von Studio mitbringt, und rechts steht genau das, was sie zu' +
+      'rückgab. Nichts hier ist erinnert oder geraten; eine Antwort, die aufhörte zu stimmen,' +
+      ' würde den Bau anhalten. Die Version der Maschine steht unter <b>Hilfe</b>, <b>Über</b' +
+      '>.</blockquote>',
+    '<p>Das andere Dokument dieser Hilfe, <b>Was die Tafel „Diagnose" Ihnen sagt</b>, hande' +
+      'lt davon, was schiefgeht. Dieses handelt davon, was die Konstrukte tun, wenn nichts sc' +
+      'hiefgeht — samt der mehreren Stellen, an denen eine Vorlage etwas Überraschendes tut u' +
+      'nd nichts es meldet.</p>',
+    '<h2 id="reading-syntax">Wie die Beispiele zu lesen sind</h2>',
+    '<p>Der Pfeil <code>→</code> trennt die Vorlage von dem, was die Maschine zurückgab. <c' +
+      'ode>(leer)</code> heißt, dass sie überhaupt nichts ausgab. Text hinter der Ausgabe, du' +
+      'rch drei Leerzeichen abgesetzt, ist eine Anmerkung und nicht Teil der Antwort.</p>',
+    '<p>Die Bedingungen sind genannt und nicht stillschweigend angenommen, denn ohne sie li' +
+      'eße sich die Hälfte der Antworten unten nicht nachvollziehen:</p>',
+    '<p><small><tt>locale: de<br>seed: 7<br>empty: (leer)<br>include intro: Willkommen bei ' +
+      '{Acme|Globex}.<br>include shout: Die %marke% ist da.</tt></small></p>',
+    '<p><code>seed</code> legt die zufällige Wahl fest. Eine Vorlage mit einer Auswahl dari' +
+      'n hat keine einzelne Antwort, ein Beispiel ohne Startwert würde also bei jedem Lauf et' +
+      'was anderes ausgeben, und es gäbe nichts zu prüfen. Im Fenster ist es das Kästchen <b>' +
+      'Startwert</b> über der rechten Hälfte; setzen Sie den Haken, und daneben erscheint ein' +
+      ' Zahlenfeld, und die Vorschau steht still, während Sie arbeiten.</p>',
+    '<p><code>locale</code> entscheidet über die Zahlformen, und es ist der Wähler über der' +
+      ' rechten Hälfte, nicht die Sprache der Oberfläche. Deutsch und Englisch brauchen zwei ' +
+      'Formen; Russisch, Ukrainisch, Belarussisch, Serbisch, Kroatisch und Bosnisch brauchen ' +
+      'drei.</p>',
+    '<h2 id="choices">Auswahl</h2>',
+    '<p>Geschweifte Klammern mit <code>|</code> dazwischen: die Maschine nimmt <b>eine</b>.' +
+      '</p>',
+    '<p><small><tt><a href="ex:1">Ein {kleiner|großer} Raum.</a><br>→&nbsp; Ein kleiner Rau' +
+      'm.</tt></small></p>',
+    '<p>Die Wahl ist zufällig, dieselbe Vorlage gibt bei einem anderen Lauf also <code>Ein ' +
+      'großer Raum.</code> Die Auswahl selbst lässt den Text um sich herum in Ruhe — auch wen' +
+      'n der Feinschliff, der gegen Ende dieses Dokuments beschrieben wird, bis zu ihm reicht' +
+      '.</p>',
+    '<h3 id="choices-0">Verschachtelung</h3>',
+    '<p>Eine Auswahl kann eine weitere enthalten, beliebig tief.</p>',
+    '<p><small><tt><a href="ex:2">Acme {Pro {Plus|Max}|Lite}</a><br>→&nbsp; Acme Pro Plus</' +
+      'tt></small></p>',
+    '<p>Die innere Wahl wird nur getroffen, wenn die äußere den Zweig nimmt, in dem sie ste' +
+      'ht: fällt <code>Lite</code>, wird <code>Plus|Max</code> nie befragt — und, messbar, ni' +
+      'cht einmal nach einer Zufallszahl gefragt.</p>',
+    '<h3 id="choices-1">Eine leere Möglichkeit</h3>',
+    '<p>Eine Möglichkeit darf leer sein. Das ist der gewöhnliche Weg, etwas nur manchmal er' +
+      'scheinen zu lassen.</p>',
+    '<p><small><tt><a href="ex:3">Ein {|sehr }großer Raum.</a><br>→&nbsp; Ein großer Raum.<' +
+      '/tt></small></p>',
+    '<p>Das Leerzeichen in die Möglichkeit zu schreiben, <code>{|sehr }</code> statt <code>' +
+      '{|sehr} </code>, ist Gewohnheit und keine Vorschrift: der Feinschliff zieht den doppel' +
+      'ten Zwischenraum so oder so zusammen.</p>',
+    '<h2 id="shuffles">Mischen</h2>',
+    '<p>Eckige Klammern nehmen mehrere Stücke, wählen wie viele, bringen sie in zufällige R' +
+      'eihenfolge und fügen sie zusammen.</p>',
+    '<p><small><tt><a href="ex:4">[rot|grün|blau]</a><br>→&nbsp; Grün blau rot</tt></small>' +
+      '</p>',
+    '<p>Sich selbst überlassen nimmt es alle und verbindet sie mit einem Leerzeichen. Alles' +
+      ' Weitere über ein Mischen steht in einem <code>&lt;…&gt;</code> Block unmittelbar hint' +
+      'er der öffnenden Klammer.</p>',
+    '<h3 id="shuffles-0">Das Trennzeichen</h3>',
+    '<p><small><tt><a href="ex:5">[&lt;, &gt;rot|grün|blau]</a><br>→&nbsp; Grün, blau, rot<' +
+      '/tt></small></p>',
+    '<p>Ein <code>&lt;…&gt;</code> Block ist selbst das Trennzeichen, sofern er nicht <b>ei' +
+      'ne Einstellung nennt</b>: eine von <code>sep</code>, <code>lastsep</code>, <code>minsi' +
+      'ze</code> oder <code>maxsize</code>, als eigenes Wort und mit einem <code>=</code> dah' +
+      'inter. Alles andere an dieser Stelle ist ein Trennzeichen, so sehr es auch nach einer ' +
+      'Einstellung aussieht — ein Schlüssel ohne sein <code>=</code>:</p>',
+    '<p><small><tt><a href="ex:6">[&lt;maxsize 2&gt;rot|grün|blau]</a><br>→&nbsp; Grünmaxsi' +
+      'ze 2blaumaxsize 2rot</tt></small></p>',
+    '<p>oder ein Schlüssel, an den vorn etwas geklebt ist:</p>',
+    '<p><small><tt><a href="ex:7">[&lt;xmaxsize=1&gt;rot|grün|blau]</a><br>→&nbsp; Grünxmax' +
+      'size=1blauxmaxsize=1rot</tt></small></p>',
+    '<p>Der zweite lohnt einen zweiten Blick: die Tafel nennt <code>xmaxsize</code> <b>sehr' +
+      ' wohl</b> einen unbekannten Schlüssel, und die Maschine druckt den ganzen Block trotzd' +
+      'em zwischen die Stücke. Die Diagnose und die Ausgabe beantworten verschiedene Fragen.<' +
+      '/p>',
+    '<p>Schreiben Sie die Einstellungen aus, wenn Sie zwei verschiedene Trennzeichen wollen' +
+      ':</p>',
+    '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" und "&gt;rot|grün|blau]</a><br>→&' +
+      'nbsp; Grün, blau und rot</tt></small></p>',
+    '<p><code>sep</code> steht zwischen den Stücken und <code>lastsep</code> vor dem letzte' +
+      'n.</p>',
+    '<h3 id="shuffles-1">Wie viele</h3>',
+    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;rot|grün|blau]</a><br>→&nbsp;' +
+      ' Grün blau</tt></small></p>',
+    '<p><code>minsize</code> ist der Boden und <code>maxsize</code> die Decke; die Anzahl d' +
+      'azwischen ist zufällig wie die Reihenfolge. Gleiche Werte nehmen genau so viele. <b>Oh' +
+      'ne beide alle — aber mit nur <code>maxsize</code> liegt der Boden bei eins</b>, was Le' +
+      'ute überrascht:</p>',
+    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+      'p>',
+    '<p>Drei Stücke, eine Decke von drei, und eines kam heraus. Schreiben Sie auch <code>mi' +
+      'nsize</code>, wenn Sie „alle, höchstens drei" meinen. Ein <code>maxsize</code> über de' +
+      'r Anzahl der Stücke wird stillschweigend auf sie gesenkt. Ein <code>minsize</code> übe' +
+      'r dem <code>maxsize</code> wird wortlos hingenommen, und der Boden gewinnt — die Decke' +
+      ' wird zu ihm angehoben und nicht umgekehrt:</p>',
+    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;rot|grün|blau]</a><br>→&nbsp' +
+      '; Grün blau rot</tt></small></p>',
+    '<h3 id="shuffles-2">Ein Trennzeichen zwischen zwei Stücken</h3>',
+    '<p>Ein <code>&lt;…&gt;</code>, das <b>zwischen</b> zwei Stücke geschrieben wird, ist d' +
+      'as Trennzeichen für dieses Paar.</p>',
+    '<p><small><tt><a href="ex:12">[rot|grün&lt;und&gt;|blau]</a><br>→&nbsp; Grün und blau ' +
+      'rot</tt></small></p>',
+    '<p>Es gehört zu dem Stück <b>danach</b> und wandert mit diesem Stück durch das Mischen' +
+      ', taucht also dort auf, wo dieses Stück landet, statt an einer festen Stelle der Ausga' +
+      'be. Ein <code>&lt;…&gt;</code> hinter dem <b>letzten</b> Stück ist überhaupt kein Tren' +
+      'nzeichen und wird als Text gedruckt:</p>',
+    '<p><small><tt><a href="ex:13">[rot|grün|blau&lt;und&gt;]</a><br>→&nbsp; Grün blau&lt;u' +
+      'nd&gt; rot</tt></small></p>',
+    '<h2 id="macros">Makros</h2>',
+    '<p><code>#set</code> gibt einem Stück Text einen Namen. Der Name wird als <code>%name%' +
+      '</code> benutzt, und die Anweisung muss das Erste in ihrer Zeile sein — führende Leerz' +
+      'eichen und Tabulatoren sind erlaubt, alles andere nicht.</p>',
+    '<p><small><tt><a href="ex:14">#set %stadt% = Berlin</a><br><a href="ex:14">Flug nach %' +
+      'stadt%.</a><br>→&nbsp; Flug nach Berlin.</tt></small></p>',
+    '<p>Namen bestehen aus lateinischen Buchstaben, Ziffern und <code>_</code>. Ein Name in' +
+      ' einem anderen Alphabet ist kein Name, worüber das andere Dokument unter <code>set.mal' +
+      'formed</code> spricht. Umlaute gehören also nicht in einen Namen — in einen Wert dageg' +
+      'en schon.</p>',
+    '<h3 id="macros-0"><code>#set</code> würfelt erneut, <code>#def</code> würfelt einmal</' +
+      'h3>',
+    '<p>Das ist der ganze Unterschied zwischen beiden, und er zeigt sich nur, wenn der Wert' +
+      ' eine Auswahl enthält.</p>',
+    '<p><small><tt><a href="ex:15">#set %wahl% = {A|B}</a><br><a href="ex:15">%wahl% %wahl%' +
+      ' %wahl%</a><br>→&nbsp; A A B</tt></small></p>',
+    '<p><small><tt><a href="ex:16">#def %wahl% = {A|B}</a><br><a href="ex:16">%wahl% %wahl%' +
+      ' %wahl%</a><br>→&nbsp; A A A</tt></small></p>',
+    '<p>Beide Beispiele liefen unter demselben Startwert. <code>#set</code> bewahrt die Vor' +
+      'lage auf und würfelt sie bei jeder Benutzung; <code>#def</code> würfelt einmal und beh' +
+      'ält die Antwort. Nehmen Sie <code>#def</code> für etwas, das mit sich selbst übereinst' +
+      'immen muss — eine Marke, eine Stadt, einen Namen, eine Anzahl — und <code>#set</code> ' +
+      'für Abwechslung.</p>',
+    '<p>Ein einzelner Startwert kann die beiden nicht auseinanderhalten: es gibt Startwerte' +
+      ', bei denen <code>#set</code> zufällig dreimal dieselbe Möglichkeit nimmt und die zwei' +
+      ' gleich aussehen. Das ist zu wissen, bevor Sie aus einer einzigen Vorschau schließen, ' +
+      'eine Festlegung funktioniere nicht.</p>',
+    '<h2 id="conditions">Bedingungen</h2>',
+    '<p><code>{?name?dann|sonst}</code> fragt, ob ein Makro einen Wert hat.</p>',
+    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?wir haben %n%|no' +
+      'ch nichts}</a><br>→&nbsp; Wir haben 5</tt></small></p>',
+    '<p>Die <code>sonst</code>-Hälfte darf fehlen — <code>{?name?dann}</code> gibt nichts a' +
+      'us, wenn die Antwort nein ist. Ein <code>!</code> dreht die Frage um:</p>',
+    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?Fremder|Fre' +
+      'und}</a><br>→&nbsp; Freund</tt></small></p>',
+    '<p>Einen Wert zu haben heißt, <b>mindestens ein Zeichen zu haben, das kein Leerzeichen' +
+      ' ist</b>. Ein Makro, das auf nichts gesetzt ist oder nur auf Leerzeichen, gilt als ohn' +
+      'e Wert.</p>',
+    '<p>Der Name einer Bedingung muss mit einem Buchstaben oder <code>_</code> <b>beginnen<' +
+      '/b>, was strenger ist als bei einem Makro — und das Kapitel über die Stillen sagt, was' +
+      ' aus einem Namen wird, der mit einer Ziffer anfängt.</p>',
+    '<h2 id="counting">Zählung</h2>',
+    '<p><code>{plural %n%: …}</code> wählt die Wortform, die zu einer Zahl gehört.</p>',
+    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: Dat' +
+      'ei|Dateien}</a><br>→&nbsp; 1 Datei</tt></small></p>',
+    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: Dat' +
+      'ei|Dateien}</a><br>→&nbsp; 5 Dateien</tt></small></p>',
+    '<p>Die Zahl ist hier mit Absicht ein <code>#def</code> und kein <code>#set</code>, und' +
+      ' die Regel lohnt sich zu behalten: <b>machen Sie die Zahl zu einer schlichten Ziffer o' +
+      'der einem <code>#def</code>, niemals zu einem <code>#set</code>.</b> Was aus einem <co' +
+      'de>#set</code> in den Zahl-Platz gelangt, ist der aufbewahrte TEXT, <code>{5|5}</code>' +
+      ' statt <code>5</code> — keine Zahl also, weshalb das ganze Konstrukt nichts ergibt und' +
+      ' die Tafel <code>plural.count-macro</code> sagt. Die Zahl und die Form können sich nic' +
+      'ht widersprechen: stattdessen verschwindet das Wort.</p>',
+    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+      ' Datei|Dateien}</a><br>→&nbsp; 5</tt></small></p>',
+    '<p>Wie viele Formen es sind, entscheidet die Locale und nicht Sie: unter <code>de</cod' +
+      'e> sind es zwei, unter <code>ru</code> drei. Die falsche Anzahl ist ein Fehler, den di' +
+      'e Tafel meldet (<code>plural.arity</code>), und die Maschine druckt dann das ganze Kon' +
+      'strukt zurück, mit breiten Klammern <code>｛｝</code> statt der schmalen, damit man es n' +
+      'icht für Ausgabe hält.</p>',
+    '<h2 id="fragments">Ausschnitte</h2>',
+    '<p><code>#include "name"</code> setzt an dieser Stelle eine andere Vorlage ein, und di' +
+      'e Anweisung muss das Erste in ihrer Zeile sein — auch hier sind führende Leerzeichen u' +
+      'nd Tabulatoren erlaubt.</p>',
+    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Willkommen bei Acme.</tt' +
+      '></small></p>',
+    '<p>Der Ausschnitt wird als eigene Vorlage gerendert, eine Auswahl darin wird also fris' +
+      'ch getroffen: <code>intro</code> enthält <code>{Acme|Globex}</code> und antwortet mit ' +
+      'dem einen oder dem anderen.</p>',
+    '<p>Der Name wird <b>genau</b> verglichen. <code>Intro</code> und <code>intro</code> si' +
+      'nd zwei verschiedene Ausschnitte, und unter Windows ist das leicht falsch zu machen, w' +
+      'eil das Dateisystem es nicht kümmert. Ein fehlendes Ziel rendert als nichts, und die T' +
+      'afel sagt <code>include.unknown-target</code>; ein Ziel, das sich nur in der Groß- und' +
+      ' Kleinschreibung unterscheidet, bekommt eine Studio-Notiz mit dem Namen, den Sie vermu' +
+      'tlich meinten.</p>',
+    '<h3 id="fragments-0">Ein Ausschnitt sieht Ihre Makros nicht</h3>',
+    '<p>Er wird als eigene Vorlage gerendert: er hat die Werte der Sitzung, aber nicht die ' +
+      '<code>#set</code> und <code>#def</code> des Dokuments, das ihn hereingeholt hat.</p>',
+    '<p><small><tt><a href="ex:23">#set %marke% = Acme</a><br><a href="ex:23">#include "sho' +
+      'ut"</a><br>→&nbsp; Die %marke% ist da.</tt></small></p>',
+    '<p><code>shout</code> ist <code>Die %marke% ist da.</code>, und der Name muss im Aussc' +
+      'hnitt selbst festgelegt sein. Das ist keine Stille — die Tafel sagt durchaus <code>var' +
+      'iable.undefined</code> —, aber sie sagt es gegen <b><code>shout</code></b>, in Zeile 1' +
+      ' jener Datei, und im Dokument, das Sie ansehen, erscheint keine Wellenlinie, weil die ' +
+      'Stelle zu einem anderen Puffer gehört. Lesen Sie die Spalte <b>Datei</b>, wenn eine Wa' +
+      'rnung von einer Zeile zu handeln scheint, die Sie nicht geschrieben haben.</p>',
+    '<h2 id="remarks">Anmerkungen</h2>',
+    '<p><code>/# … #/</code> ist ein Kommentar: alles zwischen den Marken wird entfernt, be' +
+      'vor irgendetwas anderes geschieht.</p>',
+    '<p><small><tt><a href="ex:24">Entwurf /# unsicher ob das bleibt #/ fertig</a><br>→&nbs' +
+      'p; Entwurf fertig</tt></small></p>',
+    '<p>Kommentare verschachteln sich nicht. Das erste <code>#/</code> schließt den Komment' +
+      'ar, was auch immer davor stand, ein Kommentar um Text herum, der selbst <code>#/</code' +
+      '> enthält, endet also früher als er aussieht.</p>',
+    '<h2 id="tidying">Was die Maschine am Ende glättet</h2>',
+    '<p>Die Ausgabe ist nicht ganz der Text, den die Konstrukte erzeugt haben. Am Ende gesc' +
+      'hieht ihr mehreres; zweierlei begegnet Ihnen täglich.</p>',
+    '<p>Der erste Buchstabe jedes Satzes wird großgeschrieben:</p>',
+    '<p><small><tt><a href="ex:25">eins. zwei. drei.</a><br>→&nbsp; Eins. Zwei. Drei.</tt><' +
+      '/small></p>',
+    '<p>Deshalb antworten die Beispiele in dieser Hilfe so oft mit einem großen Buchstaben,' +
+      ' wo die Vorlage einen kleinen hat. Ein Punkt hinter einer Abkürzung, die die Maschine ' +
+      'kennt, beendet keinen Satz, und ebenso wenig etwas in der Form von <code>z.B.</code> o' +
+      'der <code>d.h.</code> — <b>in lateinischen Buchstaben</b>, was eine echte Grenze ist u' +
+      'nd keine Absicherung: die Prüfung „ist das die Mitte eines Wortes" ist eine ASCII-Prüf' +
+      'ung.</p>',
+    '<p><small><tt><a href="ex:26">z.B. das bleibt klein</a><br>→&nbsp; z.B. das bleibt kle' +
+      'in</tt></small></p>',
+    '<p><small><tt><a href="ex:27">Dr. unsere Preise sind niedrig</a><br>→&nbsp; Dr. unsere' +
+      ' Preise sind niedrig</tt></small></p>',
+    '<p>Jedes andere Wort beendet einen Satz, wie kurz es auch sei — die Länge hat nichts d' +
+      'amit zu tun:</p>',
+    '<p><small><tt><a href="ex:28">Xyz. unsere Preise sind niedrig</a><br>→&nbsp; Xyz. Unse' +
+      're Preise sind niedrig</tt></small></p>',
+    '<p>Die Liste, die die Maschine kennt, hat 46 Einträge, <b>29 davon kyrillisch</b>, und' +
+      ' das andere Dokument geht sie unter <b>Eine Stille für jede Sprache</b> durch. Für deu' +
+      'tsche Texte steht das Wichtigste weiter unten bei den Stillen: die Liste ist nicht auf' +
+      ' Deutsch eingestellt.</p>',
+    '<p>Das zweite alltägliche ist, dass Folgen von Leerzeichen zu einem zusammenfallen. Da' +
+      's ist es, was Sie eine leere Möglichkeit stehen lassen lässt, ohne die Leerzeichen dar' +
+      'um herum zu zählen.</p>',
+    '<p>Der Rest in einem Atemzug: ein Leerzeichen vor <code>,;:!?.</code> fällt weg und ei' +
+      'nes wird dahinter eingesetzt; die ganze Ausgabe wird an den Rändern beschnitten; der g' +
+      'roße Buchstabe kommt auch nach einem Zeilenumbruch und nach einem Block-Tag, nicht nur' +
+      ' nach einem Punkt; und Adressen mit Schema, E-Mail-Adressen, nackte Domains und Dezima' +
+      'lzahlen sind geschützt und kommen genau so heraus, wie sie getippt wurden.</p>',
+    '<p>Für den letzten Punkt gilt dieselbe ASCII-Grenze wie für die Abkürzungen oben. Eine' +
+      ' nackte Domain ist geschützt, wenn sie in lateinischen Buchstaben geschrieben ist; <co' +
+      'de>сайт.рф</code> ist es nicht, und der Feinschliff setzt ein Leerzeichen und einen gr' +
+      'oßen Buchstaben hinein.</p>',
+    '<p><small><tt><a href="ex:29">hallo , Welt</a><br>→&nbsp; Hallo, Welt</tt></small></p>',
+    '<p><small><tt><a href="ex:30">eins.zwei</a><br>→&nbsp; eins.zwei</tt></small></p>',
+    '<h2 id="silences">Stillen</h2>',
+    '<p>Jeder Fall unten rendert, ergibt etwas anderes als er aussieht und zieht <b>überhau' +
+      'pt keine Diagnose</b> nach sich. Sie sind hier gesammelt, weil nichts sonst im Fenster' +
+      ' sie je erwähnen wird.</p>',
+    '<p><b>Die deutschen Abkürzungen stehen nicht in der Liste der Maschine.</b> Das ist di' +
+      'e Stille, die deutsche Autoren als Erstes treffen. Geschützt sind nur die Wörter, die ' +
+      'sich mit der englischen Hälfte der Liste decken — <code>Dr.</code> und <code>Prof.</co' +
+      'de> oben —, während <code>Nr.</code>, <code>bzw.</code>, <code>usw.</code>, <code>Str.' +
+      '</code> und <code>ca.</code> einen Satz beenden und das nächste Wort großschreiben:</p' +
+      '>',
+    '<p><small><tt><a href="ex:31">bzw. unsere Preise sind niedrig</a><br>→&nbsp; Bzw. Unse' +
+      're Preise sind niedrig</tt></small></p>',
+    '<p>Die Formen mit mehreren Punkten sind davon nicht betroffen: <code>z.B.</code>, <cod' +
+      'e>d.h.</code> und <code>u.a.</code> gehen durch die Regel für mehrere Punkte und bleib' +
+      'en unangetastet. Für die einzelnen Wörter hilft nur, umzuformulieren oder den Punkt zu' +
+      ' vermeiden.</p>',
+    '<p><b>Ein <code>#include</code>, das nicht allein in seiner Zeile steht, ist gewöhnlic' +
+      'her Text.</b></p>',
+    '<p><small><tt><a href="ex:32">Vorher. #include "intro"</a><br>→&nbsp; Vorher. #include' +
+      ' "intro"</tt></small></p>',
+    '<p>Dasselbe gilt für eine Anweisung mit etwas dahinter und für <code>#include"intro"</' +
+      'code> ohne Leerzeichen. Die Regel ist die der Familie und nicht die dieser Maschine, u' +
+      'nd sie ist es, die eine Anweisung erkennbar macht, ohne die ganze Zeile zu zerlegen.</' +
+      'p>',
+    '<p><b>Eine Bedingung, deren Name mit einer Ziffer beginnt, ist keine Bedingung.</b> Si' +
+      'e wird zu einer gewöhnlichen Auswahl zwischen <code>?1x?ja</code> und <code>nein</code' +
+      '>:</p>',
+    '<p><small><tt><a href="ex:33">{?1x?ja|nein}</a><br>→&nbsp; ?1x? Ja</tt></small></p>',
+    '<p><b>Ein <code>&lt;…&gt;</code> am Kopf eines späteren Stücks ist kein Trennzeichen</' +
+      'b> und wird gedruckt, wie es dasteht:</p>',
+    '<p><small><tt><a href="ex:34">[rot|&lt;und&gt;grün]</a><br>→&nbsp; &lt;und&gt;Grün rot' +
+      '</tt></small></p>',
+    '<p>Der Block am Kopf des <b>ersten</b> Stücks ist das Trennzeichen — das ist die Schre' +
+      'ibweise, mit der das Kapitel über das Mischen beginnt:</p>',
+    '<p><small><tt><a href="ex:35">[&lt;und&gt;rot|grün]</a><br>→&nbsp; Grün und rot</tt></' +
+      'small></p>',
+    '<p>Irgendwo hinter einem <code>|</code> ist er gewöhnlicher Text, und ein Trennzeichen' +
+      ' zwischen zwei Stücken gehört ans <b>Ende</b> des ersten.</p>',
+    '<p><b>Ein nacktes Tag am Ende eines Stücks wird als Trennzeichen dieses Paares genomme' +
+      'n</b> und als eigener Text gedruckt:</p>',
+    '<p><small><tt><a href="ex:36">[eins&lt;br&gt;|zwei]</a><br>→&nbsp; Zwei eins</tt></sma' +
+      'll></p>',
+    '<p>Unter diesem Startwert landeten die zwei in der anderen Reihenfolge, das Trennzeich' +
+      'en kam also gar nicht heraus. Mit einem dritten Stück gibt es einen Platz für es, und ' +
+      'es erscheint:</p>',
+    '<p><small><tt><a href="ex:37">[rot|grün&lt;br&gt;|blau]</a><br>→&nbsp; Grün br blau ro' +
+      't</tt></small></p>',
+    '<p>Das <code>&lt;br&gt;</code> sitzt zwischen <code>grün</code> und dem, was darauf fo' +
+      'lgt, wohin das Mischen dieses Paar auch setzt. Ein schließendes Tag (<code>&lt;/b&gt;<' +
+      '/code>), ein selbstschließendes (<code>&lt;br/&gt;</code>), eines mit Attributen (<cod' +
+      'e>&lt;br class="x"&gt;</code>) und ein Tag mitten in einem Stück bleiben alle unangeta' +
+      'stet.</p>',
+    '<p><b>Ein nicht geschlossener Kommentar ist gewöhnlicher Text</b> — er öffnet nichts, ' +
+      'und das <code>/#</code> wird gedruckt:</p>',
+    '<p><small><tt><a href="ex:38">vorher /# der Rest davon</a><br>→&nbsp; Vorher /# der Re' +
+      'st davon</tt></small></p>',
+    '<p>Er ist aber immer noch die Hälfte eines Paares. Erscheint weiter unten im Dokument ' +
+      'ein <code>#/</code>, finden die beiden einander, und alles dazwischen geht — samt alle' +
+      'm, was der Autor dazwischen geschrieben hat:</p>',
+    '<p><small><tt><a href="ex:39">{a /# ups|b} Mitte #/ Schwanz</a><br>→&nbsp; {a Schwanz<' +
+      '/tt></small></p>',
+    '<p>Die Auswahl oben verlor ihre zweite Alternative und ihre schließende Klammer, und k' +
+      'eine Diagnose sagt es: das ist, was der Text BEDEUTET, und kein Fehler, den die Maschi' +
+      'ne sehen kann. Wenn ein <code>/#</code> wörtlich gemeint ist, ist der sichere Platz da' +
+      'für der Wert einer Variablen und nicht der Vorlagentext.</p>',
+    '<h2 id="next">Wo als Nächstes nachsehen</h2>',
+    '<p>Das andere Dokument, <b>Was die Tafel „Diagnose" Ihnen sagt</b>, hat einen Artikel ' +
+      'je Zeile, die die Tafel zeigen kann — was sie bedeutet, was sie auslöst und was die Ma' +
+      'schine mit der Vorlage macht, solange sie dasteht. Drücken Sie F1 mit dem Cursor in ei' +
+      'nem Konstrukt, und die Hilfe öffnet beim Kapitel dieses Konstrukts <b>in jenem Dokumen' +
+      't</b>: eine geschweifte Klammer bei <b>Klammern</b>, ein <code>[…]</code> bei <b>Misch' +
+      'ungen</b>, eine <code>#set</code>-Zeile bei <b>Festlegungen</b>.</p>',
+    '<h1 id="about">Was die Tafel „Diagnose" Ihnen sagt</h1>',
+    '<p>Jede Zeile in dieser Tafel ist ein Urteil der <b>Maschine</b>, und dasselbe Urteil ' +
+      'bekämen Sie von der JavaScript-, PHP- oder Python-Umsetzung — vier eigenständige Masch' +
+      'inen, gemessen an einem gemeinsamen Korpus. Es ist nicht Studios Meinung über Ihre Vor' +
+      'lage. Nennt die Maschine hier etwas einen Fehler, nennt jede andere Maschine der Famil' +
+      'ie es auch einen Fehler, und Ihre Vorlage verhält sich auf Ihrem Server so wie in dies' +
+      'em Fenster.</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th>was dasteht</th><th>wer es sagt</th><th>was es bedeutet</th></tr>',
+    '<tr><td><b>Fehler</b></td><td>die Maschine</td><td>die Vorlage tut nicht das, wonach s' +
+      'ie aussieht</td></tr>',
+    '<tr><td><b>Warnung</b></td><td>die Maschine</td><td>sie rendert, aber wahrscheinlich n' +
+      'icht wie gemeint</td></tr>',
+    '<tr><td><b>Studio-Notiz</b></td><td>Studio</td><td>die Maschine sagte nichts, und es i' +
+      'st trotzdem der Rede wert: eine Einfügung im Kreis, ein Ziel mit anderer Schreibung, e' +
+      'in Steuerzeichen</td></tr>',
+    '</table>',
+    '<p>Die Spalte <b>Ort</b> ist Zeile und Spalte. Ein Klick auf die Zeile setzt den Curso' +
+      'r dorthin.</p>',
+    '<blockquote>Jedes Beispiel unten wird bei jedem Bau des Programms durch die Maschine g' +
+      'eschickt, die diese Kopie von Studio mitbringt, und rechts steht genau das, was sie zu' +
+      'rückgab. Nichts hier ist erinnert oder geraten; eine Antwort, die aufhörte zu stimmen,' +
+      ' würde den Bau anhalten. Die Version der Maschine steht unter <b>Hilfe</b>, <b>Über</b' +
+      '>.</blockquote>',
+    '<h2 id="reading">Wie die Beispiele zu lesen sind</h2>',
+    '<p>Der Pfeil <code>→</code> trennt die Vorlage von dem, was die Maschine zurückgab. <c' +
+      'ode>⏎</code> ist ein Zeilenumbruch in einer Ausgabe, <code>(leer)</code> heißt, dass s' +
+      'ie überhaupt nichts ausgab, und <code>…</code> steht für eine Ausgabe, die zu lang ist' +
+      ', um sie ganz zu zeigen. Text hinter der Ausgabe, durch drei Leerzeichen abgesetzt, is' +
+      't eine Anmerkung und nicht Teil der Antwort.</p>',
+    '<p>Die Bedingungen, unter denen die Beispiele liefen, stehen hier und nicht versteckt ' +
+      'in den Tests — ohne sie ließen sich manche Antworten nicht nachvollziehen. Der Satz vo' +
+      'n Vorlagen zählt am meisten: sonst ruhte <code>#include "frag"</code> → <code>Fragment' +
+      '</code> auf etwas, das dieses Dokument nie sagt.</p>',
+    '<p><small><tt>locale: de<br>seed: 7<br>empty: (leer)<br>include frag: Fragment<br>incl' +
+      'ude loop: #include "loop"<br>include Intro: Einleitung</tt></small></p>',
+    '<p><code>seed</code> legt die zufällige Wahl fest: ohne ihn antwortete eine Auswahl od' +
+      'er eine Mischung jedes Mal anders, und es gäbe nichts zu prüfen.</p>',
+    '<p><b>Die Locale ist hier <code>de</code>, und sie entscheidet zweierlei:</b> wie viel' +
+      'e Zahlformen die Maschine erwartet und welche Form zu welcher Zahl gehört. Deutsch und' +
+      ' Englisch verlangen zwei. Russisch, Ukrainisch, Belarussisch, Serbisch, Kroatisch und ' +
+      'Bosnisch verlangen drei. Die Locale kommt vom Wähler über der rechten Hälfte, nicht vo' +
+      'n der Sprache der Oberfläche.</p>',
+    '<hr>',
+    '<h2 id="brackets">Klammern</h2>',
+    '<p><b>Setzen Sie den Cursor auf eine Klammer, und das Konstrukt zeigt sich ganz:</b> w' +
+      'o es anfängt, wo es aufhört und <b>jedes seiner Trennzeichen</b>. Verschachtelte Grupp' +
+      'en leuchten nicht mit auf — sie haben eigene Trennzeichen, und die kommen, wenn der Cu' +
+      'rsor auf ihrer Klammer steht. Es ist der schnellste Weg zu sehen, wo das endet, was Si' +
+      'e gerade bearbeiten, besonders in einer langen Zeile, in der die <code>}</code> zwei B' +
+      'ildschirme nach rechts gewandert ist.</p>',
+    '<p>Ein Trennzeichen ist nicht nur <code>|</code>. In einer Mischung hat <code>[a&lt;br' +
+      '&gt;|b]</code> zwei: die Maschine liest <code>&lt;br&gt;</code> als Trennzeichen <b>vo' +
+      'r dem nächsten</b> Stück, und die Hervorhebung zeigt es mit den anderen, weil es zum B' +
+      'au des Konstrukts gehört.</p>',
+    '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — eine Klammer wird geöffnet u' +
+      'nd nie geschlossen</h3>',
+    '<p><small><tt><a href="ex:40">ein Preis {billig|teuer</a><br>→&nbsp; Ein Preis {billig' +
+      '|teuer</tt></small></p>',
+    '<p>Die Maschine rät nicht, wo Sie schließen wollten. Der Text bleibt, wie er ist, Klam' +
+      'mer und alles, und die Auswahl findet nie statt.</p>',
+    '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — von einer Klammer andere' +
+      'r Art geschlossen</h3>',
+    '<p><small><tt><a href="ex:41">ein Preis {billig|teuer]</a><br>→&nbsp; Ein Preis {billi' +
+      'g|teuer]</tt></small></p>',
+    '<p><code>{</code> wartet auf <code>}</code> und <code>[</code> auf <code>]</code>. Ein' +
+      'e Mischung, die von einer geschweiften Klammer geschlossen wird, ist keine Mischung.</' +
+      'p>',
+    '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — eine sch' +
+      'ließende Klammer ohne offene</h3>',
+    '<p><small><tt><a href="ex:42">ein Preis billig} und alles</a><br>→&nbsp; Ein Preis bil' +
+      'lig} und alles</tt></small></p>',
+    '<p>Sie bleibt als Text stehen. Meistens ist es eine Klammer, die von einer Änderung üb' +
+      'rig blieb.</p>',
+    '<hr>',
+    '<h2 id="definitions">Festlegungen</h2>',
+    '<h3 id="set.malformed"><code>set.malformed</code> — diese <code>#set</code>-Zeile folg' +
+      't nicht der Regel</h3>',
+    '<p><small><tt><a href="ex:43">#set stadt = Berlin</a><br><a href="ex:43">in %stadt%</a' +
+      '><br>→&nbsp; #set stadt = Berlin ⏎ In %stadt%</tt></small></p>',
+    '<p><b>Der Name gehört zwischen Prozentzeichen:</b> <code>#set %stadt% = Berlin</code>.' +
+      ' Das ist der häufigste erste Fehler, und er setzt gleich zwei Zeilen in die Tafel — di' +
+      'e missratene Zeile selbst und „diese Variable ist nirgends festgelegt", weil keine Fes' +
+      'tlegung geschah und <code>%stadt%</code> niemandem gehört.</p>',
+    '<p>Sehen Sie sich die Ausgabe an: die gescheiterte Anweisung blieb <b>wie geschrieben<' +
+      '/b> im Text stehen. Die Maschine las sie nicht als Anweisung, also ist sie eine gewöhn' +
+      'liche Zeile und landet im Ergebnis.</p>',
+    '<h3 id="def.malformed"><code>def.malformed</code> — diese <code>#def</code>-Zeile folg' +
+      't nicht der Regel</h3>',
+    '<p><small><tt><a href="ex:44">#def seiten = {1|3}</a><br><a href="ex:44">%seiten%</a><' +
+      'br>→&nbsp; #def seiten = 1 ⏎ %seiten%</tt></small></p>',
+    '<p>Dieselbe Regel und derselbe Preis. <code>#def</code> unterscheidet sich von <code>#' +
+      'set</code> nicht in der Schreibung, sondern darin, <b>wann</b> der Wert entfaltet wird' +
+      ': <code>#set</code> entfaltet ihn bei jeder Nennung erneut, <code>#def</code> einmal j' +
+      'e Durchgang. Ein Schreibfehler kostet Sie beides.</p>',
+    '<p>Und sehen Sie genau hin: das <code>{1|3}</code> in der gescheiterten Anweisung <b>h' +
+      'at eine Möglichkeit gezogen</b>. Die Zeile wurde gewöhnlicher Text — und gewöhnlicher ' +
+      'Text wird gerendert wie gewöhnlicher Text, Klammern und alles. Eine missratene Zeile i' +
+      'st nicht abgeschaltet; sie hört bloß auf, eine Anweisung zu sein.</p>',
+    '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — dieser Nam' +
+      'e ist oben schon festgelegt</h3>',
+    '<p><small><tt><a href="ex:45">#set %x% = erste</a><br><a href="ex:45">#set %x% = zweit' +
+      'e</a><br><a href="ex:45">%x%</a><br>→&nbsp; Zweite</tt></small></p>',
+    '<p>Es funktioniert — die <b>letzte</b> Festlegung gewinnt —, aber die Maschine nennt e' +
+      's einen Fehler: ein Dokument, in dem ein Name zweimal gesetzt wird, liest sich mehrdeu' +
+      'tig, und in einem Monat wissen Sie nicht mehr, welche der beiden Zeilen die lebende is' +
+      't. Der Fehler zeigt auf die <b>zweite</b> Festlegung; die erste steht weiter oben.</p>',
+    '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
+      '> im Wert einer Festlegung</h3>',
+    '<p><small><tt><a href="ex:46">#def %x% = #include "frag"</a><br><a href="ex:46">%x%</a' +
+      '><br>→&nbsp; Fragment</tt></small></p>',
+    '<p>Eine Einfügung in einem Wert entfaltet sich zu einem anderen Zeitpunkt, als Sie erw' +
+      'arten würden, und die Familie verbietet es. Setzen Sie das <code>#include</code> in ei' +
+      'ne eigene Zeile.</p>',
+    '<hr>',
+    '<h2 id="variables">Variablen</h2>',
+    '<h3 id="variable.undefined"><code>variable.undefined</code> — diese Variable ist nirge' +
+      'nds festgelegt</h3>',
+    '<p><small><tt><a href="ex:47">hallo, %name%</a><br>→&nbsp; Hallo, %name%</tt></small><' +
+      '/p>',
+    '<p>Eine Warnung und kein Fehler: die Maschine druckt den Namen, wie er dasteht. Das is' +
+      't so gewollt — der Wert kann von außen kommen, vom Wirtsprogramm. In Studio liefern Si' +
+      'e solche Werte in der Tafel Variablen unter <b>Sitzungswerte</b>.</p>',
+    '<p><b>Der Wert einer Festlegung lässt sich in der Tafel ändern.</b> Stellen Sie sich i' +
+      'm oberen Teil auf die Spalte Wert und drücken Sie <b>F2</b> (oder tippen Sie einfach l' +
+      'os); <b>Eingabe</b> übernimmt, <b>Esc</b> verwirft. Die Änderung geht <b>ins Dokument<' +
+      '/b>, in einem einzigen Rückgängig-Schritt: <code>Strg+Z</code> stellt sie zurück.</p>',
+    '<p>Der Name und die Art (<code>#set</code> oder <code>#def</code>) lassen sich nicht ä' +
+      'ndern — eine Entscheidung und keine unfertige Ecke. Aus einer Zelle heraus umzubenenne' +
+      'n zerreißt jede Nennung der Variablen im Dokument, und die Zeile zu löschen nähme den ' +
+      'Kommentar und die Einrückung mit. Beides gehört in den Text, wo Sie sehen, was Sie tun' +
+      '.</p>',
+    '<p>Genau der Wert ändert sich. Die Einrückung, die zusätzlichen Leerzeichen, die Schre' +
+      'ibung des Namens und ein Kommentar am Zeilenende bleiben, wie sie waren — <code>   #se' +
+      't  %Marke%   =   Acme   /# Rest #/</code> kommt aus einer Änderung zurück und untersch' +
+      'eidet sich nur in <code>Acme</code>. Die Datei liegt in git, und eine Zeile neu zu for' +
+      'matieren erschiene dort als Ihre Änderung.</p>',
+    '<p><b>Eine Verweigerung heißt, dass die Maschine die Zeile anders läse.</b> Die Änderu' +
+      'ng wird nicht stillschweigend übernommen: die Maschine liest das Ergebnis zurück, und ' +
+      'sagt es nicht das Verlangte, bleibt das Dokument in Ruhe und die Statusleiste sagt es.' +
+      ' Drei wirkliche Ursachen: ein <code>/#</code> im Wert öffnet einen Kommentar, der den ' +
+      'Rest der Datei frisst, ein Zeilenumbruch beendet die Anweisung zu früh, und ein Kommen' +
+      'tar <b>in</b> der Anweisung macht die Zeile stückweise unänderbar — diese ändern Sie i' +
+      'm Text.</p>',
+    '<p><b>Zwei Gesten auf dem Namen einer Variablen.</b> Der Name in der Tafel ist ein Ver' +
+      'weis und keine Aufschrift:</p>',
+    '<ul>',
+    '<li><b>ein Klick auf den Namen</b> bringt den Cursor an die erste Stelle, an der das D' +
+      'okument diese Variable benutzt, und die Zeile leuchtet kurz auf. Dasselbe Wort in eine' +
+      'm Kommentar oder als Ziel eines <code>#include</code> zählt <b>nicht</b> — die Tafel b' +
+      'ringt Sie dorthin, wo die Variable wirklich wirkt.</li>',
+    '<li><b>Strg+Klick</b> schreibt eine Festlegung ins Dokument und öffnet den Gruppenedit' +
+      'or darauf. Der Wert, den Sie schon getippt haben, zieht als erste Möglichkeit ein:</li' +
+      '>',
+    '</ul>',
+    '<p><small><tt><a href="ex:48">#set %marke% = {Vulkan}</a><br><a href="ex:48">Kasino %m' +
+      'arke%</a><br>→&nbsp; Kasino Vulkan</tt></small></p>',
+    '<p>Der Unterschied zwischen beiden ist, was das Schließen des Fensters übersteht. Ein ' +
+      'Sitzungswert nicht: er steht nicht in der Datei, nicht in git, und keine andere Maschi' +
+      'ne der Familie sieht ihn. Eine Festlegung schon, und nur eine Festlegung bringt diese ' +
+      'Warnung endgültig zum Schweigen. Ein <code>Strg+Z</code> stellt das Dokument zurück.</' +
+      'p>',
+    '<p><b>Ein Sitzungswert ist zunächst eine Vorlage und kein Text.</b> Das ist es, was di' +
+      'e Maschine mit jedem Wert des Wirtsprogramms tut, und die Vorschau muss zum Server pas' +
+      'sen — <code>{billig|teuer}</code> ins Wertfeld getippt gibt also eine Auswahl und nich' +
+      't diese dreizehn Zeichen. Wenn Sie den Text selbst meinten, setzen Sie in der dritten ' +
+      'Spalte den Haken bei <b>als Text</b>: dann bleiben geschweifte Klammern und Prozentzei' +
+      'chen Zeichen.</p>',
+    '<h3 id="variable.self-reference"><code>variable.self-reference</code> — die Festlegung' +
+      ' nennt sich selbst</h3>',
+    '<p><small><tt><a href="ex:49">#set %x% = a %x% b</a><br><a href="ex:49">%x%</a><br>→&n' +
+      'bsp; A a a … %x% … b b b</tt></small></p>',
+    '<p>Fünfzig Ebenen, dann Schluss. Die Maschine entfaltet bis zur Tiefengrenze und hält ' +
+      'an und lässt <code>%x%</code> in der Mitte stehen. Keine Schleife, und auch nicht das,' +
+      ' was Sie wollten.</p>',
+    '<p>Das <code>…</code> oben ist die Abkürzung dieses Dokuments und nicht die der Maschi' +
+      'ne. Die wirkliche Ausgabe ist 207 Zeichen lang und trägt auf jeder Seite <b>einundfünf' +
+      'zig</b> Buchstaben statt fünfzig: die fünfzigste Ebene hält an und lässt den Wert steh' +
+      'en, wie er ist, und der Wert enthält von jedem einen mehr.</p>',
+    '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — die Fe' +
+      'stlegungen nennen sich im Kreis</h3>',
+    '<p><small><tt><a href="ex:50">#set %x% = %y%</a><br><a href="ex:50">#set %y% = %x%</a>' +
+      '<br><a href="ex:50">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p>Jede Seite entfaltet sich genau <b>einmal</b> und hält dann an: <code>%x%</code> wu' +
+      'rde <code>%y%</code> und nicht <code>%x%</code>. Die Maschine rollt den Kreis auf, sta' +
+      'tt ihn zu laufen, und übrig bleibt der andere Name aus dem Kreis — setzen Sie <code>%x' +
+      '% %y%</code> in ein Dokument, und es gibt <code>%y% %x%</code> aus, das Paar vertausch' +
+      't.</p>',
+    '<p>Die Tafel zeichnet eine Zeile für <b>jede Nennung, die den Kreis schließt</b>, nich' +
+      't eine Zeile für den Kreis und nicht eine je Festlegung. Eine Festlegung, die den Krei' +
+      's zweimal nennt, bekommt zwei Zeilen auf ihrer eigenen Zeile: <code>#set %x% = %y% %y%' +
+      '</code> gegen <code>#set %y% = %x%</code> sind drei Fehler, zwei davon in der ersten Z' +
+      'eile. Die Zeilen werden nicht zusammengefasst. Und die Stelle liegt auf der Festlegung' +
+      ', die wirklich gilt: ist der Name zweimal festgelegt, ist das die <b>letzte</b>.</p>',
+    '<hr>',
+    '<h2 id="includes">Einfügungen</h2>',
+    '<h3 id="includes-0"><code>#include</code> wirkt nur am Zeilenanfang</h3>',
+    '<p><small><tt><a href="ex:51">vorher #include "frag" danach</a><br>→&nbsp; Vorher #inc' +
+      'lude "frag" danach</tt></small></p>',
+    '<p><small><tt><a href="ex:52">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
+    '<p>Keine Diagnose, und genau darum geht es: ein <code>#include</code> mitten in einer ' +
+      'Zeile ist <b>keine</b> Einfügung. Die Maschine liest es als gewöhnlichen Text und sagt' +
+      ' nichts, weil es nichts zu beanstanden gibt — Sie schrieben Text und bekamen Text.</p>',
+    '<p><b>Das Ziel darf aber eine Zeile tiefer stehen</b>, und das überrascht von der ande' +
+      'ren Seite. Der Abstand, den die Maschine zwischen dem Wort und seinem Ziel erlaubt, sc' +
+      'hließt Zeilenumbrüche ein, das hier ist also eine Einfügung und sie wirkt:</p>',
+    '<p><small><tt><a href="ex:53">#include</a><br><a href="ex:53">"frag"</a><br>→&nbsp; Fr' +
+      'agment</tt></small></p>',
+    '<p>Leere Zeilen dazwischen gehen auch. Alles andere geht nicht: ein Wort vor dem Ziel ' +
+      'oder irgendetwas außer Leerzeichen dahinter — und das Ganze ist wieder Text. Der Edito' +
+      'r färbt das Ziel in seiner eigenen Zeile, lässt aber das Wort gewöhnlich, bis das Ziel' +
+      ' gekommen ist: er verspricht keine Anweisung, deren Ende er noch nicht sieht.</p>',
+    '<h3 id="include.unknown-target"><code>include.unknown-target</code> — kein solches Zie' +
+      'l im Satz</h3>',
+    '<p><small><tt><a href="ex:54">#include "nichtda"</a><br>→&nbsp; (leer)</tt></small></p' +
+      '>',
+    '<p>Ziele sind die <code>.spintax</code>-Dateien im Ordner des offenen Dokuments. Ein u' +
+      'nbekanntes Ziel entfaltet sich zu nichts — der Absatz verschwindet, statt kaputtzugehe' +
+      'n, weshalb es so leicht zu übersehen ist.</p>',
+    '<p><b>Darum hat die Tafel Variablen einen dritten Abschnitt, Einfügungen.</b> Er liste' +
+      't jedes <code>#include</code> des Dokuments auf und dazu, ob der Satz sein Ziel hat — ' +
+      'eine Zeile je Vorkommen, ein zweimal genanntes Ziel sind also zwei Zeilen. Der Abschni' +
+      'tt erscheint nur, wenn das Dokument Einfügungen hat. Ein Klick auf eine Zeile bringt d' +
+      'en Cursor zu dem <code>#include</code>, das dieses Ziel nennt.</p>',
+    '<p>Die Marke hat <b>drei</b> Werte, und der dritte zählt: „kein Satz" heißt nicht „der' +
+      ' Ausschnitt fehlt", sondern „es gibt noch nirgends nachzusehen". Der Satz ist der Ordn' +
+      'er neben dem Dokument, und ein ungespeichertes Dokument hat keinen Ordner — bis zum er' +
+      'sten Speichern ist also jedes Ziel so gekennzeichnet. „FEHLT" erscheint nur, wenn es e' +
+      'inen Ordner gibt und die Datei wirklich nicht darin ist.</p>',
+    '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — das Ziel gibt es, in and' +
+      'erer Schreibung</h3>',
+    '<p><small><tt><a href="ex:55">#include "intro"</a><br>→&nbsp; (leer)</tt></small></p>',
+    '<p>Der Satz enthält <code>Intro.spintax</code> — und die Maschine sagt trotzdem, es ge' +
+      'be kein solches Ziel, während Studio seine Notiz über die Schreibung hinzufügt. Die Sc' +
+      'hreibung zählt: <code>intro</code> und <code>Intro</code> sind verschiedene Ziele. Win' +
+      'dows öffnete die Datei so wie so, weshalb Studio im Satz nachsieht und nicht im Dateis' +
+      'ystem: sonst widerspräche die Vorschau dem Server über dasselbe Dokument.</p>',
+    '<h3 id="note.cycle"><code>note.cycle</code> — eine Einfügung im Kreis</h3>',
+    '<p>Enthält <code>loop.spintax</code> selbst <code>#include "loop"</code>, dann:</p>',
+    '<p><small><tt><a href="ex:56">#include "loop"</a><br>→&nbsp; (leer)</tt></small></p>',
+    '<p>Die Maschine setzt nichts ein statt der Unendlichkeit. Die Notiz ist da, damit Sie ' +
+      'wissen, warum der Absatz verschwand.</p>',
+    '<p>Die Zeile ist gegen <b><code>loop</code></b> ausgestellt und nicht gegen das Dokume' +
+      'nt, das Sie ansehen — der Kreis gehört dem Ausschnitt, und dorthin geht auch der Curso' +
+      'r beim Klicken. Im offenen Dokument ist nichts unterstrichen, denn mit der Zeile, die ' +
+      'Sie geschrieben haben, ist alles in Ordnung.</p>',
+    '<hr>',
+    '<h2 id="plurals">Zahlformen</h2>',
+    '<h3 id="plural.arity"><code>plural.arity</code> — nicht so viele Formen, wie die Local' +
+      'e verlangt</h3>',
+    '<p><small><tt><a href="ex:57">#set %n% = 5</a><br><a href="ex:57">%n% {plural %n%: Din' +
+      'g|Dinge|Dingse}</a><br>→&nbsp; 5 ｛plural 5: Ding|Dinge|Dingse｝</tt></small></p>',
+    '<p><b>Keine Leere — die Maschine druckt das ganze Konstrukt</b>, mit breiten Klammern ' +
+      '<code>｛｝</code> statt der schmalen. So sagt sie „ich habe das gesehen und konnte es ni' +
+      'cht anwenden". Unübersehbar nennt das niemand, und das ist gut so: ein still verschwun' +
+      'dener Absatz brauchte länger, bis man ihn fände.</p>',
+    '<p>Deutsch verlangt zwei Formen, Russisch drei. Unter der Locale dieses Dokuments ist ' +
+      '<code>{plural %n%: Ding|Dinge}</code> die richtige.</p>',
+    '<p><b>Leere entsteht aus einem anderen Grund, und die beiden sind leicht zu verwechsel' +
+      'n.</b> Vergleichen Sie diese zwei, die sich nur in der Zahl der Formen unterscheiden:<' +
+      '/p>',
+    '<p><small><tt><a href="ex:58">{plural %n%: Ding|Dinge}</a><br>→&nbsp; (leer)&nbsp;&nbs' +
+      'p; zwei Formen: richtig für Deutsch<br><a href="ex:59">{plural %n%: Ding|Dinge|Dingse}' +
+      '</a><br>→&nbsp; (leer)&nbsp;&nbsp; drei Formen: falsch für Deutsch</tt></small></p>',
+    '<p>Beide drucken nichts, und die Tafel behandelt sie verschieden: die erste zieht nur ' +
+      '<code>variable.undefined</code>, die zweite zieht auch <code>plural.arity</code>. <b>L' +
+      'eere ist also kein Zeichen für einen Formfehler</b> — sie kommt hier daher, dass <code' +
+      '>%n%</code> nicht festgelegt ist, und die Maschine prüft die Zahl, bevor sie die Forme' +
+      'n zählt, hält also an, ehe die Frage nach der Anzahl überhaupt aufkommt.</p>',
+    '<p>Darum legt das Beispiel oben in diesem Artikel <code>%n%</code> zuerst fest. Ohne d' +
+      'as wäre die Ausgabe bei jeder Zahl von Formen leer und zeigte über die Anzahl gar nich' +
+      'ts.</p>',
+    '<p>Die Tafel und die Ausgabe beantworten hier verschiedene Fragen, und das ist kein Wi' +
+      'derspruch: die Zeile setzt die <b>Prüfung</b> dorthin, die die Formen im Text zählt un' +
+      'd sich für die Zahl nicht interessiert; die Leere kommt vom <b>Rendern</b>, das seine ' +
+      'eigene Reihenfolge hat. Geben Sie der Zahl eine Ziffer, wie es das erste Beispiel tut,' +
+      ' und Sie sehen, was die Anzahl wirklich tut.</p>',
+    '<h3 id="plural.count-macro"><code>plural.count-macro</code> — die Zahl kommt aus einem' +
+      ' <code>#set</code>, und das würfelt bei jeder Nennung neu</h3>',
+    '<p><small><tt><a href="ex:60">#set %n% = {1|2}</a><br><a href="ex:60">%n% {plural %n%:' +
+      ' Ding|Dinge}</a><br>→&nbsp; 1</tt></small></p>',
+    '<p>Sehen Sie, was übrig blieb: <b>die Zahl wurde gedruckt und das Hauptwort nicht.</b>' +
+      ' Die Zahl muss eine Zahl sein, wenn die Form gewählt wird, und ein <code>#set</code>, ' +
+      'dessen Wert selbst eine Auswahl ist, wird nie eine — die Maschine setzt den Wert ein, ' +
+      '<b>ohne ihn zu rendern</b>, im Zahl-Platz landet also der wörtliche Text <code>{1|2}</' +
+      'code>. Die Zahl und die Form können sich nicht widersprechen; die Maschine lässt statt' +
+      'dessen das Wort fallen.</p>',
+    '<p><code>#def</code> verhält sich anders und entfaltet seinen Wert einmal je Durchgang' +
+      ', der Zahl-Platz bekommt also eine Zahl:</p>',
+    '<p><small><tt><a href="ex:61">#def %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
+      ' Ding|Dinge}</a><br>→&nbsp; 1 Ding</tt></small></p>',
+    '<p>Dafür gibt es überhaupt keine Zeile in der Tafel. Daher die Regel: machen Sie die Z' +
+      'ahl zu einer schlichten Ziffer oder einem <code>#def</code>, niemals zu einem <code>#s' +
+      'et</code>.</p>',
+    '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — Klammern in den ' +
+      'Formen</h3>',
+    '<p><small><tt><a href="ex:62">{plural %n%: {Ding|Sache}|Dinge}</a><br>→&nbsp; ｛plural ' +
+      '%n%: ｛Ding|Sache｝|Dinge｝</tt></small></p>',
+    '<p>Formen sind schlichter Text. Eine Auswahl darin wird nicht entfaltet, und das ganze' +
+      ' Konstrukt wird stattdessen in breiten Klammern gedruckt.</p>',
+    '<hr>',
+    '<h2 id="permutations">Mischungen</h2>',
+    '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — unbekannter Sc' +
+      'hlüssel in der Einstellung</h3>',
+    '<p><small><tt><a href="ex:63">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+      'small></p>',
+    '<p>Die bekannten Schlüssel sind <code>minsize</code>, <code>maxsize</code>, <code>sep<' +
+      '/code> und <code>lastsep</code>. Ein unbekannter ist keine Einstellung — und wenn er d' +
+      'as Einzige im Block ist, ist der ganze Block überhaupt keine Einstellung: er wird zum ' +
+      'Trennzeichen zwischen den Stücken, was die Ausgabe zeigt.</p>',
+    '<p><b>Steht ein wirklicher Schlüssel daneben, ist der Ausgang völlig anders</b>, und d' +
+      'as ist der wahrscheinlichere Fehler — ein Schlüssel von mehreren falsch getippt:</p>',
+    '<p><small><tt><a href="ex:64">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+      '></small></p>',
+    '<p>Der Block ist eine Einstellung, <code>sep</code> wird befolgt, der unbekannte Schlü' +
+      'ssel schlicht fallen gelassen, und die Tafel sagt in beiden Fällen dasselbe darüber. D' +
+      'ie Diagnose sagt Ihnen also, dass ein Schlüssel nicht verstanden wurde; sie sagt Ihnen' +
+      ' nicht, was danach geschah. Dafür lesen Sie die Ausgabe.</p>',
+    '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
+      '— minsize ist keine ganze Zahl</h3>',
+    '<p><small><tt><a href="ex:65">[&lt;minsize=zwei&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+      'mall></p>',
+    '<p>Ein nicht numerischer Wert fällt samt seiner Grenze weg, und es gilt die Vorgabe — ' +
+      'nämlich alle Stücke.</p>',
+    '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
+      '— maxsize ist keine ganze Zahl</h3>',
+    '<p><small><tt><a href="ex:66">[&lt;maxsize=viele&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
+      'small></p>',
+    '<p>Genau dasselbe vom anderen Ende: die obere Grenze verschwindet, und die Ausgabe ent' +
+      'hält wieder jedes Stück.</p>',
+    '<hr>',
+    '<h2 id="notes">Studio-Notizen ohne etwas zu zeigen</h2>',
+    '<p>Die drei Notizen unten lassen sich in diesem Dokument nicht durch ein Beispiel zeig' +
+      'en, und der Grund ist jedes Mal ein anderer und wird genannt. Artikel haben sie trotzd' +
+      'em: die Hilfe schuldet <b>jeder</b> Zeile, die die Tafel zeigen kann, eine Antwort, so' +
+      'nst führt eine Zeile ins Leere.</p>',
+    '<h3 id="note.raw-sentinel"><code>note.raw-sentinel</code> — ein Steuerzeichen im Text<' +
+      '/h3>',
+    '<p>Die Zeichen U+E000–U+E005 sind das, was die Maschine für ihre eigene Auszeichnung b' +
+      'enutzt, und sie <b>entfernt</b> sie vor dem Zerlegen. Sind sie in Ihre Vorlage geraten' +
+      ' — meist aus einem anderen Editor eingefügt —, sagt Studio es: weder die Vorschau noch' +
+      ' der Server werden sie zeigen.</p>',
+    '<p>Hier steht mit Absicht kein Beispiel: diese Zeichen sind unsichtbar, und eine Zeile' +
+      ' mit ihnen sähe leer aus. Es gäbe nichts zu sehen.</p>',
+    '<h3 id="note.unknown-target"><code>note.unknown-target</code> — der Satz ist leer, es ' +
+      'ist nichts zu beurteilen</h3>',
+    '<p>Sie erscheint, wenn der Satz neben dem Dokument <b>leer</b> ist: keine einzige Vorl' +
+      'age außer dieser. Es gibt nichts, woran das Ziel zu prüfen wäre, Studio sagt also nich' +
+      't „kein solches Ziel" — es sagt, dass es nicht antworten kann. Legen Sie eine einzige ' +
+      'Vorlage in diesen Ordner, und die Notiz weicht dem gewöhnlichen <code>include.unknown-' +
+      'target</code>, das in der Sache antwortet.</p>',
+    '<p>Ein nie gespeichertes Dokument hat <b>überhaupt</b> keinen Satz, und das ist ein dr' +
+      'itter Fall und nicht dieser: Einfügungen bleiben dann wörtlich in der Ausgabe stehen, ' +
+      'und die Tafel sagt nichts über sie. Speichern Sie das Dokument, und sie fangen an zu w' +
+      'irken.</p>',
+    '<p>Hier steht kein Beispiel, weil es keines geben kann: der Satz dieses Dokuments ist ' +
+      'oben genannt und nicht leer.</p>',
+    '<h3 id="note.too-deep"><code>note.too-deep</code> — Einfügungen zu tief verschachtelt<' +
+      '/h3>',
+    '<p>Die Maschine hält bei der zwanzigsten Ebene verschachtelter <code>#include</code> a' +
+      'n und setzt darunter nichts mehr ein. Die Grenze gehört der Familie: die JavaScript-, ' +
+      'PHP- und Python-Maschinen tun dasselbe, ein Dokument, das an sie stößt, verhält sich a' +
+      'lso überall gleich.</p>',
+    '<p>Hier steht kein Beispiel wegen seiner Größe: eines zu zeigen brauchte einundzwanzig' +
+      ' Dateien.</p>',
+    '<hr>',
+    '<h2 id="abbreviations">Eine Stille für jede Sprache: Abkürzungen</h2>',
+    '<h3 id="abbreviations-0">Eine Abkürzung lässt das nächste Wort klein</h3>',
+    '<p><small><tt><a href="ex:67">Dr. unsere Preise sind niedrig</a><br>→&nbsp; Dr. unsere' +
+      ' Preise sind niedrig<br><a href="ex:68">Xyz. unsere Preise sind niedrig</a><br>→&nbsp;' +
+      ' Xyz. Unsere Preise sind niedrig</tt></small></p>',
+    '<p>Zwei Zeilen, die sich in einem Wort unterscheiden, und das zweite Wort jeder sagt I' +
+      'hnen die Regel: nach <code>Dr.</code> bleibt der Satz klein, nach <code>Xyz.</code> wi' +
+      'rd er großgeschrieben. Die Maschine schreibt nach einem Punkt groß — außer nach einer ' +
+      'Abkürzung, die sie kennt, und nach allem in der Form von <code>z.B.</code> oder <code>' +
+      'd.h.</code>. Sie ist still: keine Diagnose, keine Warnung, und der einzige Weg, es zu ' +
+      'merken, ist die Ausgabe zu lesen.</p>',
+    '<p><b>Die Liste ist nicht deutsch, und auch nicht englisch.</b> Sie hat 46 Einträge, u' +
+      'nd 29 davon sind russisch:</p>',
+    '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
+    '<tr><th></th><th></th></tr>',
+    '<tr><td>lateinisch</td><td><code>etc vs mr mrs ms dr prof sr jr inc ltd co corp no st ' +
+      'ave blvd</code></td></tr>',
+    '<tr><td>kyrillisch</td><td><code>соц эл см ср ст ул пр пер г р руб коп тыс млн млрд тр' +
+      'лн доп напр прим изд обл респ стр табл рис мин макс тел факс</code></td></tr>',
+    '</table>',
+    '<p>Beide Hälften gelten in <b>jeder</b> Locale — die Regel fragt nie, welche Sprache S' +
+      'ie eingestellt haben. <code>руб.</code> schützt das nächste Wort also in einem deutsch' +
+      'en Dokument, und <code>Dr.</code> schützt es in einem russischen.</p>',
+    '<p>Für deutsche Texte ist die Folge einfach und unangenehm: von den Abkürzungen, die S' +
+      'ie täglich schreiben, stehen nur <code>Dr.</code> und <code>Prof.</code> in der Liste,' +
+      ' weil sie sich zufällig mit der lateinischen Hälfte decken. <code>Nr.</code>, <code>bz' +
+      'w.</code>, <code>usw.</code>, <code>Str.</code> und <code>ca.</code> stehen nicht dari' +
+      'n und beenden einen Satz. Die Formen mit mehreren Punkten — <code>z.B.</code>, <code>d' +
+      '.h.</code>, <code>u.a.</code> — sind davon nicht betroffen; für die einzelnen Wörter h' +
+      'ilft nur, umzuformulieren.</p>',
+    '<hr>',
+    '<h2 id="correct">Wie die richtige Form aussieht</h2>',
+    '<p><small><tt><a href="ex:69">ein Preis {billig|teuer}</a><br>→&nbsp; Ein Preis billig' +
+      '</tt></small></p>',
+    '<p><small><tt><a href="ex:70">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+      't></small></p>',
+    '<p><small><tt><a href="ex:71">#set %vip% = 1</a><br><a href="ex:71">{?vip?für Sie|für ' +
+      'alle}</a><br>→&nbsp; Für Sie</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %n% = 5</a><br><a href="ex:72">%n% {plural %n%: Stü' +
+      'ck|Stücke}</a><br>→&nbsp; 5 Stücke</tt></small></p>',
+    '<p><small><tt><a href="ex:73">vorher /# eine Notiz #/ danach</a><br>→&nbsp; Vorher dan' +
+      'ach</tt></small></p>',
+    '<p>Fünf Konstrukte, fünf saubere Zeilen: eine Auswahl, eine Mischung mit Einstellungen' +
+      ', eine Bedingung, eine Zahlform mit einer Zahl davor und ein Kommentar. Keines davon s' +
+      'etzt etwas in die Tafel.</p>',
+    '<hr>',
+    '<h2 id="faq">Häufig gefragt</h2>',
+    '<p><b>Warum ist der Absatz einfach verschwunden?</b> Zwei häufige Ursachen, beide oben' +
+      ': ein unbekanntes <code>#include</code>-Ziel und eine Einfügung im Kreis. Beide drucke' +
+      'n nichts. Die dritte, die man zuerst verdächtigt — die falsche Zahl von Zahlformen — d' +
+      'ruckt <b>nicht</b> nichts: die Maschine druckt das ganze Konstrukt in breiten Klammern' +
+      ' <code>｛｝</code>. Leere kommt dort von einer nicht numerischen Zahl und nicht von der ' +
+      'Zahl der Formen.</p>',
+    '<p><b>Warum wirkt meine Variable mit Umlaut im Namen nicht?</b> Namen bestehen aus lat' +
+      'einischen Buchstaben, Ziffern und dem Unterstrich. <code>%größe%</code> ist überhaupt ' +
+      'keine Nennung einer Variablen — die Maschine liest es als Text und sagt nichts, weil e' +
+      's aus ihrer Sicht nichts zu melden gibt:</p>',
+    '<p><small><tt><a href="ex:74">hallo %größe% und %name%</a><br>→&nbsp; Hallo %größe% un' +
+      'd %name%</tt></small></p>',
+    '<p>Beide kamen unverändert durch, und das ist die Falle: nur das zweite zog eine Zeile' +
+      ' in der Tafel. Das erste ist still, nichts sagt Ihnen also, dass es nie eingesetzt wer' +
+      'den wird. Benennen Sie es um. Im <b>Wert</b> sind Umlaute dagegen völlig in Ordnung.</' +
+      'p>',
+    '<p><b>Warum wird derselbe Fehler zweimal gezeigt?</b> Ein Kreis von Festlegungen zieht' +
+      ' eine Zeile für jede Nennung, die ihn schließt — zwei Stellen zum Ansehen, manchmal dr' +
+      'ei. Das sind keine Dubletten, und sie werden nicht zusammengefasst.</p>',
+    '<p><b>Die Tafel sagt Fehler und die Ausgabe sieht richtig aus. Was denn nun?</b> Beide' +
+      's. Das kommt bei einem doppelt festgelegten Namen vor: das Rendern ist richtig — der l' +
+      'etzte Wert gewinnt — und das Dokument ist mehrdeutig. Das Urteil gilt dem Dokument und' +
+      ' nicht dieser einen Ausgabe.</p>',
+    '<p><b>Ich habe die Locale gewechselt und das Dokument wurde rot.</b> Das ist die Local' +
+      'e bei der Arbeit. Das Demo-Dokument ist englisch, und seine Zahlformen tragen zwei For' +
+      'men; stellen Sie die Locale auf Russisch, und aus diesen zwei Formen wird ein Fehler d' +
+      'er Anzahl, weil Russisch drei verlangt. Deutsch verlangt wie Englisch zwei, das Demo-D' +
+      'okument bleibt unter <code>de</code> also ruhig. Die Locale gehört zum <b>Dokument</b>' +
+      ', weshalb Studio sie nicht ändert, wenn Sie die Sprache der Oberfläche wechseln.</p>',
+    '<p><b>Stimmt die Vorschau mit dem überein, was mein Server ausgibt?</b> Mit derselben ' +
+      'Maschine, derselben Version, derselben Locale und denselben Werten — ja, genau, und ge' +
+      'nau darum lässt die Vorschau das wirkliche <code>spintax-win</code> laufen und keine A' +
+      'nnäherung daran. Mit einer <b>anderen</b> Maschine der Familie — der für JavaScript, P' +
+      'HP oder Python — überträgt sich das Urteil und die Menge der Texte, die die Vorlage he' +
+      'rgeben kann, aber nicht, welchen davon ein bestimmter Startwert zieht. Genau diese Zie' +
+      'hung zu wiederholen verspricht die Familie nicht.</p>'
   );
 
   { The templates the `ex:N` links point at, verbatim as the fixture ran them. }
-  HELP_EX_FIRST: array[0..1] of Integer = (
-    0, 74
+  HELP_EX_FIRST: array[0..2] of Integer = (
+    0, 74, 154
   );
-  HELP_EX_LAST: array[0..1] of Integer = (
-    73, 153
+  HELP_EX_LAST: array[0..2] of Integer = (
+    73, 153, 228
   );
-  HELP_EX_TEMPLATE: array[0..153] of string = (
+  HELP_EX_TEMPLATE: array[0..228] of string = (
     '{Hi|Hello} there.',
     'A {small|large} room.',
     'Acme {Pro {Plus|Max}|Lite}',
@@ -2162,23 +3095,177 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: товар|товара|товаров}',
-    'до /# заметка #/ после'
+    'до /# заметка #/ после',
+    '{Hallo|Guten Tag} zusammen.',
+    'Ein {kleiner|großer} Raum.',
+    'Acme {Pro {Plus|Max}|Lite}',
+    'Ein {|sehr }großer Raum.',
+    '[rot|grün|blau]',
+    '[<, >rot|grün|blau]',
+    '[<maxsize 2>rot|grün|blau]',
+    '[<xmaxsize=1>rot|grün|blau]',
+    '[<sep=", ";lastsep=" und ">rot|grün|blau]',
+    '[<minsize=2;maxsize=2>rot|grün|blau]',
+    '[<maxsize=3>a|b|c]',
+    '[<minsize=3;maxsize=1>rot|grün|blau]',
+    '[rot|grün<und>|blau]',
+    '[rot|grün|blau<und>]',
+    '#set %stadt% = Berlin' +
+      #10 +
+      'Flug nach %stadt%.',
+    '#set %wahl% = {A|B}' +
+      #10 +
+      '%wahl% %wahl% %wahl%',
+    '#def %wahl% = {A|B}' +
+      #10 +
+      '%wahl% %wahl% %wahl%',
+    '#set %n% = 5' +
+      #10 +
+      '{?n?wir haben %n%|noch nichts}',
+    '#set %vip% = 1' +
+      #10 +
+      '{?!vip?Fremder|Freund}',
+    '#def %n% = 1' +
+      #10 +
+      '%n% {plural %n%: Datei|Dateien}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: Datei|Dateien}',
+    '#set %n% = {5|5}' +
+      #10 +
+      '%n% {plural %n%: Datei|Dateien}',
+    '#include "intro"',
+    '#set %marke% = Acme' +
+      #10 +
+      '#include "shout"',
+    'Entwurf /# unsicher ob das bleibt #/ fertig',
+    'eins. zwei. drei.',
+    'z.B. das bleibt klein',
+    'Dr. unsere Preise sind niedrig',
+    'Xyz. unsere Preise sind niedrig',
+    'hallo , Welt',
+    'eins.zwei',
+    'bzw. unsere Preise sind niedrig',
+    'Vorher. #include "intro"',
+    '{?1x?ja|nein}',
+    '[rot|<und>grün]',
+    '[<und>rot|grün]',
+    '[eins<br>|zwei]',
+    '[rot|grün<br>|blau]',
+    'vorher /# der Rest davon',
+    '{a /# ups|b} Mitte #/ Schwanz',
+    'ein Preis {billig|teuer',
+    'ein Preis {billig|teuer]',
+    'ein Preis billig} und alles',
+    '#set stadt = Berlin' +
+      #10 +
+      'in %stadt%',
+    '#def seiten = {1|3}' +
+      #10 +
+      '%seiten%',
+    '#set %x% = erste' +
+      #10 +
+      '#set %x% = zweite' +
+      #10 +
+      '%x%',
+    '#def %x% = #include "frag"' +
+      #10 +
+      '%x%',
+    'hallo, %name%',
+    '#set %marke% = {Vulkan}' +
+      #10 +
+      'Kasino %marke%',
+    '#set %x% = a %x% b' +
+      #10 +
+      '%x%',
+    '#set %x% = %y%' +
+      #10 +
+      '#set %y% = %x%' +
+      #10 +
+      '%x%',
+    'vorher #include "frag" danach',
+    '#include "frag"',
+    '#include' +
+      #10 +
+      '"frag"',
+    '#include "nichtda"',
+    '#include "intro"',
+    '#include "loop"',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: Ding|Dinge|Dingse}',
+    '{plural %n%: Ding|Dinge}',
+    '{plural %n%: Ding|Dinge|Dingse}',
+    '#set %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: Ding|Dinge}',
+    '#def %n% = {1|2}' +
+      #10 +
+      '%n% {plural %n%: Ding|Dinge}',
+    '{plural %n%: {Ding|Sache}|Dinge}',
+    '[<foo=1>a|b|c]',
+    '[<sep=", ";foo=1>a|b|c]',
+    '[<minsize=zwei>a|b|c]',
+    '[<maxsize=viele>a|b|c]',
+    'Dr. unsere Preise sind niedrig',
+    'Xyz. unsere Preise sind niedrig',
+    'ein Preis {billig|teuer}',
+    '[<minsize=2;sep=", ">a|b|c]',
+    '#set %vip% = 1' +
+      #10 +
+      '{?vip?für Sie|für alle}',
+    '#set %n% = 5' +
+      #10 +
+      '%n% {plural %n%: Stück|Stücke}',
+    'vorher /# eine Notiz #/ danach',
+    'hallo %größe% und %name%'
   );
-  HELP_EX_DOC: array[0..153] of Integer = (
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_EX_DOC: array[0..228] of Integer = (
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
-  HELP_ANCHOR_FIRST: array[0..1] of Integer = (
-    0, 31
+  HELP_ANCHOR_FIRST: array[0..2] of Integer = (
+    0, 31, 62
   );
-  HELP_ANCHOR_LAST: array[0..1] of Integer = (
-    30, 61
+  HELP_ANCHOR_LAST: array[0..2] of Integer = (
+    30, 61, 92
   );
-  HELP_ANCHOR_PAGE: array[0..61] of Integer = (
-    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
+  HELP_ANCHOR_PAGE: array[0..92] of Integer = (
+    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
   );
-  HELP_ANCHOR_ID: array[0..61] of string = (
+  HELP_ANCHOR_ID: array[0..92] of string = (
+    'choices-0',
+    'choices-1',
+    'shuffles-0',
+    'shuffles-1',
+    'shuffles-2',
+    'macros-0',
+    'fragments-0',
+    'bracket.unclosed',
+    'bracket.mismatched',
+    'bracket.unexpected-closing',
+    'set.malformed',
+    'def.malformed',
+    'definition.duplicate-name',
+    'def.include-in-value',
+    'variable.undefined',
+    'variable.self-reference',
+    'variable.circular-reference',
+    'includes-0',
+    'include.unknown-target',
+    'note.case-mismatch',
+    'note.cycle',
+    'plural.arity',
+    'plural.count-macro',
+    'plural.nested-brackets',
+    'permutation.unknown-key',
+    'permutation.minsize-not-integer',
+    'permutation.maxsize-not-integer',
+    'note.raw-sentinel',
+    'note.unknown-target',
+    'note.too-deep',
+    'abbreviations-0',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -2242,7 +3329,7 @@ const
     'note.too-deep',
     'abbreviations-0'
   );
-  HELP_ANCHOR_TITLE: array[0..61] of string = (
+  HELP_ANCHOR_TITLE: array[0..92] of string = (
     'Nesting',
     'An empty option',
     'The separator',
@@ -2305,10 +3392,42 @@ const
     '`note.raw-sentinel` — служебный символ в тексте',
     '`note.unknown-target` — набор пуст, и судить не о чем',
     '`note.too-deep` — вставки вложены слишком глубоко',
-    'Сокращение оставляет следующее слово строчным'
+    'Сокращение оставляет следующее слово строчным',
+    'Verschachtelung',
+    'Eine leere Möglichkeit',
+    'Das Trennzeichen',
+    'Wie viele',
+    'Ein Trennzeichen zwischen zwei Stücken',
+    '`#set` würfelt erneut, `#def` würfelt einmal',
+    'Ein Ausschnitt sieht Ihre Makros nicht',
+    '`bracket.unclosed` — eine Klammer wird geöffnet und nie geschlossen',
+    '`bracket.mismatched` — von einer Klammer anderer Art geschlossen',
+    '`bracket.unexpected-closing` — eine schließende Klammer ohne offene',
+    '`set.malformed` — diese `#set`-Zeile folgt nicht der Regel',
+    '`def.malformed` — diese `#def`-Zeile folgt nicht der Regel',
+    '`definition.duplicate-name` — dieser Name ist oben schon festgelegt',
+    '`def.include-in-value` — `#include` im Wert einer Festlegung',
+    '`variable.undefined` — diese Variable ist nirgends festgelegt',
+    '`variable.self-reference` — die Festlegung nennt sich selbst',
+    '`variable.circular-reference` — die Festlegungen nennen sich im Kreis',
+    '`#include` wirkt nur am Zeilenanfang',
+    '`include.unknown-target` — kein solches Ziel im Satz',
+    '`note.case-mismatch` — das Ziel gibt es, in anderer Schreibung',
+    '`note.cycle` — eine Einfügung im Kreis',
+    '`plural.arity` — nicht so viele Formen, wie die Locale verlangt',
+    '`plural.count-macro` — die Zahl kommt aus einem `#set`, und das würfelt bei jeder Nenn' +
+      'ung neu',
+    '`plural.nested-brackets` — Klammern in den Formen',
+    '`permutation.unknown-key` — unbekannter Schlüssel in der Einstellung',
+    '`permutation.minsize-not-integer` — minsize ist keine ganze Zahl',
+    '`permutation.maxsize-not-integer` — maxsize ist keine ganze Zahl',
+    '`note.raw-sentinel` — ein Steuerzeichen im Text',
+    '`note.unknown-target` — der Satz ist leer, es ist nichts zu beurteilen',
+    '`note.too-deep` — Einfügungen zu tief verschachtelt',
+    'Eine Abkürzung lässt das nächste Wort klein'
   );
-  HELP_ANCHOR_CODE: array[0..61] of Boolean = (
-    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
+  HELP_ANCHOR_CODE: array[0..92] of Boolean = (
+    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
   );
 
 function SpxHelpLangCode(ALang: Integer): string;

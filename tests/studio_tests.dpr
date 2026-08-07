@@ -3600,7 +3600,7 @@ type
   end;
 
 const
-  HELP_DOCS: array[0..5] of THelpDoc = (
+  HELP_DOCS: array[0..8] of THelpDoc = (
     (Path: 'docs/help/en/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
     (Path: 'docs/help/ru/diagnostics.md'; Examples: 38; Codes: True;  Good: 8),
     (Path: 'docs/help/en/syntax.md';      Examples: 38; Codes: False; Good: 34),
@@ -3609,6 +3609,9 @@ const
       the LANGUAGE works and never what this program is. It carries one example, because it is
       about the window rather than the syntax, and that one is gated like every other. }
     (Path: 'docs/help/en/studio.md';      Examples: 1;  Codes: False; Good: 1),
+    (Path: 'docs/help/de/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
+    (Path: 'docs/help/de/syntax.md';      Examples: 39; Codes: False; Good: 35),
+    (Path: 'docs/help/de/studio.md';      Examples: 1;  Codes: False; Good: 1),
     (Path: 'docs/help/ru/studio.md';      Examples: 1;  Codes: False; Good: 1));
 
 { `docs/help/ru/diagnostics.md` -> `ru/diagnostics`, for check names that say which document. }
@@ -3966,9 +3969,10 @@ type
   end;
 
 const
-  HELP_LANG_FACTS: array[0..1] of THelpLangFacts = (
+  HELP_LANG_FACTS: array[0..2] of THelpLangFacts = (
     (Code: 'en'; CleanExamples: 47; Silences: 5),
-    (Code: 'ru'; CleanExamples: 54; Silences: 7));
+    (Code: 'ru'; CleanExamples: 54; Silences: 7),
+    (Code: 'de'; CleanExamples: 48; Silences: 6));
 
 function HelpFactsFor(const ACode: string; out AFacts: THelpLangFacts): Boolean;
 var i: Integer;
