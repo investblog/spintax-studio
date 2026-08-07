@@ -3846,6 +3846,153 @@ begin
       Result.Add(Copy(GRanTemplates[i], Length(head) + 1, MaxInt));
 end;
 
+(* ▁▁▁ AND THE LIST ITSELF, HELD AGAINST THE ENGINE ▁▁▁
+
+   `ENGINE_CODES` above is spelled out by hand, which is right -- deriving it at RUNTIME would
+   mean the help's obligation moved whenever the engine did, silently, which is the opposite of
+   what a ratchet is for. But a hand-written list has its own hole: a code the engine gains and
+   nobody transcribes is enforced NOWHERE. The suite would not ask for an article, the generator
+   has no notion of codes, and the first sign of it would be a reader double-clicking a
+   diagnostic row and landing on the contents page.
+
+   So the list is compared against the pinned engine's own source. Every string literal in it
+   shaped like a code -- `word.word-word` -- must be in the list, and every entry of the list
+   must be somewhere in that file. Both directions matter: the first catches a code the engine
+   added, the second catches one it dropped while the help went on documenting it.
+
+   It reads the engine as TEXT rather than calling it, because there is no API that enumerates
+   the codes and inventing one in the engine for the sake of a consumer's test would be the
+   wrong way round. The cost is a false positive if the engine ever holds an unrelated literal
+   of that shape; that is a red build with a name on it, which is the safe direction. *)
+procedure TestEngineCodeList;
+const SRC = 'engine/src/Spintax.pas';
+var
+  txt, lit: string;
+  found, missing, extra: TStringList;
+  i, j, k: Integer;
+
+  function LooksLikeACode(const S: string): Boolean;
+  var d, n: Integer;
+  begin
+    Result := False;
+    d := Pos('.', S);
+    if (d < 2) or (d = Length(S)) then Exit;
+    for n := 1 to Length(S) do
+      if not ((S[n] in ['a'..'z']) or (S[n] = '.') or (S[n] = '-')) then Exit;
+    { one dot, and nothing doubled }
+    if Pos('.', Copy(S, d + 1, MaxInt)) > 0 then Exit;
+    Result := True;
+  end;
+
+begin
+  if not FileExists(SRC) then
+  begin
+    { A clone without `--recurse-submodules`. Say so rather than passing quietly. }
+    CheckTrue('engine/codes/the engine source is here to compare against', False);
+    Exit;
+  end;
+  found := TStringList.Create;
+  missing := TStringList.Create;
+  extra := TStringList.Create;
+  try
+    missing.LoadFromFile(SRC);      { borrowed as a reader; cleared right back }
+    txt := missing.Text;
+    missing.Clear;
+    found.Sorted := True;
+    found.Duplicates := dupIgnore;
+    (* NOT by pairing quotes. The first version walked the file opening a literal at every `'`
+       and closing it at the next one -- and this source is mostly PROSE, whose apostrophes
+       ("does not", "the engine's") desynchronise the pairing at once: it found six codes of
+       seventeen and reported the other eleven as dropped. What is looked for instead is a RUN
+       of the code alphabet with a quote hard against each end, which needs no pairing at all
+       and cannot drift. *)
+    i := 1;
+    while i <= Length(txt) do
+    begin
+      if txt[i] in ['a'..'z'] then
+      begin
+        j := i;
+        while (j <= Length(txt)) and (txt[j] in ['a'..'z', '.', '-']) do Inc(j);
+        lit := Copy(txt, i, j - i);
+        if (i > 1) and (txt[i - 1] = #39) and (j <= Length(txt)) and (txt[j] = #39) and
+           LooksLikeACode(lit) then
+          found.Add(lit);
+        i := j;
+      end
+      else Inc(i);
+    end;
+
+    for i := 0 to found.Count - 1 do
+    begin
+      k := -1;
+      for j := Low(ENGINE_CODES) to High(ENGINE_CODES) do
+        if ENGINE_CODES[j] = found[i] then k := j;
+      if k < 0 then missing.Add(found[i]);
+    end;
+    for j := Low(ENGINE_CODES) to High(ENGINE_CODES) do
+      if found.IndexOf(ENGINE_CODES[j]) < 0 then extra.Add(ENGINE_CODES[j]);
+
+    Check('engine/codes/the engine emits none this list has not got',
+          missing.CommaText, '');
+    Check('engine/codes/this list names none the engine has dropped',
+          extra.CommaText, '');
+    CheckTrue('engine/codes/there were codes to compare', found.Count > 0);
+  finally
+    extra.Free;
+    missing.Free;
+    found.Free;
+  end;
+end;
+
+(* ▁▁▁ ONE ROW PER HELP LANGUAGE, AND ADDING A LANGUAGE EDITS NOTHING ELSE HERE ▁▁▁
+
+   These two numbers were spelled into the middle of two different checks, one of them as
+   `if code = 'en' then 47 else 54` -- which does not fail for a third language, it quietly
+   hands it Russian's number and passes. The other was `array[0..1]`, which skipped a third
+   language altogether. Both are the same mistake in opposite directions: a per-language fact
+   written where only two languages could ever be meant.
+
+   Twelve more languages are the next slice, so the shape has to be a table keyed by the
+   language's own code, with a NAMED failure for a language that has no row. Both numbers stay
+   exact ratchets -- a new counter-example must be counted, not absorbed. *)
+type
+  THelpLangFacts = record
+    Code: string;
+    { Examples that draw no diagnostic row at all, across every document of the language. }
+    CleanExamples: Integer;
+    { Bolded claims in the `silences` chapter. Legitimately different per language: two of the
+      Russian silences are about Cyrillic text and have no English counterpart. }
+    Silences: Integer;
+  end;
+
+const
+  HELP_LANG_FACTS: array[0..1] of THelpLangFacts = (
+    (Code: 'en'; CleanExamples: 47; Silences: 5),
+    (Code: 'ru'; CleanExamples: 54; Silences: 7));
+
+function HelpFactsFor(const ACode: string; out AFacts: THelpLangFacts): Boolean;
+var i: Integer;
+begin
+  for i := Low(HELP_LANG_FACTS) to High(HELP_LANG_FACTS) do
+    if HELP_LANG_FACTS[i].Code = ACode then
+    begin
+      AFacts := HELP_LANG_FACTS[i];
+      Exit(True);
+    end;
+  AFacts := Default(THelpLangFacts);
+  Result := False;
+end;
+
+{ Whether an interface language has a help document of its OWN, rather than falling back. The
+  answer is the shipped unit's, not a list of codes written here. }
+function HelpHasOwnDocument(const ACode: string): Boolean;
+var i: Integer;
+begin
+  Result := False;
+  for i := 0 to SPX_HELP_LANG_COUNT - 1 do
+    if SpxHelpLangCode(i) = ACode then Exit(True);
+end;
+
 procedure CheckHelpDoc(const ADoc: THelpDoc);
 var
   line, want, doc_, got, tag, key, val, label_, locale, empty_: string;
@@ -4240,10 +4387,8 @@ end;
    as an abbreviation -- because the engine's word-boundary check is ASCII. They are not English
    readers' silences, and a shared list would have forced one language to carry the other's. *)
 procedure TestHelpSilences;
-const
-  { en, ru. A number, deliberately: see above. }
-  WANT: array[0..1] of Integer = (5, 7);
 var lang, page, at, nextAt, claims, shown, ex: Integer; html: string;
+    facts: THelpLangFacts;
 begin
   for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
   begin
@@ -4269,9 +4414,14 @@ begin
     end;
     Check('help/silences/' + SpxHelpLangCode(lang) + '/every claim is shown, not just made',
           IntToStr(shown), IntToStr(claims));
-    if lang <= High(WANT) then
+    { A number, deliberately: see above. Per language, because two of the Russian silences are
+      about Cyrillic text and have no English counterpart. }
+    if HelpFactsFor(SpxHelpLangCode(lang), facts) then
       Check('help/silences/' + SpxHelpLangCode(lang) + '/the chapter still names this many',
-            IntToStr(claims), IntToStr(WANT[lang]));
+            IntToStr(claims), IntToStr(facts.Silences))
+    else
+      Check('help/silences/' + SpxHelpLangCode(lang) + '/has a row in HELP_LANG_FACTS',
+            'missing', 'present');
   end;
 end;
 
@@ -5181,7 +5331,8 @@ end;
 
 procedure TestHelpUnit;
 var
-  lang, page, i, seen, p_: Integer;
+  lang, page, i, seen, p_, page_: Integer;
+  facts: THelpLangFacts;
   html, ids, want, got, s_: string;
   k: TSpxNoteKind;
   arts, hrefs: TStringList;
@@ -5651,7 +5802,9 @@ begin
     lang := SpxHelpLangFor(TSpxLang(i));
     CheckTrue('help/nav/' + SpxLangCode(TSpxLang(i)) + ' resolves to a document',
               (lang >= 0) and (lang < SPX_HELP_LANG_COUNT));
-    if (SpxLangCode(TSpxLang(i)) = 'en') or (SpxLangCode(TSpxLang(i)) = 'ru') then
+    { Which languages have their own document is the UNIT's answer, not a pair of literals:
+      with `de` registered, the old form asserted that German falls back to English. }
+    if HelpHasOwnDocument(SpxLangCode(TSpxLang(i))) then
     begin
       Check('help/nav/' + SpxLangCode(TSpxLang(i)) + ' gets its own document',
             SpxHelpLangCode(lang), SpxLangCode(TSpxLang(i)));
@@ -5660,8 +5813,8 @@ begin
     end
     else
     begin
-      Check('help/nav/' + SpxLangCode(TSpxLang(i)) + ' falls back to English',
-            SpxHelpLangCode(lang), 'en');
+      Check('help/nav/' + SpxLangCode(TSpxLang(i)) + ' falls back to the first language',
+            SpxHelpLangCode(lang), SpxHelpLangCode(0));
       CheckTrue('help/nav/' + SpxLangCode(TSpxLang(i)) + ' is NOT translated, and says so',
                 not SpxHelpIsTranslated(TSpxLang(i)));
     end;
@@ -5850,9 +6003,12 @@ begin
     48 pages. So a title query matches through the body anyway, and guarding the title branch
     left the suite green. What is asserted now is the OUTCOME the reader depends on -- the
     chapter is found by the name the contents tree shows, and it is that chapter. }
-  hits := SpxHelpFind(0, SpxHelpPageTitle(0, 3), False);
+  { By SLUG, not by position: a page inserted anywhere before this one used to move the
+    number, and the check would then be about whichever chapter had slid into index 3. }
+  page_ := SpxHelpPageIndex(0, 'groups');
+  hits := SpxHelpFind(0, SpxHelpPageTitle(0, page_), False);
   CheckTrue('help/find/a page is found by its title', Length(hits) > 0);
-  Check('help/find/and that page is the first hit', IntToStr(hits[0].Page), '3');
+  Check('help/find/and that page is the first hit', IntToStr(hits[0].Page), IntToStr(page_));
   Check('help/find/on the page itself, not inside an article', hits[0].Anchor, '');
 
   { ENTITIES ARE DECODED BEFORE THE MATCH. `<foo=1>` is stored as `&lt;foo=1&gt;` and drawn as
@@ -5921,7 +6077,9 @@ begin
     version asserted `(ins > 0) and (ins < count)`, which passes for anything from 1 to 32:
     review changed the helper so the numbers moved by three per language and the suite reported
     the same 6010 checks, 0 failed. A check indifferent to a fifth of its subject is not one. }
-  Check('help/offer/languages this count is written for', IntToStr(SPX_HELP_LANG_COUNT), '2');
+  { Derived, so registering a language cannot leave a number behind. }
+  Check('help/offer/every shipped language has a row in HELP_LANG_FACTS',
+        IntToStr(SPX_HELP_LANG_COUNT), IntToStr(Length(HELP_LANG_FACTS)));
   for i := 0 to SPX_HELP_LANG_COUNT - 1 do
   begin
     ins := 0;
@@ -5934,10 +6092,12 @@ begin
       language reference is the other way round, because it demonstrates constructs that work.
       The product guide adds exactly one, which is clean. Exact, so a new counter-example
       cannot arrive without being counted. }
-    if SpxHelpLangCode(i) = 'en' then
-      Check('help/offer/en/clean example count', IntToStr(ins), '47')
+    if HelpFactsFor(SpxHelpLangCode(i), facts) then
+      Check('help/offer/' + SpxHelpLangCode(i) + '/clean example count',
+            IntToStr(ins), IntToStr(facts.CleanExamples))
     else
-      Check('help/offer/ru/clean example count', IntToStr(ins), '54');
+      Check('help/offer/' + SpxHelpLangCode(i) + '/has a row in HELP_LANG_FACTS',
+            'missing', 'present');
   end;
 end;
 
@@ -7892,6 +8052,7 @@ begin
   TestLongestLine;
   TestHtmlScan;
   TestGroups;
+  TestEngineCodeList;
   TestHelpExamples;
   TestHelpSilences;
   TestOfflineClaim;

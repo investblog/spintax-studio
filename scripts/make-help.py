@@ -936,6 +936,19 @@ def main():
                 if ca != cb:
                     raise SystemExit('section %d (%s) holds %s in %s but %s in %s'
                                      % (i, a['slug'], ca, a_doc['path'], cb, b_doc['path']))
+                # AND THE PROSE HEADINGS MUST LINE UP TOO, because their ids are POSITIONAL --
+                # `slug-0`, `slug-1`, counted over every ### on the page. A section with three
+                # of them in one language and two in another gives the same id to different
+                # headings, and SpxHelpRelocate then lands a reader who switches language on
+                # the wrong paragraph -- silently, since the id resolves. It has never happened
+                # with two languages that were written together; with twelve translated later
+                # it is a matter of time, and the check costs one comparison.
+                na = [x['id'] for x in a['anchors'] if not x['code']]
+                nb = [x['id'] for x in b['anchors'] if not x['code']]
+                if na != nb:
+                    raise SystemExit('section %d (%s) has prose headings %s in %s but %s in %s '
+                                     '-- their ids are positional, so they must match'
+                                     % (i, a['slug'], na, a_doc['path'], nb, b_doc['path']))
 
     # ── flat tables ────────────────────────────────────────────────────────────────────────
     # A SLUG IS LOOKED UP ACROSS THE WHOLE LANGUAGE, because that is what a page number is to

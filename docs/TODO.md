@@ -503,6 +503,48 @@ is a deliberate state and not a backlog of things anyone forgot.
    a defect. It gained a companion that shows the behaviour at this document's own seed instead
    of describing an unreachable one.
 
+16. **The help machinery stopped assuming two languages** (2026-08-07), which is the thing that
+   had to happen before the first translation rather than during it. Five places in the suite
+   were written when two was the only number there could be, and they failed in two opposite
+   ways — which is the part worth keeping:
+
+   - `if code = 'en' then 47 else 54` **does not fail for a third language.** It hands it
+     Russian's number and passes. A wrong pass is worse than a red build, and this shape had it.
+   - `WANT: array[0..1]` **skips** a third language instead, so its silences chapter would have
+     had no ratchet at all and nobody would have known.
+
+   Both are now one table keyed by the language's own code — `HELP_LANG_FACTS`, with the clean
+   example count and the silences count — and a language with no row fails **by name**. Proved
+   by deleting the Russian row: three named checks go red, none of them silently borrowing
+   English's numbers. The count of registered languages is derived from the table's length; the
+   fallback loop asks the shipped unit which languages have their own document instead of naming
+   `en` and `ru`; and the search check looks its page up by slug, where it used to assert index
+   `3` and would have followed whichever chapter slid into that position.
+
+   **`ENGINE_CODES` is now held against the engine.** It is spelled out by hand on purpose — a
+   list derived at runtime would move whenever the engine did, silently, which is the opposite of
+   a ratchet — but a hand-written list has its own hole: a code the engine gains and nobody
+   transcribes is enforced NOWHERE, and the first sign would be a reader double-clicking a
+   diagnostic row and landing on the contents page. The suite reads `engine/src/Spintax.pas` as
+   text and compares in both directions. Proved by removing one entry: it is named exactly.
+
+   *The first version of that scanner walked the file pairing quotes, and the engine's source is
+   mostly PROSE — its apostrophes ("does not", "the engine's") desynchronised the pairing at the
+   first one. It found 6 codes of 17 and reported the other 11 as dropped, which reads exactly
+   like a real regression. What it looks for now is a run of the code alphabet with a quote hard
+   against each end, which needs no pairing and cannot drift.*
+
+   **And the generator now refuses mismatched prose headings.** Its cross-language check compared
+   the CODE anchors per section and let the positional ones (`slug-0`, `slug-1`) differ — so a
+   section with three prose headings in one language and two in another gives the same id to
+   different paragraphs, and a reader switching language lands on the wrong one, silently, since
+   the id resolves. Never seen with two languages written together; a matter of time with twelve
+   translated later. One comparison, with a message naming both files.
+
+   What is deliberately KEPT is the all-or-nothing rule: a language is registered with all three
+   documents running parallel, or it is not registered and falls back to English. That is what
+   makes a half-translated document impossible, and it is the intended pressure.
+
 **Not on the list, and not an oversight:** the listing's website and support URI both point at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
 decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store
