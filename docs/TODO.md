@@ -1791,6 +1791,65 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       внутри одного** — проверка «на каждый код по статье» делает полудокумент невозможным по
       построению. Просмотрщик обязан честно сказать, на каком языке показывает.
 
+## The Store says this application speaks one language. It speaks fourteen.
+
+- [ ] **`<Resources>` in the manifest declares `en-us` and nothing else, so the listing
+      advertises English only.** Measured on 2026-08-09, inside the package that was being
+      submitted as `v0.1.1.0` — not from the draft, from the artefact:
+
+      ```
+      AppxManifest.xml   ->   <Resources><Resource Language="en-us" /></Resources>
+      resources.pri      ->   absent (the package has 11 entries: manifest, exe, seven PNGs,
+                              the block map and the content types)
+      storefront JSON    ->   SupportedLanguages = ["English (United States)"]
+      ```
+
+      The window has spoken fourteen languages since long before R0, and the help has answered
+      in all fourteen since 2026-08-07. **This is not a missing feature, it is a false claim
+      about the product on its own storefront** — the same class as `LegalCopyright="MIT"` and
+      the Apache-2.0 feature bullet, and it costs the same thing: a reader searching the Store
+      in their own language never finds an application that would have answered them in it.
+
+      Nothing caught it because nothing compares the manifest to `gui/lang/`. The suite already
+      counts the fourteen language tables and the fourteen help folders and holds them to each
+      other; the manifest is the third place that fact lives and the only one outside the gate.
+
+      The work, in order:
+
+      1. `packaging/AppxManifest.xml.in` — one `<Resource Language="…" />` per shipped
+         language, generated from the same list the flag strip and `SpxTexts*.pas` come from
+         rather than typed out. A hand-written list of another component's constants is
+         enforced nowhere, which this project has paid for twice (`ENGINE_CODES`, the icon
+         sizes).
+      2. **A gate between them**, or item 1 rots the day a fifteenth language lands: the suite
+         must read the generated manifest and assert its language set equals `TSpxLang`.
+      3. Decide whether a `resources.pri` is needed at all. The strings are compiled into the
+         executable, not into MRT resources, so the declaration may be enough on its own —
+         **measure it, do not assume**: build the package, install it, and read
+         `SupportedLanguages` back from the storefront JSON after the submission goes live.
+         Adding MakePri means re-running WACK, which the icon-asset note below already weighs.
+
+- [ ] **Localised Store listings.** Declaring the languages is half of it; the listing itself is
+      English-only. A customer whose Store is set to German sees an English description for an
+      application whose window and help are both German.
+
+      Fourteen listings is not the obvious answer — each is a title, description, feature
+      bullets and screenshots, all hand-maintained in Partner Center forever, and every one is
+      a place for a claim to rot (the live English bullet 20 still says Apache-2.0, five days
+      after the relicence). Worth deciding deliberately:
+
+      * which languages get a listing at all — the interface list is fourteen, the *market* list
+        is a different question and the answer may be three or four;
+      * the source of truth. `docs/store-listing.md` holds the English draft today; a localised
+        set wants the same treatment or it drifts the way the live bullet did;
+      * screenshots. A localised listing with English screenshots is worse than an English
+        listing, and the window can be photographed in any of the fourteen —
+        `scripts/` already has the probe shape for that (`PrintWindow` from outside the
+        process, which is how the About box was measured in three languages in a minute).
+
+      **Not for `v0.1.1.0`** — that submission is in flight. The manifest fix above is a package
+      change and needs its own version; the listings are Partner Center edits and can follow.
+
 ## Raised by review, not yet built
 
 - [ ] **The GSA conversion runs on the UI thread and is quadratic in DISTINCT macros.**
