@@ -132,11 +132,14 @@ optional external authoring workflow above must remain clearly external to the a
 - Support contact: `https://spintax.net` — same decision. The draft asked for
   `https://301.st/contact`; the listing therefore offers no direct contact route, which becomes
   an obligation only when R1 ships live generative AI (spec §11).
-- Additional license terms: **must not be left blank.** The source license is
-  GPL-3.0-or-later (with the section 7 exception in `NOTICE.md`), and Microsoft's Standard
-  Application License Terms restrict copying and redistribution in ways the GPL does not allow to
-  be added. Enter the project's own terms, or a URL to `LICENSE`, so the package is conveyed under
-  the licence it is actually under. *(R0 shipped with this field blank — see the note at the end.)*
+- Additional license terms: **DECIDED — left blank** (owner, 2026-08-08). The analysis stands
+  and is why the question was asked: the source licence is GPL-3.0-or-later (with the section 7
+  exception in `NOTICE.md`), and Microsoft's Standard Application License Terms — which an empty
+  field conveys the package under — restrict copying and redistribution in ways GPLv3 §10 says a
+  distributor may not add. The owner has weighed that and chosen to leave it empty; it does not
+  affect the source, which is under the GPL from the repository regardless. See
+  [`publish/store-listing-edits.md`](publish/store-listing-edits.md) §3 so this is not re-opened
+  every release.
 - Privacy policy: hosted at [`https://spintax.studio/privacy.html`](https://spintax.studio/privacy.html)
   **and** entered in Partner Center — **two publications, not one**. The listing's `PrivacyUrl`
   is a frozen Microsoft snapshot of the text typed into that field, not a link to the site, so

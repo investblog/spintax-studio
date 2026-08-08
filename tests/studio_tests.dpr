@@ -4700,6 +4700,43 @@ begin
     the page. It read one until 2026-08-04, and the count is what forced the page to be edited
     when the second link was added rather than after somebody noticed. }
   Check('offline/exactly two links hand an address to the shell', IntToStr(opens), '2');
+
+  (* ▁▁▁ AND THE PUBLISHED COPIES SAY THE SAME ▁▁▁
+
+     The policy exists in THREE places and only one of them was ever held to the code:
+     `docs/privacy.md` here, the page at spintax.studio, and the text pasted into Partner
+     Center -- which is the copy a Store customer actually opens, because the listing's
+     `PrivacyUrl` is a frozen Microsoft snapshot of that field and not a link to the site.
+     Both published copies were found on 2026-08-08 still saying "one external action" while
+     the shipping window has two marks, and the entry that tracked it described the fix as
+     "republish the hosted copy", which is not enough.
+
+     `docs/publish/` now holds exactly what gets uploaded and pasted, and this is the gate
+     between them: whatever the count above says, all three copies must name BOTH marks and
+     the same contact. Adding a publishable copy without a gate would only have made a third
+     place for the fact to rot. *)
+  for d := 0 to 2 do
+  begin
+    case d of
+      0: name_ := 'docs/privacy.md';
+      1: name_ := 'docs/publish/privacy.html';
+    else name_ := 'docs/publish/privacy-partner-center.txt';
+    end;
+    if not FileExists(name_) then
+    begin
+      CheckTrue('privacy/' + name_ + ' is where the suite expects it', False);
+      Continue;
+    end;
+    low_ := SpxReadTextFile(name_);
+    CheckTrue('privacy/' + name_ + ' names the rail mark', Pos('spintax.net', low_) > 0);
+    CheckTrue('privacy/' + name_ + ' names the status-bar mark', Pos('301.st', low_) > 0);
+    CheckTrue('privacy/' + name_ + ' gives the contact address',
+              Pos('support@301.st', low_) > 0);
+    { The sentence the stale copies carried, in either voice. }
+    CheckTrue('privacy/' + name_ + ' no longer claims a single link',
+              (Pos('one external action', low_) = 0) and
+              (Pos('There is one external', low_) = 0));
+  end;
   { Belt and braces: nothing in the product opens a process either. }
   stop := 0;
   for d := 0 to High(dirs) do

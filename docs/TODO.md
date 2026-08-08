@@ -89,10 +89,13 @@ is a deliberate state and not a backlog of things anyone forgot.
 2. **`LegalCopyright` in the executable's version resource** said `MIT` — a licence name in a
    copyright field, and the wrong licence. Fixed in the tree and gated by the suite; it needs a
    rebuild to reach anyone, which is exactly what the next version is.
-3. **Listing, feature bullet 20** still reads "Open-source Apache-2.0 Studio".
-4. **Listing, "Additional license terms"** is blank, which conveys the package under Microsoft's
-   Standard Application License Terms — those restrict redistribution in ways the GPL does not
-   permit adding. Enter the project's own terms, or a URL to `LICENSE`.
+3. **Listing, feature bullet 20** still reads "Open-source Apache-2.0 Studio". The exact
+   replacement text is in [`publish/store-listing-edits.md`](publish/store-listing-edits.md) §2.
+4. **Listing, "Additional license terms" — DECIDED, stays blank** (owner, 2026-08-08). An empty
+   field conveys the package under Microsoft's Standard Application License Terms, which restrict
+   redistribution in ways GPLv3 §10 says a distributor may not add; the owner has weighed that
+   and chosen it. Recorded in [`publish/store-listing-edits.md`](publish/store-listing-edits.md)
+   §3 rather than left as an open item, so it is not raised again each release.
 5. **The 301ST mark in the status bar**, done 2026-08-04 — a link to <https://301.st> at the
    right end, opposite the spintax.net ribbon on the rail: the company in one corner, the
    language and engine family in the other. The glyph is generated into the executable by
