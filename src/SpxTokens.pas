@@ -307,7 +307,9 @@ end;
   scan, and ConfigSkip asks PermConfigLength where a permutation's config ends. One rule, one
   place: a second copy here would be a second thing to keep in step with the engine. }
 function TrailingSepLength(const Line: string; p: Integer): Integer; forward;
-function PermConfigLength(const Line: string; p: Integer): Integer; forward;
+function PermConfigLength(const Line: string; p: Integer;
+  ALastGt, ALastCloseTag: Integer): Integer; forward;
+function LastOf(const Line, What: string): Integer; forward;
 
 (* HOW MANY BYTES A PERMUTATION'S CONFIG TAKES AT AAt, or 0 when there is no config there.
 
@@ -327,7 +329,7 @@ function PermConfigLength(const Line: string; p: Integer): Integer; forward;
   outer `]`. Found by review, after this comment already claimed to ask the tokenizer rather
   than decide again. *)
 function ConfigSkip(const Text: string; AAt: Integer): Integer;
-var from_, stop, blanks: Integer;
+var from_, stop, blanks: Integer; slice: string;
 begin
   Result := 0;
   if (AAt < 1) or (AAt > Length(Text)) then Exit;
@@ -340,7 +342,9 @@ begin
   while (from_ > 1) and (Text[from_ - 1] <> #10) and (Text[from_ - 1] <> #13) do Dec(from_);
   stop := AAt;
   while (stop <= Length(Text)) and (Text[stop] <> #10) and (Text[stop] <> #13) do Inc(stop);
-  Result := PermConfigLength(Copy(Text, from_, stop - from_), AAt - from_ + 1);
+  slice := Copy(Text, from_, stop - from_);
+  Result := PermConfigLength(slice, AAt - from_ + 1,
+                             LastOf(slice, '>'), LastOf(slice, '</'));
   { The blanks are skipped with it, or the caller lands back on them. }
   if Result > 0 then Inc(Result, blanks);
 end;
@@ -662,10 +666,25 @@ end;
   whole permutation, which may run past this line; a line-at-a-time scan can only look at
   the rest of THIS line. A multi-line `[<li>…` therefore colours as config where the engine
   would call it content. The self-closing and same-line cases -- which is how HTML inside a
-  permutation is actually written -- are exact. }
-function LooksLikeHtmlStartTag(const ConfigStr, Remaining: string): Boolean;
+  permutation is actually written -- are exact.
+
+  THE REMAINDER IS PASSED AS AN OFFSET, NOT A COPY. It used to arrive as `Copy(Line, i + 1,
+  MaxInt)` and then be lower-cased whole -- two allocations and two walks of everything after
+  the bracket, once per `[` on the line. That is quadratic in line length, and engine output
+  has no obligation to contain a line break: `[<p>` repeated 20 000 times, one line of 80 KB,
+  measured **6.6 seconds**, clean 4x per doubling, on the UI thread inside SynEdit. The
+  comparison folds case as it walks instead. }
+function LooksLikeHtmlStartTag(const ConfigStr, Line: string;
+  RemFrom, ALastCloseTag: Integer): Boolean;
 const WS = [' ', #9, #10, #11, #12, #13];   { JS \s restricted to ASCII, as the engine has it }
-var t, nameLow, remLow: string; n, j, k: Integer;
+
+  { ASCII fold, which is all this needs: a tag name is letters, digits and `-`. }
+  function Lower(c: Char): Char;
+  begin
+    if c in ['A'..'Z'] then Result := Chr(Ord(c) + 32) else Result := c;
+  end;
+
+var t, nameLow: string; n, j, k, m: Integer; hit: Boolean;
 begin
   Result := False;
   t := Trim(ConfigStr);
@@ -689,26 +708,66 @@ begin
 
   if t[Length(t)] = '/' then Exit(True);   { self-closing: no partner needed }
 
-  { A start tag counts as HTML only when its closing partner follows. }
+  { A start tag counts as HTML only when its closing partner follows. Walked over the line in
+    place, folding case per character, so nothing is copied -- and not walked at all when the
+    line holds no `</` past here. }
+  if ALastCloseTag < RemFrom then Exit;
   nameLow := LowerCase(Copy(t, 1, n));
-  remLow := LowerCase(Remaining);
-  k := 1;
-  repeat
-    k := PosEx('</' + nameLow, remLow, k);
-    if k = 0 then Exit;
-    j := k + 2 + Length(nameLow);
-    while (j <= Length(remLow)) and (remLow[j] in WS) do Inc(j);
-    if (j <= Length(remLow)) and (remLow[j] = '>') then Exit(True);
+  k := RemFrom;
+  while k <= Length(Line) - Length(nameLow) - 1 do
+  begin
+    if (Line[k] = '<') and (Line[k + 1] = '/') then
+    begin
+      hit := True;
+      for m := 1 to Length(nameLow) do
+        if Lower(Line[k + 1 + m]) <> nameLow[m] then
+        begin
+          hit := False;
+          Break;
+        end;
+      if hit then
+      begin
+        j := k + 2 + Length(nameLow);
+        while (j <= Length(Line)) and (Line[j] in WS) do Inc(j);
+        if (j <= Length(Line)) and (Line[j] = '>') then Exit(True);
+      end;
+    end;
     Inc(k);
-  until False;
+  end;
 end;
 
-function PermConfigLength(const Line: string; p: Integer): Integer;
+(* TWO BOUNDS, both exact, both because this is called ONCE PER `[` on the line and every
+   search inside it used to run to the end.
+
+   `[<` repeated 20 000 times -- 40 KB on one line, and engine output has no obligation to
+   contain a line break -- spent its whole time hunting a `>` that is not there, once per
+   bracket. `[<p>` repeated 20 000 times spent it hunting a `</p>` that is not there. Both are
+   answered by looking at the line ONCE: if there is no `>` after this position at all, this is
+   not a config; if there is no `</` after the config, no start tag can be closed and the HTML
+   test cannot succeed.
+
+   Measured on this machine, one SpxScanLine call, before -> after:
+     `[<`   x20 000 (40 KB)   720 ms -> 4 ms
+     `[<p>` x20 000 (80 KB)  6617 ms -> 9 ms
+   and the plain 200 KB line stays at 1 ms. This runs on the UI thread inside SynEdit. *)
+function LastOf(const Line, What: string): Integer;
+var i, m: Integer;
+begin
+  Result := 0;
+  m := Length(What);
+  for i := Length(Line) - m + 1 downto 1 do
+    if CompareMem(@Line[i], @What[1], m) then Exit(i);
+end;
+
+function PermConfigLength(const Line: string; p: Integer;
+  ALastGt, ALastCloseTag: Integer): Integer;
 var i, n: Integer; inQuote: Boolean;
 begin
   Result := 0;
   n := Length(Line);
   if (p > n) or (Line[p] <> '<') then Exit;
+  { Nothing after here can close a config. }
+  if ALastGt < p then Exit;
 
   inQuote := False;
   i := p + 1;
@@ -720,7 +779,7 @@ begin
   end;
   if i > n then Exit;   { no closing '>' on this line }
 
-  if LooksLikeHtmlStartTag(Copy(Line, p + 1, i - p - 1), Copy(Line, i + 1, MaxInt)) then Exit;
+  if LooksLikeHtmlStartTag(Copy(Line, p + 1, i - p - 1), Line, i + 1, ALastCloseTag) then Exit;
   Result := i - p + 1;
 end;
 
@@ -795,6 +854,12 @@ procedure SpxScanLine(const Line: string; var State: TSpxScanState; Tokens: TSpx
   ACloserAhead: Boolean);
 var
   p, n, runStart, len, q: Integer;
+  { Where the last `>` and the last `</` sit, found ONCE for this line and handed to every
+    config test on it. The first version of this bound scanned the line backwards INSIDE
+    PermConfigLength, which is called once per `[` -- so it replaced a forward walk with a
+    backward one of the same cost and made an 80 KB line slower, 6.6 s to 6.9 s. Measured
+    before it was believed, which is the only reason it did not ship. }
+  lastGt, lastCloseTag: Integer;
   { The SPLIT level, counted the way the engine's SplitTopLevel counts it, for this line
     only: a signed brace depth, and one frame per `[` open on this line remembering the brace
     depth it was opened at. A trailing separator belongs to the innermost permutation at its
@@ -876,6 +941,8 @@ begin
   braceDepth := 0;
   permTop := 0;
   SetLength(permFrames, 8);
+  lastGt := LastOf(Line, '>');
+  lastCloseTag := LastOf(Line, '</');
 
   { A source line that does not continue a comment starts a new LOGICAL line; one that does
     continues the old one, because the newline inside a comment is removed with it. }
@@ -1086,7 +1153,7 @@ begin
             space does not disable it, and neither may the colouring. }
           q := p;
           while (q <= n) and (Line[q] in [' ', #9, #10, #11, #12, #13]) do Inc(q);
-          len := PermConfigLength(Line, q);
+          len := PermConfigLength(Line, q, lastGt, lastCloseTag);
           if len > 0 then
           begin
             FlushText(q);

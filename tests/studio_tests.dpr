@@ -1404,6 +1404,16 @@ begin
     between the options. }
   Check('scan/unpaired-tag-is-config', ScanOne('[<li>a|b]'),
         '[([)1 cfg(<li>)1 text(a)1 |(|)1 text(b)1 ](])1');
+  (* ...and one whose partner DOES come is markup. These two are here for the bound the scan
+     takes before it goes looking: the line's last `>` and last `</` are found once, and a
+     config test past either of them stops at once. That turned an 80 KB line of `[<p>` from
+     6.6 seconds to 7 milliseconds -- it runs on the UI thread inside SynEdit -- and the pair
+     below is what says the bound is EXACT rather than merely fast: the partner must still be
+     found when it is there, and must not be counted when it sits BEFORE the tag. *)
+  Check('scan/paired-tag-is-markup', ScanOne('[<li>a|b</li>]'),
+        '[([)1 text(<li>a)1 |(|)1 text(b</li>)1 ](])1');
+  Check('scan/a-closer-before-the-tag-does-not-pair', ScanOne('</li>[<li>a|b]'),
+        'text(</li>)0 [([)1 cfg(<li>)1 text(a)1 |(|)1 text(b)1 ](])1');
   { The closing `>` is found respecting quotes, so a separator may contain one. }
   Check('scan/quoted-gt-inside-config', ScanOne('[<sep="a>b">x|y]'),
         '[([)1 cfg(<sep="a>b">)1 text(x)1 |(|)1 text(y)1 ](])1');
@@ -4868,6 +4878,31 @@ var
     Check('count/' + name + '/is-a-bound', BoolToStr(c.Exact, True), BoolToStr(False, True));
   end;
 
+  { `[o1|o2|...|oN]`, and the options alone. }
+  function Options(N: Integer): string;
+  var i: Integer;
+  begin
+    Result := '';
+    for i := 1 to N do
+    begin
+      if i > 1 then Result := Result + '|';
+      Result := Result + 'o' + IntToStr(i);
+    end;
+  end;
+
+  function PermOf(N: Integer): string;
+  begin
+    Result := '[' + Options(N) + ']';
+  end;
+
+  procedure CheckSaturates(const name, Tmpl: string);
+  var c: TSpxCount;
+  begin
+    c := SpxCountVariants(Tmpl, ctx);
+    Check('count/' + name, IntToStr(c.Value), IntToStr(SPX_COUNT_CEILING));
+    CheckTrue('count/' + name + '/is-saturated', c.Saturated);
+  end;
+
   procedure CheckSays(const name, Tmpl: string; want: Int64; wantExact: Boolean);
   var c: TSpxCount;
   begin
@@ -5106,6 +5141,22 @@ begin
     CheckFloor('plural-head-across-a-line', '{plural 2' + LineEnding + ': one|many}');
     CheckFloor('plural-head-across-a-pipe', '{plural 2|3: one|many}');
     CheckCounted('plural-without-the-space-is-a-choice', '{plural|other}');
+
+    (* ---- THE TWO EXACT EXITS IN PermutationCount, at their boundaries. Both drop terms that
+       provably cannot change the answer, so what has to hold is the BOUNDARY: 14! is under the
+       ceiling and 15! is over it, and a permutation allowed fifteen options is saturated
+       whatever its counts are. Enumeration cannot reach these -- 14! variants is not a thing
+       anybody renders -- so they are stated as arithmetic, which is what they are. ---- *)
+    CheckSays('perm-14-options-is-exact', PermOf(14), 87178291200, True);
+    { Saturation is carried by its own field, not by clearing Exact -- the panel reads
+      `Saturated` to say "at least" -- so that is what this asserts. }
+    CheckSaturates('perm-15-options-saturates', PermOf(15));
+    CheckTrue('count/perm-14-options-does-not-saturate',
+              not SpxCountVariants(PermOf(14), ctx).Saturated);
+    { And the inner loop stops at max_, not at n: a hundred options taken at most two at a time
+      is 100 + 2*C(100,2), which stays well under the ceiling and must still be exact. }
+    CheckSays('perm-many-options-small-maxsize', '[<maxsize=2>' + Options(100) + ']',
+              10000, True);
 
     CheckCounted('open-comment', '{aa|bb}' + LineEnding + '/# note' + LineEnding + '{cc|dd}');
     CheckCounted('open-comment-inline', 'xx /# note {cc|dd}');

@@ -221,6 +221,7 @@ function PermutationCount(const Counts: array of Int64; AMin, AMax: Integer): In
 var
   e: array of Int64;
   n, i, k, min_, max_: Integer;
+  fact: Int64;
 begin
   n := Length(Counts);
   if n = 0 then Exit(1);
@@ -234,23 +235,48 @@ begin
   if max_ < min_ then max_ := min_;
   if max_ > n then max_ := n;
 
-  SetLength(e, n + 1);
+  (* ▁▁▁ TWO EXITS BEFORE THE ARITHMETIC, BOTH EXACT ▁▁▁
+
+     This ran to completion however large the permutation was, and the recurrence below is
+     O(n * max). Measured on 50 000 options -- a 100 KB document of one list -- it took
+     **56 seconds**, every one of them on TSpxEngineThread AFTER the render, so it blocked
+     every following preview for that long while returning the same saturated ceiling it
+     could have returned at once.
+
+     FIRST: every count is at least 1, so e_k >= C(n, k) >= 1 for any k <= n. The answer
+     includes k!*e_k for k = max_, and 15! = 1 307 674 368 000 is already past the ceiling
+     (14! is not: 87 178 291 200). So a permutation allowed to take fifteen or more options
+     IS saturated, whatever the counts are, and no arithmetic can say otherwise.
+
+     SECOND: nothing above e_max_ is ever read, so the inner loop stops there instead of at n.
+     That is what makes a big permutation with a small `maxsize` linear rather than quadratic.
+
+     Neither is an estimate -- both drop terms that provably cannot change the answer. *)
+  if max_ >= 15 then Exit(SPX_COUNT_CEILING);
+
+  SetLength(e, max_ + 1);
   e[0] := 1;
-  for i := 1 to n do e[i] := 0;
+  for i := 1 to max_ do e[i] := 0;
   for i := 0 to n - 1 do
   begin
     { e_k is still 0 for every k above the number of options read so far, so the full range
       is wasted work: 3 000 options measured 101 ms before this line, which is the quadratic
       term and not the arithmetic. }
     k := i + 1;
-    if k > n then k := n;
+    if k > max_ then k := max_;
     for k := k downto 1 do
       e[k] := AddSat(e[k], MulSat(e[k - 1], Counts[i]));
   end;
 
+  { The factorial is carried rather than rebuilt per term -- FactSat(k) walked 2..k again for
+    every k, which is the same quadratic shape one loop later. }
   Result := 0;
+  fact := FactSat(min_);
   for k := min_ to max_ do
-    Result := AddSat(Result, MulSat(FactSat(k), e[k]));
+  begin
+    if k > min_ then fact := MulSat(fact, k);
+    Result := AddSat(Result, MulSat(fact, e[k]));
+  end;
   {$IFDEF SPX_COUNT_TRACE}
   Write('  PERM n=', n, ' min=', min_, ' max=', max_, ' counts=');
   for i := 0 to n - 1 do Write(Counts[i], ' ');
