@@ -273,7 +273,7 @@ Las dianas son los archivos `.spintax` de la carpeta del documento abierto. Una 
 se despliega a nada: el párrafo desaparece en vez de romperse, que es justamente por lo que es tan
 fácil pasarlo por alto.
 
-**Por eso la pestaña Variables tiene una tercera sección, Inclusiones.** Enumera cada `#include`
+**Por eso la pestaña Variables tiene una tercera sección, «Inclusiones».** Enumera cada `#include`
 del documento y, para cada uno, si el juego tiene su diana: una fila por aparición, así que una
 diana nombrada dos veces son dos filas. La sección aparece solo si el documento tiene inclusiones.
 Un clic en una fila lleva el cursor al `#include` que nombra esa diana.

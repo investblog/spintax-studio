@@ -343,8 +343,17 @@ begin
   stop := AAt;
   while (stop <= Length(Text)) and (Text[stop] <> #10) and (Text[stop] <> #13) do Inc(stop);
   slice := Copy(Text, from_, stop - from_);
-  Result := PermConfigLength(slice, AAt - from_ + 1,
-                             LastOf(slice, '>'), LastOf(slice, '</'));
+  (* THE BOUNDS ARE PASSED WIDE OPEN HERE, on purpose.
+
+     They exist to stop `SpxScanLine` re-walking a long line once per `[`, where they are
+     computed ONCE for the line and pay for themselves many times over. This caller has one
+     `[` and one slice, so computing them costs a full walk each and saves nothing -- measured:
+     it made the caret path on an 80 KB line 30% slower, which a review caught. `Length(slice)`
+     disables both early exits and leaves the answer exactly as it was.
+
+     The caret path is quadratic on such a line either way, and was before any of this; that is
+     recorded in the backlog rather than papered over here. *)
+  Result := PermConfigLength(slice, AAt - from_ + 1, Length(slice), Length(slice));
   { The blanks are skipped with it, or the caller lands back on them. }
   if Result > 0 then Inc(Result, blanks);
 end;
@@ -354,7 +363,7 @@ type
   TOpen = record Pos: Integer; Ch: Char; end;
 var
   stack: array of TOpen;
-  top, i, n: Integer;
+  top, i, n, lastCloser: Integer;
   c: Char;
 
   function Partner(Opener, Closer: Char): Boolean;
@@ -369,13 +378,21 @@ begin
   if not (Text[Offset] in ['{', '}', '[', ']']) then Exit;
 
   SetLength(stack, 32);
+  { Once, not once per character: a lookup inside the walk below would make it quadratic. }
+  lastCloser := LastOf(Text, '#/');
   top := 0;
   i := 1;
   while i <= n do
   begin
-    { A comment is not code: brackets inside it belong to no pair, and the offset itself
-      being inside one means there is nothing to match. }
-    if (Text[i] = '/') and (i < n) and (Text[i + 1] = '#') then
+    (* A comment is not code: brackets inside it belong to no pair, and the offset itself
+       being inside one means there is nothing to match.
+
+       AND `/#` WITH NO `#/` AFTER IT IS NOT A COMMENT. Engine v0.5.0, the same rule
+       `SpxScanLine` was brought to -- and these two hand-rolled walks were left behind, which
+       is what a review found: with `http://example.com/#top` on the line above, the pair on
+       `{a|b}` was never drawn and the separator never lit, because everything from the `/#`
+       was being skipped as a comment. This one holds the whole text, so it can simply look. *)
+    if (Text[i] = '/') and (i < n) and (Text[i + 1] = '#') and (lastCloser > i + 1) then
     begin
       Inc(i, 2);
       while (i < n) and not ((Text[i] = '#') and (Text[i + 1] = '/')) do Inc(i);
@@ -420,7 +437,7 @@ type
   TOpen = record Pos: Integer; Ch: Char; end;
 var
   stack: array of TOpen;
-  top, i, n, k, from_: Integer;
+  top, i, n, k, from_, lastCloser: Integer;
   c: Char;
 
   function Partner(Opener, Closer: Char): Boolean;
@@ -453,11 +470,14 @@ begin
   end;
 
   SetLength(stack, 32);
+  { Once, not once per character: a lookup inside the walk below would make it quadratic. }
+  lastCloser := LastOf(Text, '#/');
   top := 0;
   i := 1;
   while i <= n do
   begin
-    if (Text[i] = '/') and (i < n) and (Text[i + 1] = '#') then
+    { The same rule as SpxMatchBracket's above, and for the same reason. }
+    if (Text[i] = '/') and (i < n) and (Text[i + 1] = '#') and (lastCloser > i + 1) then
     begin
       from_ := i;
       Inc(i, 2);
@@ -610,7 +630,7 @@ begin
   begin
     q := 2;
     while (q <= Length(inner)) and (inner[q] in ['A'..'Z', 'a'..'z', '0'..'9']) do Inc(q);
-    if (q <= Length(inner)) and (inner[q] in [' ', #9, #10, #13]) then Exit;
+    if (q <= Length(inner)) and (inner[q] in [' ', #9, #10, #11, #12, #13]) then Exit;
   end;
 
   { And the `|` that makes this element not the last one. The engine reaches it by rtrimming

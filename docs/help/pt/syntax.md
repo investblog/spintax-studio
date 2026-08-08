@@ -11,7 +11,7 @@ sétima marca que não produz absolutamente nada.
 > Cada exemplo abaixo passa pelo motor que esta cópia do Studio traz consigo, sempre que o
 > programa é compilado, e à direita está exactamente o que ele devolveu. Nada aqui é lembrado nem
 > adivinhado; uma resposta que deixasse de ser verdadeira pararia a compilação. A versão do motor
-> está em **Ajuda**, **Acerca de**.
+> está em **Ajuda**, **Sobre**.
 
 O outro documento desta ajuda, **O que lhe está a dizer o separador Diagnóstico**, trata do que
 corre mal. Este trata do que as construções fazem quando nada corre mal — incluindo os vários

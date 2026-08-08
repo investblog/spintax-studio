@@ -3629,7 +3629,8 @@ begin
      back with terminators GSA never wrote, one more per branch of every tag group. Clamped to
      what the imported FILE ended with; -1 everywhere else means "leave it exactly alone",
      which is what an ordinary document needs. *)
-  if FGsaDoc then job.MaxTrailEols := FGsaTrailEols else job.MaxTrailEols := -1;
+  job.ClampTrailEols := FGsaDoc;
+  job.MaxTrailEols := FGsaTrailEols;
   { A selection previews on its own -- in the document's scope, which is editor-core's job,
     not ours. WHICH selections count is also editor-core's, and gated there: none at all and
     the one a jump made to show a finding do not. Whether the fragment is worth rendering
@@ -3668,6 +3669,9 @@ begin
   end;
   req.Vars := FVars.RuntimeValues;
   req.NoPostProcess := FGsaDoc;
+  { The exported text is the one that goes back to GSA, so it is clamped too. }
+  req.ClampTrailEols := FGsaDoc;
+  req.MaxTrailEols := FGsaTrailEols;
   req.Count := Count;
   req.SeedBase := SeedBase;
   req.Opts := Opts;

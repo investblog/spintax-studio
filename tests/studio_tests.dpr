@@ -1127,7 +1127,8 @@ var
   st: TSpxScanState;
   toks: TSpxTokenList;
   lines: TStringList;
-  i, lastCloser: Integer;
+  i, lastCloser, mbO, mbC: Integer;
+  mbS: TSpxOffsets;
   deep: string;
   seenKinds: set of TSpxTokenKind;
 begin
@@ -1414,6 +1415,21 @@ begin
         '[([)1 text(<li>a)1 |(|)1 text(b</li>)1 ](])1');
   Check('scan/a-closer-before-the-tag-does-not-pair', ScanOne('</li>[<li>a|b]'),
         'text(</li>)0 [([)1 cfg(<li>)1 text(a)1 |(|)1 text(b)1 ](])1');
+
+  (* THE BRACKET OVERLAY LIVES IN THE SAME WORLD AS THE SCAN. `SpxMatchBracket` and
+     `SpxConstructOf` each walk the whole text with their own comment skip, and both were left
+     in the pre-v0.5.0 world when SpxScanLine was brought out of it -- so with an ordinary URL
+     carrying a fragment on the line above, the caret on a brace drew NO pair and the caret on
+     a separator lit NO construct. They hold the whole text, so they can simply look. *)
+  CheckTrue('scan/a-url-fragment-does-not-eat-the-pair',
+            SpxMatchBracket('http://example.com/#top' + #10 + '{a|b}', 25) = 29);
+  CheckTrue('scan/a-url-fragment-does-not-eat-the-separators',
+            SpxConstructOf('http://example.com/#top' + #10 + '{a|b}', 27, mbO, mbC, mbS));
+  { and a real comment is still skipped, both ways }
+  CheckTrue('scan/a-real-comment-still-hides-its-brackets',
+            SpxMatchBracket('/# c #/' + #10 + '{a|b}', 9) = 13);
+  CheckTrue('scan/a-caret-inside-a-real-comment-matches-nothing',
+            SpxMatchBracket('x /# c #/ {a|b} #/ y', 4) = 0);
   { The closing `>` is found respecting quotes, so a separator may contain one. }
   Check('scan/quoted-gt-inside-config', ScanOne('[<sep="a>b">x|y]'),
         '[([)1 cfg(<sep="a>b">)1 text(x)1 |(|)1 text(y)1 ](])1');
@@ -5158,6 +5174,38 @@ begin
     CheckSays('perm-many-options-small-maxsize', '[<maxsize=2>' + Options(100) + ']',
               10000, True);
 
+    (* ---- WHAT THE CLOSING REVIEW FOUND IN THE FIXES ABOVE. Two of them broke the floor
+       again, in the same commit that restored it, and both were a TELL that a blank or a line
+       break could walk past. ---- *)
+
+    { One space after the `[` used to consume the "just after the bracket" position, so the
+      next-line config was never noticed: 6 EXACT against the engine's 3. The engine ltrims
+      before parsing a config and has already stripped comments, so neither may count here. }
+    CheckFloor('config-after-a-blank-then-a-line',
+               '[ ' + LineEnding + '<maxsize=1>aa|bb|cc]');
+    CheckFloor('config-after-a-comment-then-a-line',
+               '[/# c #/' + LineEnding + '<maxsize=1>aa|bb|cc]');
+
+    (* A trailing `<sep>` on a line BELOW its `[`. `SpxTokens` only recognises one while its
+       permutation frame is open and those frames are line-local -- "a missing colour, never a
+       wrong one", which was true until a token KIND started deciding a COUNT. The engine lifts
+       it out of the part and then drops the part for being empty, so `[a` LF `|<x>|b]` is two
+       options; this counted three and said EXACT. An ordinary multi-line permutation must stay
+       exact, which is the other half of the pair. *)
+    CheckFloor('separator-below-its-bracket', '[aa' + LineEnding + '|<xx>|bb]');
+    CheckCounted('ordinary-multi-line-permutation', '[aa' + LineEnding + '|bb|cc]');
+
+    (* THE PLURAL HEAD, from both sides. The keyword must be on the brace's own line -- content
+       that STARTS with the line break is an ordinary choice to the engine -- and the colon it
+       also requires may be on a later one, so that half is decided after the whole construct
+       has been read. Requiring the colon on the keyword's line broke the floor for the second
+       case here, and the suite caught it inside the run. *)
+    CheckCounted('brace-then-plural-on-the-next-line',
+                 '{' + LineEnding + 'plural 2: one|many}');
+    CheckFloor('plural-with-its-colon-on-the-next-line',
+               '{plural 2' + LineEnding + ': one|many}');
+    CheckCounted('plural-without-a-colon-is-a-choice', '{plural 2 one|many}');
+
     CheckCounted('open-comment', '{aa|bb}' + LineEnding + '/# note' + LineEnding + '{cc|dd}');
     CheckCounted('open-comment-inline', 'xx /# note {cc|dd}');
     CheckCounted('closed-comment-eats-the-group',
@@ -6378,29 +6426,112 @@ type
     Why: string;
   end;
 const
-  HELP_UI_QUOTES: array[0..5] of TSpxUiQuote = (
-    (Id: sColLiteral;    Why: 'the session-value column'),
-    (Id: sReroll;        Why: 'the reroll button'),
-    (Id: sViewSource;    Why: 'the source view'),
-    (Id: sViewPage;      Why: 'the page view'),
-    (Id: sVarsIncludes;  Why: 'the Variables panel section'),
-    (Id: sMenuGsaOpen;   Why: 'the File menu item'));
+  HELP_UI_QUOTES: array[0..11] of TSpxUiQuote = (
+    (Id: sColLiteral;      Why: 'the session-value column'),
+    (Id: sSeed;            Why: 'the seed tick-box'),
+    (Id: sReroll;          Why: 'the reroll button'),
+    (Id: sViewSource;      Why: 'the source view'),
+    (Id: sViewPage;        Why: 'the page view'),
+    (Id: sTabDiagnostics;  Why: 'the diagnostics panel'),
+    (Id: sTabVariables;    Why: 'the variables panel'),
+    (Id: sTabVariants;     Why: 'the variants panel'),
+    (Id: sVarsIncludes;    Why: 'the Variables panel section'),
+    (Id: sMenuHelp;        Why: 'the Help menu'),
+    (Id: sMenuAbout;       Why: 'the About item'),
+    (Id: sMenuGsaOpen;     Why: 'the File menu item'));
 
-{ Every run of blank characters becomes one space, so a wrapped line reads as a sentence. }
+{ Every run of blank characters becomes one space, so a wrapped line reads as a sentence --
+  and a blockquote's `> ` marker at the start of a continuation line goes with it. Without
+  that, `**Помоћ**, **О` / `> програму**` flattened to `О > програму` and the check reported a
+  correctly written name as missing. }
 function Flatten(const S: string): string;
-var i: Integer; sp: Boolean;
+var i: Integer; sp, atLineStart: Boolean;
 begin
   Result := '';
   sp := False;
-  for i := 1 to Length(S) do
-    if (S[i] = ' ') or (S[i] = #9) or (S[i] = #10) or (S[i] = #13) then
-      sp := True
+  atLineStart := True;
+  i := 1;
+  while i <= Length(S) do
+  begin
+    if (S[i] = ' ') or (S[i] = #9) then
+    begin
+      sp := True;
+      Inc(i);
+    end
+    else if (S[i] = #10) or (S[i] = #13) then
+    begin
+      sp := True;
+      atLineStart := True;
+      Inc(i);
+    end
+    else if atLineStart and (S[i] = '>') then
+    begin
+      { the blockquote marker, not text }
+      Inc(i);
+    end
     else
     begin
       if sp and (Result <> '') then Result := Result + ' ';
       sp := False;
+      atLineStart := False;
       Result := Result + S[i];
+      Inc(i);
     end;
+  end;
+end;
+
+(* THE BOLDED RUNS OF A DOCUMENT, which is where the help CLAIMS to be quoting the window.
+
+   The first version of this check asked `Pos(want, all_) > 0` -- an unanchored substring
+   search over the whole corpus -- and a review showed what that lets through: `**Yeniden
+   çek**` satisfies the label `Yeniden`, `**Opnieuw loten**` satisfies `Opnieuw`, and the
+   Turkish column label `düz metin` was satisfied by two sentences about exporting variants
+   that never mention the column. Three wrong names survived the very commit that claimed to
+   fix them.
+
+   A label has to be a WHOLE quoted run to count -- and this help has TWO citation forms, both
+   deliberate: **bold** for a control the reader clicks, and guillemets for a named region
+   like a panel's section heading. Taking only the bold ones made every language fail on the
+   Variables panel's third section, which every one of them quotes correctly in guillemets. *)
+function QuotedRuns(const S: string): TStringList;
+var i, j: Integer;
+begin
+  Result := TStringList.Create;
+  { The two forms are scanned INDEPENDENTLY, not in one pass. A guillemet citation very often
+    sits inside a bold sentence -- «Змінні» and «Включення» in one bolded line is the ordinary
+    shape here -- and a single walk that consumed the bold run first never saw them. }
+  i := 1;
+  while i < Length(S) - 1 do
+  begin
+    if (S[i] = '*') and (S[i + 1] = '*') then
+    begin
+      j := i + 2;
+      while (j < Length(S)) and not ((S[j] = '*') and (S[j + 1] = '*')) do Inc(j);
+      if j < Length(S) then
+      begin
+        Result.Add(Trim(Copy(S, i + 2, j - i - 2)));
+        i := j + 2;
+        Continue;
+      end;
+    end;
+    Inc(i);
+  end;
+  i := 1;
+  while i < Length(S) - 1 do
+  begin
+    if Copy(S, i, 2) = '«' then
+    begin
+      j := i + 2;
+      while (j < Length(S)) and (Copy(S, j, 2) <> '»') do Inc(j);
+      if j < Length(S) then
+      begin
+        Result.Add(Trim(Copy(S, i + 2, j - i - 2)));
+        i := j + 2;
+        Continue;
+      end;
+    end;
+    Inc(i);
+  end;
 end;
 
 { The part of a string a reader sees as its NAME: everything before the em dash that
@@ -6422,7 +6553,8 @@ var
   d, q, i: Integer;
   lang: TSpxLang;
   code, want, all_: string;
-  body: TStringList;
+  found: Boolean;
+  body, runs: TStringList;
 begin
   for i := 0 to SPX_HELP_LANG_COUNT - 1 do
   begin
@@ -6446,15 +6578,24 @@ begin
       the reader sees on the control, so both sides of the comparison are flattened -- the
       check is about the words, not about where the paragraph happened to break. Found by the
       check itself: it failed a Portuguese menu item that was written correctly. }
-    all_ := Flatten(all_);
-
-    for q := Low(HELP_UI_QUOTES) to High(HELP_UI_QUOTES) do
-    begin
-      want := Flatten(UiLabel(SpxStrIn(lang, HELP_UI_QUOTES[q].Id)));
-      if want = '' then Continue;
-      CheckTrue(Format('help/%s/names %s as the window does [%s]',
-                       [code, HELP_UI_QUOTES[q].Why, want]),
-                Pos(want, all_) > 0);
+    runs := QuotedRuns(Flatten(all_));
+    try
+      for q := Low(HELP_UI_QUOTES) to High(HELP_UI_QUOTES) do
+      begin
+        want := Flatten(UiLabel(SpxStrIn(lang, HELP_UI_QUOTES[q].Id)));
+        if want = '' then Continue;
+        found := False;
+        for d := 0 to runs.Count - 1 do
+          if UiLabel(runs[d]) = want then
+          begin
+            found := True;
+            Break;
+          end;
+        CheckTrue(Format('help/%s/names %s as the window does [%s]',
+                         [code, HELP_UI_QUOTES[q].Why, want]), found);
+      end;
+    finally
+      runs.Free;
     end;
   end;
 end;

@@ -36,7 +36,7 @@ include shout: The %brand% is here.
 
 `seed` pins the random choice. A template with a choice in it has no single answer, so an example
 without a seed would print something different on every run and there would be nothing to check.
-In the window it is the tick-box marked **Seed** above the right-hand pane; tick it and a number
+In the window it is the tick-box marked **seed** above the right-hand pane; tick it and a number
 field appears beside it, and the preview stops moving while you edit.
 
 `locale` decides plural forms, and it is the selector above the right-hand pane rather than the

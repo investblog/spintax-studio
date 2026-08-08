@@ -57,7 +57,7 @@ place.
 
 La barre d'outils sur le côté ouvre trois panneaux, un à la fois.
 
-**Diagnostic** liste ce que le moteur a jugé fautif, chaque fois avec la ligne et la colonne du
+**Diagnostics** liste ce que le moteur a jugé fautif, chaque fois avec la ligne et la colonne du
 début. Un clic sur une ligne y place le curseur. C'est le même verdict que le moteur rend partout
 ailleurs, et non un second avis de l'éditeur — c'est pourquoi un gabarit que ce panneau déclare
 valide est accepté par les autres moteurs.

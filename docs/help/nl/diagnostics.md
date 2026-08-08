@@ -278,7 +278,7 @@ Doelen zijn de `.spintax`-bestanden in de map van het geopende document. Een onb
 zich uit tot niets — de alinea verdwijnt in plaats van kapot te gaan, en dat is precies waarom het
 zo gemakkelijk te missen is.
 
-**Daarom heeft het tabblad Variabelen een derde afdeling, Includes.** Zij somt elk `#include`
+**Daarom heeft het tabblad Variabelen een derde afdeling, «Includes».** Zij somt elk `#include`
 van het document op en, voor elk, of de verzameling zijn doel heeft — één regel per voorkomen, dus
 een twee keer genoemd doel zijn twee regels. De afdeling verschijnt alleen als het document
 invoegingen heeft. Een klik op een regel brengt de cursor naar het `#include` dat dat doel noemt.

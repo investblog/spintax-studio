@@ -12,7 +12,7 @@ andere Vorlage hereinholt. Kommentare sind eine siebte Markierung, die überhaup
 > Jedes Beispiel unten wird bei jedem Bau des Programms durch die Maschine geschickt, die diese
 > Kopie von Studio mitbringt, und rechts steht genau das, was sie zurückgab. Nichts hier ist
 > erinnert oder geraten; eine Antwort, die aufhörte zu stimmen, würde den Bau anhalten. Die
-> Version der Maschine steht unter **Hilfe**, **Über**.
+> Version der Maschine steht unter **Hilfe**, **Über das Programm**.
 
 Das andere Dokument dieser Hilfe, **Was die Tafel „Diagnose" Ihnen sagt**, handelt davon, was
 schiefgeht. Dieses handelt davon, was die Konstrukte tun, wenn nichts schiefgeht — samt der

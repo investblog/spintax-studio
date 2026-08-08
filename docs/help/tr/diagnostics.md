@@ -191,8 +191,7 @@ uyarıyı temelli susturan yalnızca bir tanımdır. Bir `Ctrl+Z` belgeyi geri a
 
 **Bir oturum değeri önce şablondur, metin değil.** Makine konak programdan gelen her değere bunu
 yapar ve önizlemenin sunucuyla örtüşmesi gerekir — dolayısıyla değer alanına yazılan `{ucuz|pahalı}`
-bir seçim verir, o karakterleri değil. Metnin kendisini kastediyorsanız üçüncü sütunda **metin
-olarak** kutusunu işaretleyin: o zaman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.
+bir seçim verir, o karakterleri değil. Metnin kendisini kastediyorsanız üçüncü sütunda **düz metin** kutusunu işaretleyin: o zaman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.
 
 ### `variable.self-reference` — tanım kendi kendini anıyor
 
@@ -265,7 +264,7 @@ ama hedef gelene dek sözcüğü sıradan bırakır: sonunu henüz görmediği b
 Hedefler, açık belgenin klasöründeki `.spintax` dosyalarıdır. Bilinmeyen bir hedef hiçliğe açılır —
 paragraf bozulmak yerine yok olur, ki bunu gözden kaçırmak tam da bu yüzden kolaydır.
 
-**Değişkenler sekmesinin üçüncü bir bölümü, Eklemeler, bu yüzden vardır.** Belgedeki her `#include`
+**Değişkenler sekmesinin üçüncü bir bölümü, «Eklemeler», bu yüzden vardır.** Belgedeki her `#include`
 işaretini ve her biri için kümenin hedefi bulundurup bulundurmadığını sıralar — geçiş başına bir
 satır, yani iki kez anılan bir hedef iki satır eder. Bölüm yalnızca belgede ekleme varsa görünür.
 Bir satıra tıklamak imleci o hedefi anan `#include` işaretine götürür.

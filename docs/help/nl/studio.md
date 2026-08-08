@@ -39,7 +39,7 @@ Een sjabloon met een keuze erin heeft geen enkel antwoord, en de voorvertoning t
 {Hallo|Goedendag} allemaal.  →  Hallo allemaal.
 ```
 
-**Opnieuw loten** boven de rechterhelft haalt de volgende. Wilt u altijd dezelfde — terwijl u twee
+**Opnieuw** boven de rechterhelft haalt de volgende. Wilt u altijd dezelfde — terwijl u twee
 wijzigingen vergelijkt bijvoorbeeld — vink dan **seed** aan, en de voorvertoning staat stil
 tot u het weer uitvinkt of het getal verandert.
 

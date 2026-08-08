@@ -17,7 +17,7 @@ A coluna **Onde** é linha e coluna. Um clique na linha põe lá o cursor.
 > Cada exemplo abaixo passa pelo motor que esta cópia do Studio traz consigo, sempre que o
 > programa é compilado, e à direita está exactamente o que ele devolveu. Nada aqui é lembrado nem
 > adivinhado; uma resposta que deixasse de ser verdadeira pararia a compilação. A versão do motor
-> está em **Ajuda**, **Acerca de**.
+> está em **Ajuda**, **Sobre**.
 
 ## Como ler os exemplos
 
@@ -271,7 +271,7 @@ Os alvos são os ficheiros `.spintax` da pasta do documento aberto. Um alvo desc
 em nada: o parágrafo desaparece em vez de partir, que é precisamente por isso que é tão fácil não
 dar por ele.
 
-**É por isso que o separador Variáveis tem uma terceira secção, Inclusões.** Enumera cada
+**É por isso que o separador Variáveis tem uma terceira secção, «Inclusões».** Enumera cada
 `#include` do documento e, para cada um, se o conjunto tem o seu alvo: uma linha por ocorrência,
 logo um alvo nomeado duas vezes dá duas linhas. A secção aparece só se o documento tiver inclusões.
 Um clique numa linha leva o cursor ao `#include` que nomeia esse alvo.

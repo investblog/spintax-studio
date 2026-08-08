@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    '271b132231107d65', '86168cd464b4d93f', '7dd6651ddec1ad95', '3467833a274e49df', 'c5226848658b80c2', 'f6b0fb891bdfa838', '41b507e99199ea85', '9758c28166c0d8fb', '6fb3939d1407cdc0', 'd08afd8499ba0b5e', '488ce59bac9e29c3', '88701f8e10cc3aa7', '7ea98a48ac22843c', '7813c6dc420189dd', 'a0035d73c719b0f3', '3893062b6a214e95', '22617daebdcad545', '85bf18f86a542259', '64f52e7b06a0757c', '4820e3fd1a6e29fb', '904327775d31d21b', '27d32401c18211cd', 'b54956a9ee49f248', 'd1f72044112424a1', 'bff9d7cb63128e88', '18c7da1e110847db', 'a92dcbdc418097b3', 'c1c1badef7c96448', '9ece59c788b1fb2a', 'b8529893866ec950', '0e3b38d8328fc7db', '6e6d8fab20b03b6b', '471885d59dbd925b', 'd43ff8a230ee4e10', '461b278e2312bf95', '2a4bb2d8392a4ede', 'd08430cca515c3af', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', 'd7ca1912a0475cd6', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    '6472d2ba56a15145', '1161eb58753cc15f', '87e44fc97111b7a9', '3467833a274e49df', 'c5226848658b80c2', 'f6b0fb891bdfa838', '41b507e99199ea85', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '103b1b8e3a7c9cbf', '488ce59bac9e29c3', '7f61fd4b089638df', '7ea98a48ac22843c', '7813c6dc420189dd', '0d549262922b3331', '3893062b6a214e95', 'c85b5f196fca1f91', '6bb5e85de94010ed', '64f52e7b06a0757c', '4ddfd411500958cc', '26e21bf1b83633da', 'e253f38f8253bc7d', 'b54956a9ee49f248', '00a887dfff5a6ef5', '5483fb9294d79d0b', '18c7da1e110847db', 'd9d49c35432acae4', 'c1c1badef7c96448', '9ece59c788b1fb2a', 'b8529893866ec950', '0e3b38d8328fc7db', '6e6d8fab20b03b6b', '471885d59dbd925b', 'd43ff8a230ee4e10', '461b278e2312bf95', '2a4bb2d8392a4ede', 'd08430cca515c3af', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '467fbe1fe9bddf19', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -785,7 +785,7 @@ const
     '<p><small><tt><a href="ex:0">{Hi|Hello} there.</a><br>→&nbsp; Hi there.</tt></small></' +
       'p>',
     '<p>Press <b>Reroll</b> above the right pane for another. If you want the same one ever' +
-      'y time — while you are comparing two edits, say — tick <b>Seed</b> and the preview sto' +
+      'y time — while you are comparing two edits, say — tick <b>seed</b> and the preview sto' +
       'ps moving until you untick it or change the number.</p>',
     '<p>The switch above the right pane offers <b>Page</b> and <b>Source</b>. Templates are' +
       ' usually HTML, and the two questions "how does this look" and "what markup came out" d' +
@@ -894,7 +894,7 @@ const
       'me|Globex}.<br>include shout: The %brand% is here.</tt></small></p>',
     '<p><code>seed</code> pins the random choice. A template with a choice in it has no sin' +
       'gle answer, so an example without a seed would print something different on every run ' +
-      'and there would be nothing to check. In the window it is the tick-box marked <b>Seed</' +
+      'and there would be nothing to check. In the window it is the tick-box marked <b>seed</' +
       'b> above the right-hand pane; tick it and a number field appears beside it, and the pr' +
       'eview stops moving while you edit.</p>',
     '<p><code>locale</code> decides plural forms, and it is the selector above the right-ha' +
@@ -1365,11 +1365,11 @@ const
     '<p>Targets are the <code>.spintax</code> files in the folder of the open document. An ' +
       'unknown target expands to nothing — the paragraph disappears rather than breaking, whi' +
       'ch is exactly why it is easy to miss.</p>',
-    '<p><b>That is why the Variables tab has a third section, Includes.</b> It lists every ' +
-      '<code>#include</code> the document contains and, for each, whether the set has its tar' +
-      'get — one row per occurrence, so a target named twice is two rows. The section appears' +
-      ' only when the document has includes. Clicking a row moves the caret to the <code>#inc' +
-      'lude</code> that names that target.</p>',
+    '<p><b>That is why the Variables tab has a third section, «Includes».</b> It lists ever' +
+      'y <code>#include</code> the document contains and, for each, whether the set has its t' +
+      'arget — one row per occurrence, so a target named twice is two rows. The section appea' +
+      'rs only when the document has includes. Clicking a row moves the caret to the <code>#i' +
+      'nclude</code> that names that target.</p>',
     '<p>The mark has <b>three</b> values, and the third matters: <code>no set</code> is not' +
       ' "the fragment is missing", it is "there is nowhere to look yet". The set is the folde' +
       'r beside the document, and an unsaved document has no folder — so until the first save' +
@@ -2548,8 +2548,8 @@ const
     '<blockquote>Jedes Beispiel unten wird bei jedem Bau des Programms durch die Maschine g' +
       'eschickt, die diese Kopie von Studio mitbringt, und rechts steht genau das, was sie zu' +
       'rückgab. Nichts hier ist erinnert oder geraten; eine Antwort, die aufhörte zu stimmen,' +
-      ' würde den Bau anhalten. Die Version der Maschine steht unter <b>Hilfe</b>, <b>Über</b' +
-      '>.</blockquote>',
+      ' würde den Bau anhalten. Die Version der Maschine steht unter <b>Hilfe</b>, <b>Über da' +
+      's Programm</b>.</blockquote>',
     '<p>Das andere Dokument dieser Hilfe, <b>Was die Tafel „Diagnose" Ihnen sagt</b>, hande' +
       'lt davon, was schiefgeht. Dieses handelt davon, was die Konstrukte tun, wenn nichts sc' +
       'hiefgeht — samt der mehreren Stellen, an denen eine Vorlage etwas Überraschendes tut u' +
@@ -2880,8 +2880,8 @@ const
     '<blockquote>Jedes Beispiel unten wird bei jedem Bau des Programms durch die Maschine g' +
       'eschickt, die diese Kopie von Studio mitbringt, und rechts steht genau das, was sie zu' +
       'rückgab. Nichts hier ist erinnert oder geraten; eine Antwort, die aufhörte zu stimmen,' +
-      ' würde den Bau anhalten. Die Version der Maschine steht unter <b>Hilfe</b>, <b>Über</b' +
-      '>.</blockquote>',
+      ' würde den Bau anhalten. Die Version der Maschine steht unter <b>Hilfe</b>, <b>Über da' +
+      's Programm</b>.</blockquote>',
     '<h2 id="reading">Wie die Beispiele zu lesen sind</h2>',
     '<p>Der Pfeil <code>→</code> trennt die Vorlage von dem, was die Maschine zurückgab. <c' +
       'ode>⏎</code> ist ein Zeilenumbruch in einer Ausgabe, <code>(leer)</code> heißt, dass s' +
@@ -3077,11 +3077,11 @@ const
     '<p>Ziele sind die <code>.spintax</code>-Dateien im Ordner des offenen Dokuments. Ein u' +
       'nbekanntes Ziel entfaltet sich zu nichts — der Absatz verschwindet, statt kaputtzugehe' +
       'n, weshalb es so leicht zu übersehen ist.</p>',
-    '<p><b>Darum hat die Tafel Variablen einen dritten Abschnitt, Includes.</b> Er listet j' +
-      'edes <code>#include</code> des Dokuments auf und dazu, ob der Satz sein Ziel hat — ein' +
-      'e Zeile je Vorkommen, ein zweimal genanntes Ziel sind also zwei Zeilen. Der Abschnitt ' +
-      'erscheint nur, wenn das Dokument Einfügungen hat. Ein Klick auf eine Zeile bringt den ' +
-      'Cursor zu dem <code>#include</code>, das dieses Ziel nennt.</p>',
+    '<p><b>Darum hat die Tafel Variablen einen dritten Abschnitt, «Includes».</b> Er listet' +
+      ' jedes <code>#include</code> des Dokuments auf und dazu, ob der Satz sein Ziel hat — e' +
+      'ine Zeile je Vorkommen, ein zweimal genanntes Ziel sind also zwei Zeilen. Der Abschnit' +
+      't erscheint nur, wenn das Dokument Einfügungen hat. Ein Klick auf eine Zeile bringt de' +
+      'n Cursor zu dem <code>#include</code>, das dieses Ziel nennt.</p>',
     '<p>Die Marke hat <b>drei</b> Werte, und der dritte zählt: „kein Satz" heißt nicht „der' +
       ' Ausschnitt fehlt", sondern „es gibt noch nirgends nachzusehen". Der Satz ist der Ordn' +
       'er neben dem Dokument, und ein ungespeichertes Dokument hat keinen Ordner — bis zum er' +
@@ -3352,11 +3352,11 @@ const
       'sort comme il le fera à sa place.</p>',
     '<h2 id="panels">Les panneaux du bas</h2>',
     '<p>La barre d''outils sur le côté ouvre trois panneaux, un à la fois.</p>',
-    '<p><b>Diagnostic</b> liste ce que le moteur a jugé fautif, chaque fois avec la ligne e' +
-      't la colonne du début. Un clic sur une ligne y place le curseur. C''est le même verdic' +
-      't que le moteur rend partout ailleurs, et non un second avis de l''éditeur — c''est po' +
-      'urquoi un gabarit que ce panneau déclare valide est accepté par les autres moteurs.</p' +
-      '>',
+    '<p><b>Diagnostics</b> liste ce que le moteur a jugé fautif, chaque fois avec la ligne ' +
+      'et la colonne du début. Un clic sur une ligne y place le curseur. C''est le même verdi' +
+      'ct que le moteur rend partout ailleurs, et non un second avis de l''éditeur — c''est p' +
+      'ourquoi un gabarit que ce panneau déclare valide est accepté par les autres moteurs.</' +
+      'p>',
     '<p><b>Variables</b> montre les noms que votre document définit et ceux qu''il ne fait ' +
       'qu''employer. Un nom qu''il emploie et que rien ne définit, vous pouvez le remplir ici' +
       ' pour la session : écrivez une valeur à côté et l''aperçu la reprend. Cochez <b>en tex' +
@@ -3962,11 +3962,11 @@ const
     '<p>Les cibles sont les fichiers <code>.spintax</code> du dossier du document ouvert. U' +
       'ne cible inconnue se déploie en rien — le paragraphe disparaît au lieu de casser, ce q' +
       'ui est précisément pourquoi c''est facile à manquer.</p>',
-    '<p><b>C''est pourquoi l''onglet Variables a une troisième section, Inclusions.</b> Ell' +
-      'e liste chaque <code>#include</code> du document et, pour chacun, si le jeu a sa cible' +
-      ' — une ligne par occurrence, une cible nommée deux fois fait donc deux lignes. La sect' +
-      'ion n''apparaît que si le document a des inclusions. Un clic sur une ligne amène le cu' +
-      'rseur au <code>#include</code> qui nomme cette cible.</p>',
+    '<p><b>C''est pourquoi l''onglet Variables a une troisième section, «Inclusions».</b> E' +
+      'lle liste chaque <code>#include</code> du document et, pour chacun, si le jeu a sa cib' +
+      'le — une ligne par occurrence, une cible nommée deux fois fait donc deux lignes. La se' +
+      'ction n''apparaît que si le document a des inclusions. Un clic sur une ligne amène le ' +
+      'curseur au <code>#include</code> qui nomme cette cible.</p>',
     '<p>La marque a <b>trois</b> valeurs, et la troisième compte : « pas de jeu » ne veut p' +
       'as dire « l''extrait manque », mais « il n''y a encore nulle part où regarder ». Le je' +
       'u est le dossier à côté du document, et un document non enregistré n''a pas de dossier' +
@@ -4824,11 +4824,11 @@ const
     '<p>Las dianas son los archivos <code>.spintax</code> de la carpeta del documento abier' +
       'to. Una diana desconocida se despliega a nada: el párrafo desaparece en vez de rompers' +
       'e, que es justamente por lo que es tan fácil pasarlo por alto.</p>',
-    '<p><b>Por eso la pestaña Variables tiene una tercera sección, Inclusiones.</b> Enumera' +
-      ' cada <code>#include</code> del documento y, para cada uno, si el juego tiene su diana' +
-      ': una fila por aparición, así que una diana nombrada dos veces son dos filas. La secci' +
-      'ón aparece solo si el documento tiene inclusiones. Un clic en una fila lleva el cursor' +
-      ' al <code>#include</code> que nombra esa diana.</p>',
+    '<p><b>Por eso la pestaña Variables tiene una tercera sección, «Inclusiones».</b> Enume' +
+      'ra cada <code>#include</code> del documento y, para cada uno, si el juego tiene su dia' +
+      'na: una fila por aparición, así que una diana nombrada dos veces son dos filas. La sec' +
+      'ción aparece solo si el documento tiene inclusiones. Un clic en una fila lleva el curs' +
+      'or al <code>#include</code> que nombra esa diana.</p>',
     '<p>La marca tiene <b>tres</b> valores, y el tercero importa: «sin juego» no quiere dec' +
       'ir «falta el fragmento», sino «todavía no hay dónde mirar». El juego es la carpeta jun' +
       'to al documento, y un documento sin guardar no tiene carpeta: hasta el primer guardado' +
@@ -5176,7 +5176,7 @@ const
     '<blockquote>Ogni esempio qui sotto passa per il motore che questa copia di Studio port' +
       'a con sé, a ogni compilazione del programma, e a destra sta esattamente ciò che ha res' +
       'tituito. Nulla qui è ricordato o indovinato; una risposta che smettesse di essere vera' +
-      ' fermerebbe la compilazione. La versione del motore è sotto <b>Aiuto</b>, <b>Informazi' +
+      ' fermerebbe la compilazione. La versione del motore è sotto <b>Guida</b>, <b>Informazi' +
       'oni</b>.</blockquote>',
     '<p>L''altro documento di questa guida, <b>Cosa vi sta dicendo la scheda Diagnostica</b' +
       '>, parla di ciò che va storto. Questo parla di ciò che i costrutti fanno quando nulla ' +
@@ -5490,7 +5490,7 @@ const
     '<blockquote>Ogni esempio qui sotto passa per il motore che questa copia di Studio port' +
       'a con sé, a ogni compilazione del programma, e a destra sta esattamente ciò che ha res' +
       'tituito. Nulla qui è ricordato o indovinato; una risposta che smettesse di essere vera' +
-      ' fermerebbe la compilazione. La versione del motore è sotto <b>Aiuto</b>, <b>Informazi' +
+      ' fermerebbe la compilazione. La versione del motore è sotto <b>Guida</b>, <b>Informazi' +
       'oni</b>.</blockquote>',
     '<h2 id="reading">Come leggere gli esempi</h2>',
     '<p>La freccia <code>→</code> separa il modello da ciò che il motore ha restituito. <co' +
@@ -5681,11 +5681,11 @@ const
     '<p>I bersagli sono i file <code>.spintax</code> nella cartella del documento aperto. U' +
       'n bersaglio sconosciuto si dispiega in nulla: il paragrafo sparisce invece di rompersi' +
       ', ed è proprio per questo che è tanto facile non accorgersene.</p>',
-    '<p><b>Per questo la scheda Variabili ha una terza sezione, Inclusioni.</b> Elenca ogni' +
-      ' <code>#include</code> del documento e, per ciascuno, se l''insieme ha il suo bersagli' +
-      'o: una riga per occorrenza, quindi un bersaglio nominato due volte fa due righe. La se' +
-      'zione compare solo se il documento ha inclusioni. Un clic su una riga porta il cursore' +
-      ' all''<code>#include</code> che nomina quel bersaglio.</p>',
+    '<p><b>Per questo la scheda Variabili ha una terza sezione, «Inclusioni».</b> Elenca og' +
+      'ni <code>#include</code> del documento e, per ciascuno, se l''insieme ha il suo bersag' +
+      'lio: una riga per occorrenza, quindi un bersaglio nominato due volte fa due righe. La ' +
+      'sezione compare solo se il documento ha inclusioni. Un clic su una riga porta il curso' +
+      're all''<code>#include</code> che nomina quel bersaglio.</p>',
     '<p>Il segno ha <b>tre</b> valori, e il terzo conta: «nessun insieme» non vuol dire «il' +
       ' frammento manca», ma «non c''è ancora dove guardare». L''insieme è la cartella accant' +
       'o al documento, e un documento non salvato non ha cartella: fino al primo salvataggio ' +
@@ -6033,8 +6033,7 @@ const
     '<blockquote>Cada exemplo abaixo passa pelo motor que esta cópia do Studio traz consigo' +
       ', sempre que o programa é compilado, e à direita está exactamente o que ele devolveu. ' +
       'Nada aqui é lembrado nem adivinhado; uma resposta que deixasse de ser verdadeira parar' +
-      'ia a compilação. A versão do motor está em <b>Ajuda</b>, <b>Acerca de</b>.</blockquote' +
-      '>',
+      'ia a compilação. A versão do motor está em <b>Ajuda</b>, <b>Sobre</b>.</blockquote>',
     '<p>O outro documento desta ajuda, <b>O que lhe está a dizer o separador Diagnóstico</b' +
       '>, trata do que corre mal. Este trata do que as construções fazem quando nada corre ma' +
       'l — incluindo os vários sítios em que um modelo faz algo surpreendente e nada o assina' +
@@ -6348,8 +6347,7 @@ const
     '<blockquote>Cada exemplo abaixo passa pelo motor que esta cópia do Studio traz consigo' +
       ', sempre que o programa é compilado, e à direita está exactamente o que ele devolveu. ' +
       'Nada aqui é lembrado nem adivinhado; uma resposta que deixasse de ser verdadeira parar' +
-      'ia a compilação. A versão do motor está em <b>Ajuda</b>, <b>Acerca de</b>.</blockquote' +
-      '>',
+      'ia a compilação. A versão do motor está em <b>Ajuda</b>, <b>Sobre</b>.</blockquote>',
     '<h2 id="reading">Como ler os exemplos</h2>',
     '<p>A seta <code>→</code> separa o modelo daquilo que o motor devolveu. <code>⏎</code> ' +
       'é uma mudança de linha dentro de uma saída, <code>(vazio)</code> quer dizer que não im' +
@@ -6531,11 +6529,11 @@ const
     '<p>Os alvos são os ficheiros <code>.spintax</code> da pasta do documento aberto. Um al' +
       'vo desconhecido desdobra-se em nada: o parágrafo desaparece em vez de partir, que é pr' +
       'ecisamente por isso que é tão fácil não dar por ele.</p>',
-    '<p><b>É por isso que o separador Variáveis tem uma terceira secção, Inclusões.</b> Enu' +
-      'mera cada <code>#include</code> do documento e, para cada um, se o conjunto tem o seu ' +
-      'alvo: uma linha por ocorrência, logo um alvo nomeado duas vezes dá duas linhas. A secç' +
-      'ão aparece só se o documento tiver inclusões. Um clique numa linha leva o cursor ao <c' +
-      'ode>#include</code> que nomeia esse alvo.</p>',
+    '<p><b>É por isso que o separador Variáveis tem uma terceira secção, «Inclusões».</b> E' +
+      'numera cada <code>#include</code> do documento e, para cada um, se o conjunto tem o se' +
+      'u alvo: uma linha por ocorrência, logo um alvo nomeado duas vezes dá duas linhas. A se' +
+      'cção aparece só se o documento tiver inclusões. Um clique numa linha leva o cursor ao ' +
+      '<code>#include</code> que nomeia esse alvo.</p>',
     '<p>A marca tem <b>três</b> valores, e o terceiro conta: «sem conjunto» não quer dizer ' +
       '«o excerto falta», mas «ainda não há onde procurar». O conjunto é a pasta ao lado do d' +
       'ocumento, e um documento por gravar não tem pasta: até à primeira gravação, portanto, ' +
@@ -6785,9 +6783,9 @@ const
       't er een:</p>',
     '<p><small><tt><a href="ex:0">{Hallo|Goedendag} allemaal.</a><br>→&nbsp; Hallo allemaal' +
       '.</tt></small></p>',
-    '<p><b>Opnieuw loten</b> boven de rechterhelft haalt de volgende. Wilt u altijd dezelfd' +
-      'e — terwijl u twee wijzigingen vergelijkt bijvoorbeeld — vink dan <b>seed</b> aan, en ' +
-      'de voorvertoning staat stil tot u het weer uitvinkt of het getal verandert.</p>',
+    '<p><b>Opnieuw</b> boven de rechterhelft haalt de volgende. Wilt u altijd dezelfde — te' +
+      'rwijl u twee wijzigingen vergelijkt bijvoorbeeld — vink dan <b>seed</b> aan, en de voo' +
+      'rvertoning staat stil tot u het weer uitvinkt of het getal verandert.</p>',
     '<p>De schakelaar boven de rechterhelft biedt <b>Pagina</b> en <b>Bron</b>. Sjablonen z' +
       'ijn meestal HTML, en de twee vragen «hoe ziet dit eruit» en «welke opmaak kwam eruit» ' +
       'beantwoorden elkaar niet: een kapotte tag geeft een licht scheve opmaak waar het oog o' +
@@ -7390,11 +7388,11 @@ const
     '<p>Doelen zijn de <code>.spintax</code>-bestanden in de map van het geopende document.' +
       ' Een onbekend doel vouwt zich uit tot niets — de alinea verdwijnt in plaats van kapot ' +
       'te gaan, en dat is precies waarom het zo gemakkelijk te missen is.</p>',
-    '<p><b>Daarom heeft het tabblad Variabelen een derde afdeling, Includes.</b> Zij somt e' +
-      'lk <code>#include</code> van het document op en, voor elk, of de verzameling zijn doel' +
-      ' heeft — één regel per voorkomen, dus een twee keer genoemd doel zijn twee regels. De ' +
-      'afdeling verschijnt alleen als het document invoegingen heeft. Een klik op een regel b' +
-      'rengt de cursor naar het <code>#include</code> dat dat doel noemt.</p>',
+    '<p><b>Daarom heeft het tabblad Variabelen een derde afdeling, «Includes».</b> Zij somt' +
+      ' elk <code>#include</code> van het document op en, voor elk, of de verzameling zijn do' +
+      'el heeft — één regel per voorkomen, dus een twee keer genoemd doel zijn twee regels. D' +
+      'e afdeling verschijnt alleen als het document invoegingen heeft. Een klik op een regel' +
+      ' brengt de cursor naar het <code>#include</code> dat dat doel noemt.</p>',
     '<p>De markering heeft <b>drie</b> waarden, en de derde telt: «geen verzameling» beteke' +
       'nt niet «het fragment ontbreekt», maar «er is nog nergens te kijken». De verzameling i' +
       's de map naast het document, en een niet-bewaard document heeft geen map — tot de eers' +
@@ -7645,9 +7643,9 @@ const
       'i gösterir:</p>',
     '<p><small><tt><a href="ex:0">{Merhaba|Selam} herkese.</a><br>→&nbsp; Merhaba herkese.<' +
       '/tt></small></p>',
-    '<p>Sağ yarımın üstündeki <b>Yeniden çek</b> bir sonrakini getirir. Hep aynısını istiyo' +
-      'rsanız — iki değişikliği karşılaştırırken diyelim — <b>seed</b> kutusunu işaretleyin, ' +
-      'önizleme siz işareti kaldırana veya sayıyı değiştirene kadar durur.</p>',
+    '<p>Sağ yarımın üstündeki <b>Yeniden</b> bir sonrakini getirir. Hep aynısını istiyorsan' +
+      'ız — iki değişikliği karşılaştırırken diyelim — <b>seed</b> kutusunu işaretleyin, öniz' +
+      'leme siz işareti kaldırana veya sayıyı değiştirene kadar durur.</p>',
     '<p>Sağ yarımın üstündeki anahtar <b>Sayfa</b> ve <b>Kaynak</b> sunar. Şablonlar çoğunl' +
       'ukla HTML''dir ve «bu nasıl görünüyor» ile «hangi biçimleme çıktı» soruları birbirini ' +
       'yanıtlamaz: bozuk bir etiket gözün atladığı hafif eğri bir yerleşim verir, etiket dolu' +
@@ -7658,18 +7656,18 @@ const
       'sa öyle çıkar.</p>',
     '<h2 id="panels">Alttaki paneller</h2>',
     '<p>Yandaki araç şeridi üç paneli, her seferinde birini açar.</p>',
-    '<p><b>Tanı</b> makinenin yanlış bulduklarını, her birini başladığı satır ve sütunla bi' +
-      'rlikte sıralar. Bir satıra tıklamak imleci oraya koyar. Bu, makinenin başka her yerde ' +
-      'verdiği hükmün ta kendisidir, düzenleyicinin ikinci bir görüşü değil — bu yüzden bu pa' +
-      'nelin geçerli dediği bir şablonu öteki makineler de kabul eder.</p>',
+    '<p><b>Tanılama</b> makinenin yanlış bulduklarını, her birini başladığı satır ve sütunl' +
+      'a birlikte sıralar. Bir satıra tıklamak imleci oraya koyar. Bu, makinenin başka her ye' +
+      'rde verdiği hükmün ta kendisidir, düzenleyicinin ikinci bir görüşü değil — bu yüzden b' +
+      'u panelin geçerli dediği bir şablonu öteki makineler de kabul eder.</p>',
     '<p><b>Değişkenler</b> belgenizin tanımladığı adları ve yalnızca kullandığı adları göst' +
       'erir. Kullandığı ve hiçbir şeyin tanımlamadığı bir adı burada oturum için doldurabilir' +
       'siniz: yanına bir değer yazın, önizleme onu alır. Değer kendi kendini anlatan bir meti' +
       'nse, kendi başına küçük bir şablon değilse, <b>Düz metin</b> kutusunu işaretleyin.</p>',
-    '<p><b>Çeşitlemeler</b> bir seferde çok sayıda metin üretir. Kaç tane olduğunu söyleyin' +
-      ', üretin ve dışa aktarmadan önce listede okuyun. Neredeyse aynı olanlar üretilirken el' +
-      'enebilir ve bir tohum bütün partiyi yinelenebilir kılar: aynı tohum ve aynı şablon yar' +
-      'ın da aynı çeşitlemeleri verir.</p>',
+    '<p><b>Varyantlar</b> bir seferde çok sayıda metin üretir. Kaç tane olduğunu söyleyin, ' +
+      'üretin ve dışa aktarmadan önce listede okuyun. Neredeyse aynı olanlar üretilirken elen' +
+      'ebilir ve bir tohum bütün partiyi yinelenebilir kılar: aynı tohum ve aynı şablon yarın' +
+      ' da aynı çeşitlemeleri verir.</p>',
     '<p>Bu alanların yanında panel, şablonun toplamda kaç çeşitleme verebileceğini söyler: ' +
       '<code>{a|b} ve {c|d}</code> dört tane eder. Bu sayı, elli tane üretip okuyarak fark et' +
       'meden önce şablonun zayıf olduğunu size söyler.</p>',
@@ -8177,8 +8175,8 @@ const
     '<p><b>Bir oturum değeri önce şablondur, metin değil.</b> Makine konak programdan gelen' +
       ' her değere bunu yapar ve önizlemenin sunucuyla örtüşmesi gerekir — dolayısıyla değer ' +
       'alanına yazılan <code>{ucuz|pahalı}</code> bir seçim verir, o karakterleri değil. Metn' +
-      'in kendisini kastediyorsanız üçüncü sütunda <b>metin olarak</b> kutusunu işaretleyin: ' +
-      'o zaman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.</p>',
+      'in kendisini kastediyorsanız üçüncü sütunda <b>düz metin</b> kutusunu işaretleyin: o z' +
+      'aman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — tanım kendi ke' +
       'ndini anıyor</h3>',
     '<p><small><tt><a href="ex:50">#set %x% = a %x% b</a><br><a href="ex:50">%x%</a><br>→&n' +
@@ -8226,11 +8224,11 @@ const
     '<p>Hedefler, açık belgenin klasöründeki <code>.spintax</code> dosyalarıdır. Bilinmeyen' +
       ' bir hedef hiçliğe açılır — paragraf bozulmak yerine yok olur, ki bunu gözden kaçırmak' +
       ' tam da bu yüzden kolaydır.</p>',
-    '<p><b>Değişkenler sekmesinin üçüncü bir bölümü, Eklemeler, bu yüzden vardır.</b> Belge' +
-      'deki her <code>#include</code> işaretini ve her biri için kümenin hedefi bulundurup bu' +
-      'lundurmadığını sıralar — geçiş başına bir satır, yani iki kez anılan bir hedef iki sat' +
-      'ır eder. Bölüm yalnızca belgede ekleme varsa görünür. Bir satıra tıklamak imleci o hed' +
-      'efi anan <code>#include</code> işaretine götürür.</p>',
+    '<p><b>Değişkenler sekmesinin üçüncü bir bölümü, «Eklemeler», bu yüzden vardır.</b> Bel' +
+      'gedeki her <code>#include</code> işaretini ve her biri için kümenin hedefi bulundurup ' +
+      'bulundurmadığını sıralar — geçiş başına bir satır, yani iki kez anılan bir hedef iki s' +
+      'atır eder. Bölüm yalnızca belgede ekleme varsa görünür. Bir satıra tıklamak imleci o h' +
+      'edefi anan <code>#include</code> işaretine götürür.</p>',
     '<p>İşaretin <b>üç</b> değeri vardır ve üçüncüsü önemlidir: «küme yok», «parça eksik» d' +
       'emek değildir, «henüz bakılacak bir yer yok» demektir. Küme, belgenin yanındaki klasör' +
       'dür ve kaydedilmemiş bir belgenin klasörü yoktur — ilk kayda kadar her hedef böyle iml' +
@@ -11735,10 +11733,10 @@ const
       'onom gdje počinje. Klik na red vodi kursor tamo. To je ista presuda koju motor donosi ' +
       'svugdje, a ne drugo mišljenje uređivača — zato šablon koji ova ploča nazove ispravnim ' +
       'prihvataju i ostali motori.</p>',
-    '<p><b>Varijable</b> pokazuju imena koja vaš dokument definiše i ona koja samo koristi.' +
-      ' Ime koje on koristi a ništa ne definiše može se popuniti ovdje za ovu sesiju: upišite' +
-      ' vrijednost pored i pregled će je pokupiti. Označite <b>kao tekst</b> kada je vrijedno' +
-      'st tekst koji znači sam sebe, a ne mali šablon.</p>',
+    '<p><b>Promjenljive</b> pokazuju imena koja vaš dokument definiše i ona koja samo koris' +
+      'ti. Ime koje on koristi a ništa ne definiše može se popuniti ovdje za ovu sesiju: upiš' +
+      'ite vrijednost pored i pregled će je pokupiti. Označite <b>kao tekst</b> kada je vrije' +
+      'dnost tekst koji znači sam sebe, a ne mali šablon.</p>',
     '<p><b>Varijante</b> prave mnogo tekstova odjednom. Recite koliko, napravite ih i proči' +
       'tajte u spisku prije izvoza. Gotovo iste mogu se odbacivati već tokom pravljenja, a se' +
       'ed čini cijeli skup ponovljivim: isto sjeme i isti šablon sutra daju iste varijante.</' +

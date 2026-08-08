@@ -82,7 +82,16 @@ type
 
        So the host says what the SOURCE ended with and the render is clamped to it -- never
        padded, only cut, and only down to the reader's own file. The text that goes back to
-       GSA has to survive character for character. *)
+       GSA has to survive character for character.
+
+       TWO FIELDS, and the Boolean is why. `MaxTrailEols` alone made ZERO mean "end with no
+       terminator at all", which is the most destructive value there is -- and zero is exactly
+       what a caller who has never heard of the field leaves behind. The help branch of
+       RequestRender returns before the field is set and took it: measured harmless today (no
+       help example ends with a terminator) and one new example away from silent. This is the
+       lesson written twelve lines above for `HelpSet` and twenty above for `NoPostProcess`,
+       applied here after a review pointed out it had not been. *)
+    ClampTrailEols: Boolean;
     MaxTrailEols: Integer;
     { A selection to preview on its own, in the DOCUMENT's scope -- its `#set`/`#def` lines,
       the runtime context and the locale all still apply (spec §4.2). Empty means the whole
@@ -183,6 +192,11 @@ type
     Opts: TSpxDedupeOpts;
     { Same rule and the same polarity as the render job's, for the same reason. }
     NoPostProcess: Boolean;
+    { And the same ending. THIS is the path whose text goes back to GSA -- the preview is only
+      what the reader looks at -- and the clamp was added to the preview alone, which the
+      commit message justified with the export. Found by review. }
+    ClampTrailEols: Boolean;
+    MaxTrailEols: Integer;
   end;
 
   { One step's worth of news. Accepted says whether the variant just rendered went into the
@@ -494,6 +508,7 @@ begin
     batch := SpxRenderBatch(req.Text, ctx, 1, seed);
     try
       if batch.Count = 0 then v := Default(TSpxVariant) else v := batch[0];
+      if req.ClampTrailEols then v.Text := SpxClampTrailEols(v.Text, req.MaxTrailEols);
     finally
       batch.Free;
     end;
@@ -648,7 +663,8 @@ begin
       FResult.Preview := SpxRenderFragment(Job.Text, Job.Fragment, ctx)
     else
       FResult.Preview := SpxRenderSample(Job.Text, ctx);
-    FResult.Preview := SpxClampTrailEols(FResult.Preview, Job.MaxTrailEols);
+    if Job.ClampTrailEols then
+      FResult.Preview := SpxClampTrailEols(FResult.Preview, Job.MaxTrailEols);
 
     { Probes = 0: the interactive path already has its one render, and the health flags are
       the panel's business (M2), not the status bar's. }

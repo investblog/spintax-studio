@@ -270,7 +270,7 @@ arrives — it will not promise you a directive it cannot yet see the end of.
 Targets are the `.spintax` files in the folder of the open document. An unknown target expands to
 nothing — the paragraph disappears rather than breaking, which is exactly why it is easy to miss.
 
-**That is why the Variables tab has a third section, Includes.** It lists every `#include` the
+**That is why the Variables tab has a third section, «Includes».** It lists every `#include` the
 document contains and, for each, whether the set has its target — one row per occurrence, so a
 target named twice is two rows. The section appears only when the document
 has includes. Clicking a row moves the caret to the `#include` that names that target.

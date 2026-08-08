@@ -38,7 +38,7 @@ değil bir cümleyi izler.
 {Merhaba|Selam} herkese.  →  Merhaba herkese.
 ```
 
-Sağ yarımın üstündeki **Yeniden çek** bir sonrakini getirir. Hep aynısını istiyorsanız — iki
+Sağ yarımın üstündeki **Yeniden** bir sonrakini getirir. Hep aynısını istiyorsanız — iki
 değişikliği karşılaştırırken diyelim — **seed** kutusunu işaretleyin, önizleme siz işareti
 kaldırana veya sayıyı değiştirene kadar durur.
 
@@ -54,7 +54,7 @@ yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl ç�
 
 Yandaki araç şeridi üç paneli, her seferinde birini açar.
 
-**Tanı** makinenin yanlış bulduklarını, her birini başladığı satır ve sütunla birlikte sıralar. Bir
+**Tanılama** makinenin yanlış bulduklarını, her birini başladığı satır ve sütunla birlikte sıralar. Bir
 satıra tıklamak imleci oraya koyar. Bu, makinenin başka her yerde verdiği hükmün ta kendisidir,
 düzenleyicinin ikinci bir görüşü değil — bu yüzden bu panelin geçerli dediği bir şablonu öteki
 makineler de kabul eder.
@@ -64,7 +64,7 @@ hiçbir şeyin tanımlamadığı bir adı burada oturum için doldurabilirsiniz:
 önizleme onu alır. Değer kendi kendini anlatan bir metinse, kendi başına küçük bir şablon değilse,
 **Düz metin** kutusunu işaretleyin.
 
-**Çeşitlemeler** bir seferde çok sayıda metin üretir. Kaç tane olduğunu söyleyin, üretin ve dışa
+**Varyantlar** bir seferde çok sayıda metin üretir. Kaç tane olduğunu söyleyin, üretin ve dışa
 aktarmadan önce listede okuyun. Neredeyse aynı olanlar üretilirken elenebilir ve bir tohum bütün
 partiyi yinelenebilir kılar: aynı tohum ve aynı şablon yarın da aynı çeşitlemeleri verir.
 

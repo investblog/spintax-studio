@@ -56,7 +56,7 @@ Traka alata sa strane otvara tri ploče, po jednu u isto vrijeme.
 Klik na red vodi kursor tamo. To je ista presuda koju motor donosi svugdje, a ne drugo mišljenje
 uređivača — zato šablon koji ova ploča nazove ispravnim prihvataju i ostali motori.
 
-**Varijable** pokazuju imena koja vaš dokument definiše i ona koja samo koristi. Ime koje on koristi
+**Promjenljive** pokazuju imena koja vaš dokument definiše i ona koja samo koristi. Ime koje on koristi
 a ništa ne definiše može se popuniti ovdje za ovu sesiju: upišite vrijednost pored i pregled će je
 pokupiti. Označite **kao tekst** kada je vrijednost tekst koji znači sam sebe, a ne mali šablon.
 

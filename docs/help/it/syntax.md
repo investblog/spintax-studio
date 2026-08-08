@@ -11,7 +11,7 @@ modello. I commenti sono un settimo segno che non produce nulla del tutto.
 > Ogni esempio qui sotto passa per il motore che questa copia di Studio porta con sé, a ogni
 > compilazione del programma, e a destra sta esattamente ciò che ha restituito. Nulla qui è
 > ricordato o indovinato; una risposta che smettesse di essere vera fermerebbe la compilazione.
-> La versione del motore è sotto **Aiuto**, **Informazioni**.
+> La versione del motore è sotto **Guida**, **Informazioni**.
 
 L'altro documento di questa guida, **Cosa vi sta dicendo la scheda Diagnostica**, parla di ciò che
 va storto. Questo parla di ciò che i costrutti fanno quando nulla va storto — compresi i diversi

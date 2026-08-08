@@ -17,7 +17,7 @@ La colonna **Dove** è riga e colonna. Un clic sulla riga vi porta il cursore.
 > Ogni esempio qui sotto passa per il motore che questa copia di Studio porta con sé, a ogni
 > compilazione del programma, e a destra sta esattamente ciò che ha restituito. Nulla qui è
 > ricordato o indovinato; una risposta che smettesse di essere vera fermerebbe la compilazione.
-> La versione del motore è sotto **Aiuto**, **Informazioni**.
+> La versione del motore è sotto **Guida**, **Informazioni**.
 
 ## Come leggere gli esempi
 
@@ -274,7 +274,7 @@ I bersagli sono i file `.spintax` nella cartella del documento aperto. Un bersag
 dispiega in nulla: il paragrafo sparisce invece di rompersi, ed è proprio per questo che è tanto
 facile non accorgersene.
 
-**Per questo la scheda Variabili ha una terza sezione, Inclusioni.** Elenca ogni `#include` del
+**Per questo la scheda Variabili ha una terza sezione, «Inclusioni».** Elenca ogni `#include` del
 documento e, per ciascuno, se l'insieme ha il suo bersaglio: una riga per occorrenza, quindi un
 bersaglio nominato due volte fa due righe. La sezione compare solo se il documento ha inclusioni.
 Un clic su una riga porta il cursore all'`#include` che nomina quel bersaglio.

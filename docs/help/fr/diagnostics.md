@@ -280,7 +280,7 @@ Les cibles sont les fichiers `.spintax` du dossier du document ouvert. Une cible
 déploie en rien — le paragraphe disparaît au lieu de casser, ce qui est précisément pourquoi c'est
 facile à manquer.
 
-**C'est pourquoi l'onglet Variables a une troisième section, Inclusions.** Elle liste chaque
+**C'est pourquoi l'onglet Variables a une troisième section, «Inclusions».** Elle liste chaque
 `#include` du document et, pour chacun, si le jeu a sa cible — une ligne par occurrence, une cible
 nommée deux fois fait donc deux lignes. La section n'apparaît que si le document a des inclusions.
 Un clic sur une ligne amène le curseur au `#include` qui nomme cette cible.

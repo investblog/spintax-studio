@@ -128,10 +128,15 @@ end;
 
    DELETE THIS when the engine's converter tests the shape before the count. *)
 
-{ The engine's `IsBlank`. }
+(* The engine's `IsBlank` (`Spintax.Gsa.pas:156-159`): SPACE AND TAB, and nothing else.
+
+   Written with CR and LF in it first, which quietly killed the third refusal below: the scan
+   stopped AT the line break instead of walking onto it, so `TagOf`'s "a tag carrying a line
+   break is not a tag" could never fire and a tag block split across two lines was lifted where
+   the engine leaves it alone. A blank set copied by guess rather than from the source. *)
 function GsaBlank(c: Char): Boolean;
 begin
-  Result := (c = ' ') or (c = #9) or (c = #13) or (c = #10);
+  Result := (c = ' ') or (c = #9);
 end;
 
 { `TagOf` reduced to the question this asks -- is the option claiming to be a tag AND readable
@@ -174,32 +179,82 @@ begin
   Result := True;
 end;
 
-{ A prefix that occurs nowhere in the document, so every name built on it is free. }
+(* A prefix that occurs nowhere in the document, so every name built on it is free --
+   compared CASE-INSENSITIVELY, because the engine folds variable names and the engine's own
+   `ChoosePrefix` says so in as many words (`Spintax.Gsa.pas:251`). Matching case-sensitively
+   let a document carrying `%__SPX_U1%` in upper case hand the author's own variable to a
+   generated name, and the render came back with the tag twice. *)
 function FreePrefix(const ADoc: string): string;
-var n: Integer;
+var n: Integer; low: string;
 begin
+  low := LowerCase(ADoc);
   Result := '__spx_u';
   n := 0;
-  while Pos(Result, ADoc) > 0 do
+  while Pos(LowerCase(Result), low) > 0 do
   begin
     Inc(n);
     Result := '__spx' + IntToStr(n) + '_u';
   end;
 end;
 
+(* WHAT A REFUSAL MUST CARRY: the AUTHOR's text.
+
+   The guard walks the CONVERTED document, where every BBCode bracket, `#file[...]` and `/#`
+   has already become a `%__gsa_N%` ref. Lifting the block as it stands there hands the reader
+   -- and the render -- this unit's placeholders instead of what they wrote, and marking it
+   `Literal` makes that permanent: `SpNeutralize` treats `%` as structural, so the ref can
+   never resolve again. Measured: `{#.de [b]Hallo[/b]} today.` came out as
+   `{#.de %__gsa_l1%b%__gsa_l2%Hallo…} today.` on screen and in the dialog -- WORSE than the
+   leak this guard was written to close, which at least kept the text.
+
+   The engine does the identical lift and expands first, for the identical reason
+   (`Spintax.Gsa.pas:843-846`, `ExpandMacroRefs` at `:438`): "a block that later turns out to
+   be unconvertible puts them back before it is reported, so the host is handed the author's
+   text and not this unit's placeholders". Mirrored here. *)
+function ExpandRefs(const S: string; AMacros: TStrMap): string;
+var i, n, j: Integer; nm, val: string;
+begin
+  Result := '';
+  i := 1;
+  n := Length(S);
+  while i <= n do
+  begin
+    if S[i] = '%' then
+    begin
+      j := i + 1;
+      while (j <= n) and (S[j] <> '%') do Inc(j);
+      if j <= n then
+      begin
+        nm := Copy(S, i + 1, j - i - 1);
+        if AMacros.TryGetValue(nm, val) then
+        begin
+          Result := Result + SpSafetyRestore(val);
+          i := j + 1;
+          Continue;
+        end;
+      end;
+    end;
+    Result := Result + S[i];
+    Inc(i);
+  end;
+end;
+
 { Lifts every single-option tag block out of ADoc, appending one entry to AVars and one to
   ARefused for each, and returns the rewritten document. }
-function GuardTagBlocks(const ADoc: string; var AVars: TSpxVarPairs;
+function GuardTagBlocks(const ADoc: string; AMacros: TStrMap; var AVars: TSpxVarPairs;
   var ARefused: TSpxGsaRefusals): string;
 var
   i, j, depth, at, n, taken: Integer;
   content, prefix, name_, whole: string;
+  seen: TStrMap;         { lifted text -> the name it was given }
 begin
   Result := '';
   prefix := FreePrefix(ADoc);
   taken := 0;
   n := Length(ADoc);
   i := 1;
+  seen := TStrMap.Create;
+  try
   while i <= n do
   begin
     if ADoc[i] <> '{' then
@@ -223,22 +278,39 @@ begin
     end;
     if (j > n) or (depth <> 0) then
     begin
-      { unbalanced: the rest goes through exactly as it is }
-      Result := Result + Copy(ADoc, i, n - i + 1);
-      Break;
+      (* UNBALANCED, so this `{` closes nothing -- and the walk goes ON. Copying the remainder
+         and stopping meant one stray brace anywhere disabled the guard for everything after
+         it: `a { b {#.de Hallo} c` leaked exactly as before. The engine's own walk emits the
+         brace and carries on (`Spintax.Gsa.pas:806-807`); so does this. *)
+      Result := Result + ADoc[i];
+      Inc(i);
+      Continue;
     end;
 
     content := Copy(ADoc, i + 1, j - i - 1);
     if SingleOption(content) and TagShaped(content) then
     begin
-      Inc(taken);
-      name_ := prefix + IntToStr(taken);
-      whole := Copy(ADoc, i, j - i + 1);
-      at := Length(AVars);
-      SetLength(AVars, at + 1);
-      AVars[at].Name := name_;
-      AVars[at].Value := whole;
-      AVars[at].Literal := True;
+      { The author's text, not the converter's placeholders -- see ExpandRefs above. }
+      whole := ExpandRefs(Copy(ADoc, i, j - i + 1), AMacros);
+      { IDENTICAL TEXT SHARES ONE NAME, as the engine's lifter does (`:269-273`) -- otherwise
+        the same block twice made two variables, the count said "2 variables" for one distinct
+        text, and the dialog's dedupe could never collapse them. }
+      { A DICTIONARY, not a name=value list: the lifted text is arbitrary and may carry an
+        `=` of its own, and `IndexOf` over a joined line found nothing at all -- the first
+        version of this dedupe silently did not dedupe. }
+      if not seen.TryGetValue(whole, name_) then
+      begin
+        Inc(taken);
+        name_ := prefix + IntToStr(taken);
+        seen.AddOrSetValue(whole, name_);
+        at := Length(AVars);
+        SetLength(AVars, at + 1);
+        AVars[at].Name := name_;
+        AVars[at].Value := whole;
+        AVars[at].Literal := True;
+      end;
+      { One refusal per OCCURRENCE, which is what the engine reports too -- the dialog dedupes
+        by name for display. }
       at := Length(ARefused);
       SetLength(ARefused, at + 1);
       ARefused[at].Name := name_;
@@ -253,6 +325,9 @@ begin
       Result := Result + ADoc[i];
       Inc(i);
     end;
+  end;
+  finally
+    seen.Free;
   end;
 end;
 
@@ -316,7 +391,7 @@ begin
        The first version of this call sat above it and its refusals vanished silently -- the
        document was rewritten correctly and the reader was told nothing, which is the very
        defect being fixed. Caught by measuring the result, not by reading the diff. *)
-    Result.Doc := GuardTagBlocks(Result.Doc, Result.Vars, Result.Refused);
+    Result.Doc := GuardTagBlocks(Result.Doc, macros, Result.Vars, Result.Refused);
     SortPairs(Result.Vars);
   finally
     refused.Free;

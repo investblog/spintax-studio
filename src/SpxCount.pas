@@ -123,6 +123,22 @@ type
       answer in BOTH directions: `maxsize=1` over three options is 3 where the plain reading
       is 6, and `minsize=2` is 12. }
     UnknownConfig: Boolean;
+    { Made by this file rather than read from the document -- see the plural tell. }
+    Synthetic: Boolean;
+    { Which LINE this token came from, so a frame can tell whether an option was read on the
+      line its own `[` opened. See TFrame.Suspect. }
+    Line: Integer;
+    (* THE WHOLE TOKEN IS `<...>`, so the engine may be lifting it out of the option as a
+       trailing separator where this scan handed it over as ordinary text.
+
+       `SpxTokens` only recognises a trailing separator while its permutation frame is open,
+       and those frames are LINE-LOCAL by design -- the unit header calls that "a missing
+       colour, never a wrong one", which was true until a token KIND started deciding a
+       COUNT. `[a` LF `|<x>|b]` then kept an option the engine drops: 6, EXACT, against 2. *)
+    LooksSep: Boolean;
+    { Carries a `:` -- the engine's second condition for a plural head, which may be on a
+      later line than the keyword. }
+    HasColon: Boolean;
   end;
   TCTokList = specialize TList<TCTok>;
 
@@ -151,6 +167,13 @@ type
     Broken: Boolean;
     { This permutation's config was there and unreadable. }
     ConfigUnknown: Boolean;
+    { The line this frame's opener was on, and whether an option arrived that the scan could
+      not have classified from here -- see TCTok.LooksSep. }
+    OpenLine: Integer;
+    Suspect: Boolean;
+    { A `plural ` keyword was seen right after the brace, and whether the colon the engine also
+      requires turned up anywhere inside. }
+    MaybePlural, SawColon: Boolean;
     (* Has the option being read put anything in? A permutation drops the ones that did not;
        an enumeration keeps them, and an enumeration of two empties really is three. See
        TCTok.HasInk. Star-parens: the example it wants to show is made of braces. *)
@@ -436,7 +459,7 @@ var
   line: TSpxTokenList;
   masked: string;
   i, j, k, b1, b2: Integer;
-  lastCloserLine, bracketLine: Integer;
+  lastCloserLine, bracketLine, braceLine: Integer;
   head: TCTok;
   lineHasInclude: Boolean;
   prevKind: TSpxTokenKind;
@@ -461,6 +484,7 @@ var
 begin
   AIncludes := 0;
   bracketLine := -1;
+  braceLine := -1;
   AOpenComment := False;
   ALooseInclude := False;
   AOpenConfig := False;
@@ -524,8 +548,15 @@ begin
           it never do. }
         t.HasInk := not (t.Kind in [sptComment, sptTrailingSep, sptPermConfig,
                                     sptPipe, sptBraceClose, sptBracketClose]);
+        t.Line := i;
         if (t.Kind = sptText) and t.HasInk then
-          t.HasInk := Trim(Copy(masked, line[j].Start, line[j].Length)) <> '';
+        begin
+          slice := Trim(Copy(masked, line[j].Start, line[j].Length));
+          t.HasInk := slice <> '';
+          t.LooksSep := (Length(slice) >= 2) and (slice[1] = '<') and
+                        (slice[Length(slice)] = '>');
+          t.HasColon := Pos(':', slice) > 0;
+        end;
         { Only the kinds whose characters are read later; see TCTok. }
         if t.Kind in [sptVariable, sptString, sptPermConfig] then
           t.Text := Copy(masked, line[j].Start, line[j].Length)
@@ -583,17 +614,36 @@ begin
              A synthetic head token rather than a new rule: the walk already knows what to do
              with one, including making the answer a floor. Requiring the trailing space is
              what keeps `{plural|other}` an ordinary two-way choice, which is what it is. *)
-          if (prevKind = sptBraceOpen) and (t.Kind = sptText) and
+          (* SAME LINE AS THE BRACE. `prevKind` survives a line break, so `{` LF
+             `plural 2: one|many}` fired this -- but the engine's gate is
+             `Copy(content,1,7) = 'plural '` and that content STARTS WITH THE LF, so it is an
+             ordinary choice of two and this reported "at least 1".
+
+             The engine's SECOND condition -- a `:` anywhere after the keyword
+             (`Spintax.pas:1614-1618`) -- is decided in the walk, not here: it may sit on a
+             later line, and requiring it on THIS one broke the floor for
+             `{plural 2` LF `: one|many}`, which the engine reads as a plural worth one. The
+             suite caught that within the run. *)
+          if (prevKind = sptBraceOpen) and (t.Kind = sptText) and (i = braceLine) and
              (Copy(masked, line[j].Start, 7) = 'plural ') then
           begin
             head := Default(TCTok);
             head.Kind := sptPluralHead;
             head.HasInk := True;
+            head.Synthetic := True;
+            head.Line := i;
             Tokens.Add(head);
           end;
         end;
-        prevKind := t.Kind;
+        (* WHAT COUNTS AS "THE TOKEN AFTER THE BRACKET". Blank and comments do NOT: the engine
+           ltrims before parsing a config (`PhpLtrim`, `Spintax.pas:1502`) and has already
+           stripped comments, so `[ ` LF `<maxsize=1>a|b|c]` is a config to it. One space after
+           the `[` used to consume this position and the next-line tell never ran -- 6, EXACT,
+           against the engine's 3, which breaks the floor. Found by review. *)
+        if not ((t.Kind = sptComment) or ((t.Kind = sptText) and not t.HasInk)) then
+          prevKind := t.Kind;
         if t.Kind = sptBracketOpen then bracketLine := i;
+        if t.Kind = sptBraceOpen then braceLine := i;
         Tokens.Add(t);
       end;
     end;
@@ -731,13 +781,14 @@ var
     frames[top].Options[m] := frames[top].Current;
   end;
 
-  procedure Push(AKind: TSpxTokenKind; AFree: Boolean);
+  procedure Push(AKind: TSpxTokenKind; AFree: Boolean; ALine: Integer);
   begin
     Inc(top);
     SetLength(frames, top + 1);
     frames[top] := Default(TFrame);
     frames[top].Kind := AKind;
     frames[top].Free := AFree;
+    frames[top].OpenLine := ALine;
     frames[top].Current := 1;
     frames[top].MinSize := -1;
     frames[top].MaxSize := -1;
@@ -820,19 +871,33 @@ begin
         tell an empty option from one that merely has no choice in it. An opener counts for
         the frame it sits IN, before it becomes a frame of its own. }
       if (top >= 0) and t.HasInk then frames[top].OptInk := True;
+      { An option this scan could not have classified: see TFrame.Suspect. }
+      if (top >= 0) and t.LooksSep and (frames[top].Kind = sptBracketOpen) and
+         (t.Line <> frames[top].OpenLine) then
+        frames[top].Suspect := True;
+      if (top >= 0) and t.HasColon then frames[top].SawColon := True;
       case t.Kind of
         sptBraceOpen:
           { A conditional or a plural is decided by the input, so it is NOT a free choice: its
             head token arrives next and says which this is. Pushed as free, corrected below. }
-          Push(sptBraceOpen, True);
+          Push(sptBraceOpen, True, t.Line);
         sptBracketOpen:
-          Push(sptBracketOpen, True);
+          Push(sptBracketOpen, True, t.Line);
         sptCondHead, sptPluralHead:
           if top >= 0 then
           begin
-            frames[top].Free := False;
-            frames[top].Cond := t.Kind = sptCondHead;
-            Exact := False;
+            (* A SYNTHESISED head is a MAYBE: the keyword was there but the engine also wants a
+               colon after it, which may be on a later line. The frame carries the question and
+               the close answers it. A real head from the scanner has already been read whole,
+               so it is not in doubt. *)
+            if t.Synthetic then
+              frames[top].MaybePlural := True
+            else
+            begin
+              frames[top].Free := False;
+              frames[top].Cond := t.Kind = sptCondHead;
+              Exact := False;
+            end;
           end;
         sptPermConfig:
           if (top >= 0) and (frames[top].Kind = sptBracketOpen) then
@@ -897,6 +962,13 @@ begin
             if j >= 0 then
             begin
             CloseOption;
+            { The plural question, answered now that the whole construct has been read. }
+            if frames[top].MaybePlural and frames[top].SawColon then
+            begin
+              frames[top].Free := False;
+              frames[top].Cond := False;
+              Exact := False;
+            end;
             if not frames[top].Free then
             begin
               (* A CONDITIONAL'S INPUT PICKS THE BRANCH -- but the branch still has whatever is
@@ -920,7 +992,7 @@ begin
             end
             else if frames[top].Kind = sptBracketOpen then
             begin
-              if frames[top].ConfigUnknown then
+              if frames[top].ConfigUnknown or frames[top].Suspect then
               begin
                 { One is the only number that cannot be wrong here. }
                 c := 1;

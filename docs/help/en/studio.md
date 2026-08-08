@@ -40,7 +40,7 @@ A template with a choice in it has no single answer, and the preview shows one o
 ```
 
 Press **Reroll** above the right pane for another. If you want the same one every time — while
-you are comparing two edits, say — tick **Seed** and the preview stops moving until you untick
+you are comparing two edits, say — tick **seed** and the preview stops moving until you untick
 it or change the number.
 
 The switch above the right pane offers **Page** and **Source**. Templates are usually HTML, and the

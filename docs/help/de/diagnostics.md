@@ -17,7 +17,7 @@ Die Spalte **Ort** ist Zeile und Spalte. Ein Klick auf die Zeile setzt den Curso
 > Jedes Beispiel unten wird bei jedem Bau des Programms durch die Maschine geschickt, die diese
 > Kopie von Studio mitbringt, und rechts steht genau das, was sie zurückgab. Nichts hier ist
 > erinnert oder geraten; eine Antwort, die aufhörte zu stimmen, würde den Bau anhalten. Die
-> Version der Maschine steht unter **Hilfe**, **Über**.
+> Version der Maschine steht unter **Hilfe**, **Über das Programm**.
 
 ## Wie die Beispiele zu lesen sind
 
@@ -284,7 +284,7 @@ Ziele sind die `.spintax`-Dateien im Ordner des offenen Dokuments. Ein unbekannt
 sich zu nichts — der Absatz verschwindet, statt kaputtzugehen, weshalb es so leicht zu übersehen
 ist.
 
-**Darum hat die Tafel Variablen einen dritten Abschnitt, Includes.** Er listet jedes `#include`
+**Darum hat die Tafel Variablen einen dritten Abschnitt, «Includes».** Er listet jedes `#include`
 des Dokuments auf und dazu, ob der Satz sein Ziel hat — eine Zeile je Vorkommen, ein zweimal
 genanntes Ziel sind also zwei Zeilen. Der Abschnitt erscheint nur, wenn das Dokument Einfügungen
 hat. Ein Klick auf eine Zeile bringt den Cursor zu dem `#include`, das dieses Ziel nennt.
