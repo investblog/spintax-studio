@@ -104,9 +104,25 @@ is a deliberate state and not a backlog of things anyone forgot.
    application opens no socket at all; clicking a mark hands an address to Windows, and the
    browser is what visits the site, exactly as if the address had been typed. `docs/privacy.md`
    names both marks and says that in as many words; the suite's count moved from one to two in
-   the same commit, which is what the count is for. The hosted copy at
-   <https://spintax.studio/privacy.html> **must be republished before this version ships**, and
-   Microsoft's own snapshot of that text updates only with the submission.
+   the same commit, which is what the count is for.
+
+   **The policy is published in TWO places and BOTH are wrong today** — read on 2026-08-08,
+   not assumed. This entry used to say "republish the hosted copy", which is not enough and
+   reads as if one action closed it:
+
+   - <https://spintax.studio/privacy.html> — *"There is **one** external action: clicking the
+     spintax.net mark in the tool rail…"* Owner republishes.
+   - **the listing's `PrivacyUrl` is NOT that page.** It is a frozen Microsoft snapshot,
+     `https://cdn.storeedgefd.dsx.mp.microsoft.com/eus2/privacy-policy-storage/…/privacy_policy_5736d213-….txt`,
+     fetched and read: it carries the same one-link text. That is the copy a Store customer
+     opens, and it changes **only** through the Partner Center field at submission. Republishing
+     the site does not touch it.
+
+   The contact line differs across all three copies as well — `docs/privacy.md` says
+   `support@301.st`, both published copies say `https://301.st/contact`, and the live listing's
+   `SupportUris` is `https://spintax.net`. **`support@301.st` is the owner's choice** (2026-08-08)
+   and becomes the published contact at submission; confirm the mailbox is live before it does.
+   The `SupportUris` difference stays an owner decision at submission, not a defect to fix here.
 
 6. **The engine moved to `v0.5.1`**, 2026-08-07 (was `v0.3.3`, which is what R0 shipped
    against; `v0.4.0` and `v0.4.1` were each pinned for part of the day — see below). Nothing Studio can see changed, and that was checked rather than read off a
@@ -1774,6 +1790,37 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
 ## Raised by review, not yet built
 
+- [ ] **The GSA conversion runs on the UI thread and is quadratic in DISTINCT macros.**
+      `gui/SpxMainForm.pas:4341` calls `SpxImportGsa` straight from the menu handler -- every
+      other engine-family call in this application goes through `TSpxEngineThread` -- and
+      `TLifter.Ref` (`engine/src/Spintax.Gsa.pas:316`) looks its keys up with a linear
+      `FKeys.IndexOf`. Measured by the review, on this machine:
+
+      | input | distinct lifted | time |
+      |---|---|---|
+      | 1 000 x `#file[lN.txt,1,S]` (20 KB) | 1 000 | 298 ms |
+      | 2 000 x same (41 KB) | 2 000 | 1 292 ms |
+      | 4 000 x same (83 KB) | 4 000 | 4 155 ms |
+      | 4 000 x a full line (249 KB) | 4 003 | **38 922 ms** |
+
+      Text volume alone is fine -- 220 KB with 2 distinct macros is 69 ms -- so the driver is
+      the count of distinct macros, which is exactly what a large SER project template has.
+      During those 39 seconds the window is frozen with no cursor, no progress and no cancel,
+      and Windows marks it *Not Responding*.
+
+      **Not a `GAbbrevs` race**: `EnsureAbbrevs` is reached only from the post-process, and the
+      converter renders nothing. The defect is the freeze. The work is to move the call onto
+      the worker with progress and cancel, which is a slice of its own -- **deliberately not in
+      `v0.1.1.0`** (owner's decision, 2026-08-08).
+
+- [ ] **The help's control-name gate holds a floor, not a ceiling.** `CheckHelpNamesControls`
+      asserts each language names a control as its own string table does, somewhere across its
+      three documents -- so a document naming one WRONGLY is masked by a sibling naming it
+      right, which is what English had (`studio.md` said "Literal" where `diagnostics.md` said
+      *as text*). The 27 masked occurrences were found by grepping the wrong words once, by
+      hand. Tightening it needs a way to know which documents discuss which control, and every
+      version of that is a hand-written list per language.
+
 - [x] **An unbalanced bracket inside a permutation's config made the two bracket rules
       contradict each other — FIXED 2026-08-01.** Both walks ask the tokenizer's own
       `PermConfigLength` and skip the config whole; the first attempt left the defect alive
@@ -2065,6 +2112,25 @@ Decisions owed **before the relevant submission** (not switchable later):
   See spec §10/§11.
 
 ## To report to the engine
+
+- [ ] **`Spintax.Gsa.pas:626` — a tag block with ONE option is neither converted nor refused.**
+      `TranslateBlock` does `if parts.Count < 2 then Exit` (returning `bkPlain`) **before** the
+      tag-shape test at `:631-640` that exists to catch this. Measured on the pinned `v0.5.1`:
+
+      ```
+      {#.de Hallo} today.        ->  renders `#.de Hallo today.`, Refused = 0
+      {#TAG1 hello} world        ->  renders `#TAG1 hello world`,  Refused = 0
+      {x|{#.de Hallo}}           ->  the tag comes out at random
+      {#.de Hallo|#.com Hello}   ->  refused, correctly
+      ```
+
+      That is the coin flip the unit's own header (`:12-18`) forbids in as many words. The fix
+      looks like moving the count test after the shape test, so a block that is tag-SHAPED and
+      unreadable is `bkUnsupported` whatever its option count.
+
+      **Studio guards itself meanwhile** — `GuardTagBlocks` in `src/SpxGsaImport.pas`, which
+      reads the converted document back and lifts the shape into a refusal. **Delete that guard
+      when this lands**, and the checks named `gsa/a one-option tag block…` with it.
 
 - [ ] **The converter's bracket rule expires the day SER gains `[]` — WAIT for that release,
       do not pre-empt it.** GSA replied on 2026-08-06 that they will implement rather than

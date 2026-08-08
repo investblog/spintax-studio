@@ -7,7 +7,9 @@ project: spintax-studio
 
 # Privacy policy — Spintax Studio
 
-**Effective 1 August 2026. Applies to Spintax Studio 0.1 for Windows.**
+**Effective 4 August 2026. Applies to Spintax Studio 0.1 for Windows.**
+
+*(The date moved from 1 August because the text below changed on the 4th: the window gained a second mark, and a policy that lists what leaves your computer has to be dated when that list changed, not when it was first written.)*
 
 Spintax Studio is an offline desktop application. It does not collect, transmit or store any
 personal data.
