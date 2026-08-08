@@ -43,7 +43,7 @@ Press **Reroll** above the right pane for another. If you want the same one ever
 you are comparing two edits, say — tick **Seed** and the preview stops moving until you untick
 it or change the number.
 
-The right pane shows either the **page** or the **source**. Templates are usually HTML, and the
+The switch above the right pane offers **Page** and **Source**. Templates are usually HTML, and the
 two questions "how does this look" and "what markup came out" do not answer each other: a broken
 tag makes slightly crooked layout the eye skips over, while prose with tags in it does not read
 as prose. The switch above the pane changes which one you are looking at.
@@ -62,7 +62,7 @@ the other engines will accept.
 
 **Variables** shows the names your document defines and the names it merely uses. A name it uses
 and nothing defines is one you can fill in here for the session: type a value beside it and the
-preview picks it up. Tick **Literal** when the value is text that means itself rather than a
+preview picks it up. Tick **as text** when the value is text that means itself rather than a
 little template of its own.
 
 **Variants** generates many texts at once. Say how many, generate, and read them in the list

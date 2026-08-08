@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    '827dad11c9cc9f1f', '86168cd464b4d93f', 'fa83a90f7f612dbc', '27c9f591fca72a43', 'c5226848658b80c2', '5fffb2b1ac7faad0', 'f84422c4914795af', 'b238d9fc03fd8d1e', '954bc0684862f7bf', 'a13813d94022fc79', 'f97317079554607c', 'cba1e24e3fd02d3c', '2ac60637deec5293', 'a171652427448b1d', '2edce4acd51627d2', 'ad5ac9e54fecd8bb', '6c95fb9944927410', '08805b1be3656cd9', 'c32ef23f68968452', '6c578908ab8c6c29', 'bff3ba7c06efe1c3', 'aea105784f6a931e', 'bd89c7e36c9cf6c8', 'f2b72eeadf6781cc', '573101ecb765ab77', 'b3da8cd65b776379', '1426514362a3982e', '63b3b631bc63a6c3', 'f6a7a52fc38720ab', 'ca47272aa433136a', '3352ab7dbd5a86a7', '9f2342c04979c9c0', '28b58196d1106227', '9f99b035c5622081', '601fbb8d6ec439f8', '604a516c3b56753e', '4e5d9d9fe0d0272f', 'e8db63837bb7c682', 'babb3acf31b0d217', '3d08b6abd55d1d8f', 'b0336f99bf55ae0d', 'bda61a2255cfeb97'
+    '271b132231107d65', '86168cd464b4d93f', '7dd6651ddec1ad95', '3467833a274e49df', 'c5226848658b80c2', 'f6b0fb891bdfa838', '41b507e99199ea85', '9758c28166c0d8fb', '6fb3939d1407cdc0', 'd08afd8499ba0b5e', '488ce59bac9e29c3', '88701f8e10cc3aa7', '7ea98a48ac22843c', '7813c6dc420189dd', 'a0035d73c719b0f3', '3893062b6a214e95', '22617daebdcad545', '85bf18f86a542259', '64f52e7b06a0757c', '4820e3fd1a6e29fb', '904327775d31d21b', '27d32401c18211cd', 'b54956a9ee49f248', 'd1f72044112424a1', 'bff9d7cb63128e88', '18c7da1e110847db', 'a92dcbdc418097b3', 'c1c1badef7c96448', '9ece59c788b1fb2a', 'b8529893866ec950', '0e3b38d8328fc7db', '6e6d8fab20b03b6b', '471885d59dbd925b', 'd43ff8a230ee4e10', '461b278e2312bf95', '2a4bb2d8392a4ede', 'd08430cca515c3af', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', 'd7ca1912a0475cd6', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -787,11 +787,11 @@ const
     '<p>Press <b>Reroll</b> above the right pane for another. If you want the same one ever' +
       'y time — while you are comparing two edits, say — tick <b>Seed</b> and the preview sto' +
       'ps moving until you untick it or change the number.</p>',
-    '<p>The right pane shows either the <b>page</b> or the <b>source</b>. Templates are usu' +
-      'ally HTML, and the two questions "how does this look" and "what markup came out" do no' +
-      't answer each other: a broken tag makes slightly crooked layout the eye skips over, wh' +
-      'ile prose with tags in it does not read as prose. The switch above the pane changes wh' +
-      'ich one you are looking at.</p>',
+    '<p>The switch above the right pane offers <b>Page</b> and <b>Source</b>. Templates are' +
+      ' usually HTML, and the two questions "how does this look" and "what markup came out" d' +
+      'o not answer each other: a broken tag makes slightly crooked layout the eye skips over' +
+      ', while prose with tags in it does not read as prose. The switch above the pane change' +
+      's which one you are looking at.</p>',
     '<p>Select part of the template and only that part is rendered — in the document''s own' +
       ' scope, so a fragment that uses a variable defined at the top still renders the way it' +
       ' will in place.</p>',
@@ -803,7 +803,7 @@ const
       'e this panel calls valid is one the other engines will accept.</p>',
     '<p><b>Variables</b> shows the names your document defines and the names it merely uses' +
       '. A name it uses and nothing defines is one you can fill in here for the session: type' +
-      ' a value beside it and the preview picks it up. Tick <b>Literal</b> when the value is ' +
+      ' a value beside it and the preview picks it up. Tick <b>as text</b> when the value is ' +
       'text that means itself rather than a little template of its own.</p>',
     '<p><b>Variants</b> generates many texts at once. Say how many, generate, and read them' +
       ' in the list before exporting. Near-duplicates can be dropped as they are produced, an' +
@@ -1312,9 +1312,9 @@ const
       'de>Ctrl+Z</code> puts the document back.</p>',
     '<p><b>A session value is a template by default, not text.</b> That is what the engine ' +
       'does with any host value, and the preview has to match the production server — so <cod' +
-      'e>{cheap|dear}</code> typed into the value field gives a choice, not those eleven char' +
-      'acters. If you meant the text itself, tick <b>as text</b> in the third column: then br' +
-      'aces and per cent signs stay characters.</p>',
+      'e>{cheap|dear}</code> typed into the value field gives a choice, not those characters.' +
+      ' If you meant the text itself, tick <b>as text</b> in the third column: then braces an' +
+      'd per cent signs stay characters.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — the definition' +
       ' refers to itself</h3>',
     '<p><small><tt><a href="ex:48">#set %x% = a %x% b</a><br><a href="ex:48">%x%</a><br>→&n' +
@@ -1612,14 +1612,14 @@ const
       ':</p>',
     '<p><small><tt><a href="ex:0">{Привет|Здравствуйте}.</a><br>→&nbsp; Привет.</tt></small' +
       '></p>',
-    '<p>Кнопка <b>Перебросить</b> над правой панелью даёт следующий. Если нужен один и тот ' +
-      'же — например, пока вы сравниваете две правки, — включите <b>Сид</b>, и предпросмотр п' +
-      'ерестанет меняться, пока вы его не выключите или не смените число.</p>',
-    '<p>Справа показывается либо <b>страница</b>, либо <b>исходник</b>. Шаблоны почти всегд' +
-      'а HTML, и вопросы «как это выглядит» и «какая разметка получилась» друг друга не замен' +
-      'яют: сломанный тег даёт чуть кривую вёрстку, мимо которой глаз проскакивает, а проза с' +
-      ' тегами не читается как проза. Переключатель над панелью решает, на что вы смотрите.</' +
-      'p>',
+    '<p>Кнопка <b>Другой</b> над правой панелью даёт следующий. Если нужен один и тот же — ' +
+      'например, пока вы сравниваете две правки, — включите <b>Сид</b>, и предпросмотр перест' +
+      'анет меняться, пока вы его не выключите или не смените число.</p>',
+    '<p>Переключатель над правой половиной предлагает <b>Страница</b> и <b>Исходник</b>. Ша' +
+      'блоны почти всегда HTML, и вопросы «как это выглядит» и «какая разметка получилась» др' +
+      'уг друга не заменяют: сломанный тег даёт чуть кривую вёрстку, мимо которой глаз проска' +
+      'кивает, а проза с тегами не читается как проза. Переключатель над панелью решает, на ч' +
+      'то вы смотрите.</p>',
     '<p>Выделите часть шаблона — отрендерится только она, причём в области видимости докуме' +
       'нта: фрагмент, который пользуется переменной из начала файла, покажет то же, что покаж' +
       'ет на своём месте.</p>',
@@ -1632,8 +1632,8 @@ const
     '<p><b>Переменные</b> показывают имена, которые документ определяет, и имена, которыми ' +
       'он только пользуется. Имя, которым пользуются и которое ничто не определяет, можно зап' +
       'олнить здесь на время сессии: впишите значение рядом, и предпросмотр его подхватит. От' +
-      'метьте <b>Литерал</b>, если значение — текст, который означает сам себя, а не маленьки' +
-      'й шаблон.</p>',
+      'метьте <b>как текст</b>, если значение — текст, который означает сам себя, а не малень' +
+      'кий шаблон.</p>',
     '<p><b>Варианты</b> генерируют много текстов сразу. Скажите сколько, сгенерируйте и про' +
       'чтите список до экспорта. Похожие можно отбрасывать прямо при генерации, а сид делает ' +
       'весь набор воспроизводимым: тот же сид и тот же шаблон завтра дадут те же варианты.</p' +
@@ -2141,9 +2141,9 @@ const
       'оку неправимой по частям — такую строку правьте прямо в тексте.</p>',
     '<p><b>Значение сессии по умолчанию — шаблон, а не текст.</b> Так делает движок с любым' +
       ' значением хоста, и предпросмотр обязан совпадать с боевым сервером. Поэтому <code>{дё' +
-      'шево|дорого}</code>, набранное в поле значения, даст выбор, а не эти восемь символов. ' +
-      'Если вы имели в виду именно текст — поставьте галочку <b>«как текст»</b> в третьей кол' +
-      'онке: тогда скобки и проценты останутся символами.</p>',
+      'шево|дорого}</code>, набранное в поле значения, даст выбор, а не эти символы. Если вы ' +
+      'имели в виду именно текст — поставьте галочку <b>«как текст»</b> в третьей колонке: то' +
+      'гда скобки и проценты останутся символами.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — определение сс' +
       'ылается само на себя</h3>',
     '<p><small><tt><a href="ex:51">#set %x% = а %x% б</a><br><a href="ex:51">%x%</a><br>→&n' +
@@ -2447,15 +2447,15 @@ const
       'eigt eine davon:</p>',
     '<p><small><tt><a href="ex:0">{Hallo|Guten Tag} zusammen.</a><br>→&nbsp; Hallo zusammen' +
       '.</tt></small></p>',
-    '<p><b>Neu würfeln</b> über der rechten Hälfte holt die nächste. Wenn Sie immer dieselb' +
-      'e wollen — etwa während Sie zwei Änderungen vergleichen —, setzen Sie den Haken bei <b' +
-      '>Startwert</b>, und die Vorschau steht still, bis Sie ihn wieder entfernen oder die Za' +
-      'hl ändern.</p>',
-    '<p>Die rechte Hälfte zeigt entweder die <b>Seite</b> oder den <b>Quelltext</b>. Vorlag' +
-      'en sind meist HTML, und die beiden Fragen „wie sieht das aus" und „welches Markup kam ' +
-      'heraus" beantworten einander nicht: ein kaputtes Tag ergibt ein leicht schiefes Layout' +
-      ', über das das Auge hinwegsieht, während Prosa mit Tags darin sich nicht wie Prosa lie' +
-      'st. Der Schalter über der Hälfte wechselt, was Sie gerade ansehen.</p>',
+    '<p><b>Würfeln</b> über der rechten Hälfte holt die nächste. Wenn Sie immer dieselbe wo' +
+      'llen — etwa während Sie zwei Änderungen vergleichen —, setzen Sie den Haken bei <b>See' +
+      'd</b>, und die Vorschau steht still, bis Sie ihn wieder entfernen oder die Zahl ändern' +
+      '.</p>',
+    '<p>Der Schalter über der rechten Hälfte bietet <b>Seite</b> und <b>Quelltext</b>. Vorl' +
+      'agen sind meist HTML, und die beiden Fragen „wie sieht das aus" und „welches Markup ka' +
+      'm heraus" beantworten einander nicht: ein kaputtes Tag ergibt ein leicht schiefes Layo' +
+      'ut, über das das Auge hinwegsieht, während Prosa mit Tags darin sich nicht wie Prosa l' +
+      'iest. Der Schalter über der Hälfte wechselt, was Sie gerade ansehen.</p>',
     '<p>Markieren Sie einen Teil der Vorlage, und nur dieser Teil wird gerendert — im Geltu' +
       'ngsbereich des ganzen Dokuments, sodass ein Ausschnitt, der eine oben definierte Varia' +
       'ble benutzt, so herauskommt, wie er es an seiner Stelle tun wird.</p>',
@@ -2469,8 +2469,8 @@ const
     '<p><b>Variablen</b> zeigt die Namen, die Ihr Dokument definiert, und die, die es nur b' +
       'enutzt. Einen Namen, den es benutzt und den nichts definiert, können Sie hier für die ' +
       'Sitzung ausfüllen: Schreiben Sie einen Wert daneben, und die Vorschau nimmt ihn auf. S' +
-      'etzen Sie den Haken bei <b>Literal</b>, wenn der Wert Text ist, der sich selbst meint,' +
-      ' und nicht eine kleine Vorlage für sich.</p>',
+      'etzen Sie den Haken bei <b>als Text</b>, wenn der Wert Text ist, der sich selbst meint' +
+      ', und nicht eine kleine Vorlage für sich.</p>',
     '<p><b>Varianten</b> erzeugt viele Texte auf einmal. Sagen Sie wie viele, erzeugen Sie ' +
       'sie und lesen Sie sie in der Liste, bevor Sie exportieren. Beinahe-Dubletten lassen si' +
       'ch schon beim Erzeugen verwerfen, und ein Startwert macht den ganzen Satz wiederholbar' +
@@ -2515,8 +2515,8 @@ const
     '<h2 id="gsa">Eine GSA-Vorlage einlesen</h2>',
     '<p>Dieses Stück ist aus, bis Sie es einschalten, unter <b>Ansicht</b>, <b>GSA-Import</' +
       'b>, weil die meisten, die Vorlagen schreiben, den GSA Search Engine Ranker nie benutzt' +
-      ' haben. Ist es an, liest <b>Datei</b>, <b>GSA-Vorlage einlesen…</b> eine SER-Vorlage u' +
-      'nd wandelt sie in diese Sprache um.</p>',
+      ' haben. Ist es an, liest <b>Datei</b>, <b>GSA-Vorlage importieren…</b> eine SER-Vorlag' +
+      'e und wandelt sie in diese Sprache um.</p>',
     '<p>Die Umwandlung ist auf eine bestimmte Weise vorsichtig. Was sie nicht getreu ausdrü' +
       'cken kann, verweigert sie und sagt es Ihnen, statt es still in etwas zu verwandeln, da' +
       's rendert. Konstrukte, die im Text falsch gelesen würden — BBCode-Klammern, ein <code>' +
@@ -2565,8 +2565,8 @@ const
     '<p><code>seed</code> legt die zufällige Wahl fest. Eine Vorlage mit einer Auswahl dari' +
       'n hat keine einzelne Antwort, ein Beispiel ohne Startwert würde also bei jedem Lauf et' +
       'was anderes ausgeben, und es gäbe nichts zu prüfen. Im Fenster ist es das Kästchen <b>' +
-      'Startwert</b> über der rechten Hälfte; setzen Sie den Haken, und daneben erscheint ein' +
-      ' Zahlenfeld, und die Vorschau steht still, während Sie arbeiten.</p>',
+      'Seed</b> über der rechten Hälfte; setzen Sie den Haken, und daneben erscheint ein Zahl' +
+      'enfeld, und die Vorschau steht still, während Sie arbeiten.</p>',
     '<p><code>locale</code> entscheidet über die Zahlformen, und es ist der Wähler über der' +
       ' rechten Hälfte, nicht die Sprache der Oberfläche. Deutsch und Englisch brauchen zwei ' +
       'Formen; Russisch, Ukrainisch, Belarussisch, Serbisch, Kroatisch und Bosnisch brauchen ' +
@@ -3023,9 +3023,9 @@ const
     '<p><b>Ein Sitzungswert ist zunächst eine Vorlage und kein Text.</b> Das ist es, was di' +
       'e Maschine mit jedem Wert des Wirtsprogramms tut, und die Vorschau muss zum Server pas' +
       'sen — <code>{billig|teuer}</code> ins Wertfeld getippt gibt also eine Auswahl und nich' +
-      't diese dreizehn Zeichen. Wenn Sie den Text selbst meinten, setzen Sie in der dritten ' +
-      'Spalte den Haken bei <b>als Text</b>: dann bleiben geschweifte Klammern und Prozentzei' +
-      'chen Zeichen.</p>',
+      't diese Zeichen. Wenn Sie den Text selbst meinten, setzen Sie in der dritten Spalte de' +
+      'n Haken bei <b>als Text</b>: dann bleiben geschweifte Klammern und Prozentzeichen Zeic' +
+      'hen.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — die Festlegung' +
       ' nennt sich selbst</h3>',
     '<p><small><tt><a href="ex:49">#set %x% = a %x% b</a><br><a href="ex:49">%x%</a><br>→&n' +
@@ -3077,11 +3077,11 @@ const
     '<p>Ziele sind die <code>.spintax</code>-Dateien im Ordner des offenen Dokuments. Ein u' +
       'nbekanntes Ziel entfaltet sich zu nichts — der Absatz verschwindet, statt kaputtzugehe' +
       'n, weshalb es so leicht zu übersehen ist.</p>',
-    '<p><b>Darum hat die Tafel Variablen einen dritten Abschnitt, Einfügungen.</b> Er liste' +
-      't jedes <code>#include</code> des Dokuments auf und dazu, ob der Satz sein Ziel hat — ' +
-      'eine Zeile je Vorkommen, ein zweimal genanntes Ziel sind also zwei Zeilen. Der Abschni' +
-      'tt erscheint nur, wenn das Dokument Einfügungen hat. Ein Klick auf eine Zeile bringt d' +
-      'en Cursor zu dem <code>#include</code>, das dieses Ziel nennt.</p>',
+    '<p><b>Darum hat die Tafel Variablen einen dritten Abschnitt, Includes.</b> Er listet j' +
+      'edes <code>#include</code> des Dokuments auf und dazu, ob der Satz sein Ziel hat — ein' +
+      'e Zeile je Vorkommen, ein zweimal genanntes Ziel sind also zwei Zeilen. Der Abschnitt ' +
+      'erscheint nur, wenn das Dokument Einfügungen hat. Ein Klick auf eine Zeile bringt den ' +
+      'Cursor zu dem <code>#include</code>, das dieses Ziel nennt.</p>',
     '<p>Die Marke hat <b>drei</b> Werte, und der dritte zählt: „kein Satz" heißt nicht „der' +
       ' Ausschnitt fehlt", sondern „es gibt noch nirgends nachzusehen". Der Satz ist der Ordn' +
       'er neben dem Dokument, und ein ungespeichertes Dokument hat keinen Ordner — bis zum er' +
@@ -3337,16 +3337,16 @@ const
       'e :</p>',
     '<p><small><tt><a href="ex:0">{Salut|Bonjour} à tous.</a><br>→&nbsp; Salut à tous.</tt>' +
       '</small></p>',
-    '<p><b>Retirer</b> au-dessus du volet de droite en donne une autre. Si vous voulez touj' +
-      'ours la même — pendant que vous comparez deux modifications, par exemple —, cochez <b>' +
-      'Graine</b>, et l''aperçu cesse de bouger jusqu''à ce que vous la décochiez ou changiez' +
-      ' le nombre.</p>',
-    '<p>Le volet de droite montre soit la <b>page</b>, soit la <b>source</b>. Les gabarits ' +
-      'sont le plus souvent du HTML, et les deux questions « de quoi cela a-t-il l''air » et ' +
-      '« quel balisage est sorti » ne se répondent pas l''une à l''autre : une balise cassée ' +
-      'donne une mise en page légèrement de travers que l''œil saute, tandis que de la prose ' +
-      'truffée de balises ne se lit pas comme de la prose. Le sélecteur au-dessus du volet ch' +
-      'ange ce que vous regardez.</p>',
+    '<p><b>Relancer</b> au-dessus du volet de droite en donne une autre. Si vous voulez tou' +
+      'jours la même — pendant que vous comparez deux modifications, par exemple —, cochez <b' +
+      '>seed</b>, et l''aperçu cesse de bouger jusqu''à ce que vous la décochiez ou changiez ' +
+      'le nombre.</p>',
+    '<p>Le sélecteur au-dessus du volet de droite propose <b>Page</b> et <b>Source</b>. Les' +
+      ' gabarits sont le plus souvent du HTML, et les deux questions « de quoi cela a-t-il l' +
+      '''air » et « quel balisage est sorti » ne se répondent pas l''une à l''autre : une bal' +
+      'ise cassée donne une mise en page légèrement de travers que l''œil saute, tandis que d' +
+      'e la prose truffée de balises ne se lit pas comme de la prose. Le sélecteur au-dessus ' +
+      'du volet change ce que vous regardez.</p>',
     '<p>Sélectionnez une partie du gabarit et seule cette partie est rendue — dans la porté' +
       'e du document entier, si bien qu''un extrait utilisant une variable définie plus haut ' +
       'sort comme il le fera à sa place.</p>',
@@ -3359,8 +3359,8 @@ const
       '>',
     '<p><b>Variables</b> montre les noms que votre document définit et ceux qu''il ne fait ' +
       'qu''employer. Un nom qu''il emploie et que rien ne définit, vous pouvez le remplir ici' +
-      ' pour la session : écrivez une valeur à côté et l''aperçu la reprend. Cochez <b>Littér' +
-      'al</b> quand la valeur est un texte qui se signifie lui-même plutôt qu''un petit gabar' +
+      ' pour la session : écrivez une valeur à côté et l''aperçu la reprend. Cochez <b>en tex' +
+      'te</b> quand la valeur est un texte qui se signifie lui-même plutôt qu''un petit gabar' +
       'it à son tour.</p>',
     '<p><b>Variantes</b> engendre beaucoup de textes d''un coup. Dites combien, engendrez-l' +
       'es et lisez-les dans la liste avant d''exporter. Les quasi-doublons peuvent être écart' +
@@ -3406,8 +3406,8 @@ const
     '<h2 id="gsa">Importer un gabarit GSA</h2>',
     '<p>Celui-ci est éteint tant que vous ne l''allumez pas, sous <b>Affichage</b>, <b>Impo' +
       'rt GSA</b>, parce que la plupart des gens qui écrivent des gabarits n''ont jamais util' +
-      'isé GSA Search Engine Ranker. Une fois allumé, <b>Fichier</b>, <b>Importer un gabarit ' +
-      'GSA…</b> lit un gabarit SER et le convertit dans ce langage.</p>',
+      'isé GSA Search Engine Ranker. Une fois allumé, <b>Fichier</b>, <b>Importer un modèle G' +
+      'SA…</b> lit un gabarit SER et le convertit dans ce langage.</p>',
     '<p>La conversion est prudente d''une manière précise. Ce qu''elle ne peut exprimer fid' +
       'èlement, elle le refuse et vous le dit, plutôt que d''en faire discrètement quelque ch' +
       'ose qui se rend. Les constructions qui seraient mal lues si elles restaient dans le te' +
@@ -3455,9 +3455,9 @@ const
       '{Acme|Globex}.<br>include shout: La %marque% est là.</tt></small></p>',
     '<p><code>seed</code> fixe le tirage au sort. Un gabarit contenant un choix n''a pas de' +
       ' réponse unique ; un exemple sans graine imprimerait donc autre chose à chaque passage' +
-      ' et il n''y aurait rien à vérifier. Dans la fenêtre, c''est la case <b>Graine</b> au-d' +
-      'essus du volet de droite ; cochez-la et un champ de nombre apparaît à côté, et l''aper' +
-      'çu cesse de bouger pendant que vous travaillez.</p>',
+      ' et il n''y aurait rien à vérifier. Dans la fenêtre, c''est la case <b>seed</b> au-des' +
+      'sus du volet de droite ; cochez-la et un champ de nombre apparaît à côté, et l''aperçu' +
+      ' cesse de bouger pendant que vous travaillez.</p>',
     '<p><code>locale</code> décide des formes de nombre, et c''est le sélecteur au-dessus d' +
       'u volet de droite, non la langue de l''interface. Le français et l''anglais demandent ' +
       'deux formes ; le russe, l''ukrainien, le biélorusse, le serbe, le croate et le bosnien' +
@@ -3676,9 +3676,9 @@ const
     '<p><b>Les abréviations françaises ne sont pas dans la liste du moteur.</b> C''est le s' +
       'ilence que les auteurs francophones rencontrent en premier. Sont protégés seulement le' +
       's mots qui coïncident avec la moitié latine de la liste — <code>Dr.</code>, <code>Prof' +
-      '.</code>, <code>etc.</code> plus haut —, tandis que <code>cf.</code>, <code>env.</code' +
-      '>, <code>M.</code> et <code>no.</code> écrit à la française terminent une phrase et me' +
-      'ttent le mot suivant en majuscule :</p>',
+      '.</code>, <code>etc.</code> plus haut, et <code>no.</code>, qui y est aussi —, tandis ' +
+      'que <code>cf.</code>, <code>env.</code>, <code>M.</code> et <code>av.</code> terminent' +
+      ' une phrase et mettent le mot suivant en majuscule :</p>',
     '<p><small><tt><a href="ex:31">cf. nos prix sont bas</a><br>→&nbsp; Cf. Nos prix sont b' +
       'as</tt></small></p>',
     '<p><code>p. ex.</code> traverse la finition sans dommage, ce qui vaut d''être montré p' +
@@ -3908,9 +3908,9 @@ const
       'taire cet avertissement pour de bon. Un <code>Ctrl+Z</code> remet le document.</p>',
     '<p><b>Une valeur de session est d''abord un gabarit et non du texte.</b> C''est ce que' +
       ' le moteur fait de toute valeur de l''hôte, et l''aperçu doit coller au serveur — <cod' +
-      'e>{bon|cher}</code> tapé dans le champ de valeur donne donc un choix et non ces neuf c' +
-      'aractères. Si vous vouliez le texte lui-même, cochez <b>comme texte</b> dans la troisi' +
-      'ème colonne : alors accolades et signes de pourcentage restent des caractères.</p>',
+      'e>{bon|cher}</code> tapé dans le champ de valeur donne donc un choix et non ces caract' +
+      'ères. Si vous vouliez le texte lui-même, cochez <b>comme texte</b> dans la troisième c' +
+      'olonne : alors accolades et signes de pourcentage restent des caractères.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — la définition ' +
       'se nomme elle-même</h3>',
     '<p><small><tt><a href="ex:51">#set %x% = a %x% b</a><br><a href="ex:51">%x%</a><br>→&n' +
@@ -4135,12 +4135,12 @@ const
       ' quelle langue vous avez réglée. <code>руб.</code> protège donc le mot suivant dans un' +
       ' document français, et <code>Dr.</code> le protège dans un document russe.</p>',
     '<p>Pour un texte français la conséquence est simple et désagréable : parmi les abrévia' +
-      'tions que vous écrivez tous les jours, seules <code>Dr.</code>, <code>Prof.</code> et ' +
-      '<code>etc.</code> sont dans la liste, parce qu''elles coïncident avec la moitié latine' +
-      '. <code>cf.</code>, <code>env.</code>, <code>M.</code> et <code>no.</code> n''y sont p' +
-      'as et terminent une phrase. Le guide du langage montre en plus deux cas mesurés qui ne' +
-      ' se devinent pas : <code>p. ex.</code> traverse la finition sans dommage, et <code>c.-' +
-      'à-d.</code> en ressort cassé.</p>',
+      'tions que vous écrivez tous les jours, seules <code>Dr.</code>, <code>Prof.</code>, <c' +
+      'ode>etc.</code> et <code>no.</code> sont dans la liste, parce qu''elles coïncident ave' +
+      'c la moitié latine. <code>cf.</code>, <code>env.</code>, <code>M.</code> et <code>av.<' +
+      '/code> n''y sont pas et terminent une phrase. Le guide du langage montre en plus deux ' +
+      'cas mesurés qui ne se devinent pas : <code>p. ex.</code> traverse la finition sans dom' +
+      'mage, et <code>c.-à-d.</code> en ressort cassé.</p>',
     '<hr>',
     '<h2 id="correct">À quoi ressemble la forme correcte</h2>',
     '<p><small><tt><a href="ex:71">un prix {bon|cher}</a><br>→&nbsp; Un prix bon</tt></smal' +
@@ -4224,14 +4224,14 @@ const
       'stra una:</p>',
     '<p><small><tt><a href="ex:0">{Hola|Buenas} a todos.</a><br>→&nbsp; Hola a todos.</tt><' +
       '/small></p>',
-    '<p><b>Volver a tirar</b>, encima de la mitad derecha, saca otra. Si quiere siempre la ' +
-      'misma —mientras compara dos cambios, por ejemplo— marque <b>Semilla</b>, y el avance s' +
-      'e queda quieto hasta que la desmarque o cambie el número.</p>',
-    '<p>La mitad derecha muestra la <b>página</b> o el <b>código</b>. Las plantillas suelen' +
-      ' ser HTML, y las dos preguntas «qué aspecto tiene» y «qué marcado ha salido» no se res' +
-      'ponden la una a la otra: una etiqueta rota da una maquetación algo torcida que el ojo ' +
-      'se salta, mientras que la prosa con etiquetas dentro no se lee como prosa. El interrup' +
-      'tor sobre la mitad cambia lo que está mirando.</p>',
+    '<p><b>Otra</b>, encima de la mitad derecha, saca otra. Si quiere siempre la misma —mie' +
+      'ntras compara dos cambios, por ejemplo— marque <b>seed</b>, y el avance se queda quiet' +
+      'o hasta que la desmarque o cambie el número.</p>',
+    '<p>El selector sobre la mitad derecha ofrece <b>Página</b> y <b>Fuente</b>. Las planti' +
+      'llas suelen ser HTML, y las dos preguntas «qué aspecto tiene» y «qué marcado ha salido' +
+      '» no se responden la una a la otra: una etiqueta rota da una maquetación algo torcida ' +
+      'que el ojo se salta, mientras que la prosa con etiquetas dentro no se lee como prosa. ' +
+      'El interruptor sobre la mitad cambia lo que está mirando.</p>',
     '<p>Seleccione una parte de la plantilla y solo esa parte se renderiza —en el ámbito de' +
       'l documento entero, de modo que un fragmento que usa una variable definida arriba sale' +
       ' como saldrá en su sitio.</p>',
@@ -4243,8 +4243,8 @@ const
       ' plantilla que este panel llama válida la aceptan los demás motores.</p>',
     '<p><b>Variables</b> muestra los nombres que su documento define y los que solo usa. Un' +
       ' nombre que usa y que nada define puede rellenarlo aquí para la sesión: escriba un val' +
-      'or al lado y el avance lo recoge. Marque <b>Literal</b> cuando el valor sea texto que ' +
-      'se significa a sí mismo y no una pequeña plantilla propia.</p>',
+      'or al lado y el avance lo recoge. Marque <b>como texto</b> cuando el valor sea texto q' +
+      'ue se significa a sí mismo y no una pequeña plantilla propia.</p>',
     '<p><b>Variantes</b> genera muchos textos de una vez. Diga cuántos, genérelos y léalos ' +
       'en la lista antes de exportar. Los casi duplicados pueden descartarse según se produce' +
       'n, y una semilla hace todo el lote repetible: la misma semilla y la misma plantilla da' +
@@ -4334,9 +4334,9 @@ const
       'Acme|Globex}.<br>include shout: La %marca% está aquí.</tt></small></p>',
     '<p><code>seed</code> fija el sorteo. Una plantilla con una elección dentro no tiene un' +
       'a única respuesta, así que un ejemplo sin semilla imprimiría algo distinto en cada pas' +
-      'ada y no habría nada que comprobar. En la ventana es la casilla <b>Semilla</b> encima ' +
-      'de la mitad derecha; márquela y al lado aparece un campo numérico, y el avance se qued' +
-      'a quieto mientras usted trabaja.</p>',
+      'ada y no habría nada que comprobar. En la ventana es la casilla <b>seed</b> encima de ' +
+      'la mitad derecha; márquela y al lado aparece un campo numérico, y el avance se queda q' +
+      'uieto mientras usted trabaja.</p>',
     '<p><code>locale</code> decide las formas de número, y es el selector encima de la mita' +
       'd derecha, no el idioma de la interfaz. El español y el inglés piden dos formas; el ru' +
       'so, el ucraniano, el bielorruso, el serbio, el croata y el bosnio piden tres.</p>',
@@ -4771,9 +4771,8 @@ const
     '<p><b>Un valor de sesión es primero una plantilla y no texto.</b> Es lo que el motor h' +
       'ace con cualquier valor del anfitrión, y el avance tiene que coincidir con el servidor' +
       ', así que <code>{barato|caro}</code> escrito en el campo de valor da una elección y no' +
-      ' esos trece caracteres. Si quería el texto en sí, marque <b>como texto</b> en la terce' +
-      'ra columna: entonces las llaves y los signos de porcentaje siguen siendo caracteres.</' +
-      'p>',
+      ' esos caracteres. Si quería el texto en sí, marque <b>como texto</b> en la tercera col' +
+      'umna: entonces las llaves y los signos de porcentaje siguen siendo caracteres.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — la definición ' +
       'se nombra a sí misma</h3>',
     '<p><small><tt><a href="ex:51">#set %x% = a %x% b</a><br><a href="ex:51">%x%</a><br>→&n' +
@@ -5082,13 +5081,13 @@ const
     '<p><small><tt><a href="ex:0">{Ciao|Salve} a tutti.</a><br>→&nbsp; Ciao a tutti.</tt></' +
       'small></p>',
     '<p><b>Rilancia</b>, sopra la metà destra, ne prende un''altra. Se ne volete sempre la ' +
-      'stessa — mentre confrontate due modifiche, per esempio — spuntate <b>Seme</b>, e l''an' +
+      'stessa — mentre confrontate due modifiche, per esempio — spuntate <b>seed</b>, e l''an' +
       'teprima resta ferma finché non lo togliete o cambiate il numero.</p>',
-    '<p>La metà destra mostra o la <b>pagina</b> o il <b>sorgente</b>. I modelli sono per l' +
-      'o più HTML, e le due domande «che aspetto ha» e «quale marcatura è uscita» non si risp' +
-      'ondono a vicenda: un tag rotto dà un impaginato un po'' storto che l''occhio salta, me' +
-      'ntre la prosa piena di tag non si legge come prosa. L''interruttore sopra la metà camb' +
-      'ia ciò che state guardando.</p>',
+    '<p>Il selettore sopra la metà destra offre <b>Pagina</b> e <b>Sorgente</b>. I modelli ' +
+      'sono per lo più HTML, e le due domande «che aspetto ha» e «quale marcatura è uscita» n' +
+      'on si rispondono a vicenda: un tag rotto dà un impaginato un po'' storto che l''occhio' +
+      ' salta, mentre la prosa piena di tag non si legge come prosa. L''interruttore sopra la' +
+      ' metà cambia ciò che state guardando.</p>',
     '<p>Selezionate una parte del modello e solo quella viene resa — nell''ambito dell''int' +
       'ero documento, così che un frammento che usa una variabile definita in alto esca come ' +
       'uscirà al suo posto.</p>',
@@ -5100,8 +5099,8 @@ const
       ' un modello che questo pannello chiama valido viene accettato dagli altri motori.</p>',
     '<p><b>Variabili</b> mostra i nomi che il vostro documento definisce e quelli che solta' +
       'nto usa. Un nome che usa e che nulla definisce potete riempirlo qui per la sessione: s' +
-      'crivete un valore accanto e l''anteprima lo raccoglie. Spuntate <b>Letterale</b> quand' +
-      'o il valore è testo che significa se stesso e non un piccolo modello a sua volta.</p>',
+      'crivete un valore accanto e l''anteprima lo raccoglie. Spuntate <b>come testo</b> quan' +
+      'do il valore è testo che significa se stesso e non un piccolo modello a sua volta.</p>',
     '<p><b>Varianti</b> genera molti testi in una volta. Dite quanti, generateli e leggetel' +
       'i nella lista prima di esportare. I quasi doppioni si possono scartare mentre nascono,' +
       ' e un seme rende ripetibile l''intero lotto: lo stesso seme e lo stesso modello danno ' +
@@ -5193,7 +5192,7 @@ const
       'Acme|Globex}.<br>include shout: Il %marchio% è qui.</tt></small></p>',
     '<p><code>seed</code> fissa l''estrazione. Un modello con una scelta dentro non ha una ' +
       'risposta sola, quindi un esempio senza seme stamperebbe qualcosa di diverso a ogni pas' +
-      'saggio e non ci sarebbe niente da verificare. Nella finestra è la casella <b>Seme</b> ' +
+      'saggio e non ci sarebbe niente da verificare. Nella finestra è la casella <b>seed</b> ' +
       'sopra la metà destra; spuntatela e accanto compare un campo numerico, e l''anteprima r' +
       'esta ferma mentre lavorate.</p>',
     '<p><code>locale</code> decide le forme di numero, ed è il selettore sopra la metà dest' +
@@ -5628,8 +5627,8 @@ const
     '<p><b>Un valore di sessione è prima di tutto un modello e non testo.</b> È ciò che il ' +
       'motore fa con qualsiasi valore dell''ospite, e l''anteprima deve coincidere con il ser' +
       'ver, quindi <code>{basso|alto}</code> scritto nel campo del valore dà una scelta e non' +
-      ' quei dodici caratteri. Se intendevate il testo in sé, spuntate <b>come testo</b> nell' +
-      'a terza colonna: allora graffe e segni di percentuale restano caratteri.</p>',
+      ' quei caratteri. Se intendevate il testo in sé, spuntate <b>come testo</b> nella terza' +
+      ' colonna: allora graffe e segni di percentuale restano caratteri.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — la definizione' +
       ' nomina se stessa</h3>',
     '<p><small><tt><a href="ex:51">#set %x% = a %x% b</a><br><a href="ex:51">%x%</a><br>→&n' +
@@ -5941,14 +5940,14 @@ const
       'o mostra uma delas:</p>',
     '<p><small><tt><a href="ex:0">{Olá|Bom dia} a todos.</a><br>→&nbsp; Olá a todos.</tt></' +
       'small></p>',
-    '<p><b>Voltar a tirar</b>, por cima da metade direita, traz outra. Se quiser sempre a m' +
-      'esma — enquanto compara duas alterações, por exemplo — marque <b>Semente</b>, e a pré-' +
-      'visualização fica quieta até a desmarcar ou mudar o número.</p>',
-    '<p>A metade direita mostra a <b>página</b> ou o <b>código</b>. Os modelos costumam ser' +
-      ' HTML, e as duas perguntas «que aspecto tem» e «que marcação saiu» não se respondem um' +
-      'a à outra: uma etiqueta partida dá uma disposição um pouco torta que o olho salta, ao ' +
-      'passo que prosa cheia de etiquetas não se lê como prosa. O interruptor por cima da met' +
-      'ade muda o que está a ver.</p>',
+    '<p><b>Outra</b>, por cima da metade direita, traz outra. Se quiser sempre a mesma — en' +
+      'quanto compara duas alterações, por exemplo — marque <b>seed</b>, e a pré-visualização' +
+      ' fica quieta até a desmarcar ou mudar o número.</p>',
+    '<p>O seletor sobre a metade direita oferece <b>Página</b> e <b>Origem</b>. Os modelos ' +
+      'costumam ser HTML, e as duas perguntas «que aspecto tem» e «que marcação saiu» não se ' +
+      'respondem uma à outra: uma etiqueta partida dá uma disposição um pouco torta que o olh' +
+      'o salta, ao passo que prosa cheia de etiquetas não se lê como prosa. O interruptor por' +
+      ' cima da metade muda o que está a ver.</p>',
     '<p>Seleccione uma parte do modelo e só essa parte é composta — no âmbito do documento ' +
       'inteiro, de modo que um excerto que use uma variável definida em cima sai como sairá n' +
       'o seu lugar.</p>',
@@ -5960,8 +5959,8 @@ const
       'te painel chama válido é aceite pelos outros motores.</p>',
     '<p><b>Variáveis</b> mostra os nomes que o seu documento define e os que apenas usa. Um' +
       ' nome que usa e que nada define pode preenchê-lo aqui para a sessão: escreva um valor ' +
-      'ao lado e a pré-visualização apanha-o. Marque <b>Literal</b> quando o valor for texto ' +
-      'que se significa a si mesmo e não um pequeno modelo por sua vez.</p>',
+      'ao lado e a pré-visualização apanha-o. Marque <b>como texto</b> quando o valor for tex' +
+      'to que se significa a si mesmo e não um pequeno modelo por sua vez.</p>',
     '<p><b>Variantes</b> gera muitos textos de uma vez. Diga quantos, gere-os e leia-os na ' +
       'lista antes de exportar. Os quase duplicados podem ser descartados à medida que nascem' +
       ', e uma semente torna todo o lote repetível: a mesma semente e o mesmo modelo dão aman' +
@@ -6050,9 +6049,9 @@ const
       'cme|Globex}.<br>include shout: A %marca% está aqui.</tt></small></p>',
     '<p><code>seed</code> fixa o sorteio. Um modelo com uma escolha lá dentro não tem uma ú' +
       'nica resposta, logo um exemplo sem semente imprimiria coisa diferente em cada passagem' +
-      ' e não haveria nada a verificar. Na janela é a caixa <b>Semente</b> por cima da metade' +
-      ' direita; marque-a e ao lado aparece um campo numérico, e a pré-visualização fica quie' +
-      'ta enquanto trabalha.</p>',
+      ' e não haveria nada a verificar. Na janela é a caixa <b>seed</b> por cima da metade di' +
+      'reita; marque-a e ao lado aparece um campo numérico, e a pré-visualização fica quieta ' +
+      'enquanto trabalha.</p>',
     '<p><code>locale</code> decide as formas de número, e é o selector por cima da metade d' +
       'ireita, não o idioma da interface. O português e o inglês pedem duas formas; o russo, ' +
       'o ucraniano, o bielorrusso, o sérvio, o croata e o bósnio pedem três.</p>',
@@ -6479,9 +6478,9 @@ const
       ' documento de volta.</p>',
     '<p><b>Um valor de sessão é primeiro um modelo e não texto.</b> É o que o motor faz com' +
       ' qualquer valor do anfitrião, e a pré-visualização tem de bater certo com o servidor, ' +
-      'logo <code>{barato|caro}</code> escrito no campo do valor dá uma escolha e não esses t' +
-      'reze caracteres. Se queria o texto em si, marque <b>como texto</b> na terceira coluna:' +
-      ' então chavetas e sinais de percentagem continuam a ser caracteres.</p>',
+      'logo <code>{barato|caro}</code> escrito no campo do valor dá uma escolha e não esses c' +
+      'aracteres. Se queria o texto em si, marque <b>como texto</b> na terceira coluna: então' +
+      ' chavetas e sinais de percentagem continuam a ser caracteres.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — a definição no' +
       'meia-se a si própria</h3>',
     '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
@@ -6787,13 +6786,13 @@ const
     '<p><small><tt><a href="ex:0">{Hallo|Goedendag} allemaal.</a><br>→&nbsp; Hallo allemaal' +
       '.</tt></small></p>',
     '<p><b>Opnieuw loten</b> boven de rechterhelft haalt de volgende. Wilt u altijd dezelfd' +
-      'e — terwijl u twee wijzigingen vergelijkt bijvoorbeeld — vink dan <b>Startgetal</b> aa' +
-      'n, en de voorvertoning staat stil tot u het weer uitvinkt of het getal verandert.</p>',
-    '<p>De rechterhelft toont ofwel de <b>pagina</b> ofwel de <b>broncode</b>. Sjablonen zi' +
-      'jn meestal HTML, en de twee vragen «hoe ziet dit eruit» en «welke opmaak kwam eruit» b' +
-      'eantwoorden elkaar niet: een kapotte tag geeft een licht scheve opmaak waar het oog ov' +
-      'erheen kijkt, terwijl proza vol tags niet als proza leest. De schakelaar boven de helf' +
-      't wisselt waar u naar kijkt.</p>',
+      'e — terwijl u twee wijzigingen vergelijkt bijvoorbeeld — vink dan <b>seed</b> aan, en ' +
+      'de voorvertoning staat stil tot u het weer uitvinkt of het getal verandert.</p>',
+    '<p>De schakelaar boven de rechterhelft biedt <b>Pagina</b> en <b>Bron</b>. Sjablonen z' +
+      'ijn meestal HTML, en de twee vragen «hoe ziet dit eruit» en «welke opmaak kwam eruit» ' +
+      'beantwoorden elkaar niet: een kapotte tag geeft een licht scheve opmaak waar het oog o' +
+      'verheen kijkt, terwijl proza vol tags niet als proza leest. De schakelaar boven de hel' +
+      'ft wisselt waar u naar kijkt.</p>',
     '<p>Selecteer een deel van het sjabloon en alleen dat deel wordt weergegeven — binnen h' +
       'et bereik van het hele document, zodat een fragment dat een bovenaan gedefinieerde var' +
       'iabele gebruikt eruit komt zoals het op zijn plaats zal doen.</p>',
@@ -6805,9 +6804,9 @@ const
       'een sjabloon dat dit paneel geldig noemt door de andere machines aanvaard.</p>',
     '<p><b>Variabelen</b> toont de namen die uw document definieert en de namen die het all' +
       'een gebruikt. Een naam die het gebruikt en die niets definieert kunt u hier voor de se' +
-      'ssie invullen: schrijf er een waarde naast en de voorvertoning pakt hem op. Vink <b>Le' +
-      'tterlijk</b> aan wanneer de waarde tekst is die zichzelf betekent en niet op zijn beur' +
-      't een klein sjabloon.</p>',
+      'ssie invullen: schrijf er een waarde naast en de voorvertoning pakt hem op. Vink <b>al' +
+      's tekst</b> aan wanneer de waarde tekst is die zichzelf betekent en niet op zijn beurt' +
+      ' een klein sjabloon.</p>',
     '<p><b>Varianten</b> maakt veel teksten in één keer. Zeg hoeveel, maak ze aan en lees z' +
       'e in de lijst voordat u exporteert. Bijna-doublures kunnen tijdens het maken worden we' +
       'ggelaten, en een startgetal maakt de hele partij herhaalbaar: hetzelfde startgetal en ' +
@@ -6851,8 +6850,8 @@ const
     '<h2 id="gsa">Een GSA-sjabloon inlezen</h2>',
     '<p>Dit stuk staat uit tot u het aanzet, onder <b>Beeld</b>, <b>GSA-import</b>, omdat d' +
       'e meeste mensen die sjablonen schrijven de GSA Search Engine Ranker nooit hebben gebru' +
-      'ikt. Staat het aan, dan leest <b>Bestand</b>, <b>GSA-sjabloon inlezen…</b> een SER-sja' +
-      'bloon en zet het om in deze taal.</p>',
+      'ikt. Staat het aan, dan leest <b>Bestand</b>, <b>GSA-sjabloon importeren…</b> een SER-' +
+      'sjabloon en zet het om in deze taal.</p>',
     '<p>De omzetting is op een bepaalde manier voorzichtig. Wat zij niet getrouw kan uitdru' +
       'kken weigert zij en meldt zij, in plaats van het stilletjes te veranderen in iets dat ' +
       'weergeeft. Constructies die verkeerd gelezen zouden worden als ze in de tekst bleven —' +
@@ -6899,9 +6898,9 @@ const
       'e|Globex}.<br>include shout: Het %merk% is er.</tt></small></p>',
     '<p><code>seed</code> legt de loting vast. Een sjabloon met een keuze erin heeft geen e' +
       'nkel antwoord, dus een voorbeeld zonder startgetal zou bij elke doorgang iets anders a' +
-      'fdrukken en er viel niets te controleren. In het venster is het het vakje <b>Startgeta' +
-      'l</b> boven de rechterhelft; vink het aan en er verschijnt een getalveld naast, en de ' +
-      'voorvertoning staat stil terwijl u werkt.</p>',
+      'fdrukken en er viel niets te controleren. In het venster is het het vakje <b>seed</b> ' +
+      'boven de rechterhelft; vink het aan en er verschijnt een getalveld naast, en de voorve' +
+      'rtoning staat stil terwijl u werkt.</p>',
     '<p><code>locale</code> bepaalt de getalsvormen, en het is de keuzelijst boven de recht' +
       'erhelft, niet de taal van de interface. Het Nederlands en het Engels vragen twee vorme' +
       'n; het Russisch, het Oekraïens, het Wit-Russisch, het Servisch, het Kroatisch en het B' +
@@ -7339,8 +7338,8 @@ const
     '<p><b>Een sessiewaarde is eerst een sjabloon en geen tekst.</b> Dat is wat de machine ' +
       'met elke waarde van het gastprogramma doet, en de voorvertoning moet met de server ove' +
       'reenkomen — dus <code>{laag|hoog}</code> getypt in het waardeveld geeft een keuze en n' +
-      'iet die elf tekens. Bedoelde u de tekst zelf, vink dan <b>als tekst</b> aan in de derd' +
-      'e kolom: dan blijven accolades en procenttekens tekens.</p>',
+      'iet die tekens. Bedoelde u de tekst zelf, vink dan <b>als tekst</b> aan in de derde ko' +
+      'lom: dan blijven accolades en procenttekens tekens.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — de vastlegging' +
       ' noemt zichzelf</h3>',
     '<p><small><tt><a href="ex:49">#set %x% = a %x% b</a><br><a href="ex:49">%x%</a><br>→&n' +
@@ -7391,11 +7390,11 @@ const
     '<p>Doelen zijn de <code>.spintax</code>-bestanden in de map van het geopende document.' +
       ' Een onbekend doel vouwt zich uit tot niets — de alinea verdwijnt in plaats van kapot ' +
       'te gaan, en dat is precies waarom het zo gemakkelijk te missen is.</p>',
-    '<p><b>Daarom heeft het tabblad Variabelen een derde afdeling, Invoegingen.</b> Zij som' +
-      't elk <code>#include</code> van het document op en, voor elk, of de verzameling zijn d' +
-      'oel heeft — één regel per voorkomen, dus een twee keer genoemd doel zijn twee regels. ' +
-      'De afdeling verschijnt alleen als het document invoegingen heeft. Een klik op een rege' +
-      'l brengt de cursor naar het <code>#include</code> dat dat doel noemt.</p>',
+    '<p><b>Daarom heeft het tabblad Variabelen een derde afdeling, Includes.</b> Zij somt e' +
+      'lk <code>#include</code> van het document op en, voor elk, of de verzameling zijn doel' +
+      ' heeft — één regel per voorkomen, dus een twee keer genoemd doel zijn twee regels. De ' +
+      'afdeling verschijnt alleen als het document invoegingen heeft. Een klik op een regel b' +
+      'rengt de cursor naar het <code>#include</code> dat dat doel noemt.</p>',
     '<p>De markering heeft <b>drie</b> waarden, en de derde telt: «geen verzameling» beteke' +
       'nt niet «het fragment ontbreekt», maar «er is nog nergens te kijken». De verzameling i' +
       's de map naast het document, en een niet-bewaard document heeft geen map — tot de eers' +
@@ -7647,13 +7646,13 @@ const
     '<p><small><tt><a href="ex:0">{Merhaba|Selam} herkese.</a><br>→&nbsp; Merhaba herkese.<' +
       '/tt></small></p>',
     '<p>Sağ yarımın üstündeki <b>Yeniden çek</b> bir sonrakini getirir. Hep aynısını istiyo' +
-      'rsanız — iki değişikliği karşılaştırırken diyelim — <b>Tohum</b> kutusunu işaretleyin,' +
-      ' önizleme siz işareti kaldırana veya sayıyı değiştirene kadar durur.</p>',
-    '<p>Sağ yarım ya <b>sayfayı</b> ya da <b>kaynağı</b> gösterir. Şablonlar çoğunlukla HTM' +
-      'L''dir ve «bu nasıl görünüyor» ile «hangi biçimleme çıktı» soruları birbirini yanıtlam' +
-      'az: bozuk bir etiket gözün atladığı hafif eğri bir yerleşim verir, etiket dolu bir düz' +
-      'yazı ise düzyazı gibi okunmaz. Yarımın üstündeki anahtar neye baktığınızı değiştirir.<' +
-      '/p>',
+      'rsanız — iki değişikliği karşılaştırırken diyelim — <b>seed</b> kutusunu işaretleyin, ' +
+      'önizleme siz işareti kaldırana veya sayıyı değiştirene kadar durur.</p>',
+    '<p>Sağ yarımın üstündeki anahtar <b>Sayfa</b> ve <b>Kaynak</b> sunar. Şablonlar çoğunl' +
+      'ukla HTML''dir ve «bu nasıl görünüyor» ile «hangi biçimleme çıktı» soruları birbirini ' +
+      'yanıtlamaz: bozuk bir etiket gözün atladığı hafif eğri bir yerleşim verir, etiket dolu' +
+      ' bir düzyazı ise düzyazı gibi okunmaz. Yarımın üstündeki anahtar neye baktığınızı deği' +
+      'ştirir.</p>',
     '<p>Şablonun bir bölümünü seçin, yalnız o bölüm işlenir — belgenin bütününün kapsamında' +
       ', böylece yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl çıkacak' +
       'sa öyle çıkar.</p>',
@@ -7753,8 +7752,8 @@ const
       'rketine hoş geldiniz.<br>include shout: %marka% burada.</tt></small></p>',
     '<p><code>seed</code> kurayı sabitler. İçinde seçim bulunan bir şablonun tek yanıtı yok' +
       'tur, dolayısıyla tohumsuz bir örnek her geçişte başka bir şey yazardı ve denetlenecek ' +
-      'bir şey kalmazdı. Pencerede bu, sağ yarımın üstündeki <b>Tohum</b> kutusudur; işaretle' +
-      'yin, yanında bir sayı alanı belirir ve siz çalışırken önizleme durur.</p>',
+      'bir şey kalmazdı. Pencerede bu, sağ yarımın üstündeki <b>seed</b> kutusudur; işaretley' +
+      'in, yanında bir sayı alanı belirir ve siz çalışırken önizleme durur.</p>',
     '<p><code>locale</code> sayı biçimlerini belirler ve arayüzün dili değil, sağ yarımın ü' +
       'stündeki seçicidir. Türkçe ve İngilizce iki biçim ister; Rusça, Ukraynaca, Belarusça, ' +
       'Sırpça, Hırvatça ve Boşnakça üç ister.</p>',
@@ -8177,9 +8176,9 @@ const
       '/code> belgeyi geri alır.</p>',
     '<p><b>Bir oturum değeri önce şablondur, metin değil.</b> Makine konak programdan gelen' +
       ' her değere bunu yapar ve önizlemenin sunucuyla örtüşmesi gerekir — dolayısıyla değer ' +
-      'alanına yazılan <code>{ucuz|pahalı}</code> bir seçim verir, o on üç karakteri değil. M' +
-      'etnin kendisini kastediyorsanız üçüncü sütunda <b>metin olarak</b> kutusunu işaretleyi' +
-      'n: o zaman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.</p>',
+      'alanına yazılan <code>{ucuz|pahalı}</code> bir seçim verir, o karakterleri değil. Metn' +
+      'in kendisini kastediyorsanız üçüncü sütunda <b>metin olarak</b> kutusunu işaretleyin: ' +
+      'o zaman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — tanım kendi ke' +
       'ndini anıyor</h3>',
     '<p><small><tt><a href="ex:50">#set %x% = a %x% b</a><br><a href="ex:50">%x%</a><br>→&n' +
@@ -8467,13 +8466,14 @@ const
       '</p>',
     '<p><small><tt><a href="ex:0">{Привіт|Вітаю} усім.</a><br>→&nbsp; Привіт усім.</tt></sm' +
       'all></p>',
-    '<p><b>Перекинути</b> над правою половиною дає наступну. Якщо потрібна завжди одна й та' +
-      ' сама — поки ви порівнюєте дві правки, скажімо, — поставте позначку <b>Зерно</b>, і пе' +
-      'регляд стоятиме, доки ви її не знімете або не зміните число.</p>',
-    '<p>Права половина показує або <b>сторінку</b>, або <b>джерело</b>. Шаблони здебільшого' +
-      ' є HTML, і два питання «як це виглядає» та «яка розмітка вийшла» не відповідають одне ' +
-      'одному: зламаний тег дає трохи криву верстку, яку око проминає, а проза з тегами всере' +
-      'дині не читається як проза. Перемикач над половиною змінює те, на що ви дивитесь.</p>',
+    '<p><b>Інший</b> над правою половиною дає наступну. Якщо потрібна завжди одна й та сама' +
+      ' — поки ви порівнюєте дві правки, скажімо, — поставте позначку <b>сид</b>, і перегляд ' +
+      'стоятиме, доки ви її не знімете або не зміните число.</p>',
+    '<p>Перемикач над правою половиною пропонує <b>Сторінка</b> і <b>Джерело</b>. Шаблони з' +
+      'дебільшого є HTML, і два питання «як це виглядає» та «яка розмітка вийшла» не відповід' +
+      'ають одне одному: зламаний тег дає трохи криву верстку, яку око проминає, а проза з те' +
+      'гами всередині не читається як проза. Перемикач над половиною змінює те, на що ви диви' +
+      'тесь.</p>',
     '<p>Виділіть частину шаблону — і відтвориться лише вона, у межах усього документа, тож ' +
       'уривок, який вживає змінну, визначену вгорі, вийде так, як вийде на своєму місці.</p>',
     '<h2 id="panels">Панелі внизу</h2>',
@@ -8484,8 +8484,8 @@ const
       'ає правильним, приймуть й інші рушії.</p>',
     '<p><b>Змінні</b> показують імена, які ваш документ визначає, і ті, якими він лише кори' +
       'стується. Ім’я, яким він користується і якого ніщо не визначає, можна заповнити тут на' +
-      ' сесію: впишіть значення поруч, і перегляд його підхопить. Позначте <b>Літерал</b>, ко' +
-      'ли значення — це текст, що означає сам себе, а не маленький шаблон.</p>',
+      ' сесію: впишіть значення поруч, і перегляд його підхопить. Позначте <b>як текст</b>, к' +
+      'оли значення — це текст, що означає сам себе, а не маленький шаблон.</p>',
     '<p><b>Варіанти</b> створюють багато текстів за раз. Скажіть скільки, створіть і прочит' +
       'айте їх у списку перед експортом. Майже однакові можна відкидати просто під час створе' +
       'ння, а зерно робить увесь набір відтворюваним: те саме зерно й той самий шаблон завтра' +
@@ -8525,8 +8525,8 @@ const
     '<h2 id="gsa">Імпорт шаблону GSA</h2>',
     '<p>Ця частина вимкнена, доки ви її не ввімкнете, у <b>Вигляд</b>, <b>Імпорт GSA</b>, б' +
       'о більшість тих, хто пише шаблони, ніколи не користувалися GSA Search Engine Ranker. У' +
-      'вімкнена, <b>Файл</b>, <b>Імпортувати шаблон GSA…</b> читає шаблон SER і перекладає йо' +
-      'го цією мовою.</p>',
+      'вімкнена, <b>Файл</b>, <b>Імпорт GSA-шаблона…</b> читає шаблон SER і перекладає його ц' +
+      'ією мовою.</p>',
     '<p>Перетворення обережне у певний спосіб. Те, чого воно не може передати достеменно, в' +
       'оно відхиляє й каже вам про це, замість тихо перетворити на щось, що відтвориться. Кон' +
       'струкції, які прочитались би хибно, лишившись у тексті, — дужки BBCode, <code>#</code>' +
@@ -8570,8 +8570,8 @@ const
       'симо до {Acme|Globex}.<br>include shout: %brand% тут.</tt></small></p>',
     '<p><code>seed</code> закріплює жеребкування. Шаблон із вибором усередині не має єдиної' +
       ' відповіді, тож приклад без зерна друкував би щоразу інше й не було б чого перевіряти.' +
-      ' У вікні це віконце <b>Зерно</b> над правою половиною; поставте позначку — і поруч з’я' +
-      'виться поле числа, а перегляд стоятиме, поки ви працюєте.</p>',
+      ' У вікні це віконце <b>сид</b> над правою половиною; поставте позначку — і поруч з’яви' +
+      'ться поле числа, а перегляд стоятиме, поки ви працюєте.</p>',
     '<p><code>locale</code> вирішує форми числа, і це перемикач над правою половиною, а не ' +
       'мова інтерфейсу. Українській, російській, білоруській, сербській, хорватській і босній' +
       'ській потрібні три форми; англійській — дві.</p>',
@@ -8790,8 +8790,11 @@ const
       'укр</code> рушій розбирає на два речення:</p>',
     '<p><small><tt><a href="ex:34">сайт.укр три</a><br>→&nbsp; Сайт. Укр три</tt></small></' +
       'p>',
-    '<p>Причина всіх трьох одна: перевірка «чи це середина слова» в рушії латинська, і кири' +
-      'лиця для неї літерою не є.</p>',
+    '<p>Причин тут дві, а не одна, і плутати їх не варто. Перше — просто СПИСОК: у ньому 46' +
+      ' слів, і те, що майже жодне з них не українське, до абетки стосунку не має. Рушій звір' +
+      'яє їх повністю по-юнікодному, через що 29 кириличних записів узагалі працюють. Друге —' +
+      ' перевірка «чи це середина слова», і от вона латинська: саме через неї ламаються скоро' +
+      'чення з кількох крапок і кириличні домени, і тільки вони.</p>',
     '<p><b><code>#include</code>, який не стоїть сам у своєму рядку, — звичайний текст.</b>' +
       '</p>',
     '<p><small><tt><a href="ex:35">Перед. #include "intro"</a><br>→&nbsp; Перед. #include "' +
@@ -8992,9 +8995,9 @@ const
       'code> повертає документ.</p>',
     '<p><b>Значення сесії — спершу шаблон, а не текст.</b> Саме так рушій чинить із будь-як' +
       'им значенням господаря, і перегляд має збігатися з сервером — тож <code>{низька|висока' +
-      '}</code>, набране в поле значення, дає вибір, а не ці шістнадцять символів. Якщо ви ма' +
-      'ли на увазі сам текст, поставте позначку <b>як текст</b> у третьому стовпці: тоді фігу' +
-      'рні дужки й відсотки лишаються символами.</p>',
+      '}</code>, набране в поле значення, дає вибір, а не ці символи. Якщо ви мали на увазі с' +
+      'ам текст, поставте позначку <b>як текст</b> у третьому стовпці: тоді фігурні дужки й в' +
+      'ідсотки лишаються символами.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — визначення пос' +
       'илається саме на себе</h3>',
     '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
@@ -9042,11 +9045,11 @@ const
     '<p>Цілі — це файли <code>.spintax</code> у теці відкритого документа. Невідома ціль ро' +
       'згортається в ніщо: абзац зникає, а не ламається, і саме тому це так легко проґавити.<' +
       '/p>',
-    '<p><b>Через це на вкладці «Змінні» є третій розділ, «Вставки».</b> Він перелічує кожен' +
-      ' <code>#include</code> документа і для кожного — чи має набір його ціль; по рядку на в' +
-      'ходження, тож ціль, названа двічі, дає два рядки. Розділ зʼявляється лише тоді, коли в' +
-      ' документі є вставки. Клацання по рядку веде курсор до того <code>#include</code>, яки' +
-      'й називає цю ціль.</p>',
+    '<p><b>Через це на вкладці «Змінні» є третій розділ, «Включення».</b> Він перелічує кож' +
+      'ен <code>#include</code> документа і для кожного — чи має набір його ціль; по рядку на' +
+      ' входження, тож ціль, названа двічі, дає два рядки. Розділ зʼявляється лише тоді, коли' +
+      ' в документі є вставки. Клацання по рядку веде курсор до того <code>#include</code>, я' +
+      'кий називає цю ціль.</p>',
     '<p>Позначка має <b>три</b> значення, і третє важливе: «немає набору» — це не «уривка б' +
       'ракує», а «поки що нема де шукати». Набір — це тека поруч із документом, а незбережени' +
       'й документ теки не має; тож до першого збереження кожна ціль позначена саме так. «БРАК' +
@@ -9280,14 +9283,14 @@ const
       '/p>',
     '<p><small><tt><a href="ex:0">{Прывітанне|Вітаю} усім.</a><br>→&nbsp; Прывітанне усім.<' +
       '/tt></small></p>',
-    '<p><b>Перакінуць</b> над правай палавінай дае наступны. Калі патрэбны заўсёды адзін і ' +
-      'той жа — пакуль вы параўноўваеце дзве праўкі, скажам, — пастаўце адзнаку <b>Зерне</b>,' +
-      ' і прагляд будзе стаяць, пакуль вы яе не здымеце або не зменіце лік.</p>',
-    '<p>Правая палавіна паказвае альбо <b>старонку</b>, альбо <b>зыходнік</b>. Шаблоны збол' +
-      'ьшага з’яўляюцца HTML, і два пытанні «як гэта выглядае» і «якая разметка выйшла» не ад' +
-      'казваюць адно аднаму: зламаны тэг дае трохі крывую вёрстку, якую вока мінае, а проза з' +
-      ' тэгамі ўсярэдзіне не чытаецца як проза. Пераключальнік над палавінай мяняе тое, на шт' +
-      'о вы глядзіце.</p>',
+    '<p><b>Іншы</b> над правай палавінай дае наступны. Калі патрэбны заўсёды адзін і той жа' +
+      ' — пакуль вы параўноўваеце дзве праўкі, скажам, — пастаўце адзнаку <b>сід</b>, і прагл' +
+      'яд будзе стаяць, пакуль вы яе не здымеце або не зменіце лік.</p>',
+    '<p>Пераключальнік над правай палавінай прапануе <b>Старонка</b> і <b>Крыніца</b>. Шабл' +
+      'оны збольшага з’яўляюцца HTML, і два пытанні «як гэта выглядае» і «якая разметка выйшл' +
+      'а» не адказваюць адно аднаму: зламаны тэг дае трохі крывую вёрстку, якую вока мінае, а' +
+      ' проза з тэгамі ўсярэдзіне не чытаецца як проза. Пераключальнік над палавінай мяняе то' +
+      'е, на што вы глядзіце.</p>',
     '<p>Вылучыце частку шаблона — і адтворыцца толькі яна, у межах усяго дакумента, таму ўр' +
       'ывак, які ўжывае зменную, вызначаную ўверсе, выйдзе так, як выйдзе на сваім месцы.</p>',
     '<h2 id="panels">Панэлі ўнізе</h2>',
@@ -9298,8 +9301,8 @@ const
       'які гэтая панэль называе правільным, прымуць і іншыя рухавікі.</p>',
     '<p><b>Зменныя</b> паказваюць імёны, якія ваш дакумент вызначае, і тыя, якімі ён толькі' +
       ' карыстаецца. Імя, якім ён карыстаецца і якога нішто не вызначае, можна запоўніць тут ' +
-      'на сесію: упішыце значэнне побач, і прагляд яго падхопіць. Пастаўце адзнаку <b>Літарал' +
-      '</b>, калі значэнне — гэта тэкст, які азначае сам сябе, а не маленькі шаблон.</p>',
+      'на сесію: упішыце значэнне побач, і прагляд яго падхопіць. Пастаўце адзнаку <b>як тэкс' +
+      'т</b>, калі значэнне — гэта тэкст, які азначае сам сябе, а не маленькі шаблон.</p>',
     '<p><b>Варыянты</b> ствараюць многа тэкстаў за раз. Скажыце колькі, стварыце і прачытай' +
       'це іх у спісе перад экспартам. Амаль аднолькавыя можна адкідваць проста падчас стварэн' +
       'ня, а зерне робіць увесь набор паўтаральным: тое самае зерне і той самы шаблон заўтра ' +
@@ -9339,8 +9342,8 @@ const
     '<h2 id="gsa">Імпарт шаблона GSA</h2>',
     '<p>Гэтая частка выключана, пакуль вы яе не ўключыце, у <b>Выгляд</b>, <b>Імпарт GSA</b' +
       '>, бо большасць тых, хто піша шаблоны, ніколі не карысталіся GSA Search Engine Ranker.' +
-      ' Уключаная, <b>Файл</b>, <b>Імпартаваць шаблон GSA…</b> чытае шаблон SER і перакладае ' +
-      'яго на гэтую мову.</p>',
+      ' Уключаная, <b>Файл</b>, <b>Імпарт GSA-шаблона…</b> чытае шаблон SER і перакладае яго ' +
+      'на гэтую мову.</p>',
     '<p>Ператварэнне асцярожнае пэўным чынам. Тое, чаго яно не можа перадаць дакладна, яно ' +
       'адхіляе і кажа вам пра гэта, замест таго каб ціха ператварыць у нешта, што адтворыцца.' +
       ' Канструкцыі, якія прачыталіся б памылкова, застаўшыся ў тэксце, — дужкі BBCode, <code' +
@@ -9385,8 +9388,8 @@ const
       'шаем у {Acme|Globex}.<br>include shout: %brand% тут.</tt></small></p>',
     '<p><code>seed</code> замацоўвае жараб’ёўку. Шаблон з выбарам усярэдзіне не мае адзінаг' +
       'а адказу, таму прыклад без зерня друкаваў бы кожны раз іншае і не было б чаго правярац' +
-      'ь. У акне гэта аконца <b>Зерне</b> над правай палавінай; пастаўце адзнаку — і побач з’' +
-      'явіцца поле ліку, а прагляд будзе стаяць, пакуль вы працуеце.</p>',
+      'ь. У акне гэта аконца <b>сід</b> над правай палавінай; пастаўце адзнаку — і побач з’яв' +
+      'іцца поле ліку, а прагляд будзе стаяць, пакуль вы працуеце.</p>',
     '<p><code>locale</code> вырашае формы ліку, і гэта пераключальнік над правай палавінай,' +
       ' а не мова інтэрфейсу. Беларускай, рускай, украінскай, сербскай, харвацкай і баснійска' +
       'й патрэбныя тры формы; англійскай — дзве.</p>',
@@ -9594,9 +9597,9 @@ const
       'ае.</p>',
     '<p><b>Беларускія скарачэнні ў спісе рухавіка збольшага адсутнічаюць.</b> Гэта маўчанне' +
       ', якое беларускі аўтар сустракае першым. Заслоненыя толькі тыя словы, што супадаюць з ' +
-      'рускай паловай спіса — <code>г.</code>, <code>ст.</code> і <code>напр.</code> вышэй, —' +
-      ' тады як <code>вул.</code>, <code>стар.</code> і <code>руб.</code> заканчваюць сказ і ' +
-      'пішуць наступнае слова з вялікай:</p>',
+      'рускай паловай спіса — <code>г.</code>, <code>ст.</code>, <code>напр.</code> і <code>р' +
+      'уб.</code>, — тады як <code>вул.</code>, <code>стар.</code> і <code>хв.</code> заканчв' +
+      'аюць сказ і пішуць наступнае слова з вялікай:</p>',
     '<p><small><tt><a href="ex:32">вул. нашы цэны нізкія</a><br>→&nbsp; Вул. Нашы цэны нізк' +
       'ія</tt></small></p>',
     '<p><b>Скарачэнне з некалькіх кропак працуе толькі на лацінцы.</b> <code>e.g.</code> за' +
@@ -9608,8 +9611,11 @@ const
       '/code> рухавік разбірае на два сказы:</p>',
     '<p><small><tt><a href="ex:34">сайт.бел тры</a><br>→&nbsp; Сайт. Бел тры</tt></small></' +
       'p>',
-    '<p>Прычына ўсіх трох адна: праверка «ці гэта сярэдзіна слова» ў рухавіку лацінская, і ' +
-      'кірыліца для яе літарай не з’яўляецца.</p>',
+    '<p>Прычын тут дзве, а не адна, і блытаць іх не варта. Першая — проста СПІС: у ім 46 сл' +
+      'оў, і тое, што амаль ніводнае з іх не беларускае, да азбукі дачынення не мае. Рухавік ' +
+      'звярае іх цалкам па-юнікодну, дзякуючы чаму 29 кірылічных запісаў наогул працуюць. Дру' +
+      'гая — праверка «ці гэта сярэдзіна слова», і вось яна лацінская: менавіта праз яе ломяц' +
+      'ца скарачэнні з некалькіх кропак і кірылічныя дамены, і толькі яны.</p>',
     '<p><b><code>#include</code>, які не стаіць сам у сваім радку, — звычайны тэкст.</b></p' +
       '>',
     '<p><small><tt><a href="ex:35">Перад. #include "intro"</a><br>→&nbsp; Перад. #include "' +
@@ -9811,9 +9817,9 @@ const
       '+Z</code> вяртае дакумент.</p>',
     '<p><b>Значэнне сесіі — спярша шаблон, а не тэкст.</b> Менавіта так рухавік робіць з лю' +
       'бым значэннем гаспадара, і прагляд мусіць супадаць з серверам — таму <code>{нізкая|выс' +
-      'окая}</code>, набранае ў поле значэння, дае выбар, а не гэтыя шаснаццаць сімвалаў. Кал' +
-      'і вы мелі на ўвазе сам тэкст, пастаўце адзнаку <b>як тэкст</b> у трэцім слупку: тады ф' +
-      'ігурныя дужкі і працэнты застаюцца сімваламі.</p>',
+      'окая}</code>, набранае ў поле значэння, дае выбар, а не гэтыя сімвалы. Калі вы мелі на' +
+      ' ўвазе сам тэкст, пастаўце адзнаку <b>як тэкст</b> у трэцім слупку: тады фігурныя дужк' +
+      'і і працэнты застаюцца сімваламі.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — вызначэнне спа' +
       'сылаецца само на сябе</h3>',
     '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
@@ -9861,11 +9867,11 @@ const
     '<p>Мэты — гэта файлы <code>.spintax</code> у папцы адкрытага дакумента. Невядомая мэта' +
       ' разгортваецца ў нішто: абзац знікае, а не ломіцца, і менавіта таму гэта так лёгка пра' +
       'пусціць.</p>',
-    '<p><b>Праз гэта на ўкладцы «Зменныя» ёсць трэці раздзел, «Устаўкі».</b> Ён пералічвае ' +
-      'кожны <code>#include</code> дакумента і для кожнага — ці мае набор яго мэту; па радку ' +
-      'на ўваходжанне, таму мэта, названая двойчы, дае два радкі. Раздзел з’яўляецца толькі т' +
-      'ады, калі ў дакуменце ёсць устаўкі. Пстрычка па радку вядзе курсор да таго <code>#incl' +
-      'ude</code>, які называе гэтую мэту.</p>',
+    '<p><b>Праз гэта на ўкладцы «Зменныя» ёсць трэці раздзел, «Уключэнні».</b> Ён пералічва' +
+      'е кожны <code>#include</code> дакумента і для кожнага — ці мае набор яго мэту; па радк' +
+      'у на ўваходжанне, таму мэта, названая двойчы, дае два радкі. Раздзел з’яўляецца толькі' +
+      ' тады, калі ў дакуменце ёсць устаўкі. Пстрычка па радку вядзе курсор да таго <code>#in' +
+      'clude</code>, які называе гэтую мэту.</p>',
     '<p>Адзнака мае <b>тры</b> значэнні, і трэцяе важнае: «няма набору» — гэта не «урыўка н' +
       'е хапае», а «пакуль што няма дзе шукаць». Набор — гэта папка побач з дакументам, а нез' +
       'ахаваны дакумент папкі не мае; таму да першага захавання кожная мэта пазначана менавіт' +
@@ -10019,10 +10025,11 @@ const
       'е, а <code>г.</code> заслоняе яго ў англійскім.</p>',
     '<p>Для беларускага тэксту вынік просты і нязручны: з таго, што вы пішаце штодня, у спі' +
       'се ёсць толькі словы, якія супадаюць з рускімі — <code>г.</code>, <code>ст.</code>, <c' +
-      'ode>напр.</code> ды яшчэ некалькі, — тады як <code>вул.</code>, <code>стар.</code> і <' +
-      'code>руб.</code> у ім адсутнічаюць і заканчваюць сказ. Моўны даведнік дадае яшчэ два в' +
-      'ымераныя выпадкі: <code>т.д.</code> не заслонена, бо форма з некалькіх кропак працуе т' +
-      'олькі на лацінцы, і кірылічны дамен <code>.бел</code> таксама не заслонены.</p>',
+      'ode>напр.</code>, <code>руб.</code>, <code>тыс.</code> ды яшчэ некалькі, — тады як <co' +
+      'de>вул.</code>, <code>стар.</code> і <code>хв.</code> у ім адсутнічаюць і заканчваюць ' +
+      'сказ. Моўны даведнік дадае яшчэ два вымераныя выпадкі: <code>т.д.</code> не заслонена,' +
+      ' бо форма з некалькіх кропак працуе толькі на лацінцы, і кірылічны дамен <code>.бел</c' +
+      'ode> таксама не заслонены.</p>',
     '<hr>',
     '<h2 id="correct">Як выглядае правільнае</h2>',
     '<p><small><tt><a href="ex:72">цана {нізкая|высокая}</a><br>→&nbsp; Цана нізкая</tt></s' +
@@ -10101,10 +10108,11 @@ const
     '<p><b>Друга</b> изнад десне половине даје следећу. Ако вам треба увек иста — док упоре' +
       'ђујете две измене, рецимо — штиклирајте <b>seed</b>, и преглед ће стајати док је не ск' +
       'инете или не промените број.</p>',
-    '<p>Десна половина показује или <b>страницу</b> или <b>извор</b>. Шаблони су углавном H' +
-      'TML, и два питања «како ово изгледа» и «каква је разметка испала» не одговарају једно ' +
-      'на друго: покварен таг даје мало криву страницу коју око прескочи, а проза са таговима' +
-      ' унутра не чита се као проза. Пребацивач изнад половине мења оно у шта гледате.</p>',
+    '<p>Пребацивач изнад десне половине нуди <b>Страница</b> и <b>Извор</b>. Шаблони су угл' +
+      'авном HTML, и два питања «како ово изгледа» и «каква је разметка испала» не одговарају' +
+      ' једно на друго: покварен таг даје мало криву страницу коју око прескочи, а проза са т' +
+      'аговима унутра не чита се као проза. Пребацивач изнад половине мења оно у шта гледате.' +
+      '</p>',
     '<p>Означите део шаблона и одиграће се само он, у оквиру целог документа, па одломак ко' +
       'ји користи променљиву дефинисану горе излази онако како излази на свом месту.</p>',
     '<h2 id="panels">Панели доле</h2>',
@@ -10414,8 +10422,11 @@ const
       'б</code> мотор раставља на две реченице:</p>',
     '<p><small><tt><a href="ex:35">сајт.срб три</a><br>→&nbsp; Сајт. Срб три</tt></small></' +
       'p>',
-    '<p>Разлог сва три је исти: провера «да ли је ово средина речи» у мотору је латинична, ' +
-      'и ћирилица за њу није слово.</p>',
+    '<p>Разлога су два, а не један, и не вреди их мешати. Први је прост СПИСАК: у њему су 4' +
+      '6 речи, и то што готово ниједна није српска нема везе с писмом. Мотор их пореди потпун' +
+      'о уникодно, због чега 29 ћириличних уноса уопште и раде. Други је провера «да ли је ов' +
+      'о средина речи», и она јесте латинична: управо због ње пуцају скраћенице од више тачак' +
+      'а и ћирилични домени, и само оне.</p>',
     '<p><b><code>#include</code> који не стоји сам у свом реду обичан је текст.</b></p>',
     '<p><small><tt><a href="ex:36">Пре. #include "intro"</a><br>→&nbsp; Пре. #include "intr' +
       'o"</tt></small></p>',
@@ -10613,9 +10624,9 @@ const
       'code> враћа документ.</p>',
     '<p><b>Вредност сесије је прво шаблон, а не текст.</b> Управо тако мотор поступа са сва' +
       'ком вредношћу домаћина, а преглед мора да се поклапа са сервером — па <code>{ниска|вис' +
-      'ока}</code> откуцано у поље вредности даје избор, а не тих шеснаест знакова. Ако сте м' +
-      'ислили на сам текст, штиклирајте <b>као текст</b> у трећој колони: тада витичасте загр' +
-      'аде и проценти остају знаци.</p>',
+      'ока}</code> откуцано у поље вредности даје избор, а не те знакове. Ако сте мислили на ' +
+      'сам текст, штиклирајте <b>као текст</b> у трећој колони: тада витичасте заграде и проц' +
+      'енти остају знаци.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — дефиниција упу' +
       'ћује сама на себе</h3>',
     '<p><small><tt><a href="ex:53">#set %x% = a %x% b</a><br><a href="ex:53">%x%</a><br>→&n' +
@@ -10662,11 +10673,11 @@ const
     '<p>Циљеви су <code>.spintax</code> фајлови у фасцикли отвореног документа. Непознат ци' +
       'љ се развија у ништа: пасус нестаје, а не пуца, и управо зато је то тако лако превидет' +
       'и.</p>',
-    '<p><b>Због тога на картици «Променљиве» постоји трећи одељак, «Уметања».</b> Он набрај' +
-      'а сваки <code>#include</code> документа и за сваки — да ли скуп има његов циљ; по једа' +
-      'н ред по појављивању, па циљ именован двапут даје два реда. Одељак се појављује само о' +
-      'нда када у документу има уметања. Клик на ред води курсор до оног <code>#include</code' +
-      '> који именује тај циљ.</p>',
+    '<p><b>Због тога на картици «Променљиве» постоји трећи одељак, «Укључења».</b> Он набра' +
+      'ја сваки <code>#include</code> документа и за сваки — да ли скуп има његов циљ; по јед' +
+      'ан ред по појављивању, па циљ именован двапут даје два реда. Одељак се појављује само ' +
+      'онда када у документу има уметања. Клик на ред води курсор до оног <code>#include</cod' +
+      'e> који именује тај циљ.</p>',
     '<p>Ознака има <b>три</b> значења, и треће је важно: «нема скупа» није «одломак недоста' +
       'је», него «за сада нема где да се тражи». Скуп је фасцикла поред документа, а несачува' +
       'н документ фасциклу нема; па је до првог чувања сваки циљ означен управо тако. «НЕДОСТ' +
@@ -10901,11 +10912,11 @@ const
     '<p><b>Druga</b> iznad desne polovice daje sljedeću. Ako vam treba uvijek ista — dok us' +
       'poređujete dvije izmjene, recimo — kvačicom označite <b>seed</b>, i pregled će stajati' +
       ' dok je ne skinete ili ne promijenite broj.</p>',
-    '<p>Desna polovica pokazuje ili <b>stranicu</b> ili <b>izvor</b>. Predlošci su uglavnom' +
-      ' HTML, i dva pitanja «kako ovo izgleda» i «kakva je razmetnica ispala» ne odgovaraju j' +
-      'edno na drugo: pokvaren tag daje malo krivu stranicu koju oko preskoči, a proza s tago' +
-      'vima unutra ne čita se kao proza. Prebacivač iznad polovice mijenja ono u što gledate.' +
-      '</p>',
+    '<p>Prebacivač iznad desne polovice nudi <b>Stranica</b> i <b>Izvor</b>. Predlošci su u' +
+      'glavnom HTML, i dva pitanja «kako ovo izgleda» i «kakva je razmetnica ispala» ne odgov' +
+      'araju jedno na drugo: pokvaren tag daje malo krivu stranicu koju oko preskoči, a proza' +
+      ' s tagovima unutra ne čita se kao proza. Prebacivač iznad polovice mijenja ono u što g' +
+      'ledate.</p>',
     '<p>Označite dio predloška i odigrat će se samo on, u okviru cijelog dokumenta, pa odlo' +
       'mak koji koristi varijablu definiranu gore izlazi onako kako izlazi na svom mjestu.</p' +
       '>',
@@ -11218,9 +11229,11 @@ const
       ' motoru uopće nije spomen varijable: on ga ispisuje kao tekst i ne kaže ništa:</p>',
     '<p><small><tt><a href="ex:33">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
       'll></p>',
-    '<p>Razlog je isti kao gore: provjera «je li ovo sredina riječi» u motoru je ASCII prov' +
-      'jera, i <code>š</code> za nju nije slovo. U vrijednosti su kvačice sasvim na mjestu; u' +
-      ' imenu ne rade uopće.</p>',
+    '<p>Razlog NIJE isti kao gore, i to vrijedi razdvojiti. Gore je bio popis -- koje riječ' +
+      'i motor zna. Ovdje je pravilo o IMENIMA: reference varijabli motor čita ASCII slovima,' +
+      ' znamenkama i <code>_</code>, i ništa drugo ne broji kao ime. To se odlučuje prije neg' +
+      'o što se išta odigra, pa dotjerivanje s tim nema veze. U vrijednosti su kvačice sasvim' +
+      ' na mjestu; u imenu ne rade uopće.</p>',
     '<p><b><code>#include</code> koji ne stoji sam u svom retku običan je tekst.</b></p>',
     '<p><small><tt><a href="ex:34">Prije. #include "intro"</a><br>→&nbsp; Prije. #include "' +
       'intro"</tt></small></p>',
@@ -11419,9 +11432,9 @@ const
       'ode>Ctrl+Z</code> vraća dokument.</p>',
     '<p><b>Vrijednost je sesije najprije predložak, a ne tekst.</b> Upravo tako motor postu' +
       'pa sa svakom vrijednošću domaćina, a pregled se mora podudarati s poslužiteljem — pa <' +
-      'code>{niska|visoka}</code> otipkano u polje vrijednosti daje izbor, a ne tih šesnaest ' +
-      'znakova. Ako ste mislili na sam tekst, kvačicom označite <b>kao tekst</b> u trećem stu' +
-      'pcu: tada vitičaste zagrade i postoci ostaju znaci.</p>',
+      'code>{niska|visoka}</code> otipkano u polje vrijednosti daje izbor, a ne te znakove. A' +
+      'ko ste mislili na sam tekst, kvačicom označite <b>kao tekst</b> u trećem stupcu: tada ' +
+      'vitičaste zagrade i postoci ostaju znaci.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — definicija upu' +
       'ćuje sama na sebe</h3>',
     '<p><small><tt><a href="ex:51">#set %x% = a %x% b</a><br><a href="ex:51">%x%</a><br>→&n' +
@@ -11468,11 +11481,11 @@ const
     '<p>Ciljevi su <code>.spintax</code> datoteke u mapi otvorenog dokumenta. Nepoznat se c' +
       'ilj razvija u ništa: odlomak nestaje, a ne puca, i upravo je zato to tako lako previdj' +
       'eti.</p>',
-    '<p><b>Zbog toga na kartici «Varijable» postoji treći odjeljak, «Umetanja».</b> On nabr' +
-      'aja svaki <code>#include</code> dokumenta i za svaki — ima li skup njegov cilj; po jed' +
-      'an redak po pojavljivanju, pa cilj imenovan dvaput daje dva retka. Odjeljak se pojavlj' +
-      'uje samo onda kada u dokumentu ima umetanja. Klik na redak vodi pokazivač do onog <cod' +
-      'e>#include</code> koji imenuje taj cilj.</p>',
+    '<p><b>Zbog toga na kartici «Varijable» postoji treći odjeljak, «Uključivanja».</b> On ' +
+      'nabraja svaki <code>#include</code> dokumenta i za svaki — ima li skup njegov cilj; po' +
+      ' jedan redak po pojavljivanju, pa cilj imenovan dvaput daje dva retka. Odjeljak se poj' +
+      'avljuje samo onda kada u dokumentu ima umetanja. Klik na redak vodi pokazivač do onog ' +
+      '<code>#include</code> koji imenuje taj cilj.</p>',
     '<p>Oznaka ima <b>tri</b> značenja, i treće je važno: «nema skupa» nije «odlomak nedost' +
       'aje», nego «zasad nema gdje tražiti». Skup je mapa pored dokumenta, a nespremljen doku' +
       'ment mapu nema; pa je do prvog spremanja svaki cilj označen upravo tako. «NEDOSTAJE» s' +
@@ -11709,11 +11722,11 @@ const
     '<p><b>Druga</b> iznad desne polovine daje sljedeću. Ako vam treba uvijek ista — dok po' +
       'redite dvije izmjene, recimo — označite <b>seed</b>, i pregled će stajati dok je ne sk' +
       'inete ili ne promijenite broj.</p>',
-    '<p>Desna polovina pokazuje ili <b>stranicu</b> ili <b>izvor</b>. Šabloni su uglavnom H' +
-      'TML, i dva pitanja «kako ovo izgleda» i «kakva je razmjetnica ispala» ne odgovaraju je' +
-      'dno na drugo: pokvaren tag daje malo krivu stranicu koju oko preskoči, a proza s tagov' +
-      'ima unutra ne čita se kao proza. Prebacivač iznad polovine mijenja ono u šta gledate.<' +
-      '/p>',
+    '<p>Prebacivač iznad desne polovine nudi <b>Stranica</b> i <b>Izvor</b>. Šabloni su ugl' +
+      'avnom HTML, i dva pitanja «kako ovo izgleda» i «kakva je razmjetnica ispala» ne odgova' +
+      'raju jedno na drugo: pokvaren tag daje malo krivu stranicu koju oko preskoči, a proza ' +
+      's tagovima unutra ne čita se kao proza. Prebacivač iznad polovine mijenja ono u šta gl' +
+      'edate.</p>',
     '<p>Označite dio šablona i odigrat će se samo on, u okviru cijelog dokumenta, pa odloma' +
       'k koji koristi varijablu definisanu gore izlazi onako kako izlazi na svom mjestu.</p>',
     '<h2 id="panels">Ploče dolje</h2>',
@@ -11763,8 +11776,8 @@ const
     '<h2 id="gsa">Uvoz GSA šablona</h2>',
     '<p>Ovaj je dio isključen dok ga ne uključite, u <b>Prikaz</b>, <b>GSA uvoz</b>, jer ve' +
       'ćina onih koji pišu šablone nikada nije koristila GSA Search Engine Ranker. Uključeno,' +
-      ' <b>Datoteka</b>, <b>Uvezi GSA šablon…</b> čita SER šablon i prevodi ga na ovaj jezik.' +
-      '</p>',
+      ' <b>Datoteka</b>, <b>Uvezi GSA predložak…</b> čita SER šablon i prevodi ga na ovaj jez' +
+      'ik.</p>',
     '<p>Pretvaranje je oprezno na određen način. Ono što ne može prenijeti tačno, ono odbij' +
       'a i kaže vam o tome, umjesto da tiho pretvori u nešto što će se odigrati. Konstrukcije' +
       ' koje bi se pogrešno pročitale da ostanu u tekstu — BBCode zagrade, <code>#</code> unu' +
@@ -12025,9 +12038,11 @@ const
       ' motoru uopće nije pominjanje varijable: on ga ispisuje kao tekst i ne kaže ništa:</p>',
     '<p><small><tt><a href="ex:33">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
       'll></p>',
-    '<p>Razlog je isti kao gore: provjera «je li ovo sredina riječi» u motoru je ASCII prov' +
-      'jera, i <code>š</code> za nju nije slovo. U vrijednosti su kvačice sasvim na mjestu; u' +
-      ' imenu ne rade uopće.</p>',
+    '<p>Razlog NIJE isti kao gore, i to vrijedi razdvojiti. Gore je bio popis -- koje riječ' +
+      'i motor zna. Ovdje je pravilo o IMENIMA: reference varijabli motor čita ASCII slovima,' +
+      ' znamenkama i <code>_</code>, i ništa drugo ne broji kao ime. To se odlučuje prije neg' +
+      'o što se išta odigra, pa dotjerivanje s tim nema veze. U vrijednosti su kvačice sasvim' +
+      ' na mjestu; u imenu ne rade uopće.</p>',
     '<p><b><code>#include</code> koji ne stoji sam u svom redu običan je tekst.</b></p>',
     '<p><small><tt><a href="ex:34">Prije. #include "intro"</a><br>→&nbsp; Prije. #include "' +
       'intro"</tt></small></p>',
@@ -12225,9 +12240,9 @@ const
       '>Ctrl+Z</code> vraća dokument.</p>',
     '<p><b>Vrijednost je sesije prvo šablon, a ne tekst.</b> Upravo tako motor postupa sa s' +
       'vakom vrijednošću domaćina, a pregled se mora poklapati sa serverom — pa <code>{niska|' +
-      'visoka}</code> otkucano u polje vrijednosti daje izbor, a ne tih šesnaest znakova. Ako' +
-      ' ste mislili na sam tekst, označite <b>kao tekst</b> u trećoj koloni: tada vitičaste z' +
-      'agrade i procenti ostaju znaci.</p>',
+      'visoka}</code> otkucano u polje vrijednosti daje izbor, a ne te znakove. Ako ste misli' +
+      'li na sam tekst, označite <b>kao tekst</b> u trećoj koloni: tada vitičaste zagrade i p' +
+      'rocenti ostaju znaci.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — definicija upu' +
       'ćuje sama na sebe</h3>',
     '<p><small><tt><a href="ex:51">#set %x% = a %x% b</a><br><a href="ex:51">%x%</a><br>→&n' +
@@ -12274,11 +12289,11 @@ const
     '<p>Ciljevi su <code>.spintax</code> fajlovi u folderu otvorenog dokumenta. Nepoznat se' +
       ' cilj razvija u ništa: pasus nestaje, a ne puca, i upravo je zato to tako lako previdj' +
       'eti.</p>',
-    '<p><b>Zbog toga na kartici «Varijable» postoji treći odjeljak, «Umetanja».</b> On nabr' +
-      'aja svaki <code>#include</code> dokumenta i za svaki — ima li skup njegov cilj; po jed' +
-      'an red po pojavljivanju, pa cilj imenovan dvaput daje dva reda. Odjeljak se pojavljuje' +
-      ' samo onda kada u dokumentu ima umetanja. Klik na red vodi kursor do onog <code>#inclu' +
-      'de</code> koji imenuje taj cilj.</p>',
+    '<p><b>Zbog toga na kartici «Varijable» postoji treći odjeljak, «Uključivanja».</b> On ' +
+      'nabraja svaki <code>#include</code> dokumenta i za svaki — ima li skup njegov cilj; po' +
+      ' jedan red po pojavljivanju, pa cilj imenovan dvaput daje dva reda. Odjeljak se pojavl' +
+      'juje samo onda kada u dokumentu ima umetanja. Klik na red vodi kursor do onog <code>#i' +
+      'nclude</code> koji imenuje taj cilj.</p>',
     '<p>Oznaka ima <b>tri</b> značenja, i treće je važno: «nema skupa» nije «odlomak nedost' +
       'aje», nego «zasad nema gdje tražiti». Skup je folder pored dokumenta, a nesačuvan doku' +
       'ment folder nema; pa je do prvog čuvanja svaki cilj označen upravo tako. «NEDOSTAJE» s' +

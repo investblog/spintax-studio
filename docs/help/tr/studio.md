@@ -39,10 +39,10 @@ değil bir cümleyi izler.
 ```
 
 Sağ yarımın üstündeki **Yeniden çek** bir sonrakini getirir. Hep aynısını istiyorsanız — iki
-değişikliği karşılaştırırken diyelim — **Tohum** kutusunu işaretleyin, önizleme siz işareti
+değişikliği karşılaştırırken diyelim — **seed** kutusunu işaretleyin, önizleme siz işareti
 kaldırana veya sayıyı değiştirene kadar durur.
 
-Sağ yarım ya **sayfayı** ya da **kaynağı** gösterir. Şablonlar çoğunlukla HTML'dir ve «bu nasıl
+Sağ yarımın üstündeki anahtar **Sayfa** ve **Kaynak** sunar. Şablonlar çoğunlukla HTML'dir ve «bu nasıl
 görünüyor» ile «hangi biçimleme çıktı» soruları birbirini yanıtlamaz: bozuk bir etiket gözün
 atladığı hafif eğri bir yerleşim verir, etiket dolu bir düzyazı ise düzyazı gibi okunmaz. Yarımın
 üstündeki anahtar neye baktığınızı değiştirir.

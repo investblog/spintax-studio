@@ -40,11 +40,11 @@ delas:
 {Olá|Bom dia} a todos.  →  Olá a todos.
 ```
 
-**Voltar a tirar**, por cima da metade direita, traz outra. Se quiser sempre a mesma — enquanto
-compara duas alterações, por exemplo — marque **Semente**, e a pré-visualização fica quieta até a
+**Outra**, por cima da metade direita, traz outra. Se quiser sempre a mesma — enquanto
+compara duas alterações, por exemplo — marque **seed**, e a pré-visualização fica quieta até a
 desmarcar ou mudar o número.
 
-A metade direita mostra a **página** ou o **código**. Os modelos costumam ser HTML, e as duas
+O seletor sobre a metade direita oferece **Página** e **Origem**. Os modelos costumam ser HTML, e as duas
 perguntas «que aspecto tem» e «que marcação saiu» não se respondem uma à outra: uma etiqueta
 partida dá uma disposição um pouco torta que o olho salta, ao passo que prosa cheia de etiquetas
 não se lê como prosa. O interruptor por cima da metade muda o que está a ver.
@@ -63,7 +63,7 @@ outros motores.
 
 **Variáveis** mostra os nomes que o seu documento define e os que apenas usa. Um nome que usa e
 que nada define pode preenchê-lo aqui para a sessão: escreva um valor ao lado e a
-pré-visualização apanha-o. Marque **Literal** quando o valor for texto que se significa a si
+pré-visualização apanha-o. Marque **como texto** quando o valor for texto que se significa a si
 mesmo e não um pequeno modelo por sua vez.
 
 **Variantes** gera muitos textos de uma vez. Diga quantos, gere-os e leia-os na lista antes de

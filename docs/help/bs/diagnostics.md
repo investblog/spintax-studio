@@ -190,7 +190,7 @@ definicija utišava ovo upozorenje zauvijek. Jedan `Ctrl+Z` vraća dokument.
 
 **Vrijednost je sesije prvo šablon, a ne tekst.** Upravo tako motor postupa sa svakom vrijednošću
 domaćina, a pregled se mora poklapati sa serverom — pa `{niska|visoka}` otkucano u polje vrijednosti
-daje izbor, a ne tih šesnaest znakova. Ako ste mislili na sam tekst, označite **kao tekst** u trećoj
+daje izbor, a ne te znakove. Ako ste mislili na sam tekst, označite **kao tekst** u trećoj
 koloni: tada vitičaste zagrade i procenti ostaju znaci.
 
 ### `variable.self-reference` — definicija upućuje sama na sebe
@@ -264,7 +264,7 @@ vidi.
 Ciljevi su `.spintax` fajlovi u folderu otvorenog dokumenta. Nepoznat se cilj razvija u ništa:
 pasus nestaje, a ne puca, i upravo je zato to tako lako previdjeti.
 
-**Zbog toga na kartici «Varijable» postoji treći odjeljak, «Umetanja».** On nabraja svaki `#include`
+**Zbog toga na kartici «Varijable» postoji treći odjeljak, «Uključivanja».** On nabraja svaki `#include`
 dokumenta i za svaki — ima li skup njegov cilj; po jedan red po pojavljivanju, pa cilj imenovan
 dvaput daje dva reda. Odjeljak se pojavljuje samo onda kada u dokumentu ima umetanja. Klik na red
 vodi kursor do onog `#include` koji imenuje taj cilj.

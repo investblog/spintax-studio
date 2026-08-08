@@ -36,7 +36,7 @@ include shout: Il %marchio% è qui.
 
 `seed` fissa l'estrazione. Un modello con una scelta dentro non ha una risposta sola, quindi un
 esempio senza seme stamperebbe qualcosa di diverso a ogni passaggio e non ci sarebbe niente da
-verificare. Nella finestra è la casella **Seme** sopra la metà destra; spuntatela e accanto compare
+verificare. Nella finestra è la casella **seed** sopra la metà destra; spuntatela e accanto compare
 un campo numerico, e l'anteprima resta ferma mentre lavorate.
 
 `locale` decide le forme di numero, ed è il selettore sopra la metà destra, non la lingua

@@ -6254,9 +6254,120 @@ begin
   end;
 end;
 
+(* ▁▁▁ A CONTROL THE HELP NAMES MUST BE A CONTROL THE WINDOW CARRIES ▁▁▁
+
+   The help writes control names in prose, and nothing compared them to the string table. Ten
+   documents named a "Literal" column where every one of the fourteen displays *as text*; nine
+   translated the seed tick-box the application leaves in English; nine renamed the reroll
+   button; seven renamed the Variables panel's third section. A reader looks for a label that
+   is not there, and no build ever noticed.
+
+   The expected text is READ FROM THAT LANGUAGE'S OWN TABLE, so a retranslation breaks this
+   rather than quietly parting the two. Compared against all three of a language's documents,
+   because which one mentions a control is an editorial choice.
+
+   WHAT THAT COSTS, stated here rather than discovered later: a document naming a control
+   WRONGLY is masked when a sibling document names it right. English had exactly that --
+   `studio.md` said "Literal" where `diagnostics.md` said *as text* -- and this check passed
+   it. Twenty-seven such occurrences were found by grepping for the wrong words once, by hand,
+   and fixed. So this holds the FLOOR (no language may name a control wrongly everywhere) and
+   not the ceiling. Tightening it needs a way to know which documents discuss which control,
+   and every version of that is a hand-written list per language -- the shape this project has
+   already paid for twice.
+
+   Only the LABEL is compared. `sVarsIncludes` is a heading and its own explanation joined by
+   an em dash; the help quotes the heading. *)
+type
+  TSpxUiQuote = record
+    Id: TSpxStr;
+    Why: string;
+  end;
+const
+  HELP_UI_QUOTES: array[0..5] of TSpxUiQuote = (
+    (Id: sColLiteral;    Why: 'the session-value column'),
+    (Id: sReroll;        Why: 'the reroll button'),
+    (Id: sViewSource;    Why: 'the source view'),
+    (Id: sViewPage;      Why: 'the page view'),
+    (Id: sVarsIncludes;  Why: 'the Variables panel section'),
+    (Id: sMenuGsaOpen;   Why: 'the File menu item'));
+
+{ Every run of blank characters becomes one space, so a wrapped line reads as a sentence. }
+function Flatten(const S: string): string;
+var i: Integer; sp: Boolean;
+begin
+  Result := '';
+  sp := False;
+  for i := 1 to Length(S) do
+    if (S[i] = ' ') or (S[i] = #9) or (S[i] = #10) or (S[i] = #13) then
+      sp := True
+    else
+    begin
+      if sp and (Result <> '') then Result := Result + ' ';
+      sp := False;
+      Result := Result + S[i];
+    end;
+end;
+
+{ The part of a string a reader sees as its NAME: everything before the em dash that
+  introduces its explanation, when there is one. }
+function UiLabel(const S: string): string;
+var at: Integer;
+begin
+  Result := S;
+  at := Pos(' — ', Result);
+  if at > 0 then Result := Copy(Result, 1, at - 1);
+  { A menu item's trailing ellipsis is punctuation, not part of the name. }
+  if (Length(Result) >= 3) and (Copy(Result, Length(Result) - 2, 3) = '…') then
+    Result := Copy(Result, 1, Length(Result) - 3);
+  Result := Trim(Result);
+end;
+
+procedure CheckHelpNamesControls;
+var
+  d, q, i: Integer;
+  lang: TSpxLang;
+  code, want, all_: string;
+  body: TStringList;
+begin
+  for i := 0 to SPX_HELP_LANG_COUNT - 1 do
+  begin
+    code := SpxHelpLangCode(i);
+    lang := SpxUiLangFor(code);
+    { Every document this language has, read once. }
+    all_ := '';
+    body := TStringList.Create;
+    try
+      for d := Low(HELP_DOCS) to High(HELP_DOCS) do
+        if Copy(HELP_DOCS[d].Path, Length('docs/help/') + 1, Length(code)) = code then
+        begin
+          body.LoadFromFile(HELP_DOCS[d].Path);
+          all_ := all_ + body.Text;
+        end;
+    finally
+      body.Free;
+    end;
+    if all_ = '' then Continue;
+    { Markdown WRAPS. A label whose words fall either side of a line break is still the label
+      the reader sees on the control, so both sides of the comparison are flattened -- the
+      check is about the words, not about where the paragraph happened to break. Found by the
+      check itself: it failed a Portuguese menu item that was written correctly. }
+    all_ := Flatten(all_);
+
+    for q := Low(HELP_UI_QUOTES) to High(HELP_UI_QUOTES) do
+    begin
+      want := Flatten(UiLabel(SpxStrIn(lang, HELP_UI_QUOTES[q].Id)));
+      if want = '' then Continue;
+      CheckTrue(Format('help/%s/names %s as the window does [%s]',
+                       [code, HELP_UI_QUOTES[q].Why, want]),
+                Pos(want, all_) > 0);
+    end;
+  end;
+end;
+
 procedure TestHelpExamples;
 var i: Integer; arts: TStringList; registered: TStringList;
 begin
+  CheckHelpNamesControls;
   registered := TStringList.Create;
   try
     for i := Low(HELP_DOCS) to High(HELP_DOCS) do registered.Add(HELP_DOCS[i].Path);

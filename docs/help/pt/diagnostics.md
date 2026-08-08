@@ -194,7 +194,7 @@ definição cala este aviso de vez. Um `Ctrl+Z` põe o documento de volta.
 
 **Um valor de sessão é primeiro um modelo e não texto.** É o que o motor faz com qualquer valor do
 anfitrião, e a pré-visualização tem de bater certo com o servidor, logo `{barato|caro}` escrito no
-campo do valor dá uma escolha e não esses treze caracteres. Se queria o texto em si, marque **como
+campo do valor dá uma escolha e não esses caracteres. Se queria o texto em si, marque **como
 texto** na terceira coluna: então chavetas e sinais de percentagem continuam a ser caracteres.
 
 ### `variable.self-reference` — a definição nomeia-se a si própria

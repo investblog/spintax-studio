@@ -40,10 +40,10 @@ Een sjabloon met een keuze erin heeft geen enkel antwoord, en de voorvertoning t
 ```
 
 **Opnieuw loten** boven de rechterhelft haalt de volgende. Wilt u altijd dezelfde — terwijl u twee
-wijzigingen vergelijkt bijvoorbeeld — vink dan **Startgetal** aan, en de voorvertoning staat stil
+wijzigingen vergelijkt bijvoorbeeld — vink dan **seed** aan, en de voorvertoning staat stil
 tot u het weer uitvinkt of het getal verandert.
 
-De rechterhelft toont ofwel de **pagina** ofwel de **broncode**. Sjablonen zijn meestal HTML, en de
+De schakelaar boven de rechterhelft biedt **Pagina** en **Bron**. Sjablonen zijn meestal HTML, en de
 twee vragen «hoe ziet dit eruit» en «welke opmaak kwam eruit» beantwoorden elkaar niet: een kapotte
 tag geeft een licht scheve opmaak waar het oog overheen kijkt, terwijl proza vol tags niet als
 proza leest. De schakelaar boven de helft wisselt waar u naar kijkt.
@@ -63,7 +63,7 @@ noemt door de andere machines aanvaard.
 
 **Variabelen** toont de namen die uw document definieert en de namen die het alleen gebruikt. Een
 naam die het gebruikt en die niets definieert kunt u hier voor de sessie invullen: schrijf er een
-waarde naast en de voorvertoning pakt hem op. Vink **Letterlijk** aan wanneer de waarde tekst is
+waarde naast en de voorvertoning pakt hem op. Vink **als tekst** aan wanneer de waarde tekst is
 die zichzelf betekent en niet op zijn beurt een klein sjabloon.
 
 **Varianten** maakt veel teksten in één keer. Zeg hoeveel, maak ze aan en lees ze in de lijst
@@ -116,7 +116,7 @@ sjabloon, die de getalsvormen bepaalt en boven de rechterhelft wordt ingesteld.
 
 Dit stuk staat uit tot u het aanzet, onder **Beeld**, **GSA-import**, omdat de meeste mensen die
 sjablonen schrijven de GSA Search Engine Ranker nooit hebben gebruikt. Staat het aan, dan leest
-**Bestand**, **GSA-sjabloon inlezen…** een SER-sjabloon en zet het om in deze taal.
+**Bestand**, **GSA-sjabloon importeren…** een SER-sjabloon en zet het om in deze taal.
 
 De omzetting is op een bepaalde manier voorzichtig. Wat zij niet getrouw kan uitdrukken weigert
 zij en meldt zij, in plaats van het stilletjes te veranderen in iets dat weergeeft. Constructies

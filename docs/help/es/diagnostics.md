@@ -195,7 +195,7 @@ definición calla este aviso para siempre. Un `Ctrl+Z` devuelve el documento.
 
 **Un valor de sesión es primero una plantilla y no texto.** Es lo que el motor hace con cualquier
 valor del anfitrión, y el avance tiene que coincidir con el servidor, así que `{barato|caro}`
-escrito en el campo de valor da una elección y no esos trece caracteres. Si quería el texto en sí,
+escrito en el campo de valor da una elección y no esos caracteres. Si quería el texto en sí,
 marque **como texto** en la tercera columna: entonces las llaves y los signos de porcentaje siguen
 siendo caracteres.
 

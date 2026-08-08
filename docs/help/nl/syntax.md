@@ -37,7 +37,7 @@ include shout: Het %merk% is er.
 
 `seed` legt de loting vast. Een sjabloon met een keuze erin heeft geen enkel antwoord, dus een
 voorbeeld zonder startgetal zou bij elke doorgang iets anders afdrukken en er viel niets te
-controleren. In het venster is het het vakje **Startgetal** boven de rechterhelft; vink het aan en
+controleren. In het venster is het het vakje **seed** boven de rechterhelft; vink het aan en
 er verschijnt een getalveld naast, en de voorvertoning staat stil terwijl u werkt.
 
 `locale` bepaalt de getalsvormen, en het is de keuzelijst boven de rechterhelft, niet de taal van

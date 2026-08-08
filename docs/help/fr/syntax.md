@@ -37,7 +37,7 @@ include shout: La %marque% est là.
 
 `seed` fixe le tirage au sort. Un gabarit contenant un choix n'a pas de réponse unique ; un
 exemple sans graine imprimerait donc autre chose à chaque passage et il n'y aurait rien à
-vérifier. Dans la fenêtre, c'est la case **Graine** au-dessus du volet de droite ; cochez-la et un
+vérifier. Dans la fenêtre, c'est la case **seed** au-dessus du volet de droite ; cochez-la et un
 champ de nombre apparaît à côté, et l'aperçu cesse de bouger pendant que vous travaillez.
 
 `locale` décide des formes de nombre, et c'est le sélecteur au-dessus du volet de droite, non la
@@ -360,8 +360,9 @@ diagnostic**. Ils sont réunis ici parce que rien d'autre dans la fenêtre ne le
 
 **Les abréviations françaises ne sont pas dans la liste du moteur.** C'est le silence que les
 auteurs francophones rencontrent en premier. Sont protégés seulement les mots qui coïncident avec
-la moitié latine de la liste — `Dr.`, `Prof.`, `etc.` plus haut —, tandis que `cf.`, `env.`, `M.`
-et `no.` écrit à la française terminent une phrase et mettent le mot suivant en majuscule :
+la moitié latine de la liste — `Dr.`, `Prof.`, `etc.` plus haut, et `no.`, qui y est aussi —,
+tandis que `cf.`, `env.`, `M.` et `av.` terminent une phrase et mettent le mot suivant en
+majuscule :
 
 ```spx-good
 cf. nos prix sont bas  →  Cf. Nos prix sont bas

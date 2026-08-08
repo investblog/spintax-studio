@@ -196,7 +196,7 @@ sì, e solo una definizione zittisce questo avviso per sempre. Un `Ctrl+Z` rimet
 
 **Un valore di sessione è prima di tutto un modello e non testo.** È ciò che il motore fa con
 qualsiasi valore dell'ospite, e l'anteprima deve coincidere con il server, quindi `{basso|alto}`
-scritto nel campo del valore dà una scelta e non quei dodici caratteri. Se intendevate il testo in
+scritto nel campo del valore dà una scelta e non quei caratteri. Se intendevate il testo in
 sé, spuntate **come testo** nella terza colonna: allora graffe e segni di percentuale restano
 caratteri.
 

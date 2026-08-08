@@ -201,7 +201,7 @@ Un `Ctrl+Z` remet le document.
 
 **Une valeur de session est d'abord un gabarit et non du texte.** C'est ce que le moteur fait de
 toute valeur de l'hôte, et l'aperçu doit coller au serveur — `{bon|cher}` tapé dans le champ de
-valeur donne donc un choix et non ces neuf caractères. Si vous vouliez le texte lui-même, cochez
+valeur donne donc un choix et non ces caractères. Si vous vouliez le texte lui-même, cochez
 **comme texte** dans la troisième colonne : alors accolades et signes de pourcentage restent des
 caractères.
 
@@ -503,8 +503,8 @@ vous avez réglée. `руб.` protège donc le mot suivant dans un document fran
 protège dans un document russe.
 
 Pour un texte français la conséquence est simple et désagréable : parmi les abréviations que vous
-écrivez tous les jours, seules `Dr.`, `Prof.` et `etc.` sont dans la liste, parce qu'elles
-coïncident avec la moitié latine. `cf.`, `env.`, `M.` et `no.` n'y sont pas et terminent une
+écrivez tous les jours, seules `Dr.`, `Prof.`, `etc.` et `no.` sont dans la liste, parce qu'elles
+coïncident avec la moitié latine. `cf.`, `env.`, `M.` et `av.` n'y sont pas et terminent une
 phrase. Le guide du langage montre en plus deux cas mesurés qui ne se devinent pas : `p. ex.`
 traverse la finition sans dommage, et `c.-à-d.` en ressort cassé.
 

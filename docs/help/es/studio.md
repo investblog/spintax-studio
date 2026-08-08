@@ -39,11 +39,11 @@ Una plantilla con una elección dentro no tiene una única respuesta, y el avanc
 {Hola|Buenas} a todos.  →  Hola a todos.
 ```
 
-**Volver a tirar**, encima de la mitad derecha, saca otra. Si quiere siempre la misma —mientras
-compara dos cambios, por ejemplo— marque **Semilla**, y el avance se queda quieto hasta que la
+**Otra**, encima de la mitad derecha, saca otra. Si quiere siempre la misma —mientras
+compara dos cambios, por ejemplo— marque **seed**, y el avance se queda quieto hasta que la
 desmarque o cambie el número.
 
-La mitad derecha muestra la **página** o el **código**. Las plantillas suelen ser HTML, y las dos
+El selector sobre la mitad derecha ofrece **Página** y **Fuente**. Las plantillas suelen ser HTML, y las dos
 preguntas «qué aspecto tiene» y «qué marcado ha salido» no se responden la una a la otra: una
 etiqueta rota da una maquetación algo torcida que el ojo se salta, mientras que la prosa con
 etiquetas dentro no se lee como prosa. El interruptor sobre la mitad cambia lo que está mirando.
@@ -63,7 +63,7 @@ la aceptan los demás motores.
 
 **Variables** muestra los nombres que su documento define y los que solo usa. Un nombre que usa y
 que nada define puede rellenarlo aquí para la sesión: escriba un valor al lado y el avance lo
-recoge. Marque **Literal** cuando el valor sea texto que se significa a sí mismo y no una pequeña
+recoge. Marque **como texto** cuando el valor sea texto que se significa a sí mismo y no una pequeña
 plantilla propia.
 
 **Variantes** genera muchos textos de una vez. Diga cuántos, genérelos y léalos en la lista antes

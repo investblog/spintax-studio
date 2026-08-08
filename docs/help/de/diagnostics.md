@@ -205,7 +205,7 @@ Eine Festlegung schon, und nur eine Festlegung bringt diese Warnung endgültig z
 
 **Ein Sitzungswert ist zunächst eine Vorlage und kein Text.** Das ist es, was die Maschine mit
 jedem Wert des Wirtsprogramms tut, und die Vorschau muss zum Server passen — `{billig|teuer}` ins
-Wertfeld getippt gibt also eine Auswahl und nicht diese dreizehn Zeichen. Wenn Sie den Text selbst
+Wertfeld getippt gibt also eine Auswahl und nicht diese Zeichen. Wenn Sie den Text selbst
 meinten, setzen Sie in der dritten Spalte den Haken bei **als Text**: dann bleiben geschweifte
 Klammern und Prozentzeichen Zeichen.
 
@@ -284,7 +284,7 @@ Ziele sind die `.spintax`-Dateien im Ordner des offenen Dokuments. Ein unbekannt
 sich zu nichts — der Absatz verschwindet, statt kaputtzugehen, weshalb es so leicht zu übersehen
 ist.
 
-**Darum hat die Tafel Variablen einen dritten Abschnitt, Einfügungen.** Er listet jedes `#include`
+**Darum hat die Tafel Variablen einen dritten Abschnitt, Includes.** Er listet jedes `#include`
 des Dokuments auf und dazu, ob der Satz sein Ziel hat — eine Zeile je Vorkommen, ein zweimal
 genanntes Ziel sind also zwei Zeilen. Der Abschnitt erscheint nur, wenn das Dokument Einfügungen
 hat. Ein Klick auf eine Zeile bringt den Cursor zu dem `#include`, das dieses Ziel nennt.

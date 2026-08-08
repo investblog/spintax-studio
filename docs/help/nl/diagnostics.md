@@ -200,7 +200,7 @@ vastlegging wel, en alleen een vastlegging brengt deze waarschuwing voorgoed tot
 
 **Een sessiewaarde is eerst een sjabloon en geen tekst.** Dat is wat de machine met elke waarde van
 het gastprogramma doet, en de voorvertoning moet met de server overeenkomen — dus `{laag|hoog}`
-getypt in het waardeveld geeft een keuze en niet die elf tekens. Bedoelde u de tekst zelf, vink dan
+getypt in het waardeveld geeft een keuze en niet die tekens. Bedoelde u de tekst zelf, vink dan
 **als tekst** aan in de derde kolom: dan blijven accolades en procenttekens tekens.
 
 ### `variable.self-reference` — de vastlegging noemt zichzelf
@@ -278,7 +278,7 @@ Doelen zijn de `.spintax`-bestanden in de map van het geopende document. Een onb
 zich uit tot niets — de alinea verdwijnt in plaats van kapot te gaan, en dat is precies waarom het
 zo gemakkelijk te missen is.
 
-**Daarom heeft het tabblad Variabelen een derde afdeling, Invoegingen.** Zij somt elk `#include`
+**Daarom heeft het tabblad Variabelen een derde afdeling, Includes.** Zij somt elk `#include`
 van het document op en, voor elk, of de verzameling zijn doel heeft — één regel per voorkomen, dus
 een twee keer genoemd doel zijn twee regels. De afdeling verschijnt alleen als het document
 invoegingen heeft. Een klik op een regel brengt de cursor naar het `#include` dat dat doel noemt.

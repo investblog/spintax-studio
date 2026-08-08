@@ -40,10 +40,10 @@ Un modello con una scelta dentro non ha una risposta sola, e l'anteprima ne most
 ```
 
 **Rilancia**, sopra la metà destra, ne prende un'altra. Se ne volete sempre la stessa — mentre
-confrontate due modifiche, per esempio — spuntate **Seme**, e l'anteprima resta ferma finché non
+confrontate due modifiche, per esempio — spuntate **seed**, e l'anteprima resta ferma finché non
 lo togliete o cambiate il numero.
 
-La metà destra mostra o la **pagina** o il **sorgente**. I modelli sono per lo più HTML, e le due
+Il selettore sopra la metà destra offre **Pagina** e **Sorgente**. I modelli sono per lo più HTML, e le due
 domande «che aspetto ha» e «quale marcatura è uscita» non si rispondono a vicenda: un tag rotto dà
 un impaginato un po' storto che l'occhio salta, mentre la prosa piena di tag non si legge come
 prosa. L'interruttore sopra la metà cambia ciò che state guardando.
@@ -62,7 +62,7 @@ valido viene accettato dagli altri motori.
 
 **Variabili** mostra i nomi che il vostro documento definisce e quelli che soltanto usa. Un nome
 che usa e che nulla definisce potete riempirlo qui per la sessione: scrivete un valore accanto e
-l'anteprima lo raccoglie. Spuntate **Letterale** quando il valore è testo che significa se stesso
+l'anteprima lo raccoglie. Spuntate **come testo** quando il valore è testo che significa se stesso
 e non un piccolo modello a sua volta.
 
 **Varianti** genera molti testi in una volta. Dite quanti, generateli e leggeteli nella lista prima

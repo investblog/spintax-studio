@@ -40,7 +40,7 @@ rečenicom, a ne za svakim slovom.
 **Druga** iznad desne polovine daje sljedeću. Ako vam treba uvijek ista — dok poredite dvije
 izmjene, recimo — označite **seed**, i pregled će stajati dok je ne skinete ili ne promijenite broj.
 
-Desna polovina pokazuje ili **stranicu** ili **izvor**. Šabloni su uglavnom HTML, i dva pitanja
+Prebacivač iznad desne polovine nudi **Stranica** i **Izvor**. Šabloni su uglavnom HTML, i dva pitanja
 «kako ovo izgleda» i «kakva je razmjetnica ispala» ne odgovaraju jedno na drugo: pokvaren tag daje
 malo krivu stranicu koju oko preskoči, a proza s tagovima unutra ne čita se kao proza. Prebacivač
 iznad polovine mijenja ono u šta gledate.
@@ -103,8 +103,7 @@ koji rješava oblike množine i zadaje se iznad desne polovine.
 ## Uvoz GSA šablona
 
 Ovaj je dio isključen dok ga ne uključite, u **Prikaz**, **GSA uvoz**, jer većina onih koji pišu
-šablone nikada nije koristila GSA Search Engine Ranker. Uključeno, **Datoteka**, **Uvezi GSA
-šablon…** čita SER šablon i prevodi ga na ovaj jezik.
+šablone nikada nije koristila GSA Search Engine Ranker. Uključeno, **Datoteka**, **Uvezi GSA predložak…** čita SER šablon i prevodi ga na ovaj jezik.
 
 Pretvaranje je oprezno na određen način. Ono što ne može prenijeti tačno, ono odbija i kaže vam o
 tome, umjesto da tiho pretvori u nešto što će se odigrati. Konstrukcije koje bi se pogrešno

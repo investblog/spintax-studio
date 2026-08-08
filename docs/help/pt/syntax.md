@@ -36,7 +36,7 @@ include shout: A %marca% está aqui.
 
 `seed` fixa o sorteio. Um modelo com uma escolha lá dentro não tem uma única resposta, logo um
 exemplo sem semente imprimiria coisa diferente em cada passagem e não haveria nada a verificar. Na
-janela é a caixa **Semente** por cima da metade direita; marque-a e ao lado aparece um campo
+janela é a caixa **seed** por cima da metade direita; marque-a e ao lado aparece um campo
 numérico, e a pré-visualização fica quieta enquanto trabalha.
 
 `locale` decide as formas de número, e é o selector por cima da metade direita, não o idioma da

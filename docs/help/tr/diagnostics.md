@@ -191,7 +191,7 @@ uyarıyı temelli susturan yalnızca bir tanımdır. Bir `Ctrl+Z` belgeyi geri a
 
 **Bir oturum değeri önce şablondur, metin değil.** Makine konak programdan gelen her değere bunu
 yapar ve önizlemenin sunucuyla örtüşmesi gerekir — dolayısıyla değer alanına yazılan `{ucuz|pahalı}`
-bir seçim verir, o on üç karakteri değil. Metnin kendisini kastediyorsanız üçüncü sütunda **metin
+bir seçim verir, o karakterleri değil. Metnin kendisini kastediyorsanız üçüncü sütunda **metin
 olarak** kutusunu işaretleyin: o zaman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.
 
 ### `variable.self-reference` — tanım kendi kendini anıyor

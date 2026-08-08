@@ -39,11 +39,11 @@ Un gabarit contenant un choix n'a pas de réponse unique, et l'aperçu en montre
 {Salut|Bonjour} à tous.  →  Salut à tous.
 ```
 
-**Retirer** au-dessus du volet de droite en donne une autre. Si vous voulez toujours la même —
-pendant que vous comparez deux modifications, par exemple —, cochez **Graine**, et l'aperçu cesse
+**Relancer** au-dessus du volet de droite en donne une autre. Si vous voulez toujours la même —
+pendant que vous comparez deux modifications, par exemple —, cochez **seed**, et l'aperçu cesse
 de bouger jusqu'à ce que vous la décochiez ou changiez le nombre.
 
-Le volet de droite montre soit la **page**, soit la **source**. Les gabarits sont le plus souvent
+Le sélecteur au-dessus du volet de droite propose **Page** et **Source**. Les gabarits sont le plus souvent
 du HTML, et les deux questions « de quoi cela a-t-il l'air » et « quel balisage est sorti » ne se
 répondent pas l'une à l'autre : une balise cassée donne une mise en page légèrement de travers que
 l'œil saute, tandis que de la prose truffée de balises ne se lit pas comme de la prose. Le
@@ -64,7 +64,7 @@ valide est accepté par les autres moteurs.
 
 **Variables** montre les noms que votre document définit et ceux qu'il ne fait qu'employer. Un nom
 qu'il emploie et que rien ne définit, vous pouvez le remplir ici pour la session : écrivez une
-valeur à côté et l'aperçu la reprend. Cochez **Littéral** quand la valeur est un texte qui se
+valeur à côté et l'aperçu la reprend. Cochez **en texte** quand la valeur est un texte qui se
 signifie lui-même plutôt qu'un petit gabarit à son tour.
 
 **Variantes** engendre beaucoup de textes d'un coup. Dites combien, engendrez-les et lisez-les dans
@@ -117,7 +117,7 @@ gabarit, qui décide des formes de nombre et se règle au-dessus du volet de dro
 
 Celui-ci est éteint tant que vous ne l'allumez pas, sous **Affichage**, **Import GSA**, parce que
 la plupart des gens qui écrivent des gabarits n'ont jamais utilisé GSA Search Engine Ranker. Une
-fois allumé, **Fichier**, **Importer un gabarit GSA…** lit un gabarit SER et le convertit dans ce
+fois allumé, **Fichier**, **Importer un modèle GSA…** lit un gabarit SER et le convertit dans ce
 langage.
 
 La conversion est prudente d'une manière précise. Ce qu'elle ne peut exprimer fidèlement, elle le

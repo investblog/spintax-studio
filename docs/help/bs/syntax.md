@@ -364,8 +364,10 @@ varijable: on ga ispisuje kao tekst i ne kaže ništa:
 zdravo, %šifra%  →  Zdravo, %šifra%
 ```
 
-Razlog je isti kao gore: provjera «je li ovo sredina riječi» u motoru je ASCII provjera, i `š` za nju
-nije slovo. U vrijednosti su kvačice sasvim na mjestu; u imenu ne rade uopće.
+Razlog NIJE isti kao gore, i to vrijedi razdvojiti. Gore je bio popis -- koje riječi motor zna.
+Ovdje je pravilo o IMENIMA: reference varijabli motor čita ASCII slovima, znamenkama i `_`, i ništa
+drugo ne broji kao ime. To se odlučuje prije nego što se išta odigra, pa dotjerivanje s tim nema
+veze. U vrijednosti su kvačice sasvim na mjestu; u imenu ne rade uopće.
 
 **`#include` koji ne stoji sam u svom redu običan je tekst.**
 

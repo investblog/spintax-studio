@@ -41,7 +41,7 @@ Predložak s izborom unutra nema jedan odgovor, i pregled pokazuje jedan od njih
 izmjene, recimo — kvačicom označite **seed**, i pregled će stajati dok je ne skinete ili ne
 promijenite broj.
 
-Desna polovica pokazuje ili **stranicu** ili **izvor**. Predlošci su uglavnom HTML, i dva pitanja
+Prebacivač iznad desne polovice nudi **Stranica** i **Izvor**. Predlošci su uglavnom HTML, i dva pitanja
 «kako ovo izgleda» i «kakva je razmetnica ispala» ne odgovaraju jedno na drugo: pokvaren tag daje
 malo krivu stranicu koju oko preskoči, a proza s tagovima unutra ne čita se kao proza. Prebacivač
 iznad polovice mijenja ono u što gledate.
@@ -106,8 +106,7 @@ koji rješava oblike množine i zadaje se iznad desne polovice.
 ## Uvoz GSA predloška
 
 Ovaj je dio isključen dok ga ne uključite, u **Prikaz**, **GSA uvoz**, jer većina onih koji pišu
-predloške nikada nije koristila GSA Search Engine Ranker. Uključeno, **Datoteka**, **Uvezi GSA
-predložak…** čita SER predložak i prevodi ga na ovaj jezik.
+predloške nikada nije koristila GSA Search Engine Ranker. Uključeno, **Datoteka**, **Uvezi GSA predložak…** čita SER predložak i prevodi ga na ovaj jezik.
 
 Pretvaranje je oprezno na određen način. Ono što ne može prenijeti točno, ono odbija i kaže vam o
 tome, umjesto da tiho pretvori u nešto što će se odigrati. Konstrukcije koje bi se pogrešno

@@ -194,7 +194,7 @@ and only a definition silences this warning for good. One `Ctrl+Z` puts the docu
 
 **A session value is a template by default, not text.** That is what the engine does with any
 host value, and the preview has to match the production server — so `{cheap|dear}` typed into the
-value field gives a choice, not those eleven characters. If you meant the text itself, tick **as
+value field gives a choice, not those characters. If you meant the text itself, tick **as
 text** in the third column: then braces and per cent signs stay characters.
 
 ### `variable.self-reference` — the definition refers to itself

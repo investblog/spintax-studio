@@ -35,7 +35,7 @@ include shout: %marka% burada.
 
 `seed` kurayı sabitler. İçinde seçim bulunan bir şablonun tek yanıtı yoktur, dolayısıyla tohumsuz
 bir örnek her geçişte başka bir şey yazardı ve denetlenecek bir şey kalmazdı. Pencerede bu, sağ
-yarımın üstündeki **Tohum** kutusudur; işaretleyin, yanında bir sayı alanı belirir ve siz
+yarımın üstündeki **seed** kutusudur; işaretleyin, yanında bir sayı alanı belirir ve siz
 çalışırken önizleme durur.
 
 `locale` sayı biçimlerini belirler ve arayüzün dili değil, sağ yarımın üstündeki seçicidir. Türkçe

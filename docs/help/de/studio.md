@@ -42,11 +42,11 @@ davon:
 {Hallo|Guten Tag} zusammen.  →  Hallo zusammen.
 ```
 
-**Neu würfeln** über der rechten Hälfte holt die nächste. Wenn Sie immer dieselbe wollen — etwa
-während Sie zwei Änderungen vergleichen —, setzen Sie den Haken bei **Startwert**, und die
+**Würfeln** über der rechten Hälfte holt die nächste. Wenn Sie immer dieselbe wollen — etwa
+während Sie zwei Änderungen vergleichen —, setzen Sie den Haken bei **Seed**, und die
 Vorschau steht still, bis Sie ihn wieder entfernen oder die Zahl ändern.
 
-Die rechte Hälfte zeigt entweder die **Seite** oder den **Quelltext**. Vorlagen sind meist HTML,
+Der Schalter über der rechten Hälfte bietet **Seite** und **Quelltext**. Vorlagen sind meist HTML,
 und die beiden Fragen „wie sieht das aus" und „welches Markup kam heraus" beantworten einander
 nicht: ein kaputtes Tag ergibt ein leicht schiefes Layout, über das das Auge hinwegsieht,
 während Prosa mit Tags darin sich nicht wie Prosa liest. Der Schalter über der Hälfte wechselt,
@@ -68,7 +68,7 @@ Tafel gültig nennt, auch von den anderen Maschinen angenommen.
 **Variablen** zeigt die Namen, die Ihr Dokument definiert, und die, die es nur benutzt. Einen
 Namen, den es benutzt und den nichts definiert, können Sie hier für die Sitzung ausfüllen:
 Schreiben Sie einen Wert daneben, und die Vorschau nimmt ihn auf. Setzen Sie den Haken bei
-**Literal**, wenn der Wert Text ist, der sich selbst meint, und nicht eine kleine Vorlage für
+**als Text**, wenn der Wert Text ist, der sich selbst meint, und nicht eine kleine Vorlage für
 sich.
 
 **Varianten** erzeugt viele Texte auf einmal. Sagen Sie wie viele, erzeugen Sie sie und lesen Sie
@@ -123,7 +123,7 @@ eingestellt wird.
 
 Dieses Stück ist aus, bis Sie es einschalten, unter **Ansicht**, **GSA-Import**, weil die
 meisten, die Vorlagen schreiben, den GSA Search Engine Ranker nie benutzt haben. Ist es an, liest
-**Datei**, **GSA-Vorlage einlesen…** eine SER-Vorlage und wandelt sie in diese Sprache um.
+**Datei**, **GSA-Vorlage importieren…** eine SER-Vorlage und wandelt sie in diese Sprache um.
 
 Die Umwandlung ist auf eine bestimmte Weise vorsichtig. Was sie nicht getreu ausdrücken kann,
 verweigert sie und sagt es Ihnen, statt es still in etwas zu verwandeln, das rendert. Konstrukte,

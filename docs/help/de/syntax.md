@@ -37,7 +37,7 @@ include shout: Die %marke% ist da.
 
 `seed` legt die zufällige Wahl fest. Eine Vorlage mit einer Auswahl darin hat keine einzelne
 Antwort, ein Beispiel ohne Startwert würde also bei jedem Lauf etwas anderes ausgeben, und es
-gäbe nichts zu prüfen. Im Fenster ist es das Kästchen **Startwert** über der rechten Hälfte;
+gäbe nichts zu prüfen. Im Fenster ist es das Kästchen **Seed** über der rechten Hälfte;
 setzen Sie den Haken, und daneben erscheint ein Zahlenfeld, und die Vorschau steht still, während
 Sie arbeiten.
 

@@ -36,7 +36,7 @@ include shout: La %marca% está aquí.
 
 `seed` fija el sorteo. Una plantilla con una elección dentro no tiene una única respuesta, así que
 un ejemplo sin semilla imprimiría algo distinto en cada pasada y no habría nada que comprobar. En
-la ventana es la casilla **Semilla** encima de la mitad derecha; márquela y al lado aparece un
+la ventana es la casilla **seed** encima de la mitad derecha; márquela y al lado aparece un
 campo numérico, y el avance se queda quieto mientras usted trabaja.
 
 `locale` decide las formas de número, y es el selector encima de la mitad derecha, no el idioma de
