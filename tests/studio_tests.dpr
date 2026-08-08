@@ -2815,6 +2815,27 @@ end;
   The count is the one that would rot silently: a fifteenth language is an edit in one file and
   a flag strip that is still fourteen wide, with the last language showing the wrong flag. }
 { Every frame of the application icon, by the two fields that decide who can read it. }
+function CompareByNumber(List: TStringList; I1, I2: Integer): Integer;
+begin
+  Result := StrToIntDef(List[I1], 0) - StrToIntDef(List[I2], 0);
+end;
+
+{ The words of a space-separated list, in a fixed order, so two lists can be compared as sets. }
+function SortedWords(const S: string): string;
+var l: TStringList;
+begin
+  l := TStringList.Create;
+  try
+    l.Delimiter := ' ';
+    l.StrictDelimiter := True;
+    l.DelimitedText := S;
+    l.CustomSort(@CompareByNumber);
+    Result := StringReplace(Trim(l.Text), sLineBreak, ' ', [rfReplaceAll]);
+  finally
+    l.Free;
+  end;
+end;
+
 procedure CheckIconFrames;
 const ICO = 'assets/brand/spintax.ico';
 var
@@ -2857,7 +2878,11 @@ begin
       CheckTrue(Format('icon/frame-%d-is-inside-the-file', [i]),
         (offset > 0) and (offset + size_ <= LongWord(f.Size)));
       if seen <> '' then seen := seen + ' ';
-      seen := seen + IntToStr(w);
+      { The directory entry stores 256 as ZERO -- the same convention the icon reader relies on
+        -- so reading the byte raw would report `0` for a correct 256-px frame and fail this on
+        an icon that is right. Latent today (the list tops out at 128) and named rather than
+        left for the day it is not. }
+      if w = 0 then seen := seen + '256' else seen := seen + IntToStr(w);
     end;
 
     (* AND WHICH SIZES ARE THERE, which the loop above says nothing about.
@@ -2889,7 +2914,9 @@ begin
       src.Free;
     end;
     CheckTrue('icon/the generator still declares its sizes', want <> '');
-    Check('icon/carries every size the generator emits', seen, want);
+    { Compared as SETS: the file's order is the writer's and the script's is the author's, and
+      an icon is not wrong because someone sorted a list. }
+    Check('icon/carries every size the generator emits', SortedWords(seen), SortedWords(want));
   finally
     f.Free;
   end;

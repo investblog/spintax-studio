@@ -1813,6 +1813,22 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       the worker with progress and cancel, which is a slice of its own -- **deliberately not in
       `v0.1.1.0`** (owner's decision, 2026-08-08).
 
+- [ ] **The caret path is quadratic on one very long line, and was before any of today's
+      work.** `SpxMatchBracket` and `SpxConstructOf` walk the whole text, and `ConfigSkip`
+      copies the enclosing LINE once per `[` to hand it to `PermConfigLength`. Measured on this
+      machine, `[<p>` x20 000 on one 80 KB line: **3150 ms** for a single bracket match, on the
+      UI thread. (The scan itself is 4 ms since 8a52cb7; a review measured the caret path at
+      6216 ms before that commit, 8187 ms after it -- the bounds were being computed per
+      bracket, where they save nothing -- and it is 3150 ms now that they are passed wide open
+      there and the comment lookup is hoisted.) Fixing it properly means making the two walks
+      line-aware so they stop copying, which is a slice of its own.
+
+- [ ] **A permutation whose HTML sits on the line after the `[` counts 1.** `[` LF
+      `<b>bold</b>|x]` is two options to the engine and this reports "at least 1": the
+      next-line tell cannot tell a config from markup, because deciding that needs the rest of
+      the permutation and the scan has only the line. The floor holds; the number is poor. The
+      same restructuring as the entry above would answer it.
+
 - [ ] **The help's control-name gate holds a floor, not a ceiling.** `CheckHelpNamesControls`
       asserts each language names a control as its own string table does, somewhere across its
       three documents -- so a document naming one WRONGLY is masked by a sibling naming it

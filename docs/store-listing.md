@@ -138,7 +138,10 @@ optional external authoring workflow above must remain clearly external to the a
   be added. Enter the project's own terms, or a URL to `LICENSE`, so the package is conveyed under
   the licence it is actually under. *(R0 shipped with this field blank — see the note at the end.)*
 - Privacy policy: hosted at [`https://spintax.studio/privacy.html`](https://spintax.studio/privacy.html)
-  and entered in Partner Center.
+  **and** entered in Partner Center — **two publications, not one**. The listing's `PrivacyUrl`
+  is a frozen Microsoft snapshot of the text typed into that field, not a link to the site, so
+  republishing the page does not change a word of what a Store customer reads. Read from the
+  storefront on 2026-08-08; both copies are stale today, and `docs/TODO.md` carries the detail.
 - Pricing: `Free`; audience: public; discoverability: available and discoverable in the Store.
 - Complete the IARC age-rating questionnaire and choose the appropriate app category in Partner Center.
 - Accessibility declaration: leave unchecked for R0; the current build has not passed the
