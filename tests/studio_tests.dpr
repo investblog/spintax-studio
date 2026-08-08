@@ -1983,6 +1983,19 @@ begin
   probe := TThreadProbe.Create;
   th := TSpxEngineThread.Create(probe.Done);
   try
+    (* ZEROED FIRST, which this had never done. A local record is not initialised in Pascal,
+       and every field this test does not set was whatever the stack held -- including
+       `NoPostProcess`, whose whole design says "a caller who does not know about me leaves me
+       False". That is true of `Default(TSpxJob)`, which is how the PRODUCT builds one (three
+       sites, all checked); it is not true of a local nobody zeroed.
+
+       It passed for months by luck, and adding two fields to the record changed the stack
+       enough to end the luck -- on Linux and macOS, where the post-process came back OFF and
+       the worker answered `вариант` where a direct render says `Вариант`. Windows kept
+       passing. The suite caught it in CI, which is the first thing CI has been asked to do
+       here since the release path was fixed. *)
+    job := Default(TSpxJob);
+
     { One job, one answer, and it is the same text the same context produces on this thread:
       the worker is a place to run the engine, not a second implementation of it. }
     job.Id := 1;
@@ -5824,6 +5837,19 @@ begin
     render against the help's own fragments. The help declares one called `frag`, so a document
     with a fragment of that name exported the help's text instead of its own. }
   CheckTrue('engine/a default job asks for no help set', not Default(TSpxJob).HelpSet);
+  (* AND EVERY OTHER FIELD WHOSE ZERO IS LOAD-BEARING. Each of these is written so that the
+     value a caller who has never heard of it leaves behind is the SAFE one; that is a claim
+     about `Default`, and it is cheap to hold rather than to repeat in a comment.
+
+     `MaxTrailEols` is deliberately absent: zero is NOT safe for it, which is exactly why it is
+     guarded by a Boolean that is. *)
+  CheckTrue('engine/a default job post-processes', not Default(TSpxJob).NoPostProcess);
+  CheckTrue('engine/a default job does not clamp its ending',
+            not Default(TSpxJob).ClampTrailEols);
+  CheckTrue('engine/a default batch post-processes',
+            not Default(TSpxBatchRequest).NoPostProcess);
+  CheckTrue('engine/a default batch does not clamp its ending',
+            not Default(TSpxBatchRequest).ClampTrailEols);
 
   Check('help/unit/digest-of-empty', SpxHelpDigest(''), 'cbf29ce484222325');
   Check('help/unit/digest-of-a', SpxHelpDigest('a'), 'af63dc4c8601ec8c');
