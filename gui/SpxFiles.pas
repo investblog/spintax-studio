@@ -54,6 +54,15 @@ function SpxEndsWithEol(const Text: string): Boolean;
 { Rewrites every terminator -- CRLF, LF or CR -- as AEol. Nothing else is touched. }
 function SpxNormalizeEol(const Text, AEol: string): string;
 
+{ How many line terminators Text ends with, counting CRLF as one. }
+function SpxTrailEols(const Text: string): Integer;
+
+{ Text with at most AMax trailing terminators. AMax < 0 leaves it exactly as it is, which is
+  every ordinary document; the GSA import is the one caller that passes a number, because the
+  converter appends a `#def` block whose line breaks GSA never wrote. Never PADS -- a render
+  that already ends with fewer stays as it is. }
+function SpxClampTrailEols(const Text: string; AMax: Integer): string;
+
 { The slug a path contributes to the set: base name, extension removed, case untouched. }
 function SpxSlugOf(const Path: string): string;
 
@@ -98,6 +107,51 @@ begin
   finally
     fs.Free;
   end;
+end;
+
+function SpxTrailEols(const Text: string): Integer;
+var i: Integer;
+begin
+  Result := 0;
+  i := Length(Text);
+  while i >= 1 do
+  begin
+    if Text[i] = #10 then
+    begin
+      Inc(Result);
+      { CRLF is ONE terminator, so the CR before an LF is consumed with it. }
+      if (i > 1) and (Text[i - 1] = #13) then Dec(i);
+      Dec(i);
+    end
+    else if Text[i] = #13 then
+    begin
+      Inc(Result);
+      Dec(i);
+    end
+    else
+      Break;
+  end;
+end;
+
+function SpxClampTrailEols(const Text: string; AMax: Integer): string;
+var have, i: Integer;
+begin
+  Result := Text;
+  if AMax < 0 then Exit;
+  have := SpxTrailEols(Result);
+  i := Length(Result);
+  while have > AMax do
+  begin
+    if Result[i] = #10 then
+    begin
+      if (i > 1) and (Result[i - 1] = #13) then Dec(i);
+      Dec(i);
+    end
+    else
+      Dec(i);
+    Dec(have);
+  end;
+  SetLength(Result, i);
 end;
 
 function SpxDetectEol(const Text: string): string;

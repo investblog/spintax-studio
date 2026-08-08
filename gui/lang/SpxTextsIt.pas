@@ -96,8 +96,10 @@ const
       'Importazione GSA',
       'Importa modello GSA…',
       'Modelli GSA|*.txt;*.spintax|Tutti i file|*.*',
-      'Elementi estratti dal modello in variabili: %d.',
+      '%d variabili sono state estratte dal modello.',
       'Sono valori di sessione: compaiono nel pannello delle variabili e NON vengono salvati con il documento. Il rendering avviene senza post-elaborazione, così il modello resta quello scritto da GSA.',
+      '%d blocchi sono stati rifiutati e lasciati tali e quali.',
+      '…e altri %d.',
 
       'Varianti possibili: %s',
       'Varianti possibili: almeno %s'

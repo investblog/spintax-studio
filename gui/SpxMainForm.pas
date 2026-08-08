@@ -196,6 +196,9 @@ type
       runs without the cosmetic stage (spec §4.7). Per DOCUMENT, so opening anything else
       clears it -- LoadDocument and NewClicked both do. }
     FGsaDoc: Boolean;
+    { What the imported FILE ended with, so the render can be clamped to it; -1 when this is
+      not a converted document. See TSpxJob.MaxTrailEols. }
+    FGsaTrailEols: Integer;
     FStatus: TStatusBar;
     { The company mark that sits at the right end of the status bar, and the ink it was last
       sliced with -- part of the cache key for the reason EnsureSmallIcons gives: a desktop can
@@ -3239,6 +3242,7 @@ begin
   s := SpxReadTextFile(APath);
   FPath := APath;
   FGsaDoc := False;
+  FGsaTrailEols := -1;
   FEol := SpxDetectEol(s);
   FTrailingEol := SpxEndsWithEol(s);
   FEditor.Text := s;
@@ -3275,6 +3279,21 @@ begin
   end;
   SpxWriteTextFile(FPath, DocText);
   FEditor.Modified := False;
+
+  (* ▁▁▁ AND THIS DOCUMENT STOPS BEING A GSA IMPORT ▁▁▁
+
+     `FGsaDoc` turns the cosmetic stage off, and it lived only in memory: `LoadDocument` and
+     `NewClicked` cleared it, saving did not. So the same file previewed VERBATIM while the
+     window still remembered importing it and POST-PROCESSED after a reopen -- `a,b` became
+     `A, b` -- with nothing on screen to explain which of the two answers was the file's.
+
+     Cleared here because the preview must describe the FILE. What lands on disk carries
+     nothing that marks it as GSA -- the spec already accepts that a reopened conversion has
+     lost its session values (§4.7) -- so remembering more than the file says would be the
+     window arguing with what it just wrote. The reader sees the change at the moment of their
+     own action, which beats an ambush tomorrow. *)
+  FGsaDoc := False;
+  FGsaTrailEols := -1;
   { Saved: the folder may now hold a file it did not before, and this document's own saved
     copy has just changed under whatever else includes it. }
   FReloadSet := True;
@@ -3302,6 +3321,7 @@ begin
   StopBatchForDocument;
   FPath := '';
   FGsaDoc := False;
+  FGsaTrailEols := -1;
   FEol := SPX_DEFAULT_EOL;
   FTrailingEol := True;
   FEditor.Text := '';
@@ -3604,6 +3624,12 @@ begin
   job.Vars := FVars.RuntimeValues;
   { NOT a constant: a converted GSA template renders verbatim. }
   job.NoPostProcess := FGsaDoc;
+  (* AND HOW THE SOURCE ENDED, for a converted document only. The converter appends its `#def`
+     block after the body, and a consumed directive leaves its line break -- so the render came
+     back with terminators GSA never wrote, one more per branch of every tag group. Clamped to
+     what the imported FILE ended with; -1 everywhere else means "leave it exactly alone",
+     which is what an ordinary document needs. *)
+  if FGsaDoc then job.MaxTrailEols := FGsaTrailEols else job.MaxTrailEols := -1;
   { A selection previews on its own -- in the document's scope, which is editor-core's job,
     not ours. WHICH selections count is also editor-core's, and gated there: none at all and
     the one a jump made to show a finding do not. Whether the fragment is worth rendering
@@ -4345,11 +4371,15 @@ end;
    flag already set and the text already in, or the first preview is the one thing this whole
    feature exists to avoid: a GSA template shown as something else. *)
 procedure TSpxMainForm.GsaImportClicked(Sender: TObject);
+const
+  { As many as fit a dialog nobody has to scroll -- see the list below. }
+  SPX_GSA_REFUSALS_SHOWN = 12;
 var
   dlg: TOpenDialog;
   src, msg: string;
   res: TSpxGsaResult;
-  i: Integer;
+  i, shown: Integer;
+  seen: TStringList;
 begin
   if not AskSave then Exit;
   src := '';
@@ -4368,6 +4398,7 @@ begin
   StopBatchForDocument;
   FPath := '';
   FGsaDoc := not res.PostProcess;   { the result carries the rule; this obeys it }
+  FGsaTrailEols := SpxTrailEols(src);
   FEol := SpxDetectEol(src);
   FTrailingEol := SpxEndsWithEol(src);
   FEditor.Text := res.Doc;
@@ -4388,14 +4419,44 @@ begin
     panel shows the values without saying where they came from or that they are temporary. }
   msg := Format(Tr(sGsaLifted), [Length(res.Vars)]) + LineEnding + LineEnding +
          Tr(sGsaSessionOnly);
+  { Both numbers, because they count different things and the list below made that visible:
+    identical blocks share ONE variable and are listed once per occurrence, so "1 lifted"
+    over two rows read as a contradiction on screen. }
+  if Length(res.Refused) > 0 then
+    msg := msg + LineEnding + LineEnding +
+           Format(Tr(sGsaRefusedCount), [Length(res.Refused)]);
   { AND EVERY REFUSAL BY NAME. The engine hands these back rather than translating them into a
     rule nobody agreed to; swallowing the list here would undo exactly that care. The original
     text is the variable's value, so the document still renders as the GSA template said. }
+  (* THE LIST, DEDUPED AND CAPPED. One line per NAME rather than per occurrence -- the same
+     refused text shares one variable, and printing it twice says the count is wrong.
+
+     And a cap, because this dialog cannot scroll: on Vista and later LCL routes MessageDlg to
+     `TaskDialogIndirect` with the whole string as its content (`win32lclintf.inc:694-780`),
+     which neither scrolls nor elides, so a template with a few dozen refusals produced a
+     dialog taller than the display and the rest was simply unreachable. What is dropped is
+     SAID, rather than the list quietly stopping. *)
   if Length(res.Refused) > 0 then
   begin
     msg := msg + LineEnding + LineEnding;
-    for i := 0 to High(res.Refused) do
-      msg := msg + LineEnding + '%' + res.Refused[i].Name + '% = ' + res.Refused[i].Original;
+    seen := TStringList.Create;
+    try
+      seen.Sorted := True;
+      seen.Duplicates := dupIgnore;
+      shown := 0;
+      for i := 0 to High(res.Refused) do
+      begin
+        if seen.IndexOf(res.Refused[i].Name) >= 0 then Continue;
+        seen.Add(res.Refused[i].Name);
+        if shown >= SPX_GSA_REFUSALS_SHOWN then Continue;
+        msg := msg + LineEnding + '%' + res.Refused[i].Name + '% = ' + res.Refused[i].Original;
+        Inc(shown);
+      end;
+      if seen.Count > shown then
+        msg := msg + LineEnding + Format(Tr(sGsaRefusedMore), [seen.Count - shown]);
+    finally
+      seen.Free;
+    end;
   end;
   MessageDlg(Tr(sMenuGsaOpen), msg, mtInformation, [mbOk], 0);
 end;

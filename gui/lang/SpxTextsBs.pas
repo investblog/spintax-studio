@@ -102,8 +102,10 @@ const
       'GSA uvoz',
       'Uvezi GSA predložak…',
       'GSA predlošci|*.txt;*.spintax|Sve datoteke|*.*',
-      'Iz predloška izdvojeno u varijable: %d.',
+      'Izneseno u varijable: %d.',
       'To su vrijednosti sesije: vide se u panelu varijabli i NE čuvaju se uz dokument. Prikaz se računa bez naknadne obrade, pa predložak ostaje onakav kakvim ga je GSA napisao.',
+      'Odbijeno blokova: %d — ostavljeni tačno kakvi su bili.',
+      '…i još %d.',
 
       'Mogućih varijanti: %s',
       'Mogućih varijanti: najmanje %s'

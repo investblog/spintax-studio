@@ -70,6 +70,20 @@ type
        charter already carries this lesson about the engine's own `Default(TSpContext)`; it
        applies to any record a caller builds by hand. *)
     NoPostProcess: Boolean;
+    (* HOW MANY LINE TERMINATORS THE RENDER MAY END WITH, or -1 to leave it alone (which is
+       every ordinary document).
+
+       A converted GSA template is the exception. The converter appends its `#def` block to
+       the END of the document (`Spintax.Gsa.pas:841`), and a consumed directive still leaves
+       its line break behind -- so `{#A a|#B b} X {#A c|#B d}`, which GSA renders as `a X c`
+       and nothing else, came out with two terminators after it, growing by one per branch.
+       The engine's own note says `PostProcess=True` trims them away, and spec §4.7 forbids
+       exactly that for this document.
+
+       So the host says what the SOURCE ended with and the render is clamped to it -- never
+       padded, only cut, and only down to the reader's own file. The text that goes back to
+       GSA has to survive character for character. *)
+    MaxTrailEols: Integer;
     { A selection to preview on its own, in the DOCUMENT's scope -- its `#set`/`#def` lines,
       the runtime context and the locale all still apply (spec §4.2). Empty means the whole
       document, which is the ordinary case. Only the PREVIEW narrows: diagnostics keep
@@ -634,6 +648,7 @@ begin
       FResult.Preview := SpxRenderFragment(Job.Text, Job.Fragment, ctx)
     else
       FResult.Preview := SpxRenderSample(Job.Text, ctx);
+    FResult.Preview := SpxClampTrailEols(FResult.Preview, Job.MaxTrailEols);
 
     { Probes = 0: the interactive path already has its one render, and the health flags are
       the panel's business (M2), not the status bar's. }

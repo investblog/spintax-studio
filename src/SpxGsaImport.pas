@@ -108,6 +108,154 @@ begin
   end;
 end;
 
+(* ▁▁▁ A TAG BLOCK WITH ONE OPTION, WHICH THE CONVERTER LETS THROUGH ▁▁▁
+
+   `SpGsaToSpintax` returns `bkPlain` for any block with fewer than two options
+   (`Spintax.Gsa.pas:626`) -- BEFORE the tag-shape test at `:631-640` that exists to catch
+   exactly this. So `{#.de Hallo}` is neither converted nor refused: it renders `#.de Hallo`,
+   with `Refused = 0` and nothing said to the reader. That is the coin flip the converter's own
+   header forbids in as many words -- text it does not understand is not "left alone" -- and
+   `{x|{#.de Hallo}}` shows it plainly: the tag comes out at random.
+
+   Reported upstream; the pin cannot move for it today, and Studio calls this converter
+   DIRECTLY, so Studio defends itself. It reads the RESULT back and refuses the shape, the way
+   the group editor reads its own edits back rather than trusting a release note -- the lesson
+   v0.4.0's defective converter already cost this project.
+
+   The mirror is deliberately narrow: a brace group with no top-level separator whose content
+   is tag-shaped by the engine's own rule (`TagOf`, `:226-246`). Anything wider would start
+   refusing ordinary spin.
+
+   DELETE THIS when the engine's converter tests the shape before the count. *)
+
+{ The engine's `IsBlank`. }
+function GsaBlank(c: Char): Boolean;
+begin
+  Result := (c = ' ') or (c = #9) or (c = #13) or (c = #10);
+end;
+
+{ `TagOf` reduced to the question this asks -- is the option claiming to be a tag AND readable
+  as one -- with the same tests in the same order, including its two refusals. }
+function TagShaped(const AOpt: string): Boolean;
+var i, n, tagStart: Integer;
+begin
+  Result := False;
+  n := Length(AOpt);
+  i := 1;
+  while (i <= n) and GsaBlank(AOpt[i]) do Inc(i);
+  if (i > n) or (AOpt[i] <> '#') then Exit;
+  Inc(i);
+  tagStart := i;
+  while (i <= n) and not GsaBlank(AOpt[i]) do
+  begin
+    if (AOpt[i] = #13) or (AOpt[i] = #10) then Exit;   { a tag carrying a line break }
+    Inc(i);
+  end;
+  if i = tagStart then Exit;    { a bare `#` }
+  if i > n then Exit;           { a tag with no text after it }
+  Result := True;
+end;
+
+{ True when the content holds no separator at its own level, so the engine saw ONE option and
+  took the early exit. Both bracket kinds counted, as SplitTop counts them. }
+function SingleOption(const AContent: string): Boolean;
+var i, brace, brack: Integer;
+begin
+  brace := 0;
+  brack := 0;
+  for i := 1 to Length(AContent) do
+    case AContent[i] of
+      '{': Inc(brace);
+      '}': Dec(brace);
+      '[': Inc(brack);
+      ']': Dec(brack);
+      '|': if (brace = 0) and (brack = 0) then Exit(False);
+    end;
+  Result := True;
+end;
+
+{ A prefix that occurs nowhere in the document, so every name built on it is free. }
+function FreePrefix(const ADoc: string): string;
+var n: Integer;
+begin
+  Result := '__spx_u';
+  n := 0;
+  while Pos(Result, ADoc) > 0 do
+  begin
+    Inc(n);
+    Result := '__spx' + IntToStr(n) + '_u';
+  end;
+end;
+
+{ Lifts every single-option tag block out of ADoc, appending one entry to AVars and one to
+  ARefused for each, and returns the rewritten document. }
+function GuardTagBlocks(const ADoc: string; var AVars: TSpxVarPairs;
+  var ARefused: TSpxGsaRefusals): string;
+var
+  i, j, depth, at, n, taken: Integer;
+  content, prefix, name_, whole: string;
+begin
+  Result := '';
+  prefix := FreePrefix(ADoc);
+  taken := 0;
+  n := Length(ADoc);
+  i := 1;
+  while i <= n do
+  begin
+    if ADoc[i] <> '{' then
+    begin
+      Result := Result + ADoc[i];
+      Inc(i);
+      Continue;
+    end;
+    (* the matching closer, counting braces only -- which is how the engine finds it *)
+    depth := 0;
+    j := i;
+    while j <= n do
+    begin
+      if ADoc[j] = '{' then Inc(depth)
+      else if ADoc[j] = '}' then
+      begin
+        Dec(depth);
+        if depth = 0 then Break;
+      end;
+      Inc(j);
+    end;
+    if (j > n) or (depth <> 0) then
+    begin
+      { unbalanced: the rest goes through exactly as it is }
+      Result := Result + Copy(ADoc, i, n - i + 1);
+      Break;
+    end;
+
+    content := Copy(ADoc, i + 1, j - i - 1);
+    if SingleOption(content) and TagShaped(content) then
+    begin
+      Inc(taken);
+      name_ := prefix + IntToStr(taken);
+      whole := Copy(ADoc, i, j - i + 1);
+      at := Length(AVars);
+      SetLength(AVars, at + 1);
+      AVars[at].Name := name_;
+      AVars[at].Value := whole;
+      AVars[at].Literal := True;
+      at := Length(ARefused);
+      SetLength(ARefused, at + 1);
+      ARefused[at].Name := name_;
+      ARefused[at].Original := whole;
+      Result := Result + '%' + name_ + '%';
+      i := j + 1;
+    end
+    else
+    begin
+      (* Not this shape -- keep the brace and carry on INSIDE it, so a nested one is still
+         found: a tag block wrapped in an ordinary choice is the case that made this matter. *)
+      Result := Result + ADoc[i];
+      Inc(i);
+    end;
+  end;
+end;
+
 function SpxImportGsa(const ASource: string): TSpxGsaResult;
 var
   macros: TStrMap;
@@ -162,6 +310,14 @@ begin
         Result.Refused[i].Original := refused.ValueFromIndex[i];
       end;
     end;
+
+    (* OURS LAST, and after the loop above rather than before it: the loop does
+       `SetLength(Result.Refused, refused.Count)`, which THROWS AWAY anything already there.
+       The first version of this call sat above it and its refusals vanished silently -- the
+       document was rewritten correctly and the reader was told nothing, which is the very
+       defect being fixed. Caught by measuring the result, not by reading the diff. *)
+    Result.Doc := GuardTagBlocks(Result.Doc, Result.Vars, Result.Refused);
+    SortPairs(Result.Vars);
   finally
     refused.Free;
     macros.Free;

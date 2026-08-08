@@ -95,8 +95,10 @@ const
       'GSA içe aktarma',
       'GSA şablonu içe aktar…',
       'GSA şablonları|*.txt;*.spintax|Tüm dosyalar|*.*',
-      'Şablondan değişkenlere çıkarılan öğe: %d.',
+      'Şablondan %d değişken çıkarıldı.',
       'Bunlar oturum değerleridir: Değişkenler panelinde görünür ve belgeyle birlikte KAYDEDİLMEZ. Şablonun GSA''nın yazdığı gibi kalması için son işlem uygulanmadan işlenir.',
+      '%d blok reddedildi ve olduğu gibi bırakıldı.',
+      '…ve %d tane daha.',
 
       'Olası varyantlar: %s',
       'Olası varyantlar: en az %s'

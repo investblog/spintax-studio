@@ -5318,6 +5318,50 @@ begin
   Check('gsa/a plain template is untouched', res.Doc, 'Plain {a|b} text.');
   Check('gsa/and lifts nothing', IntToStr(Length(res.Vars)), '0');
 
+  (* ---- A TAG BLOCK WITH ONE OPTION, which the ENGINE's converter lets through: it returns
+     bkPlain for anything with fewer than two options (`Spintax.Gsa.pas:626`), BEFORE the
+     tag-shape test written to catch this. So `{#.de Hallo}` was neither converted nor refused
+     and rendered `#.de Hallo` -- the coin flip that unit's own header forbids -- and nested in
+     an ordinary choice the tag simply came out at random.
+
+     Reported upstream; Studio guards itself meanwhile, because it calls that converter
+     directly. These checks are what says the guard is NARROW as well as present: the two
+     refusals `TagOf` itself makes -- a bare marker, and a tag with no text -- must still not
+     be touched, and ordinary spin must pass through untouched. ---- *)
+  res := SpxImportGsa('{#.de Hallo} today.');
+  Check('gsa/a one-option tag block is refused', IntToStr(Length(res.Refused)), '1');
+  Check('gsa/and lifted out of the document', IntToStr(Length(res.Vars)), '1');
+  CheckTrue('gsa/the refusal keeps the block verbatim',
+            (Length(res.Refused) = 1) and (res.Refused[0].Original = '{#.de Hallo}'));
+  CheckTrue('gsa/and the document no longer carries it',
+            Pos('#.de', res.Doc) = 0);
+  { Nested in an ordinary choice -- the shape that made the leak visible. }
+  res := SpxImportGsa('{x|{#.de Hallo}}');
+  Check('gsa/a nested one-option tag block is refused too',
+        IntToStr(Length(res.Refused)), '1');
+  { And the two shapes TagOf itself declines stay ordinary text. }
+  res := SpxImportGsa('{# bare} x');
+  Check('gsa/a bare marker is not a tag block', IntToStr(Length(res.Refused)), '0');
+  res := SpxImportGsa('{#tagonly} y');
+  Check('gsa/a tag with no text is not a tag block', IntToStr(Length(res.Refused)), '0');
+  res := SpxImportGsa('{a|b} ordinary');
+  Check('gsa/ordinary spin is not refused', IntToStr(Length(res.Refused)), '0');
+  Check('gsa/ordinary spin is not rewritten', res.Doc, '{a|b} ordinary');
+
+  { ---- AND THE RENDER MUST END AS THE SOURCE DID. The converter appends its `#def` block to
+    the end, and a consumed directive leaves its line break, so a tag group's render grew a
+    terminator per branch that GSA never wrote. ---- }
+  Check('files/trailing terminators counted', IntToStr(SpxTrailEols('a' + LineEnding)), '1');
+  Check('files/CRLF counts once', IntToStr(SpxTrailEols('a'#13#10)), '1');
+  Check('files/a lone CR counts', IntToStr(SpxTrailEols('a'#13)), '1');
+  Check('files/two of them', IntToStr(SpxTrailEols('a'#10#10)), '2');
+  Check('files/none', IntToStr(SpxTrailEols('a')), '0');
+  Check('files/clamped down', SpxClampTrailEols('a'#10#10#10, 1), 'a'#10);
+  Check('files/clamped to none', SpxClampTrailEols('a'#13#10#13#10, 0), 'a');
+  Check('files/never padded', SpxClampTrailEols('a', 3), 'a');
+  Check('files/minus one leaves it alone', SpxClampTrailEols('a'#10#10, -1), 'a'#10#10);
+
+
   { THE FOUR SHAPES THE ENGINE'S RELEASE NOTES NAME, in one template. Post-process OFF, because
     this asserts what the conversion preserves and the post-processor is prose typography --
     it rewrites even a neutralised value, which is recorded as a defect to report. }

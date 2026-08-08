@@ -655,7 +655,7 @@ begin
 end;
 
 procedure TSpxVarsPane.SetRuntimeValues(const APairs: TSpxVarPairs);
-var i: Integer; name_: string;
+var i, n: Integer; name_: string;
 begin
   FValues.Clear;
   FLiteral.Clear;
@@ -666,6 +666,36 @@ begin
     FValues.Values[name_] := APairs[i].Value;
     if APairs[i].Literal then FLiteral.Values[name_] := '1';
   end;
+  (* ▁▁▁ AND THE MODEL HAS TO KNOW THESE NAMES BEFORE THAT RENDER ▁▁▁
+
+     `RuntimeValues` ends with `SpxKeepRuntime(FModel, all)`, which keeps only the names the
+     LAST MODEL called runtime variables -- and the last model is the previous document's,
+     because `FModel` is written from `JobDone` and the render being asked for here has not
+     happened yet. So a GSA import handed over its lifted values, the filter recognised none
+     of them, ZERO pairs went to the worker, and the reader dismissed "4 constructs were
+     lifted" onto a preview full of `%__gsa_…%` with four `variable.undefined` warnings beside
+     it -- the one thing that whole feature exists to avoid. `JobDone` then set the model and
+     did not re-render, so it stood until the next keystroke.
+
+     Seeded straight into the field rather than through SetModel: this is not a model to draw
+     from -- the grid is rebuilt when the worker delivers the real one, a moment later, and
+     rebuilding it here would take the selection with it for nothing. What this does is stop
+     the filter throwing away values it has just been given. *)
+  SetLength(FModel, Length(APairs));
+  n := 0;
+  for i := 0 to High(APairs) do
+  begin
+    name_ := LowerCase(APairs[i].Name);
+    if name_ = '' then Continue;
+    FModel[n] := Default(TSpxVarInfo);
+    FModel[n].Name := name_;
+    FModel[n].Kind := spxVarRuntime;
+    FModel[n].Value := APairs[i].Value;
+    FModel[n].DirIndex := -1;      { a runtime variable has no directive to edit }
+    Inc(n);
+  end;
+  SetLength(FModel, n);
+
   { The grid is rebuilt from the MODEL, which the next render produces -- so nothing is drawn
     here. What must happen now is the render itself, because the document and its values
     arrived together and the preview is currently showing neither. }

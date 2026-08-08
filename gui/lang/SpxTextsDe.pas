@@ -105,8 +105,10 @@ const
       'GSA-Import',
       'GSA-Vorlage importieren…',
       'GSA-Vorlagen|*.txt;*.spintax|Alle Dateien|*.*',
-      'Aus der Vorlage in Variablen ausgelagert: %d.',
+      '%d Variablen wurden aus der Vorlage herausgezogen.',
       'Es sind Sitzungswerte: Sie stehen in der Variablen-Ansicht und werden NICHT mit dem Dokument gespeichert. Gerendert wird ohne Nachbearbeitung, damit die Vorlage genau so bleibt, wie GSA sie geschrieben hat.',
+      '%d Blöcke wurden abgelehnt und unverändert gelassen.',
+      '…und %d weitere.',
 
       'Mögliche Varianten: %s',
       'Mögliche Varianten: mindestens %s'
