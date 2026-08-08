@@ -42,9 +42,44 @@ jobs:
         run: |
           $version = (Get-Content VERSION -Raw).Trim()
           $expected = "v$version"
-          if ($env:GITHUB_REF_NAME -ne $expected) {
+          # -cne, not -ne: PowerShell's -ne is case-INSENSITIVE, so a tag `V0.1.1.0` passed
+          # this gate and then named the GitHub release `V0.1.1.0`. Measured, not assumed.
+          if ($env:GITHUB_REF_NAME -cne $expected) {
             throw "Tag $env:GITHUB_REF_NAME does not match VERSION $version; expected $expected"
           }
+
+      # ── THE GENERATED UNITS ARE THEIR GENERATORS' OUTPUT ──────────────────────────
+      #
+      # These two steps also live in ci.yml, and for most of this project's life that was
+      # enough -- until it was noticed that CI DOES NOT RUN ON A TAG. `ci.yml` is
+      # `on: push: branches: ['**']`, and a `branches` filter excludes tag pushes; the run
+      # history shows it plainly, the v0.1.0.0 tag ran only this workflow. CI happened to have
+      # run on the same commit because that commit was pushed to main first, which is a habit
+      # rather than a gate.
+      #
+      # So a tag cut from an unpushed branch would package a help unit and an About box that
+      # nobody had regenerated. Neither `build.sh` nor the pre-commit hook runs the generators
+      # -- checked -- and the version chain `VERSION` -> `SPX_VERSION` -> the .lpi resource is
+      # joined at one end by the suite and at the other ONLY by this regenerate step.
+      #
+      # Windows here, where ci.yml runs them on Linux: both scripts import the standard library
+      # and nothing else, deliberately, so there is nothing to install.
+      - name: The help unit is the generator's output
+        shell: bash
+        run: |
+          python scripts/make-help.py
+          git diff --exit-code gui/SpxHelpText.pas
+
+      - name: The About unit is the generator's output
+        shell: bash
+        run: |
+          # THE TAGS FIRST -- actions/checkout clones the submodule at depth 1, and when the pin
+          # is behind the remote's tip it fetches that commit alone and brings no tags with it.
+          # `describe` then answers "No names found" and the generator refuses, which would read
+          # as "the About unit is stale" and be wrong.
+          git -C engine fetch --tags --quiet || true
+          python scripts/make-about.py
+          git diff --exit-code gui/SpxAbout.pas
 
       - name: Build and run the release gate
         shell: bash

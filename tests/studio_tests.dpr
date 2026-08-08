@@ -2791,7 +2791,9 @@ end;
 { Every frame of the application icon, by the two fields that decide who can read it. }
 procedure CheckIconFrames;
 const ICO = 'assets/brand/spintax.ico';
-var f: TMemoryStream; n, i, at: Integer; w, h: Byte; size_, offset: LongWord; sig: array[0..3] of Byte;
+var
+  f: TMemoryStream; n, i, at: Integer; w, h: Byte; size_, offset: LongWord;
+  sig: array[0..3] of Byte; seen, want: string; src: TStringList;
 begin
   if not FileExists(ICO) then
   begin
@@ -2805,6 +2807,7 @@ begin
     n := 0;
     f.Read(n, 2);
     CheckTrue('icon/has frames', n > 0);
+    seen := '';
     for i := 0 to n - 1 do
     begin
       at := 6 + i * 16;
@@ -2827,7 +2830,40 @@ begin
           IntToStr(sig[0] + sig[1] * 256 + sig[2] * 65536 + sig[3] * 16777216), '40');
       CheckTrue(Format('icon/frame-%d-is-inside-the-file', [i]),
         (offset > 0) and (offset + size_ <= LongWord(f.Size)));
+      if seen <> '' then seen := seen + ' ';
+      seen := seen + IntToStr(w);
     end;
+
+    (* AND WHICH SIZES ARE THERE, which the loop above says nothing about.
+       Windows does NOT scale an icon up: when the exact size is missing it takes the nearest
+       SMALLER frame and draws it in the corner of the space, which a reader reported as the
+       taskbar icon "not being centred". It was centred; the frame list was a tidy doubling and
+       simply lacked what the shell asks for at 125%, 150% and 175%.
+       That was fixed by emitting 30, 36 and 42 -- and NOTHING held it there. A revert to the
+       tidy list passed every check in this suite.
+       The expected list is READ FROM THE GENERATOR rather than copied here: a hand-written
+       list of another component's constants is enforced nowhere, which this project has
+       already paid for once with ENGINE_CODES. *)
+    want := '';
+    src := TStringList.Create;
+    try
+      src.LoadFromFile('scripts/make-appicon.py');
+      for i := 0 to src.Count - 1 do
+        if Copy(TrimLeft(src[i]), 1, 8) = 'SIZES = ' then
+        begin
+          want := Trim(src[i]);
+          at := Pos('[', want);
+          want := Copy(want, at + 1, Pos(']', want) - at - 1);
+          want := StringReplace(want, ',', ' ', [rfReplaceAll]);
+          while Pos('  ', want) > 0 do want := StringReplace(want, '  ', ' ', [rfReplaceAll]);
+          want := Trim(want);
+          Break;
+        end;
+    finally
+      src.Free;
+    end;
+    CheckTrue('icon/the generator still declares its sizes', want <> '');
+    Check('icon/carries every size the generator emits', seen, want);
   finally
     f.Free;
   end;
