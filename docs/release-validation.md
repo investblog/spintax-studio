@@ -1,3 +1,69 @@
+# Release validation
+
+Two records, newest first: `v0.1.1.0` was validated on 2026-08-08, `v0.1.0.0` (R0) on
+2026-08-03 and published on 2026-08-04.
+
+---
+
+# v0.1.1.0 — validated 2026-08-08
+
+## Candidate
+
+The **exact** artefact the tag produced, downloaded from the draft release rather than rebuilt
+locally — a local rebuild would be a different package and the report would describe something
+nobody submits.
+
+- Tag `v0.1.1.0` → `8c65ae2`, built by `.github/workflows/release.yml`
+- `spintax-studio.msix`, 2 943 284 bytes
+- SHA-256 `0c854fb7002a9e497944d61c407915dc9321b847268ceb3a6e4f9a4c2b4b9088`, **checked against
+  the published `SHA256SUMS` before the run**
+- Identity, publisher and architecture unchanged from R0, so this is an update rather than a
+  new identity: `301.SpintaxStudio`, `CN=BEE1F94B-ABDE-4CF8-9F30-1DF4DAFDAE83`, x64
+
+CI was green on that commit across all five jobs before the tag was cut, which is new: the
+release path had never had the two regenerate-and-diff gates until this version, and `ci.yml`
+does not run on a tag at all (a `branches:` filter excludes tag pushes).
+
+## WACK
+
+```powershell
+appcert.exe reset
+appcert.exe test -appxpackagepath build\spintax-studio.msix `
+  -reportoutputpath build\wack\spintax-studio-wack-20260808-192523.xml
+```
+
+Kit version `10.0.19041.5609`. Result: **`OVERALL_RESULT=PASS`, `PARTIAL_RUN=FALSE`.**
+24 tests — **all 13 required tests pass**, including application manifest, resource packages,
+branding, private code signing, platform-appropriate files and DPI awareness.
+
+One OPTIONAL test fails, **Blocked Executable Files**, with three analyser findings. R0 had two;
+the third is new, and it was investigated rather than assumed to be another false positive of
+the same kind:
+
+| finding | what it actually is |
+|---|---|
+| `shell32.dll!ShellExecuteW` | LCL's `OpenURL`, behind the two marks that hand an address to the browser. Deliberate, and the privacy policy describes it. |
+| `"reg"` | the HTML entity name in SynEdit's `TSynHTMLSyn` table. `&reg;` appears once in the binary; `reg.exe` appears zero times. |
+| `"cMD"` — **new in this version** | a byte coincidence inside compiled code at offset 234753, surrounded by x86-64 REX.W instruction prefixes. Not a string. |
+
+Measured in the shipped executable, extracted from the package under test:
+
+```
+CreateProcessW  0    WinExec     0    cmd.exe     0
+CreateProcessA  0    system      0    reg.exe     0
+ShellExecuteW   1    powershell  0
+```
+
+So the binary imports exactly one process-launching API — the browser action — and references
+no blocked executable at all. The analyser matches ASCII substrings and these two hit machine
+code and a collation table. Removing them is not possible without removing HTML entity support
+and the browser action, which would change the product to silence a report that is not about
+the product.
+
+The report is kept locally under `build/wack/`; generated build evidence is not tracked.
+
+---
+
 # R0 Release Validation
 
 Date: 2026-08-03 (validation) · 2026-08-04 (published)
