@@ -39,7 +39,7 @@ uses
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxGsaImport, SpxCount, SpxPrompt,
-  SpxFiles, SpxEngineThread, SpxHttp, SpxLlm, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
+  SpxFiles, SpxEngineThread, SpxHttp, SpxLlm, SpxSecrets, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
   SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxCompanyMark, SpxSevIcons;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
@@ -57,6 +57,7 @@ uses
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxHttp in '..\gui\SpxHttp.pas',
   SpxLlm in '..\gui\SpxLlm.pas',
+  SpxSecrets in '..\gui\SpxSecrets.pas',
   SpxStrings in '..\gui\SpxStrings.pas',
   SpxIcons in '..\gui\SpxIcons.pas',
   SpxFlags in '..\gui\SpxFlags.pas',
@@ -5193,6 +5194,95 @@ begin
   end;
 end;
 
+(* THE CREDENTIAL STORE, AND THIS ONE REALLY WRITES.
+
+   Unlike the transport and the providers, there is nothing here to fake: the whole point of the
+   unit is that the secret goes into Windows' own store, so a check that avoided touching it
+   would be checking nothing. It writes, reads back, deletes, and confirms the deletion -- under
+   a provider name that ends in a suffix no real configuration can produce, so a failed run can
+   never leave a reader's key in a worse state than it found it.
+
+   THE NAMESPACE CHECK IS THE ONE THAT CANNOT BE RECOVERED FROM. Spec §6 keeps the reader's own
+   provider key and a managed-service token deliberately apart, and the failure mode if they ever
+   share a target is silent: one overwrites the other, and the reader's key is gone. So the two
+   are asserted distinct for every provider name the window can offer, and for the awkward ones
+   besides. *)
+procedure TestSecrets;
+const
+  (* A suffix a real provider name cannot have: the window offers `anthropic` and
+     `openai-compatible`, and nothing types this. *)
+  TEST_PROVIDER = 'suite-only--do-not-use';
+var
+  got: string;
+  ok: Boolean;
+  k1, k2: TSpxSecretKind;
+  names: array[0..5] of string = ('anthropic', 'openai-compatible', '', '  spaced  ',
+                                  'byok', 'service');
+  i: Integer;
+begin
+  (* -- the two namespaces, which must never meet -- *)
+  for i := Low(names) to High(names) do
+    CheckTrue('secrets/the two kinds never share a target [' + names[i] + ']',
+              SpxSecretTarget(skByokKey, names[i]) <> SpxSecretTarget(skServiceToken, names[i]));
+  (* And a provider called `service` must not be able to impersonate the service namespace --
+     the reason the slot is a separate path element and not a prefix on the name. *)
+  CheckTrue('secrets/a provider named after the other slot cannot impersonate it',
+            SpxSecretTarget(skByokKey, 'service') <> SpxSecretTarget(skServiceToken, 'anthropic'));
+
+  (* Case and surrounding space are not part of the identity: a reader who types `Anthropic`
+     must find the key they stored as `anthropic`. *)
+  Check('secrets/the target folds case and trims',
+        SpxSecretTarget(skByokKey, '  Anthropic '), SpxSecretTarget(skByokKey, 'anthropic'));
+
+  if not SpxSecretsAvailable then
+  begin
+    (* No store on this platform. Say so as a check rather than skipping in silence -- a suite
+       that quietly tests nothing on the CI leg is how a platform gap survives. *)
+    CheckTrue('secrets/no credential store on this platform, and the unit says so',
+              not SpxSecretStore(skByokKey, TEST_PROVIDER, 'x'));
+    Exit;
+  end;
+
+  (* -- write, read back, and delete -- *)
+  SpxSecretForget(skByokKey, TEST_PROVIDER);
+
+  CheckTrue('secrets/nothing is stored to begin with',
+            not SpxSecretRead(skByokKey, TEST_PROVIDER, got));
+  Check('secrets/and a missing secret reads as empty', got, '');
+  Check('secrets/a missing secret is not an error', IntToStr(SpxSecretsLastError), '0');
+
+  (* Non-ASCII on purpose: a key is ASCII, but the blob path must not depend on that -- the same
+     store will hold whatever a future secret turns out to be, and a UTF-8 round trip that only
+     works for ASCII is a bug waiting for its input. *)
+  ok := SpxSecretStore(skByokKey, TEST_PROVIDER, 'sk-ant-АБВ-±-key');
+  CheckTrue('secrets/storing says it worked [' + IntToStr(SpxSecretsLastError) + ']', ok);
+
+  CheckTrue('secrets/reading it back says it worked',
+            SpxSecretRead(skByokKey, TEST_PROVIDER, got));
+  Check('secrets/and what comes out is what went in', got, 'sk-ant-АБВ-±-key');
+
+  (* The other namespace is genuinely a different slot, not a different label on one. *)
+  CheckTrue('secrets/the service slot is empty even though the byok one is not',
+            not SpxSecretRead(skServiceToken, TEST_PROVIDER, got));
+
+  (* Overwriting replaces rather than appends or fails. *)
+  CheckTrue('secrets/storing again over the same target works',
+            SpxSecretStore(skByokKey, TEST_PROVIDER, 'second'));
+  SpxSecretRead(skByokKey, TEST_PROVIDER, got);
+  Check('secrets/and the second value replaces the first', got, 'second');
+
+  CheckTrue('secrets/forgetting says it worked', SpxSecretForget(skByokKey, TEST_PROVIDER));
+  CheckTrue('secrets/and afterwards there is nothing to read',
+            not SpxSecretRead(skByokKey, TEST_PROVIDER, got));
+  (* Deleting something already gone is the state the caller asked for, not a failure. *)
+  CheckTrue('secrets/forgetting twice is not a failure',
+            SpxSecretForget(skByokKey, TEST_PROVIDER));
+
+  (* An empty provider is refused rather than filed under a bare prefix, which would be a
+     credential nobody could find again. *)
+  CheckTrue('secrets/an empty provider name is refused', not SpxSecretStore(skByokKey, '', 'x'));
+end;
+
 procedure TestOfflineClaim;
 const
   { Unit names that mean a socket is being opened. Whole words, matched inside a uses clause
@@ -9341,6 +9431,7 @@ begin
   TestOfflineClaim;
   TestHttp;
   TestLlm;
+  TestSecrets;
   TestAbout;
   TestGsaImport;
   TestVariantCount;
