@@ -4941,10 +4941,9 @@ end;
 procedure TestHttp;
 var
   err: TSpxHttpError;
-  host, path, wired, dir_: string;
-  port, k: Integer;
+  host, path: string;
+  port: Integer;
   secure: Boolean;
-  r_: TSearchRec;
 
   procedure Refused(const AWhat, AUrl: string);
   var r: TSpxHttpRequest; res: TSpxHttpResult;
