@@ -1,0 +1,8 @@
+CHANNEL: generic short marketing copy.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %Grad% — nominative
+
+BRIEF:
+Кратак маркетиншки текст о новој услузи.
+
+Write the spintax template now. Output only the template.

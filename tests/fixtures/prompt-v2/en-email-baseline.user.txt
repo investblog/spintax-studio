@@ -1,0 +1,7 @@
+CHANNEL: email — 2–5 sentences, conversational, one clear call to action.
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+BRIEF:
+Write a short, friendly welcome email (3-4 sentences) for a productivity app called FocusDesk. One clear call to action: open the dashboard.
+
+Write the spintax template now. Output only the template.

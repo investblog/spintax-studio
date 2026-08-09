@@ -1,0 +1,10 @@
+CHANNEL: SMS — under 160 characters TOTAL in every variant. Be terse. No permutations.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %first_name%
+  %days_left% — a count of days
+  %link% — already a complete URL — do not wrap or spin it
+
+BRIEF:
+Write an SMS (max ~2 short sentences) reminding %first_name% that their trial ends in %days_left% days. Include a short link placeholder %link%. Keep wording variation minimal.
+
+Write the spintax template now. Output only the template.

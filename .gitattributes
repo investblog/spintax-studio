@@ -12,6 +12,12 @@
 *.lfm text eol=lf
 *.inc text eol=lf
 
+# Prompt fixtures. These are compared BYTE FOR BYTE against src/SpxPrompt.pas, and the builder
+# they were taken from joins every block with '\n'. The global rule above already gives LF, but
+# it is spelled out here because a normalisation applied to these files would not look like a
+# checkout setting -- it would look like a broken port, on a machine where the port is fine.
+tests/fixtures/prompt-v2/** text eol=lf
+
 # Binary assets, never diffed or line-normalized
 *.ico binary
 *.png binary

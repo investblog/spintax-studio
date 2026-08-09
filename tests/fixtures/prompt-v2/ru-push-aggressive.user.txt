@@ -1,0 +1,8 @@
+CHANNEL: push notification — one sentence, under 120 characters in every variant.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %unread_count% — число непрочитанных сообщений — счётчик
+
+BRIEF:
+Напиши короткий пуш (1-2 предложения) о том, что у пользователя %unread_count% непрочитанных сообщений — грамматично при любом числе. Вариативность максимальная.
+
+Write the spintax template now. Output only the template.

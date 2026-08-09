@@ -1,0 +1,7 @@
+CHANNEL: SMS — under 160 characters TOTAL in every variant. Be terse. No permutations.
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+BRIEF:
+Kratka SMS obavijest o isporuci.
+
+Write the spintax template now. Output only the template.

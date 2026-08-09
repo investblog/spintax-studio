@@ -1,0 +1,10 @@
+CHANNEL: email — 2–5 sentences, conversational, one clear call to action.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %first_name% — recipient's first name
+  %company% — recipient's company
+  %has_discount% — optional — empty when the account has no discount
+
+BRIEF:
+Write a short onboarding email for %first_name% at %company%. If %has_discount% is set, mention their discount is already applied; otherwise do not mention pricing at all. 3-5 sentences, one call to action.
+
+Write the spintax template now. Output only the template.

@@ -1,0 +1,9 @@
+CHANNEL: email — 2–5 sentences, conversational, one clear call to action.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %Misto% — nominative
+  %MistoGen% — genitive
+
+BRIEF:
+Короткий лист про знижку на передплату.
+
+Write the spintax template now. Output only the template.

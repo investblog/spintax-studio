@@ -1,0 +1,7 @@
+CHANNEL: generic short marketing copy.
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+BRIEF:
+Short marketing copy with no declared language.
+
+Write the spintax template now. Output only the template.

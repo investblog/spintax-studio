@@ -1,0 +1,317 @@
+{
+ "promptVersion": "2",
+ "cases": [
+  {
+   "id": "en-email-baseline",
+   "kind": "authoring",
+   "locale": "en",
+   "channel": "email",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "Write a short, friendly welcome email (3-4 sentences) for a productivity app called FocusDesk. One clear call to action: open the dashboard."
+  },
+  {
+   "id": "en-email-vars-conditional",
+   "kind": "authoring",
+   "locale": "en",
+   "channel": "email",
+   "variationLevel": "balanced",
+   "allowedVariables": [
+    {
+     "name": "first_name",
+     "note": "recipient's first name"
+    },
+    {
+     "name": "company",
+     "note": "recipient's company"
+    },
+    {
+     "name": "has_discount",
+     "note": "optional — empty when the account has no discount"
+    }
+   ],
+   "brief": "Write a short onboarding email for %first_name% at %company%. If %has_discount% is set, mention their discount is already applied; otherwise do not mention pricing at all. 3-5 sentences, one call to action."
+  },
+  {
+   "id": "en-product-plural",
+   "kind": "authoring",
+   "locale": "en",
+   "channel": "landing",
+   "variationLevel": "balanced",
+   "allowedVariables": [
+    {
+     "name": "product"
+    },
+    {
+     "name": "price"
+    },
+    {
+     "name": "in_stock",
+     "note": "a count — an integer number of units"
+    }
+   ],
+   "brief": "Write a two-sentence e-commerce product blurb for %product% priced at %price%. Mention that there are %in_stock% units in stock — the sentence must stay grammatical whether it is 1 or many."
+  },
+  {
+   "id": "en-landing-lastsep",
+   "kind": "authoring",
+   "locale": "en",
+   "channel": "landing",
+   "variationLevel": "aggressive",
+   "allowedVariables": [],
+   "brief": "Write a one-paragraph landing-page intro for a team chat app. In one sentence, list three to four of these selling points in varying order: fast search, thread summaries, offline mode, granular permissions. The list must read naturally in prose (with a proper 'and' before the last item)."
+  },
+  {
+   "id": "en-sms-conservative",
+   "kind": "authoring",
+   "locale": "en",
+   "channel": "sms",
+   "variationLevel": "conservative",
+   "allowedVariables": [
+    {
+     "name": "first_name"
+    },
+    {
+     "name": "days_left",
+     "note": "a count of days"
+    },
+    {
+     "name": "link",
+     "note": "already a complete URL — do not wrap or spin it"
+    }
+   ],
+   "brief": "Write an SMS (max ~2 short sentences) reminding %first_name% that their trial ends in %days_left% days. Include a short link placeholder %link%. Keep wording variation minimal."
+  },
+  {
+   "id": "ru-email-light",
+   "kind": "authoring",
+   "locale": "ru",
+   "channel": "email",
+   "variationLevel": "balanced",
+   "allowedVariables": [
+    {
+     "name": "Name",
+     "case": "nominative",
+     "note": "имя получателя"
+    },
+    {
+     "name": "CompanyGen",
+     "case": "genitive",
+     "note": "название компании в родительном падеже"
+    }
+   ],
+   "brief": "Напиши короткое письмо (3-4 предложения) для %Name% о том, что отчёт компании %CompanyGen% готов к просмотру. Один призыв к действию: открыть отчёт."
+  },
+  {
+   "id": "ru-strict-cased-counts",
+   "kind": "authoring",
+   "locale": "ru",
+   "channel": "landing",
+   "variationLevel": "balanced",
+   "allowedVariables": [
+    {
+     "name": "Visitors",
+     "case": "nominative",
+     "note": "посетители — именительный"
+    },
+    {
+     "name": "VisitorsGen",
+     "case": "genitive",
+     "note": "посетителей — родительный"
+    },
+    {
+     "name": "VisitorsDat",
+     "case": "dative",
+     "note": "посетителям — дательный"
+    },
+    {
+     "name": "VisitorsInstr",
+     "case": "instrumental",
+     "note": "посетителями — творительный"
+    },
+    {
+     "name": "VisitorsLoc",
+     "case": "prepositional",
+     "note": "о посетителях — предложный"
+    },
+    {
+     "name": "Brand",
+     "note": "название бренда — не склоняется, вставлять как есть"
+    },
+    {
+     "name": "visitor_count",
+     "note": "число посетителей — счётчик"
+    }
+   ],
+   "brief": "Напиши абзац (3-5 предложений) для лендинга сервиса аналитики посетителей. Расскажи, что сервис создан для %VisitorsGen%, помогает работать с %VisitorsInstr% и уже обслуживает %visitor_count% посетителей — число должно оставаться грамматичным при любом значении. Название бренда %Brand% не склоняется и не изменяется."
+  },
+  {
+   "id": "ru-push-aggressive",
+   "kind": "authoring",
+   "locale": "ru",
+   "channel": "push",
+   "variationLevel": "aggressive",
+   "allowedVariables": [
+    {
+     "name": "unread_count",
+     "note": "число непрочитанных сообщений — счётчик"
+    }
+   ],
+   "brief": "Напиши короткий пуш (1-2 предложения) о том, что у пользователя %unread_count% непрочитанных сообщений — грамматично при любом числе. Вариативность максимальная."
+  },
+  {
+   "id": "port-hr-landing",
+   "kind": "authoring",
+   "locale": "hr",
+   "channel": "landing",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "Kratki naslov i jedna rečenica za stranicu proizvoda."
+  },
+  {
+   "id": "port-sr-generic",
+   "kind": "authoring",
+   "locale": "sr",
+   "channel": "generic",
+   "variationLevel": "aggressive",
+   "allowedVariables": [
+    {
+     "name": "Grad",
+     "case": "nominative"
+    }
+   ],
+   "brief": "Кратак маркетиншки текст о новој услузи."
+  },
+  {
+   "id": "port-bs-sms",
+   "kind": "authoring",
+   "locale": "bs",
+   "channel": "sms",
+   "variationLevel": "conservative",
+   "allowedVariables": [],
+   "brief": "Kratka SMS obavijest o isporuci."
+  },
+  {
+   "id": "port-uk-email",
+   "kind": "authoring",
+   "locale": "uk",
+   "channel": "email",
+   "variationLevel": "balanced",
+   "allowedVariables": [
+    {
+     "name": "Misto",
+     "case": "nominative"
+    },
+    {
+     "name": "MistoGen",
+     "case": "genitive"
+    }
+   ],
+   "brief": "Короткий лист про знижку на передплату."
+  },
+  {
+   "id": "port-de-email",
+   "kind": "authoring",
+   "locale": "de",
+   "channel": "email",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "Kurze Willkommens-E-Mail für ein Produktivitätswerkzeug."
+  },
+  {
+   "id": "port-nolocale",
+   "kind": "authoring",
+   "locale": "",
+   "channel": "generic",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "Short marketing copy with no declared language."
+  },
+  {
+   "id": "repair-en",
+   "kind": "repair",
+   "locale": "en",
+   "allowedVariables": [],
+   "diagnostics": [
+    {
+     "severity": "error",
+     "code": "bracket.unclosed",
+     "line": 1,
+     "column": 4,
+     "message": "Unclosed '{'."
+    },
+    {
+     "severity": "error",
+     "code": "plural.arity",
+     "line": 2,
+     "column": 14,
+     "message": "{plural ...}: expected 2 forms, got 3."
+    },
+    {
+     "severity": "warning",
+     "code": "variable.undefined",
+     "line": 2,
+     "column": 10,
+     "message": "Variable 'n' is not defined — may be a runtime variable."
+    }
+   ]
+  },
+  {
+   "id": "repair-ru",
+   "kind": "repair",
+   "locale": "ru",
+   "allowedVariables": [
+    {
+     "name": "City",
+     "case": "nominative"
+    },
+    {
+     "name": "CityGen",
+     "case": "genitive",
+     "note": "после «для»"
+    },
+    {
+     "name": "Brand",
+     "note": "не склоняется"
+    }
+   ],
+   "diagnostics": [
+    {
+     "severity": "error",
+     "code": "plural.arity",
+     "line": 8,
+     "column": 15,
+     "message": "{plural ...}: expected 3 forms, got 2."
+    },
+    {
+     "severity": "warning",
+     "code": "variable.undefined",
+     "line": 4,
+     "column": 16,
+     "message": "Variable 'City' is not defined — may be a runtime variable."
+    },
+    {
+     "severity": "warning",
+     "code": "variable.undefined",
+     "line": 6,
+     "column": 5,
+     "message": "Variable 'CityGen' is not defined — may be a runtime variable."
+    },
+    {
+     "severity": "warning",
+     "code": "variable.undefined",
+     "line": 6,
+     "column": 34,
+     "message": "Variable 'Brand' is not defined — may be a runtime variable."
+    },
+    {
+     "severity": "warning",
+     "code": "variable.undefined",
+     "line": 8,
+     "column": 11,
+     "message": "Variable 'n' is not defined — may be a runtime variable."
+    }
+   ]
+  }
+ ]
+}

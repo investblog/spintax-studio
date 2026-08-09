@@ -1,0 +1,14 @@
+CHANNEL: landing copy — a headline plus one supporting sentence.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %Visitors% — nominative; посетители — именительный
+  %VisitorsGen% — genitive; посетителей — родительный
+  %VisitorsDat% — dative; посетителям — дательный
+  %VisitorsInstr% — instrumental; посетителями — творительный
+  %VisitorsLoc% — prepositional; о посетителях — предложный
+  %Brand% — название бренда — не склоняется, вставлять как есть
+  %visitor_count% — число посетителей — счётчик
+
+BRIEF:
+Напиши абзац (3-5 предложений) для лендинга сервиса аналитики посетителей. Расскажи, что сервис создан для %VisitorsGen%, помогает работать с %VisitorsInstr% и уже обслуживает %visitor_count% посетителей — число должно оставаться грамматичным при любом значении. Название бренда %Brand% не склоняется и не изменяется.
+
+Write the spintax template now. Output only the template.

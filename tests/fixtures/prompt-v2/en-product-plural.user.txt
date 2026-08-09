@@ -1,0 +1,10 @@
+CHANNEL: landing copy — a headline plus one supporting sentence.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %product%
+  %price%
+  %in_stock% — a count — an integer number of units
+
+BRIEF:
+Write a two-sentence e-commerce product blurb for %product% priced at %price%. Mention that there are %in_stock% units in stock — the sentence must stay grammatical whether it is 1 or many.
+
+Write the spintax template now. Output only the template.

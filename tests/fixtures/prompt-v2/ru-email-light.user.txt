@@ -1,0 +1,9 @@
+CHANNEL: email — 2–5 sentences, conversational, one clear call to action.
+ALLOWED VARIABLES (the case is part of the value, not a suggestion):
+  %Name% — nominative; имя получателя
+  %CompanyGen% — genitive; название компании в родительном падеже
+
+BRIEF:
+Напиши короткое письмо (3-4 предложения) для %Name% о том, что отчёт компании %CompanyGen% готов к просмотру. Один призыв к действию: открыть отчёт.
+
+Write the spintax template now. Output only the template.
