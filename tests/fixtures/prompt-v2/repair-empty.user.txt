@@ -1,0 +1,11 @@
+This template failed validation.
+
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+TEMPLATE (line-numbered):
+ 1 | 
+
+ERRORS:
+- (none reported — return the template unchanged)
+
+Return the corrected template. Output only the template.

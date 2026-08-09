@@ -147,6 +147,32 @@ begin
   end;
 end;
 
+(* `split('
+')` AND NOTHING ELSE, which is not what a TStringList does.
+
+   `TStringList.Text` splits on CR as well as LF, drops a trailing empty line, and joins back
+   with the platform terminator. All three differ from the original, and the difference reaches
+   the reader: `FEditor.Text` is CRLF-joined (SynEdit writes `sfleSystem`), so a repair prompt
+   built through a TStringList ate every CR, and a document ending in a newline silently lost
+   its last numbered row. No fixture had a CR or a trailing newline, so the byte gate could not
+   see any of it -- the review did. *)
+procedure SplitLF(const S: string; AOut: TStringList);
+var
+  i, start: Integer;
+begin
+  AOut.Clear;
+  start := 1;
+  for i := 1 to Length(S) do
+    if S[i] = #10 then
+    begin
+      AOut.Add(Copy(S, start, i - start));
+      start := i + 1;
+    end;
+  (* The tail after the last LF, EVEN WHEN EMPTY: 'a' + LF is two elements in JS and one in a
+     TStringList, and the second is the line the reader is about to type on. *)
+  AOut.Add(Copy(S, start, Length(S) - start + 1));
+end;
+
 (* Prefix every line -- INCLUDING an empty one -- with eight spaces, so a worked example reads
    as a block inside the prompt. *)
 function Indent(const ABlock: string): string;
@@ -156,9 +182,7 @@ var
 begin
   l := TStringList.Create;
   try
-    l.TextLineBreakStyle := tlbsLF;
-    l.SkipLastLineBreak := True;
-    l.Text := ABlock;
+    SplitLF(ABlock, l);
     Result := '';
     for i := 0 to l.Count - 1 do
     begin
@@ -577,9 +601,7 @@ var
 begin
   lines := TStringList.Create;
   try
-    lines.TextLineBreakStyle := tlbsLF;
-    lines.SkipLastLineBreak := True;
-    lines.Text := ATemplate;
+    SplitLF(ATemplate, lines);
     numbered := '';
     for i := 0 to lines.Count - 1 do
     begin
@@ -595,10 +617,13 @@ begin
   end;
 
   (* Note 4: the filter is HERE, and AMessages is parallel to ADiags so it survives it. *)
+  (* AMessages is parallel to ADiags by contract; a caller that gets it wrong would read past
+     the end of an open array, which reads whatever is next on the stack rather than failing.
+     Bounded here so a short list drops rows instead of inventing them. *)
   list := '';
   if ADiags <> nil then
     for i := 0 to ADiags.Count - 1 do
-      if ADiags[i].Severity = 'error' then
+      if (i <= High(AMessages)) and (ADiags[i].Severity = 'error') then
       begin
         if list <> '' then list := list + LF;
         list := list + '- line ' + IntToStr(ADiags[i].Line) +
@@ -646,49 +671,100 @@ function SpxCleanModelTemplate(const ARaw: string): string;
 const
   FENCE = '```';
 
-  function IsAsciiLetter(C: Char): Boolean;
+  (* ONE UTF-8 DECODE, THEN A MEMBERSHIP TEST -- not a list of byte patterns.
+
+     The first port of this hand-listed the byte sequences a reader thinks of (NBSP, U+2028,
+     the BOM) and was six code points short of what the original accepts. `trim()` and `\s`
+     under the `u` flag take the WHOLE Space_Separator category, and the expensive gap was not
+     a stray edge space: the prefix scan below walks this function, so one unhandled space
+     aborted the whole strip and left `Template : ...` in the reader's document. Decoding once
+     and testing the code point cannot be short by one the way a list can. *)
+  function CodePointAt(const S: string; P: Integer; out ALen: Integer): LongWord;
+  var
+    b: Byte;
   begin
-    Result := ((C >= 'a') and (C <= 'z')) or ((C >= 'A') and (C <= 'Z'));
+    ALen := 0;
+    Result := 0;
+    if (P < 1) or (P > Length(S)) then Exit;
+    b := Ord(S[P]);
+    if b < $80 then begin ALen := 1; Exit(b); end;
+    if (b and $E0) = $C0 then
+    begin
+      if P + 1 > Length(S) then begin ALen := 1; Exit(b); end;
+      ALen := 2;
+      Exit(((b and $1F) shl 6) or (Ord(S[P + 1]) and $3F));
+    end;
+    if (b and $F0) = $E0 then
+    begin
+      if P + 2 > Length(S) then begin ALen := 1; Exit(b); end;
+      ALen := 3;
+      Exit(((b and $0F) shl 12) or ((Ord(S[P + 1]) and $3F) shl 6) or
+           (Ord(S[P + 2]) and $3F));
+    end;
+    if (b and $F8) = $F0 then
+    begin
+      if P + 3 > Length(S) then begin ALen := 1; Exit(b); end;
+      ALen := 4;
+      Exit(((b and $07) shl 18) or ((Ord(S[P + 1]) and $3F) shl 12) or
+           ((Ord(S[P + 2]) and $3F) shl 6) or (Ord(S[P + 3]) and $3F));
+    end;
+    ALen := 1;
+    Result := b;
   end;
 
-  (* JS \s under /u. Trim() in FPC stops at #32, which would leave a NBSP or a U+2028 behind. *)
+  (* The start of a UTF-8 sequence at or before P, so the trailing scan can decode backwards. *)
+  function StartOfCodePoint(const S: string; P: Integer): Integer;
+  begin
+    Result := P;
+    while (Result > 1) and ((Ord(S[Result]) and $C0) = $80) do Dec(Result);
+  end;
+
+  (* JS WhiteSpace + LineTerminator, which is what both `trim()` and `\s` accept. *)
+  function IsWhite(CP: LongWord): Boolean;
+  begin
+    Result := (CP = 9) or (CP = 10) or (CP = 11) or (CP = 12) or (CP = 13) or (CP = 32) or
+              (CP = $A0) or (CP = $1680) or
+              ((CP >= $2000) and (CP <= $200A)) or
+              (CP = $2028) or (CP = $2029) or (CP = $202F) or (CP = $205F) or
+              (CP = $3000) or (CP = $FEFF);
+  end;
+
+  (* `[a-z]` under the `i` and `u` flags. Case folding maps U+017F to `s` and U+212A to `k`,
+     so V8 accepts either as a fence's language tag -- obscure, and exactly the sort of thing a
+     port written as `C in ['a'..'z']` gets wrong without noticing. *)
+  function IsFenceTagLetter(CP: LongWord): Boolean;
+  begin
+    Result := ((CP >= Ord('a')) and (CP <= Ord('z'))) or
+              ((CP >= Ord('A')) and (CP <= Ord('Z'))) or
+              (CP = $017F) or (CP = $212A);
+  end;
+
   function IsSpace(const S: string; P: Integer): Integer;
+  var
+    len: Integer;
   begin
     Result := 0;
-    if P > Length(S) then Exit;
-    if S[P] in [#9, #10, #11, #12, #13, ' '] then Exit(1);
-    if (P + 1 <= Length(S)) and (S[P] = #$C2) and (S[P + 1] = #$A0) then Exit(2);       (* NBSP *)
-    if (P + 2 <= Length(S)) and (S[P] = #$E2) and (S[P + 1] = #$80) and
-       (S[P + 2] in [#$A8, #$A9]) then Exit(3);                                        (* LS, PS *)
-    if (P + 2 <= Length(S)) and (S[P] = #$EF) and (S[P + 1] = #$BB) and
-       (S[P + 2] = #$BF) then Exit(3);                                                 (* BOM *)
+    if IsWhite(CodePointAt(S, P, len)) then Result := len;
   end;
 
   function TrimU(const S: string): string;
   var
-    a, b, w: Integer;
+    a, b, w, len: Integer;
   begin
     a := 1;
     repeat
       w := IsSpace(S, a);
       Inc(a, w);
     until w = 0;
+    (* The trailing scan walks BACK to the start of the code point and then asks the same
+       question the leading one asks. Written as two independent lists once, and the second
+       list was missing U+FEFF -- which a fixture found. One predicate, two directions. *)
     b := Length(S);
     while b >= a do
     begin
-      w := 0;
-      if S[b] in [#9, #10, #11, #12, #13, ' '] then w := 1
-      else if (b > 1) and (S[b - 1] = #$C2) and (S[b] = #$A0) then w := 2
-      else if (b > 2) and (S[b - 2] = #$E2) and (S[b - 1] = #$80) and
-              (S[b] in [#$A8, #$A9]) then w := 3
-      (* U+FEFF. The leading loop had this from the start and this one did not, which is a
-         defect a fixture found rather than a review: `clean-bom-edges` carries one at each end
-         and the two ends disagreed. Written down because "the same rule, twice, in two
-         directions" is where the second direction gets forgotten. *)
-      else if (b > 2) and (S[b - 2] = #$EF) and (S[b - 1] = #$BB) and
-              (S[b] = #$BF) then w := 3;
-      if w = 0 then Break;
-      Dec(b, w);
+      w := StartOfCodePoint(S, b);
+      if not IsWhite(CodePointAt(S, w, len)) then Break;
+      b := w - 1;
     end;
     Result := Copy(S, a, b - a + 1);
   end;
@@ -753,7 +829,7 @@ const
 
 var
   t: string;
-  i, w: Integer;
+  i, w, cpLen: Integer;
 begin
   t := TrimU(ARaw);
 
@@ -761,7 +837,7 @@ begin
   if Copy(t, 1, 3) = FENCE then
   begin
     i := 4;
-    while (i <= Length(t)) and IsAsciiLetter(t[i]) do Inc(i);
+    while (i <= Length(t)) and IsFenceTagLetter(CodePointAt(t, i, cpLen)) do Inc(i, cpLen);
     if (i <= Length(t)) and (t[i] = #13) then Inc(i);
     if (i <= Length(t)) and (t[i] = #10) then Inc(i);
     t := Copy(t, i, Length(t));
@@ -799,7 +875,9 @@ begin
   end;
 
   (* paired quotes, straight or curly *)
-  if (Length(t) >= 2) and (t[1] = '"') and (t[Length(t)] = '"') then
+  (* NO LENGTH GUARD, because the original has none: for a lone `"` both `startsWith` and
+     `endsWith` are true and `slice(1, -1)` gives the empty string. A `>= 2` here kept it. *)
+  if (Length(t) >= 1) and (t[1] = '"') and (t[Length(t)] = '"') then
     t := TrimU(Copy(t, 2, Length(t) - 2))
   else if (Length(t) >= 6) and (Copy(t, 1, 3) = #$E2#$80#$9C) and
           (Copy(t, Length(t) - 2, 3) = #$E2#$80#$9D) then

@@ -17,3 +17,6 @@ port-sr-Latn-RS	authoring	sr-Latn-RS	landing	balanced
 port-en-US-sms	authoring	en-US	sms	conservative
 repair-en	repair	en		
 repair-ru	repair	ru		
+repair-crlf	repair	en		
+repair-trailing-newline	repair	en		
+repair-empty	repair	en		

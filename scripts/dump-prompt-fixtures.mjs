@@ -107,6 +107,33 @@ const REPAIRS = [
       'До встречи, команда %Brand%',
     ].join('\n'),
   },
+
+  /* HOW THE TEMPLATE IS SPLIT, which the two repair cases above cannot ask about because
+     neither has a CR or a trailing newline -- and the shipped input has both. The editor joins
+     its text with CRLF (SynEdit writes the platform terminator), so a port that reached for a
+     TStringList ate every CR and lost the last row of any document ending in a newline. The
+     original splits on '\n' and on nothing else.
+
+     `repair-empty` is the degenerate end of the same rule: JS `''.split('\n')` is one empty
+     element, so the gutter still prints ` 1 | `. */
+  {
+    id: 'repair-crlf',
+    locale: 'en',
+    allowedVariables: [],
+    template: 'Hi {a|b there!\r\nSecond line.\r\nYou have %n% {plural %n%: item|items|extra} left.\r\n',
+  },
+  {
+    id: 'repair-trailing-newline',
+    locale: 'en',
+    allowedVariables: [],
+    template: 'Hi {a|b there!\n\n',
+  },
+  {
+    id: 'repair-empty',
+    locale: 'en',
+    allowedVariables: [],
+    template: '',
+  },
 ];
 
 /* OUR cases, on top of the family's eight.
@@ -260,6 +287,28 @@ const CLEAN_CASES = [
   ['prefix-lookalike', 'Templates: Hi {a|b} there.'],
   ['blank', '   \n  '],
   ['multiline', '```\n#def %x% = {a|b}\n\n%x% and %x%\n```'],
+
+  /* THE REST OF JS's WHITESPACE, which the first port did not have. `trim()` and `\s` under
+     the `u` flag take the whole Space_Separator category, not the handful a reader thinks of.
+     The expensive one is not a stray edge space -- it is the PREFIX scan, where a single
+     unhandled space aborts the whole strip and `Template : ...` survives into the document. */
+  ['sp-ideographic', '　Hi {a|b} there.　'],
+  ['sp-thin', ' Hi {a|b} there. '],
+  ['sp-enquad', ' Hi {a|b} '],
+  ['sp-narrow-nbsp', ' Hi {a|b} '],
+  ['sp-ogham', ' Hi {a|b} '],
+  ['sp-medial', ' Hi {a|b} '],
+  ['prefix-ideographic-gap', 'Template　: Hi {a|b}.'],
+
+  /* A LONE QUOTE. The original has no length guard, so `"` is both the start and the end and
+     slices to nothing; the first port guarded on length and kept it. */
+  ['quote-only', '"'],
+
+  /* `[a-z]` under `iu` matches these as well: case folding maps U+017F to `s` and U+212A to
+     `k`, so V8 accepts either as a fence's language tag. Obscure, and the same root cause as
+     the spaces above -- the `u` and `i` flags ported as plain ASCII. */
+  ['fence-long-s', '```ſ\nHi {a|b}\n```'],
+  ['fence-kelvin', '```K\nHi {a|b}\n```'],
 ];
 
 for (const [id, raw] of CLEAN_CASES) {

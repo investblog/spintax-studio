@@ -20,3 +20,13 @@ fence-only
 prefix-lookalike
 blank
 multiline
+sp-ideographic
+sp-thin
+sp-enquad
+sp-narrow-nbsp
+sp-ogham
+sp-medial
+prefix-ideographic-gap
+quote-only
+fence-long-s
+fence-kelvin

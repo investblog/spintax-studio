@@ -1,0 +1,13 @@
+This template failed validation.
+
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+TEMPLATE (line-numbered):
+ 1 | Hi {a|b there!
+ 2 | 
+ 3 | 
+
+ERRORS:
+- line 1, column 4 [bracket.unclosed]: Unclosed '{'.
+
+Return the corrected template. Output only the template.

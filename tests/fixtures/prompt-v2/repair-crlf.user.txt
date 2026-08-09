@@ -1,0 +1,15 @@
+This template failed validation.
+
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+TEMPLATE (line-numbered):
+ 1 | Hi {a|b there!
+ 2 | Second line.
+ 3 | You have %n% {plural %n%: item|items|extra} left.
+ 4 | 
+
+ERRORS:
+- line 1, column 4 [bracket.unclosed]: Unclosed '{'.
+- line 3, column 14 [plural.arity]: {plural ...}: expected 2 forms, got 3.
+
+Return the corrected template. Output only the template.

@@ -1,0 +1,3 @@
+Hi {a|b there!
+Second line.
+You have %n% {plural %n%: item|items|extra} left.

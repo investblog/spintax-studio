@@ -339,6 +339,57 @@
      "message": "Variable 'n' is not defined — may be a runtime variable."
     }
    ]
+  },
+  {
+   "id": "repair-crlf",
+   "kind": "repair",
+   "locale": "en",
+   "allowedVariables": [],
+   "diagnostics": [
+    {
+     "severity": "error",
+     "code": "bracket.unclosed",
+     "line": 1,
+     "column": 4,
+     "message": "Unclosed '{'."
+    },
+    {
+     "severity": "error",
+     "code": "plural.arity",
+     "line": 3,
+     "column": 14,
+     "message": "{plural ...}: expected 2 forms, got 3."
+    },
+    {
+     "severity": "warning",
+     "code": "variable.undefined",
+     "line": 3,
+     "column": 10,
+     "message": "Variable 'n' is not defined — may be a runtime variable."
+    }
+   ]
+  },
+  {
+   "id": "repair-trailing-newline",
+   "kind": "repair",
+   "locale": "en",
+   "allowedVariables": [],
+   "diagnostics": [
+    {
+     "severity": "error",
+     "code": "bracket.unclosed",
+     "line": 1,
+     "column": 4,
+     "message": "Unclosed '{'."
+    }
+   ]
+  },
+  {
+   "id": "repair-empty",
+   "kind": "repair",
+   "locale": "en",
+   "allowedVariables": [],
+   "diagnostics": []
   }
  ]
 }

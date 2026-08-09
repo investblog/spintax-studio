@@ -107,7 +107,7 @@ const
 
       (* the AI panel (ADR 0011) *)
       'AI nacrt',
-      'Upit',
+      'Zadatak',
       'Varijable koje model smije koristiti',
       'Odgovor modela',
       'Kanal',
@@ -121,7 +121,7 @@ const
       'Upit je kopiran. Odnesite ga svom modelu i vratite odgovor.',
       'Upit za popravak je kopiran. Pokazuje na točna mjesta.',
       'Nacrt je umetnut. Presuda je u ploči dijagnostike.',
-      'Najprije napišite upit.',
+      'Najprije napišite zadatak.',
       'Najprije zalijepite odgovor modela.',
       'Nema pogrešaka za popravak.',
       'e-pošta',

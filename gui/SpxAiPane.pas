@@ -121,6 +121,8 @@ type
 implementation
 
 const
+  LF = #10;
+
   COL_NAME = 0;
   COL_CASE = 1;
   COL_NOTE = 2;
@@ -135,6 +137,23 @@ const
 
   LEVEL_IDS: array[TSpxVariation] of TSpxStr =
     (sAiLvConservative, sAiLvBalanced, sAiLvAggressive);
+
+(* SpxPrompt joins with LF by contract, because the builder it ports does. The Windows
+   clipboard's contract is CRLF, and a legacy EDIT control shows an LF-only payload as ONE
+   line -- no characters lost, but a reader who pastes into Notepad first sees a wall of text
+   and reads the panel's main button as broken. Converted at the boundary, which is the only
+   place that knows it is a clipboard. *)
+function ForClipboard(const S: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 1 to Length(S) do
+  begin
+    if (S[i] = #10) and ((i = 1) or (S[i - 1] <> #13)) then Result := Result + #13;
+    Result := Result + S[i];
+  end;
+end;
 
 constructor TSpxAiPane.Create(AOwner: TComponent);
 var
@@ -249,7 +268,12 @@ begin
   FAllowed.Columns.Add;   (* note -- free text, and free is right: it is a hint to a model *)
   FAllowed.Columns[COL_NAME].ReadOnly := True;
   FAllowed.Columns[COL_CASE].ButtonStyle := cbsPickList;
-  FAllowed.Columns[COL_CASE].ReadOnly := True;   (* pick, do not type *)
+  (* AND NOT `ReadOnly`, WHICH CLOSES THE PICKER TOO. `TCustomGrid.EditingAllowed`
+     (grids.pas:8656-8660) answers False for a read-only column before it ever asks which
+     editor the column wants, so `cbsPickList` plus `ReadOnly` is a cell that cannot be opened
+     at all -- the case could never be declared, which is most of the reason this panel exists.
+     Found by review, confirmed in LCL's source. Typing is refused in CaseEdited instead, by
+     reading the value back: the same shape the group editor uses for a definition's value. *)
   FAllowed.OnEditingDone := @CaseEdited;
 
   FRight := TPanel.Create(Self);
@@ -459,8 +483,14 @@ begin
   SetLength(Result, n);
 end;
 
-(* The picker wrote a word into a cell; turn it back into the ordinal that IS the state.
-   Runs while the language is stable, which is the only moment the two can be matched. *)
+(* THE EDIT IS READ BACK, and a value this panel does not recognise is refused rather than
+   stored. The picker offers exactly the seven words, but the cell is editable -- it has to be,
+   or the picker will not open -- so someone can type into it. A typed word that matches
+   nothing would otherwise land as "not declared", which is the one value in that column that
+   must never arrive by accident: it drops the rule the model needed and says nothing.
+
+   Runs while the language is stable, which is the only moment a word and an ordinal can be
+   matched at all -- see Retranslate. *)
 procedure TSpxAiPane.CaseEdited(Sender: TObject);
 var
   r: Integer;
@@ -474,6 +504,8 @@ begin
       FCases[r] := k;
       Exit;
     end;
+  (* Not one of the seven: put back what was declared before the edit. *)
+  FAllowed.Cells[COL_CASE, r] := Tr(CASE_IDS[FCases[r]]);
 end;
 
 procedure TSpxAiPane.CopyPromptClicked(Sender: TObject);
@@ -490,7 +522,7 @@ begin
                                    TSpxVariation(FLevel.ItemIndex));
   (* System and user prompt in one block, separated by a blank line. A reader pasting this into
      a chat window has one field, not two -- the split matters to an API and not to them. *)
-  Clipboard.AsText := built.SystemPrompt + LineEnding + LineEnding + built.UserPrompt;
+  Clipboard.AsText := ForClipboard(built.SystemPrompt + LF + LF + built.UserPrompt);
   Say(Tr(sAiCopied));
 end;
 
@@ -508,6 +540,16 @@ begin
      happens HERE rather than in the editor, so the spans the repair prompt later quotes belong
      to the same text the engine validated. *)
   cleaned := SpxCleanModelTemplate(FReply.Text);
+  (* AND THE CLEANING CAN LEAVE NOTHING. An empty fenced block is not empty until it is
+     cleaned, so the guard above passes and this does not: the form refuses an empty insert,
+     and saying "draft inserted" over it would be a sentence about something that did not
+     happen. Reported by review with the exact input -- three backticks, a newline, three
+     backticks -- which is `clean-fence-only` in the corpus, and its output is zero bytes. *)
+  if cleaned = '' then
+  begin
+    Say(Tr(sAiNeedReply));
+    Exit;
+  end;
   if Assigned(FOnInsert) then FOnInsert(cleaned);
   Say(Tr(sAiInserted));
 end;
@@ -554,7 +596,7 @@ begin
     end;
 
     built := SpxBuildRepairPrompt(FDocText, FLocale, diags, msgs, CollectVars);
-    Clipboard.AsText := built.SystemPrompt + LineEnding + LineEnding + built.UserPrompt;
+    Clipboard.AsText := ForClipboard(built.SystemPrompt + LF + LF + built.UserPrompt);
     Say(Tr(sAiRepairCopied));
   finally
     diags.Free;
