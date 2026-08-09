@@ -96,3 +96,9 @@ assets/store/
 .agents/
 AGENTS.md
 CLAUDE.md
+
+# Store listing drafts, per language. Deliberately NOT tracked: this is marketing copy under
+# review, not a product artefact, and it changes on a different clock from the code. What IS
+# tracked is the English source it must agree with (docs/store-listing.md) and the script that
+# compares them (scripts/check-listing-drafts.py).
+marketing/

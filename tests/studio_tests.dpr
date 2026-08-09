@@ -2849,6 +2849,90 @@ begin
   end;
 end;
 
+(* ▁▁▁ THE STOREFRONT MUST ADVERTISE EVERY LANGUAGE THE WINDOW SPEAKS ▁▁▁
+
+   `<Resources>` in the package manifest is what the Store reads for "Supported languages". It
+   said `en-us` and nothing else until 2026-08-09 -- measured inside the artefact that was being
+   submitted -- while the interface had spoken fourteen languages since before R0 and the help
+   had answered in all fourteen since 2026-08-07. The live listing therefore advertised
+   ["English (United States)"].
+
+   That is not a missing feature. It is a false claim about the product on its own storefront,
+   the same class as the `LegalCopyright="MIT"` that shipped in 0.1.0.0 and the Apache-2.0
+   feature bullet still live today, and it costs a reader searching in their own language an
+   application that would have answered them in it.
+
+   Nothing caught it because the manifest is the THIRD place this fact lives -- the string
+   tables and the help folders were already held to each other -- and the only one outside a
+   gate. So: the expected set is ENUMERATED from `TSpxLang` rather than transcribed here, which
+   is the lesson `ENGINE_CODES` and the icon sizes each cost once.
+
+   Compared as PRIMARY SUBTAGS, lower-cased: `en-us` keeps its region because that is what the
+   package was certified with, and a later `pt-br` would still count as `pt`. The check answers
+   "is every language the window speaks declared, and nothing else" -- not "is the region tag
+   spelled the way I expected". *)
+function PrimarySubtag(const S: string): string;
+var at: Integer;
+begin
+  Result := LowerCase(Trim(S));
+  at := Pos('-', Result);
+  if at > 0 then Result := Copy(Result, 1, at - 1);
+end;
+
+procedure CheckManifestLanguages;
+const MANIFEST = 'packaging/AppxManifest.xml.in';
+var
+  body, declared, wanted: TStringList;
+  s_, one: string;
+  i, at, stop: Integer;
+  lang: TSpxLang;
+begin
+  if not FileExists(MANIFEST) then
+  begin
+    CheckTrue('manifest/is where the suite expects it', False);
+    Exit;
+  end;
+  declared := TStringList.Create;
+  wanted := TStringList.Create;
+  body := TStringList.Create;
+  try
+    declared.Sorted := True;
+    declared.Duplicates := dupError;   { the same language twice is a manifest error }
+    wanted.Sorted := True;
+    wanted.Duplicates := dupIgnore;
+
+    body.LoadFromFile(MANIFEST);
+    s_ := body.Text;
+    i := 1;
+    while True do
+    begin
+      at := PosEx('<Resource ', s_, i);
+      if at = 0 then Break;
+      stop := PosEx('/>', s_, at);
+      if stop = 0 then Break;
+      one := Copy(s_, at, stop - at);
+      i := stop + 2;
+      at := Pos('Language="', one);
+      if at = 0 then Continue;
+      one := Copy(one, at + Length('Language="'), MaxInt);
+      at := Pos('"', one);
+      if at = 0 then Continue;
+      declared.Add(PrimarySubtag(Copy(one, 1, at - 1)));
+    end;
+
+    for lang := Low(TSpxLang) to High(TSpxLang) do
+      wanted.Add(PrimarySubtag(SpxLangCode(lang)));
+
+    CheckTrue('manifest/declares at least one language', declared.Count > 0);
+    Check('manifest/declares every language the window speaks',
+          declared.CommaText, wanted.CommaText);
+  finally
+    body.Free;
+    wanted.Free;
+    declared.Free;
+  end;
+end;
+
 procedure CheckIconFrames;
 const ICO = 'assets/brand/spintax.ico';
 var
@@ -3301,6 +3385,7 @@ begin
     on startup, from an icon that had been verified through Windows and never launched. The
     generator refuses to write one now; this refuses to ship one. }
   CheckIconFrames;
+  CheckManifestLanguages;
 
   { A size nobody has a strip for still gets one rather than nil. }
   p := SpxIconStrip(999, len);

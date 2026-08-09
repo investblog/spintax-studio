@@ -44,8 +44,34 @@
                         MaxVersionTested="10.0.22621.0" />
   </Dependencies>
 
+  <!-- EVERY LANGUAGE THE WINDOW SPEAKS, because this is what the storefront advertises.
+
+       It said `en-us` and nothing else until 2026-08-09, while the interface had spoken
+       fourteen languages since before R0 and the help had answered in all fourteen since
+       2026-08-07. `SupportedLanguages` on the live listing therefore read
+       ["English (United States)"] -- a false claim about the product on its own storefront,
+       the same class as the `LegalCopyright="MIT"` that shipped in 0.1.0.0, and it costs a
+       reader searching in their own language an application that would have answered them.
+
+       Nothing compared this list to `gui/lang/`; the suite now does, so a fifteenth language
+       cannot be added to the window and forgotten here. `en-us` keeps its region because that
+       is the declaration the package was certified with; the check compares primary subtags,
+       so `pt` and `pt-br` would count as the same language either way. -->
   <Resources>
     <Resource Language="en-us" />
+    <Resource Language="ru" />
+    <Resource Language="uk" />
+    <Resource Language="be" />
+    <Resource Language="sr" />
+    <Resource Language="hr" />
+    <Resource Language="bs" />
+    <Resource Language="de" />
+    <Resource Language="fr" />
+    <Resource Language="es" />
+    <Resource Language="it" />
+    <Resource Language="pt" />
+    <Resource Language="nl" />
+    <Resource Language="tr" />
   </Resources>
 
   <Applications>

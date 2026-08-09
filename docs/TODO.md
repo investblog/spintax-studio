@@ -1816,13 +1816,14 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
       The work, in order:
 
-      1. `packaging/AppxManifest.xml.in` — one `<Resource Language="…" />` per shipped
-         language, generated from the same list the flag strip and `SpxTexts*.pas` come from
-         rather than typed out. A hand-written list of another component's constants is
-         enforced nowhere, which this project has paid for twice (`ENGINE_CODES`, the icon
-         sizes).
-      2. **A gate between them**, or item 1 rots the day a fifteenth language lands: the suite
-         must read the generated manifest and assert its language set equals `TSpxLang`.
+      1. ~~`packaging/AppxManifest.xml.in` — one `<Resource Language="…" />` per shipped
+         language.~~ **Done 2026-08-09:** fourteen entries, `en-us` keeping its region and the
+         other thirteen as bare subtags, with the reason in a comment above them.
+      2. ~~**A gate between them**, or item 1 rots the day a fifteenth language lands.~~
+         **Done 2026-08-09:** `CheckManifestLanguages` in the suite reads
+         `packaging/AppxManifest.xml.in`, folds each tag to its primary subtag and compares the
+         set with `SpxLangCode` over `TSpxLang`. Proved in both directions — removing `tr` from
+         the manifest names it as missing, adding `ja` names it as extra.
       3. Decide whether a `resources.pri` is needed at all. The strings are compiled into the
          executable, not into MRT resources, so the declaration may be enough on its own —
          **measure it, do not assume**: build the package, install it, and read
@@ -1849,6 +1850,33 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
 
       **Not for `v0.1.1.0`** — that submission is in flight. The manifest fix above is a package
       change and needs its own version; the listings are Partner Center edits and can follow.
+
+      **Drafts exist as of 2026-08-09, in `marketing/store/` (gitignored).** Thirteen files, one
+      per non-English language, translated from `docs/store-listing.md` with no claim altered,
+      each carrying a *Reviewer's notes* section naming what the translator was unsure about.
+      They are drafts for a human who speaks the language, not copy to paste — that is the whole
+      point of keeping them out of the repository. `scripts/check-listing-drafts.py` (tracked)
+      holds them to the source: it reads the language list from the manifest, so it inherits the
+      gate above rather than adding a fifteenth list.
+
+      Three things the drafts turned up that no amount of reading would have:
+
+      * **Partner Center accepts twenty features, and the source had twenty-one.** Documented
+        limit, quoted in `docs/store-listing.md`. The GSA bullet took the list over on
+        2026-08-06 and nothing counted, because the count had never been near twenty. The two
+        offline bullets — one about accounts and telemetry, one about runtimes, both ending
+        "runtime required" — are now one line, which drops no claim. The checker refuses a
+        twenty-first, and refuses any feature over 200 characters **in the target language**.
+      * **Terminology has to be taken from `docs/help/<lang>/`, not chosen.** Two of the first
+        drafts used a different word for *engine* than the shipped help does (Croatian *pogon*
+        against 64 uses of *motor*; German *Engine* against 60 uses of *Maschine*), which would
+        have read as a different product to the reader who clicks through.
+      * **A reviewer's note is a claim like any other.** One said Turkish lines are the longest
+        after German; measured, Turkish is among the shortest. Another described the seed
+        caption as Latin when it is Cyrillic `сид`.
+
+      Still open, and unchanged by the above: which markets get a listing at all, and the
+      screenshots — a localised listing with English screenshots is worse than an English one.
 
 ## Raised by review, not yet built
 

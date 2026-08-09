@@ -45,9 +45,9 @@ Both are held to `docs/privacy.md` and to the code by the suite: `offline/exactl
 counts the `OpenURL` calls, and `privacy/…` asserts all three copies name both marks and the
 same contact.
 
-## 2. Feature bullet 20 — the licence
+## 2. Feature bullets — the licence, and a cap that would have stopped the submission
 
-Live text:
+**The licence bullet.** Live text:
 
 > Open-source Apache-2.0 Studio built around the SPINTAX engine family
 
@@ -59,8 +59,25 @@ R0 was submitted while the repository still said Apache-2.0. The project has bee
 GPL-3.0-or-later since 2026-08-04 (ADR 0010), and `LICENSE`, `NOTICE.md`, the About box and the
 executable's version resource all agree — only the storefront still carries the old name.
 
-Also note the live `Features` array has 20 bullets and the draft in
-[`../store-listing.md`](../store-listing.md) now has 21: the GSA import is new in this version.
+**And the list was one over the limit.** Partner Center accepts
+[up to 20 features](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/add-and-edit-store-listing-info),
+200 characters each. Adding the GSA import bullet on 2026-08-06 took
+[`../store-listing.md`](../store-listing.md) to 21, and the form is where that would have been
+discovered. Fixed on 2026-08-09 by merging the two offline bullets, which said the same thing in
+two lines:
+
+> ~~Offline by design: no account, cloud service, API key, telemetry or runtime required~~
+> ~~Windows x64 desktop app with no browser, Node.js, PHP or Python runtime required~~
+>
+> Offline by design: no account, cloud service, API key or telemetry, and no browser, Node.js,
+> PHP or Python runtime
+
+No claim was dropped. `scripts/check-listing-drafts.py` now counts, and counts the per-feature
+length in the target language too.
+
+**What to type in the form:** the live listing has 20 bullets and the corrected list has 20.
+Beyond the licence line, the changes are the merge above (two lines become one) and the new GSA
+import line at the end.
 
 ## 3. Additional license terms — LEFT BLANK, by the owner's decision
 

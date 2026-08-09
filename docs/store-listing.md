@@ -71,11 +71,19 @@ the language and explore the engines at spintax.net.
 
 ## Product features
 
-Partner Center displays these as bullets. Bullet 21 arrived with the GSA import on 2026-08-06
-and is **not on the live page yet** — it goes up with the same Partner Center visit as the
-licence corrections below. Enter each line as a separate feature; do not include
-the line numbers or bullet characters in the Store form. Each feature stays below Microsoft's
-200-character limit.
+Partner Center displays these as bullets. The GSA import bullet arrived on 2026-08-06 and is
+**not on the live page yet** — it goes up with the same Partner Center visit as the licence
+corrections below. Enter each line as a separate feature; do not include the line numbers or
+bullet characters in the Store form.
+
+**Microsoft allows twenty features, not more, and 200 characters each** — documented on
+[Add and edit Store listing info](https://learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/msix/add-and-edit-store-listing-info):
+*"no more than 200 characters per feature. You may include up to 20 features."* Adding the GSA
+bullet took this list to twenty-one, which the submission form would have refused; nothing here
+counted them, because the count had never been near the limit before. The two offline bullets
+were merged into one — *no account, cloud, API key or telemetry* and *no browser, Node.js, PHP
+or Python runtime* were separate lines that both ended in "runtime required", so the merge drops
+no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-first.
 
 1. Native Windows spintax editor for writing and maintaining reusable text templates
 2. Two-pane live preview: edit the template on the left and inspect the rendered result on the right
@@ -93,11 +101,10 @@ the line numbers or bullet characters in the Store form. Each feature stays belo
 14. XLSX spreadsheet export with XML-safe text and UTF-8 content
 15. Light and dark themes for a comfortable editing workspace
 16. Multilingual interface with 14 available UI languages
-17. Offline by design: no account, cloud service, API key, telemetry or runtime required
-18. Windows x64 desktop app with no browser, Node.js, PHP or Python runtime required
-19. Local-first workflow for SEO content, localization workflows and reusable product copy
-20. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
-21. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
+17. Offline by design: no account, cloud service, API key or telemetry, and no browser, Node.js, PHP or Python runtime
+18. Local-first workflow for SEO content, localization workflows and reusable product copy
+19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
+20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
 ## Captured screenshots
 
