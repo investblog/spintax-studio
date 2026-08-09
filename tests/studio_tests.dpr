@@ -4925,16 +4925,37 @@ end;
 procedure TestOfflineClaim;
 const
   { Unit names that mean a socket is being opened. Whole words, matched inside a uses clause
-    only, so a comment mentioning one of them is not a failure. }
-  NET_UNITS: array[0..9] of string = (
+    only, so a comment mentioning one of them is not a failure.
+
+    `winhttp` AND `wininet` WERE MISSING UNTIL 2026-08-09, and that is the interesting part:
+    this list was written to make the offline claim checkable, and it did not know the two
+    units a Windows application actually reaches for. Both ship in `winunits-base` and are
+    built for this target -- so the transport ADR 0012 chose would have gone in under a green
+    build, past the one check whose whole job is to notice. Found while opening that slice, by
+    reading the list against what the toolchain has rather than trusting that it was complete.
+
+    The lesson is the list's shape, not its contents: an enumeration of forbidden things is
+    only as good as the day somebody last compared it to what exists. }
+  NET_UNITS: array[0..11] of string = (
     'fphttpclient', 'httpsend', 'ftpsend', 'smtpsend', 'ssockets', 'sockets',
-    'winsock', 'winsock2', 'opensslsockets', 'netdb');
+    'winsock', 'winsock2', 'opensslsockets', 'netdb', 'winhttp', 'wininet');
+
+  (* THE FILES ALLOWED TO OPEN ONE, and today there are none.
+
+     Empty is a decision rather than an oversight: every published copy of the privacy policy
+     says this application makes no network request of any kind, so the honest state of this
+     array is the state of that sentence. When ADR 0012's transport lands, the file that
+     carries it goes here IN THE SAME COMMIT as the rewritten policy -- and any SECOND file
+     that reaches for a socket still fails, which is what an exception list buys over deleting
+     the check. *)
+  NET_ALLOWED: array[0..0] of string = ('');
 var
   dirs: array[0..2] of string;
   d, i: Integer;
   rec: TSearchRec;
   text_, low_, clause, name_: string;
   at, stop, opens: Integer;
+  allowed: Boolean;
 
   { Every uses clause in the file, joined -- a unit may have one in the interface and one in
     the implementation. }
@@ -5006,7 +5027,15 @@ begin
         name_ := '';
         for i := Low(NET_UNITS) to High(NET_UNITS) do
           if HasWord(clause, NET_UNITS[i]) then name_ := NET_UNITS[i];
-        Check('offline/' + rec.Name + ' opens no socket', name_, '');
+        allowed := False;
+        for i := Low(NET_ALLOWED) to High(NET_ALLOWED) do
+          if (NET_ALLOWED[i] <> '') and SameText(NET_ALLOWED[i], rec.Name) then allowed := True;
+        if allowed then
+          { Named, and therefore answerable for: the policy has to describe what it does. }
+          Check('offline/' + rec.Name + ' is the one file allowed a socket [' + name_ + ']',
+                BoolToStr(name_ <> '', True), 'True')
+        else
+          Check('offline/' + rec.Name + ' opens no socket', name_, '');
         { And the one outbound call, counted across the whole product. }
         at := 1;
         repeat
