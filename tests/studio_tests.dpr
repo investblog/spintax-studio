@@ -3423,6 +3423,23 @@ begin
     SpxSavePrefsTo(path, p);
     Check('settings/collapsed-is-a-real-value', IntToStr(SpxLoadPrefsFrom(path).Panel), '-1');
 
+    (* AND THE LAST PANEL SURVIVES, which is the half that was missing.
+
+       THE CLAMP ITSELF WAS ALREADY GATED, further down, by a check that hand-wrote the old
+       maximum as `'2'`. So when the window gained a fourth panel, that check did not warn that
+       the clamp was now too low -- it stayed green while a stored `3` came back as `2`, and
+       then went RED as soon as the clamp was raised, blaming the fix. A test that hard-codes
+       a number tells you when the number CHANGES; it cannot tell you the number is wrong.
+
+       What was missing is this direction: the highest real panel must round-trip. Both checks
+       now read the maximum from the same constant the parser clamps to, so raising the panel
+       count in one place cannot leave the other behind. Found by launching the application and
+       looking at it, which no check here would have prompted. *)
+    p.Panel := SPX_PANEL_MAX;
+    SpxSavePrefsTo(path, p);
+    Check('settings/the-last-panel-survives',
+          IntToStr(SpxLoadPrefsFrom(path).Panel), IntToStr(SPX_PANEL_MAX));
+
     { NOISE. None of these may raise, and none may change a setting to something nobody
       chose -- an unreadable value means the default for that key and nothing else. }
     Put('');
@@ -3453,7 +3470,7 @@ begin
       SpxLoadPrefsFrom(path).FontFamily, 'Menlo');
     Put('panel=7');
     Check('settings/a-panel-that-does-not-exist-is-clamped',
-      IntToStr(SpxLoadPrefsFrom(path).Panel), '2');
+      IntToStr(SpxLoadPrefsFrom(path).Panel), IntToStr(SPX_PANEL_MAX));
     { The panel's width has the same promise: a hand-edited number cannot make it swallow the
       editor or shrink to a sliver. }
     Put('slide.width=5000');

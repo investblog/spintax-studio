@@ -219,7 +219,23 @@ const
 
     { the possible-variant count: both carry %s, which a budgeted string may not do at all,
       and both are drawn into a label the strip already sizes }
-    0, 0
+    0, 0,
+
+    { THE AI PANEL. Every caption here is either measured before it is placed (the labels over
+      the three columns, and the three field names in the top strip), drawn into a button that
+      is sized to its own text, or written into a status line that spans the panel. None sits
+      in a slot fixed at a number, which is the only thing a budget protects against -- so
+      giving these one would be a number that fails a translation for no reason on screen.
+      The three columns of the allow-list grid ARE sized in code, but the grid scrolls and its
+      columns are stretched to what is in them. }
+    0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0,
+    0, 0,
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

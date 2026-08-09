@@ -103,7 +103,42 @@ const
       '…i još %d.',
 
       'Mogućih varijanti: %s',
-      'Mogućih varijanti: najmanje %s'
+      'Mogućih varijanti: najmanje %s',
+
+      (* the AI panel (ADR 0011) *)
+      'AI nacrt',
+      'Upit',
+      'Varijable koje model smije koristiti',
+      'Odgovor modela',
+      'Kanal',
+      'Varijativnost',
+      'Jezik',
+      'Kopiraj upit',
+      'Kopiraj upit za popravak',
+      'Umetni u dokument',
+      'Padež',
+      'Napomena',
+      'Upit je kopiran. Odnesite ga svom modelu i vratite odgovor.',
+      'Upit za popravak je kopiran. Pokazuje na točna mjesta.',
+      'Nacrt je umetnut. Presuda je u ploči dijagnostike.',
+      'Najprije napišite upit.',
+      'Najprije zalijepite odgovor modela.',
+      'Nema pogrešaka za popravak.',
+      'e-pošta',
+      'SMS',
+      'push',
+      'stranica',
+      'općenito',
+      'oprezna',
+      'uravnotežena',
+      'smjela',
+      '—',
+      'nominativ',
+      'genitiv',
+      'dativ',
+      'akuzativ',
+      'instrumental',
+      'lokativ'
   );
 
 implementation

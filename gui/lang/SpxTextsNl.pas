@@ -106,7 +106,42 @@ const
       '…en nog %d.',
 
       'Mogelijke varianten: %s',
-      'Mogelijke varianten: minstens %s'
+      'Mogelijke varianten: minstens %s',
+
+      (* the AI panel (ADR 0011) *)
+      'AI-concept',
+      'Briefing',
+      'Variabelen die het model mag gebruiken',
+      'Antwoord van het model',
+      'Kanaal',
+      'Variatie',
+      'Taal',
+      'Prompt kopiëren',
+      'Herstelprompt kopiëren',
+      'In het document invoegen',
+      'Naamval',
+      'Notitie',
+      'Prompt gekopieerd. Breng hem naar uw model en het antwoord terug.',
+      'Herstelprompt gekopieerd. Hij wijst de precieze plekken aan.',
+      'Concept ingevoegd. Het oordeel staat in het diagnosepaneel.',
+      'Schrijf eerst een briefing.',
+      'Plak eerst het antwoord van het model.',
+      'Geen fouten om te herstellen.',
+      'e-mail',
+      'sms',
+      'push',
+      'landingspagina',
+      'algemeen',
+      'behoudend',
+      'evenwichtig',
+      'gedurfd',
+      '—',
+      'nominatief',
+      'genitief',
+      'datief',
+      'accusatief',
+      'instrumentalis',
+      'prepositief'
   );
 
 implementation

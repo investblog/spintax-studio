@@ -107,7 +107,42 @@ const
       '…and %d more.',
 
       'Possible variants: %s',
-      'Possible variants: at least %s'
+      'Possible variants: at least %s',
+
+      (* the AI panel (ADR 0011) *)
+      'AI draft',
+      'Brief',
+      'Variables the model may use',
+      'The model''s answer',
+      'Channel',
+      'Variation',
+      'Language',
+      'Copy prompt',
+      'Copy repair prompt',
+      'Insert into document',
+      'Case',
+      'Note',
+      'Prompt copied. Take it to your model and bring the answer back.',
+      'Repair prompt copied. It points at the exact spans.',
+      'Draft inserted. The diagnostics panel has the verdict.',
+      'Write a brief first.',
+      'Paste the model''s answer first.',
+      'No errors to repair.',
+      'email',
+      'SMS',
+      'push',
+      'landing',
+      'generic',
+      'conservative',
+      'balanced',
+      'aggressive',
+      '—',
+      'nominative',
+      'genitive',
+      'dative',
+      'accusative',
+      'instrumental',
+      'prepositional'
   );
 
 implementation

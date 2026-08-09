@@ -32,6 +32,24 @@ interface
 uses
   Classes, SysUtils, SpxEditorFont{$IFDEF WINDOWS}, Windirs{$ENDIF};
 
+const
+  (* THE HIGHEST PANEL INDEX THIS FILE WILL RESTORE, and it must be raised whenever the window
+     gains a panel.
+
+     It was a bare `2` inside the parser, written when there were three panels, and adding a
+     fourth broke restoring it in the quietest possible way: a stored `3` was clamped to `2`,
+     so the reader who left the AI panel open came back to the variants panel with nothing said
+     and nothing logged. Found by launching the application and looking at it.
+
+     THE SUITE HAD A CHECK ON THIS ALREADY, and it did not help -- which is the part worth
+     remembering. It fed the parser `panel=7` and asserted the answer was `'2'`, a number typed
+     into the test. That kind of check reports when the clamp CHANGES; it cannot report that
+     the clamp is too low, so it sat green through the defect and then went red at the fix,
+     blaming it. Both checks now read this constant instead of a literal, and a second one
+     round-trips the highest real panel -- so the pair fails when the window gains a panel and
+     this does not. *)
+  SPX_PANEL_MAX = 3;
+
 type
   { The editor's colours. Only the editor and the source view: the preview shows the user's
     own HTML as it will be published, so darkening it would misreport the work. }
@@ -44,7 +62,7 @@ type
     Lang: string;
     RailRight: Boolean;
     PreviewSource: Boolean;
-    { 0..2 for the three panels, or -1 for a collapsed bottom block. }
+    { 0..SPX_PANEL_MAX for the panels, or -1 for a collapsed bottom block. }
     Panel: Integer;
     { POINTS, and the editor's own -- not an offset from the desktop's caption font. The
       editor has its own readability policy now (SpxEditorFont says why), so a size here is
@@ -200,7 +218,7 @@ begin
         Result.GsaImport := ReadBool(val, Result.GsaImport)
       else if key = 'panel' then
       begin
-        if TryStrToInt(val, n) then Result.Panel := Clamp(n, -1, 2);
+        if TryStrToInt(val, n) then Result.Panel := Clamp(n, -1, SPX_PANEL_MAX);
       end
       else if key = 'font.size' then
       begin

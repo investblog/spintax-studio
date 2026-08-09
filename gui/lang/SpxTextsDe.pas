@@ -111,7 +111,42 @@ const
       '…und %d weitere.',
 
       'Mögliche Varianten: %s',
-      'Mögliche Varianten: mindestens %s'
+      'Mögliche Varianten: mindestens %s',
+
+      (* the AI panel (ADR 0011) *)
+      'KI-Entwurf',
+      'Briefing',
+      'Variablen, die das Modell nutzen darf',
+      'Antwort des Modells',
+      'Kanal',
+      'Variation',
+      'Sprache',
+      'Prompt kopieren',
+      'Reparatur-Prompt kopieren',
+      'In das Dokument einfügen',
+      'Fall',
+      'Notiz',
+      'Prompt kopiert. Bringen Sie ihn zu Ihrem Modell und die Antwort zurück.',
+      'Reparatur-Prompt kopiert. Er zeigt auf die genauen Stellen.',
+      'Entwurf eingefügt. Das Urteil steht im Diagnosebereich.',
+      'Schreiben Sie zuerst ein Briefing.',
+      'Fügen Sie zuerst die Antwort des Modells ein.',
+      'Keine Fehler zu reparieren.',
+      'E-Mail',
+      'SMS',
+      'Push',
+      'Landingpage',
+      'allgemein',
+      'zurückhaltend',
+      'ausgewogen',
+      'offensiv',
+      '—',
+      'Nominativ',
+      'Genitiv',
+      'Dativ',
+      'Akkusativ',
+      'Instrumental',
+      'Präpositiv'
   );
 
 implementation

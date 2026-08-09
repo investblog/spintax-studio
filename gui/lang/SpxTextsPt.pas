@@ -102,7 +102,42 @@ const
       '…e mais %d.',
 
       'Variantes possíveis: %s',
-      'Variantes possíveis: pelo menos %s'
+      'Variantes possíveis: pelo menos %s',
+
+      (* the AI panel (ADR 0011) *)
+      'Rascunho de IA',
+      'Resumo',
+      'Variáveis que o modelo pode usar',
+      'Resposta do modelo',
+      'Canal',
+      'Variação',
+      'Idioma',
+      'Copiar o pedido',
+      'Copiar o pedido de correção',
+      'Inserir no documento',
+      'Caso',
+      'Nota',
+      'Pedido copiado. Leve-o ao seu modelo e traga a resposta.',
+      'Pedido de correção copiado. Aponta os pontos exatos.',
+      'Rascunho inserido. O veredicto está no painel de diagnósticos.',
+      'Escreva primeiro um resumo.',
+      'Cole primeiro a resposta do modelo.',
+      'Não há erros para corrigir.',
+      'e-mail',
+      'SMS',
+      'push',
+      'página de destino',
+      'genérico',
+      'prudente',
+      'equilibrada',
+      'ousada',
+      '—',
+      'nominativo',
+      'genitivo',
+      'dativo',
+      'acusativo',
+      'instrumental',
+      'prepositivo'
   );
 
 implementation

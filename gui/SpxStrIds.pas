@@ -143,7 +143,31 @@ type
       qualifier lands in a different place in a different language, and "at least" is not a
       word every one of these fourteen spells with one. The number itself is not translated —
       it is grouped in code, the way GTW writes it. ── }
-    sPossible, sPossibleAtLeast
+    sPossible, sPossibleAtLeast,
+
+    (* ── THE AI PANEL (ADR 0011), and every word of it is about a loop that has no network in
+       it. The panel builds a prompt, the reader carries it to whatever model they use, and
+       brings the answer back; the verdict on that answer comes from the engine that is already
+       in this process. So there is no "connect", no "key", no "sending" and no "waiting" here,
+       and there is not meant to be.
+
+       THE CASE NAMES ARE NOT DECORATION. A variable is substituted verbatim -- the engine
+       never inflects it -- so in an inflected language the sentence has to be built around the
+       form the value already has, and the model can only choose correctly if it is TOLD which
+       form each name holds. Upstream measured a real template set where `%CasinoGamesAcc%`
+       carried instrumental forms: the naming convention lied and the declaration could not.
+       That is why the case is a column the author fills in and never a guess from the name.
+
+       Seven cases, and the first is "not declared" rather than a case: English needs none of
+       them, and a blank in that column has to mean "no claim" instead of "nominative". ── *)
+    sTabAi, sAiBrief, sAiAllowed, sAiReply, sAiChannel, sAiLevel, sAiLocale,
+    sAiCopyPrompt, sAiCopyRepair, sAiInsert,
+    sAiColCase, sAiColNote,
+    sAiCopied, sAiRepairCopied, sAiInserted,
+    sAiNeedBrief, sAiNeedReply, sAiNoErrors,
+    sAiChEmail, sAiChSms, sAiChPush, sAiChLanding, sAiChGeneric,
+    sAiLvConservative, sAiLvBalanced, sAiLvAggressive,
+    sAiCaseNone, sAiCaseNom, sAiCaseGen, sAiCaseDat, sAiCaseAcc, sAiCaseIns, sAiCasePre
   );
 
 implementation

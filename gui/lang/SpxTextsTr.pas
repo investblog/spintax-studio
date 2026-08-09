@@ -101,7 +101,42 @@ const
       '…ve %d tane daha.',
 
       'Olası varyantlar: %s',
-      'Olası varyantlar: en az %s'
+      'Olası varyantlar: en az %s',
+
+      (* the AI panel (ADR 0011) *)
+      'Yapay zekâ taslağı',
+      'Özet',
+      'Modelin kullanabileceği değişkenler',
+      'Modelin yanıtı',
+      'Kanal',
+      'Çeşitleme',
+      'Dil',
+      'İstemi kopyala',
+      'Düzeltme istemini kopyala',
+      'Belgeye ekle',
+      'Durum',
+      'Not',
+      'İstem kopyalandı. Modelinize götürüp yanıtı geri getirin.',
+      'Düzeltme istemi kopyalandı. Tam yerleri gösterir.',
+      'Taslak eklendi. Karar tanılama panelinde.',
+      'Önce bir özet yazın.',
+      'Önce modelin yanıtını yapıştırın.',
+      'Düzeltilecek hata yok.',
+      'e-posta',
+      'SMS',
+      'push',
+      'açılış sayfası',
+      'genel',
+      'temkinli',
+      'dengeli',
+      'cesur',
+      '—',
+      'yalın',
+      'tamlayan',
+      'yönelme',
+      'belirtme',
+      'araç',
+      'bulunma'
   );
 
 implementation

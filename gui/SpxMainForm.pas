@@ -28,8 +28,24 @@ uses
   SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
   SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented, SpxCompanyMark, SpxGsaImport,
   SpxSettings, SpxTheme, SpxEditorFont,
-  SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
+  SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxAiPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
   SpxStrIds, SpxStrings;
+
+const
+  (* THE RAIL'S TOOLS BY NAME, and the bottom block's pages by the same numbers -- the two are
+     one list on purpose: the lit tool IS the panel on screen.
+
+     They were bare numbers in eleven places until this slice inserted one in the middle, which
+     moves the group editor from 3 to 4. Eleven hand edits with nothing to catch a missed one
+     is the shape of defect this project has paid for before; a name costs nothing and the next
+     insertion is free. *)
+  RAIL_DIAG  = 0;
+  RAIL_VARS  = 1;
+  RAIL_SET   = 2;
+  RAIL_AI    = 3;
+  (* Not a panel: the group editor is a slide-out and lives in its own latch group. It is here
+     because it shares the rail's index space and nothing else does. *)
+  RAIL_GROUP = 4;
 
 type
   TSpxMainForm = class(TForm)
@@ -223,6 +239,7 @@ type
     FDiag: TListView;
     FVars: TSpxVarsPane;
     FSet: TSpxVariantsPane;
+    FAi: TSpxAiPane;
     FDiagSplit: TSplitter;
     FRows: TSpxPanelRows;
     FRowSig: string;
@@ -331,6 +348,7 @@ type
     procedure RailDiagClicked(Sender: TObject);
     procedure RailVarsClicked(Sender: TObject);
     procedure RailSetClicked(Sender: TObject);
+    procedure RailAiClicked(Sender: TObject);
     procedure LangPicked(Sender: TObject);
     procedure LangFollowClicked(Sender: TObject);
     procedure ApplyLangMode;
@@ -392,6 +410,9 @@ type
     procedure MenuDiagClicked(Sender: TObject);
     procedure MenuVarsClicked(Sender: TObject);
     procedure MenuSetClicked(Sender: TObject);
+    procedure MenuAiClicked(Sender: TObject);
+    { The AI panel's one request of this form: put a cleaned draft in the editor. }
+    procedure AiInsert(const AText: string);
     procedure GroupPaneClosed(Sender: TObject);
     procedure FontAutoClicked(Sender: TObject);
     procedure FontPicked(Sender: TObject);
@@ -565,7 +586,7 @@ end;
 
 procedure TSpxMainForm.BuildUi;
 var
-  sheetDiag, sheetVars, sheetSet: TTabSheet;
+  sheetDiag, sheetVars, sheetSet, sheetAi: TTabSheet;
   i: Integer;
 begin
   Width := 1100;
@@ -813,6 +834,8 @@ begin
   sheetVars.Caption := Tr(sTabVariables);
   sheetSet := FBottom.AddTabSheet;
   sheetSet.Caption := Tr(sTabVariants);
+  sheetAi := FBottom.AddTabSheet;
+  sheetAi.Caption := Tr(sTabAi);
 
   { What a squiggle cannot show: a finding inside an included file, and one the engine could
     not place at all. }
@@ -856,6 +879,15 @@ begin
   FSet.OnGenerate := @StartBatch;
   FSet.OnCancelBatch := @CancelBatch;
   FSet.OnShowVariant := @ShowVariant;
+
+  (* The AI loop. It asks this form for nothing but a place to put a draft: the prompt is built
+     from the panel's own fields plus the document's locale and variables, and the verdict comes
+     back through the ordinary render path, because that is the one already on the worker
+     (ADR 0011). *)
+  FAi := TSpxAiPane.Create(Self);
+  FAi.Parent := sheetAi;
+  FAi.Align := alClient;
+  FAi.OnInsert := @AiInsert;
   { The worker's own event is NOT hooked here: BuildUi runs before the engine exists, and
     the first version of this line dereferenced nil at startup -- an access violation before
     the window ever appeared. It is set in the constructor, right after the thread. }
@@ -1749,11 +1781,15 @@ begin
   FRail.AddTool(SPX_ICON_DIAG, Tr(sTabDiagnostics), @RailDiagClicked, 1);
   FRail.AddTool(SPX_ICON_VARS, Tr(sTabVariables), @RailVarsClicked, 1);
   FRail.AddTool(SPX_ICON_SET, Tr(sTabVariants), @RailSetClicked, 1);
+  { The AI panel is a panel like the other three -- one choice, one lit tool. Its icon has been
+    in the strip since 2026-07-29, put there deliberately ahead of the feature so that it would
+    not be chosen in a hurry when the feature landed. }
+  FRail.AddTool(SPX_ICON_AI, Tr(sTabAi), @RailAiClicked, 1);
   { The one tool that is not access but WORKSPACE: a group's variants are a list, one short
     line each, which is exactly what fits beside the editor. }
   FRail.AddTool(SPX_ICON_GROUP, Tr(sTabGroup), @RailGroupClicked, 2);
   { The window opens with the diagnostics showing, so the tool that says so is lit. }
-  FRail.SetDown(0, True);
+  FRail.SetDown(RAIL_DIAG, True);
   { THE BRAND, at the rail's foot. The hint is the domain and is not translated: a domain is
     the same word everywhere, and the mark beside it is the site's own. }
   FRail.SetBrand(SPX_SITE_HOST, @BrandClicked);
@@ -1840,7 +1876,7 @@ begin
       over an open pane is not just wrong-looking -- the next click on it flips Down to True,
       this handler sees the pane already open and closes it. So the user presses an unlit
       "group editor" and the group editor vanishes. Measured by review, pixel for pixel. }
-    FRail.SetDown(3, True);
+    FRail.SetDown(RAIL_GROUP, True);
   finally
     EnableAlign;
   end;
@@ -1933,17 +1969,22 @@ end;
 
 procedure TSpxMainForm.RailDiagClicked(Sender: TObject);
 begin
-  ShowPanel(0, FRail.IsDown(0));
+  ShowPanel(RAIL_DIAG, FRail.IsDown(RAIL_DIAG));
 end;
 
 procedure TSpxMainForm.RailVarsClicked(Sender: TObject);
 begin
-  ShowPanel(1, FRail.IsDown(1));
+  ShowPanel(RAIL_VARS, FRail.IsDown(RAIL_VARS));
 end;
 
 procedure TSpxMainForm.RailSetClicked(Sender: TObject);
 begin
-  ShowPanel(2, FRail.IsDown(2));
+  ShowPanel(RAIL_SET, FRail.IsDown(RAIL_SET));
+end;
+
+procedure TSpxMainForm.RailAiClicked(Sender: TObject);
+begin
+  ShowPanel(RAIL_AI, FRail.IsDown(RAIL_AI));
 end;
 
 { One handler for fourteen items: which language it was is the item's Tag, set when the menu
@@ -2183,15 +2224,19 @@ begin
   sideItem := Item(viewMenu, Tr(sTabDiagnostics), 0, [], @MenuDiagClicked);
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
-  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 0);
+  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_DIAG);
   sideItem := Item(viewMenu, Tr(sTabVariables), 0, [], @MenuVarsClicked);
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
-  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 1);
+  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_VARS);
   sideItem := Item(viewMenu, Tr(sTabVariants), 0, [], @MenuSetClicked);
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
-  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = 2);
+  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_SET);
+  sideItem := Item(viewMenu, Tr(sTabAi), 0, [], @MenuAiClicked);
+  sideItem.RadioItem := True;
+  sideItem.GroupIndex := 3;
+  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_AI);
 
   { The same action the splitter's double click performs, named and reachable without knowing
     the gesture exists. The icon rides ON the item rather than through the menu's image list:
@@ -3439,11 +3484,12 @@ begin
   FHelpClose.Hint := Tr(sClose);
   FHelpTool.Hint := Tr(sMenuHelp);
   BuildMenu;
-  if FBottom.PageCount >= 3 then
+  if FBottom.PageCount >= 4 then
   begin
     FBottom.Pages[0].Caption := Tr(sTabDiagnostics);
     FBottom.Pages[1].Caption := Tr(sTabVariables);
     FBottom.Pages[2].Caption := Tr(sTabVariants);
+    FBottom.Pages[3].Caption := Tr(sTabAi);
   end;
   if FDiag.Columns.Count >= 4 then
   begin
@@ -3454,16 +3500,18 @@ begin
   end;
   FVars.Retranslate;
   FSet.Retranslate;
+  FAi.Retranslate;
   FPreview.Retranslate;
   { A rail button says its name in a hint and wears a letter until icons arrive; both are
     translated text. }
   if FRail <> nil then
   begin
     { The faces are icons, so a language changes the tooltip and nothing else. }
-    FRail.SetTool(0, Tr(sTabDiagnostics));
-    FRail.SetTool(1, Tr(sTabVariables));
-    FRail.SetTool(2, Tr(sTabVariants));
-    FRail.SetTool(3, Tr(sTabGroup));
+    FRail.SetTool(RAIL_DIAG, Tr(sTabDiagnostics));
+    FRail.SetTool(RAIL_VARS, Tr(sTabVariables));
+    FRail.SetTool(RAIL_SET, Tr(sTabVariants));
+    FRail.SetTool(RAIL_AI, Tr(sTabAi));
+    FRail.SetTool(RAIL_GROUP, Tr(sTabGroup));
   end;
   FSlide.Retranslate;
   { And the help, which may have to change DOCUMENT and not merely captions -- where the reader
@@ -3876,8 +3924,8 @@ begin
   end
   else
   begin
-    FRail.SetDown(0, False);
-    ShowPanel(0, False);
+    FRail.SetDown(RAIL_DIAG, False);
+    ShowPanel(RAIL_DIAG, False);
   end;
   ApplyTheme;
   ApplyEditorFont;
@@ -4099,20 +4147,26 @@ end;
   panel it names would be a surprise; the rail's tool is where collapsing lives. }
 procedure TSpxMainForm.MenuDiagClicked(Sender: TObject);
 begin
-  FRail.SetDown(0, True);
-  ShowPanel(0, True);
+  FRail.SetDown(RAIL_DIAG, True);
+  ShowPanel(RAIL_DIAG, True);
 end;
 
 procedure TSpxMainForm.MenuVarsClicked(Sender: TObject);
 begin
-  FRail.SetDown(1, True);
-  ShowPanel(1, True);
+  FRail.SetDown(RAIL_VARS, True);
+  ShowPanel(RAIL_VARS, True);
 end;
 
 procedure TSpxMainForm.MenuSetClicked(Sender: TObject);
 begin
-  FRail.SetDown(2, True);
-  ShowPanel(2, True);
+  FRail.SetDown(RAIL_SET, True);
+  ShowPanel(RAIL_SET, True);
+end;
+
+procedure TSpxMainForm.MenuAiClicked(Sender: TObject);
+begin
+  FRail.SetDown(RAIL_AI, True);
+  ShowPanel(RAIL_AI, True);
 end;
 
 { The panel's own close button, and Escape from inside it. The rail's tool still toggles --
@@ -4128,7 +4182,7 @@ begin
   ClampPanes;
   { The rail's tool is a latch now, and it can be put out from here -- by the panel's X or by
     Escape -- as well as by clicking it. }
-  FRail.SetDown(3, False);
+  FRail.SetDown(RAIL_GROUP, False);
   { Back to the document: a panel that closes and leaves the focus nowhere means the next
     keystroke goes to whatever LCL picks. }
   { CanSetFocus, not CanFocus: the pair CanFocus/SetFocus is what LCL's own header warns
@@ -4244,7 +4298,7 @@ begin
   if FSlide.Visible then
   begin
     FSlide.Visible := False;
-    FRail.SetDown(3, False);
+    FRail.SetDown(RAIL_GROUP, False);
   end;
   { Declared first, for the reason OpenGroupPane gives at length: hiding the other face
     ripples into ClampSlide, and it must already know whose width to apply. }
@@ -4505,6 +4559,30 @@ begin
   RequestRender;
 end;
 
+(* THE AI PANEL'S ONE REQUEST OF THIS FORM: a draft, already cleaned of whatever the model
+   wrapped it in, put where the reader can see what the engine makes of it.
+
+   AT THE CARET, not over the document. A draft is a piece of copy and the reader may well
+   want it beside what they already have; replacing the buffer would destroy work on a button
+   whose caption says "insert". If they want it alone, an empty document is one Ctrl+N away and
+   that is their decision rather than this button's.
+
+   `RequestRender` is what closes the loop: the ordinary render path validates the draft on the
+   worker and fills the diagnostics panel, which is where the repair prompt then reads its
+   spans from. No engine call happens in the panel, and none happens here. *)
+procedure TSpxMainForm.AiInsert(const AText: string);
+begin
+  if (FEditor = nil) or (AText = '') then Exit;
+  FEditor.BeginUpdate;
+  try
+    FEditor.InsertTextAtCaret(AText);
+  finally
+    FEditor.EndUpdate;
+  end;
+  FlashJumpLine;
+  RequestRender;
+end;
+
 procedure TSpxMainForm.HelpPaneClosed(Sender: TObject);
 begin
   DisableAlign;
@@ -4677,6 +4755,15 @@ begin
             SpxHelpOffersInsert(HelpShowing, FHelpExample, Length(Res.Rows)));
   FVars.SetModel(Res.Vars);
   FVars.SetIncludes(Res.Includes, Res.HaveSet);
+  (* The AI panel is fed from the SAME answer, not from a second look at the document: the
+     allow-list it offers and the findings its repair prompt quotes then describe one state.
+     A help example is not the reader's document and must not overwrite either. *)
+  if not Res.HelpSet then
+  begin
+    FAi.SetVariables(Res.Vars);
+    FAi.SetDocument(FEditor.Text, Res.Rows);
+    FAi.SetLocale(CurrentLocale);
+  end;
   (* AND NOT WHEN THE ANSWER IS ABOUT THE HELP. With the help open this job's text is the
      example under the caret -- or an empty string before anything is clicked, which counts as
      one -- so the Variants panel read "Possible variants: 1" beside a Generate button that

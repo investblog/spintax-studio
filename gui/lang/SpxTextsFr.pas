@@ -111,7 +111,42 @@ const
       '…et %d de plus.',
 
       'Variantes possibles : %s',
-      'Variantes possibles : au moins %s'
+      'Variantes possibles : au moins %s',
+
+      (* the AI panel (ADR 0011) *)
+      'Brouillon IA',
+      'Brief',
+      'Variables que le modèle peut utiliser',
+      'Réponse du modèle',
+      'Canal',
+      'Variation',
+      'Langue',
+      'Copier l''invite',
+      'Copier l''invite de correction',
+      'Insérer dans le document',
+      'Cas',
+      'Note',
+      'Invite copiée. Portez-la à votre modèle et rapportez la réponse.',
+      'Invite de correction copiée. Elle pointe les endroits exacts.',
+      'Brouillon inséré. Le verdict est dans le panneau des diagnostics.',
+      'Écrivez d''abord un brief.',
+      'Collez d''abord la réponse du modèle.',
+      'Aucune erreur à corriger.',
+      'e-mail',
+      'SMS',
+      'push',
+      'page d''atterrissage',
+      'générique',
+      'prudente',
+      'équilibrée',
+      'audacieuse',
+      '—',
+      'nominatif',
+      'génitif',
+      'datif',
+      'accusatif',
+      'instrumental',
+      'prépositionnel'
   );
 
 implementation
