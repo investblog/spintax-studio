@@ -12,27 +12,21 @@
 *.lfm text eol=lf
 *.inc text eol=lf
 
-# Prompt fixtures. These are compared BYTE FOR BYTE against src/SpxPrompt.pas, and the builder
-# they were taken from joins every block with '\n'. The global rule above already gives LF, but
-# it is spelled out here because a normalisation applied to these files would not look like a
-# checkout setting -- it would look like a broken port, on a machine where the port is fine.
-tests/fixtures/prompt-v2/*.system.txt   text eol=lf
-tests/fixtures/prompt-v2/*.user.txt     text eol=lf
-tests/fixtures/prompt-v2/*.brief.txt    text eol=lf
-tests/fixtures/prompt-v2/*.template.txt text eol=lf
-tests/fixtures/prompt-v2/*.tsv          text eol=lf
-tests/fixtures/prompt-v2/*.json         text eol=lf
-tests/fixtures/prompt-v2/VERSION        text eol=lf
-
-# And the clean-model-output cases get NO normalisation at all, because one of them is a CRLF
-# fence and that is the whole case. The rule above was written to protect these files and, on
-# its first commit, silently rewrote `clean-fence-crlf.in.txt` from CRLF to LF -- git said so in
-# one warning line, and the suite stayed green because the working tree still held the original.
-# A fresh clone would have got a case that tests nothing while claiming to test CRLF, which is
-# worse than a failure. These are machine-generated and machine-compared; read them through
+# Prompt fixtures: NO normalisation of any kind, for the whole directory.
+#
+# These files are compared BYTE FOR BYTE against src/SpxPrompt.pas, so whatever git changes on
+# the way in or out is a difference the port gets blamed for. This rule has now been written
+# twice, and the first version was too clever: it normalised most of the directory to LF and
+# exempted only `clean-*`, on the reasoning that those were the cases that might hold a CR. A
+# week's worth of that reasoning lasted one commit -- the next fixture to carry CRLF was
+# `repair-crlf`, a `.template.txt` and a `.user.txt`, and both were silently rewritten. Twice
+# in one session, the same way: one warning line in the middle of a large add, and a working
+# tree that still held the original so the suite stayed green.
+#
+# So: no exceptions, no per-extension reasoning, nothing to keep in step with what the corpus
+# happens to contain. These are machine-generated and machine-compared. Read them through
 # scripts/dump-prompt-fixtures.mjs, not through a diff.
-tests/fixtures/prompt-v2/clean-*.in.txt  -text
-tests/fixtures/prompt-v2/clean-*.out.txt -text
+tests/fixtures/prompt-v2/** -text
 
 # Binary assets, never diffed or line-normalized
 *.ico binary
