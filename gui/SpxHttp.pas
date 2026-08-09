@@ -115,8 +115,122 @@ function SpxHttpClassify(ACode: LongWord): TSpxHttpError;
 implementation
 
 {$IFDEF WINDOWS}
+(* Directly under `implementation`, where FPC requires it -- a uses clause after any
+   other declaration is a syntax error, which is how SpxSecrets first failed to build. *)
 uses
   Windows, winhttp;
+{$ENDIF}
+
+(* THE URL, IN PLAIN PASCAL AND ON EVERY PLATFORM.
+
+   This was `WinHttpCrackUrl` and therefore Windows-only, which broke two things at once. The
+   unit did not compile off Windows at all (fixed in a2a3e7a with a stub), and then the stub
+   answered `heUnsupported` for everything -- which took `SpxLlmIsLocal` down with it, because
+   deciding whether an endpoint is on this machine is done by looking at the HOST. CI said so
+   in two named failures: `llm/localhost is local`, `llm/127.0.0.1 is local`.
+
+   That is the argument for parsing here rather than stubbing. "Is this address on my own
+   computer" is a PRIVACY question -- the policy says a local model sends nothing off the
+   machine -- and it has nothing to do with which transport carries the request. Written once,
+   it is checked on all three CI legs instead of on one.
+
+   `SpxHttpSend` already took the pieces apart for `WinHttpConnect` and `WinHttpOpenRequest`,
+   so nothing downstream changes. Stricter than WinHttpCrackUrl in one place on purpose: a
+   port outside 1..65535 is refused rather than wrapped. *)
+function SpxHttpParseUrl(const AUrl: string; out AHost, APath: string;
+  out APort: Integer; out ASecure: Boolean): TSpxHttpError;
+var
+  s, scheme, authority, rest: string;
+  at, colon, cut, i: Integer;
+begin
+  AHost := ''; APath := ''; APort := 0; ASecure := False;
+  s := Trim(AUrl);
+  if s = '' then Exit(heBadUrl);
+
+  cut := Pos('://', s);
+  if cut < 2 then Exit(heBadUrl);
+  scheme := LowerCase(Copy(s, 1, cut - 1));
+  rest := Copy(s, cut + 3, MaxInt);
+
+  (* http is allowed on purpose: a local model answers on plain http at 127.0.0.1, and refusing
+     it would refuse the one configuration that never leaves the machine -- which is the
+     configuration the privacy policy goes out of its way to describe. *)
+  if scheme = 'https' then ASecure := True
+  else if scheme <> 'http' then Exit(heBadUrl);
+
+  (* The authority ends at the first delimiter of what follows it, and all three must be
+     looked for: `https://host?q` has no path and `https://host#f` none either. *)
+  cut := Length(rest) + 1;
+  for i := 1 to Length(rest) do
+    if (rest[i] = '/') or (rest[i] = '?') or (rest[i] = '#') then
+    begin
+      cut := i;
+      Break;
+    end;
+  authority := Copy(rest, 1, cut - 1);
+  APath := Copy(rest, cut, MaxInt);
+  if APath = '' then APath := '/';
+
+  { Credentials in the authority are the far end's business, not ours -- but they must not be
+    mistaken for the host. }
+  at := 0;
+  for i := 1 to Length(authority) do
+    if authority[i] = '@' then at := i;
+  if at > 0 then authority := Copy(authority, at + 1, MaxInt);
+
+  if (authority <> '') and (authority[1] = '[') then
+  begin
+    { An IPv6 literal: the colons inside the brackets are not a port separator. }
+    cut := Pos(']', authority);
+    if cut = 0 then Exit(heBadUrl);
+    AHost := Copy(authority, 2, cut - 2);
+    rest := Copy(authority, cut + 1, MaxInt);
+    if (rest <> '') and (rest[1] <> ':') then Exit(heBadUrl);
+    if rest <> '' then rest := Copy(rest, 2, MaxInt);
+  end
+  else
+  begin
+    colon := 0;
+    for i := 1 to Length(authority) do
+      if authority[i] = ':' then colon := i;
+    if colon > 0 then
+    begin
+      AHost := Copy(authority, 1, colon - 1);
+      rest := Copy(authority, colon + 1, MaxInt);
+    end
+    else
+    begin
+      AHost := authority;
+      rest := '';
+    end;
+  end;
+
+  if AHost = '' then Exit(heBadUrl);
+  { A host is not a host if it carries a space: `not a url at all` cracks into nonsense
+    otherwise, and this is the check that refuses it. }
+  for i := 1 to Length(AHost) do
+    if AHost[i] <= ' ' then Exit(heBadUrl);
+
+  if rest = '' then
+  begin
+    if ASecure then APort := 443 else APort := 80;
+  end
+  else
+  begin
+    APort := 0;
+    for i := 1 to Length(rest) do
+    begin
+      if (rest[i] < '0') or (rest[i] > '9') then Exit(heBadUrl);
+      APort := APort * 10 + (Ord(rest[i]) - Ord('0'));
+      if APort > 65535 then Exit(heBadUrl);
+    end;
+    if APort = 0 then Exit(heBadUrl);
+  end;
+
+  Result := heNone;
+end;
+
+{$IFDEF WINDOWS}
 
 (* Not declared by winunits-base, and the one thing this unit needs that it lacks. Without it
    WinHTTP's defaults apply, and its default resolve timeout is infinite. *)
@@ -171,45 +285,6 @@ end;
 function SpxHttpAvailable: Boolean;
 begin
   Result := True;
-end;
-
-function SpxHttpParseUrl(const AUrl: string; out AHost, APath: string;
-  out APort: Integer; out ASecure: Boolean): TSpxHttpError;
-var
-  comps: URL_COMPONENTS;
-  wurl, host, path, extra: WideString;
-begin
-  AHost := ''; APath := ''; APort := 0; ASecure := False;
-  wurl := UTF8Decode(Trim(AUrl));
-  if wurl = '' then Exit(heBadUrl);
-  FillChar(comps, SizeOf(comps), 0);
-  comps.dwStructSize := SizeOf(comps);
-  comps.dwSchemeLength := DWORD(-1);
-  comps.dwHostNameLength := DWORD(-1);
-  comps.dwUrlPathLength := DWORD(-1);
-  comps.dwExtraInfoLength := DWORD(-1);
-  if not WinHttpCrackUrl(PWideChar(wurl), Length(wurl), 0, @comps) then Exit(heBadUrl);
-
-  (* http is allowed on purpose: a local model answers on plain http at 127.0.0.1, and refusing
-     it would refuse the one configuration that never leaves the machine -- which is the
-     configuration the privacy policy goes out of its way to describe. *)
-  ASecure := comps.nScheme = INTERNET_SCHEME_HTTPS;
-  if (not ASecure) and (comps.nScheme <> INTERNET_SCHEME_HTTP) then Exit(heBadUrl);
-
-  SetString(host, comps.lpszHostName, comps.dwHostNameLength);
-  SetString(path, comps.lpszUrlPath, comps.dwUrlPathLength);
-  if comps.dwExtraInfoLength > 0 then
-  begin
-    SetString(extra, comps.lpszExtraInfo, comps.dwExtraInfoLength);
-    path := path + extra;
-  end;
-  if path = '' then path := '/';
-  if host = '' then Exit(heBadUrl);
-
-  AHost := UTF8Encode(host);
-  APath := UTF8Encode(path);
-  APort := comps.nPort;
-  Result := heNone;
 end;
 
 function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): TSpxHttpResult;
@@ -344,10 +419,10 @@ end;
    in the compiler's own words -- and CI's two non-Windows legs stayed red for five commits
    while every local gate passed, because every local gate runs on Windows.
 
-   Stubs rather than a hand-rolled parser: `SpxHttpParseUrl` is WinHTTP's `WinHttpCrackUrl`,
-   and a second implementation for a platform the product does not ship on would be code the
-   Windows build never runs and nothing compares -- a worse answer than saying plainly that
-   there is no transport here. *)
+   `SpxHttpParseUrl` is NOT among them any more: it moved above the split and is plain Pascal,
+   because the stub that stood here answered `heUnsupported` for every URL and took
+   `SpxLlmIsLocal` -- a privacy question, not a transport one -- down with it on both
+   non-Windows legs. What is left below is genuinely the transport, and only that. *)
 
 function SpxHttpAvailable: Boolean;
 begin
@@ -359,16 +434,22 @@ begin
   Result := heUnsupported;
 end;
 
-function SpxHttpParseUrl(const AUrl: string; out AHost, APath: string;
-  out APort: Integer; out ASecure: Boolean): TSpxHttpError;
-begin
-  AHost := ''; APath := ''; APort := 0; ASecure := False;
-  Result := heUnsupported;
-end;
-
 function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): TSpxHttpResult;
+var
+  host, path: string;
+  port: Integer;
+  secure: Boolean;
 begin
   Result := Default(TSpxHttpResult);
+  (* A BAD URL IS STILL A BAD URL HERE. Answering `heUnsupported` to everything would make the
+     platform the only thing this branch can say, and the caller's own mistakes would be
+     invisible on the two CI legs that run it. *)
+  Result.Error := SpxHttpParseUrl(ARequest.Url, host, path, port, secure);
+  if Result.Error <> heNone then
+  begin
+    Result.Detail := 'not a url this accepts';
+    Exit;
+  end;
   Result.Error := heUnsupported;
   Result.Detail := 'no transport on this platform';
 end;

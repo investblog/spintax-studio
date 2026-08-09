@@ -5154,21 +5154,16 @@ var
   end;
 
 begin
-  (* NOT `CheckTrue(SpxHttpAvailable)`, WHICH IS WHAT STOOD HERE. The product ships on Windows
-     and the transport is Windows', but this suite runs on three platforms -- and an assertion
-     that the platform has a transport is a claim about the BUILD MACHINE, not about the code.
-     It would have failed the two non-Windows legs even after the unit compiled again.
+  (* WHAT A URL IS -- ON EVERY PLATFORM, and that is the point of the split below.
 
-     Said as a check rather than skipped in silence: a suite that quietly tests nothing on a CI
-     leg is how a platform gap survives. Same shape as the credential store's. *)
-  if not SpxHttpAvailable then
-  begin
-    CheckTrue('http/no transport on this platform, and parsing says so',
-              SpxHttpParseUrl('https://example.com/x', host, path, port, secure) = heUnsupported);
-    Refused2('http/no transport on this platform, and sending says so',
-             'https://example.com/x', heUnsupported);
-    Exit;
-  end;
+     `CheckTrue(SpxHttpAvailable)` stood here once: a claim about the BUILD MACHINE rather than
+     about the code, which failed the two non-Windows legs. Skipping the whole procedure there
+     instead was no better -- the parse is plain Pascal and deciding whether an endpoint is on
+     this machine is a PRIVACY question, so a leg that checks none of it checks the wrong half.
+
+     So the questions divide by what they are ABOUT, not by where they run: everything a URL
+     can be wrong about is asked everywhere, and only what the transport does is asked where
+     there is one. Both sides say so by name; neither is a silence. *)
 
   Refused('an empty url', '');
   Refused('a url that is only spaces', '   ');
@@ -5202,6 +5197,39 @@ begin
   err := SpxHttpParseUrl('https://example.com', host, path, port, secure);
   CheckTrue('http/a bare host is accepted', err = heNone);
   Check('http/and its path defaults to a slash', path, '/');
+
+  { The shapes only a parser of our own has to answer, and nothing asked before it was one. }
+  err := SpxHttpParseUrl('http://user:pw@127.0.0.1:11434/x', host, path, port, secure);
+  CheckTrue('http/credentials are not mistaken for the host', err = heNone);
+  Check('http/the host after an @', host, '127.0.0.1');
+  Check('http/the port after an @', IntToStr(port), '11434');
+
+  err := SpxHttpParseUrl('http://[::1]:11434/api', host, path, port, secure);
+  CheckTrue('http/an ipv6 literal is accepted', err = heNone);
+  Check('http/its host keeps no brackets', host, '::1');
+  Check('http/and the colons inside it are not a port', IntToStr(port), '11434');
+
+  Refused('a port that is not a number', 'http://localhost:no/x');
+  Refused('a port past the end of the range', 'http://localhost:70000/x');
+  Refused('a url with no scheme separator', 'localhost:11434/x');
+
+  err := SpxHttpParseUrl('https://example.com?q=1', host, path, port, secure);
+  CheckTrue('http/a query with no path is accepted', err = heNone);
+  Check('http/and the query becomes the path', path, '?q=1');
+
+  (* -- AND WHAT THIS PLATFORM CAN DO WITH ONE --
+
+     Named on both sides. A suite that quietly tests nothing on a CI leg is how a platform gap
+     survives -- and the gap this replaces was real: the transport unit did not compile off
+     Windows for five commits. *)
+  if not SpxHttpAvailable then
+  begin
+    Refused2('http/a good url reports no transport on this platform',
+             'https://api.anthropic.com/v1/messages', heUnsupported);
+    Check('http/and there are no error codes to classify here',
+          ErrName(SpxHttpClassify(12038)), 'heUnsupported');
+    Exit;
+  end;
 
   (* -- WHAT WINDOWS' NUMBERS MEAN, ASKED IN NUMBERS --
 
