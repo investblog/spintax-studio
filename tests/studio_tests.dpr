@@ -35,7 +35,7 @@ uses
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxGsaImport, SpxCount, SpxPrompt,
-  SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
+  SpxFiles, SpxEngineThread, SpxHttp, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
   SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxCompanyMark, SpxSevIcons;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
@@ -51,6 +51,7 @@ uses
   SpxPrompt in '..\src\SpxPrompt.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
+  SpxHttp in '..\gui\SpxHttp.pas',
   SpxStrings in '..\gui\SpxStrings.pas',
   SpxIcons in '..\gui\SpxIcons.pas',
   SpxFlags in '..\gui\SpxFlags.pas',
@@ -4922,6 +4923,105 @@ end;
    handing an address to the shell is the user's own act, and the request that follows is their
    browser's. What the count defends is the ENUMERATION -- the policy names each mark, so a
    third one would make the page's list false while every other check stayed green. *)
+(* THE TRANSPORT, ASKED ONLY WHAT IT CAN ANSWER WITHOUT A NETWORK.
+
+   Not one check here opens a connection, and that is deliberate rather than timid: a suite
+   that dials is a suite that goes red when a build machine is behind a proxy, and a red build
+   nobody believes is worse than no check. What IS decidable offline is the whole front half --
+   whether a string is a URL this will accept, and whether the platform has a transport at all
+   -- and that half is where a caller's mistakes land.
+
+   The back half (timeouts, cancellation, the size ceiling) is exercised by the window against
+   a real endpoint; there is nothing here that could stand in for it honestly. *)
+procedure TestHttp;
+var
+  err: TSpxHttpError;
+  host, path, wired, dir_: string;
+  port, k: Integer;
+  secure: Boolean;
+  r_: TSearchRec;
+
+  procedure Refused(const AWhat, AUrl: string);
+  var r: TSpxHttpRequest; res: TSpxHttpResult;
+  begin
+    r := Default(TSpxHttpRequest);
+    r.Url := AUrl;
+    res := SpxHttpSend(r, nil);
+    CheckTrue('http/' + AWhat + ' is refused before anything is dialled [' + res.Detail + ']',
+              res.Error = heBadUrl);
+    CheckTrue('http/' + AWhat + ' reports no status', res.Status = 0);
+  end;
+
+begin
+  { On this platform there is a transport; the window asks this before offering the feature. }
+  CheckTrue('http/this build has a transport', SpxHttpAvailable);
+
+  Refused('an empty url', '');
+  Refused('a url that is only spaces', '   ');
+  Refused('a string that is not a url', 'not a url at all');
+  { The scheme test is the one that matters: `ftp` cracks fine and must still be refused. }
+  Refused('an ftp url', 'ftp://example.com/x');
+  Refused('a file url', 'file:///C:/Windows/win.ini');
+
+  { AND PLAIN HTTP IS NOT REFUSED, because a local model answers on it. Refusing it would
+    refuse the one configuration that never leaves the machine -- which is the configuration
+    the privacy policy goes out of its way to describe.
+
+    The first draft of this check was `CheckTrue(..., True)` -- a sentence about the product
+    with nothing behind it, which is exactly the shape this suite exists to prevent. The URL
+    parser is a separate function so that this can ask it something. }
+  err := SpxHttpParseUrl('http://127.0.0.1:11434/api/generate', host, path, port, secure);
+  CheckTrue('http/a local model url is accepted', err = heNone);
+  Check('http/its host', host, '127.0.0.1');
+  Check('http/its port', IntToStr(port), '11434');
+  Check('http/its path', path, '/api/generate');
+  CheckTrue('http/and it is not treated as secure', not secure);
+
+  { https, the default port, and a query string that must survive into the path. }
+  err := SpxHttpParseUrl('https://api.anthropic.com/v1/messages?beta=1', host, path, port, secure);
+  CheckTrue('http/an https url is accepted', err = heNone);
+  Check('http/its default port', IntToStr(port), '443');
+  Check('http/its query rides with the path', path, '/v1/messages?beta=1');
+  CheckTrue('http/and it is secure', secure);
+
+  { A url with no path at all still gets one, because WinHttpOpenRequest wants an object name. }
+  err := SpxHttpParseUrl('https://example.com', host, path, port, secure);
+  CheckTrue('http/a bare host is accepted', err = heNone);
+  Check('http/and its path defaults to a slash', path, '/');
+
+  (* AND NOTHING IN THE WINDOW CAN REACH IT YET.
+
+     This is the check that dates the privacy policy. Every published copy still says the
+     application makes no network request of any kind, and while no unit but this suite mentions
+     `SpxHttp`, that sentence is TRUE of the package a reader installs -- the transport is in
+     the box with no handle on it.
+
+     The first unit to wire it up deletes this check, and that commit owes the rewritten policy
+     in all three copies plus listing bullet 17. The text is written and waiting in
+     `docs/publish/network-slice-edits.md`, so the work is a move rather than a draft.
+
+     Counted over `gui/` and `src/`, because a suite that names itself here would always pass. *)
+  wired := '';
+  for k := 0 to 1 do
+  begin
+    if k = 0 then dir_ := 'gui' else dir_ := 'src';
+    if FindFirst(dir_ + '/*.pas', faAnyFile, r_) <> 0 then Continue;
+    try
+      repeat
+        if SameText(r_.Name, 'SpxHttp.pas') then Continue;
+        (* The WHOLE file and a plain substring, not a uses clause and not a whole word: both
+           readers are another procedure's locals, and broad is the right side to err on here.
+           A mention of this unit anywhere in `gui/` or `src/` is a signal worth stopping for. *)
+        if Pos('spxhttp', LowerCase(SpxReadTextFile(dir_ + '/' + r_.Name))) > 0 then
+          wired := wired + ' ' + r_.Name;
+      until FindNext(r_) <> 0;
+    finally
+      FindClose(r_);
+    end;
+  end;
+  Check('http/the transport is not reachable from the window', Trim(wired), '');
+end;
+
 procedure TestOfflineClaim;
 const
   { Unit names that mean a socket is being opened. Whole words, matched inside a uses clause
@@ -4942,13 +5042,17 @@ const
 
   (* THE FILES ALLOWED TO OPEN ONE, and today there are none.
 
-     Empty is a decision rather than an oversight: every published copy of the privacy policy
-     says this application makes no network request of any kind, so the honest state of this
-     array is the state of that sentence. When ADR 0012's transport lands, the file that
-     carries it goes here IN THE SAME COMMIT as the rewritten policy -- and any SECOND file
-     that reaches for a socket still fails, which is what an exception list buys over deleting
-     the check. *)
-  NET_ALLOWED: array[0..0] of string = ('');
+     It was empty until ADR 0012's transport landed. `SpxHttp.pas` is named here now, and any
+     SECOND file reaching for a socket still fails -- which is what an exception list buys over
+     deleting the check.
+
+     BEING ABLE TO IS NOT THE SAME AS DOING, and the policy is about the second. A package that
+     contains this unit but gives no way to reach it cannot send anything, so the published
+     sentence is still true and is deliberately not rewritten yet. What makes that checkable
+     rather than a promise is `http/the transport is not reachable from the window` below:
+     delete that check and the policy edit is due in the same commit. The prepared text is in
+     `docs/publish/network-slice-edits.md`. *)
+  NET_ALLOWED: array[0..0] of string = ('SpxHttp.pas');
 var
   dirs: array[0..2] of string;
   d, i: Integer;
@@ -9025,6 +9129,7 @@ begin
   TestHelpExamples;
   TestHelpSilences;
   TestOfflineClaim;
+  TestHttp;
   TestAbout;
   TestGsaImport;
   TestVariantCount;
