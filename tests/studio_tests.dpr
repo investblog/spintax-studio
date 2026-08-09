@@ -5215,7 +5215,6 @@ const
 var
   got: string;
   ok: Boolean;
-  k1, k2: TSpxSecretKind;
   names: array[0..5] of string = ('anthropic', 'openai-compatible', '', '  spaced  ',
                                   'byok', 'service');
   i: Integer;
