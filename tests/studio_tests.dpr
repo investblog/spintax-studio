@@ -6842,7 +6842,7 @@ type
     Why: string;
   end;
 const
-  HELP_UI_QUOTES: array[0..11] of TSpxUiQuote = (
+  HELP_UI_QUOTES: array[0..15] of TSpxUiQuote = (
     (Id: sColLiteral;      Why: 'the session-value column'),
     (Id: sSeed;            Why: 'the seed tick-box'),
     (Id: sReroll;          Why: 'the reroll button'),
@@ -6854,7 +6854,15 @@ const
     (Id: sVarsIncludes;    Why: 'the Variables panel section'),
     (Id: sMenuHelp;        Why: 'the Help menu'),
     (Id: sMenuAbout;       Why: 'the About item'),
-    (Id: sMenuGsaOpen;     Why: 'the File menu item'));
+    (Id: sMenuGsaOpen;     Why: 'the File menu item'),
+    (* The AI panel, added with it (ADR 0011). Its three buttons are here and not only its
+       name because the whole section is instructions to press them: a help that says "copy the
+       prompt" over a button reading something else is the defect this check exists for, and it
+       is the likeliest one when fourteen documents are written in one sitting. *)
+    (Id: sTabAi;           Why: 'the AI panel'),
+    (Id: sAiCopyPrompt;    Why: 'the copy-prompt button'),
+    (Id: sAiInsert;        Why: 'the insert button'),
+    (Id: sAiCopyRepair;    Why: 'the repair-prompt button'));
 
 { Every run of blank characters becomes one space, so a wrapped line reads as a sentence --
   and a blockquote's `> ` marker at the start of a continuation line goes with it. Without

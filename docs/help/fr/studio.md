@@ -55,7 +55,7 @@ place.
 
 ## Les panneaux du bas
 
-La barre d'outils sur le côté ouvre trois panneaux, un à la fois.
+La barre d'outils sur le côté ouvre quatre panneaux, un à la fois.
 
 **Diagnostics** liste ce que le moteur a jugé fautif, chaque fois avec la ligne et la colonne du
 début. Un clic sur une ligne y place le curseur. C'est le même verdict que le moteur rend partout
@@ -92,6 +92,22 @@ rendu, que la branche empruntée s'en serve ou non.
 
 L'export les écrit de trois manières : en classeur XLSX, en texte brut avec une variante par ligne
 ou en un fichier par variante dans un dossier de votre choix.
+
+**Brouillon IA** est le point de départ d'un modèle quand vous préférez ne pas écrire chaque
+variante à la main. Dites dans le brief ce que vous voulez, listez les variables que le modèle
+peut employer, puis appuyez sur **Copier l'invite**. L'application ne s'adresse à aucun modèle et ne
+détient aucune clé : elle rédige l'invite pour que vous la portiez à celui que vous utilisez
+déjà. Rapportez la réponse et appuyez sur **Insérer dans le document** — le moteur de cette fenêtre dit alors ce
+qu'il en pense dans le panneau des diagnostics, exactement comme pour tout ce que vous tapez
+vous-même. S'il y a des erreurs, **Copier l'invite de correction** construit une seconde invite qui pointe les
+endroits exacts plutôt que le document entier.
+
+La colonne des cas est la partie qui vaut la peine d'être remplie. Une variable est insérée
+telle quelle, rien ne la décline : dans une langue à cas, la phrase doit donc être construite
+autour de la forme que la valeur possède déjà, et un modèle ne choisit correctement que si on
+lui dit quelle forme porte chaque nom. Cela ne se déduit pas du nom : dans un vrai jeu de
+modèles, les formes instrumentales se trouvaient dans une variable dont le nom disait
+accusatif.
 
 ## L'éditeur de groupe
 

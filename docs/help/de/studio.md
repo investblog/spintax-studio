@@ -58,7 +58,7 @@ herauskommt, wie er es an seiner Stelle tun wird.
 
 ## Die Tafeln am unteren Rand
 
-Die Werkzeugleiste an der Seite öffnet drei Tafeln, immer eine davon.
+Die Werkzeugleiste an der Seite öffnet vier Tafeln, immer eine davon.
 
 **Diagnose** listet auf, was die Maschine beanstandet, jeweils mit Zeile und Spalte des Anfangs.
 Ein Klick auf eine Zeile setzt den Cursor dorthin. Das ist dasselbe Urteil, das die Maschine
@@ -96,6 +96,21 @@ einmal je Durchgang, ob der eingeschlagene Zweig es benutzt oder nicht.
 
 Der Export schreibt sie auf drei Arten heraus: als XLSX-Mappe, als reinen Text mit einer Variante
 je Zeile oder als eine Datei je Variante in einem Ordner Ihrer Wahl.
+
+**KI-Entwurf** ist der Anfang einer Vorlage, wenn Sie nicht jede Variante von Hand
+schreiben wollen. Beschreiben Sie im Briefing, was Sie brauchen, führen Sie die Variablen auf,
+die das Modell verwenden darf, und drücken Sie **Prompt kopieren**. Die Anwendung spricht mit keinem
+Modell und hält keinen Schlüssel: sie schreibt den Prompt, damit Sie ihn zu dem Modell tragen,
+das Sie ohnehin benutzen. Bringen Sie die Antwort zurück und drücken Sie **In das Dokument einfügen** — die
+Maschine in diesem Fenster sagt dann im Diagnosebereich, was sie davon hält, genau wie bei allem
+anderen, was Sie selbst tippen. Gibt es Fehler, baut **Reparatur-Prompt kopieren** einen zweiten Prompt, der das
+Modell auf die genauen Stellen zeigt statt auf das ganze Dokument.
+
+Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlich eingesetzt,
+nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die Form herum gebaut
+werden, die der Wert schon hat, und ein Modell wählt nur dann richtig, wenn ihm gesagt wird,
+welche Form jeder Name trägt. Aus dem Namen ergibt sich das nicht: in einem echten Vorlagensatz
+standen die instrumentalen Formen in einer Variablen, deren Name Akkusativ sagte.
 
 ## Der Gruppeneditor
 

@@ -53,7 +53,7 @@ così che un frammento che usa una variabile definita in alto esca come uscirà 
 
 ## I pannelli in basso
 
-La barra degli strumenti di lato apre tre pannelli, uno per volta.
+La barra degli strumenti di lato apre quattro pannelli, uno per volta.
 
 **Diagnostica** elenca ciò che il motore ha trovato sbagliato, ogni volta con la riga e la colonna
 d'inizio. Un clic su una riga vi porta il cursore. È lo stesso verdetto che il motore dà ovunque
@@ -87,6 +87,20 @@ allo stesso modo: il motore lo estrae una volta per resa, che il ramo preso lo u
 
 L'esportazione li scrive in tre modi: come cartella XLSX, come testo semplice con una variante per
 riga, oppure come un file per variante in una cartella a vostra scelta.
+
+**Bozza IA** è il punto da cui parte un modello quando non vuoi scrivere ogni variante a
+mano. Di' nel brief che cosa ti serve, elenca le variabili che il modello può usare e premi
+**Copia il prompt**. L'applicazione non parla con nessun modello e non conserva chiavi: scrive il prompt
+perché tu lo porti a quello che già usi. Riporta la risposta e premi **Inserisci nel documento** — il motore di
+questa finestra dice allora che cosa ne pensa, nel pannello delle diagnostiche, esattamente come
+per tutto ciò che scrivi tu. Se ci sono errori, **Copia il prompt di correzione** costruisce un secondo prompt che
+indica al modello i punti esatti invece dell'intero documento.
+
+La colonna del caso è la parte che vale la pena compilare. Una variabile viene inserita alla
+lettera, nulla la declina: in una lingua con i casi la frase va costruita attorno alla forma che
+il valore ha già, e un modello sceglie bene solo se gli si dice quale forma porta ogni nome. Dal
+nome non si ricava: in un vero insieme di modelli le forme strumentali stavano in una variabile
+il cui nome diceva accusativo.
 
 ## L'editor di gruppi
 

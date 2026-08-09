@@ -54,7 +54,7 @@ modo que um excerto que use uma variável definida em cima sai como sairá no se
 
 ## Os painéis de baixo
 
-A barra de ferramentas ao lado abre três painéis, um de cada vez.
+A barra de ferramentas ao lado abre quatro painéis, um de cada vez.
 
 **Diagnóstico** enumera o que o motor achou errado, cada coisa com a linha e a coluna em que
 começa. Um clique numa linha põe lá o cursor. É o mesmo veredicto que o motor dá em todo o lado, e
@@ -89,6 +89,20 @@ que seguiu.
 
 A exportação escreve-as de três maneiras: como livro XLSX, como texto simples com uma variante por
 linha, ou como um ficheiro por variante numa pasta à sua escolha.
+
+**Rascunho de IA** é por onde um modelo começa quando prefere não escrever cada variante à mão.
+Diga no resumo o que quer, enumere as variáveis que o modelo pode usar e carregue em **Copiar o pedido**.
+A aplicação não fala com nenhum modelo nem guarda chaves: escreve o pedido para que o leve àquele
+que já utiliza. Traga a resposta e carregue em **Inserir no documento** — o motor desta janela diz então o
+que lhe parece, no painel de diagnósticos, tal como faz com tudo o que escreve. Se houver erros,
+**Copiar o pedido de correção** constrói um segundo pedido que aponta ao modelo os pontos exatos em vez do documento
+inteiro.
+
+A coluna do caso é a parte que vale a pena preencher. Uma variável é inserida tal como está, nada
+a declina: numa língua com casos a frase tem de ser construída à volta da forma que o valor já
+tem, e um modelo só escolhe bem se lhe disserem que forma tem cada nome. Do nome não se deduz:
+num conjunto de modelos real as formas instrumentais estavam numa variável cujo nome dizia
+acusativo.
 
 ## O editor de grupos
 

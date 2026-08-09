@@ -51,7 +51,7 @@ varijablu definiranu gore izlazi onako kako izlazi na svom mjestu.
 
 ## Ploče dolje
 
-Traka alata sa strane otvara tri ploče, po jednu u isto vrijeme.
+Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.
 
 **Dijagnostika** nabraja ono što motor smatra pogrešnim, svaki put s retkom i stupcem gdje počinje.
 Klik na redak vodi pokazivač tamo. To je ista presuda koju motor donosi svugdje, a ne drugo
@@ -84,6 +84,20 @@ isto: motor ga izvlači jednom po odigravanju, koristila ga izabrana grana ili n
 
 Izvoz ih čuva na tri načina: kao XLSX radnu knjigu, kao običan tekst s po jednom varijantom u retku
 ili kao po jednu datoteku po varijanti u mapu koju odaberete.
+
+**AI nacrt** je ono čime predložak počinje kad ne želite ispisivati svaku varijantu
+rukom. Opišite što tražite u zadatku, navedite varijable koje model smije koristiti i pritisnite
+**Kopiraj upit**. Program se nikamo ne obraća i ne čuva ključeve: on sastavlja upit da ga odnesete
+modelu kojim se već služite. Vratite odgovor i pritisnite **Umetni u dokument** — motor u ovom prozoru
+tada kaže što o njemu misli, u ploči dijagnostike, jednako kao i o bilo kojem tekstu koji sami
+utipkate. Ako ima pogrešaka, **Kopiraj upit za popravak** sastavlja drugi upit koji pokazuje modelu točna mjesta
+umjesto cijelog dokumenta.
+
+Stupac padeža dio je koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je ne mijenja po
+padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji vrijednost već ima, a
+model bira točno samo ako mu se kaže koji oblik drži svako ime. Iz imena se to ne može izvesti:
+u jednom stvarnom skupu predložaka instrumental je stajao u varijabli čije je ime govorilo
+akuzativ.
 
 ## Uređivač grupa
 

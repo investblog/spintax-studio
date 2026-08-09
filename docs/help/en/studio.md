@@ -53,7 +53,7 @@ fragment that uses a variable defined at the top still renders the way it will i
 
 ## The panels along the bottom
 
-The strip of tools down the side opens three panels, one at a time.
+The strip of tools down the side opens four panels, one at a time.
 
 **Diagnostics** lists what the engine found wrong, each with the line and column it starts at.
 Clicking a row puts the caret there. This is the same verdict the engine gives everywhere else,
@@ -88,6 +88,20 @@ or not.
 
 Export writes them out three ways: as an XLSX workbook, as plain text with one variant per line,
 or as one file per variant in a folder you choose.
+
+**AI draft** is where a template starts when you would rather not write every variant by
+hand. Say what you want in the brief, list the variables the model may use, and press
+**Copy prompt**. The application does not talk to a model and holds no key: it writes the prompt for
+you to take to whichever one you already use. Bring the answer back and press **Insert into document** — the
+engine in this window then says what it makes of it in the diagnostics panel, exactly as it does
+for anything you type yourself. If there are errors, **Copy repair prompt** builds a second prompt that
+points the model at the exact spans instead of at the whole document.
+
+The case column is the part worth filling in. A variable is put in verbatim — nothing inflects
+it — so in a language with cases the sentence has to be built around the form the value already
+has, and a model can only choose correctly if it is told which form each name holds. It cannot
+be worked out from the name: one real template set kept its instrumental forms in a variable
+whose name said accusative.
 
 ## The group editor
 

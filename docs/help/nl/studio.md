@@ -54,7 +54,7 @@ zoals het op zijn plaats zal doen.
 
 ## De panelen onderaan
 
-De werkbalk aan de zijkant opent drie panelen, één tegelijk.
+De werkbalk aan de zijkant opent vier panelen, één tegelijk.
 
 **Diagnose** somt op wat de machine verkeerd vond, telkens met de regel en de kolom waar het
 begint. Een klik op een regel zet de cursor daar. Het is hetzelfde oordeel dat de machine overal
@@ -91,6 +91,20 @@ genomen tak hem nu gebruikt of niet.
 
 De export schrijft ze op drie manieren weg: als XLSX-werkmap, als platte tekst met één variant per
 regel, of als één bestand per variant in een map naar keuze.
+
+**AI-concept** is waar een sjabloon begint als u niet elke variant met de hand wilt
+schrijven. Zeg in de briefing wat u wilt, noem de variabelen die het model mag gebruiken en druk
+op **Prompt kopiëren**. De toepassing praat met geen enkel model en houdt geen sleutel: zij schrijft de
+prompt zodat u hem meeneemt naar het model dat u toch al gebruikt. Breng het antwoord terug en
+druk op **In het document invoegen** — de machine in dit venster zegt dan in het diagnosepaneel wat zij ervan
+vindt, net als bij alles wat u zelf typt. Zijn er fouten, dan bouwt **Herstelprompt kopiëren** een tweede
+prompt die het model de precieze plekken aanwijst in plaats van het hele document.
+
+De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variabele wordt
+letterlijk ingevoegd, niets verbuigt haar: in een taal met naamvallen moet de zin dus rond de
+vorm worden gebouwd die de waarde al heeft, en een model kiest alleen goed als het te horen
+krijgt welke vorm elke naam draagt. Uit de naam volgt dat niet: in een echte sjabloonverzameling
+stonden de instrumentalisvormen in een variabele waarvan de naam accusatief zei.
 
 ## De groepseditor
 

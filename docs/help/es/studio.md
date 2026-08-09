@@ -54,7 +54,7 @@ sitio.
 
 ## Los paneles de abajo
 
-La barra de herramientas del lateral abre tres paneles, uno cada vez.
+La barra de herramientas del lateral abre cuatro paneles, uno cada vez.
 
 **Diagnóstico** enumera lo que el motor ha encontrado mal, cada cosa con la línea y la columna en
 que empieza. Un clic en una fila pone ahí el cursor. Es el mismo veredicto que el motor da en
@@ -88,6 +88,20 @@ igual: el motor lo saca una vez por render, use o no la rama que usted tomó.
 
 La exportación las escribe de tres maneras: como libro XLSX, como texto plano con una variante por
 línea, o como un archivo por variante en una carpeta que usted elija.
+
+**Borrador de IA** es por donde empieza una plantilla cuando prefiere no escribir cada variante
+a mano. Diga en el encargo lo que quiere, enumere las variables que el modelo puede usar y pulse
+**Copiar la instrucción**. La aplicación no habla con ningún modelo ni guarda ninguna clave: redacta la
+instrucción para que usted la lleve al que ya utiliza. Traiga la respuesta y pulse **Insertar en el documento**:
+el motor de esta ventana dirá entonces qué le parece, en el panel de diagnósticos, igual que con
+cualquier cosa que escriba usted mismo. Si hay errores, **Copiar la instrucción de arreglo** construye una segunda
+instrucción que señala los puntos exactos en lugar del documento entero.
+
+La columna de caso es la parte que vale la pena rellenar. Una variable se inserta tal cual, nada
+la declina: en una lengua con casos la frase debe construirse alrededor de la forma que el valor
+ya tiene, y un modelo solo elige bien si se le dice qué forma lleva cada nombre. Del nombre no
+se deduce: en un juego de plantillas real las formas instrumentales estaban en una variable cuyo
+nombre decía acusativo.
 
 ## El editor de grupos
 

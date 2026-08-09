@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    '6472d2ba56a15145', '1161eb58753cc15f', '87e44fc97111b7a9', '3467833a274e49df', 'c5226848658b80c2', 'f6b0fb891bdfa838', '41b507e99199ea85', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '103b1b8e3a7c9cbf', '488ce59bac9e29c3', '7f61fd4b089638df', '7ea98a48ac22843c', '7813c6dc420189dd', '0d549262922b3331', '3893062b6a214e95', 'c85b5f196fca1f91', '6bb5e85de94010ed', '64f52e7b06a0757c', '4ddfd411500958cc', '26e21bf1b83633da', 'e253f38f8253bc7d', 'b54956a9ee49f248', '00a887dfff5a6ef5', '5483fb9294d79d0b', '18c7da1e110847db', 'd9d49c35432acae4', 'c1c1badef7c96448', '9dacb63502e5aa97', 'b8529893866ec950', '0e3b38d8328fc7db', 'ea10d49bf126b2b6', '471885d59dbd925b', 'd43ff8a230ee4e10', '56ba422eb944d0c7', '2a4bb2d8392a4ede', 'd08430cca515c3af', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '467fbe1fe9bddf19', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    '2d58cd83e9562642', '1161eb58753cc15f', '87e44fc97111b7a9', '871cbcc314756d02', 'c5226848658b80c2', 'f6b0fb891bdfa838', 'fc0d0a3d2f60646d', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '6538ddefac3a4281', '488ce59bac9e29c3', '7f61fd4b089638df', '5a03689e5e53cb28', '7813c6dc420189dd', '0d549262922b3331', 'c571157e6828c144', 'c85b5f196fca1f91', '6bb5e85de94010ed', '228ce166a442a5a8', '4ddfd411500958cc', '26e21bf1b83633da', 'd722b566afcb006f', 'b54956a9ee49f248', '00a887dfff5a6ef5', '9071998326efa8bb', '18c7da1e110847db', 'd9d49c35432acae4', '41c1a82a3abbac2f', '9dacb63502e5aa97', 'b8529893866ec950', '8f24172caeb947a7', 'ea10d49bf126b2b6', '471885d59dbd925b', '63d08339ece3eaa0', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '155b1b25fcdac538', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '748507336fecf404', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -747,15 +747,15 @@ const
     0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..419] of Integer = (
-    0, 7, 14, 23, 26, 29, 38, 43, 49, 61, 86, 96, 103, 110, 119, 123, 138, 160, 162, 172, 179, 192, 208, 233, 255, 275, 289, 302, 315, 323, 332, 339, 346, 355, 358, 361, 370, 375, 381, 393, 418, 428, 435, 443, 452, 456, 470, 500, 502, 513, 520, 533, 549, 574, 596, 615, 629, 642, 662, 670, 677, 684, 691, 700, 703, 706, 715, 720, 726, 738, 763, 773, 780, 787, 796, 800, 815, 840, 842, 852, 859, 872, 888, 913, 935, 955, 969, 982, 995, 1003, 1012, 1019, 1026, 1035, 1038, 1041, 1050, 1055, 1061, 1073, 1098, 1108, 1115, 1122, 1131, 1135, 1150, 1178, 1180, 1190, 1197, 1210, 1226, 1251, 1273, 1293, 1307, 1320, 1333, 1341, 1350, 1357, 1364, 1373, 1376, 1379, 1388, 1393, 1399, 1411, 1436, 1446, 1453, 1460, 1469, 1473, 1488, 1516, 1518, 1528, 1535, 1548, 1564, 1589, 1611, 1631, 1645, 1658, 1671, 1679, 1688, 1695, 1702, 1711, 1714, 1717, 1726, 1731, 1737, 1749, 1774, 1784, 1791, 1798, 1807, 1811, 1826, 1854, 1856, 1866, 1873, 1886, 1902, 1927, 1949, 1969, 1983, 1996, 2009, 2017, 2026, 2033, 2040, 2049, 2052, 2055, 2064, 2069, 2075, 2087, 2112, 2122, 2129, 2136, 2145, 2149, 2164, 2194, 2196, 2206, 2213, 2226, 2242, 2267, 2289, 2309, 2323, 2336, 2349, 2357, 2366, 2373, 2380, 2389, 2392, 2395, 2404, 2409, 2415, 2427, 2452, 2462, 2469, 2476, 2485, 2489, 2504, 2529, 2531, 2541, 2548, 2561, 2577, 2602, 2624, 2644, 2658, 2671, 2684, 2692, 2701, 2708, 2715, 2724, 2727, 2730, 2739, 2744, 2750, 2762, 2787, 2797, 2804, 2811, 2820, 2824, 2839, 2866, 2868, 2878, 2885, 2898, 2914, 2939, 2961, 2981, 2995, 3008, 3021, 3029, 3038, 3045, 3052, 3061, 3064, 3067, 3076, 3081, 3087, 3099, 3124, 3134, 3141, 3149, 3158, 3162, 3177, 3206, 3208, 3218, 3225, 3238, 3254, 3279, 3301, 3321, 3335, 3348, 3361, 3369, 3378, 3385, 3392, 3401, 3404, 3407, 3416, 3421, 3427, 3439, 3464, 3474, 3481, 3489, 3498, 3502, 3517, 3546, 3548, 3558, 3565, 3578, 3594, 3619, 3641, 3661, 3675, 3688, 3701, 3709, 3718, 3725, 3732, 3741, 3744, 3747, 3756, 3761, 3767, 3779, 3804, 3814, 3821, 3829, 3838, 3842, 3857, 3887, 3889, 3899, 3906, 3919, 3935, 3960, 3982, 4002, 4016, 4029, 4042, 4050, 4059, 4066, 4073, 4082, 4085, 4088, 4097, 4102, 4108, 4120, 4145, 4155, 4162, 4170, 4179, 4183, 4199, 4226, 4228, 4238, 4245, 4258, 4274, 4299, 4321, 4341, 4355, 4368, 4381, 4389, 4398, 4405, 4412, 4421, 4424, 4427, 4436, 4441, 4447, 4459, 4484, 4494, 4501, 4509, 4518, 4522, 4538, 4565, 4567, 4577, 4584, 4597, 4613, 4638, 4660, 4680, 4694, 4707, 4720, 4728
+    0, 7, 14, 25, 28, 31, 40, 45, 51, 63, 88, 98, 105, 112, 121, 125, 140, 162, 164, 174, 181, 194, 210, 235, 257, 277, 291, 304, 317, 325, 334, 341, 348, 359, 362, 365, 374, 379, 385, 397, 422, 432, 439, 447, 456, 460, 474, 504, 506, 517, 524, 537, 553, 578, 600, 619, 633, 646, 666, 674, 681, 688, 695, 706, 709, 712, 721, 726, 732, 744, 769, 779, 786, 793, 802, 806, 821, 846, 848, 858, 865, 878, 894, 919, 941, 961, 975, 988, 1001, 1009, 1018, 1025, 1032, 1043, 1046, 1049, 1058, 1063, 1069, 1081, 1106, 1116, 1123, 1130, 1139, 1143, 1158, 1186, 1188, 1198, 1205, 1218, 1234, 1259, 1281, 1301, 1315, 1328, 1341, 1349, 1358, 1365, 1372, 1383, 1386, 1389, 1398, 1403, 1409, 1421, 1446, 1456, 1463, 1470, 1479, 1483, 1498, 1526, 1528, 1538, 1545, 1558, 1574, 1599, 1621, 1641, 1655, 1668, 1681, 1689, 1698, 1705, 1712, 1723, 1726, 1729, 1738, 1743, 1749, 1761, 1786, 1796, 1803, 1810, 1819, 1823, 1838, 1866, 1868, 1878, 1885, 1898, 1914, 1939, 1961, 1981, 1995, 2008, 2021, 2029, 2038, 2045, 2052, 2063, 2066, 2069, 2078, 2083, 2089, 2101, 2126, 2136, 2143, 2150, 2159, 2163, 2178, 2208, 2210, 2220, 2227, 2240, 2256, 2281, 2303, 2323, 2337, 2350, 2363, 2371, 2380, 2387, 2394, 2405, 2408, 2411, 2420, 2425, 2431, 2443, 2468, 2478, 2485, 2492, 2501, 2505, 2520, 2545, 2547, 2557, 2564, 2577, 2593, 2618, 2640, 2660, 2674, 2687, 2700, 2708, 2717, 2724, 2731, 2742, 2745, 2748, 2757, 2762, 2768, 2780, 2805, 2815, 2822, 2829, 2838, 2842, 2857, 2884, 2886, 2896, 2903, 2916, 2932, 2957, 2979, 2999, 3013, 3026, 3039, 3047, 3056, 3063, 3070, 3081, 3084, 3087, 3096, 3101, 3107, 3119, 3144, 3154, 3161, 3169, 3178, 3182, 3197, 3226, 3228, 3238, 3245, 3258, 3274, 3299, 3321, 3341, 3355, 3368, 3381, 3389, 3398, 3405, 3412, 3423, 3426, 3429, 3438, 3443, 3449, 3461, 3486, 3496, 3503, 3511, 3520, 3524, 3539, 3568, 3570, 3580, 3587, 3600, 3616, 3641, 3663, 3683, 3697, 3710, 3723, 3731, 3740, 3747, 3754, 3765, 3768, 3771, 3780, 3785, 3791, 3803, 3828, 3838, 3845, 3853, 3862, 3866, 3881, 3911, 3913, 3923, 3930, 3943, 3959, 3984, 4006, 4026, 4040, 4053, 4066, 4074, 4083, 4090, 4097, 4108, 4111, 4114, 4123, 4128, 4134, 4146, 4171, 4181, 4188, 4196, 4205, 4209, 4225, 4252, 4254, 4264, 4271, 4284, 4300, 4325, 4347, 4367, 4381, 4394, 4407, 4415, 4424, 4431, 4438, 4449, 4452, 4455, 4464, 4469, 4475, 4487, 4512, 4522, 4529, 4537, 4546, 4550, 4566, 4593, 4595, 4605, 4612, 4625, 4641, 4666, 4688, 4708, 4722, 4735, 4748, 4756
   );
   HELP_LAST: array[0..419] of Integer = (
-    6, 13, 22, 25, 28, 37, 42, 48, 60, 85, 95, 102, 109, 118, 122, 137, 159, 161, 171, 178, 191, 207, 232, 254, 274, 288, 301, 314, 322, 331, 338, 345, 354, 357, 360, 369, 374, 380, 392, 417, 427, 434, 442, 451, 455, 469, 499, 501, 512, 519, 532, 548, 573, 595, 614, 628, 641, 661, 669, 676, 683, 690, 699, 702, 705, 714, 719, 725, 737, 762, 772, 779, 786, 795, 799, 814, 839, 841, 851, 858, 871, 887, 912, 934, 954, 968, 981, 994, 1002, 1011, 1018, 1025, 1034, 1037, 1040, 1049, 1054, 1060, 1072, 1097, 1107, 1114, 1121, 1130, 1134, 1149, 1177, 1179, 1189, 1196, 1209, 1225, 1250, 1272, 1292, 1306, 1319, 1332, 1340, 1349, 1356, 1363, 1372, 1375, 1378, 1387, 1392, 1398, 1410, 1435, 1445, 1452, 1459, 1468, 1472, 1487, 1515, 1517, 1527, 1534, 1547, 1563, 1588, 1610, 1630, 1644, 1657, 1670, 1678, 1687, 1694, 1701, 1710, 1713, 1716, 1725, 1730, 1736, 1748, 1773, 1783, 1790, 1797, 1806, 1810, 1825, 1853, 1855, 1865, 1872, 1885, 1901, 1926, 1948, 1968, 1982, 1995, 2008, 2016, 2025, 2032, 2039, 2048, 2051, 2054, 2063, 2068, 2074, 2086, 2111, 2121, 2128, 2135, 2144, 2148, 2163, 2193, 2195, 2205, 2212, 2225, 2241, 2266, 2288, 2308, 2322, 2335, 2348, 2356, 2365, 2372, 2379, 2388, 2391, 2394, 2403, 2408, 2414, 2426, 2451, 2461, 2468, 2475, 2484, 2488, 2503, 2528, 2530, 2540, 2547, 2560, 2576, 2601, 2623, 2643, 2657, 2670, 2683, 2691, 2700, 2707, 2714, 2723, 2726, 2729, 2738, 2743, 2749, 2761, 2786, 2796, 2803, 2810, 2819, 2823, 2838, 2865, 2867, 2877, 2884, 2897, 2913, 2938, 2960, 2980, 2994, 3007, 3020, 3028, 3037, 3044, 3051, 3060, 3063, 3066, 3075, 3080, 3086, 3098, 3123, 3133, 3140, 3148, 3157, 3161, 3176, 3205, 3207, 3217, 3224, 3237, 3253, 3278, 3300, 3320, 3334, 3347, 3360, 3368, 3377, 3384, 3391, 3400, 3403, 3406, 3415, 3420, 3426, 3438, 3463, 3473, 3480, 3488, 3497, 3501, 3516, 3545, 3547, 3557, 3564, 3577, 3593, 3618, 3640, 3660, 3674, 3687, 3700, 3708, 3717, 3724, 3731, 3740, 3743, 3746, 3755, 3760, 3766, 3778, 3803, 3813, 3820, 3828, 3837, 3841, 3856, 3886, 3888, 3898, 3905, 3918, 3934, 3959, 3981, 4001, 4015, 4028, 4041, 4049, 4058, 4065, 4072, 4081, 4084, 4087, 4096, 4101, 4107, 4119, 4144, 4154, 4161, 4169, 4178, 4182, 4198, 4225, 4227, 4237, 4244, 4257, 4273, 4298, 4320, 4340, 4354, 4367, 4380, 4388, 4397, 4404, 4411, 4420, 4423, 4426, 4435, 4440, 4446, 4458, 4483, 4493, 4500, 4508, 4517, 4521, 4537, 4564, 4566, 4576, 4583, 4596, 4612, 4637, 4659, 4679, 4693, 4706, 4719, 4727, 4736
+    6, 13, 24, 27, 30, 39, 44, 50, 62, 87, 97, 104, 111, 120, 124, 139, 161, 163, 173, 180, 193, 209, 234, 256, 276, 290, 303, 316, 324, 333, 340, 347, 358, 361, 364, 373, 378, 384, 396, 421, 431, 438, 446, 455, 459, 473, 503, 505, 516, 523, 536, 552, 577, 599, 618, 632, 645, 665, 673, 680, 687, 694, 705, 708, 711, 720, 725, 731, 743, 768, 778, 785, 792, 801, 805, 820, 845, 847, 857, 864, 877, 893, 918, 940, 960, 974, 987, 1000, 1008, 1017, 1024, 1031, 1042, 1045, 1048, 1057, 1062, 1068, 1080, 1105, 1115, 1122, 1129, 1138, 1142, 1157, 1185, 1187, 1197, 1204, 1217, 1233, 1258, 1280, 1300, 1314, 1327, 1340, 1348, 1357, 1364, 1371, 1382, 1385, 1388, 1397, 1402, 1408, 1420, 1445, 1455, 1462, 1469, 1478, 1482, 1497, 1525, 1527, 1537, 1544, 1557, 1573, 1598, 1620, 1640, 1654, 1667, 1680, 1688, 1697, 1704, 1711, 1722, 1725, 1728, 1737, 1742, 1748, 1760, 1785, 1795, 1802, 1809, 1818, 1822, 1837, 1865, 1867, 1877, 1884, 1897, 1913, 1938, 1960, 1980, 1994, 2007, 2020, 2028, 2037, 2044, 2051, 2062, 2065, 2068, 2077, 2082, 2088, 2100, 2125, 2135, 2142, 2149, 2158, 2162, 2177, 2207, 2209, 2219, 2226, 2239, 2255, 2280, 2302, 2322, 2336, 2349, 2362, 2370, 2379, 2386, 2393, 2404, 2407, 2410, 2419, 2424, 2430, 2442, 2467, 2477, 2484, 2491, 2500, 2504, 2519, 2544, 2546, 2556, 2563, 2576, 2592, 2617, 2639, 2659, 2673, 2686, 2699, 2707, 2716, 2723, 2730, 2741, 2744, 2747, 2756, 2761, 2767, 2779, 2804, 2814, 2821, 2828, 2837, 2841, 2856, 2883, 2885, 2895, 2902, 2915, 2931, 2956, 2978, 2998, 3012, 3025, 3038, 3046, 3055, 3062, 3069, 3080, 3083, 3086, 3095, 3100, 3106, 3118, 3143, 3153, 3160, 3168, 3177, 3181, 3196, 3225, 3227, 3237, 3244, 3257, 3273, 3298, 3320, 3340, 3354, 3367, 3380, 3388, 3397, 3404, 3411, 3422, 3425, 3428, 3437, 3442, 3448, 3460, 3485, 3495, 3502, 3510, 3519, 3523, 3538, 3567, 3569, 3579, 3586, 3599, 3615, 3640, 3662, 3682, 3696, 3709, 3722, 3730, 3739, 3746, 3753, 3764, 3767, 3770, 3779, 3784, 3790, 3802, 3827, 3837, 3844, 3852, 3861, 3865, 3880, 3910, 3912, 3922, 3929, 3942, 3958, 3983, 4005, 4025, 4039, 4052, 4065, 4073, 4082, 4089, 4096, 4107, 4110, 4113, 4122, 4127, 4133, 4145, 4170, 4180, 4187, 4195, 4204, 4208, 4224, 4251, 4253, 4263, 4270, 4283, 4299, 4324, 4346, 4366, 4380, 4393, 4406, 4414, 4423, 4430, 4437, 4448, 4451, 4454, 4463, 4468, 4474, 4486, 4511, 4521, 4528, 4536, 4545, 4549, 4565, 4592, 4594, 4604, 4611, 4624, 4640, 4665, 4687, 4707, 4721, 4734, 4747, 4755, 4764
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..4736] of string = (
+  HELP_LINE: array[0..4764] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -796,7 +796,7 @@ const
       ' scope, so a fragment that uses a variable defined at the top still renders the way it' +
       ' will in place.</p>',
     '<h2 id="panels">The panels along the bottom</h2>',
-    '<p>The strip of tools down the side opens three panels, one at a time.</p>',
+    '<p>The strip of tools down the side opens four panels, one at a time.</p>',
     '<p><b>Diagnostics</b> lists what the engine found wrong, each with the line and column' +
       ' it starts at. Clicking a row puts the caret there. This is the same verdict the engin' +
       'e gives everywhere else, not a second opinion from the editor — which is why a templat' +
@@ -826,6 +826,19 @@ const
       't once per render whether the branch you took uses it or not.</p>',
     '<p>Export writes them out three ways: as an XLSX workbook, as plain text with one vari' +
       'ant per line, or as one file per variant in a folder you choose.</p>',
+    '<p><b>AI draft</b> is where a template starts when you would rather not write every va' +
+      'riant by hand. Say what you want in the brief, list the variables the model may use, a' +
+      'nd press <b>Copy prompt</b>. The application does not talk to a model and holds no key' +
+      ': it writes the prompt for you to take to whichever one you already use. Bring the ans' +
+      'wer back and press <b>Insert into document</b> — the engine in this window then says w' +
+      'hat it makes of it in the diagnostics panel, exactly as it does for anything you type ' +
+      'yourself. If there are errors, <b>Copy repair prompt</b> builds a second prompt that p' +
+      'oints the model at the exact spans instead of at the whole document.</p>',
+    '<p>The case column is the part worth filling in. A variable is put in verbatim — nothi' +
+      'ng inflects it — so in a language with cases the sentence has to be built around the f' +
+      'orm the value already has, and a model can only choose correctly if it is told which f' +
+      'orm each name holds. It cannot be worked out from the name: one real template set kept' +
+      ' its instrumental forms in a variable whose name said accusative.</p>',
     '<h2 id="groups">The group editor</h2>',
     '<p>Put the caret inside a <code>{a|b|c}</code> and open the group editor from the tool' +
       ' strip. It lists the alternatives as rows: edit them, add one, remove one, and the doc' +
@@ -1624,7 +1637,7 @@ const
       'нта: фрагмент, который пользуется переменной из начала файла, покажет то же, что покаж' +
       'ет на своём месте.</p>',
     '<h2 id="panels">Панели снизу</h2>',
-    '<p>Полоса инструментов сбоку открывает три панели, по одной за раз.</p>',
+    '<p>Полоса инструментов сбоку открывает четыре панели, по одной за раз.</p>',
     '<p><b>Диагностика</b> перечисляет то, что движок счёл неверным, со строкой и колонкой ' +
       'начала. Щелчок по строке ставит туда курсор. Это тот же вердикт, который движок даёт в' +
       'езде, а не второе мнение редактора, — поэтому шаблон, который эта панель считает валид' +
@@ -1656,6 +1669,20 @@ const
       'ся им выбранная ветка или нет.</p>',
     '<p>Экспорт сохраняет их тремя способами: книгой XLSX, обычным текстом по варианту на с' +
       'троку или по файлу на вариант в папку, которую вы выберете.</p>',
+    '<p><b>AI-черновик</b> — это то, с чего начинается шаблон, когда выписывать каждый вари' +
+      'ант руками не хочется. Опишите задачу в брифе, перечислите переменные, которыми модели' +
+      ' можно пользоваться, и нажмите <b>Скопировать промпт</b>. Приложение никуда не обращае' +
+      'тся и не хранит ключей: оно составляет промпт, чтобы вы отнесли его в ту модель, котор' +
+      'ой пользуетесь. Верните ответ и нажмите <b>Вставить в документ</b> — движок в этом окн' +
+      'е скажет, что он о нём думает, в панели диагностики, ровно так же, как о любом тексте,' +
+      ' набранном вами. Если есть ошибки, <b>Скопировать промпт правки</b> составит второй пр' +
+      'омпт, который указывает модели на точные места, а не на весь документ.</p>',
+    '<p>Колонка падежа — та часть, которую стоит заполнить. Переменная подставляется дослов' +
+      'но, ничто её не склоняет, поэтому в языке с падежами предложение приходится строить во' +
+      'круг той формы, которая у значения уже есть, и модель выберет верно, только если ей ск' +
+      'азать, какую форму держит каждое имя. Из имени это не выводится: в одном настоящем наб' +
+      'оре шаблонов творительные формы лежали в переменной, имя которой говорило «винительный' +
+      '».</p>',
     '<h2 id="groups">Редактор групп</h2>',
     '<p>Поставьте курсор внутрь <code>{a|b|c}</code> и откройте редактор групп на полосе ин' +
       'струментов. Он показывает альтернативы строками: правьте, добавляйте, удаляйте — докум' +
@@ -2460,7 +2487,7 @@ const
       'ngsbereich des ganzen Dokuments, sodass ein Ausschnitt, der eine oben definierte Varia' +
       'ble benutzt, so herauskommt, wie er es an seiner Stelle tun wird.</p>',
     '<h2 id="panels">Die Tafeln am unteren Rand</h2>',
-    '<p>Die Werkzeugleiste an der Seite öffnet drei Tafeln, immer eine davon.</p>',
+    '<p>Die Werkzeugleiste an der Seite öffnet vier Tafeln, immer eine davon.</p>',
     '<p><b>Diagnose</b> listet auf, was die Maschine beanstandet, jeweils mit Zeile und Spa' +
       'lte des Anfangs. Ein Klick auf eine Zeile setzt den Cursor dorthin. Das ist dasselbe U' +
       'rteil, das die Maschine überall sonst fällt, keine zweite Meinung des Editors — deshal' +
@@ -2495,6 +2522,22 @@ const
     '<p>Der Export schreibt sie auf drei Arten heraus: als XLSX-Mappe, als reinen Text mit ' +
       'einer Variante je Zeile oder als eine Datei je Variante in einem Ordner Ihrer Wahl.</p' +
       '>',
+    '<p><b>KI-Entwurf</b> ist der Anfang einer Vorlage, wenn Sie nicht jede Variante von Ha' +
+      'nd schreiben wollen. Beschreiben Sie im Briefing, was Sie brauchen, führen Sie die Var' +
+      'iablen auf, die das Modell verwenden darf, und drücken Sie <b>Prompt kopieren</b>. Die' +
+      ' Anwendung spricht mit keinem Modell und hält keinen Schlüssel: sie schreibt den Promp' +
+      't, damit Sie ihn zu dem Modell tragen, das Sie ohnehin benutzen. Bringen Sie die Antwo' +
+      'rt zurück und drücken Sie <b>In das Dokument einfügen</b> — die Maschine in diesem Fen' +
+      'ster sagt dann im Diagnosebereich, was sie davon hält, genau wie bei allem anderen, wa' +
+      's Sie selbst tippen. Gibt es Fehler, baut <b>Reparatur-Prompt kopieren</b> einen zweit' +
+      'en Prompt, der das Modell auf die genauen Stellen zeigt statt auf das ganze Dokument.<' +
+      '/p>',
+    '<p>Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlic' +
+      'h eingesetzt, nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die' +
+      ' Form herum gebaut werden, die der Wert schon hat, und ein Modell wählt nur dann richt' +
+      'ig, wenn ihm gesagt wird, welche Form jeder Name trägt. Aus dem Namen ergibt sich das ' +
+      'nicht: in einem echten Vorlagensatz standen die instrumentalen Formen in einer Variabl' +
+      'en, deren Name Akkusativ sagte.</p>',
     '<h2 id="groups">Der Gruppeneditor</h2>',
     '<p>Setzen Sie den Cursor in ein <code>{a|b|c}</code> und öffnen Sie den Gruppeneditor ' +
       'über die Werkzeugleiste. Er listet die Alternativen als Zeilen auf: ändern, eine hinzu' +
@@ -3351,7 +3394,7 @@ const
       'e du document entier, si bien qu''un extrait utilisant une variable définie plus haut ' +
       'sort comme il le fera à sa place.</p>',
     '<h2 id="panels">Les panneaux du bas</h2>',
-    '<p>La barre d''outils sur le côté ouvre trois panneaux, un à la fois.</p>',
+    '<p>La barre d''outils sur le côté ouvre quatre panneaux, un à la fois.</p>',
     '<p><b>Diagnostics</b> liste ce que le moteur a jugé fautif, chaque fois avec la ligne ' +
       'et la colonne du début. Un clic sur une ligne y place le curseur. C''est le même verdi' +
       'ct que le moteur rend partout ailleurs, et non un second avis de l''éditeur — c''est p' +
@@ -3386,6 +3429,21 @@ const
       'a branche empruntée s''en serve ou non.</p>',
     '<p>L''export les écrit de trois manières : en classeur XLSX, en texte brut avec une va' +
       'riante par ligne ou en un fichier par variante dans un dossier de votre choix.</p>',
+    '<p><b>Brouillon IA</b> est le point de départ d''un modèle quand vous préférez ne pas ' +
+      'écrire chaque variante à la main. Dites dans le brief ce que vous voulez, listez les v' +
+      'ariables que le modèle peut employer, puis appuyez sur <b>Copier l''invite</b>. L''app' +
+      'lication ne s''adresse à aucun modèle et ne détient aucune clé : elle rédige l''invite' +
+      ' pour que vous la portiez à celui que vous utilisez déjà. Rapportez la réponse et appu' +
+      'yez sur <b>Insérer dans le document</b> — le moteur de cette fenêtre dit alors ce qu''' +
+      'il en pense dans le panneau des diagnostics, exactement comme pour tout ce que vous ta' +
+      'pez vous-même. S''il y a des erreurs, <b>Copier l''invite de correction</b> construit ' +
+      'une seconde invite qui pointe les endroits exacts plutôt que le document entier.</p>',
+    '<p>La colonne des cas est la partie qui vaut la peine d''être remplie. Une variable es' +
+      't insérée telle quelle, rien ne la décline : dans une langue à cas, la phrase doit don' +
+      'c être construite autour de la forme que la valeur possède déjà, et un modèle ne chois' +
+      'it correctement que si on lui dit quelle forme porte chaque nom. Cela ne se déduit pas' +
+      ' du nom : dans un vrai jeu de modèles, les formes instrumentales se trouvaient dans un' +
+      'e variable dont le nom disait accusatif.</p>',
     '<h2 id="groups">L''éditeur de groupe</h2>',
     '<p>Placez le curseur dans un <code>{a|b|c}</code> et ouvrez l''éditeur de groupe depui' +
       's la barre d''outils. Il liste les variantes en lignes : modifiez-les, ajoutez-en une,' +
@@ -4236,7 +4294,7 @@ const
       'l documento entero, de modo que un fragmento que usa una variable definida arriba sale' +
       ' como saldrá en su sitio.</p>',
     '<h2 id="panels">Los paneles de abajo</h2>',
-    '<p>La barra de herramientas del lateral abre tres paneles, uno cada vez.</p>',
+    '<p>La barra de herramientas del lateral abre cuatro paneles, uno cada vez.</p>',
     '<p><b>Diagnóstico</b> enumera lo que el motor ha encontrado mal, cada cosa con la líne' +
       'a y la columna en que empieza. Un clic en una fila pone ahí el cursor. Es el mismo ver' +
       'edicto que el motor da en todas partes, no una segunda opinión del editor: por eso una' +
@@ -4267,6 +4325,20 @@ const
     '<p>La exportación las escribe de tres maneras: como libro XLSX, como texto plano con u' +
       'na variante por línea, o como un archivo por variante en una carpeta que usted elija.<' +
       '/p>',
+    '<p><b>Borrador de IA</b> es por donde empieza una plantilla cuando prefiere no escribi' +
+      'r cada variante a mano. Diga en el encargo lo que quiere, enumere las variables que el' +
+      ' modelo puede usar y pulse <b>Copiar la instrucción</b>. La aplicación no habla con ni' +
+      'ngún modelo ni guarda ninguna clave: redacta la instrucción para que usted la lleve al' +
+      ' que ya utiliza. Traiga la respuesta y pulse <b>Insertar en el documento</b>: el motor' +
+      ' de esta ventana dirá entonces qué le parece, en el panel de diagnósticos, igual que c' +
+      'on cualquier cosa que escriba usted mismo. Si hay errores, <b>Copiar la instrucción de' +
+      ' arreglo</b> construye una segunda instrucción que señala los puntos exactos en lugar ' +
+      'del documento entero.</p>',
+    '<p>La columna de caso es la parte que vale la pena rellenar. Una variable se inserta t' +
+      'al cual, nada la declina: en una lengua con casos la frase debe construirse alrededor ' +
+      'de la forma que el valor ya tiene, y un modelo solo elige bien si se le dice qué forma' +
+      ' lleva cada nombre. Del nombre no se deduce: en un juego de plantillas real las formas' +
+      ' instrumentales estaban en una variable cuyo nombre decía acusativo.</p>',
     '<h2 id="groups">El editor de grupos</h2>',
     '<p>Ponga el cursor dentro de un <code>{a|b|c}</code> y abra el editor de grupos desde ' +
       'la barra de herramientas. Enumera las alternativas como filas: cámbielas, añada una, q' +
@@ -5092,7 +5164,7 @@ const
       'ero documento, così che un frammento che usa una variabile definita in alto esca come ' +
       'uscirà al suo posto.</p>',
     '<h2 id="panels">I pannelli in basso</h2>',
-    '<p>La barra degli strumenti di lato apre tre pannelli, uno per volta.</p>',
+    '<p>La barra degli strumenti di lato apre quattro pannelli, uno per volta.</p>',
     '<p><b>Diagnostica</b> elenca ciò che il motore ha trovato sbagliato, ogni volta con la' +
       ' riga e la colonna d''inizio. Un clic su una riga vi porta il cursore. È lo stesso ver' +
       'detto che il motore dà ovunque altrove, non un secondo parere dell''editor: per questo' +
@@ -5123,6 +5195,20 @@ const
     '<p>L''esportazione li scrive in tre modi: come cartella XLSX, come testo semplice con ' +
       'una variante per riga, oppure come un file per variante in una cartella a vostra scelt' +
       'a.</p>',
+    '<p><b>Bozza IA</b> è il punto da cui parte un modello quando non vuoi scrivere ogni va' +
+      'riante a mano. Di'' nel brief che cosa ti serve, elenca le variabili che il modello pu' +
+      'ò usare e premi <b>Copia il prompt</b>. L''applicazione non parla con nessun modello e' +
+      ' non conserva chiavi: scrive il prompt perché tu lo porti a quello che già usi. Riport' +
+      'a la risposta e premi <b>Inserisci nel documento</b> — il motore di questa finestra di' +
+      'ce allora che cosa ne pensa, nel pannello delle diagnostiche, esattamente come per tut' +
+      'to ciò che scrivi tu. Se ci sono errori, <b>Copia il prompt di correzione</b> costruis' +
+      'ce un secondo prompt che indica al modello i punti esatti invece dell''intero document' +
+      'o.</p>',
+    '<p>La colonna del caso è la parte che vale la pena compilare. Una variabile viene inse' +
+      'rita alla lettera, nulla la declina: in una lingua con i casi la frase va costruita at' +
+      'torno alla forma che il valore ha già, e un modello sceglie bene solo se gli si dice q' +
+      'uale forma porta ogni nome. Dal nome non si ricava: in un vero insieme di modelli le f' +
+      'orme strumentali stavano in una variabile il cui nome diceva accusativo.</p>',
     '<h2 id="groups">L''editor di gruppi</h2>',
     '<p>Mettete il cursore dentro un <code>{a|b|c}</code> e aprite l''editor di gruppi dall' +
       'a barra degli strumenti. Elenca le alternative come righe: modificatele, aggiungetene ' +
@@ -5952,7 +6038,7 @@ const
       'inteiro, de modo que um excerto que use uma variável definida em cima sai como sairá n' +
       'o seu lugar.</p>',
     '<h2 id="panels">Os painéis de baixo</h2>',
-    '<p>A barra de ferramentas ao lado abre três painéis, um de cada vez.</p>',
+    '<p>A barra de ferramentas ao lado abre quatro painéis, um de cada vez.</p>',
     '<p><b>Diagnóstico</b> enumera o que o motor achou errado, cada coisa com a linha e a c' +
       'oluna em que começa. Um clique numa linha põe lá o cursor. É o mesmo veredicto que o m' +
       'otor dá em todo o lado, e não uma segunda opinião do editor: por isso um modelo que es' +
@@ -5983,6 +6069,19 @@ const
       '>',
     '<p>A exportação escreve-as de três maneiras: como livro XLSX, como texto simples com u' +
       'ma variante por linha, ou como um ficheiro por variante numa pasta à sua escolha.</p>',
+    '<p><b>Rascunho de IA</b> é por onde um modelo começa quando prefere não escrever cada ' +
+      'variante à mão. Diga no resumo o que quer, enumere as variáveis que o modelo pode usar' +
+      ' e carregue em <b>Copiar o pedido</b>. A aplicação não fala com nenhum modelo nem guar' +
+      'da chaves: escreve o pedido para que o leve àquele que já utiliza. Traga a resposta e ' +
+      'carregue em <b>Inserir no documento</b> — o motor desta janela diz então o que lhe par' +
+      'ece, no painel de diagnósticos, tal como faz com tudo o que escreve. Se houver erros, ' +
+      '<b>Copiar o pedido de correção</b> constrói um segundo pedido que aponta ao modelo os ' +
+      'pontos exatos em vez do documento inteiro.</p>',
+    '<p>A coluna do caso é a parte que vale a pena preencher. Uma variável é inserida tal c' +
+      'omo está, nada a declina: numa língua com casos a frase tem de ser construída à volta ' +
+      'da forma que o valor já tem, e um modelo só escolhe bem se lhe disserem que forma tem ' +
+      'cada nome. Do nome não se deduz: num conjunto de modelos real as formas instrumentais ' +
+      'estavam numa variável cujo nome dizia acusativo.</p>',
     '<h2 id="groups">O editor de grupos</h2>',
     '<p>Ponha o cursor dentro de um <code>{a|b|c}</code> e abra o editor de grupos a partir' +
       ' da barra de ferramentas. Enumera as alternativas em linhas: altere-as, acrescente uma' +
@@ -6795,7 +6894,7 @@ const
       'et bereik van het hele document, zodat een fragment dat een bovenaan gedefinieerde var' +
       'iabele gebruikt eruit komt zoals het op zijn plaats zal doen.</p>',
     '<h2 id="panels">De panelen onderaan</h2>',
-    '<p>De werkbalk aan de zijkant opent drie panelen, één tegelijk.</p>',
+    '<p>De werkbalk aan de zijkant opent vier panelen, één tegelijk.</p>',
     '<p><b>Diagnose</b> somt op wat de machine verkeerd vond, telkens met de regel en de ko' +
       'lom waar het begint. Een klik op een regel zet de cursor daar. Het is hetzelfde oordee' +
       'l dat de machine overal elders geeft, geen tweede mening van de editor — daarom wordt ' +
@@ -6828,6 +6927,21 @@ const
       ' nu gebruikt of niet.</p>',
     '<p>De export schrijft ze op drie manieren weg: als XLSX-werkmap, als platte tekst met ' +
       'één variant per regel, of als één bestand per variant in een map naar keuze.</p>',
+    '<p><b>AI-concept</b> is waar een sjabloon begint als u niet elke variant met de hand w' +
+      'ilt schrijven. Zeg in de briefing wat u wilt, noem de variabelen die het model mag geb' +
+      'ruiken en druk op <b>Prompt kopiëren</b>. De toepassing praat met geen enkel model en ' +
+      'houdt geen sleutel: zij schrijft de prompt zodat u hem meeneemt naar het model dat u t' +
+      'och al gebruikt. Breng het antwoord terug en druk op <b>In het document invoegen</b> —' +
+      ' de machine in dit venster zegt dan in het diagnosepaneel wat zij ervan vindt, net als' +
+      ' bij alles wat u zelf typt. Zijn er fouten, dan bouwt <b>Herstelprompt kopiëren</b> ee' +
+      'n tweede prompt die het model de precieze plekken aanwijst in plaats van het hele docu' +
+      'ment.</p>',
+    '<p>De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variabele' +
+      ' wordt letterlijk ingevoegd, niets verbuigt haar: in een taal met naamvallen moet de z' +
+      'in dus rond de vorm worden gebouwd die de waarde al heeft, en een model kiest alleen g' +
+      'oed als het te horen krijgt welke vorm elke naam draagt. Uit de naam volgt dat niet: i' +
+      'n een echte sjabloonverzameling stonden de instrumentalisvormen in een variabele waarv' +
+      'an de naam accusatief zei.</p>',
     '<h2 id="groups">De groepseditor</h2>',
     '<p>Zet de cursor in een <code>{a|b|c}</code> en open de groepseditor vanuit de werkbal' +
       'k. Hij somt de alternatieven als regels op: wijzig ze, voeg er een toe, haal er een we' +
@@ -7655,7 +7769,7 @@ const
       ', böylece yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl çıkacak' +
       'sa öyle çıkar.</p>',
     '<h2 id="panels">Alttaki paneller</h2>',
-    '<p>Yandaki araç şeridi üç paneli, her seferinde birini açar.</p>',
+    '<p>Yandaki araç şeridi dört paneli, her seferinde birini açar.</p>',
     '<p><b>Tanılama</b> makinenin yanlış bulduklarını, her birini başladığı satır ve sütunl' +
       'a birlikte sıralar. Bir satıra tıklamak imleci oraya koyar. Bu, makinenin başka her ye' +
       'rde verdiği hükmün ta kendisidir, düzenleyicinin ikinci bir görüşü değil — bu yüzden b' +
@@ -7686,6 +7800,19 @@ const
     '<p>Dışa aktarma bunları üç yolla yazar: XLSX çalışma kitabı olarak, satır başına bir ç' +
       'eşitleme düşen düz metin olarak ya da seçtiğiniz bir klasörde çeşitleme başına bir dos' +
       'ya olarak.</p>',
+    '<p><b>Yapay zekâ taslağı</b>, her çeşitlemeyi elle yazmak istemediğinizde bir şablonun' +
+      ' başladığı yerdir. Ne istediğinizi özette anlatın, modelin kullanabileceği değişkenler' +
+      'i sıralayın ve <b>İstemi kopyala</b> düğmesine basın. Uygulama hiçbir modele bağlanmaz' +
+      ' ve anahtar tutmaz: istemi, zaten kullandığınız modele götüresiniz diye yazar. Yanıtı ' +
+      'geri getirip <b>Belgeye ekle</b> düğmesine basın — bu penceredeki makine o zaman ne dü' +
+      'şündüğünü tanılama panelinde söyler, tıpkı kendi yazdığınız her şey için yaptığı gibi.' +
+      ' Hata varsa <b>Düzeltme istemini kopyala</b>, modele belgenin tamamını değil tam yerle' +
+      'ri gösteren ikinci bir istem hazırlar.</p>',
+    '<p>Durum sütunu, doldurmaya değer olan bölümdür. Değişken olduğu gibi yerleştirilir, o' +
+      'nu hiçbir şey çekimlemez: durumları olan bir dilde cümle, değerin hâlihazırda taşıdığı' +
+      ' biçimin çevresine kurulmalıdır ve model ancak her adın hangi biçimi taşıdığı söylendi' +
+      'ğinde doğru seçer. Addan çıkarılamaz: gerçek bir şablon kümesinde araç durumundaki biç' +
+      'imler, adı belirtme durumu diyen bir değişkende duruyordu.</p>',
     '<h2 id="groups">Grup düzenleyici</h2>',
     '<p>İmleci bir <code>{a|b|c}</code> içine koyun ve araç şeridinden grup düzenleyiciyi a' +
       'çın. Seçenekleri satırlar olarak sıralar: değiştirin, bir tane ekleyin, bir tane çıkar' +
@@ -8475,7 +8602,7 @@ const
     '<p>Виділіть частину шаблону — і відтвориться лише вона, у межах усього документа, тож ' +
       'уривок, який вживає змінну, визначену вгорі, вийде так, як вийде на своєму місці.</p>',
     '<h2 id="panels">Панелі внизу</h2>',
-    '<p>Смуга інструментів збоку відкриває три панелі, по одній за раз.</p>',
+    '<p>Смуга інструментів збоку відкриває чотири панелі, по одній за раз.</p>',
     '<p><b>Діагностика</b> перелічує те, що рушій вважає хибним, щоразу з рядком і стовпцем' +
       ', де воно починається. Клацання по рядку ставить туди курсор. Це той самий вирок, який' +
       ' рушій виносить скрізь, а не друга думка редактора — тому шаблон, який ця панель назив' +
@@ -8505,6 +8632,19 @@ const
       ' раз на відтворення, користується ним обрана гілка чи ні.</p>',
     '<p>Експорт зберігає їх трьома способами: книгою XLSX, звичайним текстом по варіанту на' +
       ' рядок або по файлу на варіант у теку, яку ви оберете.</p>',
+    '<p><b>AI-чернетка</b> — це те, з чого починається шаблон, коли виписувати кожен варіан' +
+      'т руками не хочеться. Опишіть задачу в брифі, перелічіть змінні, якими моделі можна ко' +
+      'ристуватися, і натисніть <b>Скопіювати промпт</b>. Програма нікуди не звертається і не' +
+      ' зберігає ключів: вона складає промпт, щоб ви віднесли його до тієї моделі, якою корис' +
+      'туєтеся. Поверніть відповідь і натисніть <b>Вставити в документ</b> — рушій у цьому ві' +
+      'кні скаже, що він про неї думає, у панелі діагностики, так само, як про будь-який набр' +
+      'аний вами текст. Якщо є помилки, <b>Скопіювати промпт виправлення</b> складе другий пр' +
+      'омпт, який вказує моделі на точні місця, а не на весь документ.</p>',
+    '<p>Колонка відмінка — та частина, яку варто заповнити. Змінна підставляється дослівно,' +
+      ' ніщо її не відмінює, тому в мові з відмінками речення доводиться будувати навколо тіє' +
+      'ї форми, яку значення вже має, і модель обере правильно, лише якщо їй сказати, яку фор' +
+      'му тримає кожне ім''я. З імені це не виводиться: в одному справжньому наборі шаблонів ' +
+      'орудні форми лежали у змінній, ім''я якої казало «знахідний».</p>',
     '<h2 id="groups">Редактор груп</h2>',
     '<p>Поставте курсор усередину <code>{a|b|c}</code> і відкрийте редактор груп зі смуги і' +
       'нструментів. Він перелічує варіанти рядками: правте їх, додайте один, приберіть інший ' +
@@ -9293,7 +9433,7 @@ const
     '<p>Вылучыце частку шаблона — і адтворыцца толькі яна, у межах усяго дакумента, таму ўр' +
       'ывак, які ўжывае зменную, вызначаную ўверсе, выйдзе так, як выйдзе на сваім месцы.</p>',
     '<h2 id="panels">Панэлі ўнізе</h2>',
-    '<p>Паласа інструментаў збоку адкрывае тры панэлі, па адной за раз.</p>',
+    '<p>Паласа інструментаў збоку адкрывае чатыры панэлі, па адной за раз.</p>',
     '<p><b>Дыягностыка</b> пералічвае тое, што рухавік лічыць памылковым, кожны раз з радко' +
       'м і слупком, дзе яно пачынаецца. Пстрычка па радку ставіць туды курсор. Гэта той самы ' +
       'прысуд, які рухавік выносіць паўсюль, а не другое меркаванне рэдактара — таму шаблон, ' +
@@ -9323,6 +9463,19 @@ const
       'яго раз на адтварэнне, карыстаецца ім абраная галіна ці не.</p>',
     '<p>Экспарт захоўвае іх трыма спосабамі: кнігай XLSX, звычайным тэкстам па варыянце на ' +
       'радок або па файле на варыянт у папку, якую вы абярэце.</p>',
+    '<p><b>AI-чарнавік</b> — гэта тое, з чаго пачынаецца шаблон, калі выпісваць кожны варыя' +
+      'нт рукамі не хочацца. Апішыце задачу ў брыфе, пералічыце зменныя, якімі мадэлі можна к' +
+      'арыстацца, і націсніце <b>Скапіяваць промпт</b>. Праграма нікуды не звяртаецца і не за' +
+      'хоўвае ключоў: яна складае промпт, каб вы занеслі яго ў тую мадэль, якой карыстаецеся.' +
+      ' Вярніце адказ і націсніце <b>Уставіць у дакумент</b> — рухавік у гэтым акне скажа, шт' +
+      'о ён пра яго думае, у панэлі дыягностыкі, гэтак жа, як пра любы набраны вамі тэкст. Ка' +
+      'лі ёсць памылкі, <b>Скапіяваць промпт праўкі</b> складзе другі промпт, які паказвае ма' +
+      'дэлі на дакладныя месцы, а не на ўвесь дакумент.</p>',
+    '<p>Калонка склону — тая частка, якую варта запоўніць. Зменная падстаўляецца даслоўна, ' +
+      'нішто яе не скланяе, таму ў мове са склонамі сказ даводзіцца будаваць вакол той формы,' +
+      ' якую значэнне ўжо мае, і мадэль выбера правільна, толькі калі ёй сказаць, якую форму ' +
+      'трымае кожнае імя. З імя гэта не выводзіцца: у адным сапраўдным наборы шаблонаў творны' +
+      'я формы ляжалі ў зменнай, імя якой казала «вінавальны».</p>',
     '<h2 id="groups">Рэдактар груп</h2>',
     '<p>Пастаўце курсор усярэдзіну <code>{a|b|c}</code> і адкрыйце рэдактар груп з паласы і' +
       'нструментаў. Ён пералічвае варыянты радкамі: праўце іх, дадайце адзін, прыбярыце іншы ' +
@@ -10116,7 +10269,7 @@ const
     '<p>Означите део шаблона и одиграће се само он, у оквиру целог документа, па одломак ко' +
       'ји користи променљиву дефинисану горе излази онако како излази на свом месту.</p>',
     '<h2 id="panels">Панели доле</h2>',
-    '<p>Трака алатки са стране отвара три панела, по један у исто време.</p>',
+    '<p>Трака алатки са стране отвара четири панела, по један у исто време.</p>',
     '<p><b>Дијагностика</b> набраја оно што мотор сматра погрешним, сваки пут са редом и ко' +
       'лоном где почиње. Клик на ред води курсор тамо. То је иста пресуда коју мотор доноси с' +
       'вуда, а не друго мишљење уређивача — зато шаблон који овај панел назове исправним прих' +
@@ -10144,6 +10297,19 @@ const
       'едном по одигравању, користила га изабрана грана или не.</p>',
     '<p>Извоз их чува на три начина: као XLSX радну свеску, као обичан текст са по једном в' +
       'аријантом у реду или као по један фајл по варијанти у фасциклу коју изаберете.</p>',
+    '<p><b>AI нацрт</b> је оно чиме шаблон почиње када не желите да исписујете сваку варија' +
+      'нту ручно. Опишите шта тражите у захтеву, наведите променљиве које модел сме да корист' +
+      'и и притисните <b>Копирај упит</b>. Програм се никуда не обраћа и не чува кључеве: он ' +
+      'саставља упит да га однесете моделу којим се већ служите. Вратите одговор и притисните' +
+      ' <b>Убаци у документ</b> — мотор у овом прозору тада каже шта о њему мисли, у панелу д' +
+      'ијагностике, исто као и о било ком тексту који сами укуцате. Ако има грешака, <b>Копир' +
+      'ај упит за поправку</b> саставља други упит који показује моделу тачна места уместо це' +
+      'лог документа.</p>',
+    '<p>Колона падежа је део који вреди попунити. Променљива се уноси дословно, ништа је не' +
+      ' мења по падежима, па се у језику са падежима реченица мора градити око облика који вр' +
+      'едност већ има, а модел бира тачно само ако му се каже који облик држи свако име. Из и' +
+      'мена се то не може извести: у једном стварном скупу шаблона инструментал је стајао у п' +
+      'роменљивој чије је име говорило акузатив.</p>',
     '<h2 id="groups">Уређивач група</h2>',
     '<p>Ставите курсор унутар <code>{a|b|c}</code> и отворите уређивач група са траке алатк' +
       'и. Он набраја варијанте по редовима: мењајте их, додајте једну, уклоните другу — и док' +
@@ -10922,7 +11088,7 @@ const
       'mak koji koristi varijablu definiranu gore izlazi onako kako izlazi na svom mjestu.</p' +
       '>',
     '<h2 id="panels">Ploče dolje</h2>',
-    '<p>Traka alata sa strane otvara tri ploče, po jednu u isto vrijeme.</p>',
+    '<p>Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.</p>',
     '<p><b>Dijagnostika</b> nabraja ono što motor smatra pogrešnim, svaki put s retkom i st' +
       'upcem gdje počinje. Klik na redak vodi pokazivač tamo. To je ista presuda koju motor d' +
       'onosi svugdje, a ne drugo mišljenje uređivača — zato predložak koji ova ploča nazove i' +
@@ -10951,6 +11117,19 @@ const
       'a izvlači jednom po odigravanju, koristila ga izabrana grana ili ne.</p>',
     '<p>Izvoz ih čuva na tri načina: kao XLSX radnu knjigu, kao običan tekst s po jednom va' +
       'rijantom u retku ili kao po jednu datoteku po varijanti u mapu koju odaberete.</p>',
+    '<p><b>AI nacrt</b> je ono čime predložak počinje kad ne želite ispisivati svaku varija' +
+      'ntu rukom. Opišite što tražite u zadatku, navedite varijable koje model smije koristit' +
+      'i i pritisnite <b>Kopiraj upit</b>. Program se nikamo ne obraća i ne čuva ključeve: on' +
+      ' sastavlja upit da ga odnesete modelu kojim se već služite. Vratite odgovor i pritisni' +
+      'te <b>Umetni u dokument</b> — motor u ovom prozoru tada kaže što o njemu misli, u ploč' +
+      'i dijagnostike, jednako kao i o bilo kojem tekstu koji sami utipkate. Ako ima pogrešak' +
+      'a, <b>Kopiraj upit za popravak</b> sastavlja drugi upit koji pokazuje modelu točna mje' +
+      'sta umjesto cijelog dokumenta.</p>',
+    '<p>Stupac padeža dio je koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je n' +
+      'e mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji' +
+      ' vrijednost već ima, a model bira točno samo ako mu se kaže koji oblik drži svako ime.' +
+      ' Iz imena se to ne može izvesti: u jednom stvarnom skupu predložaka instrumental je st' +
+      'ajao u varijabli čije je ime govorilo akuzativ.</p>',
     '<h2 id="groups">Uređivač grupa</h2>',
     '<p>Stavite pokazivač unutar <code>{a|b|c}</code> i otvorite uređivač grupa s trake ala' +
       'ta. On nabraja varijante po retcima: mijenjajte ih, dodajte jednu, uklonite drugu — i ' +
@@ -11731,7 +11910,7 @@ const
     '<p>Označite dio šablona i odigrat će se samo on, u okviru cijelog dokumenta, pa odloma' +
       'k koji koristi varijablu definisanu gore izlazi onako kako izlazi na svom mjestu.</p>',
     '<h2 id="panels">Ploče dolje</h2>',
-    '<p>Traka alata sa strane otvara tri ploče, po jednu u isto vrijeme.</p>',
+    '<p>Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.</p>',
     '<p><b>Dijagnostika</b> nabraja ono što motor smatra pogrešnim, svaki put s redom i kol' +
       'onom gdje počinje. Klik na red vodi kursor tamo. To je ista presuda koju motor donosi ' +
       'svugdje, a ne drugo mišljenje uređivača — zato šablon koji ova ploča nazove ispravnim ' +
@@ -11760,6 +11939,19 @@ const
       'vlači jednom po odigravanju, koristila ga izabrana grana ili ne.</p>',
     '<p>Izvoz ih čuva na tri načina: kao XLSX radnu svesku, kao običan tekst s po jednom va' +
       'rijantom u redu ili kao po jedan fajl po varijanti u folder koji odaberete.</p>',
+    '<p><b>AI nacrt</b> je ono čime šablon počinje kad ne želite ispisivati svaku varijantu' +
+      ' rukom. Opišite šta tražite u zadatku, navedite varijable koje model smije koristiti i' +
+      ' pritisnite <b>Kopiraj upit</b>. Program se nigdje ne obraća i ne čuva ključeve: on sa' +
+      'stavlja upit da ga odnesete modelu kojim se već služite. Vratite odgovor i pritisnite ' +
+      '<b>Umetni u dokument</b> — motor u ovom prozoru tada kaže šta o njemu misli, u ploči d' +
+      'ijagnostike, jednako kao i o bilo kojem tekstu koji sami otkucate. Ako ima grešaka, <b' +
+      '>Kopiraj upit za popravku</b> sastavlja drugi upit koji pokazuje modelu tačna mjesta u' +
+      'mjesto cijelog dokumenta.</p>',
+    '<p>Kolona padeža je dio koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je n' +
+      'e mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji' +
+      ' vrijednost već ima, a model bira tačno samo ako mu se kaže koji oblik drži svako ime.' +
+      ' Iz imena se to ne može izvesti: u jednom stvarnom skupu šablona instrumental je staja' +
+      'o u varijabli čije je ime govorilo akuzativ.</p>',
     '<h2 id="groups">Uređivač grupa</h2>',
     '<p>Stavite kursor unutar <code>{a|b|c}</code> i otvorite uređivač grupa s trake alata.' +
       ' On nabraja varijante po redovima: mijenjajte ih, dodajte jednu, uklonite drugu — i do' +

@@ -52,7 +52,7 @@ yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl ç�
 
 ## Alttaki paneller
 
-Yandaki araç şeridi üç paneli, her seferinde birini açar.
+Yandaki araç şeridi dört paneli, her seferinde birini açar.
 
 **Tanılama** makinenin yanlış bulduklarını, her birini başladığı satır ve sütunla birlikte sıralar. Bir
 satıra tıklamak imleci oraya koyar. Bu, makinenin başka her yerde verdiği hükmün ta kendisidir,
@@ -86,6 +86,20 @@ sayılır: makine onu her işlemede bir kez çeker, gittiğiniz dal onu kullansa
 
 Dışa aktarma bunları üç yolla yazar: XLSX çalışma kitabı olarak, satır başına bir çeşitleme düşen
 düz metin olarak ya da seçtiğiniz bir klasörde çeşitleme başına bir dosya olarak.
+
+**Yapay zekâ taslağı**, her çeşitlemeyi elle yazmak istemediğinizde bir şablonun başladığı yerdir.
+Ne istediğinizi özette anlatın, modelin kullanabileceği değişkenleri sıralayın ve **İstemi kopyala**
+düğmesine basın. Uygulama hiçbir modele bağlanmaz ve anahtar tutmaz: istemi, zaten kullandığınız
+modele götüresiniz diye yazar. Yanıtı geri getirip **Belgeye ekle** düğmesine basın — bu penceredeki
+makine o zaman ne düşündüğünü tanılama panelinde söyler, tıpkı kendi yazdığınız her şey için
+yaptığı gibi. Hata varsa **Düzeltme istemini kopyala**, modele belgenin tamamını değil tam yerleri gösteren ikinci
+bir istem hazırlar.
+
+Durum sütunu, doldurmaya değer olan bölümdür. Değişken olduğu gibi yerleştirilir, onu hiçbir şey
+çekimlemez: durumları olan bir dilde cümle, değerin hâlihazırda taşıdığı biçimin çevresine
+kurulmalıdır ve model ancak her adın hangi biçimi taşıdığı söylendiğinde doğru seçer. Addan
+çıkarılamaz: gerçek bir şablon kümesinde araç durumundaki biçimler, adı belirtme durumu diyen bir
+değişkende duruyordu.
 
 ## Grup düzenleyici
 

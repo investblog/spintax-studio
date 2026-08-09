@@ -50,7 +50,7 @@ varijablu definisanu gore izlazi onako kako izlazi na svom mjestu.
 
 ## Ploče dolje
 
-Traka alata sa strane otvara tri ploče, po jednu u isto vrijeme.
+Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.
 
 **Dijagnostika** nabraja ono što motor smatra pogrešnim, svaki put s redom i kolonom gdje počinje.
 Klik na red vodi kursor tamo. To je ista presuda koju motor donosi svugdje, a ne drugo mišljenje
@@ -81,6 +81,20 @@ isto: motor ga izvlači jednom po odigravanju, koristila ga izabrana grana ili n
 
 Izvoz ih čuva na tri načina: kao XLSX radnu svesku, kao običan tekst s po jednom varijantom u redu
 ili kao po jedan fajl po varijanti u folder koji odaberete.
+
+**AI nacrt** je ono čime šablon počinje kad ne želite ispisivati svaku varijantu rukom.
+Opišite šta tražite u zadatku, navedite varijable koje model smije koristiti i pritisnite
+**Kopiraj upit**. Program se nigdje ne obraća i ne čuva ključeve: on sastavlja upit da ga odnesete
+modelu kojim se već služite. Vratite odgovor i pritisnite **Umetni u dokument** — motor u ovom prozoru
+tada kaže šta o njemu misli, u ploči dijagnostike, jednako kao i o bilo kojem tekstu koji sami
+otkucate. Ako ima grešaka, **Kopiraj upit za popravku** sastavlja drugi upit koji pokazuje modelu tačna mjesta
+umjesto cijelog dokumenta.
+
+Kolona padeža je dio koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je ne mijenja po
+padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji vrijednost već ima, a
+model bira tačno samo ako mu se kaže koji oblik drži svako ime. Iz imena se to ne može izvesti:
+u jednom stvarnom skupu šablona instrumental je stajao u varijabli čije je ime govorilo
+akuzativ.
 
 ## Uređivač grupa
 
