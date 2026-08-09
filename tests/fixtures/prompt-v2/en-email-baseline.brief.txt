@@ -1,0 +1,1 @@
+Write a short, friendly welcome email (3-4 sentences) for a productivity app called FocusDesk. One clear call to action: open the dashboard.

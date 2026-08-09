@@ -1,0 +1,3 @@
+first_name		recipient's first name
+company		recipient's company
+has_discount		optional — empty when the account has no discount

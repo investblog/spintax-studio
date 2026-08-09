@@ -1,0 +1,1 @@
+Write an SMS (max ~2 short sentences) reminding %first_name% that their trial ends in %days_left% days. Include a short link placeholder %link%. Keep wording variation minimal.

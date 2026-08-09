@@ -1,0 +1,7 @@
+Visitors	nominative	посетители — именительный
+VisitorsGen	genitive	посетителей — родительный
+VisitorsDat	dative	посетителям — дательный
+VisitorsInstr	instrumental	посетителями — творительный
+VisitorsLoc	prepositional	о посетителях — предложный
+Brand		название бренда — не склоняется, вставлять как есть
+visitor_count		число посетителей — счётчик

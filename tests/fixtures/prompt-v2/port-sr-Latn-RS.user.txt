@@ -1,0 +1,7 @@
+CHANNEL: landing copy — a headline plus one supporting sentence.
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+BRIEF:
+Naslov i jedna rečenica za stranicu.
+
+Write the spintax template now. Output only the template.

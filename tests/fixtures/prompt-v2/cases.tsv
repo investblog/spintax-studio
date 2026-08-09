@@ -1,0 +1,19 @@
+en-email-baseline	authoring	en	email	balanced
+en-email-vars-conditional	authoring	en	email	balanced
+en-product-plural	authoring	en	landing	balanced
+en-landing-lastsep	authoring	en	landing	aggressive
+en-sms-conservative	authoring	en	sms	conservative
+ru-email-light	authoring	ru	email	balanced
+ru-strict-cased-counts	authoring	ru	landing	balanced
+ru-push-aggressive	authoring	ru	push	aggressive
+port-hr-landing	authoring	hr	landing	balanced
+port-sr-generic	authoring	sr	generic	aggressive
+port-bs-sms	authoring	bs	sms	conservative
+port-uk-email	authoring	uk	email	balanced
+port-de-email	authoring	de	email	balanced
+port-nolocale	authoring		generic	balanced
+port-ru-RU-email	authoring	ru-RU	email	balanced
+port-sr-Latn-RS	authoring	sr-Latn-RS	landing	balanced
+port-en-US-sms	authoring	en-US	sms	conservative
+repair-en	repair	en		
+repair-ru	repair	ru		

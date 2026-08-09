@@ -1,0 +1,5 @@
+error	plural.arity	8	15	{plural ...}: expected 3 forms, got 2.
+warning	variable.undefined	4	16	Variable 'City' is not defined — may be a runtime variable.
+warning	variable.undefined	6	5	Variable 'CityGen' is not defined — may be a runtime variable.
+warning	variable.undefined	6	34	Variable 'Brand' is not defined — may be a runtime variable.
+warning	variable.undefined	8	11	Variable 'n' is not defined — may be a runtime variable.

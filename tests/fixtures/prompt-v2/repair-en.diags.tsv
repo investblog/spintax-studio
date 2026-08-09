@@ -1,0 +1,3 @@
+error	bracket.unclosed	1	4	Unclosed '{'.
+error	plural.arity	2	14	{plural ...}: expected 2 forms, got 3.
+warning	variable.undefined	2	10	Variable 'n' is not defined — may be a runtime variable.

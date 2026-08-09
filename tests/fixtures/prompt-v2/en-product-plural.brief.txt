@@ -1,0 +1,1 @@
+Write a two-sentence e-commerce product blurb for %product% priced at %price%. Mention that there are %in_stock% units in stock — the sentence must stay grammatical whether it is 1 or many.

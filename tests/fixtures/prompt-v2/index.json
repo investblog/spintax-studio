@@ -228,6 +228,33 @@
    "brief": "Short marketing copy with no declared language."
   },
   {
+   "id": "port-ru-RU-email",
+   "kind": "authoring",
+   "locale": "ru-RU",
+   "channel": "email",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "Короткое письмо о продлении подписки."
+  },
+  {
+   "id": "port-sr-Latn-RS",
+   "kind": "authoring",
+   "locale": "sr-Latn-RS",
+   "channel": "landing",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "Naslov i jedna rečenica za stranicu."
+  },
+  {
+   "id": "port-en-US-sms",
+   "kind": "authoring",
+   "locale": "en-US",
+   "channel": "sms",
+   "variationLevel": "conservative",
+   "allowedVariables": [],
+   "brief": "Short delivery notice."
+  },
+  {
    "id": "repair-en",
    "kind": "repair",
    "locale": "en",

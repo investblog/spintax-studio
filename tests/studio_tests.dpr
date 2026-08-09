@@ -34,7 +34,7 @@ uses
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
-  SpxGsaImport, SpxCount,
+  SpxGsaImport, SpxCount, SpxPrompt,
   SpxFiles, SpxEngineThread, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
   SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxCompanyMark, SpxSevIcons;
   {$ELSE}
@@ -48,6 +48,7 @@ uses
   SpxGroups in '..\src\SpxGroups.pas',
   SpxGsaImport in '..\src\SpxGsaImport.pas',
   SpxCount in '..\src\SpxCount.pas',
+  SpxPrompt in '..\src\SpxPrompt.pas',
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxStrings in '..\gui\SpxStrings.pas',
@@ -2879,6 +2880,228 @@ begin
   if at > 0 then Result := Copy(Result, 1, at - 1);
 end;
 
+(* THE PROMPT PORT IS HELD TO THE REAL BUILDER, BYTE FOR BYTE.
+
+   `src/SpxPrompt.pas` is a port of `spintax-js/packages/authoring-prompt`, and the package it
+   ports exists because a COPY of that prompt had already drifted (the Telegram bot's). A port
+   with nothing comparing it to the original is that same copy with extra steps, so this is the
+   comparison. Fixtures come from `scripts/dump-prompt-fixtures.mjs`, which asks the real
+   builder; node runs there and nowhere in this build (ADR 0011).
+
+   The comparison is EXACT rather than a threshold because the prompt is deterministic --
+   measured, two runs byte-identical. The model's ANSWER to the prompt is the nondeterministic
+   part, and it is measured elsewhere, by the family's conformance suite, statistically.
+
+   Three things this has already caught, all in the port and none by reading it: a missing
+   line-number pad, an unnormalized locale handed to `PluralArity`, and a U+FEFF stripped at
+   one end of a string and not the other. *)
+procedure CheckPromptPort;
+const DIR = 'tests/fixtures/prompt-v2/';
+
+  function Slurp(const APath: string): string;
+  var fs: TFileStream;
+  begin
+    Result := '';
+    if not FileExists(APath) then Exit;
+    fs := TFileStream.Create(APath, fmOpenRead or fmShareDenyNone);
+    try
+      SetLength(Result, fs.Size);
+      if fs.Size > 0 then fs.ReadBuffer(Result[1], fs.Size);
+    finally
+      fs.Free;
+    end;
+  end;
+
+  procedure SplitLF(const S: string; L: TStringList);
+  var i, start: Integer;
+  begin
+    L.Clear;
+    if S = '' then Exit;
+    start := 1;
+    for i := 1 to Length(S) do
+      if S[i] = #10 then
+      begin
+        L.Add(Copy(S, start, i - start));
+        start := i + 1;
+      end;
+    if start <= Length(S) then L.Add(Copy(S, start, Length(S) - start + 1));
+  end;
+
+  function Field(const S: string; N: Integer): string;
+  var i, k, start: Integer;
+  begin
+    Result := ''; k := 0; start := 1;
+    for i := 1 to Length(S) + 1 do
+      if (i > Length(S)) or (S[i] = #9) then
+      begin
+        if k = N then Exit(Copy(S, start, i - start));
+        Inc(k); start := i + 1;
+      end;
+  end;
+
+  (* Not the suite's own Check: these strings are six kilobytes, and two hex dumps of that
+     length bury the one byte that differs. Report the OFFSET and a window around it. *)
+  procedure CheckPrompt(const AName, AGot, AWant: string);
+  var i, n: Integer;
+  begin
+    Inc(Checks);
+    if AGot = AWant then Exit;
+    Inc(Failures);
+    Writeln('FAIL ', AName);
+    n := Length(AGot); if Length(AWant) < n then n := Length(AWant);
+    i := 1;
+    while (i <= n) and (AGot[i] = AWant[i]) do Inc(i);
+    Writeln('     first difference at byte ', i,
+            '  (got ', Length(AGot), ' bytes, want ', Length(AWant), ')');
+    Writeln('     got  ...', Copy(AGot,  i - 40, 90), '...');
+    Writeln('     want ...', Copy(AWant, i - 40, 90), '...');
+  end;
+
+  (* Every worked example, validated under the locale it is taught for. `%n%`, `%discount%`
+     and `%product%` are the prompt's own illustrative names and are not defined anywhere, so
+     they arrive as `variable.undefined` WARNINGS -- the bar is zero ERRORS, which is the bar
+     the family's package uses for the same reason. *)
+  procedure CheckExamplesValid(const AName, ALocale: string);
+  var
+    ex: TSpxExamples;
+    all: array[0..5] of string;
+    d: TSpDiagList;
+    k, j: Integer;
+    bad: string;
+  begin
+    ex := SpxPromptExamples(ALocale);
+    all[0] := ex.Def; all[1] := ex.SetEx; all[2] := ex.Permutation;
+    all[3] := ex.Optional; all[4] := ex.Conditional; all[5] := ex.Plural;
+    bad := '';
+    for k := 0 to High(all) do
+    begin
+      d := SpValidate(all[k], ALocale, nil);
+      try
+        for j := 0 to d.Count - 1 do
+          if d[j].Severity = 'error' then
+            bad := bad + Format(' [%d:%s@%d:%d]', [k, d[j].Code, d[j].Line, d[j].Column]);
+      finally
+        d.Free;
+      end;
+    end;
+    Check(AName, bad, '');
+  end;
+
+  function LoadVars(const APath: string): TSpxAllowedVars;
+  var l: TStringList; i: Integer;
+  begin
+    Result := nil;
+    l := TStringList.Create;
+    try
+      SplitLF(Slurp(APath), l);
+      SetLength(Result, l.Count);
+      for i := 0 to l.Count - 1 do
+      begin
+        Result[i].Name := Field(l[i], 0);
+        Result[i].Kase := SpxVarCaseFromName(Field(l[i], 1));
+        Result[i].Note := Field(l[i], 2);
+      end;
+    finally
+      l.Free;
+    end;
+  end;
+
+var
+  rows, diags: TStringList;
+  i, j: Integer;
+  id, locale: string;
+  vars: TSpxAllowedVars;
+  built: TSpxBuiltPrompt;
+  dl: TSpDiagList;
+  d: TSpDiag;
+  msgs: array of string;
+begin
+  if not FileExists(DIR + 'cases.tsv') then
+  begin
+    CheckTrue('prompt/fixtures are where the suite expects them', False);
+    Exit;
+  end;
+
+  (* The fixtures were taken from ONE upstream version. If the port claims another, every
+     comparison below is answering the wrong question, so say so plainly instead of letting
+     hundreds of byte diffs describe it. *)
+  Check('prompt/port and fixtures name the same prompt version',
+        SPX_PROMPT_VERSION, Trim(Slurp(DIR + 'VERSION')));
+
+  rows := TStringList.Create;
+  diags := TStringList.Create;
+  try
+    SplitLF(Slurp(DIR + 'cases.tsv'), rows);
+    CheckTrue('prompt/the corpus is not empty', rows.Count > 0);
+
+    for i := 0 to rows.Count - 1 do
+    begin
+      id := Field(rows[i], 0);
+      locale := Field(rows[i], 2);
+      vars := LoadVars(DIR + id + '.vars.tsv');
+
+      if Field(rows[i], 1) = 'authoring' then
+        built := SpxBuildAuthoringPrompt(Slurp(DIR + id + '.brief.txt'), locale, vars,
+                                         SpxChannelFromName(Field(rows[i], 3)),
+                                         SpxVariationFromName(Field(rows[i], 4)))
+      else
+      begin
+        SplitLF(Slurp(DIR + id + '.diags.tsv'), diags);
+        dl := TSpDiagList.Create;
+        try
+          SetLength(msgs, diags.Count);
+          for j := 0 to diags.Count - 1 do
+          begin
+            d := Default(TSpDiag);
+            d.Severity := Field(diags[j], 0);
+            d.Code     := Field(diags[j], 1);
+            d.Line     := StrToIntDef(Field(diags[j], 2), 0);
+            d.Column   := StrToIntDef(Field(diags[j], 3), 0);
+            dl.Add(d);
+            msgs[j] := Field(diags[j], 4);
+          end;
+          built := SpxBuildRepairPrompt(Slurp(DIR + id + '.template.txt'), locale, dl, msgs, vars);
+        finally
+          dl.Free;
+        end;
+      end;
+
+      CheckPrompt('prompt/' + id + '/system', built.SystemPrompt, Slurp(DIR + id + '.system.txt'));
+      CheckPrompt('prompt/' + id + '/user',   built.UserPrompt,   Slurp(DIR + id + '.user.txt'));
+    end;
+
+    (* `SpxCleanModelTemplate` is in no built prompt, so nothing above touches it -- and it is
+       the likeliest thing here to be wrong, being four JS regular expressions with the `u` and
+       `i` flags rewritten by hand for a compiler that has neither. *)
+    (* THE EXAMPLES GO THROUGH THE REAL ENGINE, under the locale they are taught for.
+       A byte comparison proves the port says what upstream says; it cannot notice that what
+       upstream says is WRONG -- a fixture regenerated from a broken prompt matches perfectly.
+       The engine is the only reader that would object, and Studio has it in-process.
+
+       The locale matters, and is the point rather than a detail: the plural example carries as
+       many forms as the target takes, so an English-taught two-form example checked under `hr`
+       is a `plural.arity` error. The family's own package validates its examples this way and
+       records the reason -- a prompt that teaches invalid syntax poisons everything downstream
+       of it. *)
+    SplitLF(Slurp(DIR + 'cases.tsv'), rows);
+    for i := 0 to rows.Count - 1 do
+    begin
+      locale := Field(rows[i], 2);
+      CheckExamplesValid('prompt/examples/' + Field(rows[i], 0), locale);
+    end;
+
+    SplitLF(Slurp(DIR + 'clean.tsv'), rows);
+    CheckTrue('prompt/the clean corpus is not empty', rows.Count > 0);
+    for i := 0 to rows.Count - 1 do
+      CheckPrompt('prompt/clean/' + rows[i],
+                  SpxCleanModelTemplate(Slurp(DIR + 'clean-' + rows[i] + '.in.txt')),
+                  Slurp(DIR + 'clean-' + rows[i] + '.out.txt'));
+  finally
+    rows.Free;
+    diags.Free;
+  end;
+end;
+
 procedure CheckManifestLanguages;
 const MANIFEST = 'packaging/AppxManifest.xml.in';
 var
@@ -3386,6 +3609,7 @@ begin
     generator refuses to write one now; this refuses to ship one. }
   CheckIconFrames;
   CheckManifestLanguages;
+  CheckPromptPort;
 
   { A size nobody has a strip for still gets one rather than nil. }
   p := SpxIconStrip(999, len);

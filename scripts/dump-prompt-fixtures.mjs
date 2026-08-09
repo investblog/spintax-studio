@@ -40,7 +40,7 @@ const OUT = join(HERE, 'tests', 'fixtures', 'prompt-v2');
 const importFrom = (pkg) =>
   import(pathToFileURL(join(JS, 'packages', pkg, 'dist', 'index.js')).href);
 
-const { buildAuthoringPrompt, buildRepairPrompt, PROMPT_VERSION } =
+const { buildAuthoringPrompt, buildRepairPrompt, cleanModelTemplate, PROMPT_VERSION } =
   await importFrom('authoring-prompt');
 const { validate } = await importFrom('core');
 
@@ -51,6 +51,23 @@ const { briefs } = JSON.parse(readFileSync(briefsPath, 'utf8'));
    must too. A CRLF here would make every fixture unmatchable on the one platform Studio ships
    on, which is the sort of failure that reads as a bad port. */
 const write = (name, text) => writeFileSync(join(OUT, name), text, 'utf8');
+
+/* The INPUTS go out as files too, one per case, in a shape Pascal reads with a TStringList and
+   a tab split. `index.json` stays for a human; the suite must not need a JSON parser to run a
+   byte comparison, and a single packed line with its own escaping convention is a second format
+   to get wrong. Each field here is written verbatim, so a brief with a comma or a note with a
+   semicolon costs nothing. */
+const asCase = (v) => (typeof v === 'string' ? { name: v } : v);
+const writeInputs = (id, { brief, allowedVariables }) => {
+  if (brief !== undefined) write(`${id}.brief.txt`, brief);
+  write(
+    `${id}.vars.tsv`,
+    (allowedVariables ?? [])
+      .map(asCase)
+      .map((v) => `${v.name}\t${v.case ?? ''}\t${v.note ?? ''}`)
+      .join('\n'),
+  );
+};
 
 /* Two repair cases, chosen for what they EXERCISE rather than for coverage of the prose:
 
@@ -125,6 +142,26 @@ const PORT_CASES = [
     brief: 'Kurze Willkommens-E-Mail für ein Produktivitätswerkzeug.', allowedVariables: [] },
   { id: 'port-nolocale', channel: 'generic', variationLevel: 'balanced',
     brief: 'Short marketing copy with no declared language.', allowedVariables: [] },
+
+  /* REGIONAL TAGS, and this is not a completeness gesture -- it is the one trap in the port
+     that nothing else here measures. JS `pluralArity(locale)` normalizes inside; the Pascal
+     entry point takes an ALREADY normalized tag. Measured on the pinned engine:
+
+         PluralArity('ru')    = 3        PluralArity('ru-RU')      = 2
+         PluralArity('hr')    = 3        PluralArity('sr-Latn-RS') = 2
+
+     So a port that passes the raw tag hands a Russian document the two-form prompt, and every
+     fixture above would still be green, because every locale above is already a base tag. A
+     trap named in a comment and measured by nothing is a trap that ships.
+
+     `en-US` is the control: it answers 2 either way. Without it, "regional tags differ" would
+     be the lesson, and the actual lesson is "normalize before you ask". */
+  { id: 'port-ru-RU-email', locale: 'ru-RU', channel: 'email', variationLevel: 'balanced',
+    brief: 'Короткое письмо о продлении подписки.', allowedVariables: [] },
+  { id: 'port-sr-Latn-RS', locale: 'sr-Latn-RS', channel: 'landing', variationLevel: 'balanced',
+    brief: 'Naslov i jedna rečenica za stranicu.', allowedVariables: [] },
+  { id: 'port-en-US-sms', locale: 'en-US', channel: 'sms', variationLevel: 'conservative',
+    brief: 'Short delivery notice.', allowedVariables: [] },
 ];
 
 rmSync(OUT, { recursive: true, force: true });
@@ -142,6 +179,7 @@ for (const b of [...briefs, ...PORT_CASES]) {
   });
   write(`${b.id}.system.txt`, p.systemPrompt);
   write(`${b.id}.user.txt`, p.userPrompt);
+  writeInputs(b.id, b);
   index.push({
     id: b.id,
     kind: 'authoring',
@@ -162,6 +200,14 @@ for (const r of REPAIRS) {
   write(`${r.id}.system.txt`, p.systemPrompt);
   write(`${r.id}.user.txt`, p.userPrompt);
   write(`${r.id}.template.txt`, r.template);
+  writeInputs(r.id, r);
+  /* Severity and message travel with EVERY diagnostic, warnings included: the port filters
+     them itself, and handing it a pre-filtered list would move that filter out of the gate. */
+  write(
+    `${r.id}.diags.tsv`,
+    diagnostics.map((d) => `${d.severity}\t${d.code}\t${d.line}\t${d.column}\t${d.message}`)
+      .join('\n'),
+  );
   index.push({
     id: r.id,
     kind: 'repair',
@@ -181,6 +227,54 @@ for (const r of REPAIRS) {
   });
 }
 
+/* `cleanModelTemplate` is not part of any built prompt, so nothing above covers it -- and it is
+   the function most likely to be wrong in the port, because the original is four regular
+   expressions with the `u` and `i` flags and Free Pascal has none of that. Every branch is
+   pinned here by asking the REAL function, including the ones that must NOT fire: a lone quote,
+   a fence in the middle of the text, a prefix that only looks like one.
+   The Cyrillic prefix matters because `UpperCase` in this Pascal dialect is ASCII-only, so a
+   naive port drops `Шаблон:` and keeps `шаблон:`. */
+const CLEAN_CASES = [
+  ['plain', 'Hi {a|b} there.'],
+  ['fence-bare', '```\nHi {a|b} there.\n```'],
+  ['fence-lang', '```spintax\nHi {a|b} there.\n```'],
+  ['fence-crlf', '```text\r\nHi {a|b} there.\r\n```'],
+  ['prefix-lower', 'template: Hi {a|b} there.'],
+  ['prefix-upper', 'TEMPLATE:Hi {a|b} there.'],
+  ['prefix-mixed', 'Template   :   Hi {a|b} there.'],
+  ['prefix-cyr-lower', 'шаблон: Привет, {мир|свет}.'],
+  ['prefix-cyr-upper', 'Шаблон : Привет, {мир|свет}.'],
+  ['prefix-cyr-caps', 'ШАБЛОН:Привет, {мир|свет}.'],
+  ['quotes-straight', '"Hi {a|b} there."'],
+  ['quotes-curly', '“Hi {a|b} there.”'],
+  ['quote-unpaired', '"Hi {a|b} there.'],
+  ['fence-then-prefix', '```\nTemplate: Hi {a|b} there.\n```'],
+  ['fence-inside', 'Use ``` in your copy, {a|b}.'],
+  ['nbsp-edges', '  Hi {a|b} there. '],
+  /* U+2028 and U+FEFF: JS trim() removes both, Pascal's Trim stops at #32. The hand-written
+     TrimU in the port has to know that, and a case written with ordinary spaces would not
+     ask. */
+  ['unicode-space-edges', '  Hi {a|b} there.  '],
+  ['bom-edges', '﻿Hi {a|b} there.﻿'],
+  ['fence-only', '```\n```'],
+  ['prefix-lookalike', 'Templates: Hi {a|b} there.'],
+  ['blank', '   \n  '],
+  ['multiline', '```\n#def %x% = {a|b}\n\n%x% and %x%\n```'],
+];
+
+for (const [id, raw] of CLEAN_CASES) {
+  write(`clean-${id}.in.txt`, raw);
+  write(`clean-${id}.out.txt`, cleanModelTemplate(raw));
+}
+write('clean.tsv', CLEAN_CASES.map(([id]) => id).join('\n'));
+
+/* The case list the suite iterates. One line per case, no field here can contain a tab or a
+   newline -- ids, locales, channels and levels are all short identifiers. */
+write(
+  'cases.tsv',
+  index.map((c) => `${c.id}\t${c.kind}\t${c.locale}\t${c.channel ?? ''}\t${c.variationLevel ?? ''}`)
+    .join('\n'),
+);
 write('VERSION', `${PROMPT_VERSION}\n`);
 write('index.json', `${JSON.stringify({ promptVersion: PROMPT_VERSION, cases: index }, null, 1)}\n`);
 

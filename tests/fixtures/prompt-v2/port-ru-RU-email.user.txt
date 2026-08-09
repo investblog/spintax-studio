@@ -1,0 +1,7 @@
+CHANNEL: email — 2–5 sentences, conversational, one clear call to action.
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+BRIEF:
+Короткое письмо о продлении подписки.
+
+Write the spintax template now. Output only the template.

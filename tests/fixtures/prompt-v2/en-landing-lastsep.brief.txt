@@ -1,0 +1,1 @@
+Write a one-paragraph landing-page intro for a team chat app. In one sentence, list three to four of these selling points in varying order: fast search, thread summaries, offline mode, granular permissions. The list must read naturally in prose (with a proper 'and' before the last item).

@@ -1,0 +1,1 @@
+Write a short onboarding email for %first_name% at %company%. If %has_discount% is set, mention their discount is already applied; otherwise do not mention pricing at all. 3-5 sentences, one call to action.
