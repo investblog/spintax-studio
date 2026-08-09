@@ -1,0 +1,1 @@
+{"type": "message", "role": "assistant", "content": [{"type": "thinking", "thinking": "ignored"}, {"type": "text", "text": "Hi "}, {"type": "text", "text": "{a|b} there."}]}

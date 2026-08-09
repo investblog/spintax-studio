@@ -32,10 +32,14 @@ uses
   { zipper for reading an exported .xlsx back apart -- the writer is only worth as much as
     the check that opens what it wrote. }
   SysUtils, Classes, Generics.Collections, zipper, StrUtils, DOM, XMLRead,
+  { The provider adapters build and read JSON, and so does the check on them: a body
+    asserted by parsing it back is the only way to test escaping without a fixture that
+    is just this code's own output. }
+  fpjson, jsonparser,
   {$IFDEF FPC}
   Spintax, SpxStudio, SpxTokens, SpxGroups, SpxDemo, SpxDedupe, SpxExport, SpxHtmlScan,
   SpxGsaImport, SpxCount, SpxPrompt,
-  SpxFiles, SpxEngineThread, SpxHttp, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
+  SpxFiles, SpxEngineThread, SpxHttp, SpxLlm, SpxStrIds, SpxStrings, SpxIcons, SpxFlags, SpxSettings,
   SpxEditorFont, SpxHelpText, SpxHelpNav, SpxAbout, SpxBrandMark, SpxCompanyMark, SpxSevIcons;
   {$ELSE}
   Spintax in '..\engine\src\Spintax.pas',
@@ -52,6 +56,7 @@ uses
   SpxFiles in '..\gui\SpxFiles.pas',
   SpxEngineThread in '..\gui\SpxEngineThread.pas',
   SpxHttp in '..\gui\SpxHttp.pas',
+  SpxLlm in '..\gui\SpxLlm.pas',
   SpxStrings in '..\gui\SpxStrings.pas',
   SpxIcons in '..\gui\SpxIcons.pas',
   SpxFlags in '..\gui\SpxFlags.pas',
@@ -4989,37 +4994,204 @@ begin
   CheckTrue('http/a bare host is accepted', err = heNone);
   Check('http/and its path defaults to a slash', path, '/');
 
-  (* AND NOTHING IN THE WINDOW CAN REACH IT YET.
+  (* THIS IS WHERE THE POLICY-DATING CHECK USED TO BE, and it did its job on 2026-08-09.
 
-     This is the check that dates the privacy policy. Every published copy still says the
-     application makes no network request of any kind, and while no unit but this suite mentions
-     `SpxHttp`, that sentence is TRUE of the package a reader installs -- the transport is in
-     the box with no handle on it.
+     It asserted that no unit in `gui/` or `src/` mentioned `SpxHttp`, so that the published
+     sentence "makes no network request of any kind" stayed true of the package a reader
+     installs. `gui/SpxLlm.pas` mentions it -- the product now holds a call path that needs only
+     a button -- and the check went red on the commit that added the providers, EARLIER than the
+     plan assumed. The temptation was to narrow it to "reachable from the form", which no text
+     scan can decide honestly; that would have been weakening a check to avoid work.
 
-     The first unit to wire it up deletes this check, and that commit owes the rewritten policy
-     in all three copies plus listing bullet 17. The text is written and waiting in
-     `docs/publish/network-slice-edits.md`, so the work is a move rather than a draft.
+     So the policy moved instead: `docs/privacy.md` and both published copies now describe what
+     the AI connection sends, to whom, and that a local endpoint sends nothing off the machine.
+     Listing bullet 17 and the thirteen drafts moved with it.
 
-     Counted over `gui/` and `src/`, because a suite that names itself here would always pass. *)
-  wired := '';
-  for k := 0 to 1 do
+     What still guards the claim is `NET_ALLOWED` above: exactly one file may open a socket, and
+     a second still fails. The link COUNT below is untouched, because there are still two -- the
+     third arrives with the report-a-problem item that policy 11.16 requires, and it moves
+     together with the paragraph that enumerates them. *)
+end;
+
+(* THE PROVIDERS, AND NOT ONE CHECK OPENS A CONNECTION.
+
+   Three questions are decidable offline, and they are the three where a caller's mistakes land:
+   what goes into the body, which header carries the key, and what a given answer means. The
+   fourth -- whether a real provider accepts it -- is a manual run, once per slice, and nothing
+   here pretends to stand in for it.
+
+   ABOUT THE RESPONSE FIXTURES, PLAINLY: they are written from the two providers' documented
+   response shapes, NOT captured from a live call. That makes them a test of this parser against
+   what those shapes are meant to be -- worth having, and not the same thing as evidence about
+   what a given account returns today. They are PARSED rather than compared byte for byte, so
+   their line endings do not matter; that is why this directory has no `-text` rule while
+   `tests/fixtures/prompt-v2` does. *)
+procedure TestLlm;
+var
+  cfg: TSpxLlmConfig;
+  prompt: TSpxBuiltPrompt;
+  ans: TSpxLlmAnswer;
+  hdrs, rows: TStringList;
+  body, id_, kindS, want: string;
+  data: TJSONData;
+  root: TJSONObject;
+  msgs: TJSONArray;
+  i, seen: Integer;
+  kind: TSpxLlmKind;
+
+  function ErrName(E: TSpxLlmError): string;
   begin
-    if k = 0 then dir_ := 'gui' else dir_ := 'src';
-    if FindFirst(dir_ + '/*.pas', faAnyFile, r_) <> 0 then Continue;
-    try
-      repeat
-        if SameText(r_.Name, 'SpxHttp.pas') then Continue;
-        (* The WHOLE file and a plain substring, not a uses clause and not a whole word: both
-           readers are another procedure's locals, and broad is the right side to err on here.
-           A mention of this unit anywhere in `gui/` or `src/` is a signal worth stopping for. *)
-        if Pos('spxhttp', LowerCase(SpxReadTextFile(dir_ + '/' + r_.Name))) > 0 then
-          wired := wired + ' ' + r_.Name;
-      until FindNext(r_) <> 0;
-    finally
-      FindClose(r_);
+    case E of
+      leNone:        Result := 'leNone';
+      leNoKey:       Result := 'leNoKey';
+      leTransport:   Result := 'leTransport';
+      leAuth:        Result := 'leAuth';
+      leRateLimit:   Result := 'leRateLimit';
+      leContext:     Result := 'leContext';
+      leProvider:    Result := 'leProvider';
+      leBadResponse: Result := 'leBadResponse';
+      leEmpty:       Result := 'leEmpty';
+    else
+      Result := 'leCancelled';
     end;
   end;
-  Check('http/the transport is not reachable from the window', Trim(wired), '');
+
+  function Col(const S: string; N: Integer): string;
+  var a, k, start: Integer;
+  begin
+    Result := ''; k := 0; start := 1;
+    for a := 1 to Length(S) + 1 do
+      if (a > Length(S)) or (S[a] = #9) then
+      begin
+        if k = N then Exit(Copy(S, start, a - start));
+        Inc(k); start := a + 1;
+      end;
+  end;
+
+begin
+  (* -- the local-endpoint rule, which decides whether an empty key is a mistake -- *)
+  CheckTrue('llm/localhost is local', SpxLlmIsLocal('http://localhost:11434/v1/chat/completions'));
+  CheckTrue('llm/127.0.0.1 is local', SpxLlmIsLocal('http://127.0.0.1:1234/v1/chat/completions'));
+  CheckTrue('llm/a cloud endpoint is not local',
+            not SpxLlmIsLocal('https://api.anthropic.com/v1/messages'));
+  (* The narrowness the unit claims for itself: a name that merely BEGINS with localhost is
+     somebody else's machine, and treating it as local would waive the missing-key check for a
+     host the reader never meant. *)
+  CheckTrue('llm/and localhost.example.com is not local',
+            not SpxLlmIsLocal('https://localhost.example.com/v1/chat/completions'));
+
+  (* -- THE BODY, ASKED OF ITSELF RATHER THAN OF A COPY OF ITSELF --
+
+     This is the check that matters, and it needs no fixture. The prompt carries a quote, a
+     backslash, a tab, a newline and Cyrillic -- everything hand-rolled JSON escaping gets wrong
+     -- and the body is parsed BACK to see whether what arrives equals what went in. A fixture
+     of the expected bytes would assert only that this code still does what it did; this asserts
+     that what it does is right. *)
+  prompt := Default(TSpxBuiltPrompt);
+  prompt.SystemPrompt := 'A "quoted" thing' + #10 + 'and a \ backslash' + #9 + 'tab';
+  prompt.UserPrompt := 'Привет, {а|б} — «кавычки», и' + #10 + 'перевод строки';
+
+  cfg := Default(TSpxLlmConfig);
+  cfg.Kind := lkAnthropic;
+  cfg.Model := 'claude-opus-5';
+  cfg.MaxTokens := 1024;
+  body := SpxLlmBuildBody(cfg, prompt);
+  data := GetJSON(body);
+  try
+    root := TJSONObject(data);
+    Check('llm/the anthropic body names the model', root.Get('model', ''), 'claude-opus-5');
+    Check('llm/and carries max_tokens', IntToStr(root.Get('max_tokens', 0)), '1024');
+    Check('llm/anthropic puts the system prompt in a FIELD, unchanged',
+          root.Get('system', ''), prompt.SystemPrompt);
+    msgs := TJSONArray(root.Find('messages'));
+    CheckTrue('llm/anthropic sends exactly one message', msgs.Count = 1);
+    Check('llm/and it is the user turn', TJSONObject(msgs.Items[0]).Get('role', ''), 'user');
+    Check('llm/whose content survives the round trip',
+          TJSONObject(msgs.Items[0]).Get('content', ''), prompt.UserPrompt);
+  finally
+    data.Free;
+  end;
+
+  cfg.Kind := lkOpenAiCompatible;
+  body := SpxLlmBuildBody(cfg, prompt);
+  data := GetJSON(body);
+  try
+    root := TJSONObject(data);
+    msgs := TJSONArray(root.Find('messages'));
+    CheckTrue('llm/the openai shape sends two messages', msgs.Count = 2);
+    Check('llm/the first is the system turn',
+          TJSONObject(msgs.Items[0]).Get('role', ''), 'system');
+    Check('llm/carrying the system prompt unchanged',
+          TJSONObject(msgs.Items[0]).Get('content', ''), prompt.SystemPrompt);
+    Check('llm/the second is the user turn',
+          TJSONObject(msgs.Items[1]).Get('role', ''), 'user');
+    Check('llm/carrying the user prompt unchanged',
+          TJSONObject(msgs.Items[1]).Get('content', ''), prompt.UserPrompt);
+  finally
+    data.Free;
+  end;
+
+  (* -- the headers, and where the key is allowed to appear -- *)
+  hdrs := TStringList.Create;
+  try
+    cfg.Kind := lkAnthropic;
+    cfg.ApiKey := 'sk-ant-TESTKEY';
+    SpxLlmHeaders(cfg, hdrs);
+    CheckTrue('llm/anthropic sends its dated version header',
+              Pos('anthropic-version: ' + SPX_ANTHROPIC_VERSION, hdrs.Text) > 0);
+    CheckTrue('llm/anthropic uses x-api-key', Pos('x-api-key: ' + cfg.ApiKey, hdrs.Text) > 0);
+    (* EXACTLY ONE line may carry it. A key in a second header is a key in a second log. *)
+    seen := 0;
+    for i := 0 to hdrs.Count - 1 do
+      if Pos(cfg.ApiKey, hdrs[i]) > 0 then Inc(seen);
+    Check('llm/the key appears in exactly one header', IntToStr(seen), '1');
+
+    cfg.Kind := lkOpenAiCompatible;
+    SpxLlmHeaders(cfg, hdrs);
+    CheckTrue('llm/the openai shape uses a bearer token',
+              Pos('authorization: Bearer ' + cfg.ApiKey, hdrs.Text) > 0);
+
+    (* An EMPTY key sends no auth header at all rather than an empty one: a local model refuses
+       a bearer with nothing after it and accepts its absence. *)
+    cfg.ApiKey := '';
+    SpxLlmHeaders(cfg, hdrs);
+    CheckTrue('llm/an empty key sends no authorization header',
+              Pos('authorization', LowerCase(hdrs.Text)) = 0);
+    cfg.Kind := lkAnthropic;
+    SpxLlmHeaders(cfg, hdrs);
+    CheckTrue('llm/nor an empty x-api-key', Pos('x-api-key', LowerCase(hdrs.Text)) = 0);
+  finally
+    hdrs.Free;
+  end;
+
+  (* -- no key, no dial: the pre-flight, and the reason this is testable at all -- *)
+  cfg := Default(TSpxLlmConfig);
+  cfg.Kind := lkAnthropic;
+  cfg.Endpoint := SpxLlmDefaultEndpoint(lkAnthropic);
+  ans := SpxLlmAsk(cfg, prompt, nil);
+  Check('llm/a missing key is refused before anything is dialled', ErrName(ans.Error), 'leNoKey');
+
+  (* -- and what each answer means -- *)
+  rows := TStringList.Create;
+  try
+    rows.Text := SpxReadTextFile('tests/fixtures/llm/cases.tsv');
+    CheckTrue('llm/the response corpus is not empty', rows.Count > 0);
+    for i := 0 to rows.Count - 1 do
+    begin
+      if Trim(rows[i]) = '' then Continue;
+      id_ := Col(rows[i], 0);
+      kindS := Col(rows[i], 1);
+      want := Col(rows[i], 3);
+      if kindS = 'anthropic' then kind := lkAnthropic else kind := lkOpenAiCompatible;
+      ans := SpxLlmParse(kind, StrToIntDef(Col(rows[i], 2), 0),
+                         SpxReadTextFile('tests/fixtures/llm/' + id_ + '.json'));
+      Check('llm/' + id_, ErrName(ans.Error), want);
+      if want = 'leNone' then
+        Check('llm/' + id_ + ' reads the text out', Trim(ans.Text), 'Hi {a|b} there.');
+    end;
+  finally
+    rows.Free;
+  end;
 end;
 
 procedure TestOfflineClaim;
@@ -5100,8 +5272,24 @@ begin
   { The page exists and still says the thing the checks below defend. }
   text_ := SpxReadTextFile('docs/privacy.md');
   CheckTrue('offline/the privacy policy is where the Store will point', Length(text_) > 400);
-  CheckTrue('offline/and it still promises nothing is collected',
-            Pos('collect, transmit or store any', text_) > 0);
+  (* WHAT THE POLICY STILL PROMISES, AND WHAT IT NO LONGER CAN.
+
+     This was one check against the literal sentence "does not collect, transmit or store any
+     personal data", and it went red on 2026-08-09 -- correctly. Half of that sentence is still
+     true and half of it is not: nothing is COLLECTED, and never will be, but the application
+     now TRANSMITS what a reader asks it to, to a provider the reader chose. A blanket promise
+     that has become half false is worse than no promise, so the anchor moved with the claim.
+
+     Three assertions instead of one, and each pins a thing that could rot separately: the
+     collection promise survives, the blanket sentence cannot creep back, and the qualification
+     is actually stated rather than merely implied by its absence. *)
+  CheckTrue('offline/the policy still promises nothing is collected',
+            Pos('collects nothing about you', text_) > 0);
+  CheckTrue('offline/and no longer makes the blanket claim it cannot keep',
+            Pos('collect, transmit or store any', text_) = 0);
+  CheckTrue('offline/and says the AI connection is off until it is turned on',
+            (Pos('off until you turn it on', text_) > 0) and
+            (Pos('your key', LowerCase(text_)) > 0));
   { AND NAMES EVERY MARK THAT LEAVES. The count below would go on passing if a link were moved
     from one brand to another, so the page is asked for both by name -- a reader checking the
     policy against the window has to find what they clicked in it. }
@@ -5195,6 +5383,29 @@ begin
     CheckTrue('privacy/' + name_ + ' no longer claims a single link',
               (Pos('one external action', low_) = 0) and
               (Pos('There is one external', low_) = 0));
+
+    (* AND EVERY COPY CARRIES THE SUBSTANCE, not just the contacts.
+
+       This gate was built after two published copies were found saying "one external action"
+       while the window had two marks, and it asked each copy for both marks and the address.
+       That is identity of CONTACTS, and on 2026-08-09 it passed while the hosted page was
+       materially incomplete: the source and the Partner Center copy described what the AI
+       connection sends and the page did not, because a rewrite touched two of its paragraphs
+       and missed two others. Nothing was red. Found by counting a phrase across the three
+       files by hand -- which is the instrument this check should have been.
+
+       Four markers, each a claim a reader would go looking for and each able to go missing on
+       its own: that the connection is off until turned on, that the key lives in the Windows
+       credential store, that a local endpoint sends nothing off the machine, and that the
+       provider's own policy governs the exchange. *)
+    CheckTrue('privacy/' + name_ + ' says the AI connection is off until turned on',
+              Pos('until you turn it on', low_) > 0);
+    CheckTrue('privacy/' + name_ + ' says where the key is kept',
+              Pos('credential manager', LowerCase(low_)) > 0);
+    CheckTrue('privacy/' + name_ + ' names a local endpoint as sending nothing',
+              Pos('localhost:11434', low_) > 0);
+    CheckTrue('privacy/' + name_ + ' says the provider''s own policy governs that exchange',
+              Pos('their policy applies', LowerCase(low_)) > 0);
   end;
   { Belt and braces: nothing in the product opens a process either. }
   stop := 0;
@@ -9130,6 +9341,7 @@ begin
   TestHelpSilences;
   TestOfflineClaim;
   TestHttp;
+  TestLlm;
   TestAbout;
   TestGsaImport;
   TestVariantCount;

@@ -1,0 +1,1 @@
+{"id": "chatcmpl-1", "object": "chat.completion", "model": "gpt-x", "choices": [{"index": 0, "message": {"role": "assistant", "content": "Hi {a|b} there."}, "finish_reason": "stop"}]}

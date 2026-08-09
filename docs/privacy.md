@@ -7,12 +7,19 @@ project: spintax-studio
 
 # Privacy policy — Spintax Studio
 
-**Effective 4 August 2026. Applies to Spintax Studio 0.1 for Windows.**
+**Effective 9 August 2026. Applies to Spintax Studio for Windows.**
 
-*(The date moved from 1 August because the text below changed on the 4th: the window gained a second mark, and a policy that lists what leaves your computer has to be dated when that list changed, not when it was first written.)*
+*(The date moves when the list below changes, not when the text was written. It moved from
+1 August because the window gained a second mark, and again on the 9th because the application
+gained the ability to send text to a model — the largest change this document has had. The
+version is not named: the build that carries that feature has no number yet, and a number
+written here before it exists would be the one false line in a document about honesty.)*
 
-Spintax Studio is an offline desktop application. It does not collect, transmit or store any
-personal data.
+Spintax Studio is an offline desktop application. It collects nothing about you: no account, no
+sign-in, no telemetry, no analytics. One feature is an exception, and only once you switch it
+on — the AI draft can send the text you hand it to a model provider **you** choose and pay for,
+with **your** key. It is off until you turn it on, and this policy describes exactly what it
+sends and to whom.
 
 ## What we collect
 
@@ -20,12 +27,32 @@ Nothing. There is no account to create, no sign-in, no licence check, no telemet
 analytics, no crash reporting, and no advertising. We do not know that you have installed the
 application, and we have no way to find out from it.
 
+Turning on the AI connection does not change this. Your key is stored on your own computer, in
+the Windows Credential Manager, encrypted for your Windows account, and it goes nowhere except
+to the endpoint you pointed it at. We have no key of our own, no account for you, and no server
+in the middle: the request is made by this application, from your machine, on your provider's
+account. We never see it.
+
 ## What leaves your computer
 
-Nothing. The application makes no network request of any kind — not at startup, not while you
-work, not on exit. Every part of it — the editor, validation, rendering, the variant generator,
-export and the built-in help — runs with no network connection at all, and there is nothing in
-it that could make one.
+**With the AI connection off — which is how the application is installed — nothing.** No part of
+it makes a network request: not at startup, not while you work, not on exit. The editor,
+validation, rendering, the variant generator, export and the built-in help have never needed one
+and still do not.
+
+**With it on, and only when you press the button that sends:** the prompt goes out. That is the
+brief you wrote, the variable names you listed, and — when you ask for a repair — the draft and
+the diagnostics the engine found in it. It goes to the endpoint you configured, with your key,
+on your account. Nothing else is added to it: no identifier, no document you did not send, and
+no record is kept here of what you sent.
+
+**And if the endpoint you configure is a local one** — a model running on your own machine, at
+an address like `http://localhost:11434` — then nothing leaves the computer at all. That is a
+different thing from a cloud provider, and this policy is not going to blur them: with a local
+model the whole loop, prompt included, stays where your documents are.
+
+What the provider does with what you send is theirs to state, not ours. Their policy applies to
+that exchange, and we are not a party to it.
 
 **The two links in the window are not an exception, because a link is not a request.** The
 **spintax.net** mark at the bottom of the tool rail and the **301.st** mark at the right end of

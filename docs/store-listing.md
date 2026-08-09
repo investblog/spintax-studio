@@ -101,7 +101,7 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 14. XLSX spreadsheet export with XML-safe text and UTF-8 content
 15. Light and dark themes for a comfortable editing workspace
 16. Multilingual interface with 14 available UI languages
-17. Offline by design: no account, cloud service, API key or telemetry, and no browser, Node.js, PHP or Python runtime
+17. Offline by default: no account, no telemetry, and no browser, Node.js, PHP or Python runtime — the optional AI link uses your own key and your own provider
 18. Local-first workflow for SEO content, localization workflows and reusable product copy
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine

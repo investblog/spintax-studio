@@ -1,0 +1,1 @@
+{"choices": [{"index": 0, "text": "Hi {a|b} there.", "finish_reason": "stop"}]}
