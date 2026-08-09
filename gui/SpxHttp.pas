@@ -97,6 +97,21 @@ function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): 
    rather than offering it and failing. *)
 function SpxHttpAvailable: Boolean;
 
+(* WHICH OF OURS A WINDOWS ERROR CODE MEANS, exported so the suite can ask it in numbers.
+
+   The codes themselves come from `winhttp`, which declares all but one of them -- they were
+   hand-copied here once and one was wrong: `ERROR_WINHTTP_SECURE_CERT_CN_INVALID` was written
+   as base+169, which is `ERROR_WINHTTP_SECURE_INVALID_CERT`, so a certificate whose name did
+   not match the host fell through to `heOther` and the reader was told "something went wrong"
+   instead of "this connection is not what it claims to be". Found by review. A list of another
+   unit's constants is enforced nowhere until something compares it to that unit -- and this
+   unit was ALREADY in `uses`.
+
+   The suite asks in LITERAL NUMBERS on purpose. Asserting against the same symbol the code
+   uses would agree with itself whatever the value; the numbers come from Microsoft's published
+   list, so the check sits between this file and its source rather than inside it. *)
+function SpxHttpClassify(ACode: LongWord): TSpxHttpError;
+
 implementation
 
 {$IFDEF WINDOWS}
@@ -110,16 +125,11 @@ function WinHttpSetTimeouts(hInternet: HINTERNET; nResolveTimeout: Integer;
   nReceiveTimeout: Integer): BOOL; stdcall; external 'winhttp.dll';
 
 const
-  ERROR_WINHTTP_BASE                   = 12000;
-  ERROR_WINHTTP_CANNOT_CONNECT         = ERROR_WINHTTP_BASE + 29;
-  ERROR_WINHTTP_TIMEOUT                = ERROR_WINHTTP_BASE + 2;
-  ERROR_WINHTTP_NAME_NOT_RESOLVED      = ERROR_WINHTTP_BASE + 7;
-  ERROR_WINHTTP_CONNECTION_ERROR       = ERROR_WINHTTP_BASE + 30;
-  ERROR_WINHTTP_SECURE_FAILURE         = ERROR_WINHTTP_BASE + 175;
-  ERROR_WINHTTP_SECURE_CERT_CN_INVALID = ERROR_WINHTTP_BASE + 169;
-  ERROR_WINHTTP_SECURE_INVALID_CA      = ERROR_WINHTTP_BASE + 45;
+  (* THE ONLY ONE `winhttp` DOES NOT DECLARE -- measured, not assumed: every other code named
+     below comes from the unit itself, and the hand-written copy of that list is gone. *)
+  ERROR_WINHTTP_TIMEOUT = WINHTTP_ERROR_BASE + 2;
 
-function ClassifyWin(ACode: DWORD): TSpxHttpError;
+function SpxHttpClassify(ACode: LongWord): TSpxHttpError;
 begin
   case ACode of
     ERROR_WINHTTP_TIMEOUT:
@@ -128,8 +138,18 @@ begin
     ERROR_WINHTTP_CANNOT_CONNECT,
     ERROR_WINHTTP_CONNECTION_ERROR:
       Result := heNoNetwork;
+    (* EVERY WAY A CERTIFICATE CAN BE REFUSED, not the three that were thought of. A reader
+       behind a corporate proxy meets INVALID_CA; an expired certificate is DATE_INVALID; a
+       host that does not match its certificate is CN_INVALID -- and that last one was the
+       code written down wrongly, so the case it names never fired. *)
     ERROR_WINHTTP_SECURE_FAILURE,
     ERROR_WINHTTP_SECURE_CERT_CN_INVALID,
+    ERROR_WINHTTP_SECURE_CERT_DATE_INVALID,
+    ERROR_WINHTTP_SECURE_CERT_REVOKED,
+    ERROR_WINHTTP_SECURE_CERT_REV_FAILED,
+    ERROR_WINHTTP_SECURE_CERT_WRONG_USAGE,
+    ERROR_WINHTTP_SECURE_INVALID_CERT,
+    ERROR_WINHTTP_SECURE_CHANNEL_ERROR,
     ERROR_WINHTTP_SECURE_INVALID_CA:
       Result := heSecurity;
   else
@@ -143,7 +163,7 @@ var
 begin
   code := GetLastError;
   R.Error := AError;
-  if AError = heOther then R.Error := ClassifyWin(code);
+  if AError = heOther then R.Error := SpxHttpClassify(code);
   R.Detail := AWhere + ' (' + IntToStr(code) + ')';
   Result := R;
 end;
@@ -318,9 +338,32 @@ end;
 
 {$ELSE}
 
+(* EVERY FUNCTION THE INTERFACE DECLARES, and the omission of one is what taught this file the
+   rule. `SpxHttpParseUrl` was declared above and implemented only inside `{$IFDEF WINDOWS}`,
+   so the unit did not compile at all on Linux or macOS -- `Forward declaration not solved`,
+   in the compiler's own words -- and CI's two non-Windows legs stayed red for five commits
+   while every local gate passed, because every local gate runs on Windows.
+
+   Stubs rather than a hand-rolled parser: `SpxHttpParseUrl` is WinHTTP's `WinHttpCrackUrl`,
+   and a second implementation for a platform the product does not ship on would be code the
+   Windows build never runs and nothing compares -- a worse answer than saying plainly that
+   there is no transport here. *)
+
 function SpxHttpAvailable: Boolean;
 begin
   Result := False;
+end;
+
+function SpxHttpClassify(ACode: LongWord): TSpxHttpError;
+begin
+  Result := heUnsupported;
+end;
+
+function SpxHttpParseUrl(const AUrl: string; out AHost, APath: string;
+  out APort: Integer; out ASecure: Boolean): TSpxHttpError;
+begin
+  AHost := ''; APath := ''; APort := 0; ASecure := False;
+  Result := heUnsupported;
 end;
 
 function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): TSpxHttpResult;

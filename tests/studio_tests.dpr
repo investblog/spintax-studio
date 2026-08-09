@@ -4929,6 +4929,176 @@ end;
    handing an address to the shell is the user's own act, and the request that follows is their
    browser's. What the count defends is the ENUMERATION -- the policy names each mark, so a
    third one would make the page's list false while every other check stayed green. *)
+(* THE OTHER PLATFORM'S BRANCH, WHICH NO GATE ON THIS MACHINE COMPILES.
+
+   `gui/SpxHttp.pas` declared `SpxHttpParseUrl` in its interface and implemented it only inside
+   `{$IFDEF WINDOWS}`. On Windows that is a complete unit; on Linux and macOS it is
+   `Forward declaration not solved`, and the two non-Windows CI legs stayed red for FIVE
+   commits while every local gate reported success -- because every local gate here runs on
+   Windows, and nothing on this machine cross-compiles to those targets.
+
+   So this stands in for the compiler that would have said it. For each unit with a top-level
+   `{$IFDEF WINDOWS}` split, every routine the interface declares must be implemented either in
+   the `{$ELSE}` branch or outside the split entirely -- which is exactly the question the
+   non-Windows compiler asks. It found the defect when written, and it is the reason the fix is
+   not just "add the stub I forgot this time".
+
+   COLUMN 1 IS THE DISCRIMINATOR. Unit-level routines start there in this codebase; class
+   methods inside a `type` block and routines nested in a body are indented, and neither is
+   what the interface promises. *)
+procedure TestPlatformSplit;
+var
+  dirs: array[0..1] of string;
+  d, i, depth, winDepth: Integer;
+  rec: TSearchRec;
+  raw, low_, name_: string;
+  lines: TStringList;
+  declared, done_: TStringList;
+  phase: Integer;
+  inElse, split: Boolean;
+  scanned: Integer;
+
+  { The identifier after `function ` / `procedure `, stopping at whatever follows it. }
+  function IdentAt(const ALine: string; AFrom: Integer): string;
+  var k: Integer;
+  begin
+    Result := '';
+    k := AFrom;
+    while (k <= Length(ALine)) and (ALine[k] = ' ') do Inc(k);
+    while (k <= Length(ALine)) and
+          (((ALine[k] >= 'A') and (ALine[k] <= 'Z')) or
+           ((ALine[k] >= 'a') and (ALine[k] <= 'z')) or
+           ((ALine[k] >= '0') and (ALine[k] <= '9')) or (ALine[k] = '_')) do
+    begin
+      Result := Result + ALine[k];
+      Inc(k);
+    end;
+  end;
+
+  { True when the line begins a unit-level routine AT COLUMN 1, and its name. }
+  function RoutineName(const ALine: string; out AName: string): Boolean;
+  begin
+    AName := '';
+    Result := False;
+    if Copy(LowerCase(ALine), 1, 9) = 'function ' then
+      AName := IdentAt(ALine, 10)
+    else if Copy(LowerCase(ALine), 1, 10) = 'procedure ' then
+      AName := IdentAt(ALine, 11)
+    else
+      Exit;
+    { `procedure TSpxFoo.Bar` is a method, not a unit-level routine: the interface never
+      declared a bare `TSpxFoo`, so it would look like an implementation of nothing. }
+    Result := (AName <> '') and (Pos('.', Copy(ALine, 1, Pos('(', ALine + '(') - 1)) = 0);
+  end;
+
+begin
+  dirs[0] := 'gui';
+  dirs[1] := 'src';
+  scanned := 0;
+  for d := Low(dirs) to High(dirs) do
+  begin
+    if FindFirst(dirs[d] + '/*.pas', faAnyFile, rec) <> 0 then Continue;
+    try
+      repeat
+        if (rec.Attr and faDirectory) <> 0 then Continue;
+        lines := TStringList.Create;
+        declared := TStringList.Create;
+        done_ := TStringList.Create;
+        try
+          lines.Text := SpxReadTextFile(dirs[d] + '/' + rec.Name);
+          declared.Sorted := True;
+          declared.Duplicates := dupIgnore;
+          done_.Sorted := True;
+          done_.Duplicates := dupIgnore;
+          phase := 0;
+          depth := 0;
+          winDepth := -1;
+          inElse := False;
+          split := False;
+
+          for i := 0 to lines.Count - 1 do
+          begin
+            raw := lines[i];
+            low_ := LowerCase(Trim(raw));
+
+            (* Only a directive that STARTS the line counts: prose quoting a conditional --
+               which SpxHttp's own header comment does -- must not move the depth.
+
+               AND THIS COMMENT IS STAR-PAREN FOR THE SAME REASON THE REST OF THIS CODEBASE IS.
+               It was written with braces, and the `}` of the directive it quoted closed it
+               early; the rest of the line became code and the build died on a backtick. The
+               rule was already written down for spintax's `{a|b}` -- the general form is that
+               a brace comment cannot contain a `}`, whatever put it there. *)
+            if Copy(low_, 1, 2) = '{$' then
+            begin
+              if (Copy(low_, 1, 7) = '{$endif') or (Copy(low_, 1, 7) = '{$ifend') then
+              begin
+                if (winDepth >= 0) and (depth = winDepth) then
+                begin
+                  winDepth := -1;
+                  inElse := False;
+                end;
+                if depth > 0 then Dec(depth);
+              end
+              else if Copy(low_, 1, 4) = '{$if' then
+              begin
+                Inc(depth);
+                if (phase = 2) and (winDepth < 0) and
+                   (Copy(low_, 1, 7) = '{$ifdef') and (Pos('windows', low_) > 0) then
+                  winDepth := depth;
+              end
+              else if low_ = '{$else}' then
+              begin
+                if (winDepth >= 0) and (depth = winDepth) then
+                begin
+                  inElse := True;
+                  split := True;
+                end;
+              end;
+              Continue;
+            end;
+
+            if low_ = 'interface' then phase := 1
+            else if low_ = 'implementation' then phase := 2;
+
+            if not RoutineName(raw, name_) then Continue;
+
+            if phase = 1 then
+              declared.Add(LowerCase(name_))
+            else if phase = 2 then
+            begin
+              { Outside the split it belongs to both branches; inside the ELSE it belongs to
+                the one no compiler here reads. Inside the WINDOWS branch it does not count. }
+              if depth = 0 then done_.Add(LowerCase(name_))
+              else if inElse and (depth = winDepth) then done_.Add(LowerCase(name_));
+            end;
+          end;
+
+          if split then
+          begin
+            Inc(scanned);
+            for i := 0 to declared.Count - 1 do
+              CheckTrue('split/' + rec.Name + ' implements ' + declared[i] +
+                        ' outside {$IFDEF WINDOWS} too', done_.IndexOf(declared[i]) >= 0);
+          end;
+        finally
+          done_.Free;
+          declared.Free;
+          lines.Free;
+        end;
+      until FindNext(rec) <> 0;
+    finally
+      FindClose(rec);
+    end;
+  end;
+
+  { And the scan itself has to have found something. A walker that silently matches no file
+    reports zero failures, which reads exactly like a pass -- the same shape as the quote
+    scanner that found 6 of 17 codes and was believed. }
+  CheckTrue('split/there are platform-split units to check [' + IntToStr(scanned) + ']',
+            scanned >= 2);
+end;
+
 (* THE TRANSPORT, ASKED ONLY WHAT IT CAN ANSWER WITHOUT A NETWORK.
 
    Not one check here opens a connection, and that is deliberate rather than timid: a suite
@@ -4946,6 +5116,32 @@ var
   port: Integer;
   secure: Boolean;
 
+  { The enum's own spelling, so a failure names what came back instead of an ordinal. }
+  function ErrName(E: TSpxHttpError): string;
+  begin
+    case E of
+      heNone: Result := 'heNone';
+      heBadUrl: Result := 'heBadUrl';
+      heNoNetwork: Result := 'heNoNetwork';
+      heTimeout: Result := 'heTimeout';
+      heSecurity: Result := 'heSecurity';
+      heCancelled: Result := 'heCancelled';
+      heTooLarge: Result := 'heTooLarge';
+      heUnsupported: Result := 'heUnsupported';
+    else
+      Result := 'heOther';
+    end;
+  end;
+
+  procedure Refused2(const AWhat, AUrl: string; AWant: TSpxHttpError);
+  var r: TSpxHttpRequest; res: TSpxHttpResult;
+  begin
+    r := Default(TSpxHttpRequest);
+    r.Url := AUrl;
+    res := SpxHttpSend(r, nil);
+    CheckTrue(AWhat + ' [' + res.Detail + ']', res.Error = AWant);
+  end;
+
   procedure Refused(const AWhat, AUrl: string);
   var r: TSpxHttpRequest; res: TSpxHttpResult;
   begin
@@ -4958,8 +5154,21 @@ var
   end;
 
 begin
-  { On this platform there is a transport; the window asks this before offering the feature. }
-  CheckTrue('http/this build has a transport', SpxHttpAvailable);
+  (* NOT `CheckTrue(SpxHttpAvailable)`, WHICH IS WHAT STOOD HERE. The product ships on Windows
+     and the transport is Windows', but this suite runs on three platforms -- and an assertion
+     that the platform has a transport is a claim about the BUILD MACHINE, not about the code.
+     It would have failed the two non-Windows legs even after the unit compiled again.
+
+     Said as a check rather than skipped in silence: a suite that quietly tests nothing on a CI
+     leg is how a platform gap survives. Same shape as the credential store's. *)
+  if not SpxHttpAvailable then
+  begin
+    CheckTrue('http/no transport on this platform, and parsing says so',
+              SpxHttpParseUrl('https://example.com/x', host, path, port, secure) = heUnsupported);
+    Refused2('http/no transport on this platform, and sending says so',
+             'https://example.com/x', heUnsupported);
+    Exit;
+  end;
 
   Refused('an empty url', '');
   Refused('a url that is only spaces', '   ');
@@ -4993,6 +5202,35 @@ begin
   err := SpxHttpParseUrl('https://example.com', host, path, port, secure);
   CheckTrue('http/a bare host is accepted', err = heNone);
   Check('http/and its path defaults to a slash', path, '/');
+
+  (* -- WHAT WINDOWS' NUMBERS MEAN, ASKED IN NUMBERS --
+
+     Every code below is a literal from Microsoft's published WinHTTP error list, deliberately
+     NOT the symbol `SpxHttp` uses: asserting `SpxHttpClassify(ERROR_WINHTTP_SECURE_CERT_CN_INVALID)`
+     would agree with itself whatever that symbol turned out to be, which is exactly how the
+     defect this replaces survived. The unit had `CN_INVALID` written as 12169 -- that is
+     `SECURE_INVALID_CERT` -- so a host whose certificate names someone else was reported as
+     "something went wrong" rather than as a security failure. Found by review; the numbers now
+     sit between this file and the unit instead of inside either. *)
+  Check('http/12002 is a timeout', ErrName(SpxHttpClassify(12002)), 'heTimeout');
+  Check('http/12007 (name not resolved) is no network', ErrName(SpxHttpClassify(12007)), 'heNoNetwork');
+  Check('http/12029 (cannot connect) is no network', ErrName(SpxHttpClassify(12029)), 'heNoNetwork');
+  Check('http/12030 (connection error) is no network', ErrName(SpxHttpClassify(12030)), 'heNoNetwork');
+  Check('http/12037 (certificate expired) is a security failure',
+        ErrName(SpxHttpClassify(12037)), 'heSecurity');
+  Check('http/12038 (certificate names another host) is a security failure',
+        ErrName(SpxHttpClassify(12038)), 'heSecurity');
+  Check('http/12045 (untrusted authority) is a security failure',
+        ErrName(SpxHttpClassify(12045)), 'heSecurity');
+  Check('http/12157 (secure channel error) is a security failure',
+        ErrName(SpxHttpClassify(12157)), 'heSecurity');
+  Check('http/12169 (invalid certificate) is a security failure',
+        ErrName(SpxHttpClassify(12169)), 'heSecurity');
+  Check('http/12170 (revoked certificate) is a security failure',
+        ErrName(SpxHttpClassify(12170)), 'heSecurity');
+  { And something that is none of them stays none of them. }
+  Check('http/an unrelated code is not dressed up as one of ours',
+        ErrName(SpxHttpClassify(5)), 'heOther');
 
   (* THIS IS WHERE THE POLICY-DATING CHECK USED TO BE, and it did its job on 2026-08-09.
 
@@ -9428,6 +9666,7 @@ begin
   TestHelpExamples;
   TestHelpSilences;
   TestOfflineClaim;
+  TestPlatformSplit;
   TestHttp;
   TestLlm;
   TestSecrets;
