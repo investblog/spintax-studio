@@ -16,7 +16,23 @@
 # they were taken from joins every block with '\n'. The global rule above already gives LF, but
 # it is spelled out here because a normalisation applied to these files would not look like a
 # checkout setting -- it would look like a broken port, on a machine where the port is fine.
-tests/fixtures/prompt-v2/** text eol=lf
+tests/fixtures/prompt-v2/*.system.txt   text eol=lf
+tests/fixtures/prompt-v2/*.user.txt     text eol=lf
+tests/fixtures/prompt-v2/*.brief.txt    text eol=lf
+tests/fixtures/prompt-v2/*.template.txt text eol=lf
+tests/fixtures/prompt-v2/*.tsv          text eol=lf
+tests/fixtures/prompt-v2/*.json         text eol=lf
+tests/fixtures/prompt-v2/VERSION        text eol=lf
+
+# And the clean-model-output cases get NO normalisation at all, because one of them is a CRLF
+# fence and that is the whole case. The rule above was written to protect these files and, on
+# its first commit, silently rewrote `clean-fence-crlf.in.txt` from CRLF to LF -- git said so in
+# one warning line, and the suite stayed green because the working tree still held the original.
+# A fresh clone would have got a case that tests nothing while claiming to test CRLF, which is
+# worse than a failure. These are machine-generated and machine-compared; read them through
+# scripts/dump-prompt-fixtures.mjs, not through a diff.
+tests/fixtures/prompt-v2/clean-*.in.txt  -text
+tests/fixtures/prompt-v2/clean-*.out.txt -text
 
 # Binary assets, never diffed or line-normalized
 *.ico binary
