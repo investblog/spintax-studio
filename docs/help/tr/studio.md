@@ -92,8 +92,10 @@ Ne istediğinizi özette anlatın, modelin kullanabileceği değişkenleri sıra
 düğmesine basın. Uygulama hiçbir modele bağlanmaz ve anahtar tutmaz: istemi, zaten kullandığınız
 modele götüresiniz diye yazar. Yanıtı geri getirip **Belgeye ekle** düğmesine basın — bu penceredeki
 makine o zaman ne düşündüğünü tanılama panelinde söyler, tıpkı kendi yazdığınız her şey için
-yaptığı gibi. Hata varsa **Düzeltme istemini kopyala**, modele belgenin tamamını değil tam yerleri gösteren ikinci
-bir istem hazırlar.
+yaptığı gibi. Hata varsa **Düzeltme istemini kopyala**, ikinci bir istem hazırlar: numaralanmış satırlarıyla belgenin tamamını taşır ve makinenin
+itiraz ettiği tam yerleri adlandırır. Yanıt, düzeltilmiş belgenin tamamıdır; onu geri getirip
+**Belgeyi değiştir** düğmesine basın — **Belgeye ekle** bozuk olanı yerinde bırakır ve yanına
+düzeltilmiş bir kopya koyar.
 
 Durum sütunu, doldurmaya değer olan bölümdür. Değişken olduğu gibi yerleştirilir, onu hiçbir şey
 çekimlemez: durumları olan bir dilde cümle, değerin hâlihazırda taşıdığı biçimin çevresine

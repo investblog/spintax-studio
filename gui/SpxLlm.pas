@@ -196,6 +196,36 @@ begin
     if ACfg.ApiKey <> '' then AOut.Add('authorization: Bearer ' + ACfg.ApiKey);
 end;
 
+(* A STRING OUT OF A NODE THAT MAY NOT BE ONE -- and every read in this unit goes through here.
+
+   `TJSONData.AsString` is not a conversion, it is an assertion: fpjson RAISES on an array, an
+   object or a null rather than returning something empty. `TJSONObject.Get(name, default)` is
+   the same function underneath, so a default of `''` protects against a MISSING key and not
+   against a key of the wrong type.
+
+   This body comes from an endpoint the reader configured, which may be a proxy, a gateway, a
+   local server or a typo. `{"error": []}` raised out of `ProviderMessage`, and a `message` that
+   is a string instead of an object raised `EInvalidCast` out of the choices path -- both found
+   by review, both on the exact inputs. An exception here would not be a bad answer, it would be
+   no answer at all: this parse runs on the network thread, where nothing is waiting to catch
+   it. So a node of the wrong type reads as absent, and the shape falls through to the next
+   candidate exactly as a missing key does. *)
+function StrOf(AData: TJSONData): string;
+begin
+  Result := '';
+  if AData = nil then Exit;
+  (* jtNull is deliberately not here: fpjson raises on it too, and a null IS an absence. *)
+  case AData.JSONType of
+    jtString, jtNumber, jtBoolean: Result := AData.AsString;
+  end;
+end;
+
+function StrIn(AObj: TJSONObject; const AName: string): string;
+begin
+  Result := '';
+  if AObj <> nil then Result := StrOf(AObj.Find(AName));
+end;
+
 (* The text of an error the provider named, wherever it put it. Both shapes nest it under
    `error`, and a provider that does not is still likely to have a `message` somewhere -- so the
    fallback is the raw body, truncated, rather than silence. *)
@@ -209,12 +239,12 @@ begin
     err := AObj.Find('error');
     if (err <> nil) and (err.JSONType = jtObject) then
     begin
-      Result := TJSONObject(err).Get('message', '');
-      if Result = '' then Result := TJSONObject(err).Get('type', '');
+      Result := StrIn(TJSONObject(err), 'message');
+      if Result = '' then Result := StrIn(TJSONObject(err), 'type');
     end
     else if err <> nil then
-      Result := err.AsString;
-    if Result = '' then Result := AObj.Get('message', '');
+      Result := StrOf(err);
+    if Result = '' then Result := StrIn(AObj, 'message');
   end;
   if Result = '' then Result := Copy(Trim(ARaw), 1, 300);
 end;
@@ -244,7 +274,7 @@ var
   arr: TJSONArray;
   i: Integer;
   text_, kind_: string;
-  item: TJSONData;
+  item, node: TJSONData;
 begin
   Result := Default(TSpxLlmAnswer);
   Result.Status := AStatus;
@@ -294,8 +324,8 @@ begin
           if arr.Items[i].JSONType = jtObject then
           begin
             obj := TJSONObject(arr.Items[i]);
-            kind_ := obj.Get('type', '');
-            if (kind_ = '') or (kind_ = 'text') then text_ := text_ + obj.Get('text', '');
+            kind_ := StrIn(obj, 'type');
+            if (kind_ = '') or (kind_ = 'text') then text_ := text_ + StrIn(obj, 'text');
           end;
       end;
     end
@@ -307,11 +337,18 @@ begin
         item := TJSONArray(item).Items[0];
         if item.JSONType = jtObject then
         begin
-          obj := TJSONObject(item).Find('message') as TJSONObject;
-          if obj <> nil then text_ := obj.Get('content', '');
+          (* `as TJSONObject` STOOD HERE, and it is a cast rather than a question: a server that
+             answers `"message": "text"` raised EInvalidCast instead of being read. Asked as a
+             type test, the plain-string shape is READ instead of raising, and anything else
+             falls through to the legacy one below. *)
+          node := TJSONObject(item).Find('message');
+          if (node <> nil) and (node.JSONType = jtObject) then
+            text_ := StrIn(TJSONObject(node), 'content')
+          else
+            text_ := StrOf(node);
           (* Some compatible servers answer the legacy completion shape. Cheap to accept, and a
              reader who hits one otherwise gets "empty" from a server that answered. *)
-          if text_ = '' then text_ := TJSONObject(item).Get('text', '');
+          if text_ = '' then text_ := StrIn(TJSONObject(item), 'text');
         end;
       end;
     end;

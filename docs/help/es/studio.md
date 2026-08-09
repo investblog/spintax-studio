@@ -94,8 +94,10 @@ a mano. Diga en el encargo lo que quiere, enumere las variables que el modelo pu
 **Copiar la instrucción**. La aplicación no habla con ningún modelo ni guarda ninguna clave: redacta la
 instrucción para que usted la lleve al que ya utiliza. Traiga la respuesta y pulse **Insertar en el documento**:
 el motor de esta ventana dirá entonces qué le parece, en el panel de diagnósticos, igual que con
-cualquier cosa que escriba usted mismo. Si hay errores, **Copiar la instrucción de arreglo** construye una segunda
-instrucción que señala los puntos exactos en lugar del documento entero.
+cualquier cosa que escriba usted mismo. Si hay errores, **Copiar la instrucción de arreglo** construye una segunda instrucción: lleva el documento entero con sus líneas numeradas y
+nombra los puntos exactos que el motor objetó. La respuesta es el documento corregido completo,
+así que tráigala y pulse **Reemplazar el documento**: **Insertar en el documento** dejaría el
+roto donde está y pondría una copia corregida al lado.
 
 La columna de caso es la parte que vale la pena rellenar. Una variable se inserta tal cual, nada
 la declina: en una lengua con casos la frase debe construirse alrededor de la forma que el valor

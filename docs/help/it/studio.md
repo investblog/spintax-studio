@@ -93,8 +93,10 @@ mano. Di' nel brief che cosa ti serve, elenca le variabili che il modello può u
 **Copia il prompt**. L'applicazione non parla con nessun modello e non conserva chiavi: scrive il prompt
 perché tu lo porti a quello che già usi. Riporta la risposta e premi **Inserisci nel documento** — il motore di
 questa finestra dice allora che cosa ne pensa, nel pannello delle diagnostiche, esattamente come
-per tutto ciò che scrivi tu. Se ci sono errori, **Copia il prompt di correzione** costruisce un secondo prompt che
-indica al modello i punti esatti invece dell'intero documento.
+per tutto ciò che scrivi tu. Se ci sono errori, **Copia il prompt di correzione** costruisce un secondo prompt: porta l'intero documento con le righe numerate e indica i punti
+esatti che il motore ha contestato. La risposta è il documento corretto per intero, quindi
+riportala e premi **Sostituisci il documento**: **Inserisci nel documento** lascerebbe quello
+rotto dov'è e ne metterebbe una copia corretta accanto.
 
 La colonna del caso è la parte che vale la pena compilare. Una variabile viene inserita alla
 lettera, nulla la declina: in una lingua con i casi la frase va costruita attorno alla forma che

@@ -138,7 +138,9 @@ const
       'dativ',
       'akuzativ',
       'instrumental',
-      'lokativ'
+      'lokativ',
+      'Zamijeni dokument',
+      'Dokument je zamijenjen. Presuda je u ploči dijagnostike.'
   );
 
 implementation

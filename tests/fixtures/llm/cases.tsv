@@ -11,3 +11,7 @@ openai-quota	openai	429	leRateLimit
 openai-error-on-200	openai	200	leProvider
 gateway-html	openai	502	leBadResponse
 json-not-object	openai	200	leBadResponse
+openai-message-is-a-string	openai	200	leNone
+openai-error-is-an-array	openai	200	leProvider
+anthropic-error-is-a-string	anthropic	400	leProvider
+anthropic-text-is-an-object	anthropic	200	leEmpty

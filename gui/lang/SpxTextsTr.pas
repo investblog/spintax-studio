@@ -136,7 +136,9 @@ const
       'yönelme',
       'belirtme',
       'araç',
-      'bulunma'
+      'bulunma',
+      'Belgeyi değiştir',
+      'Belge değiştirildi. Karar tanılama panelinde.'
   );
 
 implementation

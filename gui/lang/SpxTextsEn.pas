@@ -142,7 +142,9 @@ const
       'dative',
       'accusative',
       'instrumental',
-      'prepositional'
+      'prepositional',
+      'Replace the document',
+      'Document replaced. The diagnostics panel has the verdict.'
   );
 
 implementation

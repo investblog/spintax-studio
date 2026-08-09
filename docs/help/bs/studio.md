@@ -87,8 +87,10 @@ Opišite šta tražite u zadatku, navedite varijable koje model smije koristiti 
 **Kopiraj upit**. Program se nigdje ne obraća i ne čuva ključeve: on sastavlja upit da ga odnesete
 modelu kojim se već služite. Vratite odgovor i pritisnite **Umetni u dokument** — motor u ovom prozoru
 tada kaže šta o njemu misli, u ploči dijagnostike, jednako kao i o bilo kojem tekstu koji sami
-otkucate. Ako ima grešaka, **Kopiraj upit za popravku** sastavlja drugi upit koji pokazuje modelu tačna mjesta
-umjesto cijelog dokumenta.
+otkucate. Ako ima grešaka, **Kopiraj upit za popravku** sastavlja drugi upit: nosi cijeli dokument s numerisanim redovima i imenuje baš ona mjesta
+na koja se motor požalio. Odgovor je ispravljeni dokument u cijelosti, pa ga vratite i
+pritisnite **Zamijeni dokument**: **Umetni u dokument** ostavio bi pokvareni gdje jeste i
+pored njega stavio ispravljenu kopiju.
 
 Kolona padeža je dio koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je ne mijenja po
 padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji vrijednost već ima, a

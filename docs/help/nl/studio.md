@@ -97,8 +97,10 @@ schrijven. Zeg in de briefing wat u wilt, noem de variabelen die het model mag g
 op **Prompt kopiëren**. De toepassing praat met geen enkel model en houdt geen sleutel: zij schrijft de
 prompt zodat u hem meeneemt naar het model dat u toch al gebruikt. Breng het antwoord terug en
 druk op **In het document invoegen** — de machine in dit venster zegt dan in het diagnosepaneel wat zij ervan
-vindt, net als bij alles wat u zelf typt. Zijn er fouten, dan bouwt **Herstelprompt kopiëren** een tweede
-prompt die het model de precieze plekken aanwijst in plaats van het hele document.
+vindt, net als bij alles wat u zelf typt. Zijn er fouten, dan bouwt **Herstelprompt kopiëren** een tweede prompt: hij draagt het hele document met genummerde regels en noemt de precieze
+plekken waar de machine bezwaar maakte. Het antwoord is het volledige verbeterde document,
+breng het dus terug en druk op **Het document vervangen**; **In het document invoegen** zou het
+kapotte laten staan en er een verbeterde kopie naast leggen.
 
 De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variabele wordt
 letterlijk ingevoegd, niets verbuigt haar: in een taal met naamvallen moet de zin dus rond de

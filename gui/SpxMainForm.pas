@@ -413,6 +413,7 @@ type
     procedure MenuAiClicked(Sender: TObject);
     { The AI panel's one request of this form: put a cleaned draft in the editor. }
     procedure AiInsert(const AText: string);
+    procedure AiReplace(const AText: string);
     procedure GroupPaneClosed(Sender: TObject);
     procedure FontAutoClicked(Sender: TObject);
     procedure FontPicked(Sender: TObject);
@@ -888,6 +889,7 @@ begin
   FAi.Parent := sheetAi;
   FAi.Align := alClient;
   FAi.OnInsert := @AiInsert;
+  FAi.OnReplace := @AiReplace;
   { The worker's own event is NOT hooked here: BuildUi runs before the engine exists, and
     the first version of this line dereferenced nil at startup -- an access violation before
     the window ever appeared. It is set in the constructor, right after the thread. }
@@ -3299,6 +3301,9 @@ begin
   FEditor.Modified := False;
   FEditor.CaretXY := Point(1, 1);
   FReloadSet := True;
+  { Another document's variables are not this one's, however they are spelled. Before the
+    render, so the refresh does not carry the old declarations over one more time. }
+  FAi.ResetDeclarations;
   UpdateCaption;
   RequestRender;
 end;
@@ -3377,6 +3382,8 @@ begin
     FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
   FEditor.Modified := False;
   FReloadSet := True;
+  { As in LoadDocument: an empty document declares nothing. }
+  FAi.ResetDeclarations;
   UpdateCaption;
   RequestRender;
 end;
@@ -4583,6 +4590,32 @@ begin
   RequestRender;
 end;
 
+(* OVER THE DOCUMENT, which is what a repair answer is: the repair prompt ends "Return the
+   corrected template", so the model sends back the whole thing. Inserting that at the caret
+   left the broken template in place and put a corrected copy beside it -- found by review,
+   and the panel had no other action to offer.
+
+   THROUGH `SelText` AND NOT `Text`, because this must be undoable. Assigning `Text` wholesale
+   clears SynEdit's undo stack, and an action that can replace a document is exactly the one a
+   reader will want back. `SelectAll` then `SelText` goes through the editor's own edit path,
+   which records it. *)
+procedure TSpxMainForm.AiReplace(const AText: string);
+begin
+  if (FEditor = nil) or (AText = '') then Exit;
+  FEditor.BeginUpdate;
+  try
+    FEditor.SelectAll;
+    FEditor.SelText := AText;
+  finally
+    FEditor.EndUpdate;
+  end;
+  { A wholesale change does not reach EditorChanged (measured, twice -- see the charter). }
+  if FHighlighter <> nil then
+    FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
+  FEditor.CaretXY := Point(1, 1);
+  RequestRender;
+end;
+
 procedure TSpxMainForm.HelpPaneClosed(Sender: TObject);
 begin
   DisableAlign;
@@ -4761,7 +4794,9 @@ begin
   if not Res.HelpSet then
   begin
     FAi.SetVariables(Res.Vars);
-    FAi.SetDocument(FEditor.Text, Res.Rows);
+    (* `Res.Source`, NOT `FEditor.Text`: the rows beside it were computed from that text, and
+       this result may be one edit behind on purpose. *)
+    FAi.SetDocument(Res.Source, Res.Rows);
     FAi.SetLocale(CurrentLocale);
   end;
   (* AND NOT WHEN THE ANSWER IS ABOUT THE HELP. With the help open this job's text is the

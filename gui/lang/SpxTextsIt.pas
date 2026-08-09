@@ -137,7 +137,9 @@ const
       'dativo',
       'accusativo',
       'strumentale',
-      'prepositivo'
+      'prepositivo',
+      'Sostituisci il documento',
+      'Documento sostituito. Il verdetto è nel pannello delle diagnostiche.'
   );
 
 implementation

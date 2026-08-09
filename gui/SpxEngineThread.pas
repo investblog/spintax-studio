@@ -130,6 +130,19 @@ type
 
   TSpxJobResult = record
     Id: Int64;
+    (* THE TEXT THIS ANSWER IS ABOUT, carried rather than fetched again.
+
+       A superseded result IS delivered and IS shown -- see JobDone, where that is argued for
+       the preview -- so `FEditor.Text` at the moment a result arrives is not necessarily the
+       text that produced it. The preview can lag one edit behind harmlessly. The AI panel
+       cannot: it pairs the document with the findings' line and column numbers, and a repair
+       prompt built from now-text and then-rows quotes spans that point at other characters.
+
+       The comment above that call already claimed the panel is fed "from the SAME answer, not
+       from a second look at the document" -- and the next line took a second look. Found by
+       review. A string crosses the thread boundary by reference count, so this costs a
+       reference and not a copy. *)
+    Source: string;
     { Both copied from the job, so the window can ask "is this an answer about what I am
       showing?" instead of assuming it is. Read together, never apart: see the job's field. }
     HelpSet: Boolean;
@@ -650,6 +663,7 @@ begin
 
     FResult := Default(TSpxJobResult);
     FResult.Id := Job.Id;
+    FResult.Source := Job.Text;
     FResult.HelpSet := Job.HelpSet;
     FResult.HelpExample := Job.HelpExample;
     { A selection renders in the document's scope, not on its own: editor-core prepends the

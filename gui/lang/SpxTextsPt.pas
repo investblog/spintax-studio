@@ -137,7 +137,9 @@ const
       'dativo',
       'acusativo',
       'instrumental',
-      'prepositivo'
+      'prepositivo',
+      'Substituir o documento',
+      'Documento substituído. O veredicto está no painel de diagnósticos.'
   );
 
 implementation

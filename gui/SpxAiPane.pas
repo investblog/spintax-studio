@@ -74,6 +74,7 @@ type
     FBottom: TPanel;
     FStatus: TLabel;
     FInsert: TButton;
+    FReplace: TButton;
     FRepair: TButton;
 
     FLocale: string;
@@ -82,10 +83,13 @@ type
        is the state; the cell that shows it is a view. See Retranslate for why. *)
     FCases: array of TSpxVarCase;
     FOnInsert: TSpxAiInsertEvent;
+    FOnReplace: TSpxAiInsertEvent;
     FDocText: string;
 
     procedure CopyPromptClicked(Sender: TObject);
+    procedure AcceptReply(AReplace: Boolean);
     procedure InsertClicked(Sender: TObject);
+    procedure ReplaceClicked(Sender: TObject);
     procedure RepairClicked(Sender: TObject);
     procedure CaseEdited(Sender: TObject);
     function CollectVars: TSpxAllowedVars;
@@ -114,8 +118,23 @@ type
     (* The open document and its findings, kept so the repair prompt can be built without
        asking the engine again -- the window already has both. *)
     procedure SetDocument(const AText: string; const ARows: TSpxPanelRows);
+    (* A DIFFERENT DOCUMENT IS A DIFFERENT SET OF VARIABLES, even when the names repeat.
+
+       `SetVariables` carries the author's case and note across a re-read BY NAME, which is
+       right while one document is being edited and wrong the moment another is opened: a
+       second file with its own `%city%` inherited the first file's declared case and note,
+       and both went into the prompt. Found by review.
+
+       Only the invisible part is cleared. The brief stays: it is text the author can see and
+       is still typing, and clearing it on File > New would destroy work to fix a bug about
+       something they cannot see. *)
+    procedure ResetDeclarations;
     procedure Retranslate;
     property OnInsert: TSpxAiInsertEvent read FOnInsert write FOnInsert;
+    (* Fired for the SAME cleaned text as OnInsert. The two differ in what the window does
+       with it, not in what the panel produces -- so a repair answer, which is the whole
+       document, goes over the document instead of beside it. *)
+    property OnReplace: TSpxAiInsertEvent read FOnReplace write FOnReplace;
   end;
 
 implementation
@@ -295,12 +314,31 @@ begin
 
   FRepair := TButton.Create(Self);
   FRepair.Parent := FBottom;
+  FRepair.Left := 1000;
   FRepair.Align := alRight;
   FRepair.BorderSpacing.Around := Px(Self, 4);
   FRepair.OnClick := @RepairClicked;
 
+  (* `Left` STATES THE ORDER, BECAUSE CREATION ORDER DOES NOT.
+
+     Three `alRight` buttons all born at Left 0 are ordered by the align pass, and the pass does
+     not answer the same way twice: photographed in English it gave Repair, Insert, Replace, and
+     the very next build photographed in German gave Replace, Insert, Repair -- the same code,
+     opposite ends for the button that overwrites the document. The charter already records this
+     for two `alLeft` panels; it is the same rule and the same fix, and `alRight` needed it too.
+
+     Larger Left is further right, so Insert -- which adds rather than overwrites -- keeps the
+     corner a hand reaches without looking, and Replace sits inboard of it. *)
+  FReplace := TButton.Create(Self);
+  FReplace.Parent := FBottom;
+  FReplace.Left := 10000;
+  FReplace.Align := alRight;
+  FReplace.BorderSpacing.Around := Px(Self, 4);
+  FReplace.OnClick := @ReplaceClicked;
+
   FInsert := TButton.Create(Self);
   FInsert.Parent := FBottom;
+  FInsert.Left := 20000;
   FInsert.Align := alRight;
   FInsert.BorderSpacing.Around := Px(Self, 4);
   FInsert.OnClick := @InsertClicked;
@@ -464,6 +502,20 @@ begin
   FRows := ARows;
 end;
 
+procedure TSpxAiPane.ResetDeclarations;
+var r: Integer;
+begin
+  for r := 1 to FAllowed.RowCount - 1 do
+  begin
+    FAllowed.Cells[COL_NOTE, r] := '';
+    FAllowed.Cells[COL_CASE, r] := Tr(CASE_IDS[vcNone]);
+  end;
+  SetLength(FCases, FAllowed.RowCount);
+  for r := 0 to High(FCases) do FCases[r] := vcNone;
+  (* The rows themselves are left to the next render, which is already on its way: emptying
+     the grid here would blink it for one render and then fill it again. *)
+end;
+
 function TSpxAiPane.CollectVars: TSpxAllowedVars;
 var
   r, n: Integer;
@@ -526,7 +578,10 @@ begin
   Say(Tr(sAiCopied));
 end;
 
-procedure TSpxAiPane.InsertClicked(Sender: TObject);
+(* Both buttons, and the only difference is the last two lines. Written as one body so the
+   cleaning, the empty-after-cleaning refusal and the reasons for both cannot drift apart --
+   they were argued once and belong to both actions. *)
+procedure TSpxAiPane.AcceptReply(AReplace: Boolean);
 var
   cleaned: string;
 begin
@@ -550,8 +605,26 @@ begin
     Say(Tr(sAiNeedReply));
     Exit;
   end;
-  if Assigned(FOnInsert) then FOnInsert(cleaned);
-  Say(Tr(sAiInserted));
+  if AReplace then
+  begin
+    if Assigned(FOnReplace) then FOnReplace(cleaned);
+    Say(Tr(sAiReplaced));
+  end
+  else
+  begin
+    if Assigned(FOnInsert) then FOnInsert(cleaned);
+    Say(Tr(sAiInserted));
+  end;
+end;
+
+procedure TSpxAiPane.InsertClicked(Sender: TObject);
+begin
+  AcceptReply(False);
+end;
+
+procedure TSpxAiPane.ReplaceClicked(Sender: TObject);
+begin
+  AcceptReply(True);
 end;
 
 procedure TSpxAiPane.RepairClicked(Sender: TObject);
@@ -618,8 +691,10 @@ begin
   FAllowedLabel.Caption := Tr(sAiAllowed);
   FReplyLabel.Caption := Tr(sAiReply);
   FInsert.Caption := Tr(sAiInsert);
+  FReplace.Caption := Tr(sAiReplace);
   FRepair.Caption := Tr(sAiCopyRepair);
   FInsert.Width := TextW(FInsert.Caption) + Px(Self, 28);
+  FReplace.Width := TextW(FReplace.Caption) + Px(Self, 28);
   FRepair.Width := TextW(FRepair.Caption) + Px(Self, 28);
 
   (* Rebuild the lists in the new language WITHOUT losing what is selected -- the choice is the

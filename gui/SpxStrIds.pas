@@ -167,7 +167,19 @@ type
     sAiNeedBrief, sAiNeedReply, sAiNoErrors,
     sAiChEmail, sAiChSms, sAiChPush, sAiChLanding, sAiChGeneric,
     sAiLvConservative, sAiLvBalanced, sAiLvAggressive,
-    sAiCaseNone, sAiCaseNom, sAiCaseGen, sAiCaseDat, sAiCaseAcc, sAiCaseIns, sAiCasePre
+    sAiCaseNone, sAiCaseNom, sAiCaseGen, sAiCaseDat, sAiCaseAcc, sAiCaseIns, sAiCasePre,
+    (* ── REPLACE, BECAUSE A REPAIR IS NOT AN INSERT ──────────────────────────────────────
+       The repair prompt ends "Return the corrected template" -- the model answers with the
+       WHOLE document -- and the only action the panel had put it at the caret. So repairing a
+       template left the broken one where it was and added a corrected copy beside it. Found by
+       review.
+
+       Two buttons rather than one that changes meaning: the panel cannot tell a repair answer
+       from a draft answer, and a button whose behaviour depends on which prompt was copied
+       last is a hidden mode -- the kind that gets reported as "it ate my document". Appended
+       to the end of this enum on purpose: the language tables are `array[TSpxStr] of string`,
+       so appending is the one edit the compiler checks for all fourteen at once. ── *)
+    sAiReplace, sAiReplaced
   );
 
 implementation

@@ -141,7 +141,9 @@ const
       'datief',
       'accusatief',
       'instrumentalis',
-      'prepositief'
+      'prepositief',
+      'Het document vervangen',
+      'Document vervangen. Het oordeel staat in het diagnosepaneel.'
   );
 
 implementation

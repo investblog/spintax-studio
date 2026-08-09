@@ -235,7 +235,10 @@ const
     0, 0, 0,
     0, 0, 0, 0, 0,
     0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0,
+    { Replace, and what it says afterwards -- a button sized to its own text and a status
+      line that spans the panel, so neither sits in a slot fixed at a number. }
+    0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

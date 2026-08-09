@@ -7512,7 +7512,7 @@ type
     Why: string;
   end;
 const
-  HELP_UI_QUOTES: array[0..15] of TSpxUiQuote = (
+  HELP_UI_QUOTES: array[0..16] of TSpxUiQuote = (
     (Id: sColLiteral;      Why: 'the session-value column'),
     (Id: sSeed;            Why: 'the seed tick-box'),
     (Id: sReroll;          Why: 'the reroll button'),
@@ -7532,7 +7532,12 @@ const
     (Id: sTabAi;           Why: 'the AI panel'),
     (Id: sAiCopyPrompt;    Why: 'the copy-prompt button'),
     (Id: sAiInsert;        Why: 'the insert button'),
-    (Id: sAiCopyRepair;    Why: 'the repair-prompt button'));
+    (Id: sAiCopyRepair;    Why: 'the repair-prompt button'),
+    (* And the one that overwrites the document. It is in the help BECAUSE the repair answer is
+       the whole corrected document -- the paragraph that used to say the repair prompt points
+       at spans "instead of at the whole document" was false in all fourteen, and hid the fact
+       a reader needs: pressing Insert on that answer duplicates their template. *)
+    (Id: sAiReplace;       Why: 'the replace button'));
 
 { Every run of blank characters becomes one space, so a wrapped line reads as a sentence --
   and a blockquote's `> ` marker at the start of a continuation line goes with it. Without

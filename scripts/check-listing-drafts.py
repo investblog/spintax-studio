@@ -115,6 +115,20 @@ def section_body(text, heading):
     return '\n'.join(kept).strip()
 
 
+def prose_of(text):
+    """The draft with its list ORDINALS removed.
+
+    The language-count check used to be `if count not in text`, and with fourteen languages
+    that is `'14' in text` -- which every correct draft satisfies by having a fourteenth
+    feature bullet numbered `14.`. It could not fail. Turning the claim to "13 languages"
+    left it green; so did deleting the sentence entirely. Reported by review.
+
+    Stripping the ordinals is what makes the question answerable: what is left is the prose,
+    where a language count is either stated or is not.
+    """
+    return re.sub(r'^\s*\d+\.\s', '', text, flags=re.M)
+
+
 def length_notes(text, bullets):
     """Every Partner Center limit this file can be measured against, in the target language."""
     notes = []
@@ -195,7 +209,7 @@ def main():
 
         if licence not in text:
             notes.append('does not name %s' % licence)
-        if count not in text:
+        if count not in prose_of(text):
             notes.append('does not name the language count (%s)' % count)
 
         notes.extend(length_notes(text, bullets))

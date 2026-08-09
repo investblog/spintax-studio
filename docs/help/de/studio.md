@@ -103,8 +103,10 @@ die das Modell verwenden darf, und drücken Sie **Prompt kopieren**. Die Anwendu
 Modell und hält keinen Schlüssel: sie schreibt den Prompt, damit Sie ihn zu dem Modell tragen,
 das Sie ohnehin benutzen. Bringen Sie die Antwort zurück und drücken Sie **In das Dokument einfügen** — die
 Maschine in diesem Fenster sagt dann im Diagnosebereich, was sie davon hält, genau wie bei allem
-anderen, was Sie selbst tippen. Gibt es Fehler, baut **Reparatur-Prompt kopieren** einen zweiten Prompt, der das
-Modell auf die genauen Stellen zeigt statt auf das ganze Dokument.
+anderen, was Sie selbst tippen. Gibt es Fehler, baut **Reparatur-Prompt kopieren** einen zweiten Prompt: er trägt das ganze Dokument mit nummerierten Zeilen und benennt genau
+die Stellen, an denen die Maschine Anstoß nahm. Die Antwort darauf ist das vollständige
+korrigierte Dokument — bringen Sie es zurück und drücken Sie **Dokument ersetzen**;
+**In das Dokument einfügen** ließe das kaputte stehen und legte eine korrigierte Kopie daneben.
 
 Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlich eingesetzt,
 nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die Form herum gebaut

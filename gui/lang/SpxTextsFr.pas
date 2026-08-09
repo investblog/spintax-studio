@@ -146,7 +146,9 @@ const
       'datif',
       'accusatif',
       'instrumental',
-      'prépositionnel'
+      'prépositionnel',
+      'Remplacer le document',
+      'Document remplacé. Le verdict est dans le panneau des diagnostics.'
   );
 
 implementation

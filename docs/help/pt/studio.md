@@ -95,8 +95,10 @@ Diga no resumo o que quer, enumere as variáveis que o modelo pode usar e carreg
 A aplicação não fala com nenhum modelo nem guarda chaves: escreve o pedido para que o leve àquele
 que já utiliza. Traga a resposta e carregue em **Inserir no documento** — o motor desta janela diz então o
 que lhe parece, no painel de diagnósticos, tal como faz com tudo o que escreve. Se houver erros,
-**Copiar o pedido de correção** constrói um segundo pedido que aponta ao modelo os pontos exatos em vez do documento
-inteiro.
+**Copiar o pedido de correção** constrói um segundo pedido: leva o documento inteiro com as linhas numeradas e nomeia os
+pontos exatos de que o motor se queixou. A resposta é o documento corrigido por inteiro,
+portanto traga-a e carregue em **Substituir o documento**: **Inserir no documento** deixaria o
+estragado onde está e poria uma cópia corrigida ao lado.
 
 A coluna do caso é a parte que vale a pena preencher. Uma variável é inserida tal como está, nada
 a declina: numa língua com casos a frase tem de ser construída à volta da forma que o valor já

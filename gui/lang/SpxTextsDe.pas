@@ -146,7 +146,9 @@ const
       'Dativ',
       'Akkusativ',
       'Instrumental',
-      'Präpositiv'
+      'Präpositiv',
+      'Dokument ersetzen',
+      'Dokument ersetzt. Das Urteil steht im Diagnosebereich.'
   );
 
 implementation

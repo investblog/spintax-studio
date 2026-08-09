@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    '2d58cd83e9562642', '1161eb58753cc15f', '87e44fc97111b7a9', '871cbcc314756d02', 'c5226848658b80c2', 'f6b0fb891bdfa838', 'fc0d0a3d2f60646d', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '6538ddefac3a4281', '488ce59bac9e29c3', '7f61fd4b089638df', '5a03689e5e53cb28', '7813c6dc420189dd', '0d549262922b3331', 'c571157e6828c144', 'c85b5f196fca1f91', '6bb5e85de94010ed', '228ce166a442a5a8', '4ddfd411500958cc', '26e21bf1b83633da', 'd722b566afcb006f', 'b54956a9ee49f248', '00a887dfff5a6ef5', '9071998326efa8bb', '18c7da1e110847db', 'd9d49c35432acae4', '41c1a82a3abbac2f', '9dacb63502e5aa97', 'b8529893866ec950', '8f24172caeb947a7', 'ea10d49bf126b2b6', '471885d59dbd925b', '63d08339ece3eaa0', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '155b1b25fcdac538', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '748507336fecf404', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    'be3ab9ec808b2934', '1161eb58753cc15f', '87e44fc97111b7a9', 'adf57424e6602ca7', 'c5226848658b80c2', 'f6b0fb891bdfa838', '09308ed618481791', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '98e6f0e6b9b841fb', '488ce59bac9e29c3', '7f61fd4b089638df', '4393de3df8011894', '7813c6dc420189dd', '0d549262922b3331', 'f3d1ab11a6cced65', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'c119b11e736b526e', '4ddfd411500958cc', '26e21bf1b83633da', '1bc034a0ce3bfcb4', 'b54956a9ee49f248', '00a887dfff5a6ef5', '1999c3faa67bcd1f', '18c7da1e110847db', 'd9d49c35432acae4', '479621ff94149c25', '9dacb63502e5aa97', 'b8529893866ec950', 'f9c075cdb27b31b0', 'ea10d49bf126b2b6', '471885d59dbd925b', '34f94f93bc344e0f', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '2e031cf578a86d26', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '3cc9e29f8be16541', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -832,8 +832,11 @@ const
       ': it writes the prompt for you to take to whichever one you already use. Bring the ans' +
       'wer back and press <b>Insert into document</b> — the engine in this window then says w' +
       'hat it makes of it in the diagnostics panel, exactly as it does for anything you type ' +
-      'yourself. If there are errors, <b>Copy repair prompt</b> builds a second prompt that p' +
-      'oints the model at the exact spans instead of at the whole document.</p>',
+      'yourself. If there are errors, <b>Copy repair prompt</b> builds a second prompt: it ca' +
+      'rries the whole document with its lines numbered and names the exact places the engine' +
+      ' objected to. The answer to it is the corrected document in full, so bring that back a' +
+      'nd press <b>Replace the document</b> — <b>Insert into document</b> would leave the bro' +
+      'ken one where it is and put a corrected copy beside it.</p>',
     '<p>The case column is the part worth filling in. A variable is put in verbatim — nothi' +
       'ng inflects it — so in a language with cases the sentence has to be built around the f' +
       'orm the value already has, and a model can only choose correctly if it is told which f' +
@@ -1676,7 +1679,10 @@ const
       'ой пользуетесь. Верните ответ и нажмите <b>Вставить в документ</b> — движок в этом окн' +
       'е скажет, что он о нём думает, в панели диагностики, ровно так же, как о любом тексте,' +
       ' набранном вами. Если есть ошибки, <b>Скопировать промпт правки</b> составит второй пр' +
-      'омпт, который указывает модели на точные места, а не на весь документ.</p>',
+      'омпт: он несёт весь документ с пронумерованными строками и называет те самые места, к ' +
+      'которым придрался движок. Ответ на него — исправленный документ целиком, поэтому верни' +
+      'те его и нажмите <b>Заменить документ</b>: <b>Вставить в документ</b> оставило бы слом' +
+      'анный на месте и положило рядом исправленную копию.</p>',
     '<p>Колонка падежа — та часть, которую стоит заполнить. Переменная подставляется дослов' +
       'но, ничто её не склоняет, поэтому в языке с падежами предложение приходится строить во' +
       'круг той формы, которая у значения уже есть, и модель выберет верно, только если ей ск' +
@@ -2530,8 +2536,11 @@ const
       'rt zurück und drücken Sie <b>In das Dokument einfügen</b> — die Maschine in diesem Fen' +
       'ster sagt dann im Diagnosebereich, was sie davon hält, genau wie bei allem anderen, wa' +
       's Sie selbst tippen. Gibt es Fehler, baut <b>Reparatur-Prompt kopieren</b> einen zweit' +
-      'en Prompt, der das Modell auf die genauen Stellen zeigt statt auf das ganze Dokument.<' +
-      '/p>',
+      'en Prompt: er trägt das ganze Dokument mit nummerierten Zeilen und benennt genau die S' +
+      'tellen, an denen die Maschine Anstoß nahm. Die Antwort darauf ist das vollständige kor' +
+      'rigierte Dokument — bringen Sie es zurück und drücken Sie <b>Dokument ersetzen</b>; <b' +
+      '>In das Dokument einfügen</b> ließe das kaputte stehen und legte eine korrigierte Kopi' +
+      'e daneben.</p>',
     '<p>Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlic' +
       'h eingesetzt, nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die' +
       ' Form herum gebaut werden, die der Wert schon hat, und ein Modell wählt nur dann richt' +
@@ -3437,7 +3446,11 @@ const
       'yez sur <b>Insérer dans le document</b> — le moteur de cette fenêtre dit alors ce qu''' +
       'il en pense dans le panneau des diagnostics, exactement comme pour tout ce que vous ta' +
       'pez vous-même. S''il y a des erreurs, <b>Copier l''invite de correction</b> construit ' +
-      'une seconde invite qui pointe les endroits exacts plutôt que le document entier.</p>',
+      'une seconde invite : elle porte le document entier avec ses lignes numérotées et nomme' +
+      ' les endroits exacts qui ont fait tiquer le moteur. La réponse est le document corrigé' +
+      ' en entier — rapportez-la et appuyez sur <b>Remplacer le document</b> ; <b>Insérer dan' +
+      's le document</b> laisserait le document cassé en place et poserait une copie corrigée' +
+      ' à côté.</p>',
     '<p>La colonne des cas est la partie qui vaut la peine d''être remplie. Une variable es' +
       't insérée telle quelle, rien ne la décline : dans une langue à cas, la phrase doit don' +
       'c être construite autour de la forme que la valeur possède déjà, et un modèle ne chois' +
@@ -4332,8 +4345,11 @@ const
       ' que ya utiliza. Traiga la respuesta y pulse <b>Insertar en el documento</b>: el motor' +
       ' de esta ventana dirá entonces qué le parece, en el panel de diagnósticos, igual que c' +
       'on cualquier cosa que escriba usted mismo. Si hay errores, <b>Copiar la instrucción de' +
-      ' arreglo</b> construye una segunda instrucción que señala los puntos exactos en lugar ' +
-      'del documento entero.</p>',
+      ' arreglo</b> construye una segunda instrucción: lleva el documento entero con sus líne' +
+      'as numeradas y nombra los puntos exactos que el motor objetó. La respuesta es el docum' +
+      'ento corregido completo, así que tráigala y pulse <b>Reemplazar el documento</b>: <b>I' +
+      'nsertar en el documento</b> dejaría el roto donde está y pondría una copia corregida a' +
+      'l lado.</p>',
     '<p>La columna de caso es la parte que vale la pena rellenar. Una variable se inserta t' +
       'al cual, nada la declina: en una lengua con casos la frase debe construirse alrededor ' +
       'de la forma que el valor ya tiene, y un modelo solo elige bien si se le dice qué forma' +
@@ -5202,8 +5218,10 @@ const
       'a la risposta e premi <b>Inserisci nel documento</b> — il motore di questa finestra di' +
       'ce allora che cosa ne pensa, nel pannello delle diagnostiche, esattamente come per tut' +
       'to ciò che scrivi tu. Se ci sono errori, <b>Copia il prompt di correzione</b> costruis' +
-      'ce un secondo prompt che indica al modello i punti esatti invece dell''intero document' +
-      'o.</p>',
+      'ce un secondo prompt: porta l''intero documento con le righe numerate e indica i punti' +
+      ' esatti che il motore ha contestato. La risposta è il documento corretto per intero, q' +
+      'uindi riportala e premi <b>Sostituisci il documento</b>: <b>Inserisci nel documento</b' +
+      '> lascerebbe quello rotto dov''è e ne metterebbe una copia corretta accanto.</p>',
     '<p>La colonna del caso è la parte che vale la pena compilare. Una variabile viene inse' +
       'rita alla lettera, nulla la declina: in una lingua con i casi la frase va costruita at' +
       'torno alla forma che il valore ha già, e un modello sceglie bene solo se gli si dice q' +
@@ -6075,8 +6093,11 @@ const
       'da chaves: escreve o pedido para que o leve àquele que já utiliza. Traga a resposta e ' +
       'carregue em <b>Inserir no documento</b> — o motor desta janela diz então o que lhe par' +
       'ece, no painel de diagnósticos, tal como faz com tudo o que escreve. Se houver erros, ' +
-      '<b>Copiar o pedido de correção</b> constrói um segundo pedido que aponta ao modelo os ' +
-      'pontos exatos em vez do documento inteiro.</p>',
+      '<b>Copiar o pedido de correção</b> constrói um segundo pedido: leva o documento inteir' +
+      'o com as linhas numeradas e nomeia os pontos exatos de que o motor se queixou. A respo' +
+      'sta é o documento corrigido por inteiro, portanto traga-a e carregue em <b>Substituir ' +
+      'o documento</b>: <b>Inserir no documento</b> deixaria o estragado onde está e poria um' +
+      'a cópia corrigida ao lado.</p>',
     '<p>A coluna do caso é a parte que vale a pena preencher. Uma variável é inserida tal c' +
       'omo está, nada a declina: numa língua com casos a frase tem de ser construída à volta ' +
       'da forma que o valor já tem, e um modelo só escolhe bem se lhe disserem que forma tem ' +
@@ -6934,8 +6955,11 @@ const
       'och al gebruikt. Breng het antwoord terug en druk op <b>In het document invoegen</b> —' +
       ' de machine in dit venster zegt dan in het diagnosepaneel wat zij ervan vindt, net als' +
       ' bij alles wat u zelf typt. Zijn er fouten, dan bouwt <b>Herstelprompt kopiëren</b> ee' +
-      'n tweede prompt die het model de precieze plekken aanwijst in plaats van het hele docu' +
-      'ment.</p>',
+      'n tweede prompt: hij draagt het hele document met genummerde regels en noemt de precie' +
+      'ze plekken waar de machine bezwaar maakte. Het antwoord is het volledige verbeterde do' +
+      'cument, breng het dus terug en druk op <b>Het document vervangen</b>; <b>In het docume' +
+      'nt invoegen</b> zou het kapotte laten staan en er een verbeterde kopie naast leggen.</' +
+      'p>',
     '<p>De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variabele' +
       ' wordt letterlijk ingevoegd, niets verbuigt haar: in een taal met naamvallen moet de z' +
       'in dus rond de vorm worden gebouwd die de waarde al heeft, en een model kiest alleen g' +
@@ -7806,8 +7830,11 @@ const
       ' ve anahtar tutmaz: istemi, zaten kullandığınız modele götüresiniz diye yazar. Yanıtı ' +
       'geri getirip <b>Belgeye ekle</b> düğmesine basın — bu penceredeki makine o zaman ne dü' +
       'şündüğünü tanılama panelinde söyler, tıpkı kendi yazdığınız her şey için yaptığı gibi.' +
-      ' Hata varsa <b>Düzeltme istemini kopyala</b>, modele belgenin tamamını değil tam yerle' +
-      'ri gösteren ikinci bir istem hazırlar.</p>',
+      ' Hata varsa <b>Düzeltme istemini kopyala</b>, ikinci bir istem hazırlar: numaralanmış ' +
+      'satırlarıyla belgenin tamamını taşır ve makinenin itiraz ettiği tam yerleri adlandırır' +
+      '. Yanıt, düzeltilmiş belgenin tamamıdır; onu geri getirip <b>Belgeyi değiştir</b> düğm' +
+      'esine basın — <b>Belgeye ekle</b> bozuk olanı yerinde bırakır ve yanına düzeltilmiş bi' +
+      'r kopya koyar.</p>',
     '<p>Durum sütunu, doldurmaya değer olan bölümdür. Değişken olduğu gibi yerleştirilir, o' +
       'nu hiçbir şey çekimlemez: durumları olan bir dilde cümle, değerin hâlihazırda taşıdığı' +
       ' biçimin çevresine kurulmalıdır ve model ancak her adın hangi biçimi taşıdığı söylendi' +
@@ -8639,7 +8666,10 @@ const
       'туєтеся. Поверніть відповідь і натисніть <b>Вставити в документ</b> — рушій у цьому ві' +
       'кні скаже, що він про неї думає, у панелі діагностики, так само, як про будь-який набр' +
       'аний вами текст. Якщо є помилки, <b>Скопіювати промпт виправлення</b> складе другий пр' +
-      'омпт, який вказує моделі на точні місця, а не на весь документ.</p>',
+      'омпт: він несе весь документ із пронумерованими рядками й називає ті самі місця, до як' +
+      'их причепився рушій. Відповідь на нього — виправлений документ цілком, тож поверніть й' +
+      'ого й натисніть <b>Замінити документ</b>: <b>Вставити в документ</b> залишило б зламан' +
+      'ий на місці та поклало поруч виправлену копію.</p>',
     '<p>Колонка відмінка — та частина, яку варто заповнити. Змінна підставляється дослівно,' +
       ' ніщо її не відмінює, тому в мові з відмінками речення доводиться будувати навколо тіє' +
       'ї форми, яку значення вже має, і модель обере правильно, лише якщо їй сказати, яку фор' +
@@ -9469,8 +9499,11 @@ const
       'хоўвае ключоў: яна складае промпт, каб вы занеслі яго ў тую мадэль, якой карыстаецеся.' +
       ' Вярніце адказ і націсніце <b>Уставіць у дакумент</b> — рухавік у гэтым акне скажа, шт' +
       'о ён пра яго думае, у панэлі дыягностыкі, гэтак жа, як пра любы набраны вамі тэкст. Ка' +
-      'лі ёсць памылкі, <b>Скапіяваць промпт праўкі</b> складзе другі промпт, які паказвае ма' +
-      'дэлі на дакладныя месцы, а не на ўвесь дакумент.</p>',
+      'лі ёсць памылкі, <b>Скапіяваць промпт праўкі</b> складзе другі промпт: ён нясе ўвесь д' +
+      'акумент з пранумараванымі радкамі і называе тыя самыя месцы, да якіх прычапіўся рухаві' +
+      'к. Адказ на яго — выпраўлены дакумент цалкам, таму вярніце яго і націсніце <b>Замяніць' +
+      ' дакумент</b>: <b>Уставіць у дакумент</b> пакінула б зламаны на месцы і паклала побач ' +
+      'выпраўленую копію.</p>',
     '<p>Калонка склону — тая частка, якую варта запоўніць. Зменная падстаўляецца даслоўна, ' +
       'нішто яе не скланяе, таму ў мове са склонамі сказ даводзіцца будаваць вакол той формы,' +
       ' якую значэнне ўжо мае, і мадэль выбера правільна, толькі калі ёй сказаць, якую форму ' +
@@ -10303,8 +10336,10 @@ const
       'саставља упит да га однесете моделу којим се већ служите. Вратите одговор и притисните' +
       ' <b>Убаци у документ</b> — мотор у овом прозору тада каже шта о њему мисли, у панелу д' +
       'ијагностике, исто као и о било ком тексту који сами укуцате. Ако има грешака, <b>Копир' +
-      'ај упит за поправку</b> саставља други упит који показује моделу тачна места уместо це' +
-      'лог документа.</p>',
+      'ај упит за поправку</b> саставља други упит: носи цео документ с нумерисаним редовима ' +
+      'и именује баш она места на која се мотор пожалио. Одговор је исправљен документ у цели' +
+      'ни, зато га вратите и притисните <b>Замени документ</b>: <b>Убаци у документ</b> би по' +
+      'кварени оставио где јесте и поред њега ставио исправљену копију.</p>',
     '<p>Колона падежа је део који вреди попунити. Променљива се уноси дословно, ништа је не' +
       ' мења по падежима, па се у језику са падежима реченица мора градити око облика који вр' +
       'едност већ има, а модел бира тачно само ако му се каже који облик држи свако име. Из и' +
@@ -11123,8 +11158,11 @@ const
       ' sastavlja upit da ga odnesete modelu kojim se već služite. Vratite odgovor i pritisni' +
       'te <b>Umetni u dokument</b> — motor u ovom prozoru tada kaže što o njemu misli, u ploč' +
       'i dijagnostike, jednako kao i o bilo kojem tekstu koji sami utipkate. Ako ima pogrešak' +
-      'a, <b>Kopiraj upit za popravak</b> sastavlja drugi upit koji pokazuje modelu točna mje' +
-      'sta umjesto cijelog dokumenta.</p>',
+      'a, <b>Kopiraj upit za popravak</b> sastavlja drugi upit: nosi cijeli dokument s numeri' +
+      'ranim recima i imenuje upravo ona mjesta na koja se motor požalio. Odgovor je ispravlj' +
+      'eni dokument u cijelosti, pa ga vratite i pritisnite <b>Zamijeni dokument</b>: <b>Umet' +
+      'ni u dokument</b> ostavio bi pokvareni gdje jest i pokraj njega stavio ispravljenu kop' +
+      'iju.</p>',
     '<p>Stupac padeža dio je koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je n' +
       'e mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji' +
       ' vrijednost već ima, a model bira točno samo ako mu se kaže koji oblik drži svako ime.' +
@@ -11945,8 +11983,11 @@ const
       'stavlja upit da ga odnesete modelu kojim se već služite. Vratite odgovor i pritisnite ' +
       '<b>Umetni u dokument</b> — motor u ovom prozoru tada kaže šta o njemu misli, u ploči d' +
       'ijagnostike, jednako kao i o bilo kojem tekstu koji sami otkucate. Ako ima grešaka, <b' +
-      '>Kopiraj upit za popravku</b> sastavlja drugi upit koji pokazuje modelu tačna mjesta u' +
-      'mjesto cijelog dokumenta.</p>',
+      '>Kopiraj upit za popravku</b> sastavlja drugi upit: nosi cijeli dokument s numerisanim' +
+      ' redovima i imenuje baš ona mjesta na koja se motor požalio. Odgovor je ispravljeni do' +
+      'kument u cijelosti, pa ga vratite i pritisnite <b>Zamijeni dokument</b>: <b>Umetni u d' +
+      'okument</b> ostavio bi pokvareni gdje jeste i pored njega stavio ispravljenu kopiju.</' +
+      'p>',
     '<p>Kolona padeža je dio koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je n' +
       'e mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji' +
       ' vrijednost već ima, a model bira tačno samo ako mu se kaže koji oblik drži svako ime.' +

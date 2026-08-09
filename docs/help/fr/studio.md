@@ -99,8 +99,10 @@ peut employer, puis appuyez sur **Copier l'invite**. L'application ne s'adresse 
 détient aucune clé : elle rédige l'invite pour que vous la portiez à celui que vous utilisez
 déjà. Rapportez la réponse et appuyez sur **Insérer dans le document** — le moteur de cette fenêtre dit alors ce
 qu'il en pense dans le panneau des diagnostics, exactement comme pour tout ce que vous tapez
-vous-même. S'il y a des erreurs, **Copier l'invite de correction** construit une seconde invite qui pointe les
-endroits exacts plutôt que le document entier.
+vous-même. S'il y a des erreurs, **Copier l'invite de correction** construit une seconde invite : elle porte le document entier avec ses lignes numérotées et
+nomme les endroits exacts qui ont fait tiquer le moteur. La réponse est le document corrigé en
+entier — rapportez-la et appuyez sur **Remplacer le document** ; **Insérer dans le document**
+laisserait le document cassé en place et poserait une copie corrigée à côté.
 
 La colonne des cas est la partie qui vaut la peine d'être remplie. Une variable est insérée
 telle quelle, rien ne la décline : dans une langue à cas, la phrase doit donc être construite
