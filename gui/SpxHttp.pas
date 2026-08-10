@@ -533,7 +533,6 @@ begin
 end;
 
 function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): TSpxHttpResult;
-var
 begin
   Result := Default(TSpxHttpResult);
   (* A BAD URL IS STILL A BAD URL HERE. Answering `heUnsupported` to everything would make the

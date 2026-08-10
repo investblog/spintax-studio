@@ -4943,6 +4943,13 @@ end;
    non-Windows compiler asks. It found the defect when written, and it is the reason the fix is
    not just "add the stub I forgot this time".
 
+   WHAT IT DOES NOT DO IS COMPILE THAT BRANCH, and the difference cost a red CI a second time
+   on 2026-08-10: removing the last local from the `{$ELSE}` `SpxHttpSend` left a bare `var`
+   before `begin`, which is a syntax error nothing on this machine reads. This check answers
+   "is it implemented", never "does it build" -- for that there is only CI, which is why
+   reading `gh run list` after a push is step 1a of the plan's verification and not an optional
+   courtesy. It caught this one push later.
+
    COLUMN 1 IS THE DISCRIMINATOR. Unit-level routines start there in this codebase; class
    methods inside a `type` block and routines nested in a body are indented, and neither is
    what the interface promises. *)
