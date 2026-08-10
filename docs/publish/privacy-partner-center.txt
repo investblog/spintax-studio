@@ -10,7 +10,9 @@ With the AI connection off, which is how the application is installed: nothing. 
 
 With it on, and only when you press the button that sends: the prompt goes out. That is the brief you wrote, the variable names you listed and, when you ask for a repair, the draft and the diagnostics the engine found in it. It goes to the endpoint you configured, with your key, on your account. Nothing else is added: no identifier, no document you did not send, and no record is kept here of what you sent.
 
-If the endpoint you configure is a local one, a model running on your own machine at an address like http://localhost:11434, then nothing leaves the computer at all. That is a different thing from a cloud provider and this policy will not blur them.
+An address on your own machine is an address, not a promise. You can point this at a model running locally, something answering on http://localhost:11434, and many people will. What we can tell you is what we do: the request goes to the address in your profile and nowhere else, we are not in it, and nothing about it is reported back to us. What we cannot tell you is what the software at that address does with it next, because we did not write it and cannot see inside it. It may be exactly the local model it looks like; it may also be a proxy that forwards.
+
+The recipient does not change without you. If the address you configured answers with a redirect, the request is refused and you are told where it wanted to send you, rather than followed automatically.
 
 What the provider does with what you send is theirs to state, not ours. Their policy applies to that exchange and we are not a party to it.
 

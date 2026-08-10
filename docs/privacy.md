@@ -46,10 +46,20 @@ the diagnostics the engine found in it. It goes to the endpoint you configured, 
 on your account. Nothing else is added to it: no identifier, no document you did not send, and
 no record is kept here of what you sent.
 
-**And if the endpoint you configure is a local one** — a model running on your own machine, at
-an address like `http://localhost:11434` — then nothing leaves the computer at all. That is a
-different thing from a cloud provider, and this policy is not going to blur them: with a local
-model the whole loop, prompt included, stays where your documents are.
+**An address on your own machine is an address, not a promise.** You can point this at a model
+running locally — something answering on `http://localhost:11434`, say — and many people will.
+What we can tell you is what *we* do: the request goes to the address in your profile and
+nowhere else, we are not in it, and nothing about it is reported back to us. What we cannot tell
+you is what the software at that address does with it next, because we did not write it and
+cannot see inside it. It may be exactly the local model it looks like; it may also be a proxy
+that forwards. If it matters to you that nothing leaves the computer, that is a question to
+settle with whatever you are running there — this application cannot answer it on their behalf,
+and a policy that said otherwise would be guessing.
+
+**The recipient does not change without you.** If the address you configured answers with a
+redirect, the request is refused and you are told where it wanted to send you, rather than
+followed automatically. Otherwise the far end could move where your prompt and your key go, and
+you would never see it happen.
 
 What the provider does with what you send is theirs to state, not ours. Their policy applies to
 that exchange, and we are not a party to it.

@@ -42,11 +42,30 @@ type
      chat/completions, local models included. *)
   TSpxLlmKind = (lkAnthropic, lkOpenAiCompatible);
 
+  (* HOW THIS PROFILE AUTHENTICATES -- STATED, NEVER INFERRED FROM THE ADDRESS.
+
+     What stood here was `SpxLlmIsLocal`: an endpoint whose host was `localhost`, `127.0.0.1`
+     or `::1` was allowed to go without a key, and everything else was refused. That reads the
+     wrong thing twice. A local server can be configured to require a key, and a remote one can
+     be open -- so the check refused requests that would have worked and let through ones that
+     could not.
+
+     It was also the load-bearing half of a bigger confusion the spec now settles in §4.5:
+     `localhost` is an ADDRESS. It is not a promise that the software behind it is offline --
+     a proxy, a gateway or a tunnel answers on the same port -- and it must not decide
+     authentication, privacy wording, or anything else. *)
+  TSpxLlmAuth = (
+    laNone,          (* the endpoint takes no credential; no auth header is sent *)
+    laApiKey,        (* the reader's own provider key (BYOK) *)
+    laServiceToken   (* reserved: a token for a managed endpoint of ours (spec §6/§10) *)
+  );
+
   (* What went wrong, in terms a reader can act on. The window turns these into sentences; the
      classification is here so it cannot differ between the two adapters. *)
   TSpxLlmError = (
     leNone,
-    leNoKey,        (* nothing to authenticate with, and the endpoint is not a local one *)
+    leNoKey,        (* the profile says it needs a credential and none is stored *)
+    leRedirected,   (* the endpoint answered 3xx: the recipient would change, so it is refused *)
     leTransport,    (* the exchange never completed -- Detail carries SpxHttp's verdict *)
     leAuth,         (* 401 / 403: the key is wrong, expired, or not for this endpoint *)
     leRateLimit,    (* 429, or a provider that names a quota *)
@@ -61,7 +80,8 @@ type
     Kind: TSpxLlmKind;
     Endpoint: string;     (* the full URL; SpxLlmDefaultEndpoint gives the usual one *)
     Model: string;
-    ApiKey: string;       (* may be empty for a local endpoint *)
+    Auth: TSpxLlmAuth;    (* what this profile needs; `laNone` sends no credential *)
+    ApiKey: string;       (* required when Auth <> laNone, and never guessed at from the URL *)
     MaxTokens: Integer;   (* SPX_LLM_MAX_TOKENS when zero *)
     TimeoutMs: Integer;   (* SpxHttp's default when zero *)
   end;
@@ -90,9 +110,6 @@ procedure SpxLlmHeaders(const ACfg: TSpxLlmConfig; AOut: TStrings);
 (* What a given status and body mean. Separate for the same reason as the body. *)
 function SpxLlmParse(AKind: TSpxLlmKind; AStatus: Integer; const ABody: string): TSpxLlmAnswer;
 
-(* An endpoint on this machine, where an empty key is normal and nothing leaves. *)
-function SpxLlmIsLocal(const AUrl: string): Boolean;
-
 (* The whole exchange. Everything above, plus SpxHttp. *)
 function SpxLlmAsk(const ACfg: TSpxLlmConfig; const APrompt: TSpxBuiltPrompt;
   const ACancel: PBoolean): TSpxLlmAnswer;
@@ -116,22 +133,6 @@ begin
        somewhere they did not choose. *)
     Result := 'http://localhost:11434/v1/chat/completions';
   end;
-end;
-
-function SpxLlmIsLocal(const AUrl: string): Boolean;
-var
-  host, path: string;
-  port: Integer;
-  secure: Boolean;
-begin
-  Result := False;
-  if SpxHttpParseUrl(AUrl, host, path, port, secure) <> heNone then Exit;
-  host := LowerCase(host);
-  (* The loopback names, and nothing clever. A host that merely RESOLVES to a loopback address
-     is not decidable without asking the resolver, and this is asked before anything is dialled;
-     being narrow here can only cost a reader an unnecessary "no key" message, while being wide
-     could call a "no key needed" endpoint that is not on their machine at all. *)
-  Result := (host = 'localhost') or (host = '127.0.0.1') or (host = '::1') or (host = '[::1]');
 end;
 
 function SpxLlmBuildBody(const ACfg: TSpxLlmConfig; const APrompt: TSpxBuiltPrompt): string;
@@ -185,15 +186,16 @@ begin
   if AOut = nil then Exit;
   AOut.Clear;
   AOut.Add('content-type: application/json');
-  if ACfg.Kind = lkAnthropic then
-  begin
-    AOut.Add('anthropic-version: ' + SPX_ANTHROPIC_VERSION);
-    if ACfg.ApiKey <> '' then AOut.Add('x-api-key: ' + ACfg.ApiKey);
-  end
-  else
-    (* An empty key sends NO header at all rather than `Bearer ` with nothing after it: a local
-       model refuses the second and accepts the absence. *)
-    if ACfg.ApiKey <> '' then AOut.Add('authorization: Bearer ' + ACfg.ApiKey);
+  if ACfg.Kind = lkAnthropic then AOut.Add('anthropic-version: ' + SPX_ANTHROPIC_VERSION);
+
+  (* THE PROFILE DECIDES, not the presence of a string. `laNone` sends no credential even if one
+     is lying about in the config, which is what a reader who switched a profile to "no
+     authentication" asked for -- and a `Bearer ` with nothing after it, which is what an empty
+     key used to produce, is refused by servers that would have accepted no header at all. *)
+  if ACfg.Auth = laNone then Exit;
+  if ACfg.ApiKey = '' then Exit;
+  if ACfg.Kind = lkAnthropic then AOut.Add('x-api-key: ' + ACfg.ApiKey)
+                              else AOut.Add('authorization: Bearer ' + ACfg.ApiKey);
 end;
 
 (* A STRING OUT OF A NODE THAT MAY NOT BE ONE -- and every read in this unit goes through here.
@@ -377,11 +379,11 @@ begin
   Result := Default(TSpxLlmAnswer);
 
   (* Asked BEFORE anything is dialled, because "you have not entered a key" is a better sentence
-     than a 401 -- and a local endpoint legitimately needs none. *)
-  if (Trim(ACfg.ApiKey) = '') and (not SpxLlmIsLocal(ACfg.Endpoint)) then
+     than a 401. What it asks is the PROFILE, not the address: see TSpxLlmAuth. *)
+  if (ACfg.Auth <> laNone) and (Trim(ACfg.ApiKey) = '') then
   begin
     Result.Error := leNoKey;
-    Result.Detail := 'no key, and the endpoint is not on this machine';
+    Result.Detail := 'this profile authenticates, and no credential is stored for it';
     Exit;
   end;
 
@@ -401,6 +403,14 @@ begin
 
   case res.Error of
     heNone: ;
+    (* Not a transport failure: the endpoint answered, and what it said was "ask somebody else".
+       Refused rather than followed -- spec §4.5. *)
+    heRedirected:
+      begin
+        Result.Error := leRedirected;
+        Result.Detail := res.Detail;
+        Exit;
+      end;
     heCancelled:
       begin
         Result.Error := leCancelled;

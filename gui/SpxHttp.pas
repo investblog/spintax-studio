@@ -54,6 +54,14 @@ type
     heTimeout,       (* one of the four bounds ran out *)
     heSecurity,      (* TLS: certificate, protocol version, revocation *)
     heCancelled,     (* the caller asked, between reads *)
+    (* THE FAR END SAID "ASK SOMEBODY ELSE", AND THIS DOES NOT.
+
+       WinHTTP follows up to ten redirects by default and RESENDS the request headers to the new
+       host -- which is where the reader's API key is. So a misconfigured or hostile endpoint
+       could move the recipient of a credential without the reader ever seeing it happen. The
+       feature is switched off and the 3xx is reported instead, with the address it named, so
+       that changing where a prompt goes stays a decision somebody makes (spec §4.5). *)
+    heRedirected,
     heTooLarge,      (* the far end kept sending past the ceiling *)
     heUnsupported,   (* no transport on this platform *)
     heOther          (* Detail carries what Windows said *)
@@ -296,6 +304,9 @@ var
   sess, conn, req: HINTERNET;
   flags, status, statusLen, read_, avail: DWORD;
   timeout, ceiling: Integer;
+  feature: DWORD;
+  where: WideString;
+  whereLen: DWORD;
   bodyBytes: RawByteString;
   chunk: array[0..8191] of Byte;
   got: TMemoryStream;
@@ -310,9 +321,10 @@ begin
   ceiling := ARequest.MaxBytes;
   if ceiling <= 0 then ceiling := SPX_HTTP_MAX_BYTES;
 
-  (* ── the URL, taken apart by WinHTTP rather than by us ──────────────────────
-     A hand-written splitter is one more thing that can disagree with the stack that will
-     actually dial. *)
+  (* ── the URL, taken apart HERE rather than by WinHTTP ───────────────────────
+     `WinHttpCrackUrl` did this until 2026-08-10, and it made the parse Windows-only for no
+     reason: the pieces go to WinHttpConnect and WinHttpOpenRequest separately anyway. (This
+     comment used to argue the opposite and was left standing when the code changed.) *)
   Result.Error := SpxHttpParseUrl(ARequest.Url, hostS, pathS, port, secure);
   if Result.Error <> heNone then
   begin
@@ -340,6 +352,14 @@ begin
     if secure then flags := WINHTTP_FLAG_SECURE;
     req := WinHttpOpenRequest(conn, PWideChar(verb), PWideChar(path), nil, nil, nil, flags);
     if req = nil then Exit(Fail(Result, heOther, 'WinHttpOpenRequest'));
+
+    (* NO AUTOMATIC REDIRECTS. WinHTTP's default is to follow up to ten of them and to resend
+       the request headers each time -- and one of those headers carries the reader's key. That
+       makes the recipient of a credential something the far end can change silently, which is
+       exactly what spec §4.5 says must stay a decision a person makes. Off, and the 3xx is
+       reported to the caller with the address it named. *)
+    feature := WINHTTP_DISABLE_REDIRECTS;
+    WinHttpSetOption(req, WINHTTP_OPTION_DISABLE_FEATURE, @feature, SizeOf(feature));
 
     (* ── headers, one per line, name and value split at the first colon ── *)
     if ARequest.Headers <> nil then
@@ -372,6 +392,23 @@ begin
              nil, @status, @statusLen, nil) then
       Exit(Fail(Result, heOther, 'WinHttpQueryHeaders'));
     Result.Status := status;
+
+    (* A 3xx reaches the caller as its own answer rather than as a body to parse. The address it
+       named goes with it: "the endpoint redirected to X" is something a reader can act on, and
+       "provider error" over the same thing is not. *)
+    if (status >= 300) and (status < 400) then
+    begin
+      Result.Error := heRedirected;
+      SetLength(where, 2048);
+      whereLen := Length(where) * SizeOf(WideChar);
+      if WinHttpQueryHeaders(req, WINHTTP_QUERY_LOCATION, nil, @where[1], @whereLen, nil) then
+        SetLength(where, whereLen div SizeOf(WideChar))
+      else
+        where := '';
+      Result.Detail := 'the endpoint redirected (' + IntToStr(status) + ')';
+      if where <> '' then Result.Detail := Result.Detail + ' to ' + UTF8Encode(where);
+      Exit;
+    end;
 
     (* ── the body, in chunks, asking about the cancel between each ── *)
     repeat

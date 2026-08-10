@@ -5335,17 +5335,6 @@ var
   end;
 
 begin
-  (* -- the local-endpoint rule, which decides whether an empty key is a mistake -- *)
-  CheckTrue('llm/localhost is local', SpxLlmIsLocal('http://localhost:11434/v1/chat/completions'));
-  CheckTrue('llm/127.0.0.1 is local', SpxLlmIsLocal('http://127.0.0.1:1234/v1/chat/completions'));
-  CheckTrue('llm/a cloud endpoint is not local',
-            not SpxLlmIsLocal('https://api.anthropic.com/v1/messages'));
-  (* The narrowness the unit claims for itself: a name that merely BEGINS with localhost is
-     somebody else's machine, and treating it as local would waive the missing-key check for a
-     host the reader never meant. *)
-  CheckTrue('llm/and localhost.example.com is not local',
-            not SpxLlmIsLocal('https://localhost.example.com/v1/chat/completions'));
-
   (* -- THE BODY, ASKED OF ITSELF RATHER THAN OF A COPY OF ITSELF --
 
      This is the check that matters, and it needs no fixture. The prompt carries a quote, a
@@ -5401,6 +5390,10 @@ begin
   hdrs := TStringList.Create;
   try
     cfg.Kind := lkAnthropic;
+    { The profile states it, and `Default(TSpxLlmConfig)` deliberately does not: a record nobody
+      filled in sends NO credential. Forgetting then costs a 401 the reader can fix, rather than
+      a key going somewhere the profile never said to send one. }
+    cfg.Auth := laApiKey;
     cfg.ApiKey := 'sk-ant-TESTKEY';
     SpxLlmHeaders(cfg, hdrs);
     CheckTrue('llm/anthropic sends its dated version header',
@@ -5417,8 +5410,9 @@ begin
     CheckTrue('llm/the openai shape uses a bearer token',
               Pos('authorization: Bearer ' + cfg.ApiKey, hdrs.Text) > 0);
 
-    (* An EMPTY key sends no auth header at all rather than an empty one: a local model refuses
-       a bearer with nothing after it and accepts its absence. *)
+    (* An EMPTY key sends no auth header at all rather than an empty one: a server refuses a
+       bearer with nothing after it and accepts its absence. The profile still says it
+       authenticates -- that is what makes the pre-flight below able to say so. *)
     cfg.ApiKey := '';
     SpxLlmHeaders(cfg, hdrs);
     CheckTrue('llm/an empty key sends no authorization header',
@@ -5433,9 +5427,52 @@ begin
   (* -- no key, no dial: the pre-flight, and the reason this is testable at all -- *)
   cfg := Default(TSpxLlmConfig);
   cfg.Kind := lkAnthropic;
+  cfg.Auth := laApiKey;
   cfg.Endpoint := SpxLlmDefaultEndpoint(lkAnthropic);
   ans := SpxLlmAsk(cfg, prompt, nil);
   Check('llm/a missing key is refused before anything is dialled', ErrName(ans.Error), 'leNoKey');
+
+  (* -- AUTHENTICATION IS THE PROFILE'S, NOT THE ADDRESS'S --
+
+     `SpxLlmIsLocal` stood here: an endpoint whose host was loopback could go without a key and
+     every other was refused. It read the wrong thing in both directions -- a local server can
+     require a key and a remote one can be open -- and it was the load-bearing half of the
+     confusion spec §4.5 now settles: `localhost` is an ADDRESS, not a promise that whatever
+     answers on it is offline.
+
+     So the matrix below is the whole rule, and the two rows that used to be impossible are the
+     point of it. *)
+  cfg := Default(TSpxLlmConfig);
+  cfg.Kind := lkOpenAiCompatible;
+  cfg.Endpoint := 'http://localhost:11434/v1/chat/completions';
+  cfg.Auth := laApiKey;
+  cfg.ApiKey := '';
+  ans := SpxLlmAsk(cfg, prompt, nil);
+  Check('llm/a LOCAL endpoint that authenticates still needs its key',
+        ErrName(ans.Error), 'leNoKey');
+
+  cfg.Auth := laNone;
+  hdrs := TStringList.Create;
+  try
+    cfg.ApiKey := 'sk-left-over-from-another-profile';
+    SpxLlmHeaders(cfg, hdrs);
+    (* A profile set to "no authentication" sends none EVEN IF a key is lying about in the
+       config -- otherwise switching the profile would not be the thing that decides. *)
+    CheckTrue('llm/a profile with no auth sends no credential, key or not',
+              Pos('authorization', LowerCase(hdrs.Text)) = 0);
+
+    cfg.Endpoint := 'https://api.example.com/v1/chat/completions';
+    SpxLlmHeaders(cfg, hdrs);
+    CheckTrue('llm/and that holds for a REMOTE endpoint too, which used to be impossible',
+              Pos('authorization', LowerCase(hdrs.Text)) = 0);
+
+    cfg.Auth := laApiKey;
+    SpxLlmHeaders(cfg, hdrs);
+    CheckTrue('llm/while a profile that authenticates sends the key',
+              Pos('bearer sk-left-over', LowerCase(hdrs.Text)) > 0);
+  finally
+    hdrs.Free;
+  end;
 
   (* -- and what each answer means -- *)
   rows := TStringList.Create;
@@ -5756,8 +5793,18 @@ begin
               Pos('until you turn it on', low_) > 0);
     CheckTrue('privacy/' + name_ + ' says where the key is kept',
               Pos('credential manager', LowerCase(low_)) > 0);
-    CheckTrue('privacy/' + name_ + ' names a local endpoint as sending nothing',
-              Pos('localhost:11434', low_) > 0);
+    (* THIS MARKER USED TO PIN A FALSE SENTENCE INTO ALL THREE COPIES.
+
+       It required `localhost:11434` and was satisfied by "if the endpoint you configure is a
+       local one ... then nothing leaves the computer at all" -- which is not true and was never
+       measured: `localhost` is an ADDRESS, and a proxy, a gateway or a tunnel answers on the
+       same port. A gate keeps the three copies in step; it does not vouch for what they say,
+       and pinning a claim is not the same as checking one. So it now pins the CORRECTED claim,
+       which is the one a reader would go looking for. *)
+    CheckTrue('privacy/' + name_ + ' does not sell an address as a guarantee',
+              Pos('not a promise', low_) > 0);
+    CheckTrue('privacy/' + name_ + ' says a redirect does not move the recipient',
+              Pos('does not change without you', low_) > 0);
     CheckTrue('privacy/' + name_ + ' says the provider''s own policy governs that exchange',
               Pos('their policy applies', LowerCase(low_)) > 0);
   end;
