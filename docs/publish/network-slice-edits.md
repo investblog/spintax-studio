@@ -102,10 +102,13 @@ project: spintax-studio
 > your key, on your account. Nothing else is added to it: no identifier, no document you did not
 > send, no record kept here of what you sent.
 >
-> **And if the endpoint you configure is a local one** — a model running on your own machine, at
-> an address like `http://localhost:11434` — then nothing leaves the computer at all. That is a
-> different thing from a cloud provider, and this policy is not going to blur them: with a local
-> model the whole loop, prompt included, stays where your documents are.
+> **[ЭТОТ АБЗАЦ БЫЛ НЕВЕРЕН И ЗАМЕНЁН 2026-08-10.]** Здесь стояло утверждение, что при адресе
+> вида `http://localhost:11434` за пределы компьютера не уходит ничего. Это не измерено и
+> неверно: адрес — не обещание, на том же порту отвечает прокси, шлюз или туннель, и приложение
+> не видит, что делает чужое ПО дальше (спека §4.5). Действующий текст — в `docs/privacy.md`;
+> **брать для публикации нужно оттуда, а не отсюда.** Эта заготовка остаётся записью о решении,
+> и настоящая опасность была именно в её жанре: документ, чьё назначение — «вставить при
+> подаче», хранил готовую к вставке ложь.
 >
 > What the provider does with what you send is theirs to state, not ours. Their policy applies
 > to that exchange, and we are not a party to it.

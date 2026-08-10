@@ -4,8 +4,9 @@
  * TWO FORMATS, NOT TWO VENDORS, and the difference matters to what this covers. The Anthropic
  * Messages shape is one; the OpenAI chat-completions shape is the other, and the second is
  * spoken by OpenAI, OpenRouter, Ollama and LM Studio alike. So `http://localhost:11434/v1/...`
- * is not a special case here -- it is the same adapter pointed somewhere that never leaves the
- * machine, which is exactly the configuration the privacy policy goes out of its way to name.
+ * is not a special case here -- it is the same adapter pointed at a different address, and the
+ * address decides nothing about what happens to the request afterwards (spec §4.5). What it
+ * does decide is whether plain http may be used at all: see `heInsecure`.
  *
  * BUILD AND PARSE ARE SEPARATE FROM ASK, for the reason `SpxHttpParseUrl` is separate from
  * `SpxHttpSend`: a suite that has to open a connection to check anything is a suite that
@@ -66,6 +67,7 @@ type
     leNone,
     leNoKey,        (* the profile says it needs a credential and none is stored *)
     leRedirected,   (* the endpoint answered 3xx: the recipient would change, so it is refused *)
+    leInsecure,     (* plain http to somewhere off this machine: the key would go in clear *)
     leTransport,    (* the exchange never completed -- Detail carries SpxHttp's verdict *)
     leAuth,         (* 401 / 403: the key is wrong, expired, or not for this endpoint *)
     leRateLimit,    (* 429, or a provider that names a quota *)
@@ -387,6 +389,17 @@ begin
     Exit;
   end;
 
+  (* AND BEFORE A REQUEST IS EVEN BUILT, let alone dialled: the headers below carry the key, and
+     a body assembled for an endpoint that will be refused is a copy of the reader's document
+     made for nothing. `SpxHttpSend` asks the same question again -- one rule, two callers, no
+     way past it. *)
+  if SpxHttpTransportAllowed(ACfg.Endpoint) = heInsecure then
+  begin
+    Result.Error := leInsecure;
+    Result.Detail := 'plain http off this machine would put the request on the wire in clear';
+    Exit;
+  end;
+
   hdrs := TStringList.Create;
   try
     SpxLlmHeaders(ACfg, hdrs);
@@ -405,6 +418,12 @@ begin
     heNone: ;
     (* Not a transport failure: the endpoint answered, and what it said was "ask somebody else".
        Refused rather than followed -- spec §4.5. *)
+    heInsecure:
+      begin
+        Result.Error := leInsecure;
+        Result.Detail := res.Detail;
+        Exit;
+      end;
     heRedirected:
       begin
         Result.Error := leRedirected;

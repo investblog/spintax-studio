@@ -5099,6 +5099,93 @@ begin
             scanned >= 2);
 end;
 
+(* THE WORD THAT MEANT FOUR THINGS, AND THE SENTENCES IT LET THROUGH.
+
+   Spec §4.5 settles it: an address is an address. `localhost` is not a promise that the
+   software answering on it is offline -- a proxy, a gateway or a tunnel answers on the same
+   port, and this application cannot see what happens behind it.
+
+   The sentences below asserted otherwise, and they were not in one place: they were in the
+   privacy policy (three copies), in two unit headers, in this suite's own comments, and in a
+   publish-prep document whose entire purpose is "paste this at submission". Review found three
+   of them; a grep found six. That is the argument for a check rather than a sweep -- a sweep is
+   done once and a claim comes back with the next paragraph somebody writes.
+
+   SCOPE IS THE SHIPPING SURFACE, deliberately. `tests/`, `docs/TODO.md` and `docs/decisions/`
+   are records: quoting the wrong sentence to explain why it was wrong is what they are for, and
+   forbidding it there would push the history out of the project. What is checked is everything
+   a reader can end up holding. *)
+procedure TestLocalityWords;
+const
+  { Assertions, not mentions. "if it matters to you that nothing leaves the computer, that is a
+    question to settle with whatever you are running" is the corrected privacy text and must
+    keep passing -- so the phrases are the ones that CLAIM, and each was in the tree today. }
+  BANNED: array[0..3] of string = (
+    'never leaves the machine',
+    'sends nothing off the machine',
+    'leaves the computer at all',
+    'stays where your documents are');
+  FILES: array[0..4] of string = (
+    'docs/privacy.md',
+    'docs/publish/privacy.html',
+    'docs/publish/privacy-partner-center.txt',
+    'docs/publish/network-slice-edits.md',
+    'docs/store-listing.md');
+  DIRS: array[0..2] of string = ('src', 'gui', 'gui/lang');
+var
+  i, d, seen: Integer;
+  rec: TSearchRec;
+  low_: string;
+
+  procedure OneFile(const APath: string);
+  var b: Integer;
+  begin
+    if not FileExists(APath) then
+    begin
+      CheckTrue('locality/' + APath + ' is where the suite expects it', False);
+      Exit;
+    end;
+    Inc(seen);
+    low_ := LowerCase(SpxReadTextFile(APath));
+    for b := Low(BANNED) to High(BANNED) do
+      CheckTrue('locality/' + APath + ' does not claim "' + BANNED[b] + '"',
+                Pos(BANNED[b], low_) = 0);
+  end;
+
+begin
+  seen := 0;
+  for i := Low(FILES) to High(FILES) do OneFile(FILES[i]);
+
+  for d := Low(DIRS) to High(DIRS) do
+  begin
+    if FindFirst(DIRS[d] + '/*.pas', faAnyFile, rec) <> 0 then Continue;
+    try
+      repeat
+        if (rec.Attr and faDirectory) = 0 then OneFile(DIRS[d] + '/' + rec.Name);
+      until FindNext(rec) <> 0;
+    finally
+      FindClose(rec);
+    end;
+  end;
+
+  { Every help document, in every language it ships in. }
+  if FindFirst('docs/help/*', faAnyFile or faDirectory, rec) = 0 then
+  try
+    repeat
+      if ((rec.Attr and faDirectory) <> 0) and (rec.Name <> '.') and (rec.Name <> '..') and
+         FileExists('docs/help/' + rec.Name + '/studio.md') then
+        OneFile('docs/help/' + rec.Name + '/studio.md');
+    until FindNext(rec) <> 0;
+  finally
+    FindClose(rec);
+  end;
+
+  { And the walk has to have found something -- a scanner that matches no file reports no
+    failures, which reads exactly like a pass. }
+  CheckTrue('locality/the scan covered the shipping surface [' + IntToStr(seen) + ' files]',
+            seen >= 30);
+end;
+
 (* THE TRANSPORT, ASKED ONLY WHAT IT CAN ANSWER WITHOUT A NETWORK.
 
    Not one check here opens a connection, and that is deliberate rather than timid: a suite
@@ -5127,9 +5214,13 @@ var
       heSecurity: Result := 'heSecurity';
       heCancelled: Result := 'heCancelled';
       heTooLarge: Result := 'heTooLarge';
+      heInsecure: Result := 'heInsecure';
+      heRedirected: Result := 'heRedirected';
       heUnsupported: Result := 'heUnsupported';
+      heOther: Result := 'heOther';
     else
-      Result := 'heOther';
+      { Named, not guessed -- see the note on the LLM one. }
+      Result := 'AN ERROR WITH NO NAME -- add it to ErrName';
     end;
   end;
 
@@ -5172,9 +5263,9 @@ begin
   Refused('an ftp url', 'ftp://example.com/x');
   Refused('a file url', 'file:///C:/Windows/win.ini');
 
-  { AND PLAIN HTTP IS NOT REFUSED, because a local model answers on it. Refusing it would
-    refuse the one configuration that never leaves the machine -- which is the configuration
-    the privacy policy goes out of its way to describe.
+  { AND PLAIN HTTP PARSES, because a model on this machine answers on it. Whether it may be
+    DIALLED is a separate question with a separate answer -- which is the configuration
+    the transport rule allows -- see the cleartext checks below.
 
     The first draft of this check was `CheckTrue(..., True)` -- a sentence about the product
     with nothing behind it, which is exactly the shape this suite exists to prevent. The URL
@@ -5216,6 +5307,37 @@ begin
   err := SpxHttpParseUrl('https://example.com?q=1', host, path, port, secure);
   CheckTrue('http/a query with no path is accepted', err = heNone);
   Check('http/and the query becomes the path', path, '?q=1');
+
+  (* -- CLEARTEXT: A TRANSPORT RULE, ASKED ON EVERY PLATFORM --
+
+     Authentication stopped being a property of the address (spec §4.5), which is right and is
+     precisely what makes this necessary: `api-key` + `http://example.com` became a reachable
+     configuration, and it would put the reader's key on the wire in clear. So plain http is
+     allowed to loopback and refused everywhere else.
+
+     THE RULE THIS REPLACES SAID SOMETHING ELSE. `SpxLlmIsLocal` claimed loopback meant nothing
+     left the machine -- a claim about software we did not write. This one claims only that
+     packets to 127.0.0.1 do not cross a network interface. Same address, different question. *)
+  Check('http/plain http to this machine is allowed',
+        ErrName(SpxHttpTransportAllowed('http://127.0.0.1:11434/api')), 'heNone');
+  Check('http/and to localhost by name',
+        ErrName(SpxHttpTransportAllowed('http://localhost:11434/api')), 'heNone');
+  Check('http/and anywhere in 127/8',
+        ErrName(SpxHttpTransportAllowed('http://127.2.3.4:8080/x')), 'heNone');
+  Check('http/and to the ipv6 loopback',
+        ErrName(SpxHttpTransportAllowed('http://[::1]:11434/api')), 'heNone');
+  Check('http/plain http anywhere else is refused',
+        ErrName(SpxHttpTransportAllowed('http://example.com/v1/chat')), 'heInsecure');
+  { The near-miss that must NOT be treated as this machine. }
+  Check('http/localhost.example.com is somebody else and is refused',
+        ErrName(SpxHttpTransportAllowed('http://localhost.example.com/x')), 'heInsecure');
+  Check('http/and 127.0.0.1.example.com too',
+        ErrName(SpxHttpTransportAllowed('http://127.0.0.1.example.com/x')), 'heInsecure');
+  Check('http/https anywhere is allowed',
+        ErrName(SpxHttpTransportAllowed('https://api.anthropic.com/v1/messages')), 'heNone');
+  { And a request that would carry a key never reaches the transport at all. }
+  Refused2('http/a cleartext send is refused before it is dialled',
+           'http://example.com/v1/chat', heInsecure);
 
   (* -- AND WHAT THIS PLATFORM CAN DO WITH ONE --
 
@@ -5270,7 +5392,8 @@ begin
      scan can decide honestly; that would have been weakening a check to avoid work.
 
      So the policy moved instead: `docs/privacy.md` and both published copies now describe what
-     the AI connection sends, to whom, and that a local endpoint sends nothing off the machine.
+     the AI connection sends and to whom. *(They also said a local endpoint sends nothing off
+     the machine; that sentence was measured a day later, found untrue, and removed -- §4.5.)*
      Listing bullet 17 and the thirteen drafts moved with it.
 
      What still guards the claim is `NET_ALLOWED` above: exactly one file may open a socket, and
@@ -5305,11 +5428,21 @@ var
   i, seen: Integer;
   kind: TSpxLlmKind;
 
+  (* EVERY MEMBER BY NAME, AND THE `else` IS A COMPLAINT RATHER THAN A GUESS.
+
+     This ended `else Result := 'leCancelled'`, so every value added to the enum afterwards
+     read as "cancelled". Adding `leInsecure` produced a failure naming an error the code had
+     never returned, which cost a debugging detour -- and the other direction is worse: a check
+     expecting 'leCancelled' would have PASSED for a brand-new member. Same shape as the
+     per-language fact written `if code = 'en' then X else Y`, which the charter already
+     records: a catch-all turns a new case into a wrong answer instead of a visible gap. *)
   function ErrName(E: TSpxLlmError): string;
   begin
     case E of
       leNone:        Result := 'leNone';
       leNoKey:       Result := 'leNoKey';
+      leRedirected:  Result := 'leRedirected';
+      leInsecure:    Result := 'leInsecure';
       leTransport:   Result := 'leTransport';
       leAuth:        Result := 'leAuth';
       leRateLimit:   Result := 'leRateLimit';
@@ -5317,8 +5450,9 @@ var
       leProvider:    Result := 'leProvider';
       leBadResponse: Result := 'leBadResponse';
       leEmpty:       Result := 'leEmpty';
+      leCancelled:   Result := 'leCancelled';
     else
-      Result := 'leCancelled';
+      Result := 'AN ERROR WITH NO NAME -- add it to ErrName';
     end;
   end;
 
@@ -5473,6 +5607,32 @@ begin
   finally
     hdrs.Free;
   end;
+
+  (* -- AND THE KEY NEVER GOES ON THE WIRE IN CLEAR --
+
+     Refused before the body is built, not merely before it is sent: assembling a request for an
+     endpoint that will be refused makes a copy of the reader's document for nothing, and the
+     headers that copy travels with carry the key. *)
+  cfg := Default(TSpxLlmConfig);
+  cfg.Kind := lkOpenAiCompatible;
+  cfg.Auth := laApiKey;
+  cfg.ApiKey := 'sk-must-not-travel';
+  cfg.Endpoint := 'http://example.com/v1/chat/completions';
+  ans := SpxLlmAsk(cfg, prompt, nil);
+  Check('llm/a key is refused over plain http to another machine',
+        ErrName(ans.Error), 'leInsecure');
+  { The same profile over https is not refused here -- it gets as far as the transport. }
+  cfg.Endpoint := 'https://example.com/v1/chat/completions';
+  ans := SpxLlmAsk(cfg, prompt, nil);
+  CheckTrue('llm/while over https it is not refused for that reason',
+            ans.Error <> leInsecure);
+  { And a keyless local profile is exactly what the localhost preset is for. }
+  cfg.Auth := laNone;
+  cfg.ApiKey := '';
+  cfg.Endpoint := 'http://localhost:11434/v1/chat/completions';
+  ans := SpxLlmAsk(cfg, prompt, nil);
+  CheckTrue('llm/and the localhost preset is not refused as insecure',
+            ans.Error <> leInsecure);
 
   (* -- and what each answer means -- *)
   rows := TStringList.Create;
@@ -5787,8 +5947,9 @@ begin
 
        Four markers, each a claim a reader would go looking for and each able to go missing on
        its own: that the connection is off until turned on, that the key lives in the Windows
-       credential store, that a local endpoint sends nothing off the machine, and that the
-       provider's own policy governs the exchange. *)
+       credential store, that an address is not a guarantee about what runs behind it, that a
+       redirect cannot move the recipient, and that the provider's own policy governs the
+       exchange. *)
     CheckTrue('privacy/' + name_ + ' says the AI connection is off until turned on',
               Pos('until you turn it on', low_) > 0);
     CheckTrue('privacy/' + name_ + ' says where the key is kept',
@@ -9747,6 +9908,7 @@ begin
   TestHelpSilences;
   TestOfflineClaim;
   TestPlatformSplit;
+  TestLocalityWords;
   TestHttp;
   TestLlm;
   TestSecrets;

@@ -63,6 +63,22 @@ type
        that changing where a prompt goes stays a decision somebody makes (spec §4.5). *)
     heRedirected,
     heTooLarge,      (* the far end kept sending past the ceiling *)
+    (* CLEARTEXT OFF THIS MACHINE, WHICH IS A TRANSPORT FACT AND NOTHING MORE.
+
+       Plain `http` to anything but loopback is refused. The reason is narrow and worth keeping
+       narrow: a request to 127.0.0.1 does not cross a network interface, and a request to
+       anywhere else does -- so a credential in a header, and the reader's document in the body,
+       would travel where anyone on the path can read them. Authentication became a property of
+       the profile rather than of the address (spec §4.5), which is right, and it is exactly
+       what makes this rule necessary: `api-key` + `http://example.com` is now a reachable
+       configuration and it would put the key on the wire in clear.
+
+       THIS IS NOT THE RULE THAT WAS JUST DELETED. `SpxLlmIsLocal` claimed loopback meant the
+       processing was local and nothing left the machine -- a claim about somebody else's
+       software, which this cannot know. This claims only that packets to 127.0.0.1 do not
+       reach a network, which is true of the IP stack whatever is listening. Address as
+       transport fact: yes. Address as privacy promise: never. *)
+    heInsecure,
     heUnsupported,   (* no transport on this platform *)
     heOther          (* Detail carries what Windows said *)
   );
@@ -98,6 +114,11 @@ const
 function SpxHttpParseUrl(const AUrl: string; out AHost, APath: string;
   out APort: Integer; out ASecure: Boolean): TSpxHttpError;
 
+(* Whether this URL may be dialled AT ALL -- the cleartext rule above, asked separately so the
+   caller can refuse before it builds a request that carries a credential. `SpxHttpSend` asks it
+   too, so there is one rule and no way round it. *)
+function SpxHttpTransportAllowed(const AUrl: string): TSpxHttpError;
+
 (* ACancel is read and never written here. Set it from another thread to stop between reads. *)
 function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): TSpxHttpResult;
 
@@ -129,6 +150,35 @@ uses
   Windows, winhttp;
 {$ENDIF}
 
+(* Loopback in the strict sense: `localhost`, 127.0.0.0/8, and the IPv6 `::1`. Deliberately not
+   exported -- the only question this file lets anyone ask is `SpxHttpTransportAllowed`, so a
+   later reader cannot rebuild a privacy claim on top of it. `localhost.example.com` is somebody
+   else's machine and must not match, which is why the name is compared whole. *)
+function IsLoopbackHost(const AHost: string): Boolean;
+var
+  h: string;
+  i: Integer;
+begin
+  h := LowerCase(AHost);
+  if (h = 'localhost') or (h = '::1') or (h = '[::1]') then Exit(True);
+  Result := False;
+  if Copy(h, 1, 4) <> '127.' then Exit;
+  for i := 5 to Length(h) do
+    if not (((h[i] >= '0') and (h[i] <= '9')) or (h[i] = '.')) then Exit;
+  Result := Length(h) > 4;
+end;
+
+function SpxHttpTransportAllowed(const AUrl: string): TSpxHttpError;
+var
+  host, path: string;
+  port: Integer;
+  secure: Boolean;
+begin
+  Result := SpxHttpParseUrl(AUrl, host, path, port, secure);
+  if Result <> heNone then Exit;
+  if (not secure) and (not IsLoopbackHost(host)) then Result := heInsecure;
+end;
+
 (* THE URL, IN PLAIN PASCAL AND ON EVERY PLATFORM.
 
    This was `WinHttpCrackUrl` and therefore Windows-only, which broke two things at once. The
@@ -137,10 +187,13 @@ uses
    deciding whether an endpoint is on this machine is done by looking at the HOST. CI said so
    in two named failures: `llm/localhost is local`, `llm/127.0.0.1 is local`.
 
-   That is the argument for parsing here rather than stubbing. "Is this address on my own
-   computer" is a PRIVACY question -- the policy says a local model sends nothing off the
-   machine -- and it has nothing to do with which transport carries the request. Written once,
-   it is checked on all three CI legs instead of on one.
+   That is the argument for parsing here rather than stubbing: the host is needed to decide
+   whether plain http may be used (`heInsecure`), and that decision has nothing to do with which
+   transport carries the request. Written once, it is checked on all three CI legs.
+
+   *(This paragraph used to call it "a PRIVACY question -- the policy says a local model sends
+   nothing off the machine". Both halves were wrong and were removed from the policy the same
+   week: an address is not a promise about the software behind it. Spec §4.5.)*
 
    `SpxHttpSend` already took the pieces apart for `WinHttpConnect` and `WinHttpOpenRequest`,
    so nothing downstream changes. Stricter than WinHttpCrackUrl in one place on purpose: a
@@ -160,9 +213,9 @@ begin
   scheme := LowerCase(Copy(s, 1, cut - 1));
   rest := Copy(s, cut + 3, MaxInt);
 
-  (* http is allowed on purpose: a local model answers on plain http at 127.0.0.1, and refusing
-     it would refuse the one configuration that never leaves the machine -- which is the
-     configuration the privacy policy goes out of its way to describe. *)
+  (* http is PARSED here on purpose -- a model on this machine answers on plain http, and the
+     parser's job is to read an address, not to judge it. Whether it may be DIALLED is
+     `SpxHttpTransportAllowed`, which allows cleartext only to loopback. *)
   if scheme = 'https' then ASecure := True
   else if scheme <> 'http' then Exit(heBadUrl);
 
@@ -321,6 +374,14 @@ begin
   ceiling := ARequest.MaxBytes;
   if ceiling <= 0 then ceiling := SPX_HTTP_MAX_BYTES;
 
+  (* ── may this be dialled at all ── *)
+  Result.Error := SpxHttpTransportAllowed(ARequest.Url);
+  if Result.Error <> heNone then
+  begin
+    Result.Detail := 'plain http is only allowed to this machine';
+    Exit;
+  end;
+
   (* ── the URL, taken apart HERE rather than by WinHTTP ───────────────────────
      `WinHttpCrackUrl` did this until 2026-08-10, and it made the parse Windows-only for no
      reason: the pieces go to WinHttpConnect and WinHttpOpenRequest separately anyway. (This
@@ -473,15 +534,12 @@ end;
 
 function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): TSpxHttpResult;
 var
-  host, path: string;
-  port: Integer;
-  secure: Boolean;
 begin
   Result := Default(TSpxHttpResult);
   (* A BAD URL IS STILL A BAD URL HERE. Answering `heUnsupported` to everything would make the
      platform the only thing this branch can say, and the caller's own mistakes would be
      invisible on the two CI legs that run it. *)
-  Result.Error := SpxHttpParseUrl(ARequest.Url, host, path, port, secure);
+  Result.Error := SpxHttpTransportAllowed(ARequest.Url);
   if Result.Error <> heNone then
   begin
     Result.Detail := 'not a url this accepts';
