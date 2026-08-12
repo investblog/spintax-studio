@@ -227,6 +227,48 @@ type
 
   TSpxBatchEvent = procedure(const Progress: TSpxBatchProgress) of object;
 
+  { ── verify: a request that CANNOT be displaced ─────────────────────────────
+
+    The authoring loop's Verify step (spec §4.5). It runs HERE and not on the loop's own
+    thread because every engine call belongs to this one (spec §5) -- and it cannot ride the
+    ordinary Post, whose whole design is latest-wins: one typed character while a verify was
+    queued would silently evict it, and the loop would wait forever for an answer nobody is
+    going to compute. So verify requests have their own queue, FIFO, never replaced: every
+    request gets exactly one result. Preview jobs keep displacing each other exactly as
+    before; they are checked first, because a person is waiting on them. }
+  TSpxVerifyRequest = record
+    Id: Int64;
+    Text: string;         { the CANDIDATE -- the model's answer, not the editor's buffer }
+    Locale: string;
+    SetFolder: string;
+    DocSlug: string;
+    Vars: TSpxVarPairs;
+    UiLang: TSpxLang;
+    { Same polarity and same reason as the render job's field: the zero a caller who has
+      never heard of it leaves behind must be the safe answer. }
+    NoPostProcess: Boolean;
+    Probes: Integer;      { N probe renders for the health flags (spec §4.5) }
+  end;
+
+  TSpxVerifyResult = record
+    Id: Int64;
+    { The text this verdict is about, carried for the same reason TSpxJobResult.Source is:
+      the loop pairs it with the rows' coordinates, and a pair of different ages quotes
+      spans that point at other characters. }
+    Source: string;
+    Errors, Warnings: Integer;
+    Probes, EmptyProbes, DistinctProbes: Integer;
+    FullwidthFallback: Boolean;
+    Rows: TSpxPanelRows;
+  end;
+
+  { CALLED ON THE ENGINE THREAD, not through Synchronize. The consumer is the authoring
+    loop's own thread, which waits on an event of its own -- routing the answer through the
+    main thread would add a hop that only matters when it is busy, and the loop is exactly
+    the caller that must not depend on the window pumping messages. The handler copies the
+    record under its own lock and returns; it must not call back into this thread. }
+  TSpxVerifyDone = procedure(const Res: TSpxVerifyResult) of object;
+
   TSpxEngineThread = class(TThread)
   private
     FLock: TCriticalSection;
@@ -259,6 +301,10 @@ type
     FBatchReport: TSpxBatchReport;
     FBatchProgress: TSpxBatchProgress;
     FOnBatch: TSpxBatchEvent;
+    { The verify queue. An ARRAY, not a slot: requests are appended and taken in order,
+      and nothing ever overwrites one -- see TSpxVerifyRequest for why. }
+    FVerifyQueue: array of TSpxVerifyRequest;   // under FLock
+    FOnVerify: TSpxVerifyDone;
     FSet: TSpxTemplateSet;                // owned here, touched only on this thread
     FSetFolder: string;
     { Which help language FSet was built for, or -1 when it is an ordinary document's set. }
@@ -273,6 +319,9 @@ type
     procedure Deliver;                    // main thread, via Synchronize
     procedure DeliverBatch;               // main thread, via Synchronize
     function TakePending(out Job: TSpxJob): Boolean;
+    function TakeVerify(out Req: TSpxVerifyRequest): Boolean;
+    function VerifyPending: Boolean;
+    procedure RunVerify(const Req: TSpxVerifyRequest);
     function BatchRunning: Boolean;
     function BatchStep: Boolean;
     function InstallPendingBatch: Boolean;
@@ -293,8 +342,15 @@ type
       back as a normal Done message with Cancelled set -- never by abandoning the thread. }
     procedure CancelBatch;
     function BatchInProgress: Boolean;
+    { Appends -- never replaces. Safe from any thread. The result arrives through OnVerify,
+      ON THIS WORKER THREAD; every request still queued gets its answer eventually, in
+      order, however many renders are posted in between. Requests still queued when the
+      thread is shut down are dropped without an answer, which is why a waiter must poll
+      its own termination rather than wait forever (the loop does). }
+    procedure RequestVerify(const Req: TSpxVerifyRequest);
     procedure Shutdown;
     property OnBatch: TSpxBatchEvent read FOnBatch write FOnBatch;
+    property OnVerify: TSpxVerifyDone read FOnVerify write FOnVerify;
   end;
 
 implementation
@@ -580,6 +636,100 @@ begin
   FWake.SetEvent;
 end;
 
+procedure TSpxEngineThread.RequestVerify(const Req: TSpxVerifyRequest);
+begin
+  FLock.Enter;
+  try
+    SetLength(FVerifyQueue, Length(FVerifyQueue) + 1);
+    FVerifyQueue[High(FVerifyQueue)] := Req;
+  finally
+    FLock.Leave;
+  end;
+  FWake.SetEvent;
+end;
+
+function TSpxEngineThread.TakeVerify(out Req: TSpxVerifyRequest): Boolean;
+var i: Integer;
+begin
+  FLock.Enter;
+  try
+    Result := Length(FVerifyQueue) > 0;
+    if Result then
+    begin
+      Req := FVerifyQueue[0];
+      for i := 1 to High(FVerifyQueue) do FVerifyQueue[i - 1] := FVerifyQueue[i];
+      SetLength(FVerifyQueue, Length(FVerifyQueue) - 1);
+    end;
+  finally
+    FLock.Leave;
+  end;
+end;
+
+function TSpxEngineThread.VerifyPending: Boolean;
+begin
+  FLock.Enter;
+  try
+    Result := Length(FVerifyQueue) > 0;
+  finally
+    FLock.Leave;
+  end;
+end;
+
+{ The Verify of spec §4.5: the closure validated file by file, plus N probe renders for the
+  health flags. It reuses everything the interactive path owns -- the set, the cache -- and
+  differs from Run in what it does NOT compute: no preview, no marks, no variables panel, no
+  count. The candidate is not on screen; only the verdict travels. }
+procedure TSpxEngineThread.RunVerify(const Req: TSpxVerifyRequest);
+var
+  ctx: TSpxContext;
+  report: TSpxReport;
+  vars: TStrMap;
+  res: TSpxVerifyResult;
+  job: TSpxJob;
+  i: Integer;
+begin
+  job := Default(TSpxJob);
+  job.SetFolder := Req.SetFolder;
+  job.DocSlug := Req.DocSlug;
+  SyncSet(job);
+
+  vars := nil;
+  if Length(Req.Vars) > 0 then
+  begin
+    vars := TStrMap.Create;
+    for i := 0 to High(Req.Vars) do
+      if Req.Vars[i].Name <> '' then
+        vars.AddOrSetValue(Req.Vars[i].Name, SpxValueForEngine(Req.Vars[i]));
+  end;
+  try
+    { Unseeded on purpose: the health probes seed THEMSELVES, one fixed seed per probe
+      (SpxHealthReport), so the same candidate always reports the same numbers. }
+    ctx := SpxContext(Req.Locale, vars, FSet);
+    ctx.PostProcess := not Req.NoPostProcess;
+
+    res := Default(TSpxVerifyResult);
+    res.Id := Req.Id;
+    res.Source := Req.Text;
+    report := SpxHealthReport(Req.Text, ctx, Req.Probes, Req.DocSlug, FCache);
+    try
+      res.Errors := report.Errors;
+      res.Warnings := report.Warnings;
+      res.Probes := report.Probes;
+      res.EmptyProbes := report.EmptyProbes;
+      res.DistinctProbes := report.DistinctProbes;
+      res.FullwidthFallback := report.FullwidthFallback;
+      res.Rows := SpxPanelRows(report, Req.UiLang);
+    finally
+      report.Free;
+    end;
+  finally
+    vars.Free;
+  end;
+
+  { Delivered on THIS thread -- see TSpxVerifyDone for why not Synchronize. }
+  if Assigned(FOnVerify) then FOnVerify(res);
+end;
+
 function TSpxEngineThread.TakePending(out Job: TSpxJob): Boolean;
 begin
   FLock.Enter;
@@ -718,7 +868,7 @@ begin
 end;
 
 procedure TSpxEngineThread.Execute;
-var job: TSpxJob;
+var job: TSpxJob; vreq: TSpxVerifyRequest;
 begin
   { Warm the engine's lazy global here, on the only thread that will ever touch it, before
     the first real request can arrive. }
@@ -726,10 +876,11 @@ begin
 
   while not Terminated do
   begin
-    { Blocking only when there is nothing to do. With a batch running the wait is a poll, so
-      the loop comes straight back to the next variant -- and still notices a posted render
-      first, because that is the one a person is waiting on. }
-    if BatchRunning then FWake.WaitFor(0) else FWake.WaitFor(INFINITE);
+    { Blocking only when there is nothing to do. With a batch running -- or a verify still
+      queued, since only one is taken per turn and the event was already reset -- the wait is
+      a poll, so the loop comes straight back to the next piece of work; and it still notices
+      a posted render first, because that is the one a person is waiting on. }
+    if BatchRunning or VerifyPending then FWake.WaitFor(0) else FWake.WaitFor(INFINITE);
     FWake.ResetEvent;
 
     while (not Terminated) and TakePending(job) do
@@ -737,6 +888,11 @@ begin
       Run(job);
       if not Terminated then Synchronize(@Deliver);
     end;
+
+    { AFTER the renders -- a person is waiting on those -- and one per loop turn, so a posted
+      render gets its look between two verifies. Never displaced: TakeVerify only ever pops. }
+    if (not Terminated) and TakeVerify(vreq) then
+      RunVerify(vreq);
 
     { Installed HERE, between renders: the one moment at which no batch state is in use.
       Replacing a running batch ends it first, and that ending is a message of its own. }

@@ -369,6 +369,18 @@ begin
   Result := Default(TSpxHttpResult);
   sess := nil; conn := nil; req := nil;
 
+  (* THE ZEROTH READ OF THE CANCEL FLAG, before anything is dialled: a Stop pressed before
+     the exchange began must not put the prompt -- or the key riding the headers -- on the
+     wire at all. The flag is read again between reads; without this one, a cancellation
+     that landed before the call still transmitted everything and blocked through the
+     timeout. Found by review. *)
+  if (ACancel <> nil) and ACancel^ then
+  begin
+    Result.Error := heCancelled;
+    Result.Detail := 'cancelled before the request was sent';
+    Exit;
+  end;
+
   timeout := ARequest.TimeoutMs;
   if timeout <= 0 then timeout := SPX_HTTP_TIMEOUT_MS;
   ceiling := ARequest.MaxBytes;
@@ -535,6 +547,13 @@ end;
 function SpxHttpSend(const ARequest: TSpxHttpRequest; const ACancel: PBoolean): TSpxHttpResult;
 begin
   Result := Default(TSpxHttpResult);
+  (* The same zeroth cancel read as the Windows branch, for the same answer on every leg. *)
+  if (ACancel <> nil) and ACancel^ then
+  begin
+    Result.Error := heCancelled;
+    Result.Detail := 'cancelled before the request was sent';
+    Exit;
+  end;
   (* A BAD URL IS STILL A BAD URL HERE. Answering `heUnsupported` to everything would make the
      platform the only thing this branch can say, and the caller's own mistakes would be
      invisible on the two CI legs that run it. *)
