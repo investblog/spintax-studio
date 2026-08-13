@@ -901,6 +901,10 @@ begin
   FKeyEdit.Enabled := FProfile.Auth <> laServiceToken;
   FKeySave.Enabled := FProfile.Auth <> laServiceToken;
   FKeyForget.Enabled := FProfile.Auth <> laServiceToken;
+  (* The banner is state, so it is cleared here and set only in the one branch that has a
+     readable attached key -- a stale mask over a detached or missing key would be the
+     field claiming a grant nobody holds. *)
+  FKeyEdit.TextHint := '';
   if FProfile.Auth = laServiceToken then FKeyState.Caption := Tr(sAiKeyMissing)
   else if FProfile.KeyOrigin = '' then FKeyState.Caption := Tr(sAiKeyMissing)
   else if SpxLlmKeyAttached(FProfile) then
@@ -915,6 +919,12 @@ begin
     if SpxSecretRead(skByokKey, FProfile.Id, masked) then
     begin
       FKeyState.Caption := SpxLlmKeyHint(masked) + ' — ' + Tr(sAiKeyStored);
+      (* AND IN THE FIELD ITSELF, as the grey cue banner: the owner attached a key and
+         still read the EMPTY BOX as "no key here" -- the state label sits after two
+         buttons, and the eye checks the field. The banner is a placeholder, not text:
+         Text stays '', so the write-only rule holds and Attach can never re-store the
+         mask as a key. *)
+      FKeyEdit.TextHint := SpxLlmKeyHint(masked);
       masked := '';
     end
     else
