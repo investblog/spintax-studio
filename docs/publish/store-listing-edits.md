@@ -94,7 +94,27 @@ under the GPL from the repository regardless.
 The earlier note in [`../store-listing.md`](../store-listing.md) still reads "must not be left
 blank" — that was the analysis, and this is the decision that answers it.
 
-## 4. Support contact
+## 4. The AI slice at this submission (policy 11.16 — see `ai-content-report.md`)
+
+Three things at the same visit, added 2026-08-13:
+
+- **The description changed in the source** ([`../store-listing.md`](../store-listing.md)):
+  the "From a brief" and "Built for local work" paragraphs now disclose the live generative
+  AI feature and name the report channel. Paste the description afresh from the source —
+  do not edit the live text field by eye.
+- **Answer the AI-content declaration** in Partner Center's submission flow affirmatively
+  (duty 2 of 11.16). The exact field wording is read on the form, not quoted here.
+- **The thirteen drafts** in `marketing/store/` take the same two description paragraphs
+  AND the reworded feature 17 (now "…your own provider, and your own key when one is
+  needed" — the old wording made the key universal, and the default profile is a keyless
+  localhost preset) before this visit; `check-listing-drafts.py` holds their structure, the
+  pre-submission review holds the prose.
+
+The privacy-policy copies (section 1 above) already carry their own 13 August update: three
+links instead of two, and a "Changes to this policy" section that no longer contradicts the
+top of its own document.
+
+## 5. Support contact
 
 `SupportUris` on the live listing is `https://spintax.net`; the policy's contact is now
 `support@301.st` (confirmed live by the owner, 2026-08-08). These are different fields and may

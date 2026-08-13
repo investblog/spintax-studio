@@ -184,7 +184,10 @@ const
       'the endpoint changed — enter the key again to attach it to the new address',
       'Sending allowed',
       'Send to this endpoint?',
-      'Generate and Fix send the brief, the current template and the declared variables to the endpoint of this profile:'#10'%s'#10#10'With API-key authorization the key travels in the request headers. Nothing is sent at any other moment, and the address never changes on its own: a redirect is refused and shown. What the software at that address does with the text is up to its operator.'#10#10'You can turn this off at any time in the AI settings.'
+      'Generate and Fix send the brief, the current template and the declared variables to the endpoint of this profile:'#10'%s'#10#10'With API-key authorization the key travels in the request headers. Nothing is sent at any other moment, and the address never changes on its own: a redirect is refused and shown. What the software at that address does with the text is up to its operator.'#10#10'You can turn this off at any time in the AI settings.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Report inappropriate AI output…'
   );
 
 implementation

@@ -7,10 +7,14 @@ product: spintax-studio
 # Microsoft Store listing
 
 **Live since 2026-08-04:** <https://apps.microsoft.com/detail/9mw3ch7b530p>. This file is the
-copy that was submitted; what the live page actually carries is recorded at the end.
+copy for the NEXT submission; what the live page actually carries is recorded at the end, and
+the differences travel with the `v0.1.1.0` Partner Center visit
+([`publish/store-listing-edits.md`](publish/store-listing-edits.md)).
 
-This is the R0 listing copy. Keep it separate from the developer README: the Store page
-describes the shipped product, not the repository or future AI work.
+Updated 2026-08-13 for the AI slice: the description now discloses the live generative AI
+feature and names the report channel (Store policy 11.16), because the next submitted build
+carries Generate and Fix. Keep it separate from the developer README: the Store page
+describes the submitted product, not the repository.
 
 ## Short description
 
@@ -29,15 +33,19 @@ actual text produced by the engine.
 
 From a brief to a working template.
 
-You do not have to hand-write every variation. Visit spintax.net for the SPINTAX syntax
-reference, examples and AI authoring skills. Give ChatGPT, Claude or another model your brief
-and ask it to prepare a richly varied template instead of composing every alternative by hand.
-Bring that draft into Studio and take control: preview what it actually produces, find and fix
-syntax problems, refine the choices, and generate reproducible variants locally.
+You do not have to hand-write every variation. This application includes optional live
+generative AI: give the built-in loop your brief and Generate asks a model provider for a
+richly varied draft, while Fix sends the engine's findings back for repair — to the endpoint
+you configure, with your own key and account when the endpoint uses them, and off until
+you turn it on. Prefer to keep the network
+out of it? Copy the prepared prompt to ChatGPT, Claude or another model and paste the draft
+back — that path needs no key and no connection. Either way Studio is where you take control:
+preview what the draft actually produces, find and fix syntax problems, refine the choices,
+and generate reproducible variants locally.
 
-R0 does not call an AI service, send your documents to the cloud or require a model key. AI is
-an optional way to create the first draft; Studio is the offline workspace where you inspect,
-correct and finish the template.
+The AI connection sends only what you choose to send, to the endpoint you configured, and
+nothing until you turn it on. Found an AI draft inappropriate? Report it straight from the
+Help menu, or write to support@301.st.
 
 Learn the language while you work.
 
@@ -60,11 +68,13 @@ workbook. The result is yours to inspect, edit and use in your own workflow.
 
 Built for local work.
 
-Spintax Studio works offline. R0 requires no account, cloud service, model key, telemetry,
-browser, Node.js, PHP or Python runtime. Your templates and exports stay on your computer;
-the application does not send them anywhere. It is a focused Windows editor for authors,
-localization workflows, SEO content teams and anyone who needs controlled variation instead
-of opaque paraphrasing.
+Spintax Studio works offline. It requires no account, cloud service, telemetry, browser,
+Node.js, PHP or Python runtime, and no model key — the optional AI connection is off until
+you turn it on, and even then a key only if the endpoint you point it at asks for one. Your
+templates and exports stay on your computer; nothing is sent anywhere
+except what you yourself send to the AI endpoint you configured. It is a focused Windows
+editor for authors, localization workflows, SEO content teams and anyone who needs controlled
+variation instead of opaque paraphrasing.
 
 Spintax Studio is open source and built around the SPINTAX language and engine family. Learn
 the language and explore the engines at spintax.net.
@@ -101,7 +111,7 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 14. XLSX spreadsheet export with XML-safe text and UTF-8 content
 15. Light and dark themes for a comfortable editing workspace
 16. Multilingual interface with 14 available UI languages
-17. Offline by default: no account, no telemetry, and no browser, Node.js, PHP or Python runtime — the optional AI link uses your own key and your own provider
+17. Offline by default: no account, no telemetry, and no browser, Node.js, PHP or Python runtime — the optional AI link uses your own provider, and your own key when one is needed
 18. Local-first workflow for SEO content, localization workflows and reusable product copy
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
@@ -125,8 +135,11 @@ the editor in both supported themes:
 10. `build/store-submission/spintax-10-dark-help.png` - the help topic tree and a rendered example while the editor is dark.
 
 Use the final Store logo assets supplied by the brand rather than a screenshot of the editor
-icon. Do not present AI, cloud models, telemetry or an online service as part of Studio R0; the
-optional external authoring workflow above must remain clearly external to the application.
+icon. Do not present telemetry or an always-on online service as part of Studio; the AI
+connection is presented exactly as the description states it — optional, disclosed, the
+reader's own key and provider, off until turned on (policy 11.16). *(This note said "do not
+present AI as part of Studio R0" until 2026-08-13; the next submitted build carries Generate
+and Fix, and the description above is the disclosure.)*
 
 ## Submission notes
 
@@ -137,8 +150,10 @@ optional external authoring workflow above must remain clearly external to the a
   `https://spintax.studio/`; that site is not ready to be the address a Store listing sends
   people to, and `spintax.net` is fully working. Revisit when the studio site is.
 - Support contact: `https://spintax.net` — same decision. The draft asked for
-  `https://301.st/contact`; the listing therefore offers no direct contact route, which becomes
-  an obligation only when R1 ships live generative AI (spec §11).
+  `https://301.st/contact`. The direct contact obligation that arrives with live generative AI
+  (spec §11, Store policy 11.16) is met since 2026-08-13 by the report channel itself: the Help
+  menu's report item and `support@301.st` in the description and the privacy policy — the
+  SupportUris field can stay as decided.
 - Additional license terms: **DECIDED — left blank** (owner, 2026-08-08). The analysis stands
   and is why the question was asked: the source licence is GPL-3.0-or-later (with the section 7
   exception in `NOTICE.md`), and Microsoft's Standard Application License Terms — which an empty

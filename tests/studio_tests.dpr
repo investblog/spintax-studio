@@ -5979,7 +5979,7 @@ var
   d, i: Integer;
   rec: TSearchRec;
   text_, low_, clause, name_: string;
-  at, stop, opens: Integer;
+  at, stop, opens, mails: Integer;
   allowed: Boolean;
 
   { Every uses clause in the file, joined -- a unit may have one in the interface and one in
@@ -6090,12 +6090,46 @@ begin
       FindClose(rec);
     end;
   end;
-  { EXACTLY TWO, because the policy names two -- the spintax.net ribbon on the rail and the
-    301.st mark in the status bar. A third is not a defect in itself; it is a list in a
+  { EXACTLY THREE, because the policy names three -- the spintax.net ribbon on the rail, the
+    301.st mark in the status bar, and the Help menu's report item (Store policy 11.16),
+    which hands a mailto to the shell. A fourth is not a defect in itself; it is a list in a
     published document becoming incomplete, which is why this number moves only together with
-    the page. It read one until 2026-08-04, and the count is what forced the page to be edited
-    when the second link was added rather than after somebody noticed. }
-  Check('offline/exactly two links hand an address to the shell', IntToStr(opens), '2');
+    the page. It read one until 2026-08-04 and two until 2026-08-13, and both times the count
+    is what forced the page to be edited when a link was added rather than after somebody
+    noticed. }
+  Check('offline/exactly three links hand an address to the shell', IntToStr(opens), '3');
+
+  { And the one MAIL address among them, counted and named across the same files: an address
+    that lives in the code, three policy copies and the listing is an address that drifts,
+    so the code's copy is pinned to the same string the documents are pinned to below. }
+  mails := 0;
+  for d := 0 to High(dirs) do
+  begin
+    if FindFirst(dirs[d] + '/*.pas', faAnyFile, rec) <> 0 then Continue;
+    try
+      repeat
+        if (rec.Attr and faDirectory) <> 0 then Continue;
+        low_ := LowerCase(SpxReadTextFile(dirs[d] + '/' + rec.Name));
+        at := 1;
+        repeat
+          at := PosEx('mailto:', low_, at);
+          if at = 0 then Break;
+          Inc(mails);
+          { The address AND its terminator: a prefix match alone would bless
+            mailto:support@301.st.evil.example -- the address must end at the literal's
+            closing quote or at the subject separator. }
+          CheckTrue('offline/' + rec.Name + ' mails only the support address',
+                    (Copy(low_, at, Length('mailto:support@301.st')) = 'mailto:support@301.st')
+                    and (at + Length('mailto:support@301.st') <= Length(low_))
+                    and (low_[at + Length('mailto:support@301.st')] in ['?', '''']));
+          Inc(at, 7);
+        until False;
+      until FindNext(rec) <> 0;
+    finally
+      FindClose(rec);
+    end;
+  end;
+  Check('offline/exactly one mailto in the product', IntToStr(mails), '1');
 
   (* ▁▁▁ AND THE PUBLISHED COPIES SAY THE SAME ▁▁▁
 
@@ -6164,9 +6198,69 @@ begin
               Pos('not a promise', low_) > 0);
     CheckTrue('privacy/' + name_ + ' says a redirect does not move the recipient',
               Pos('does not change without you', low_) > 0);
-    CheckTrue('privacy/' + name_ + ' says the provider''s own policy governs that exchange',
-              Pos('their policy applies', LowerCase(low_)) > 0);
+    { The phrase moved on 2026-08-13: "their policy applies" asserted that a policy EXISTS,
+      and a self-hosted endpoint may state none -- the corrected sentence claims only that
+      whatever the operator states is what governs. The pin follows the claim. }
+    CheckTrue('privacy/' + name_ + ' says the operator''s stated policy governs that exchange',
+              Pos('policy the operator states applies', LowerCase(low_)) > 0);
+    { The report channel (Store policy 11.16), named by the menu item's own words so the
+      reader of the policy can find it in the window. Arrived 2026-08-13 with the third
+      link, and asked SECTION BY SECTION, not as a token count: two hits could both sit in
+      one paragraph, which is the token-not-behaviour gap the Codex passes named twice.
+      The links paragraph is anchored by its own "three links" head and must name the item
+      within its ~1200 characters; the contact section is anchored by the question sentence
+      all three copies share. }
+    at := Pos('three links', low_);
+    stop := PosEx('Report inappropriate AI output', low_, at);
+    CheckTrue('privacy/' + name_ + ' names the report item inside the links paragraph',
+              (at > 0) and (stop > 0) and (stop - at < 1200));
+    at := Pos('Questions about this policy', low_);
+    CheckTrue('privacy/' + name_ + ' names the report item in the contact section',
+              (at > 0) and (PosEx('Report inappropriate AI output', low_, at) > 0));
+    { The stale paragraph that contradicted the top of its own document: "Changes to this
+      policy" still promised the AI feature was "not in this version" four days after the
+      summary said the application can send. Found while opening R1-5; pinned OUT so a
+      future rewrite cannot resurrect it from an old copy. }
+    CheckTrue('privacy/' + name_ + ' no longer defers the AI feature to a later version',
+              Pos('That is not in this version', low_) = 0);
   end;
+
+  (* ── THE LISTING'S DESCRIPTION CARRIES THE DISCLOSURE (Store policy 11.16, duty 1) ──
+     The metadata must say the product uses live generative AI, and the report address must
+     be the same one the policy copies and the code name -- the same shape as the privacy
+     gates: a fact living in several files gets its gate BETWEEN them. The exact phrase is
+     pinned because the policy's own words are "live generative AI", and a paraphrase is
+     what a rewrite would silently produce.
+
+     THE DESCRIPTION SECTION, not the whole file -- the first version of this gate searched
+     the file and was satisfied by this suite's own editorial note in the header, so
+     deleting the actual disclosure paragraph stayed green (found by Codex review). And the
+     newlines are folded first, because what Partner Center receives is the prose and a
+     phrase wrapped across a source line is still the phrase. *)
+  text_ := SpxReadTextFile('docs/store-listing.md');
+  at := Pos('## Description', text_);
+  CheckTrue('listing/has a Description section', at > 0);
+  if at > 0 then
+  begin
+    low_ := Copy(text_, at + Length('## Description'), MaxInt);
+    stop := Pos(#10'## ', low_);
+    if stop > 0 then low_ := Copy(low_, 1, stop - 1);
+    low_ := StringReplace(low_, #13, ' ', [rfReplaceAll]);
+    low_ := StringReplace(low_, #10, ' ', [rfReplaceAll]);
+    CheckTrue('listing/the description discloses live generative AI',
+              Pos('live generative AI', low_) > 0);
+    CheckTrue('listing/the description names the report address',
+              Pos('support@301.st', low_) > 0);
+    CheckTrue('listing/the description no longer sells the R0 no-AI claim',
+              Pos('does not call an AI service', low_) = 0);
+  end;
+
+  { And the mail SUBJECT is pinned as source text -- the product name, the version constant
+    and the report words, in the one expression that builds it. A gate on the address alone
+    would stay green while the subject lost the version a report is useless without. }
+  low_ := LowerCase(SpxReadTextFile('gui/SpxMainForm.pas'));
+  CheckTrue('offline/the mail subject carries the product, the version and the report words',
+            Pos(#39'spintax studio '#39' + spx_version + '#39' - ai output report'#39, low_) > 0);
   { Belt and braces: nothing in the product opens a process either. }
   stop := 0;
   for d := 0 to High(dirs) do

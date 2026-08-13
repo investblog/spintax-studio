@@ -179,7 +179,10 @@ const
       'el endpoint cambió — introduzca la clave de nuevo para adjuntarla a la nueva dirección',
       'Envío permitido',
       '¿Enviar a este endpoint?',
-      '«Generar» y «Arreglar» envían el encargo, la plantilla actual y las variables declaradas al endpoint de este perfil:'#10'%s'#10#10'Con autorización por clave API, la clave viaja en las cabeceras de la petición. No se envía nada en ningún otro momento, y la dirección nunca cambia por sí sola: una redirección se rechaza y se muestra. Lo que el software de esa dirección haga con el texto depende de su operador.'#10#10'Puede desactivarlo en cualquier momento en los ajustes de IA.'
+      '«Generar» y «Arreglar» envían el encargo, la plantilla actual y las variables declaradas al endpoint de este perfil:'#10'%s'#10#10'Con autorización por clave API, la clave viaja en las cabeceras de la petición. No se envía nada en ningún otro momento, y la dirección nunca cambia por sí sola: una redirección se rechaza y se muestra. Lo que el software de esa dirección haga con el texto depende de su operador.'#10#10'Puede desactivarlo en cualquier momento en los ajustes de IA.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Denunciar una salida de IA inapropiada…'
   );
 
 implementation

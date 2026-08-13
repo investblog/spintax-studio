@@ -179,7 +179,10 @@ const
       'endpoint se promijenio — unesite ključ ponovno da ga privežete uz novu adresu',
       'Slanje dopušteno',
       'Slati na ovaj endpoint?',
-      '"Generiraj" i "Popravi" šalju zadatak, trenutačni predložak i deklarirane varijable na endpoint ovog profila:'#10'%s'#10#10'Uz autorizaciju API ključem ključ putuje u zaglavljima zahtjeva. Ništa se ne šalje ni u kojem drugom trenutku, a adresa se nikad ne mijenja sama: preusmjeravanje se odbija i prikazuje. Što softver na toj adresi radi s tekstom, određuje njegov operater.'#10#10'Ovo možete isključiti u bilo kojem trenutku u postavkama AI-ja.'
+      '"Generiraj" i "Popravi" šalju zadatak, trenutačni predložak i deklarirane varijable na endpoint ovog profila:'#10'%s'#10#10'Uz autorizaciju API ključem ključ putuje u zaglavljima zahtjeva. Ništa se ne šalje ni u kojem drugom trenutku, a adresa se nikad ne mijenja sama: preusmjeravanje se odbija i prikazuje. Što softver na toj adresi radi s tekstom, određuje njegov operater.'#10#10'Ovo možete isključiti u bilo kojem trenutku u postavkama AI-ja.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Prijavi neprimjeren AI izlaz…'
   );
 
 implementation

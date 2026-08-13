@@ -200,7 +200,13 @@ type
     sAiErrContext, sAiErrTransport, sAiErrBad, sAiErrEmpty, sAiErrProvider,
     sAiConn, sAiFormat, sAiEndpoint, sAiModel, sAiAuthMode, sAiAuthNone, sAiAuthKey,
     sAiKey, sAiKeySave, sAiKeyForget, sAiKeyStored, sAiKeyMissing, sAiKeyDetached,
-    sAiNetwork, sAiConsentTitle, sAiConsentBody
+    sAiNetwork, sAiConsentTitle, sAiConsentBody,
+
+    (* ── R1-5: THE REPORT CHANNEL (Store policy 11.16). One menu item that opens a mailto
+       to support@301.st with the product and version in the subject -- the "means for users
+       to report inappropriate content" the policy demands, reachable whether or not the
+       network is on: pasted AI output is AI output too. ── *)
+    sMenuReportAi
   );
 
 implementation

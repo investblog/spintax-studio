@@ -188,7 +188,10 @@ const
       'l''endpoint a changé — saisissez la clé à nouveau pour la rattacher à la nouvelle adresse',
       'Envoi autorisé',
       'Envoyer vers cet endpoint ?',
-      '« Générer » et « Réparer » envoient le brief, le modèle actuel et les variables déclarées à l''endpoint de ce profil :'#10'%s'#10#10'Avec l''autorisation par clé API, la clé voyage dans les en-têtes de la requête. Rien n''est envoyé à aucun autre moment, et l''adresse ne change jamais d''elle-même : une redirection est refusée et affichée. Ce que le logiciel à cette adresse fait du texte relève de son opérateur.'#10#10'Vous pouvez désactiver cela à tout moment dans les réglages IA.'
+      '« Générer » et « Réparer » envoient le brief, le modèle actuel et les variables déclarées à l''endpoint de ce profil :'#10'%s'#10#10'Avec l''autorisation par clé API, la clé voyage dans les en-têtes de la requête. Rien n''est envoyé à aucun autre moment, et l''adresse ne change jamais d''elle-même : une redirection est refusée et affichée. Ce que le logiciel à cette adresse fait du texte relève de son opérateur.'#10#10'Vous pouvez désactiver cela à tout moment dans les réglages IA.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Signaler une sortie IA inappropriée…'
   );
 
 implementation

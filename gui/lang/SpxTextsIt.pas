@@ -179,7 +179,10 @@ const
       'l''endpoint è cambiato — inserite la chiave di nuovo per collegarla al nuovo indirizzo',
       'Invio consentito',
       'Inviare a questo endpoint?',
-      '"Genera" e "Correggi" inviano il brief, il modello attuale e le variabili dichiarate all''endpoint di questo profilo:'#10'%s'#10#10'Con l''autorizzazione a chiave API, la chiave viaggia nelle intestazioni della richiesta. Nient''altro viene inviato in nessun altro momento, e l''indirizzo non cambia mai da solo: un reindirizzamento viene rifiutato e mostrato. Ciò che il software a quell''indirizzo fa del testo dipende dal suo operatore.'#10#10'Potete disattivarlo in qualsiasi momento nelle impostazioni IA.'
+      '"Genera" e "Correggi" inviano il brief, il modello attuale e le variabili dichiarate all''endpoint di questo profilo:'#10'%s'#10#10'Con l''autorizzazione a chiave API, la chiave viaggia nelle intestazioni della richiesta. Nient''altro viene inviato in nessun altro momento, e l''indirizzo non cambia mai da solo: un reindirizzamento viene rifiutato e mostrato. Ciò che il software a quell''indirizzo fa del testo dipende dal suo operatore.'#10#10'Potete disattivarlo in qualsiasi momento nelle impostazioni IA.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Segnala un output IA inappropriato…'
   );
 
 implementation

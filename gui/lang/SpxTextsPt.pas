@@ -179,7 +179,10 @@ const
       'o endpoint mudou — introduza a chave de novo para a anexar ao novo endereço',
       'Envio permitido',
       'Enviar para este endpoint?',
-      '«Gerar» e «Corrigir» enviam o resumo, o modelo atual e as variáveis declaradas para o endpoint deste perfil:'#10'%s'#10#10'Com autorização por chave API, a chave viaja nos cabeçalhos do pedido. Nada mais é enviado em nenhum outro momento, e o endereço nunca muda sozinho: um redirecionamento é recusado e mostrado. O que o software nesse endereço faz com o texto depende do seu operador.'#10#10'Pode desligar isto a qualquer momento nas definições de IA.'
+      '«Gerar» e «Corrigir» enviam o resumo, o modelo atual e as variáveis declaradas para o endpoint deste perfil:'#10'%s'#10#10'Com autorização por chave API, a chave viaja nos cabeçalhos do pedido. Nada mais é enviado em nenhum outro momento, e o endereço nunca muda sozinho: um redirecionamento é recusado e mostrado. O que o software nesse endereço faz com o texto depende do seu operador.'#10#10'Pode desligar isto a qualquer momento nas definições de IA.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Comunicar uma saída de IA imprópria…'
   );
 
 implementation

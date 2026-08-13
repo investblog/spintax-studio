@@ -253,7 +253,10 @@ const
     0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0,
-    0, 0, 0
+    0, 0, 0,
+
+    { R1-5: a menu item -- a menu grows to fit its longest. }
+    0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

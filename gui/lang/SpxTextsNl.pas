@@ -182,7 +182,10 @@ const
       'het endpoint is veranderd — voer de sleutel opnieuw in om hem aan het nieuwe adres te koppelen',
       'Versturen toegestaan',
       'Naar dit endpoint versturen?',
-      '"Genereren" en "Herstellen" versturen de briefing, het huidige sjabloon en de gedeclareerde variabelen naar het endpoint van dit profiel:'#10'%s'#10#10'Bij autorisatie met API-sleutel reist de sleutel mee in de headers van het verzoek. Op geen enkel ander moment wordt iets verstuurd, en het adres verandert nooit vanzelf: een omleiding wordt geweigerd en getoond. Wat de software op dat adres met de tekst doet, bepaalt de beheerder ervan.'#10#10'U kunt dit op elk moment uitschakelen in de AI-instellingen.'
+      '"Genereren" en "Herstellen" versturen de briefing, het huidige sjabloon en de gedeclareerde variabelen naar het endpoint van dit profiel:'#10'%s'#10#10'Bij autorisatie met API-sleutel reist de sleutel mee in de headers van het verzoek. Op geen enkel ander moment wordt iets verstuurd, en het adres verandert nooit vanzelf: een omleiding wordt geweigerd en getoond. Wat de software op dat adres met de tekst doet, bepaalt de beheerder ervan.'#10#10'U kunt dit op elk moment uitschakelen in de AI-instellingen.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Ongepaste AI-uitvoer melden…'
   );
 
 implementation

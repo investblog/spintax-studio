@@ -7,19 +7,21 @@ project: spintax-studio
 
 # Privacy policy — Spintax Studio
 
-**Effective 9 August 2026. Applies to Spintax Studio for Windows.**
+**Effective 13 August 2026. Applies to Spintax Studio for Windows.**
 
 *(The date moves when the list below changes, not when the text was written. It moved from
-1 August because the window gained a second mark, and again on the 9th because the application
-gained the ability to send text to a model — the largest change this document has had. The
-version is not named: the build that carries that feature has no number yet, and a number
-written here before it exists would be the one false line in a document about honesty.)*
+1 August because the window gained a second mark, on the 9th because the application gained
+the ability to send text to a model — the largest change this document has had — and on the
+13th because the window gained a third place that hands an address to the shell: the menu
+item for reporting AI output. The version is deliberately not named: this policy describes
+the application from its effective date on, and a version number pinned here would go stale
+with the first update that changes nothing above.)*
 
 Spintax Studio is an offline desktop application. It collects nothing about you: no account, no
 sign-in, no telemetry, no analytics. One feature is an exception, and only once you switch it
-on — the AI draft can send the text you hand it to a model provider **you** choose and pay for,
-with **your** key. It is off until you turn it on, and this policy describes exactly what it
-sends and to whom.
+on — the AI draft can send the text you hand it to a model endpoint **you** choose, on your
+own account and **your** key when that endpoint requires one. It is off until you turn it on,
+and this policy describes exactly what it sends and to whom.
 
 ## What we collect
 
@@ -27,9 +29,9 @@ Nothing. There is no account to create, no sign-in, no licence check, no telemet
 analytics, no crash reporting, and no advertising. We do not know that you have installed the
 application, and we have no way to find out from it.
 
-Turning on the AI connection does not change this. Your key is stored on your own computer, in
-the Windows Credential Manager, encrypted for your Windows account, and it goes nowhere except
-to the endpoint you pointed it at. We have no key of our own, no account for you, and no server
+Turning on the AI connection does not change this. A key, when your profile uses one, is
+stored on your own computer, in the Windows Credential Manager, encrypted for your Windows
+account, and it goes nowhere except to the endpoint you pointed it at. We have no key of our own, no account for you, and no server
 in the middle: the request is made by this application, from your machine, on your provider's
 account. We never see it.
 
@@ -42,8 +44,9 @@ and still do not.
 
 **With it on, and only when you press the button that sends:** the prompt goes out. That is the
 brief you wrote, the variable names you listed, and — when you ask for a repair — the draft and
-the diagnostics the engine found in it. It goes to the endpoint you configured, with your key,
-on your account. Nothing else is added to it: no identifier, no document you did not send, and
+the diagnostics the engine found in it. It goes to the endpoint you configured — with your key
+and on your account when the endpoint uses them. Nothing else is added to it: no identifier,
+no document you did not send, and
 no record is kept here of what you sent.
 
 **An address on your own machine is an address, not a promise.** You can point this at a model
@@ -61,16 +64,18 @@ redirect, the request is refused and you are told where it wanted to send you, r
 followed automatically. Otherwise the far end could move where your prompt and your key go, and
 you would never see it happen.
 
-What the provider does with what you send is theirs to state, not ours. Their policy applies to
-that exchange, and we are not a party to it.
+What the software at that endpoint does with what you send is its operator's to state, not
+ours. Any policy the operator states applies to that exchange, and we are not a party to it.
 
-**The two links in the window are not an exception, because a link is not a request.** The
+**The three links in the window are not an exception, because a link is not a request.** The
 **spintax.net** mark at the bottom of the tool rail and the **301.st** mark at the right end of
 the status bar do one thing when you click them: they ask Windows to open that address. Windows
 hands it to whatever browser you use, and the browser is what then visits the site — under your
-browser's terms and that site's, exactly as if you had typed the address yourself. The
-application is not part of that exchange and sends nothing into it. Nothing is opened unless you
-click.
+browser's terms and that site's, exactly as if you had typed the address yourself. The third is
+the Help menu's **Report inappropriate AI output** item: it asks Windows to open your own mail
+application with **support@301.st** and a subject line already filled in, and nothing goes
+anywhere unless you write the message and press Send yourself. The application is not part of
+any of these exchanges and sends nothing into them. Nothing is opened unless you click.
 
 ## What is stored, and where
 
@@ -92,11 +97,17 @@ The application collects no data from anyone, of any age.
 
 ## Changes to this policy
 
-A later version will add optional AI assistance, which will send the text you choose to a
-provider you configure with your own key. That is not in this version, and this policy will be
-updated and republished before any version that does so is released. Nothing in the current
-application sends anything anywhere.
+This is the version of the policy that describes the optional AI connection — the earlier one
+promised it would be updated and republished before any version that sends text is released,
+and this is that update, published with the version that carries the feature. The same rule
+holds going forward: if the application ever gains a way to send or store anything not
+described here, this policy changes first and ships with it, and the effective date above
+moves.
 
 ## Contact
 
 Questions about this policy, or about the application: **support@301.st**
+
+To report AI output you find inappropriate, use **Report inappropriate AI output** in the Help
+menu — it opens a message to the same address with the application version already in the
+subject — or write to it directly. Reports are read by the developer and acted on.

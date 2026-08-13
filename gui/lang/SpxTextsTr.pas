@@ -177,7 +177,10 @@ const
       'uç nokta değişti — anahtarı yeni adrese bağlamak için yeniden girin',
       'Gönderim açık',
       'Bu uç noktaya gönderilsin mi?',
-      '"Üret" ve "Düzelt" özeti, geçerli şablonu ve bildirilen değişkenleri bu profilin uç noktasına gönderir:'#10'%s'#10#10'API anahtarıyla yetkilendirmede anahtar, isteğin başlıklarında gider. Başka hiçbir anda hiçbir şey gönderilmez ve adres kendiliğinden asla değişmez: yönlendirme reddedilir ve gösterilir. O adresteki yazılımın metinle ne yaptığı, işletmecisine bağlıdır.'#10#10'Bunu istediğiniz zaman yapay zekâ ayarlarından kapatabilirsiniz.'
+      '"Üret" ve "Düzelt" özeti, geçerli şablonu ve bildirilen değişkenleri bu profilin uç noktasına gönderir:'#10'%s'#10#10'API anahtarıyla yetkilendirmede anahtar, isteğin başlıklarında gider. Başka hiçbir anda hiçbir şey gönderilmez ve adres kendiliğinden asla değişmez: yönlendirme reddedilir ve gösterilir. O adresteki yazılımın metinle ne yaptığı, işletmecisine bağlıdır.'#10#10'Bunu istediğiniz zaman yapay zekâ ayarlarından kapatabilirsiniz.',
+
+      (* R1-5: the report channel (Store policy 11.16) *)
+      'Uygunsuz yapay zekâ çıktısını bildir…'
   );
 
 implementation

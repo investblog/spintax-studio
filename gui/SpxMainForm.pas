@@ -27,6 +27,7 @@ uses
   SpxStudio, SpxTokens, SpxPrompt, SpxEngineThread, SpxLlm, SpxLlmThread, SpxSecrets,
   SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
+  SpxAbout,
   SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented, SpxCompanyMark, SpxGsaImport,
   SpxSettings, SpxTheme, SpxEditorFont,
   SpxPreviewPane, SpxVarsPane, SpxVariantsPane, SpxAiPane, SpxDedupe, SpxFiles, SpxDemo, SpxUi,
@@ -428,6 +429,7 @@ type
     procedure HelpToolClicked(Sender: TObject);
     procedure HelpMenuClicked(Sender: TObject);
     procedure AboutClicked(Sender: TObject);
+    procedure ReportAiClicked(Sender: TObject);
     procedure GsaToggleClicked(Sender: TObject);
     procedure GsaImportClicked(Sender: TObject);
     procedure HelpPaneClosed(Sender: TObject);
@@ -576,6 +578,15 @@ const
     makes Studio. Same two forms, and the host is a domain, so it is not translated either. }
   SPX_COMPANY_HOST = '301.st';
   SPX_COMPANY_URL = 'https://301.st';
+
+  { THE REPORT CHANNEL (Store policy 11.16): the address a reader reaches when AI output is
+    not acceptable, and the SAME address the privacy policy and the listing name -- the suite
+    holds all of them to this string, because an address that lives in four documents is an
+    address that drifts. The subject gains the product and version in ReportAiClicked; what
+    is handed to the shell is an address for the READER'S mail application -- nothing is sent
+    by this application, exactly like the two marks (privacy policy, "a link is not a
+    request"). }
+  SPX_SUPPORT_MAILTO = 'mailto:support@301.st';
   { THE ONE PIECE OF INTERFACE TEXT THAT IS NOT TRANSLATED, and deliberately: it is a
     signature rather than a sentence -- the line under a picture that says who made it -- and
     it is read as part of the mark beside it. Everything the window SAYS goes through
@@ -2526,6 +2537,12 @@ begin
     nothing is displaced. No GroupIndex: these are not radio items, and 0 is the default that
     would silently join whatever radio group is added to this menu next. }
   IconItem(helpMenu, Tr(sHelpContents), VK_F1, [], @HelpMenuClicked, SPX_ICON_HELP);
+  { THE REPORT CHANNEL (Store policy 11.16): AI output the reader finds unacceptable goes to
+    the developer, and the route lives one item under the help that explains the feature.
+    Always present, network on or off -- output pasted through the manual path is AI output
+    too, and a channel that appears only when a switch is on is a channel nobody finds. No
+    icon and no shortcut: it is used rarely and on purpose. }
+  Item(helpMenu, Tr(sMenuReportAi), 0, [], @ReportAiClicked);
   { The attributions live behind this and nowhere else in the window. NOTICE.md calls the About
     box "the copy a user can actually read", which makes this menu item the licence obligation
     rather than a courtesy. No shortcut: it is opened on purpose, once. }
@@ -4740,6 +4757,23 @@ end;
 procedure TSpxMainForm.AboutClicked(Sender: TObject);
 begin
   SpxShowAbout(Self);
+end;
+
+(* The third and last place this window hands an address to the shell, and the privacy
+   policy's list of three moves ONLY together with this code -- the suite counts these call
+   sites textually and pins the count to the page (offline/exactly three links...), which is
+   also why this comment must not spell the function name with its bracket. What
+   opens is the READER'S mail application with the address and subject filled in; nothing
+   is sent unless they press Send, which is the same line the two marks stand behind: a
+   link is not a request. The subject carries the product and the version -- the two facts
+   a report is useless without and the reader should not have to know to type. Spaces are
+   the one character in it a mailto URL cannot carry raw; SPX_VERSION is dotted digits and
+   needs nothing else encoded. *)
+procedure TSpxMainForm.ReportAiClicked(Sender: TObject);
+begin
+  OpenURL(SPX_SUPPORT_MAILTO + '?subject=' +
+          StringReplace('Spintax Studio ' + SPX_VERSION + ' - AI output report',
+                        ' ', '%20', [rfReplaceAll]));
 end;
 
 procedure TSpxMainForm.HelpCloseClicked(Sender: TObject);
