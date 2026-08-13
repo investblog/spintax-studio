@@ -273,6 +273,12 @@ type
     { The panel and the rows behind it. FRowSig is what the list currently shows, so a
       keystroke that changes nothing does not rebuild the list under the user's hand. }
     FBottom: TPageControl;
+    { THE READER'S CHOICE about the bottom block, kept apart from FBottom.Visible since the
+      help learned to hide the block (2026-08-13): while the help is up the block is hidden
+      whatever the choice says, so the visibility stopped being the choice -- and everything
+      that RECORDS the choice (SavePrefs, the View menu's ticks) reads this field, or a
+      panel closed FOR the help would be saved as a panel the reader closed. }
+    FBottomWanted: Boolean;
     FDiag: TListView;
     FVars: TSpxVarsPane;
     FSet: TSpxVariantsPane;
@@ -915,6 +921,9 @@ begin
   FBottom.Parent := FBody;
   FBottom.Top := 20000;
   FBottom.Align := alBottom;
+  { A fresh page control is visible, so the choice starts agreeing with it; ApplyPrefs sets
+    both properly through ShowPanel. }
+  FBottomWanted := True;
   { Two grids and their headings need more than 170: at that height the definitions list had
     no room left at all. The splitter above takes it from here. }
   FBottom.Height := Px(Self, 240);
@@ -1480,6 +1489,32 @@ begin
   FTop.Visible := True;
   if helpMode then
     FFindClose.Visible := False;
+
+  { THE BOTTOM BLOCK GOES WHERE THE RAIL GOES, and for the rail's own reason: its four
+    panels describe -- or configure work on -- a document that is not on screen while the
+    help is up, so under a manual they were inert decoration, and since R1-4 one of them is
+    a settings form with a key field, which a reader reported as "why is the AI box on the
+    help window". Decided HERE, from the truth, like every other owner question in this
+    routine: the reader's CHOICE lives in FBottomWanted and comes back untouched when the
+    help closes. The focus guard is ShowPanel's, retargeted: over the help the editor is
+    hidden, and the strip's search field is the one control that is always there to take
+    the focus a hidden panel would otherwise drop on the floor. }
+  if (FBottom <> nil) and (FDiagSplit <> nil) then
+  begin
+    if FBottom.Visible <> (FBottomWanted and not helpMode) then
+    begin
+      if FBottom.Visible and (Screen.ActiveControl <> nil) and
+         FBottom.ContainsControl(Screen.ActiveControl) then
+      begin
+        if helpMode and FFindText.Visible and FFindText.CanSetFocus then
+          FFindText.SetFocus
+        else if FEditor.CanSetFocus then
+          FEditor.SetFocus;
+      end;
+      FBottom.Visible := FBottomWanted and not helpMode;
+      FDiagSplit.Visible := FBottom.Visible;
+    end;
+  end;
 
   { ── the output's half, from the right edge inwards ── }
   editorEnd := 0;
@@ -2070,6 +2105,13 @@ end;
 procedure TSpxMainForm.ShowPanel(APage: Integer; AWanted: Boolean);
 begin
   if (FBottom = nil) or (FDiagSplit = nil) then Exit;
+  { ASKING FOR A PANEL WHILE THE HELP IS UP MEANS "BACK TO THE DOCUMENT, WITH THAT PANEL".
+    The block is the document's furniture and stays hidden under the help (LayoutTopStrip),
+    so showing it here would put a diagnostics grid -- or the connection settings -- under a
+    manual, about a document nobody can see. The only route in during help is the View menu
+    (the rail and the strip's buttons are hidden), and a menu action must have a visible
+    result: the same rule that has the group editor close the help on its way in. }
+  if AWanted and HelpShowing then HelpPaneClosed(nil);
   { The same hazard the group pane was fixed for, in the same window: hiding a control that
     holds the focus leaves ActiveControl NIL -- CMVisibleChanged calls DefocusControl -- and
     the caret disappears from the editor. Collapsing the block while the diagnostics list or
@@ -2077,8 +2119,9 @@ begin
   if (not AWanted) and (Screen.ActiveControl <> nil) and
      FBottom.ContainsControl(Screen.ActiveControl) and FEditor.CanSetFocus then
     FEditor.SetFocus;
-  FBottom.Visible := AWanted;
-  FDiagSplit.Visible := AWanted;
+  FBottomWanted := AWanted;
+  FBottom.Visible := AWanted and (not HelpShowing);
+  FDiagSplit.Visible := FBottom.Visible;
   if AWanted and (FBottom.PageCount > APage) then FBottom.PageIndex := APage;
   { The menu's ticks are the same state seen from the other side. }
   BuildMenu;
@@ -2342,19 +2385,19 @@ begin
   sideItem := Item(viewMenu, Tr(sTabDiagnostics), 0, [], @MenuDiagClicked);
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
-  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_DIAG);
+  sideItem.Checked := (FBottom <> nil) and FBottomWanted and (FBottom.PageIndex = RAIL_DIAG);
   sideItem := Item(viewMenu, Tr(sTabVariables), 0, [], @MenuVarsClicked);
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
-  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_VARS);
+  sideItem.Checked := (FBottom <> nil) and FBottomWanted and (FBottom.PageIndex = RAIL_VARS);
   sideItem := Item(viewMenu, Tr(sTabVariants), 0, [], @MenuSetClicked);
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
-  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_SET);
+  sideItem.Checked := (FBottom <> nil) and FBottomWanted and (FBottom.PageIndex = RAIL_SET);
   sideItem := Item(viewMenu, Tr(sTabAi), 0, [], @MenuAiClicked);
   sideItem.RadioItem := True;
   sideItem.GroupIndex := 3;
-  sideItem.Checked := (FBottom <> nil) and FBottom.Visible and (FBottom.PageIndex = RAIL_AI);
+  sideItem.Checked := (FBottom <> nil) and FBottomWanted and (FBottom.PageIndex = RAIL_AI);
 
   { The same action the splitter's double click performs, named and reachable without knowing
     the gesture exists. The icon rides ON the item rather than through the menu's image list:
@@ -4115,7 +4158,10 @@ begin
     LangFollowClicked, which ARE choices, write those two. }
   FPrefs.RailRight := (FRail <> nil) and (FRail.Side = spxRailRight);
   FPrefs.PreviewSource := (FModes <> nil) and (FModes.ItemIndex = 1);
-  if (FBottom <> nil) and FBottom.Visible then FPrefs.Panel := FBottom.PageIndex
+  { The CHOICE, not the visibility: with the help up the block is hidden whatever the
+    reader chose, and saving that would turn every exit-during-help into a collapsed
+    bottom block nobody asked for. }
+  if (FBottom <> nil) and FBottomWanted then FPrefs.Panel := FBottom.PageIndex
   else FPrefs.Panel := -1;
   SpxSavePrefs(FPrefs);
 end;
