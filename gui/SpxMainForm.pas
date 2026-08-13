@@ -1524,6 +1524,21 @@ begin
       end;
       FBottom.Visible := FBottomWanted and not helpMode;
       FDiagSplit.Visible := FBottom.Visible;
+      { The whole bottom stack is restated on show -- ShowPanel says why (the align pass
+        orders the three alBottom siblings, and after a resize while hidden it answers
+        with the splitter below the block). Inside the transition guard for the same
+        reason as there. }
+      if FBottom.Visible then
+      begin
+        FBody.DisableAlign;
+        try
+          FDiagSplit.Top := 10000;
+          FBottom.Top := 20000;
+          FStatus.Top := 30000;
+        finally
+          FBody.EnableAlign;
+        end;
+      end;
     end;
   end;
 
@@ -2114,8 +2129,11 @@ end;
   already lit", which is the collapse. The splitter goes with the block -- a splitter with
   nothing under it is a handle that resizes nothing. }
 procedure TSpxMainForm.ShowPanel(APage: Integer; AWanted: Boolean);
+var
+  wasHidden: Boolean;
 begin
   if (FBottom = nil) or (FDiagSplit = nil) then Exit;
+  wasHidden := not FBottom.Visible;
   { ASKING FOR A PANEL WHILE THE HELP IS UP MEANS "BACK TO THE DOCUMENT, WITH THAT PANEL".
     The block is the document's furniture and stays hidden under the help (LayoutTopStrip),
     so showing it here would put a diagnostics grid -- or the connection settings -- under a
@@ -2133,6 +2151,28 @@ begin
   FBottomWanted := AWanted;
   FBottom.Visible := AWanted and (not HelpShowing);
   FDiagSplit.Visible := FBottom.Visible;
+  { STATE THE WHOLE STACK AGAIN WHEN THE BLOCK COMES BACK. Three alBottom siblings share
+    this edge -- splitter, block, status bar -- and the align pass orders them without
+    answering the same way twice (the charter's alLeft/alRight lesson, measured here for
+    alBottom): a hidden control keeps stale bounds, so collapse the block, resize the
+    window, reopen, and the splitter re-entered BELOW the block -- a grip at the window's
+    edge that can only grow the panel, never shrink it. And restating only the pair is how
+    the FIRST fix regressed: the status bar sorted in between and the grip resized THAT,
+    a no-op. All three tops, the creation constants, one align pass; the hidden->shown
+    guard keeps this to the transition -- ShowPanel also fires for "same panel, other
+    page" and at preference restore, and a position re-applied off the transition is the
+    clamp that fights every drag. }
+  if FBottom.Visible and wasHidden then
+  begin
+    FBody.DisableAlign;
+    try
+      FDiagSplit.Top := 10000;
+      FBottom.Top := 20000;
+      FStatus.Top := 30000;
+    finally
+      FBody.EnableAlign;
+    end;
+  end;
   if AWanted and (FBottom.PageCount > APage) then FBottom.PageIndex := APage;
   { The menu's ticks are the same state seen from the other side. }
   BuildMenu;
