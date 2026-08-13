@@ -3104,6 +3104,21 @@ begin
       CheckPrompt('prompt/clean/' + rows[i],
                   SpxCleanModelTemplate(Slurp(DIR + 'clean-' + rows[i] + '.in.txt')),
                   Slurp(DIR + 'clean-' + rows[i] + '.out.txt'));
+
+    (* The source-text mode's composed brief -- Studio's own, OUTSIDE PROMPT_VERSION and its
+       byte gates (the fixtures above must never learn this function exists). Three claims:
+       the source arrives verbatim under its heading, so the reader can recognise their own
+       text in "Copy prompt"; the instruction opens with the pinned sentence; and a blank
+       source composes to '', which is what keeps every "nothing to send" guard upstream
+       working unchanged. *)
+    CheckTrue('prompt/from-text/source-arrives-verbatim',
+      Pos('SOURCE TEXT:'#10'Мы открыли кофейню.'#10'Обжарка — наша.',
+          SpxComposeFromTextBrief('Мы открыли кофейню.'#10'Обжарка — наша.')) > 0);
+    CheckTrue('prompt/from-text/the-instruction-is-pinned',
+      Pos('Convert the source text below into a spintax template.',
+          SpxComposeFromTextBrief('x')) = 1);
+    Check('prompt/from-text/blank-source-composes-to-nothing',
+      SpxComposeFromTextBrief('   '#10#9), '');
   finally
     rows.Free;
     diags.Free;
@@ -5508,6 +5523,20 @@ begin
     address anyone can read or re-enter. }
   Check('llm-origin/ipv6-keeps-its-brackets',
     SpxLlmOrigin('http://[::1]:11434/v1/chat/completions'), 'http://[::1]:11434');
+
+  { the model field's SUGGESTIONS (never a validator: the id goes into the body verbatim
+    and the truth about which ids exist is the provider's). Anthropic gets the dated list
+    of exact wire ids; OpenAI-compatible gets none, because those names are server-defined
+    and a guessed name is worse than an empty list. }
+  CheckTrue('llm-model/suggestions-exist-for-anthropic',
+    Length(SpxLlmModelSuggestions(lkAnthropic)) > 0);
+  CheckTrue('llm-model/no-suggestions-for-openai-compatible',
+    Length(SpxLlmModelSuggestions(lkOpenAiCompatible)) = 0);
+  Check('llm-model/anthropic-ids-are-the-wire-strings',
+    SpxLlmModelSuggestions(lkAnthropic)[0] + '|' +
+    SpxLlmModelSuggestions(lkAnthropic)[1] + '|' +
+    SpxLlmModelSuggestions(lkAnthropic)[2],
+    'claude-opus-5|claude-sonnet-5|claude-haiku-4-5');
 
   { the default profile can send nothing: no auth, no consent, and the localhost preset --
     which spec §4.5 calls a convenience address, never a privacy claim }

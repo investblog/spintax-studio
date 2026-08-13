@@ -190,7 +190,11 @@ const
       '„Erzeugen“ und „Reparieren“ senden das Briefing, die aktuelle Vorlage und die deklarierten Variablen an den Endpunkt dieses Profils:'#10'%s'#10#10'Bei Autorisierung mit API-Schlüssel reist der Schlüssel in den Kopfzeilen der Anfrage. Zu keinem anderen Zeitpunkt wird etwas gesendet, und die Adresse ändert sich nie von selbst: eine Umleitung wird abgelehnt und angezeigt. Was die Software an jener Adresse mit dem Text tut, bestimmt ihr Betreiber.'#10#10'Sie können dies jederzeit in den KI-Einstellungen abschalten.',
 
       (* R1-5: the report channel (Store policy 11.16) *)
-      'Unangemessene KI-Ausgabe melden…'
+      'Unangemessene KI-Ausgabe melden…',
+
+      (* the brief column's two modes (UX pass 2026-08-13) *)
+      'Text zum Umwandeln',
+      'Zuerst den umzuwandelnden Text einfügen.'
   );
 
 implementation

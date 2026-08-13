@@ -187,7 +187,11 @@ const
       'Generate and Fix send the brief, the current template and the declared variables to the endpoint of this profile:'#10'%s'#10#10'With API-key authorization the key travels in the request headers. Nothing is sent at any other moment, and the address never changes on its own: a redirect is refused and shown. What the software at that address does with the text is up to its operator.'#10#10'You can turn this off at any time in the AI settings.',
 
       (* R1-5: the report channel (Store policy 11.16) *)
-      'Report inappropriate AI output…'
+      'Report inappropriate AI output…',
+
+      (* the brief column's two modes (UX pass 2026-08-13) *)
+      'Text to convert',
+      'Paste the text to convert first.'
   );
 
 implementation

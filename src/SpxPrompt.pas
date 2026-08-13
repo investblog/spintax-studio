@@ -121,6 +121,15 @@ function SpxBuildRepairPrompt(const ATemplate, ALocale: string;
 
 function SpxPromptExamples(const ALocale: string): TSpxExamples;
 
+(* STUDIO'S OWN, NOT PART OF PROMPT_VERSION. The pane's "source text" mode: the reader
+   pastes existing copy instead of writing a brief, and this composes the brief for them --
+   host-side sugar AROUND the canonical builder, never a change to it (the port's byte gates
+   do not know this function exists). English on purpose: the prompt's scaffold is English
+   under every locale (ROLE/GOAL/RULES above), and the template's LANGUAGE is governed by
+   ALocale in the builder, not by the brief's wrapper. '' for a blank source, so the
+   "nothing to send" guards upstream keep working unchanged. *)
+function SpxComposeFromTextBrief(const ASource: string): string;
+
 function SpxCleanModelTemplate(const ARaw: string): string;
 
 function SpxChannelFromName(const S: string): TSpxChannel;
@@ -658,6 +667,22 @@ begin
 
   Result.PromptVersion := SPX_PROMPT_VERSION;
   Result.Allowed := NamesOf(AVars);
+end;
+
+(* The "source text" mode's brief -- see the interface note: Studio's own composition, outside
+   the port and its byte gates. The instruction mirrors the one the owner tested by hand on a
+   live model: keep the meaning, the facts and the sentence order; vary every sentence. The
+   source is appended VERBATIM under a named heading, so the reader can recognise their own
+   text in "Copy prompt" and nothing here re-wraps or trims inside it. *)
+function SpxComposeFromTextBrief(const ASource: string): string;
+begin
+  if Trim(ASource) = '' then Exit('');
+  Result :=
+    'Convert the source text below into a spintax template.' + LF +
+    'Keep its meaning, its facts and its sentence order. Give each sentence rich variation --' + LF +
+    'synonyms, reorderings, varied openings -- and every variant must stay faithful to the source.' + LF +
+    'SOURCE TEXT:' + LF +
+    ASource;
 end;
 
 (* Strip what a model wraps its answer in despite being told not to. The output contract forbids

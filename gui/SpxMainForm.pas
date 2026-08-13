@@ -238,7 +238,7 @@ type
       OnVerify -- and torn down in StopEngine, in the order its Create documents. }
     FLoop: TSpxAuthoringLoop;
     FLoopNextId: Int64;
-    { An op is in flight: Generate wears its Stop face, Fix and the ▾ menu wait. }
+    { An op is in flight: Generate wears its Stop face and Fix waits. }
     FLoopBusy: Boolean;
     { The document and the rows a Fix request is built from -- taken as a PAIR from one
       TSpxJobResult (its Source and its Rows), never the text from the editor and the rows
@@ -257,12 +257,10 @@ type
     { What the last snapshot's locale was, so SettingChanged can tell a locale change --
       which invalidates the loop -- from a seed tick, which does not. }
     FLoopLocale: string;
-    FGenerate: TButton;
-    FGenMenuBtn: TButton;
-    FFix: TButton;
-    FGenMenu: TPopupMenu;
-    FGenMenuSettings: TMenuItem;
-    FGenMenuCopy: TMenuItem;
+    { Generate/Fix/Stop live IN the AI panel since the UX pass (the owner: "all the work
+      is in one box and the button that starts it is in another") -- the pane owns the
+      buttons and fires OnGenerate/OnFix; this form still owns the consent gate, the key
+      rules and the loop, and pushes the busy/enabled state back via ShowLoopState. }
     { The document on disk. FPath is '' until it has been saved once, and that is what makes
       the template set empty and every `#include` verbatim -- the engine's own behaviour
       without a resolver, not a placeholder. FEol and FTrailingEol are the file's own shape,
@@ -461,9 +459,6 @@ type
     procedure AiReplace(const AText: string);
     { ── the authoring loop (R1-4) ── }
     procedure GenerateClicked(Sender: TObject);
-    procedure GenMenuBtnClicked(Sender: TObject);
-    procedure GenMenuSettingsClicked(Sender: TObject);
-    procedure GenMenuCopyClicked(Sender: TObject);
     procedure FixClicked(Sender: TObject);
     procedure StartLoopOp(AOp: TSpxLoopOp);
     { The consent dialog (Store policy 10.5.2): names the recipient, what travels and how to
@@ -477,10 +472,8 @@ type
     { Every route that moves the loop's snapshot: revision bump plus the buttons' state,
       in one word so a new route cannot take one and forget the other. }
     procedure LoopSnapshotMoved;
-    { Widths measured offscreen -- BuildUi and RetranslateUi only; UpdateAiButtons is cheap
-      enough to run per keystroke and must be, because the Fix button's enabled state
-      follows the revision. }
-    procedure SizeAiButtons;
+    { Cheap enough to run per keystroke and must be, because the Fix button's enabled
+      state follows the revision; the pane draws it (ShowLoopState). }
     procedure UpdateAiButtons;
     function LoopErrSentence(AErr: TSpxLlmError; const ADetail: string): string;
     procedure GroupPaneClosed(Sender: TObject);
@@ -864,33 +857,8 @@ begin
   FModes.OnChange := @PreviewModeChanged;
   FCopy.OnClick := @CopyClicked;
 
-  (* ── [Generate ▾] [Fix] (R1-4, spec §3). Captions are measured in RetranslateUi and the
-     Generate slot is sized for the WIDER of its two faces (Generate/Stop), so the busy
-     swap moves nothing. Fix is enabled only while the document has its own error rows --
-     the enabled state itself says when the button is for. ── *)
-  FGenerate := TButton.Create(Self);
-  FGenerate.Parent := FTop;
-  FGenerate.OnClick := @GenerateClicked;
-
-  FGenMenuBtn := TButton.Create(Self);
-  FGenMenuBtn.Parent := FTop;
-  FGenMenuBtn.Caption := '▾';
-  FGenMenuBtn.OnClick := @GenMenuBtnClicked;
-
-  FFix := TButton.Create(Self);
-  FFix.Parent := FTop;
-  FFix.Enabled := False;
-  FFix.OnClick := @FixClicked;
-
-  FGenMenu := TPopupMenu.Create(Self);
-  FGenMenuSettings := TMenuItem.Create(FGenMenu);
-  FGenMenuSettings.OnClick := @GenMenuSettingsClicked;
-  FGenMenu.Items.Add(FGenMenuSettings);
-  FGenMenuCopy := TMenuItem.Create(FGenMenu);
-  FGenMenuCopy.OnClick := @GenMenuCopyClicked;
-  FGenMenu.Items.Add(FGenMenuCopy);
-  SizeAiButtons;
-  UpdateAiButtons;
+  (* [Generate ▾] [Fix] used to be built here, in the strip -- moved into the AI panel by
+     the UX pass; see the field comment. The pane is created below and wired there. *)
 
   { The three bottom-aligned strips are ordered by their Top, not by the order they are
     created in -- larger Top sits closer to the bottom edge -- so the order is stated
@@ -1007,6 +975,8 @@ begin
   FAi.OnProfileChanged := @AiProfileChanged;
   FAi.OnEnableNetwork := @EnsureAiConsent;
   FAi.OnDeclChanged := @AiDeclChanged;
+  FAi.OnGenerate := @GenerateClicked;
+  FAi.OnFix := @FixClicked;
   { The worker's own event is NOT hooked here: BuildUi runs before the engine exists, and
     the first version of this line dereferenced nil at startup -- an access violation before
     the window ever appeared. It is set in the constructor, right after the thread. }
@@ -1460,12 +1430,6 @@ begin
   FCopy.Visible := not helpMode;
   FModes.Visible := not helpMode;
   FPartial.Visible := (not helpMode) and FPartialShown;
-  if FGenerate <> nil then
-  begin
-    FGenerate.Visible := not helpMode;
-    FGenMenuBtn.Visible := not helpMode;
-    FFix.Visible := not helpMode;
-  end;
   FHelpClose.Visible := helpMode;
   { THE RAIL IS WHAT GOES, NOT THE HEADER. Its tools are the document's -- the three panels and
     the group under the caret -- and none of them is about the page the reader is on, so while
@@ -1557,19 +1521,8 @@ begin
     if FPartial.Visible then PlaceRight(FPartial, FPartial.Width, Px(Self, 16), Px(Self, 11));
     PlaceRight(FCopy, Px(Self, 30), Px(Self, 26), Px(Self, 6));
     PlaceRight(FReroll, Px(Self, 30), Px(Self, 26), Px(Self, 6));
-    { The loop's three, right of the seed group (the plan's slot): visually
-      [Generate][▾][Fix], so placed right-to-left as Fix, ▾, Generate. Widths were set by
-      RetranslateUi -- the Generate slot for the wider of its two faces, so the busy swap
-      moves nothing. }
-    if FGenerate <> nil then
-    begin
-      PlaceRight(FFix, FFix.Width, Px(Self, 26), Px(Self, 6));
-      PlaceRight(FGenMenuBtn, Px(Self, 20), Px(Self, 26), Px(Self, 6));
-      { ▾ is part of the Generate button, not a neighbour: take most of the gap back so the
-        pair reads as one control. }
-      Inc(right_, Px(Self, 6));
-      PlaceRight(FGenerate, FGenerate.Width, Px(Self, 26), Px(Self, 6));
-    end;
+    { The loop's buttons used to take the slots right of the seed group -- moved into the
+      AI panel by the UX pass, next to the brief they act on. }
     { Skipped rather than placed off-screen, so the controls to its left close the gap -- the
       same way the fragment caption already comes and goes. }
     if FSeedEdit.Visible then PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
@@ -3699,8 +3652,7 @@ begin
     project have been a handler firing while the window was still being built. The locale box
     is created before its OnChange is hooked, so this is not reachable today -- and that is
     exactly the kind of ordering that a later edit breaks silently. }
-  SizeAiButtons;     { captions, widths and menu items of the loop's three, in one place }
-  UpdateAiButtons;
+  UpdateAiButtons;   { the pane re-applies the busy caption itself in Retranslate }
   if (FSeeded = nil) or (FBottom = nil) or (FDiag = nil) or (FVars = nil) or
      (FSet = nil) or (FPreview = nil) then Exit;
   FSeeded.Caption := Tr(sSeed);
@@ -4929,30 +4881,6 @@ begin
   StartLoopOp(loOpFix);
 end;
 
-procedure TSpxMainForm.GenMenuBtnClicked(Sender: TObject);
-var
-  p: TPoint;
-begin
-  p := FGenMenuBtn.ClientToScreen(Point(0, FGenMenuBtn.Height));
-  FGenMenu.PopUp(p.X, p.Y);
-end;
-
-procedure TSpxMainForm.GenMenuSettingsClicked(Sender: TObject);
-begin
-  FRail.SetDown(RAIL_AI, True);
-  ShowPanel(RAIL_AI, True);
-end;
-
-procedure TSpxMainForm.GenMenuCopyClicked(Sender: TObject);
-begin
-  { The manual path, reachable from the strip: §11 has the reviewer walk the product with
-    no key and no network, and this is that path's front door. The panel says what happened
-    in its own status line, so it is shown too. }
-  FRail.SetDown(RAIL_AI, True);
-  ShowPanel(RAIL_AI, True);
-  FAi.CopyPrompt;
-end;
-
 function TSpxMainForm.EnsureAiConsent(var AProfile: TSpxLlmProfile): Boolean;
 var
   origin: string;
@@ -5022,40 +4950,16 @@ begin
   end;
 end;
 
-procedure TSpxMainForm.SizeAiButtons;
-var
-  bmp: TBitmap;
-  w: Integer;
-begin
-  if FGenerate = nil then Exit;
-  { Measured offscreen, like every measured caption in this window. The Generate slot is
-    sized for the WIDER of its two faces, so the busy swap moves no neighbour. }
-  bmp := TBitmap.Create;
-  try
-    bmp.Canvas.Font.Assign(FGenerate.Font);
-    w := bmp.Canvas.TextWidth(Tr(sGenerate));
-    if bmp.Canvas.TextWidth(Tr(sStop)) > w then w := bmp.Canvas.TextWidth(Tr(sStop));
-    FGenerate.Width := w + Px(Self, 24);
-    FFix.Width := bmp.Canvas.TextWidth(Tr(sAiFix)) + Px(Self, 24);
-  finally
-    bmp.Free;
-  end;
-  FFix.Caption := Tr(sAiFix);
-  FGenMenuSettings.Caption := Tr(sAiSettings);
-  FGenMenuCopy.Caption := Tr(sAiCopyPrompt);
-end;
-
 procedure TSpxMainForm.UpdateAiButtons;
 begin
-  if FGenerate = nil then Exit;
-  if FLoopBusy then FGenerate.Caption := Tr(sStop) else FGenerate.Caption := Tr(sGenerate);
-  FGenMenuBtn.Enabled := not FLoopBusy;
-  { Enabled ONLY when there are error rows AND the pair they came in is the CURRENT
+  if FAi = nil then Exit;
+  { Fix is enabled ONLY when there are error rows AND the pair they came in is the CURRENT
     snapshot: after an edit the rows describe the previous text, and a Fix built from them
     would repair a document the reader has already moved past. The next render re-enables
-    it -- the same 200 ms the preview already waits. }
-  FFix.Enabled := (not FLoopBusy) and (SpxLoopDocErrors(FLoopRows) > 0) and
-                  (FLoop <> nil) and (FLoopSourceRev = FLoop.Revision);
+    it -- the same 200 ms the preview already waits. The pane only draws this answer. }
+  FAi.ShowLoopState(FLoopBusy,
+    (not FLoopBusy) and (SpxLoopDocErrors(FLoopRows) > 0) and
+    (FLoop <> nil) and (FLoopSourceRev = FLoop.Revision));
 end;
 
 procedure TSpxMainForm.LoopSnapshotMoved;
@@ -5080,7 +4984,8 @@ begin
     begin
       FRail.SetDown(RAIL_AI, True);
       ShowPanel(RAIL_AI, True);
-      SetStatusText(Tr(sAiNeedBrief));
+      { The mode's own words: "paste the text" is not "write a brief". }
+      SetStatusText(FAi.EmptyBriefMessage);
       Exit;
     end;
   end

@@ -11,10 +11,19 @@
  * reader already uses, paste the answer back -- the path §11 has the Store reviewer walk
  * with no key and no network, and the one ADR 0011 shipped alone in R0.
  *
- * WHOSE CONSENT GATES THE NETWORK. Nothing is sent from this panel; the [Generate]/[Fix]
- * buttons live in the window's top strip and both go through the form's consent dialog
- * (Store policy 10.5.2) before the loop is asked anything. The checkbox here is the visible
- * state of that consent and the way to withdraw it.
+ * WHOSE CONSENT GATES THE NETWORK. Nothing is sent BY this panel: [Generate] and [Fix]
+ * live here since the UX pass (the owner's finding -- "all the work is in one box and the
+ * button that starts it is in another"), but both only FIRE AN EVENT, and the form's
+ * handler walks the same consent dialog (Store policy 10.5.2) and the same key rules
+ * before the loop is asked anything. The checkbox here is the visible state of that
+ * consent and the way to withdraw it.
+ *
+ * THE BRIEF COLUMN HAS TWO MODES, AND ITS HEADER IS THE SWITCH. The main path measured on
+ * the owner is "here is my TEXT, make a template of it" -- no brief to invent, so the
+ * default mode takes the pasted text and composes the brief around it host-side
+ * (SpxComposeFromTextBrief -- Studio's own, outside the prompt port and its byte gates).
+ * The second mode is the free-form brief, unchanged. The combo that picks the mode IS the
+ * column's caption, so the selected item always names what the box holds.
  *
  * WHERE THE VERDICT COMES FROM. Not from here. `Insert into document` puts the cleaned draft
  * in the editor, and the editor's own render path -- one worker thread, as every engine call
@@ -70,6 +79,15 @@ type
     FLevelLabel: TLabel;
     FLevel: TComboBox;
     FCopy: TButton;
+    (* The loop's two verbs, IN the panel that holds what they act on. They fire events;
+       the form owns the consent gate, the key rules and the loop itself. The busy face of
+       Generate is Stop -- one slot, two verbs, sized for the wider caption so the swap
+       moves no neighbour. *)
+    FGenerate: TButton;
+    FFix: TButton;
+    FLoopBusy: Boolean;
+    FOnGenerate: TNotifyEvent;
+    FOnFix: TNotifyEvent;
 
     (* ── the connection profile (R1-4, spec §4.5): two rows of settings under the top
        strip. The KEY FIELD IS WRITE-ONLY: the secret is never read back into a control,
@@ -86,7 +104,9 @@ type
     FEndpointLabel: TLabel;
     FEndpoint: TEdit;
     FModelLabel: TLabel;
-    FModel: TEdit;
+    (* Editable combo, NOT a picker: the list is SpxLlmModelSuggestions -- a dated
+       suggestion, never a validator -- and the text goes into the request verbatim. *)
+    FModel: TComboBox;
     FAuthLabel: TLabel;
     FAuth: TComboBox;
     FKeyLabel: TLabel;
@@ -104,7 +124,7 @@ type
     FOnDeclChanged: TNotifyEvent;
 
     FLeft: TPanel;
-    FBriefLabel: TLabel;
+    FBriefMode: TComboBox;   (* the column's header IS the mode switch; item 0 = source text *)
     FBrief: TMemo;
 
     FMid: TPanel;
@@ -141,8 +161,11 @@ type
     procedure PlaceLabels;
     procedure FitColumns;
     function TextW(const S: string): Integer;
+    procedure GenerateClicked(Sender: TObject);
+    procedure FixClicked(Sender: TObject);
     procedure ProfileUiChanged(Sender: TObject);
     procedure FormatPicked(Sender: TObject);
+    procedure RefreshModelSuggestions;
     procedure NetworkToggled(Sender: TObject);
     procedure KeySaveClicked(Sender: TObject);
     procedure KeyForgetClicked(Sender: TObject);
@@ -188,8 +211,18 @@ type
        flows back through OnProfileChanged so the form remains the one that persists. *)
     procedure SetProfile(const AProfile: TSpxLlmProfile);
     function Profile: TSpxLlmProfile;
-    (* What a Generate request is built from -- the panel's own fields. *)
+    (* What a Generate request is built from -- the panel's own fields. In source-text mode
+       the brief is COMPOSED around the pasted text (SpxComposeFromTextBrief); '' when the
+       box is empty either way, so every "nothing to send" guard keeps working. *)
     function Brief: string;
+    (* The empty-box message in the current mode's words: "paste the text" is not
+       "write a brief", and saying the wrong one sends the reader to invent a document
+       they already have. *)
+    function EmptyBriefMessage: string;
+    (* The loop's state, shown on the panel's own buttons: Generate wears Stop while busy,
+       Fix is enabled only when the FORM says its snapshot is current -- the form computes
+       that, because the rows and the revision are the form's. *)
+    procedure ShowLoopState(ABusy, AFixEnabled: Boolean);
     function Channel: TSpxChannel;
     function Level: TSpxVariation;
     function AllowedVars: TSpxAllowedVars;
@@ -197,15 +230,17 @@ type
        lands in the reply box, where the manual Insert/Replace buttons already know what
        to do with it. Shown, never applied: that distinction is the loop's whole table. *)
     procedure SetReply(const AText: string);
-    (* The manual path, reachable from the strip's ▾ menu as well as from this panel:
-       §11 has the reviewer check the product with no key and no network, and this is
-       that path. *)
+    (* The manual path: §11 has the reviewer check the product with no key and no
+       network, and this is that path -- the panel's own button, since the strip's
+       ▾ menu went with the UX pass. *)
     procedure CopyPrompt;
     property OnInsert: TSpxAiInsertEvent read FOnInsert write FOnInsert;
     (* Fired for the SAME cleaned text as OnInsert. The two differ in what the window does
        with it, not in what the panel produces -- so a repair answer, which is the whole
        document, goes over the document instead of beside it. *)
     property OnReplace: TSpxAiInsertEvent read FOnReplace write FOnReplace;
+    property OnGenerate: TNotifyEvent read FOnGenerate write FOnGenerate;
+    property OnFix: TNotifyEvent read FOnFix write FOnFix;
     property OnProfileChanged: TSpxAiProfileEvent read FOnProfileChanged write FOnProfileChanged;
     property OnEnableNetwork: TSpxAiConsentEvent read FOnEnableNetwork write FOnEnableNetwork;
     (* The allow-list changed -- a case picked, a note edited. Part of the loop's snapshot,
@@ -305,14 +340,33 @@ begin
   FCopy.Height := Px(Self, 24);
   FCopy.OnClick := @CopyPromptClicked;
 
-  (* ── the connection profile, two rows under the top strip (R1-4) ──
+  (* Generate and Fix close the ask row: the flow reads left to right -- what to make,
+     how varied, then the verb that makes it. Both fire the FORM's handlers (see the
+     header); Fix is born disabled and only the form enables it. *)
+  FGenerate := TButton.Create(Self);
+  FGenerate.Parent := FTop;
+  FGenerate.Top := Px(Self, 4);
+  FGenerate.Height := Px(Self, 24);
+  FGenerate.OnClick := @GenerateClicked;
 
-     THREE `alTop` SIBLINGS ARE ORDERED BY `Top`, NOT BY CREATION ORDER -- the same LCL rule
-     this file already states for `alLeft` and `alRight`. The numbers only state the order. *)
+  FFix := TButton.Create(Self);
+  FFix.Parent := FTop;
+  FFix.Top := Px(Self, 4);
+  FFix.Height := Px(Self, 24);
+  FFix.Enabled := False;
+  FFix.OnClick := @FixClicked;
+
+  (* ── the connection profile, two rows AT THE PANEL'S FOOT since the UX pass ──
+
+     Settings are touched once and the work is daily, so the daily part gets the prime
+     rows: ask, columns, answer actions -- and the connection sinks to the footer, still
+     one glance away. Three `alBottom` siblings (actions, then these two) are ordered by
+     `Top`, not by creation order -- the same LCL rule this file already states for
+     `alLeft` and `alRight`; larger Top sits lower, and the numbers only state the order. *)
   FProfA := TPanel.Create(Self);
   FProfA.Parent := Self;
-  FProfA.Top := 5000;
-  FProfA.Align := alTop;
+  FProfA.Top := 20000;
+  FProfA.Align := alBottom;
   FProfA.Height := Px(Self, 30);
   FProfA.BevelOuter := bvNone;
 
@@ -350,16 +404,23 @@ begin
   FModelLabel.Parent := FProfA;
   FModelLabel.Top := Px(Self, 7);
 
-  FModel := TEdit.Create(Self);
+  (* csDropDown, the EDITABLE style: the list is a dated suggestion (SpxLlmModelSuggestions
+     -- exact wire ids, because the owner typed "Opus 5" and the provider answered with an
+     error), and free text stays first-class -- OpenAI-compatible names are server-defined
+     and any id not on the list must still be typable. Both routes announce the profile:
+     picking fires OnSelect at once, typing lands on OnEditingDone. *)
+  FModel := TComboBox.Create(Self);
   FModel.Parent := FProfA;
+  FModel.Style := csDropDown;
   FModel.Top := Px(Self, 3);
   FModel.Width := Px(Self, 150);
   FModel.OnEditingDone := @ProfileUiChanged;
+  FModel.OnSelect := @ProfileUiChanged;
 
   FProfB := TPanel.Create(Self);
   FProfB.Parent := Self;
-  FProfB.Top := 10000;
-  FProfB.Align := alTop;
+  FProfB.Top := 25000;
+  FProfB.Align := alBottom;
   FProfB.Height := Px(Self, 30);
   FProfB.BevelOuter := bvNone;
 
@@ -415,11 +476,15 @@ begin
   FNetwork.OnChange := @NetworkToggled;
 
   FProfile := SpxLlmDefaultProfile;
+  RefreshModelSuggestions;
 
   (* ── the brief, the allow-list and the answer, side by side ── *)
 
   FBottom := TPanel.Create(Self);
   FBottom.Parent := Self;
+  (* Highest of the three alBottom rows: the answer's actions stay adjacent to the answer,
+     with the profile footer below them. *)
+  FBottom.Top := 15000;
   FBottom.Align := alBottom;
   FBottom.Height := Px(Self, 32);
   FBottom.BevelOuter := bvNone;
@@ -436,9 +501,16 @@ begin
   FLeft.BevelOuter := bvNone;
   FLeft.Width := Px(Self, 300);
 
-  FBriefLabel := TLabel.Create(Self);
-  FBriefLabel.Parent := FLeft;
-  FBriefLabel.Align := alTop;
+  (* The column's header is the mode switch (see the unit header). Item order is the
+     mode's meaning and is relied on everywhere the mode is read: 0 = the reader's own
+     text to convert (the main path, and the default), 1 = a free-form brief. *)
+  FBriefMode := TComboBox.Create(Self);
+  FBriefMode.Parent := FLeft;
+  FBriefMode.Style := csDropDownList;
+  FBriefMode.Align := alTop;
+  FBriefMode.Items.Add(Tr(sAiModeFromText));
+  FBriefMode.Items.Add(Tr(sAiBrief));
+  FBriefMode.ItemIndex := 0;
 
   FBrief := TMemo.Create(Self);
   FBrief.Parent := FLeft;
@@ -574,8 +646,24 @@ begin
   FChannel.Left := x;      Inc(x, FChannel.Width + Px(Self, 16));
   FLevelLabel.Left := x;   Inc(x, TextW(FLevelLabel.Caption) + Px(Self, 6));
   FLevel.Left := x;        Inc(x, FLevel.Width + Px(Self, 16));
-  FCopy.Left := x;
+  (* ALL THREE ACTIONS hold the row's RIGHT edge, like every action row in this window --
+     and for the minimum-width reason: laid into the left flow they were the FIRST thing a
+     narrow window clipped, and in Russian the flow outgrows the form's own MinWidth (found
+     by Codex review, ~822 px of flow against ~716 of row; its second pass caught Copy
+     prompt left behind under the right-aligned pair -- the REQUIRED no-network path, so it
+     joins the protected group). What gives way under pressure is now the Variation combo,
+     a setting a wider window brings back, never a verb. The Generate slot fits the WIDER
+     of its two faces, so the busy swap to Stop moves no neighbour -- the strip's old rule,
+     carried over with the button. The wider gap before Copy prompt separates the manual
+     path from the loop's pair. *)
+  w := TextW(Tr(sGenerate));
+  if TextW(Tr(sStop)) > w then w := TextW(Tr(sStop));
+  FGenerate.Width := w + Px(Self, 28);
+  FFix.Width := TextW(Tr(sAiFix)) + Px(Self, 28);
   FCopy.Width := TextW(FCopy.Caption) + Px(Self, 28);
+  FFix.Left := FTop.ClientWidth - Px(Self, 8) - FFix.Width;
+  FGenerate.Left := FFix.Left - Px(Self, 6) - FGenerate.Width;
+  FCopy.Left := FGenerate.Left - Px(Self, 14) - FCopy.Width;
 
   (* ── the profile rows, the same rule: every caption hung off its field, measured. The
      endpoint is the one field that stretches -- an address is the longest thing here and
@@ -863,7 +951,46 @@ begin
     FProfLoading := False;
   end;
   ReadProfileUi;
+  RefreshModelSuggestions;
   AnnounceProfile;
+end;
+
+(* The list follows the FORMAT and only the format; the text is the reader's and survives
+   every rebuild -- a suggestion list that rewrote the field would be a validator with
+   extra steps. *)
+procedure TSpxAiPane.RefreshModelSuggestions;
+var
+  keep: string;
+  sugg: TSpxModelSuggestions;
+  i: Integer;
+begin
+  keep := FModel.Text;
+  FModel.Items.BeginUpdate;
+  try
+    FModel.Items.Clear;
+    sugg := SpxLlmModelSuggestions(FProfile.Kind);
+    for i := 0 to High(sugg) do FModel.Items.Add(sugg[i]);
+  finally
+    FModel.Items.EndUpdate;
+  end;
+  FModel.Text := keep;
+end;
+
+procedure TSpxAiPane.GenerateClicked(Sender: TObject);
+begin
+  if Assigned(FOnGenerate) then FOnGenerate(Self);
+end;
+
+procedure TSpxAiPane.FixClicked(Sender: TObject);
+begin
+  if Assigned(FOnFix) then FOnFix(Self);
+end;
+
+procedure TSpxAiPane.ShowLoopState(ABusy, AFixEnabled: Boolean);
+begin
+  FLoopBusy := ABusy;
+  if ABusy then FGenerate.Caption := Tr(sStop) else FGenerate.Caption := Tr(sGenerate);
+  FFix.Enabled := AFixEnabled;
 end;
 
 procedure TSpxAiPane.NetworkToggled(Sender: TObject);
@@ -957,6 +1084,7 @@ begin
       FAuth.ItemIndex := -1;
     end;
     FNetwork.Checked := SpxLlmConsentInForce(FProfile);
+    RefreshModelSuggestions;
     ShowKeyState;
   finally
     FProfLoading := False;
@@ -971,7 +1099,18 @@ end;
 
 function TSpxAiPane.Brief: string;
 begin
-  Result := FBrief.Text;
+  (* Item 0 is the source-text mode: the brief is composed AROUND the pasted text, and a
+     blank box composes to '' so the guards upstream still answer "nothing to send". *)
+  if FBriefMode.ItemIndex = 0 then
+    Result := SpxComposeFromTextBrief(FBrief.Text)
+  else
+    Result := FBrief.Text;
+end;
+
+function TSpxAiPane.EmptyBriefMessage: string;
+begin
+  if FBriefMode.ItemIndex = 0 then Result := Tr(sAiNeedText)
+  else Result := Tr(sAiNeedBrief);
 end;
 
 function TSpxAiPane.Channel: TSpxChannel;
@@ -1005,10 +1144,12 @@ var
 begin
   if Trim(FBrief.Text) = '' then
   begin
-    Say(Tr(sAiNeedBrief));
+    Say(EmptyBriefMessage);
     Exit;
   end;
-  built := SpxBuildAuthoringPrompt(FBrief.Text, FLocale, CollectVars,
+  (* Brief() and not the raw box: the manual path carries the SAME composed brief the
+     networked loop would send, or the two paths would answer differently about one text. *)
+  built := SpxBuildAuthoringPrompt(Brief, FLocale, CollectVars,
                                    TSpxChannel(FChannel.ItemIndex),
                                    TSpxVariation(FLevel.ItemIndex));
   (* System and user prompt in one block, separated by a blank line. A reader pasting this into
@@ -1126,7 +1267,22 @@ begin
   FChannelLabel.Caption := Tr(sAiChannel);
   FLevelLabel.Caption := Tr(sAiLevel);
   FCopy.Caption := Tr(sAiCopyPrompt);
-  FBriefLabel.Caption := Tr(sAiBrief);
+  (* The loop buttons: the caption the busy state owns is re-applied in the new language
+     too -- a language switch mid-flight must not turn Stop back into Generate. *)
+  if FLoopBusy then FGenerate.Caption := Tr(sStop) else FGenerate.Caption := Tr(sGenerate);
+  FFix.Caption := Tr(sAiFix);
+  (* The mode combo rebuilds like every picker here: the MODE is the ItemIndex and the
+     items are a view of it. *)
+  keepC := FBriefMode.ItemIndex;
+  FBriefMode.Items.BeginUpdate;
+  try
+    FBriefMode.Items.Clear;
+    FBriefMode.Items.Add(Tr(sAiModeFromText));
+    FBriefMode.Items.Add(Tr(sAiBrief));
+  finally
+    FBriefMode.Items.EndUpdate;
+  end;
+  FBriefMode.ItemIndex := keepC;
   FAllowedLabel.Caption := Tr(sAiAllowed);
   FReplyLabel.Caption := Tr(sAiReply);
   FInsert.Caption := Tr(sAiInsert);

@@ -191,7 +191,11 @@ const
       '« Générer » et « Réparer » envoient le brief, le modèle actuel et les variables déclarées à l''endpoint de ce profil :'#10'%s'#10#10'Avec l''autorisation par clé API, la clé voyage dans les en-têtes de la requête. Rien n''est envoyé à aucun autre moment, et l''adresse ne change jamais d''elle-même : une redirection est refusée et affichée. Ce que le logiciel à cette adresse fait du texte relève de son opérateur.'#10#10'Vous pouvez désactiver cela à tout moment dans les réglages IA.',
 
       (* R1-5: the report channel (Store policy 11.16) *)
-      'Signaler une sortie IA inappropriée…'
+      'Signaler une sortie IA inappropriée…',
+
+      (* the brief column's two modes (UX pass 2026-08-13) *)
+      'Texte à convertir',
+      'Collez d''abord le texte à convertir.'
   );
 
 implementation

@@ -206,7 +206,13 @@ type
        to support@301.st with the product and version in the subject -- the "means for users
        to report inappropriate content" the policy demands, reachable whether or not the
        network is on: pasted AI output is AI output too. ── *)
-    sMenuReportAi
+    sMenuReportAi,
+
+    (* ── THE UX PASS (owner, 2026-08-13): the brief column's two modes. The mode combo IS
+       the column's header, so its selected item NAMES what the box holds: the reader's own
+       text to convert (the main path -- no brief to invent), or a free-form brief (sAiBrief,
+       reused as the item). sAiNeedText is the empty-box message of the first mode. ── *)
+    sAiModeFromText, sAiNeedText
   );
 
 implementation

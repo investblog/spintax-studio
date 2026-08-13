@@ -154,6 +154,18 @@ function SpxLlmAuthFromWord(const AWord: string; out AAuth: TSpxLlmAuth): Boolea
 function SpxLlmKeyAttached(const AProfile: TSpxLlmProfile): Boolean;
 function SpxLlmConsentInForce(const AProfile: TSpxLlmProfile): Boolean;
 
+type
+  TSpxModelSuggestions = array of string;
+
+(* WHAT THE MODEL FIELD OFFERS, never what it enforces. The string goes into the request
+   body verbatim and the truth about which ids exist belongs to the provider -- a baked-in
+   list is a hand-written copy of someone else's constants and goes stale silently (the
+   backlog's `ENGINE_CODES` lesson), so this is a SUGGESTION list for an editable field,
+   snapshot dated 2026-08-13, and no code path may refuse an id for not being on it.
+   Empty for the OpenAI-compatible format: those names are defined by whatever server
+   answers the endpoint, and a guessed name is worse than an empty list. *)
+function SpxLlmModelSuggestions(AKind: TSpxLlmKind): TSpxModelSuggestions;
+
 (* The request body, as it will be sent. Separate so the suite can read it. *)
 function SpxLlmBuildBody(const ACfg: TSpxLlmConfig; const APrompt: TSpxBuiltPrompt): string;
 
@@ -291,6 +303,21 @@ var
 begin
   origin := SpxLlmOrigin(AProfile.Endpoint);
   Result := AProfile.Network and (origin <> '') and (AProfile.ConsentOrigin = origin);
+end;
+
+function SpxLlmModelSuggestions(AKind: TSpxLlmKind): TSpxModelSuggestions;
+begin
+  Result := nil;
+  if AKind = lkAnthropic then
+  begin
+    (* The three current tiers by their exact API ids (snapshot 2026-08-13). Exact, because
+       the reader will type "Opus 5" otherwise -- measured on the owner -- and the field's
+       whole failure mode is an id that reads right and is not the wire string. *)
+    SetLength(Result, 3);
+    Result[0] := 'claude-opus-5';
+    Result[1] := 'claude-sonnet-5';
+    Result[2] := 'claude-haiku-4-5';
+  end;
 end;
 
 function SpxLlmBuildBody(const ACfg: TSpxLlmConfig; const APrompt: TSpxBuiltPrompt): string;

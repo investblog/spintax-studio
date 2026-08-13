@@ -187,7 +187,11 @@ const
       '"Generiši" i "Popravi" šalju zadatak, trenutni šablon i deklarisane varijable na endpoint ovog profila:'#10'%s'#10#10'Uz autorizaciju API ključem ključ putuje u zaglavljima zahtjeva. Ništa se ne šalje ni u kojem drugom trenutku, a adresa se nikad ne mijenja sama: preusmjeravanje se odbija i prikazuje. Šta softver na toj adresi radi s tekstom, određuje njegov operater.'#10#10'Ovo možete isključiti u bilo kojem trenutku u postavkama AI-ja.',
 
       (* R1-5: the report channel (Store policy 11.16) *)
-      'Prijavi neprimjeren AI izlaz…'
+      'Prijavi neprimjeren AI izlaz…',
+
+      (* the brief column's two modes (UX pass 2026-08-13) *)
+      'Tekst za pretvaranje',
+      'Prvo zalijepite tekst za pretvaranje.'
   );
 
 implementation

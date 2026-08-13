@@ -180,7 +180,11 @@ const
       '"Üret" ve "Düzelt" özeti, geçerli şablonu ve bildirilen değişkenleri bu profilin uç noktasına gönderir:'#10'%s'#10#10'API anahtarıyla yetkilendirmede anahtar, isteğin başlıklarında gider. Başka hiçbir anda hiçbir şey gönderilmez ve adres kendiliğinden asla değişmez: yönlendirme reddedilir ve gösterilir. O adresteki yazılımın metinle ne yaptığı, işletmecisine bağlıdır.'#10#10'Bunu istediğiniz zaman yapay zekâ ayarlarından kapatabilirsiniz.',
 
       (* R1-5: the report channel (Store policy 11.16) *)
-      'Uygunsuz yapay zekâ çıktısını bildir…'
+      'Uygunsuz yapay zekâ çıktısını bildir…',
+
+      (* the brief column's two modes (UX pass 2026-08-13) *)
+      'Dönüştürülecek metin',
+      'Önce dönüştürülecek metni yapıştırın.'
   );
 
 implementation
