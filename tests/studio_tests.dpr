@@ -3119,6 +3119,109 @@ begin
           SpxComposeFromTextBrief('x')) = 1);
     Check('prompt/from-text/blank-source-composes-to-nothing',
       SpxComposeFromTextBrief('   '#10#9), '');
+
+    (* The source-html cleaner, one claim per decision. THE GATE FIRST, because it is the
+       claim that protects everyone who never pasted HTML: prose with a stray well-formed
+       `<j>` and a literal `&amp;` is prose, byte-identical -- entities decode only once a
+       recognised tag has proven the paste is markup. *)
+    Check('prompt/source-html/prose-is-untouched',
+      SpxCleanSourceHtml('a < b, R&amp;D quoted, and <j>this</j> stays'),
+      'a < b, R&amp;D quoted, and <j>this</j> stays');
+    Check('prompt/source-html/word-paste-keeps-the-text-not-the-costume',
+      SpxCleanSourceHtml('<p class=MsoNormal style="margin:0cm"><span lang=RU>Мы&nbsp;открыли '
+        + 'кофейню.</span><o:p></o:p></p>'),
+      '<p>Мы открыли кофейню.</p>');
+    Check('prompt/source-html/style-and-script-lose-their-contents-too',
+      SpxCleanSourceHtml('<style>.x{color:red}</style>before<script>alert(1)</script>after<div>x</div>'),
+      'beforeafter'#10'x');
+    Check('prompt/source-html/href-is-content-class-is-not',
+      SpxCleanSourceHtml('<div><a class="btn" href="https://spintax.net/">тут</a></div>'),
+      '<a href="https://spintax.net/">тут</a>');
+    (* A blank line, not a glue: close and open each leave a break and the collapse lets
+       one blank stand -- which is what a paragraph boundary should read as. *)
+    Check('prompt/source-html/sibling-divs-do-not-glue',
+      SpxCleanSourceHtml('<div>Первый абзац.</div><div>Второй абзац.</div>'),
+      'Первый абзац.'#10#10'Второй абзац.');
+    Check('prompt/source-html/lists-and-headings-are-the-product''s-own-speech',
+      SpxCleanSourceHtml('<h2 id="a">Заголовок</h2><ul><li>раз</li><li>два</li></ul>'),
+      '<h2>Заголовок</h2><ul><li>раз</li><li>два</li></ul>');
+    Check('prompt/source-html/comments-doctype-and-entities',
+      SpxCleanSourceHtml('<!DOCTYPE html><!-- hidden --><p>&#1071; &#x2014; &lt;тег&gt;</p>'),
+      '<p>Я — <тег></p>');
+    Check('prompt/source-html/only-markup-cleans-to-nothing',
+      SpxCleanSourceHtml('<style>.a{}</style><div>   </div>'), '');
+    (* Codex's four, each reproduced as a failure before the fix. The gate must WALK like
+       the cleaner: a known tag inside a comment -- somebody QUOTING markup in prose -- or
+       inside a stray tag's quoted attribute is not markup. *)
+    Check('prompt/source-html/a-tag-quoted-in-a-comment-is-prose',
+      SpxCleanSourceHtml('a <!-- <p> --> b, R&amp;D'),
+      'a <!-- <p> --> b, R&amp;D');
+    Check('prompt/source-html/a-tag-inside-an-attribute-is-prose',
+      SpxCleanSourceHtml('see <j title="<p>">this</j>, R&amp;D'),
+      'see <j title="<p>">this</j>, R&amp;D');
+    (* data-href is not href, and a value carrying a quote would smuggle an attribute past
+       the whitelist when re-emitted -- no link is better than that link. *)
+    Check('prompt/source-html/data-href-is-not-a-link',
+      SpxCleanSourceHtml('<div><a data-href="x">тут</a></div>'), '<a>тут</a>');
+    Check('prompt/source-html/a-quote-in-the-href-drops-the-href',
+      SpxCleanSourceHtml('<div><a href=''x" onclick="evil''>тут</a></div>'), '<a>тут</a>');
+    (* </styles> is not </style>: an unterminated style swallows the remainder rather than
+       letting its contents escape as copy. *)
+    Check('prompt/source-html/a-close-tag-matches-by-name-not-by-prefix',
+      SpxCleanSourceHtml('<style>hidden</styles><p>visible</p>'), '');
+    (* A surrogate codepoint is not a character: the entity stays literal rather than
+       becoming invalid UTF-8. *)
+    Check('prompt/source-html/surrogate-entities-stay-literal',
+      SpxCleanSourceHtml('<p>&#xD800;</p>'), '<p>&#xD800;</p>');
+    (* Codex's second pass, reproduced before fixing like the first. hreflang starts with
+       href and must not HIDE the real one behind it; an underscore is not a name boundary
+       either way. *)
+    Check('prompt/source-html/hreflang-does-not-hide-the-real-href',
+      SpxCleanSourceHtml('<div><a hreflang="ru" href="https://spintax.net/">тут</a></div>'),
+      '<a href="https://spintax.net/">тут</a>');
+    Check('prompt/source-html/underscore-href-is-not-href',
+      SpxCleanSourceHtml('<div><a _href="x">тут</a></div>'), '<a>тут</a>');
+    (* An unterminated tag owns everything after it: the gate must not read a "tag" out of
+       the inside of a quote that never closed. *)
+    Check('prompt/source-html/an-unterminated-tag-does-not-open-the-gate',
+      SpxCleanSourceHtml('see <j title="<p> R&amp;D'),
+      'see <j title="<p> R&amp;D');
+    (* An end tag's name ends at whitespace, /, or > -- not merely at the characters this
+       parser calls name characters. *)
+    Check('prompt/source-html/style-dot-foo-does-not-close-style',
+      SpxCleanSourceHtml('<style>hidden</style.foo><p>visible</p>'), '');
+    (* A doctype's quoted string may carry '>' and the skip honours the quotes. *)
+    Check('prompt/source-html/doctype-with-a-quoted-gt',
+      SpxCleanSourceHtml('<!DOCTYPE html SYSTEM "x>y"><p>ok</p>'), '<p>ok</p>');
+    (* A self-closing element has no contents to swallow. *)
+    Check('prompt/source-html/self-closing-svg-swallows-nothing',
+      SpxCleanSourceHtml('<svg/>видимое<div>x</div>'), 'видимое'#10'x');
+    (* The entities a paste actually carries: dashes, ellipsis, the quote pairs. *)
+    Check('prompt/source-html/typographic-entities-decode',
+      SpxCleanSourceHtml('<p>&mdash; &ndash; &hellip; &laquo;цитата&raquo; &ldquo;q&rdquo;</p>'),
+      '<p>— – … «цитата» “q”</p>');
+    (* Codex's third pass -- the review loop is capped at two re-reviews, so these four are
+       fixed without another round, reproduced first like all the others. The unterminated
+       tag owns the remainder IN BOTH PASSES: the gate already stops, and the cleaner must
+       hand the tail over as text rather than read a <style> out of a quote that never
+       closed. *)
+    Check('prompt/source-html/pass-two-hands-an-unterminated-tag-its-tail',
+      SpxCleanSourceHtml('<p>ok</p><j title="<style>hidden'),
+      '<p>ok</p><j title="<style>hidden');
+    (* A tag NAME ends at whitespace, '/' or '>' -- `<p.class>` is not `<p>` wearing a
+       suffix, it is an unknown tag and unwraps. *)
+    Check('prompt/source-html/p-dot-class-is-not-p',
+      SpxCleanSourceHtml('<div><p.class>R&amp;D</p.class></div>'), 'R&D');
+    (* The '/' in an unquoted attribute value is the VALUE's, not the tag's: the style
+       element is not self-closed and its contents are still nobody's copy. *)
+    Check('prompt/source-html/a-slash-in-an-unquoted-value-is-not-self-closing',
+      SpxCleanSourceHtml('<style media=screen/>hidden</style><p>ok</p>'), '<p>ok</p>');
+    (* Form feed is HTML whitespace too, on both boundaries that matter. *)
+    Check('prompt/source-html/form-feed-is-whitespace-before-href',
+      SpxCleanSourceHtml('<div>x</div><a'#12'href="https://spintax.net/">тут</a>'),
+      'x'#10'<a href="https://spintax.net/">тут</a>');
+    Check('prompt/source-html/form-feed-ends-a-close-tag-name',
+      SpxCleanSourceHtml('<style>h</style'#12'><p>ok</p>'), '<p>ok</p>');
   finally
     rows.Free;
     diags.Free;

@@ -130,6 +130,17 @@ function SpxPromptExamples(const ALocale: string): TSpxExamples;
    "nothing to send" guards upstream keep working unchanged. *)
 function SpxComposeFromTextBrief(const ASource: string): string;
 
+(* ALSO STUDIO'S OWN. Pasted copy arrives from a browser or Word wearing markup -- inline
+   styles, class soup, <span> nesting, Office's <o:p> -- and none of it is the reader's
+   TEXT. Before the source-text mode composes a brief, this keeps only the tags the
+   product itself speaks (its preview and its help pages: p, br, a with its href, b,
+   strong, i, em, u, tt, code, ul, ol, li, h1..h6), drops every attribute except that
+   href, swallows <script>/<style>/<head> WITH their contents, unwraps everything else,
+   and decodes the common entities. THE GATE IS A RECOGNISED TAG, not the character `<`:
+   plain text -- `a < b`, `R&amp;D` quoted literally, a stray `<j>` -- comes back
+   byte-identical, because prose must never be "cleaned". *)
+function SpxCleanSourceHtml(const ASource: string): string;
+
 function SpxCleanModelTemplate(const ARaw: string): string;
 
 function SpxChannelFromName(const S: string): TSpxChannel;
@@ -683,6 +694,458 @@ begin
     'synonyms, reorderings, varied openings -- and every variant must stay faithful to the source.' + LF +
     'SOURCE TEXT:' + LF +
     ASource;
+end;
+
+(* ── SpxCleanSourceHtml and its helpers -- see the interface note ────────────────────── *)
+
+function HtmlNameStart(C: Char): Boolean;
+begin
+  Result := C in ['a'..'z', 'A'..'Z'];
+end;
+
+(* HTML's whitespace, form feed included -- the boundary set every helper below shares. *)
+function HtmlWs(C: Char): Boolean;
+begin
+  Result := C in [' ', #9, #10, #12, #13];
+end;
+
+(* Where a tag NAME ends: whitespace, '/', '>' -- the tokenizer's delimiters, not some
+   notion of "name characters". `<p.class>` is a tag named `p.class` (unknown, unwraps),
+   never `<p>` wearing a suffix; Office's `<o:p>` and custom `x-y` parse whole the same
+   way (Codex, third pass -- the first version stopped at a letters-digits set and read
+   the suffix as attributes). *)
+function HtmlNameEnd(C: Char): Boolean;
+begin
+  Result := HtmlWs(C) or (C = '/') or (C = '>');
+end;
+
+function LowerAscii(const S: string): string;
+var
+  i: Integer;
+begin
+  Result := S;
+  for i := 1 to Length(Result) do
+    if Result[i] in ['A'..'Z'] then Result[i] := Chr(Ord(Result[i]) + 32);
+end;
+
+function IsIn(const N: string; const AList: array of string): Boolean;
+var
+  i: Integer;
+begin
+  for i := Low(AList) to High(AList) do
+    if N = AList[i] then Exit(True);
+  Result := False;
+end;
+
+(* The tags the product itself speaks: its generated help pages and the preview it renders.
+   Everything else is somebody's layout, not the reader's text. *)
+function HtmlKept(const N: string): Boolean;
+begin
+  Result := IsIn(N, ['p', 'br', 'a', 'b', 'strong', 'i', 'em', 'u', 'tt', 'code',
+                     'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']);
+end;
+
+(* Containers whose CONTENT is not copy either. *)
+function HtmlSwallowed(const N: string): Boolean;
+begin
+  Result := IsIn(N, ['script', 'style', 'head', 'title', 'noscript', 'svg']);
+end;
+
+(* Dropped block containers leave a line break behind, so two sibling <div>s do not glue
+   into one word; a dropped table cell leaves a space for the same reason. *)
+function HtmlBlockish(const N: string): Boolean;
+begin
+  Result := IsIn(N, ['div', 'section', 'article', 'header', 'footer', 'main', 'aside',
+                     'nav', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'blockquote',
+                     'pre', 'hr', 'form', 'figure', 'figcaption']);
+end;
+
+function HtmlCellish(const N: string): Boolean;
+begin
+  Result := IsIn(N, ['td', 'th']);
+end;
+
+(* The gate's list: a name that proves the paste IS markup. Deliberately wider than the
+   kept list and narrower than "anything that parses" -- `<j>` in somebody's prose must
+   not flip the gate. A colon in the name counts too (Office). *)
+function HtmlKnown(const N: string): Boolean;
+begin
+  Result := HtmlKept(N) or HtmlSwallowed(N) or HtmlBlockish(N) or HtmlCellish(N) or
+            IsIn(N, ['span', 'font', 'img', 'meta', 'link', 'body', 'html', 'iframe',
+                     'video', 'audio', 'picture', 'source', 'input', 'button', 'select',
+                     'option', 'label', 'small', 'big', 'sup', 'sub', 's', 'strike']) or
+            (Pos(':', N) > 0);
+end;
+
+(* Parse one candidate tag at S[At] = '<'. True when a well-formed tag ends at AEnd ('>');
+   AName is lowercased without the '/'. Quoted attribute values may carry '>' and are
+   skipped as wholes. *)
+function HtmlParseTag(const S: string; At: Integer;
+  out AName: string; out AClose: Boolean; out ABody: string; out AEnd: Integer): Boolean;
+var
+  i, nameFrom: Integer;
+  q: Char;
+begin
+  Result := False;
+  i := At + 1;
+  AClose := False;
+  if (i <= Length(S)) and (S[i] = '/') then
+  begin
+    AClose := True;
+    Inc(i);
+  end;
+  if (i > Length(S)) or not HtmlNameStart(S[i]) then Exit;
+  nameFrom := i;
+  while (i <= Length(S)) and not HtmlNameEnd(S[i]) do
+  begin
+    (* a second '<' inside a candidate name is prose, not a tag *)
+    if S[i] = '<' then Exit;
+    Inc(i);
+  end;
+  AName := LowerAscii(Copy(S, nameFrom, i - nameFrom));
+  nameFrom := i;   (* the attributes begin here *)
+  while i <= Length(S) do
+  begin
+    if S[i] = '>' then
+    begin
+      ABody := Copy(S, nameFrom, i - nameFrom);
+      AEnd := i;
+      Exit(True);
+    end;
+    if S[i] in ['"', ''''] then
+    begin
+      q := S[i];
+      Inc(i);
+      while (i <= Length(S)) and (S[i] <> q) do Inc(i);
+      if i > Length(S) then Exit;   (* an unclosed quote: not a tag *)
+    end;
+    Inc(i);
+  end;
+end;
+
+(* `href` out of a kept <a>'s attribute text: the one attribute that IS content. *)
+function HtmlHrefOf(const ABody: string): string;
+var
+  low: string;
+  at, i, j: Integer;
+  q: Char;
+begin
+  Result := '';
+  low := LowerAscii(ABody);
+  (* The attribute NAMED href: whitespace (or an end of the string) on BOTH sides of the
+     name, '=' next -- `data-href`, `_href` and `hreflang` each fail a boundary. And a
+     candidate that fails RESUMES the search rather than giving up: `hreflang` standing
+     before the real href must not hide it (both from Codex review, across two passes --
+     the first fix checked one boundary and exited on the first miss). *)
+  at := 0;
+  repeat
+    at := Pos('href', low, at + 1);
+    if at = 0 then Exit;
+    if ((at = 1) or HtmlWs(low[at - 1])) and
+       ((at + 4 > Length(low)) or HtmlWs(low[at + 4]) or (low[at + 4] = '=')) then
+    begin
+      i := at + 4;
+      while (i <= Length(ABody)) and HtmlWs(ABody[i]) do Inc(i);
+      if (i <= Length(ABody)) and (ABody[i] = '=') then
+      begin
+        Inc(i);
+        while (i <= Length(ABody)) and HtmlWs(ABody[i]) do Inc(i);
+        if i > Length(ABody) then Exit;
+        if ABody[i] in ['"', ''''] then
+        begin
+          q := ABody[i];
+          j := i + 1;
+          while (j <= Length(ABody)) and (ABody[j] <> q) do Inc(j);
+          Result := Copy(ABody, i + 1, j - i - 1);
+        end
+        else
+        begin
+          j := i;
+          while (j <= Length(ABody)) and not HtmlWs(ABody[j]) do Inc(j);
+          Result := Copy(ABody, i, j - i);
+        end;
+        (* A value carrying a quote would smuggle an attribute past the whitelist the
+           moment it is re-emitted inside double quotes (Codex: href='x" onclick="evil').
+           No link is better than that link. *)
+        if (Pos('"', Result) > 0) or (Pos('''', Result) > 0) then Result := '';
+        Exit;
+      end;
+    end;
+  until False;
+end;
+
+(* Whether S[At] = '<' LOOKS like a tag's start -- optional '/', then a name character.
+   The gate uses it to tell "a < b" (plain prose, keep walking) from an unterminated tag
+   whose quoted inside must not be read as markup (Codex, second pass). *)
+function HtmlTagLikeAt(const S: string; At: Integer): Boolean;
+var
+  i: Integer;
+begin
+  i := At + 1;
+  if (i <= Length(S)) and (S[i] = '/') then Inc(i);
+  Result := (i <= Length(S)) and HtmlNameStart(S[i]);
+end;
+
+(* The '>' that ends a doctype or processing instruction: a quoted run may carry '>' and
+   is skipped whole (Codex: <!DOCTYPE html SYSTEM "x>y">). 0 when none. *)
+function HtmlGtAt(const S: string; At: Integer): Integer;
+var
+  q: Char;
+begin
+  Result := At;
+  while Result <= Length(S) do
+  begin
+    if S[Result] = '>' then Exit;
+    if S[Result] in ['"', ''''] then
+    begin
+      q := S[Result];
+      Inc(Result);
+      while (Result <= Length(S)) and (S[Result] <> q) do Inc(Result);
+      if Result > Length(S) then Exit(0);
+    end;
+    Inc(Result);
+  end;
+  Result := 0;
+end;
+
+(* `<svg/>` has no contents to swallow (Codex). The trailing '/' counts only when what
+   precedes it is a boundary -- whitespace, a closing quote, or nothing: in an UNQUOTED
+   attribute value (`media=screen/`) the slash belongs to the value under HTML
+   tokenization, and the element is not self-closed (Codex, third pass). *)
+function HtmlSelfClosed(const ABody: string): Boolean;
+var
+  s: string;
+begin
+  s := TrimRight(ABody);
+  Result := (s <> '') and (s[Length(s)] = '/') and
+            ((Length(s) = 1) or HtmlWs(s[Length(s) - 1]) or
+             (s[Length(s) - 1] in ['"', '''']));
+end;
+
+function Utf8OfCodepoint(Cp: Cardinal): string;
+begin
+  if Cp < $80 then Result := Chr(Cp)
+  else if Cp < $800 then
+    Result := Chr($C0 or (Cp shr 6)) + Chr($80 or (Cp and $3F))
+  else if Cp < $10000 then
+    Result := Chr($E0 or (Cp shr 12)) + Chr($80 or ((Cp shr 6) and $3F)) +
+              Chr($80 or (Cp and $3F))
+  else
+    Result := Chr($F0 or (Cp shr 18)) + Chr($80 or ((Cp shr 12) and $3F)) +
+              Chr($80 or ((Cp shr 6) and $3F)) + Chr($80 or (Cp and $3F));
+end;
+
+(* One entity at S[At] = '&' -> its text, or False and the caller emits '&' as-is. Only
+   inside the cleaner: prose quoting `&amp;` literally is protected by the gate. *)
+function HtmlEntityAt(const S: string; At: Integer; out AText: string; out AEnd: Integer): Boolean;
+var
+  i, from: Integer;
+  name: string;
+  cp: Cardinal;
+begin
+  Result := False;
+  i := At + 1;
+  from := i;
+  while (i <= Length(S)) and (i - from < 12) and (S[i] <> ';') do Inc(i);
+  if (i > Length(S)) or (S[i] <> ';') then Exit;
+  name := LowerAscii(Copy(S, from, i - from));
+  AEnd := i;
+  if name = 'nbsp' then AText := ' '
+  else if name = 'amp' then AText := '&'
+  else if name = 'lt' then AText := '<'
+  else if name = 'gt' then AText := '>'
+  else if name = 'quot' then AText := '"'
+  else if (name = 'apos') or (name = '#39') then AText := ''''
+  (* the entities a paste actually carries: the dashes, the ellipsis, the quote pairs and
+     the marks -- each spelled as its codepoint so the table cannot drift from UTF-8 *)
+  else if name = 'mdash' then AText := Utf8OfCodepoint($2014)
+  else if name = 'ndash' then AText := Utf8OfCodepoint($2013)
+  else if name = 'hellip' then AText := Utf8OfCodepoint($2026)
+  else if name = 'laquo' then AText := Utf8OfCodepoint($AB)
+  else if name = 'raquo' then AText := Utf8OfCodepoint($BB)
+  else if name = 'ldquo' then AText := Utf8OfCodepoint($201C)
+  else if name = 'rdquo' then AText := Utf8OfCodepoint($201D)
+  else if name = 'lsquo' then AText := Utf8OfCodepoint($2018)
+  else if name = 'rsquo' then AText := Utf8OfCodepoint($2019)
+  else if name = 'copy' then AText := Utf8OfCodepoint($A9)
+  else if name = 'reg' then AText := Utf8OfCodepoint($AE)
+  else if name = 'trade' then AText := Utf8OfCodepoint($2122)
+  else if name = 'bull' then AText := Utf8OfCodepoint($2022)
+  else if name = 'middot' then AText := Utf8OfCodepoint($B7)
+  else if name = 'deg' then AText := Utf8OfCodepoint($B0)
+  else if name = 'times' then AText := Utf8OfCodepoint($D7)
+  else if name = 'sect' then AText := Utf8OfCodepoint($A7)
+  else if name = 'euro' then AText := Utf8OfCodepoint($20AC)
+  else if name = 'shy' then AText := ''   (* a soft hyphen is layout, not text *)
+  else if (Length(name) > 1) and (name[1] = '#') then
+  begin
+    if (Length(name) > 2) and (name[2] = 'x') then
+      cp := StrToDWordDef('$' + Copy(name, 3, MaxInt), 0)
+    else
+      cp := StrToDWordDef(Copy(name, 2, MaxInt), 0);
+    (* A surrogate is not a character, and encoding one is invalid UTF-8 (Codex): the
+       entity stays literal instead. *)
+    if (cp = 0) or (cp > $10FFFF) or ((cp >= $D800) and (cp <= $DFFF)) then Exit;
+    AText := Utf8OfCodepoint(cp);
+  end
+  else
+    Exit;
+  Result := True;
+end;
+
+function SpxCleanSourceHtml(const ASource: string): string;
+var
+  i, j, tagEnd, closeAt: Integer;
+  name, body, ent, lowSrc: string;
+  isClose, known: Boolean;
+  lines: TStringList;
+  s_: string;
+  blanks: Integer;
+begin
+  (* PASS 1 -- THE GATE. Only a RECOGNISED tag turns the cleaner on: prose with a stray
+     `<j>` or a literal `&amp;` is prose and comes back byte-identical. The gate WALKS the
+     way pass 2 does -- past a whole comment, past a doctype, past a parsed tag's quoted
+     attributes -- because a known tag in any of those places is somebody QUOTING markup,
+     and a one-byte step read straight through them (found by Codex review). *)
+  known := False;
+  i := 1;
+  while (i <= Length(ASource)) and not known do
+  begin
+    if ASource[i] = '<' then
+    begin
+      if Copy(ASource, i, 4) = '<!--' then
+      begin
+        closeAt := Pos('-->', ASource, i + 4);
+        if closeAt = 0 then Break;
+        i := closeAt + 3;
+        Continue;
+      end;
+      if (i < Length(ASource)) and (ASource[i + 1] in ['!', '?']) then
+      begin
+        closeAt := HtmlGtAt(ASource, i);
+        if closeAt = 0 then Break;
+        i := closeAt + 1;
+        Continue;
+      end;
+      if HtmlParseTag(ASource, i, name, isClose, body, tagEnd) then
+      begin
+        known := HtmlKnown(name);
+        i := tagEnd + 1;
+        Continue;
+      end;
+      (* Looks like a tag and never closes: everything after it is that tag's INSIDE --
+         an unclosed quote, most likely -- and must not be read as markup. Erring this
+         way keeps the promise that matters: prose comes back byte-identical. *)
+      if HtmlTagLikeAt(ASource, i) then Break;
+    end;
+    Inc(i);
+  end;
+  if not known then Exit(ASource);
+  (* Lowercased once: the close-tag search below runs per swallowed element, and a copy
+     per element made the pass quadratic (Codex). *)
+  lowSrc := LowerAscii(ASource);
+
+  (* PASS 2 -- THE CLEANING. Linear; nothing emitted is re-read, so a decoded `&lt;`
+     cannot become a tag. *)
+  Result := '';
+  i := 1;
+  while i <= Length(ASource) do
+  begin
+    if ASource[i] = '<' then
+    begin
+      (* comments, doctypes and processing instructions vanish whole *)
+      if Copy(ASource, i, 4) = '<!--' then
+      begin
+        closeAt := Pos('-->', ASource, i + 4);
+        if closeAt = 0 then i := Length(ASource) + 1 else i := closeAt + 3;
+        Continue;
+      end;
+      if (i < Length(ASource)) and (ASource[i + 1] in ['!', '?']) then
+      begin
+        closeAt := HtmlGtAt(ASource, i);
+        if closeAt = 0 then i := Length(ASource) + 1 else i := closeAt + 1;
+        Continue;
+      end;
+      if HtmlParseTag(ASource, i, name, isClose, body, tagEnd) then
+      begin
+        if HtmlSwallowed(name) and (not isClose) and (not HtmlSelfClosed(body)) then
+        begin
+          (* content and all: a <style> block is nobody's copy. The close matches by
+             EXACT name -- `</styles>` is not `</style>`, and an end tag's name ends at
+             whitespace, '/' or '>', not merely at this parser's name characters
+             (`</style.foo>` extends it too; both from Codex review). *)
+          closeAt := tagEnd;
+          repeat
+            closeAt := Pos('</' + name, lowSrc, closeAt + 1);
+            j := closeAt + 2 + Length(name);
+          until (closeAt = 0) or (j > Length(ASource)) or HtmlNameEnd(lowSrc[j]);
+          if closeAt = 0 then i := Length(ASource) + 1
+          else
+          begin
+            closeAt := Pos('>', ASource, closeAt);
+            if closeAt = 0 then i := Length(ASource) + 1 else i := closeAt + 1;
+          end;
+          Continue;
+        end;
+        if HtmlKept(name) then
+        begin
+          (* normalised: the tag, no attributes -- except the one that is content *)
+          if isClose then Result := Result + '</' + name + '>'
+          else if (name = 'a') and (HtmlHrefOf(body) <> '') then
+            Result := Result + '<a href="' + HtmlHrefOf(body) + '">'
+          else
+            Result := Result + '<' + name + '>';
+        end
+        else if HtmlBlockish(name) then Result := Result + LF
+        else if HtmlCellish(name) then Result := Result + ' ';
+        (* every other tag -- span, font, o:p, an unknown -- unwraps to its content *)
+        i := tagEnd + 1;
+        Continue;
+      end;
+      (* The gate stops at a tag-like '<' that never parses; the cleaner must own it the
+         same way (Codex, third pass): the unterminated tag's tail is TEXT, handed over
+         whole -- or a <style> gets read out of a quote that never closed. *)
+      if HtmlTagLikeAt(ASource, i) then
+      begin
+        Result := Result + Copy(ASource, i, MaxInt);
+        Break;
+      end;
+    end;
+    if (ASource[i] = '&') and HtmlEntityAt(ASource, i, ent, tagEnd) then
+    begin
+      Result := Result + ent;
+      i := tagEnd + 1;
+      Continue;
+    end;
+    Result := Result + ASource[i];
+    Inc(i);
+  end;
+
+  (* Layout whitespace is markup too, once the markup is gone: trim each line -- source
+     indentation is the file's, not the copy's -- and let at most one blank line stand. *)
+  lines := TStringList.Create;
+  try
+    SplitLF(Result, lines);
+    Result := '';
+    blanks := 0;
+    for i := 0 to lines.Count - 1 do
+    begin
+      s_ := Trim(lines[i]);
+      if Trim(s_) = '' then
+      begin
+        Inc(blanks);
+        if (blanks > 1) or (Result = '') then Continue;
+        s_ := '';
+      end
+      else
+        blanks := 0;
+      if Result <> '' then Result := Result + LF;
+      Result := Result + s_;
+    end;
+    Result := Trim(Result);
+  finally
+    lines.Free;
+  end;
 end;
 
 (* Strip what a model wraps its answer in despite being told not to. The output contract forbids

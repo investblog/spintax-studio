@@ -1099,10 +1099,15 @@ end;
 
 function TSpxAiPane.Brief: string;
 begin
-  (* Item 0 is the source-text mode: the brief is composed AROUND the pasted text, and a
-     blank box composes to '' so the guards upstream still answer "nothing to send". *)
+  (* Item 0 is the source-text mode: the paste is cleaned of markup FIRST -- a browser or
+     Word hands over style soup, and none of it is the reader's text (SpxCleanSourceHtml;
+     plain prose passes through byte-identical, the gate is a recognised tag) -- then the
+     brief is composed AROUND what remains. A paste that was ONLY markup cleans to '' and
+     composes to '', so the guards upstream still answer "nothing to send". The manual
+     "Copy prompt" path runs through here too, so the reader can SEE the cleaned source
+     in what they carry away. *)
   if FBriefMode.ItemIndex = 0 then
-    Result := SpxComposeFromTextBrief(FBrief.Text)
+    Result := SpxComposeFromTextBrief(SpxCleanSourceHtml(FBrief.Text))
   else
     Result := FBrief.Text;
 end;
@@ -1141,15 +1146,19 @@ end;
 procedure TSpxAiPane.CopyPromptClicked(Sender: TObject);
 var
   built: TSpxBuiltPrompt;
+  b: string;
 begin
-  if Trim(FBrief.Text) = '' then
+  (* Brief() and not the raw box, for the GUARD as well as the build: a paste that was
+     only markup cleans to nothing, and checking the raw text would copy a prompt with an
+     empty brief while the network path refuses the same input (found by Codex review).
+     One call -- the cleaner runs once, and what is checked is what is sent. *)
+  b := Brief;
+  if Trim(b) = '' then
   begin
     Say(EmptyBriefMessage);
     Exit;
   end;
-  (* Brief() and not the raw box: the manual path carries the SAME composed brief the
-     networked loop would send, or the two paths would answer differently about one text. *)
-  built := SpxBuildAuthoringPrompt(Brief, FLocale, CollectVars,
+  built := SpxBuildAuthoringPrompt(b, FLocale, CollectVars,
                                    TSpxChannel(FChannel.ItemIndex),
                                    TSpxVariation(FLevel.ItemIndex));
   (* System and user prompt in one block, separated by a blank line. A reader pasting this into
