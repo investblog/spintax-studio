@@ -1,15 +1,20 @@
 (*
- * SpxAiPane -- the AI authoring loop, and there is no network anywhere in it (ADR 0011).
+ * SpxAiPane -- the loop's settings and its manual path. No socket lives here either way:
+ * the ONE file allowed to open one is SpxHttp (NET_ALLOWED), and this panel only holds what
+ * a request will be built FROM.
  *
- * WHAT THIS PANEL DOES, and why the shape looks like a missing feature until you read the
- * decision behind it. Studio builds the prompt; the reader carries it to whatever model they
- * already use; the reader brings the answer back. There is no provider, no key, no "connect"
- * and no spinner, and that is the design rather than a stage of it. The published listing has
- * said since 2026-08-04 that a draft is written in a model OUTSIDE this application and
- * brought in, and that R0 "does not call an AI service, send your documents to the cloud or
- * require a model key" -- so this slice makes no published sentence false. A networked
- * provider is a separate slice with its own ADR, because it changes the listing, the privacy
- * policy in two places and the data declaration at certification.
+ * WHAT THIS PANEL IS SINCE R1-4. Two things, deliberately together. The SETTINGS of the
+ * networked loop (ADR 0012, spec §4.5): the brief, the allow-list, and the connection
+ * profile -- request format, endpoint, model, authorization mode and the key, where the key
+ * goes straight to the Credential Manager and never into a config file (§6). And the MANUAL
+ * path, which REMAINS on equal footing: copy the prompt, carry it to whatever model the
+ * reader already uses, paste the answer back -- the path §11 has the Store reviewer walk
+ * with no key and no network, and the one ADR 0011 shipped alone in R0.
+ *
+ * WHOSE CONSENT GATES THE NETWORK. Nothing is sent from this panel; the [Generate]/[Fix]
+ * buttons live in the window's top strip and both go through the form's consent dialog
+ * (Store policy 10.5.2) before the loop is asked anything. The checkbox here is the visible
+ * state of that consent and the way to withdraw it.
  *
  * WHERE THE VERDICT COMES FROM. Not from here. `Insert into document` puts the cleaned draft
  * in the editor, and the editor's own render path -- one worker thread, as every engine call
@@ -41,12 +46,19 @@ interface
 
 uses
   Classes, SysUtils, Controls, StdCtrls, ExtCtrls, Grids, Graphics, Clipbrd,
-  Spintax, SpxStudio, SpxPrompt, SpxUi, SpxStrIds, SpxStrings;
+  Spintax, SpxStudio, SpxPrompt, SpxUi, SpxStrIds, SpxStrings, SpxLlm, SpxSecrets;
 
 type
-  (* What the panel needs from the form. Three narrow seams, and not one of them is an engine
+  (* What the panel needs from the form. Narrow seams, and not one of them is an engine
      call: the form owns the document, its locale, its variables and its diagnostics. *)
   TSpxAiInsertEvent = procedure(const AText: string) of object;
+  (* The profile changed in the panel: the form persists it and bumps the loop's revision. *)
+  TSpxAiProfileEvent = procedure(const AProfile: TSpxLlmProfile) of object;
+  (* The reader is turning sending ON. The FORM owns the consent dialog (Store policy
+     10.5.2: the opt-in describes the recipient), mutates the profile it is handed --
+     Network and ConsentOrigin -- and answers whether consent was given. The panel only
+     reflects the result. *)
+  TSpxAiConsentEvent = function(var AProfile: TSpxLlmProfile): Boolean of object;
 
   TSpxAiPane = class(TPanel)
   private
@@ -58,6 +70,38 @@ type
     FLevelLabel: TLabel;
     FLevel: TComboBox;
     FCopy: TButton;
+
+    (* ── the connection profile (R1-4, spec §4.5): two rows of settings under the top
+       strip. The KEY FIELD IS WRITE-ONLY: the secret is never read back into a control,
+       so nothing here can show or log it -- typing goes to the Credential Manager on
+       "attach" and the edit is cleared. What is DISPLAYED is only whether a key is
+       attached to the current endpoint, which KeyOrigin answers without touching the
+       store. `service-token` is deliberately not offered (§6 reserves it; showing it
+       would promise a managed endpoint that does not exist). ── *)
+    FProfA: TPanel;
+    FProfB: TPanel;
+    FConnLabel: TLabel;
+    FFormatLabel: TLabel;
+    FFormat: TComboBox;
+    FEndpointLabel: TLabel;
+    FEndpoint: TEdit;
+    FModelLabel: TLabel;
+    FModel: TEdit;
+    FAuthLabel: TLabel;
+    FAuth: TComboBox;
+    FKeyLabel: TLabel;
+    FKeyEdit: TEdit;
+    FKeySave: TButton;
+    FKeyForget: TButton;
+    FKeyState: TLabel;
+    FNetwork: TCheckBox;
+    FProfile: TSpxLlmProfile;
+    (* Set while SetProfile/Retranslate rewrite controls, so their change handlers do not
+       fire OnProfileChanged about an assignment the form itself just made. *)
+    FProfLoading: Boolean;
+    FOnProfileChanged: TSpxAiProfileEvent;
+    FOnEnableNetwork: TSpxAiConsentEvent;
+    FOnDeclChanged: TNotifyEvent;
 
     FLeft: TPanel;
     FBriefLabel: TLabel;
@@ -97,6 +141,15 @@ type
     procedure PlaceLabels;
     procedure FitColumns;
     function TextW(const S: string): Integer;
+    procedure ProfileUiChanged(Sender: TObject);
+    procedure FormatPicked(Sender: TObject);
+    procedure NetworkToggled(Sender: TObject);
+    procedure KeySaveClicked(Sender: TObject);
+    procedure KeyForgetClicked(Sender: TObject);
+    procedure ReadProfileUi;
+    procedure ShowKeyState;
+    procedure ShowNetworkState;
+    procedure AnnounceProfile;
   protected
     procedure Resize; override;
   public
@@ -130,11 +183,34 @@ type
        something they cannot see. *)
     procedure ResetDeclarations;
     procedure Retranslate;
+    (* ── the loop's seams (R1-4) ── *)
+    (* The saved profile, applied to the controls. The panel keeps its own copy; every edit
+       flows back through OnProfileChanged so the form remains the one that persists. *)
+    procedure SetProfile(const AProfile: TSpxLlmProfile);
+    function Profile: TSpxLlmProfile;
+    (* What a Generate request is built from -- the panel's own fields. *)
+    function Brief: string;
+    function Channel: TSpxChannel;
+    function Level: TSpxVariation;
+    function AllowedVars: TSpxAllowedVars;
+    (* A candidate the loop could not apply -- stale, degenerate, out of fix budget --
+       lands in the reply box, where the manual Insert/Replace buttons already know what
+       to do with it. Shown, never applied: that distinction is the loop's whole table. *)
+    procedure SetReply(const AText: string);
+    (* The manual path, reachable from the strip's ▾ menu as well as from this panel:
+       §11 has the reviewer check the product with no key and no network, and this is
+       that path. *)
+    procedure CopyPrompt;
     property OnInsert: TSpxAiInsertEvent read FOnInsert write FOnInsert;
     (* Fired for the SAME cleaned text as OnInsert. The two differ in what the window does
        with it, not in what the panel produces -- so a repair answer, which is the whole
        document, goes over the document instead of beside it. *)
     property OnReplace: TSpxAiInsertEvent read FOnReplace write FOnReplace;
+    property OnProfileChanged: TSpxAiProfileEvent read FOnProfileChanged write FOnProfileChanged;
+    property OnEnableNetwork: TSpxAiConsentEvent read FOnEnableNetwork write FOnEnableNetwork;
+    (* The allow-list changed -- a case picked, a note edited. Part of the loop's snapshot,
+       so the form bumps the revision on it. *)
+    property OnDeclChanged: TNotifyEvent read FOnDeclChanged write FOnDeclChanged;
   end;
 
 implementation
@@ -228,6 +304,117 @@ begin
   FCopy.Top := Px(Self, 4);
   FCopy.Height := Px(Self, 24);
   FCopy.OnClick := @CopyPromptClicked;
+
+  (* ── the connection profile, two rows under the top strip (R1-4) ──
+
+     THREE `alTop` SIBLINGS ARE ORDERED BY `Top`, NOT BY CREATION ORDER -- the same LCL rule
+     this file already states for `alLeft` and `alRight`. The numbers only state the order. *)
+  FProfA := TPanel.Create(Self);
+  FProfA.Parent := Self;
+  FProfA.Top := 5000;
+  FProfA.Align := alTop;
+  FProfA.Height := Px(Self, 30);
+  FProfA.BevelOuter := bvNone;
+
+  FConnLabel := TLabel.Create(Self);
+  FConnLabel.Parent := FProfA;
+  FConnLabel.Top := Px(Self, 7);
+  FConnLabel.Font.Style := [fsBold];
+
+  FFormatLabel := TLabel.Create(Self);
+  FFormatLabel.Parent := FProfA;
+  FFormatLabel.Top := Px(Self, 7);
+
+  FFormat := TComboBox.Create(Self);
+  FFormat.Parent := FProfA;
+  FFormat.Style := csDropDownList;
+  FFormat.Top := Px(Self, 3);
+  FFormat.Width := Px(Self, 150);
+  (* Item order IS the enum's ordinal, the same contract as the case picker's list. The
+     labels are the formats' own names, not translated -- a wire format is a proper noun. *)
+  FFormat.Items.Add('Anthropic Messages');
+  FFormat.Items.Add('OpenAI-compatible');
+  FFormat.ItemIndex := Ord(lkOpenAiCompatible);
+  FFormat.OnChange := @FormatPicked;
+
+  FEndpointLabel := TLabel.Create(Self);
+  FEndpointLabel.Parent := FProfA;
+  FEndpointLabel.Top := Px(Self, 7);
+
+  FEndpoint := TEdit.Create(Self);
+  FEndpoint.Parent := FProfA;
+  FEndpoint.Top := Px(Self, 3);
+  FEndpoint.OnEditingDone := @ProfileUiChanged;
+
+  FModelLabel := TLabel.Create(Self);
+  FModelLabel.Parent := FProfA;
+  FModelLabel.Top := Px(Self, 7);
+
+  FModel := TEdit.Create(Self);
+  FModel.Parent := FProfA;
+  FModel.Top := Px(Self, 3);
+  FModel.Width := Px(Self, 150);
+  FModel.OnEditingDone := @ProfileUiChanged;
+
+  FProfB := TPanel.Create(Self);
+  FProfB.Parent := Self;
+  FProfB.Top := 10000;
+  FProfB.Align := alTop;
+  FProfB.Height := Px(Self, 30);
+  FProfB.BevelOuter := bvNone;
+
+  FAuthLabel := TLabel.Create(Self);
+  FAuthLabel.Parent := FProfB;
+  FAuthLabel.Top := Px(Self, 7);
+
+  FAuth := TComboBox.Create(Self);
+  FAuth.Parent := FProfB;
+  FAuth.Style := csDropDownList;
+  FAuth.Top := Px(Self, 3);
+  FAuth.Width := Px(Self, 110);
+  FAuth.OnChange := @ProfileUiChanged;
+
+  FKeyLabel := TLabel.Create(Self);
+  FKeyLabel.Parent := FProfB;
+  FKeyLabel.Top := Px(Self, 7);
+
+  FKeyEdit := TEdit.Create(Self);
+  FKeyEdit.Parent := FProfB;
+  FKeyEdit.Top := Px(Self, 3);
+  FKeyEdit.Width := Px(Self, 160);
+  (* Write-only, and masked while it is written: the one moment the secret exists in a
+     control is between typing and "attach", and it is not readable off the screen even
+     then. `PasswordChar` is a single-byte Char, so the mask is the ASCII asterisk -- a
+     multi-byte bullet does not fit the property's type. *)
+  FKeyEdit.PasswordChar := '*';
+
+  FKeySave := TButton.Create(Self);
+  FKeySave.Parent := FProfB;
+  FKeySave.Top := Px(Self, 2);
+  FKeySave.Height := Px(Self, 25);
+  FKeySave.OnClick := @KeySaveClicked;
+
+  FKeyForget := TButton.Create(Self);
+  FKeyForget.Parent := FProfB;
+  FKeyForget.Top := Px(Self, 2);
+  FKeyForget.Height := Px(Self, 25);
+  FKeyForget.OnClick := @KeyForgetClicked;
+
+  FKeyState := TLabel.Create(Self);
+  FKeyState.Parent := FProfB;
+  FKeyState.Top := Px(Self, 7);
+
+  FNetwork := TCheckBox.Create(Self);
+  FNetwork.Parent := FProfB;
+  FNetwork.Top := Px(Self, 5);
+  (* A TCheckBox is BORN AutoSize, and PlaceLabels runs from Resize -- setting a width on an
+     auto-sized control from a resize path is the ChangeBounds loop the charter already paid
+     for twice, and it cost a startup dialog here too (measured: 204 vs 208, the auto-measure
+     and the bitmap measure disagreeing forever). *)
+  FNetwork.AutoSize := False;
+  FNetwork.OnChange := @NetworkToggled;
+
+  FProfile := SpxLlmDefaultProfile;
 
   (* ── the brief, the allow-list and the answer, side by side ── *)
 
@@ -376,7 +563,7 @@ end;
 procedure TSpxAiPane.PlaceLabels;
 
 var
-  x: Integer;
+  x, w: Integer;
 begin
   if FTop = nil then Exit;
 
@@ -389,6 +576,40 @@ begin
   FLevel.Left := x;        Inc(x, FLevel.Width + Px(Self, 16));
   FCopy.Left := x;
   FCopy.Width := TextW(FCopy.Caption) + Px(Self, 28);
+
+  (* ── the profile rows, the same rule: every caption hung off its field, measured. The
+     endpoint is the one field that stretches -- an address is the longest thing here and
+     the row's spare width belongs to it. ── *)
+  if FProfA = nil then Exit;
+
+  x := Px(Self, 8);
+  FConnLabel.Left := x;     Inc(x, TextW(FConnLabel.Caption) + Px(Self, 16));
+  FFormatLabel.Left := x;   Inc(x, TextW(FFormatLabel.Caption) + Px(Self, 6));
+  FFormat.Left := x;        Inc(x, FFormat.Width + Px(Self, 16));
+  FEndpointLabel.Left := x; Inc(x, TextW(FEndpointLabel.Caption) + Px(Self, 6));
+  FEndpoint.Left := x;
+  w := ClientWidth - x - Px(Self, 16) - TextW(FModelLabel.Caption) - Px(Self, 6)
+       - FModel.Width - Px(Self, 8);
+  if w < Px(Self, 120) then w := Px(Self, 120);
+  FEndpoint.Width := w;
+  Inc(x, w + Px(Self, 16));
+  FModelLabel.Left := x;    Inc(x, TextW(FModelLabel.Caption) + Px(Self, 6));
+  FModel.Left := x;
+
+  x := Px(Self, 8);
+  FAuthLabel.Left := x;  Inc(x, TextW(FAuthLabel.Caption) + Px(Self, 6));
+  FAuth.Left := x;       Inc(x, FAuth.Width + Px(Self, 16));
+  FKeyLabel.Left := x;   Inc(x, TextW(FKeyLabel.Caption) + Px(Self, 6));
+  FKeyEdit.Left := x;    Inc(x, FKeyEdit.Width + Px(Self, 8));
+  FKeySave.Left := x;
+  FKeySave.Width := TextW(FKeySave.Caption) + Px(Self, 20);
+  Inc(x, FKeySave.Width + Px(Self, 6));
+  FKeyForget.Left := x;
+  FKeyForget.Width := TextW(FKeyForget.Caption) + Px(Self, 20);
+  Inc(x, FKeyForget.Width + Px(Self, 12));
+  FKeyState.Left := x;   Inc(x, TextW(FKeyState.Caption) + Px(Self, 16));
+  FNetwork.Left := x;
+  FNetwork.Width := TextW(FNetwork.Caption) + Px(Self, 22);
 end;
 
 function TSpxAiPane.TextW(const S: string): Integer;
@@ -550,6 +771,11 @@ var
 begin
   r := FAllowed.Row;
   if (r < 1) or (r > High(FCases)) then Exit;
+  (* The allow-list is part of the loop's snapshot, so any finished edit -- a case picked, a
+     note typed -- tells the form, which bumps the revision. Over-announcing is safe (a stale
+     result is shown rather than applied); under-announcing is the race the revision exists
+     to close. *)
+  if Assigned(FOnDeclChanged) then FOnDeclChanged(Self);
   for k := Low(TSpxVarCase) to High(TSpxVarCase) do
     if FAllowed.Cells[COL_CASE, r] = Tr(CASE_IDS[k]) then
     begin
@@ -558,6 +784,219 @@ begin
     end;
   (* Not one of the seven: put back what was declared before the edit. *)
   FAllowed.Cells[COL_CASE, r] := Tr(CASE_IDS[FCases[r]]);
+end;
+
+(* ── the connection profile (R1-4) ── *)
+
+procedure TSpxAiPane.ReadProfileUi;
+begin
+  if FFormat.ItemIndex >= 0 then FProfile.Kind := TSpxLlmKind(FFormat.ItemIndex);
+  FProfile.Endpoint := Trim(FEndpoint.Text);
+  FProfile.Model := Trim(FModel.Text);
+  (* The auth combo offers two of the three modes (§6 reserves service-token). ItemIndex -1
+     -- a service-token profile from a later version's file -- leaves the mode untouched
+     rather than silently rewriting it to something weaker. *)
+  if FAuth.ItemIndex = 0 then FProfile.Auth := laNone
+  else if FAuth.ItemIndex = 1 then FProfile.Auth := laApiKey;
+end;
+
+procedure TSpxAiPane.ShowKeyState;
+begin
+  (* A service-token profile -- reachable only from a later version's or a hand-edited
+     file -- has no key path in R1: the attach controls store the BYOK namespace, the loop
+     reads the SERVICE one (§6 keeps them apart), so leaving them live would show "a key is
+     attached" about a slot the request never reads. Disabled, and the state line speaks
+     about the namespace this mode actually uses, which holds nothing. Found by Codex
+     review's second pass. *)
+  FKeyEdit.Enabled := FProfile.Auth <> laServiceToken;
+  FKeySave.Enabled := FProfile.Auth <> laServiceToken;
+  FKeyForget.Enabled := FProfile.Auth <> laServiceToken;
+  if FProfile.Auth = laServiceToken then FKeyState.Caption := Tr(sAiKeyMissing)
+  else if FProfile.KeyOrigin = '' then FKeyState.Caption := Tr(sAiKeyMissing)
+  else if SpxLlmKeyAttached(FProfile) then FKeyState.Caption := Tr(sAiKeyStored)
+  else FKeyState.Caption := Tr(sAiKeyDetached);
+  FKeyState.Hint := FKeyState.Caption;
+  FKeyState.ShowHint := True;
+end;
+
+procedure TSpxAiPane.ShowNetworkState;
+var
+  was: Boolean;
+begin
+  (* Written under the loading flag: assigning Checked fires OnChange, and this is a VIEW
+     of the profile, not an edit of it. *)
+  was := FProfLoading;
+  FProfLoading := True;
+  FNetwork.Checked := SpxLlmConsentInForce(FProfile);
+  FProfLoading := was;
+end;
+
+procedure TSpxAiPane.AnnounceProfile;
+begin
+  ShowKeyState;
+  ShowNetworkState;
+  PlaceLabels;
+  if (not FProfLoading) and Assigned(FOnProfileChanged) then FOnProfileChanged(FProfile);
+end;
+
+procedure TSpxAiPane.ProfileUiChanged(Sender: TObject);
+begin
+  if FProfLoading then Exit;
+  ReadProfileUi;
+  AnnounceProfile;
+end;
+
+procedure TSpxAiPane.FormatPicked(Sender: TObject);
+var
+  old: TSpxLlmKind;
+begin
+  if FProfLoading then Exit;
+  old := FProfile.Kind;
+  (* A reader who never typed an address meant the picked format's usual one, so the
+     endpoint follows -- but only while it still IS the other format's default (or empty).
+     A typed address is the reader's and is never rewritten. *)
+  if (Trim(FEndpoint.Text) = '') or (Trim(FEndpoint.Text) = SpxLlmDefaultEndpoint(old)) then
+  begin
+    FProfLoading := True;
+    if FFormat.ItemIndex >= 0 then
+      FEndpoint.Text := SpxLlmDefaultEndpoint(TSpxLlmKind(FFormat.ItemIndex));
+    FProfLoading := False;
+  end;
+  ReadProfileUi;
+  AnnounceProfile;
+end;
+
+procedure TSpxAiPane.NetworkToggled(Sender: TObject);
+begin
+  if FProfLoading then Exit;
+  ReadProfileUi;
+  if FNetwork.Checked then
+  begin
+    (* ON goes through the form's consent dialog (Store policy 10.5.2): the event mutates
+       Network and ConsentOrigin only on an OK. Refused -- or nobody listening -- the box
+       goes straight back off; a tick that stays on without a grant would be the checkbox
+       claiming a consent nobody gave. *)
+    if Assigned(FOnEnableNetwork) and FOnEnableNetwork(FProfile) then
+    begin
+      AnnounceProfile;
+      Exit;
+    end;
+    FProfile.Network := False;
+    ShowNetworkState;
+    Exit;
+  end;
+  (* OFF is the reader's to do freely -- the "way to turn it off" the consent text names. *)
+  FProfile.Network := False;
+  FProfile.ConsentOrigin := '';
+  AnnounceProfile;
+end;
+
+procedure TSpxAiPane.KeySaveClicked(Sender: TObject);
+var
+  origin: string;
+begin
+  ReadProfileUi;
+  if Trim(FKeyEdit.Text) = '' then
+  begin
+    Say(Tr(sAiKeyMissing));
+    Exit;
+  end;
+  (* No valid origin, no grant: a key attached to an unparseable address is a key that can
+     never be sent and never be detached by an address CHANGE, which is the rule doing the
+     protecting. The key stays in the field so fixing the endpoint and pressing attach again
+     is one step, not a retype. *)
+  origin := SpxLlmOrigin(FProfile.Endpoint);
+  if origin = '' then
+  begin
+    Say(Tr(sAiKeyMissing));
+    ShowKeyState;
+    Exit;
+  end;
+  if SpxSecretStore(skByokKey, FProfile.Id, Trim(FKeyEdit.Text)) then
+  begin
+    FKeyEdit.Text := '';
+    FProfile.KeyOrigin := origin;
+    Say(Tr(sAiKeyStored));
+    AnnounceProfile;
+  end
+  else
+    (* An OS-level refusal, rare enough to show as the component and its code -- a number,
+       never a value. *)
+    Say('Credential Manager: ' + IntToStr(SpxSecretsLastError));
+end;
+
+procedure TSpxAiPane.KeyForgetClicked(Sender: TObject);
+begin
+  if SpxSecretForget(skByokKey, FProfile.Id) then
+  begin
+    FProfile.KeyOrigin := '';
+    Say(Tr(sAiKeyMissing));
+    AnnounceProfile;
+  end
+  else
+    Say('Credential Manager: ' + IntToStr(SpxSecretsLastError));
+end;
+
+procedure TSpxAiPane.SetProfile(const AProfile: TSpxLlmProfile);
+begin
+  FProfile := AProfile;
+  (* An empty id would file the key under `byok/` -- one slot for every profile a hand-edited
+     file can invent. The default name is the floor. *)
+  if Trim(FProfile.Id) = '' then FProfile.Id := SpxLlmDefaultProfile.Id;
+  FProfLoading := True;
+  try
+    FFormat.ItemIndex := Ord(FProfile.Kind);
+    FEndpoint.Text := FProfile.Endpoint;
+    FModel.Text := FProfile.Model;
+    case FProfile.Auth of
+      laNone: FAuth.ItemIndex := 0;
+      laApiKey: FAuth.ItemIndex := 1;
+    else
+      (* service-token: recognised in the file, not offered here (§6) -- shown as no
+         selection rather than silently rewritten to a different mode. *)
+      FAuth.ItemIndex := -1;
+    end;
+    FNetwork.Checked := SpxLlmConsentInForce(FProfile);
+    ShowKeyState;
+  finally
+    FProfLoading := False;
+  end;
+  PlaceLabels;
+end;
+
+function TSpxAiPane.Profile: TSpxLlmProfile;
+begin
+  Result := FProfile;
+end;
+
+function TSpxAiPane.Brief: string;
+begin
+  Result := FBrief.Text;
+end;
+
+function TSpxAiPane.Channel: TSpxChannel;
+begin
+  Result := TSpxChannel(FChannel.ItemIndex);
+end;
+
+function TSpxAiPane.Level: TSpxVariation;
+begin
+  Result := TSpxVariation(FLevel.ItemIndex);
+end;
+
+function TSpxAiPane.AllowedVars: TSpxAllowedVars;
+begin
+  Result := CollectVars;
+end;
+
+procedure TSpxAiPane.SetReply(const AText: string);
+begin
+  FReply.Text := AText;
+end;
+
+procedure TSpxAiPane.CopyPrompt;
+begin
+  CopyPromptClicked(nil);
 end;
 
 procedure TSpxAiPane.CopyPromptClicked(Sender: TObject);
@@ -696,6 +1135,41 @@ begin
   FInsert.Width := TextW(FInsert.Caption) + Px(Self, 28);
   FReplace.Width := TextW(FReplace.Caption) + Px(Self, 28);
   FRepair.Width := TextW(FRepair.Caption) + Px(Self, 28);
+
+  (* the profile rows. The auth list is rebuilt like the pickers below it; the MODE is
+     FProfile.Auth and the combo is a view of it, so a language switch cannot reset it. *)
+  if FProfA <> nil then
+  begin
+    FConnLabel.Caption := Tr(sAiConn);
+    FFormatLabel.Caption := Tr(sAiFormat);
+    FEndpointLabel.Caption := Tr(sAiEndpoint);
+    FModelLabel.Caption := Tr(sAiModel);
+    FAuthLabel.Caption := Tr(sAiAuthMode);
+    FKeyLabel.Caption := Tr(sAiKey);
+    FKeySave.Caption := Tr(sAiKeySave);
+    FKeyForget.Caption := Tr(sAiKeyForget);
+    FNetwork.Caption := Tr(sAiNetwork);
+    FProfLoading := True;
+    try
+      FAuth.Items.BeginUpdate;
+      try
+        FAuth.Items.Clear;
+        FAuth.Items.Add(Tr(sAiAuthNone));
+        FAuth.Items.Add(Tr(sAiAuthKey));
+      finally
+        FAuth.Items.EndUpdate;
+      end;
+      case FProfile.Auth of
+        laNone: FAuth.ItemIndex := 0;
+        laApiKey: FAuth.ItemIndex := 1;
+      else
+        FAuth.ItemIndex := -1;
+      end;
+      ShowKeyState;
+    finally
+      FProfLoading := False;
+    end;
+  end;
 
   (* Rebuild the lists in the new language WITHOUT losing what is selected -- the choice is the
      reader's and is not a string. *)

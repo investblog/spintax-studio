@@ -139,7 +139,47 @@ const
       'instrumental',
       'prepositivo',
       'Substituir o documento',
-      'Documento substituído. O veredicto está no painel de diagnósticos.'
+      'Documento substituído. O veredicto está no painel de diagnósticos.',
+
+      (* R1-4: the loop in the window (spec §4.5). Portuguese shares one word for the
+         template and the LLM ("modelo"), so what is sent is "o pedido" and "o modelo"
+         stays the LLM alone. *)
+      'Corrigir',
+      'Definições de IA…',
+      'parado',
+      'a consultar o modelo…',
+      'o motor verifica o rascunho…',
+      'tentativa de correção %d de %d',
+      'Sem erros, mas parte dos renders de teste sai vazia — verifique as formas do plural. O rascunho está no painel de IA, não aplicado.',
+      'O rascunho está limpo, mas um fragmento incluído tem um erro. Corrija esse ficheiro — regenerar não o repara.',
+      'Restam %d erros após %d tentativas de correção. O rascunho está no painel de IA, não aplicado.',
+      'O documento mudou enquanto a resposta vinha a caminho. O rascunho está no painel de IA, não aplicado.',
+      'Este perfil autentica-se e nenhuma chave está anexada. Introduza a chave no painel de IA.',
+      'O endpoint pede para usar outro endereço (%s). Não foi seguido; mude o perfil se for intencional.',
+      'Http em claro para lá desta máquina enviaria a chave e o texto às claras. Use https.',
+      'O endpoint recusou a chave. Verifique-a no painel de IA.',
+      'O endpoint comunica um limite de pedidos ou uma quota esgotada. Tente mais tarde.',
+      'O pedido é mais longo do que este modelo aceita.',
+      'O pedido não passou: %s',
+      'O endpoint respondeu, mas numa forma que esta aplicação não consegue ler: %s',
+      'A resposta não trazia nenhum modelo.',
+      'O endpoint comunica: %s',
+      'Ligação',
+      'Formato',
+      'Endpoint',
+      'Modelo',
+      'Autorização',
+      'nenhuma',
+      'Chave API',
+      'Chave',
+      'Anexar a chave',
+      'Esquecer a chave',
+      'há uma chave anexada a este endpoint',
+      'nenhuma chave anexada',
+      'o endpoint mudou — introduza a chave de novo para a anexar ao novo endereço',
+      'Envio permitido',
+      'Enviar para este endpoint?',
+      '«Gerar» e «Corrigir» enviam o resumo, o modelo atual e as variáveis declaradas para o endpoint deste perfil:'#10'%s'#10#10'Com autorização por chave API, a chave viaja nos cabeçalhos do pedido. Nada mais é enviado em nenhum outro momento, e o endereço nunca muda sozinho: um redirecionamento é recusado e mostrado. O que o software nesse endereço faz com o texto depende do seu operador.'#10#10'Pode desligar isto a qualquer momento nas definições de IA.'
   );
 
 implementation

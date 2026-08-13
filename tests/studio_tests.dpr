@@ -5444,6 +5444,175 @@ end;
    what a given account returns today. They are PARSED rather than compared byte for byte, so
    their line endings do not matter; that is why this directory has no `-text` rule while
    `tests/fixtures/prompt-v2` does. *)
+(* THE CONNECTION PROFILE (R1-4): its words, its origin rule, and its grants.
+
+   THE WORDS ARE THE FILE FORMAT. `ai.kind` and `ai.auth` are stored as words because this
+   project has already paid for an enum stored by ordinal ("wrote 3, read back 2" when the
+   enum gained a member) -- so the exact words are pinned here: renaming one is a settings
+   MIGRATION, not a cleanup.
+
+   THE ORIGIN IS THE RECIPIENT. One `openai-compatible` profile is OpenAI, OpenRouter,
+   Ollama and any gateway; edit the endpoint and a key granted "to the profile" would go to
+   a new recipient -- the followed-redirect defect with our own hands on the wheel. So the
+   key grant and the consent grant are both comparisons of NORMALISED ORIGINS
+   (scheme+host+port), and every rule below is one direction of that: a path change is the
+   same recipient, a scheme, host or port change is a different one. *)
+procedure TestLlmProfile;
+var
+  p: TSpxLlmProfile;
+  path: string;
+  prefs, back: TSpxPrefs;
+  f: TStringList;
+  k, k2: TSpxLlmKind;
+  a, a2: TSpxLlmAuth;
+begin
+  { every word round-trips, and an unknown word is refused rather than guessed }
+  for k := Low(TSpxLlmKind) to High(TSpxLlmKind) do
+  begin
+    CheckTrue('llm-profile/kind-word-round-trips-' + SpxLlmKindWord(k),
+      SpxLlmKindFromWord(SpxLlmKindWord(k), k2) and (k2 = k));
+    CheckTrue('llm-profile/kind-word-is-a-word-' + SpxLlmKindWord(k),
+      SpxLlmKindWord(k) <> '?');
+  end;
+  for a := Low(TSpxLlmAuth) to High(TSpxLlmAuth) do
+  begin
+    CheckTrue('llm-profile/auth-word-round-trips-' + SpxLlmAuthWord(a),
+      SpxLlmAuthFromWord(SpxLlmAuthWord(a), a2) and (a2 = a));
+    CheckTrue('llm-profile/auth-word-is-a-word-' + SpxLlmAuthWord(a),
+      SpxLlmAuthWord(a) <> '?');
+  end;
+  CheckTrue('llm-profile/nonsense-kind-is-refused', not SpxLlmKindFromWord('basic', k2));
+  CheckTrue('llm-profile/nonsense-auth-is-refused', not SpxLlmAuthFromWord('bearer', a2));
+  Check('llm-profile/auth-words-are-pinned',
+    SpxLlmAuthWord(laNone) + '|' + SpxLlmAuthWord(laApiKey) + '|' +
+    SpxLlmAuthWord(laServiceToken),
+    'none|api-key|service-token');
+  Check('llm-profile/kind-words-are-pinned',
+    SpxLlmKindWord(lkAnthropic) + '|' + SpxLlmKindWord(lkOpenAiCompatible),
+    'anthropic|openai-compatible');
+
+  { the origin: scheme+host+port, lowercased, default ports written out, path ignored }
+  Check('llm-origin/https-default-port',
+    SpxLlmOrigin('https://API.Anthropic.com/v1/messages'), 'https://api.anthropic.com:443');
+  Check('llm-origin/http-default-port',
+    SpxLlmOrigin('http://example.com/x'), 'http://example.com:80');
+  Check('llm-origin/explicit-port',
+    SpxLlmOrigin('http://localhost:11434/v1/chat/completions'), 'http://localhost:11434');
+  Check('llm-origin/the-path-does-not-participate',
+    SpxLlmOrigin('https://host.example:8443/v1/messages'),
+    SpxLlmOrigin('https://host.example:8443/other/path?q=1'));
+  Check('llm-origin/garbage-is-empty', SpxLlmOrigin('not a url at all'), '');
+  Check('llm-origin/empty-is-empty', SpxLlmOrigin(''), '');
+  { The parser strips an IPv6 literal's brackets; the origin puts them back, because the
+    consent dialog SHOWS this string as the recipient and `http://::1:11434` is not an
+    address anyone can read or re-enter. }
+  Check('llm-origin/ipv6-keeps-its-brackets',
+    SpxLlmOrigin('http://[::1]:11434/v1/chat/completions'), 'http://[::1]:11434');
+
+  { the default profile can send nothing: no auth, no consent, and the localhost preset --
+    which spec §4.5 calls a convenience address, never a privacy claim }
+  p := SpxLlmDefaultProfile;
+  Check('llm-profile/default-id', p.Id, 'default');
+  CheckTrue('llm-profile/default-grants-nothing',
+    (p.Auth = laNone) and (not p.Network) and (p.KeyOrigin = '') and (p.ConsentOrigin = ''));
+  Check('llm-profile/default-endpoint-is-the-localhost-preset',
+    p.Endpoint, 'http://localhost:11434/v1/chat/completions');
+
+  { the key grant follows the origin }
+  p.Endpoint := 'https://api.example.com/v1/chat/completions';
+  p.Auth := laApiKey;
+  p.KeyOrigin := SpxLlmOrigin(p.Endpoint);
+  CheckTrue('llm-key/attached-to-its-own-origin', SpxLlmKeyAttached(p));
+  p.Endpoint := 'https://api.example.com/other/path';
+  CheckTrue('llm-key/a-path-change-does-not-detach', SpxLlmKeyAttached(p));
+  p.Endpoint := 'HTTPS://API.EXAMPLE.COM/v1/chat/completions';
+  CheckTrue('llm-key/case-is-not-a-different-recipient', SpxLlmKeyAttached(p));
+  p.Endpoint := 'http://api.example.com/v1/chat/completions';
+  CheckTrue('llm-key/a-scheme-change-detaches', not SpxLlmKeyAttached(p));
+  p.Endpoint := 'https://api.example.com:8443/v1/chat/completions';
+  CheckTrue('llm-key/a-port-change-detaches', not SpxLlmKeyAttached(p));
+  p.Endpoint := 'https://api.other.com/v1/chat/completions';
+  CheckTrue('llm-key/a-host-change-detaches', not SpxLlmKeyAttached(p));
+  p.Endpoint := 'https://api.example.com/v1/chat/completions';
+  p.KeyOrigin := '';
+  CheckTrue('llm-key/no-grant-no-attachment', not SpxLlmKeyAttached(p));
+  p.Endpoint := 'not a url at all';
+  CheckTrue('llm-key/an-unreadable-address-attaches-nothing', not SpxLlmKeyAttached(p));
+
+  { consent is the same comparison, gated by the flag }
+  p := SpxLlmDefaultProfile;
+  p.Endpoint := 'https://api.example.com/v1';
+  p.Network := True;
+  p.ConsentOrigin := SpxLlmOrigin(p.Endpoint);
+  CheckTrue('llm-consent/in-force-for-its-origin', SpxLlmConsentInForce(p));
+  p.Endpoint := 'https://api.other.com/v1';
+  CheckTrue('llm-consent/lapses-when-the-recipient-changes', not SpxLlmConsentInForce(p));
+  p.Endpoint := 'https://api.example.com/v1';
+  p.Network := False;
+  CheckTrue('llm-consent/off-is-off-whatever-the-origin', not SpxLlmConsentInForce(p));
+
+  { the settings round trip, and the words IN THE FILE }
+  path := IncludeTrailingPathDelimiter(GetTempDir) + 'spx-prefs-ai-test.txt';
+  if FileExists(path) then DeleteFile(path);
+  f := TStringList.Create;
+  try
+    prefs := SpxDefaultPrefs;
+    prefs.Ai.Kind := lkAnthropic;
+    prefs.Ai.Endpoint := 'https://api.anthropic.com/v1/messages';
+    prefs.Ai.Model := 'claude-sonnet-5';
+    prefs.Ai.Auth := laApiKey;
+    prefs.Ai.Network := True;
+    prefs.Ai.ConsentOrigin := 'https://api.anthropic.com:443';
+    prefs.Ai.KeyOrigin := 'https://api.anthropic.com:443';
+    CheckTrue('llm-profile/saving-says-it-worked', SpxSavePrefsTo(path, prefs));
+    back := SpxLoadPrefsFrom(path);
+    CheckTrue('llm-profile/kind-survives', back.Ai.Kind = lkAnthropic);
+    Check('llm-profile/endpoint-survives', back.Ai.Endpoint, prefs.Ai.Endpoint);
+    Check('llm-profile/model-survives', back.Ai.Model, prefs.Ai.Model);
+    CheckTrue('llm-profile/auth-survives', back.Ai.Auth = laApiKey);
+    CheckTrue('llm-profile/consent-survives',
+      back.Ai.Network and (back.Ai.ConsentOrigin = prefs.Ai.ConsentOrigin));
+    Check('llm-profile/key-origin-survives', back.Ai.KeyOrigin, prefs.Ai.KeyOrigin);
+    Check('llm-profile/id-survives', back.Ai.Id, 'default');
+    f.LoadFromFile(path);
+    CheckTrue('llm-profile/the-file-says-the-word-not-the-ordinal',
+      Pos('ai.auth=api-key', f.Text) > 0);
+    { the file's shape is part of §6: identity and grants only, no key-shaped line at all }
+    CheckTrue('llm-profile/no-secret-shaped-key-in-the-file', Pos('ai.key=', f.Text) = 0);
+
+    { the reserved mode round-trips even though no window offers it (§6): read back as a
+      WEAKER mode it would either stop authenticating or send the reader's BYOK key to an
+      endpoint expecting our service token }
+    f.Text := 'ai.auth=service-token';
+    f.SaveToFile(path);
+    CheckTrue('llm-profile/service-token-is-recognised',
+      SpxLoadPrefsFrom(path).Ai.Auth = laServiceToken);
+
+    { an unknown word leaves the DEFAULT, not the enum's first member: FromWord writes its
+      out-parameter even when it answers False, and assigning straight through it would have
+      turned every unknown kind into an Anthropic profile -- the default kind is deliberately
+      NOT the enum's first member, so this check can tell the two apart }
+    f.Text := 'ai.kind=grpc' + LineEnding + 'ai.auth=basic';
+    f.SaveToFile(path);
+    back := SpxLoadPrefsFrom(path);
+    CheckTrue('llm-profile/an-unknown-kind-keeps-the-default',
+      back.Ai.Kind = SpxDefaultPrefs.Ai.Kind);
+    CheckTrue('llm-profile/an-unknown-auth-keeps-the-default',
+      back.Ai.Auth = SpxDefaultPrefs.Ai.Auth);
+
+    { an R0 file -- no ai.* keys at all -- reads as the default profile: no network, no
+      grants. Nothing a reader had before this slice can switch the network on. }
+    f.Text := 'lang=ru';
+    f.SaveToFile(path);
+    back := SpxLoadPrefsFrom(path);
+    CheckTrue('llm-profile/an-r0-file-reads-as-no-network',
+      (not back.Ai.Network) and (back.Ai.Auth = laNone) and (back.Ai.KeyOrigin = ''));
+  finally
+    f.Free;
+    if FileExists(path) then DeleteFile(path);
+  end;
+end;
+
 procedure TestLlm;
 var
   cfg: TSpxLlmConfig;
@@ -10560,6 +10729,7 @@ begin
   TestLocalityWords;
   TestHttp;
   TestLlm;
+  TestLlmProfile;
   TestSecrets;
   TestAbout;
   TestGsaImport;

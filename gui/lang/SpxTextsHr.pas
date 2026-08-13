@@ -140,7 +140,46 @@ const
       'instrumental',
       'lokativ',
       'Zamijeni dokument',
-      'Dokument je zamijenjen. Presuda je u ploči dijagnostike.'
+      'Dokument je zamijenjen. Presuda je u ploči dijagnostike.',
+
+      (* R1-4: the loop in the window (spec §4.5). "Motor" is the engine -- the word the
+         Croatian help uses throughout. *)
+      'Popravi',
+      'Postavke AI-ja…',
+      'zaustavljeno',
+      'upit modelu…',
+      'motor provjerava nacrt…',
+      'pokušaj popravka %d od %d',
+      'Nema grešaka, ali dio probnih rendera izlazi prazan — provjerite oblike množine. Nacrt je u AI ploči, nije primijenjen.',
+      'Nacrt je čist, ali uključeni fragment sadrži grešku. Popravite tu datoteku — ponovno generiranje to ne može.',
+      'Ostaje %d grešaka nakon %d pokušaja popravka. Nacrt je u AI ploči, nije primijenjen.',
+      'Dokument se promijenio dok je odgovor putovao. Nacrt je u AI ploči, nije primijenjen.',
+      'Ovaj se profil autentificira, a ključ nije privezan. Unesite ključ u AI ploči.',
+      'Endpoint traži drugu adresu (%s). Nije slijeđena; promijenite profil ako je to namjerno.',
+      'Otvoreni http izvan ovog računala poslao bi ključ i tekst u čistom obliku. Koristite https.',
+      'Endpoint je odbio ključ. Provjerite ga u AI ploči.',
+      'Endpoint javlja ograničenje zahtjeva ili iscrpljenu kvotu. Pokušajte kasnije.',
+      'Upit je dulji nego što ovaj model prihvaća.',
+      'Zahtjev nije prošao: %s',
+      'Endpoint je odgovorio, ali u obliku koji ova aplikacija ne može pročitati: %s',
+      'Odgovor nije nosio nikakav predložak.',
+      'Endpoint javlja: %s',
+      'Veza',
+      'Format',
+      'Endpoint',
+      'Model',
+      'Autorizacija',
+      'nema',
+      'API ključ',
+      'Ključ',
+      'Priveži ključ',
+      'Zaboravi ključ',
+      'ključ je privezan uz ovaj endpoint',
+      'ključ nije privezan',
+      'endpoint se promijenio — unesite ključ ponovno da ga privežete uz novu adresu',
+      'Slanje dopušteno',
+      'Slati na ovaj endpoint?',
+      '"Generiraj" i "Popravi" šalju zadatak, trenutačni predložak i deklarirane varijable na endpoint ovog profila:'#10'%s'#10#10'Uz autorizaciju API ključem ključ putuje u zaglavljima zahtjeva. Ništa se ne šalje ni u kojem drugom trenutku, a adresa se nikad ne mijenja sama: preusmjeravanje se odbija i prikazuje. Što softver na toj adresi radi s tekstom, određuje njegov operater.'#10#10'Ovo možete isključiti u bilo kojem trenutku u postavkama AI-ja.'
   );
 
 implementation

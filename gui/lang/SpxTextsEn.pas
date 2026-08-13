@@ -144,7 +144,47 @@ const
       'instrumental',
       'prepositional',
       'Replace the document',
-      'Document replaced. The diagnostics panel has the verdict.'
+      'Document replaced. The diagnostics panel has the verdict.',
+
+      (* R1-4: the loop in the window. The recipient is "this endpoint" -- an address the
+         reader configured -- and no sentence here claims to know what the software at that
+         address does or where it runs (spec §4.5). *)
+      'Fix',
+      'AI settings…',
+      'stopped',
+      'asking the model…',
+      'checking the draft with the engine…',
+      'fix attempt %d of %d',
+      'No errors, but some test renders come out empty — check the plural forms. The draft is in the AI panel, not applied.',
+      'The draft is clean, but an included fragment has an error. Fix that file — regenerating the template cannot.',
+      '%d errors remain after %d fix attempts. The draft is in the AI panel, not applied.',
+      'The document changed while the answer was on its way. The draft is in the AI panel, not applied.',
+      'This profile authenticates, and no key is attached. Enter the key in the AI panel.',
+      'The endpoint asks to go to a different address (%s). It was not followed; change the profile if that is intended.',
+      'Plain http off this machine would send the key and the text in clear. Use https.',
+      'The endpoint refused the key. Check it in the AI panel.',
+      'The endpoint reports a rate limit or an exhausted quota. Try again later.',
+      'The prompt is longer than this model accepts.',
+      'The request did not go through: %s',
+      'The endpoint answered, but not in a form this application can read: %s',
+      'The answer carried no template.',
+      'The endpoint reports: %s',
+      'Connection',
+      'Format',
+      'Endpoint',
+      'Model',
+      'Authorization',
+      'none',
+      'API key',
+      'Key',
+      'Attach key',
+      'Forget key',
+      'a key is attached to this endpoint',
+      'no key attached',
+      'the endpoint changed — enter the key again to attach it to the new address',
+      'Sending allowed',
+      'Send to this endpoint?',
+      'Generate and Fix send the brief, the current template and the declared variables to the endpoint of this profile:'#10'%s'#10#10'With API-key authorization the key travels in the request headers. Nothing is sent at any other moment, and the address never changes on its own: a redirect is refused and shown. What the software at that address does with the text is up to its operator.'#10#10'You can turn this off at any time in the AI settings.'
   );
 
 implementation

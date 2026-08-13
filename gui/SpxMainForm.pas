@@ -24,7 +24,8 @@ uses
   Buttons,
   Clipbrd, Graphics, LCLType, LCLIntf, Themes,
   SynEdit, SynEditTypes, SynEditWrappedView, SynEditMarkup, SynEditMarkupBracket,
-  SpxStudio, SpxTokens, SpxEngineThread, SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
+  SpxStudio, SpxTokens, SpxPrompt, SpxEngineThread, SpxLlm, SpxLlmThread, SpxSecrets,
+  SpxSynHighlighter, SpxBracketMarkup, SpxDiagMarkup,
   SpxToolRail, SpxGroupPane, SpxHelpPane, SpxHelpTopics, SpxHelpText, SpxHelpNav, SpxAboutForm,
   SpxGroups, SpxIcons, SpxSevIcons, SpxFlags, SpxSegmented, SpxCompanyMark, SpxGsaImport,
   SpxSettings, SpxTheme, SpxEditorFont,
@@ -48,6 +49,12 @@ const
   RAIL_GROUP = 4;
 
 type
+  { Which loop revision a posted render job's Text was read under -- see FLoopSourceRev. }
+  TSpxPostedRev = record
+    Id: Int64;
+    Rev: Int64;
+  end;
+
   TSpxMainForm = class(TForm)
   private
     FTop: TPanel;
@@ -225,6 +232,36 @@ type
     FEngine: TSpxEngineThread;
     FNextId: Int64;
     FLastShown: Int64;
+    (* ── the authoring loop (R1-4) ── *)
+    { The loop's thread. Created right after the engine -- it takes over the engine's
+      OnVerify -- and torn down in StopEngine, in the order its Create documents. }
+    FLoop: TSpxAuthoringLoop;
+    FLoopNextId: Int64;
+    { An op is in flight: Generate wears its Stop face, Fix and the ▾ menu wait. }
+    FLoopBusy: Boolean;
+    { The document and the rows a Fix request is built from -- taken as a PAIR from one
+      TSpxJobResult (its Source and its Rows), never the text from the editor and the rows
+      from an older answer: a pair of different ages quotes spans that point at other
+      characters. Help results do not overwrite them. }
+    FLoopSource: string;
+    FLoopRows: TSpxPanelRows;
+    { THE PAIR'S OWN AGE, as a loop revision. The pair lags the editor by one render on
+      purpose, so a Fix must not borrow the CURRENT revision -- an edit made after this
+      pair's render would bump the revision, the loop would repair the OLD text, and the
+      final check would happily apply it over the NEWER document (found by Codex review).
+      Recorded at the moment each render job is POSTED -- the same moment its Text is read
+      -- and looked up by job id when the result lands. }
+    FLoopSourceRev: Int64;
+    FPostedRevs: array of TSpxPostedRev;
+    { What the last snapshot's locale was, so SettingChanged can tell a locale change --
+      which invalidates the loop -- from a seed tick, which does not. }
+    FLoopLocale: string;
+    FGenerate: TButton;
+    FGenMenuBtn: TButton;
+    FFix: TButton;
+    FGenMenu: TPopupMenu;
+    FGenMenuSettings: TMenuItem;
+    FGenMenuCopy: TMenuItem;
     { The document on disk. FPath is '' until it has been saved once, and that is what makes
       the template set empty and every `#include` verbatim -- the engine's own behaviour
       without a resolver, not a placeholder. FEol and FTrailingEol are the file's own shape,
@@ -414,6 +451,30 @@ type
     { The AI panel's one request of this form: put a cleaned draft in the editor. }
     procedure AiInsert(const AText: string);
     procedure AiReplace(const AText: string);
+    { ── the authoring loop (R1-4) ── }
+    procedure GenerateClicked(Sender: TObject);
+    procedure GenMenuBtnClicked(Sender: TObject);
+    procedure GenMenuSettingsClicked(Sender: TObject);
+    procedure GenMenuCopyClicked(Sender: TObject);
+    procedure FixClicked(Sender: TObject);
+    procedure StartLoopOp(AOp: TSpxLoopOp);
+    { The consent dialog (Store policy 10.5.2): names the recipient, what travels and how to
+      turn it off. Mutates the profile's Network/ConsentOrigin only on an OK. Also the
+      panel's OnEnableNetwork handler -- one dialog, both routes in. }
+    function EnsureAiConsent(var AProfile: TSpxLlmProfile): Boolean;
+    procedure AiProfileChanged(const AProfile: TSpxLlmProfile);
+    procedure AiDeclChanged(Sender: TObject);
+    procedure LoopProgress(const P: TSpxLoopProgress);
+    procedure LoopResult(const R: TSpxLoopResult);
+    { Every route that moves the loop's snapshot: revision bump plus the buttons' state,
+      in one word so a new route cannot take one and forget the other. }
+    procedure LoopSnapshotMoved;
+    { Widths measured offscreen -- BuildUi and RetranslateUi only; UpdateAiButtons is cheap
+      enough to run per keystroke and must be, because the Fix button's enabled state
+      follows the revision. }
+    procedure SizeAiButtons;
+    procedure UpdateAiButtons;
+    function LoopErrSentence(AErr: TSpxLlmError; const ADetail: string): string;
     procedure GroupPaneClosed(Sender: TObject);
     procedure FontAutoClicked(Sender: TObject);
     procedure FontPicked(Sender: TObject);
@@ -579,6 +640,11 @@ begin
   FEngine := TSpxEngineThread.Create(@JobDone);
   { Only now: BuildUi has run, so the panel exists, and so does the thread. }
   FEngine.OnBatch := @BatchProgress;
+  { The loop, right after the engine whose OnVerify it takes over. Torn down in StopEngine
+    in the order TSpxAuthoringLoop.Create documents: loop joined first, engine freed before
+    the loop object. }
+  FLoop := TSpxAuthoringLoop.Create(FEngine, @LoopProgress, @LoopResult);
+  FLoopLocale := CurrentLocale;
   { `spintax-studio path\to\file.spintax` -- what a double-click in Explorer sends once the
     extension is associated, and the only way to open a document without a dialog. }
   if (ParamCount >= 1) and FileExists(ParamStr(1)) then LoadDocument(ParamStr(1))
@@ -781,6 +847,34 @@ begin
   FModes.OnChange := @PreviewModeChanged;
   FCopy.OnClick := @CopyClicked;
 
+  (* ── [Generate ▾] [Fix] (R1-4, spec §3). Captions are measured in RetranslateUi and the
+     Generate slot is sized for the WIDER of its two faces (Generate/Stop), so the busy
+     swap moves nothing. Fix is enabled only while the document has its own error rows --
+     the enabled state itself says when the button is for. ── *)
+  FGenerate := TButton.Create(Self);
+  FGenerate.Parent := FTop;
+  FGenerate.OnClick := @GenerateClicked;
+
+  FGenMenuBtn := TButton.Create(Self);
+  FGenMenuBtn.Parent := FTop;
+  FGenMenuBtn.Caption := '▾';
+  FGenMenuBtn.OnClick := @GenMenuBtnClicked;
+
+  FFix := TButton.Create(Self);
+  FFix.Parent := FTop;
+  FFix.Enabled := False;
+  FFix.OnClick := @FixClicked;
+
+  FGenMenu := TPopupMenu.Create(Self);
+  FGenMenuSettings := TMenuItem.Create(FGenMenu);
+  FGenMenuSettings.OnClick := @GenMenuSettingsClicked;
+  FGenMenu.Items.Add(FGenMenuSettings);
+  FGenMenuCopy := TMenuItem.Create(FGenMenu);
+  FGenMenuCopy.OnClick := @GenMenuCopyClicked;
+  FGenMenu.Items.Add(FGenMenuCopy);
+  SizeAiButtons;
+  UpdateAiButtons;
+
   { The three bottom-aligned strips are ordered by their Top, not by the order they are
     created in -- larger Top sits closer to the bottom edge -- so the order is stated
     instead of hoped for. Without it the status bar came out ABOVE the tab strip, and the
@@ -890,6 +984,9 @@ begin
   FAi.Align := alClient;
   FAi.OnInsert := @AiInsert;
   FAi.OnReplace := @AiReplace;
+  FAi.OnProfileChanged := @AiProfileChanged;
+  FAi.OnEnableNetwork := @EnsureAiConsent;
+  FAi.OnDeclChanged := @AiDeclChanged;
   { The worker's own event is NOT hooked here: BuildUi runs before the engine exists, and
     the first version of this line dereferenced nil at startup -- an access violation before
     the window ever appeared. It is set in the constructor, right after the thread. }
@@ -1343,6 +1440,12 @@ begin
   FCopy.Visible := not helpMode;
   FModes.Visible := not helpMode;
   FPartial.Visible := (not helpMode) and FPartialShown;
+  if FGenerate <> nil then
+  begin
+    FGenerate.Visible := not helpMode;
+    FGenMenuBtn.Visible := not helpMode;
+    FFix.Visible := not helpMode;
+  end;
   FHelpClose.Visible := helpMode;
   { THE RAIL IS WHAT GOES, NOT THE HEADER. Its tools are the document's -- the three panels and
     the group under the caret -- and none of them is about the page the reader is on, so while
@@ -1393,6 +1496,19 @@ begin
     if FPartial.Visible then PlaceRight(FPartial, FPartial.Width, Px(Self, 16), Px(Self, 11));
     PlaceRight(FCopy, Px(Self, 30), Px(Self, 26), Px(Self, 6));
     PlaceRight(FReroll, Px(Self, 30), Px(Self, 26), Px(Self, 6));
+    { The loop's three, right of the seed group (the plan's slot): visually
+      [Generate][▾][Fix], so placed right-to-left as Fix, ▾, Generate. Widths were set by
+      RetranslateUi -- the Generate slot for the wider of its two faces, so the busy swap
+      moves nothing. }
+    if FGenerate <> nil then
+    begin
+      PlaceRight(FFix, FFix.Width, Px(Self, 26), Px(Self, 6));
+      PlaceRight(FGenMenuBtn, Px(Self, 20), Px(Self, 26), Px(Self, 6));
+      { ▾ is part of the Generate button, not a neighbour: take most of the gap back so the
+        pair reads as one control. }
+      Inc(right_, Px(Self, 6));
+      PlaceRight(FGenerate, FGenerate.Width, Px(Self, 26), Px(Self, 6));
+    end;
     { Skipped rather than placed off-screen, so the controls to its left close the gap -- the
       same way the fragment caption already comes and goes. }
     if FSeedEdit.Visible then PlaceRight(FSeedEdit, Px(Self, 70), Px(Self, 24), Px(Self, 7));
@@ -3246,6 +3362,8 @@ end;
 
 procedure TSpxMainForm.RuntimeChanged(Sender: TObject);
 begin
+  { Session values are part of the loop's snapshot -- a verify runs under them. }
+  LoopSnapshotMoved;
   { Through the debounce, not straight to a render: the grid reports every CHARACTER typed
     into a value, and a session value is part of the validation cache's key -- so each one
     would re-validate every file in the closure, which is the exact cost the cache exists to
@@ -3304,6 +3422,8 @@ begin
   { Another document's variables are not this one's, however they are spelled. Before the
     render, so the refresh does not carry the old declarations over one more time. }
   FAi.ResetDeclarations;
+  { A wholesale Text assignment does not reach EditorChanged, so the loop is told here. }
+  LoopSnapshotMoved;
   UpdateCaption;
   RequestRender;
 end;
@@ -3347,6 +3467,11 @@ begin
   { Saved: the folder may now hold a file it did not before, and this document's own saved
     copy has just changed under whatever else includes it. }
   FReloadSet := True;
+  { The loop's verify context just moved too -- FPath decides the include folder and
+    FGsaDoc the post-processing mode, and both were snapshotted by any op in flight. A
+    verdict computed under the old folder must not be applied under the new one. Found by
+    Codex review. }
+  LoopSnapshotMoved;
   UpdateCaption;
   RequestRender;
   Result := True;
@@ -3384,6 +3509,8 @@ begin
   FReloadSet := True;
   { As in LoadDocument: an empty document declares nothing. }
   FAi.ResetDeclarations;
+  { And as in LoadDocument: the assignment above never reached EditorChanged. }
+  LoopSnapshotMoved;
   UpdateCaption;
   RequestRender;
 end;
@@ -3417,6 +3544,10 @@ procedure TSpxMainForm.ReloadSetClicked(Sender: TObject);
 begin
   StopBatchForDocument;
   FReloadSet := True;
+  { The reader just said the fragments on disk changed -- a verify running against the old
+    set must not deliver an applicable verdict about the new one. Same rule as SaveDocument,
+    found by Codex review's second pass. }
+  LoopSnapshotMoved;
   RequestRender;
 end;
 
@@ -3432,6 +3563,12 @@ end;
 
 procedure TSpxMainForm.EditorChanged(Sender: TObject);
 begin
+  { The document is part of the loop's snapshot; every edit that reaches this handler bumps
+    the revision -- and the Fix button follows it, because its rows now describe the
+    previous text. Wholesale Text assignments do NOT reach this handler (measured, twice),
+    which is why LoadDocument, NewClicked, AiInsert/AiReplace, SaveDocument and the GSA
+    import move the snapshot on their own. }
+  LoopSnapshotMoved;
   { WHERE THE LAST `#/` IS -- pushed on every keystroke, not on the debounced render, because
     SynEdit repaints on its own schedule and a stale answer here is a visibly wrong colour.
     One walk of the line list, which is the same order of work as the repaint it feeds; the
@@ -3462,6 +3599,8 @@ begin
     project have been a handler firing while the window was still being built. The locale box
     is created before its OnChange is hooked, so this is not reachable today -- and that is
     exactly the kind of ordering that a later edit breaks silently. }
+  SizeAiButtons;     { captions, widths and menu items of the loop's three, in one place }
+  UpdateAiButtons;
   if (FSeeded = nil) or (FBottom = nil) or (FDiag = nil) or (FVars = nil) or
      (FSet = nil) or (FPreview = nil) then Exit;
   FSeeded.Caption := Tr(sSeed);
@@ -3558,6 +3697,13 @@ end;
 
 procedure TSpxMainForm.SettingChanged(Sender: TObject);
 begin
+  { The LOCALE is part of the loop's snapshot; the seed is not -- a verify never reads it.
+    This handler serves both controls, so the locale is compared rather than assumed. }
+  if (FLoop <> nil) and (CurrentLocale <> FLoopLocale) then
+  begin
+    FLoopLocale := CurrentLocale;
+    LoopSnapshotMoved;
+  end;
   { The number belongs to the tick beside it. }
   if (FSeedEdit <> nil) and (FSeedEdit.Visible <> FSeeded.Checked) then
   begin
@@ -3695,6 +3841,15 @@ begin
   FShownAsk := SpxPreviewAsk(CurrentSelection(False), FJump);
   job.Fragment := SpxPreviewFragment(CurrentSelection(True), FJump, FJump);
   FEngine.Post(job);
+  { Which loop revision this job's Text was read under -- looked up by id when the result
+    lands, so the Fix pair knows its own age (see FLoopSourceRev). Recorded HERE, at the
+    post, because this is the one moment the text and the revision are read together. }
+  if FLoop <> nil then
+  begin
+    SetLength(FPostedRevs, Length(FPostedRevs) + 1);
+    FPostedRevs[High(FPostedRevs)].Id := job.Id;
+    FPostedRevs[High(FPostedRevs)].Rev := FLoop.Revision;
+  end;
 end;
 
 procedure TSpxMainForm.StartBatch(Count: Integer; SeedBase: LongWord;
@@ -3941,6 +4096,10 @@ begin
     Without it the window came back in the language stored last time WITH follow ticked and
     the locale box on something else -- the one combination follow mode exists to prevent. }
   if FLangFollow then ApplyLangMode;
+  { The connection profile, restored into the panel. The panel keeps its own copy and every
+    later edit flows back through AiProfileChanged, so this is the one write in this
+    direction. }
+  FAi.SetProfile(FPrefs.Ai);
   BuildMenu;
 end;
 
@@ -4477,6 +4636,12 @@ begin
   FEditor.Modified := True;
   FEditor.CaretXY := Point(1, 1);
   FReloadSet := True;
+  { Another document, the same two rules as LoadDocument: its variables are not the old
+    document's (the declared cases would otherwise be carried over BY NAME into prompts
+    about somebody else's text), and the wholesale assignment above never reached
+    EditorChanged, so the loop is told here. }
+  FAi.ResetDeclarations;
+  LoopSnapshotMoved;
   UpdateCaption;
   FVars.SetRuntimeValues(res.Vars);
 
@@ -4586,6 +4751,10 @@ begin
   finally
     FEditor.EndUpdate;
   end;
+  { Explicitly, not through hoping the edit path fires OnChange: the document just moved,
+    and an answer in flight is now about the previous one (found by Codex review for the
+    Replace side; both routes get the same rule). Over-invalidating is safe. }
+  LoopSnapshotMoved;
   FlashJumpLine;
   RequestRender;
 end;
@@ -4612,8 +4781,347 @@ begin
   { A wholesale change does not reach EditorChanged (measured, twice -- see the charter). }
   if FHighlighter <> nil then
     FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
+  { And so the loop is told here too: the pane's Replace button stays usable while an op
+    flies, and without this the op's clean result would keep the old revision and overwrite
+    the manual replacement at the final check. Found by Codex review. }
+  LoopSnapshotMoved;
   FEditor.CaretXY := Point(1, 1);
   RequestRender;
+end;
+
+{ ── the authoring loop (R1-4) ──────────────────────────────────────────────────────── }
+
+procedure TSpxMainForm.GenerateClicked(Sender: TObject);
+begin
+  { The busy face of this button IS the stop: one slot, two verbs, and the caption says
+    which -- the same shape as the variants panel's Go. }
+  if FLoopBusy then
+  begin
+    if FLoop <> nil then FLoop.Cancel;
+    Exit;
+  end;
+  StartLoopOp(loOpGenerate);
+end;
+
+procedure TSpxMainForm.FixClicked(Sender: TObject);
+begin
+  if FLoopBusy then Exit;
+  StartLoopOp(loOpFix);
+end;
+
+procedure TSpxMainForm.GenMenuBtnClicked(Sender: TObject);
+var
+  p: TPoint;
+begin
+  p := FGenMenuBtn.ClientToScreen(Point(0, FGenMenuBtn.Height));
+  FGenMenu.PopUp(p.X, p.Y);
+end;
+
+procedure TSpxMainForm.GenMenuSettingsClicked(Sender: TObject);
+begin
+  FRail.SetDown(RAIL_AI, True);
+  ShowPanel(RAIL_AI, True);
+end;
+
+procedure TSpxMainForm.GenMenuCopyClicked(Sender: TObject);
+begin
+  { The manual path, reachable from the strip: §11 has the reviewer walk the product with
+    no key and no network, and this is that path's front door. The panel says what happened
+    in its own status line, so it is shown too. }
+  FRail.SetDown(RAIL_AI, True);
+  ShowPanel(RAIL_AI, True);
+  FAi.CopyPrompt;
+end;
+
+function TSpxMainForm.EnsureAiConsent(var AProfile: TSpxLlmProfile): Boolean;
+var
+  origin: string;
+begin
+  Result := False;
+  origin := SpxLlmOrigin(AProfile.Endpoint);
+  { An address the parser cannot read is not a recipient a consent can name; the sentence
+    is the transport's, because that is where such an address would have died anyway. }
+  if origin = '' then
+  begin
+    SetStatusText(Format(Tr(sAiErrTransport), [AProfile.Endpoint]));
+    Exit;
+  end;
+  { The dialog names the recipient by its normalised origin -- what the grant is actually
+    FOR -- and the body says what travels, that the address cannot change behind the
+    reader's back, and how to turn it off (Store policy 10.5.2). }
+  if MessageDlg(Tr(sAiConsentTitle), Format(Tr(sAiConsentBody), [origin]),
+                mtConfirmation, [mbOK, mbCancel], 0) <> mrOK then Exit;
+  AProfile.Network := True;
+  AProfile.ConsentOrigin := origin;
+  Result := True;
+end;
+
+procedure TSpxMainForm.AiProfileChanged(const AProfile: TSpxLlmProfile);
+begin
+  { A LAPSED CONSENT STOPS THE FLIGHT FIRST -- before the settings write, before anything.
+    Invalidate keeps a result from being APPLIED; it does not stop an exchange already on
+    the wire, and withdrawing the 10.5.2 grant means "stop sending", not "discard the
+    answer". Cancel reaches mid-transfer (the transport reads the flag between reads), and
+    it goes ahead of SavePrefs because a disk write is milliseconds the exchange should not
+    get. This also fires when the ENDPOINT moves: the grant is per recipient, and the old
+    one has just stopped covering anything. Found by Codex review, the ordering by its
+    second pass. }
+  if (FLoop <> nil) and (not SpxLlmConsentInForce(AProfile)) then FLoop.Cancel;
+  FPrefs.Ai := AProfile;
+  SavePrefs;
+  { The profile is part of the loop's snapshot: an answer that flew under the old endpoint
+    or the old auth mode must not be applied as if nothing moved. }
+  LoopSnapshotMoved;
+end;
+
+procedure TSpxMainForm.AiDeclChanged(Sender: TObject);
+begin
+  LoopSnapshotMoved;
+end;
+
+function TSpxMainForm.LoopErrSentence(AErr: TSpxLlmError; const ADetail: string): string;
+begin
+  { Every member named, the else a fallback to the provider's own words -- the ErrName rule:
+    a member added tomorrow shows its Detail rather than borrowing another member's
+    sentence. }
+  case AErr of
+    leNoKey:       Result := Tr(sAiErrNoKey);
+    leRedirected:  Result := Format(Tr(sAiErrRedirected), [ADetail]);
+    leInsecure:    Result := Tr(sAiErrInsecure);
+    leAuth:        Result := Tr(sAiErrAuth);
+    leRateLimit:   Result := Tr(sAiErrRate);
+    leContext:     Result := Tr(sAiErrContext);
+    leTransport:   Result := Format(Tr(sAiErrTransport), [ADetail]);
+    leBadResponse: Result := Format(Tr(sAiErrBad), [ADetail]);
+    leEmpty:       Result := Tr(sAiErrEmpty);
+    leProvider:    Result := Format(Tr(sAiErrProvider), [ADetail]);
+    leCancelled:   Result := Tr(sAiStopped);
+    leNone:        Result := ADetail;
+  else
+    Result := ADetail;
+  end;
+end;
+
+procedure TSpxMainForm.SizeAiButtons;
+var
+  bmp: TBitmap;
+  w: Integer;
+begin
+  if FGenerate = nil then Exit;
+  { Measured offscreen, like every measured caption in this window. The Generate slot is
+    sized for the WIDER of its two faces, so the busy swap moves no neighbour. }
+  bmp := TBitmap.Create;
+  try
+    bmp.Canvas.Font.Assign(FGenerate.Font);
+    w := bmp.Canvas.TextWidth(Tr(sGenerate));
+    if bmp.Canvas.TextWidth(Tr(sStop)) > w then w := bmp.Canvas.TextWidth(Tr(sStop));
+    FGenerate.Width := w + Px(Self, 24);
+    FFix.Width := bmp.Canvas.TextWidth(Tr(sAiFix)) + Px(Self, 24);
+  finally
+    bmp.Free;
+  end;
+  FFix.Caption := Tr(sAiFix);
+  FGenMenuSettings.Caption := Tr(sAiSettings);
+  FGenMenuCopy.Caption := Tr(sAiCopyPrompt);
+end;
+
+procedure TSpxMainForm.UpdateAiButtons;
+begin
+  if FGenerate = nil then Exit;
+  if FLoopBusy then FGenerate.Caption := Tr(sStop) else FGenerate.Caption := Tr(sGenerate);
+  FGenMenuBtn.Enabled := not FLoopBusy;
+  { Enabled ONLY when there are error rows AND the pair they came in is the CURRENT
+    snapshot: after an edit the rows describe the previous text, and a Fix built from them
+    would repair a document the reader has already moved past. The next render re-enables
+    it -- the same 200 ms the preview already waits. }
+  FFix.Enabled := (not FLoopBusy) and (SpxLoopDocErrors(FLoopRows) > 0) and
+                  (FLoop <> nil) and (FLoopSourceRev = FLoop.Revision);
+end;
+
+procedure TSpxMainForm.LoopSnapshotMoved;
+begin
+  if FLoop <> nil then FLoop.Invalidate;
+  UpdateAiButtons;
+end;
+
+procedure TSpxMainForm.StartLoopOp(AOp: TSpxLoopOp);
+var
+  req: TSpxLoopRequest;
+  prof: TSpxLlmProfile;
+  key: string;
+  skind: TSpxSecretKind;
+begin
+  if (FLoop = nil) or FLoopBusy then Exit;
+  prof := FAi.Profile;
+
+  if AOp = loOpGenerate then
+  begin
+    if Trim(FAi.Brief) = '' then
+    begin
+      FRail.SetDown(RAIL_AI, True);
+      ShowPanel(RAIL_AI, True);
+      SetStatusText(Tr(sAiNeedBrief));
+      Exit;
+    end;
+  end
+  else
+  begin
+    if SpxLoopDocErrors(FLoopRows) = 0 then
+    begin
+      SetStatusText(Tr(sAiNoErrors));
+      Exit;
+    end;
+    { The pair must be the CURRENT snapshot's -- UpdateAiButtons already disables Fix while
+      it lags, so this is the belt to that suspender: a repair of the previous text must
+      not be built at all, not merely refused at apply time. Found by Codex review. }
+    if FLoopSourceRev <> FLoop.Revision then Exit;
+  end;
+
+  { THE CONSENT GATE, before anything else is even assembled (Store policy 10.5.2). It is
+    per RECIPIENT: consent given for one origin lapses the moment the endpoint names
+    another, and the dialog then describes the new one. }
+  if not SpxLlmConsentInForce(prof) then
+  begin
+    if not EnsureAiConsent(prof) then Exit;
+    FAi.SetProfile(prof);
+    AiProfileChanged(prof);
+  end;
+
+  req := Default(TSpxLoopRequest);
+  Inc(FLoopNextId);
+  req.Id := FLoopNextId;
+  req.Op := AOp;
+  req.Cfg.Kind := prof.Kind;
+  req.Cfg.Endpoint := prof.Endpoint;
+  req.Cfg.Model := prof.Model;
+  req.Cfg.Auth := prof.Auth;
+  if prof.Auth <> laNone then
+  begin
+    { The key goes only where it was granted: a stored key whose origin no longer matches
+      the endpoint is DETACHED -- never sent, and said so here rather than as a 401 from
+      whoever now answers that address. The loop preflights the same rule again; one rule,
+      two callers, no way past it. }
+    if not SpxLlmKeyAttached(prof) then
+    begin
+      FRail.SetDown(RAIL_AI, True);
+      ShowPanel(RAIL_AI, True);
+      if prof.KeyOrigin <> '' then SetStatusText(Tr(sAiKeyDetached))
+      else SetStatusText(Tr(sAiErrNoKey));
+      Exit;
+    end;
+    { EACH MODE READS ITS OWN NAMESPACE (§6): a service-token profile -- reachable from a
+      later version's or a hand-edited file, never from this window -- asks for the service
+      token, which R1 cannot store, and honestly answers "no credential". Read as skByokKey
+      it would have sent the reader's PROVIDER key to a managed endpoint as if it were our
+      token -- the exact merge the two namespaces exist to prevent. Found by Codex review. }
+    if prof.Auth = laServiceToken then skind := skServiceToken else skind := skByokKey;
+    if not SpxSecretRead(skind, prof.Id, key) then
+    begin
+      { Attached by our record, gone from the store -- deleted by hand in the Credential
+        Manager, or a fresh Windows profile. The message is "enter it again", not a 401. }
+      FRail.SetDown(RAIL_AI, True);
+      ShowPanel(RAIL_AI, True);
+      SetStatusText(Tr(sAiErrNoKey));
+      Exit;
+    end;
+    req.Cfg.ApiKey := key;
+  end;
+
+  req.Brief := FAi.Brief;
+  req.Channel := FAi.Channel;
+  req.Level := FAi.Level;
+  req.Allowed := FAi.AllowedVars;
+  { The fix pair, of ONE age: both halves came from the same TSpxJobResult (JobDone). }
+  req.DocText := FLoopSource;
+  req.Rows := FLoopRows;
+  { The verify context -- the same fields RequestRender assembles, for the same reasons. }
+  req.Locale := CurrentLocale;
+  if FPath = '' then
+  begin
+    req.SetFolder := '';
+    req.DocSlug := '';
+  end
+  else
+  begin
+    req.SetFolder := ExtractFilePath(FPath);
+    req.DocSlug := SpxSlugOf(FPath);
+  end;
+  req.Vars := FVars.RuntimeValues;
+  req.UiLang := SpxUiLang;
+  req.NoPostProcess := FGsaDoc;
+  req.Revision := FLoop.Revision;
+
+  FLoopBusy := True;
+  UpdateAiButtons;
+  SetStatusText(Tr(sAiAsking));
+  FLoop.Post(req);
+end;
+
+procedure TSpxMainForm.LoopProgress(const P: TSpxLoopProgress);
+var
+  s: string;
+begin
+  if P.Stage = lsAsking then s := Tr(sAiAsking) else s := Tr(sAiVerifying);
+  { "fix attempt 1 of 2" -- every round is the reader's money, counted out loud. Attempt 0
+    is the generate round and carries no counter. }
+  if P.Attempt > 0 then s := Format(Tr(sAiFixRound), [P.Attempt, P.Limit]) + ' — ' + s;
+  SetStatusText(s);
+end;
+
+procedure TSpxMainForm.LoopResult(const R: TSpxLoopResult);
+begin
+  FLoopBusy := False;
+  UpdateAiButtons;
+  case R.Outcome of
+    loClean:
+      { THE LAST CHECK RUNS HERE, on the main thread, right before applying -- Invalidate
+        and this delivery live on one thread, so `Loop.Revision = R.Revision` asked now
+        cannot be overtaken (the loop's contract, inherited from R1-3). The loop's own
+        checks narrow the window; this one closes it. }
+      if (FLoop <> nil) and (FLoop.Revision = R.Revision) then
+      begin
+        AiReplace(R.Text);
+        SetStatusText(Tr(sAiReplaced));
+      end
+      else
+      begin
+        FAi.SetReply(R.Text);
+        SetStatusText(Tr(sAiStale));
+      end;
+    loStale:
+      begin
+        FAi.SetReply(R.Text);
+        SetStatusText(Tr(sAiStale));
+      end;
+    loDegenerate:
+      begin
+        FAi.SetReply(R.Text);
+        SetStatusText(Tr(sAiDegenerate));
+      end;
+    loClosureError:
+      begin
+        FAi.SetReply(R.Text);
+        SetStatusText(Tr(sAiClosure));
+      end;
+    loStillInvalid:
+      begin
+        FAi.SetReply(R.Text);
+        SetStatusText(Format(Tr(sAiStillInvalid), [R.DocErrors, R.FixSpent]));
+      end;
+    loNothingToFix:
+      SetStatusText(Tr(sAiNoErrors));
+    loCancelled:
+      begin
+        { A round stopped mid-verify still carries its text; shown, never applied. }
+        if R.HaveText then FAi.SetReply(R.Text);
+        SetStatusText(Tr(sAiStopped));
+      end;
+    loProviderError:
+      SetStatusText(LoopErrSentence(R.LlmError, R.Detail));
+  else
+    { loNone is not an outcome the loop delivers; saying "stopped" beats saying nothing. }
+    SetStatusText(Tr(sAiStopped));
+  end;
 end;
 
 procedure TSpxMainForm.HelpPaneClosed(Sender: TObject);
@@ -4758,7 +5266,7 @@ begin
 end;
 
 procedure TSpxMainForm.JobDone(const Res: TSpxJobResult);
-var s: string;
+var s: string; i, n: Integer;
 begin
   { One worker renders one job at a time and delivers in the order it ran them, so an OLDER
     answer cannot arrive after a newer one. This comparison is that invariant written down,
@@ -4798,6 +5306,28 @@ begin
        this result may be one edit behind on purpose. *)
     FAi.SetDocument(Res.Source, Res.Rows);
     FAi.SetLocale(CurrentLocale);
+    (* The Fix pair, same rule and same source: the loop's repair request quotes spans of
+       exactly this text. A help result must not overwrite it -- its rows describe the
+       example, not the reader's document. The pair's AGE comes with it: the revision its
+       job was posted under, found by id in FPostedRevs, and every older entry is dropped
+       (ids are monotonic; entries for superseded jobs never get a result). *)
+    FLoopSource := Res.Source;
+    FLoopRows := Res.Rows;
+    for i := 0 to High(FPostedRevs) do
+      if FPostedRevs[i].Id = Res.Id then
+      begin
+        FLoopSourceRev := FPostedRevs[i].Rev;
+        Break;
+      end;
+    n := 0;
+    for i := 0 to High(FPostedRevs) do
+      if FPostedRevs[i].Id > Res.Id then
+      begin
+        FPostedRevs[n] := FPostedRevs[i];
+        Inc(n);
+      end;
+    SetLength(FPostedRevs, n);
+    UpdateAiButtons;
   end;
   (* AND NOT WHEN THE ANSWER IS ABOUT THE HELP. With the help open this job's text is the
      example under the caret -- or an empty string before anything is clicked, which counts as
@@ -4849,9 +5379,19 @@ end;
 procedure TSpxMainForm.StopEngine;
 begin
   if FEngine = nil then Exit;
+  { THE ORDER IS THE LOOP'S CONTRACT (TSpxAuthoringLoop.Create): the loop is JOINED first,
+    because its thread reads FEngine; the ENGINE is joined and freed before Loop.Free,
+    because its callback takes the loop's lock. Both WaitFor calls run on the main thread
+    and pump the Synchronize queue, so neither can deadlock on a delivery. }
+  if FLoop <> nil then
+  begin
+    FLoop.Shutdown;
+    FLoop.WaitFor;
+  end;
   FEngine.Shutdown;
   FEngine.WaitFor;
   FreeAndNil(FEngine);
+  FreeAndNil(FLoop);
 end;
 
 procedure TSpxMainForm.FormClosed(Sender: TObject; var CloseAction: TCloseAction);

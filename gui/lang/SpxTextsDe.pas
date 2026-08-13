@@ -148,7 +148,46 @@ const
       'Instrumental',
       'Präpositiv',
       'Dokument ersetzen',
-      'Dokument ersetzt. Das Urteil steht im Diagnosebereich.'
+      'Dokument ersetzt. Das Urteil steht im Diagnosebereich.',
+
+      (* R1-4: the loop in the window (spec §4.5). "Maschine" is the engine -- the word the
+         German help uses throughout; the computer is "Rechner" so the two cannot collide. *)
+      'Reparieren',
+      'KI-Einstellungen…',
+      'gestoppt',
+      'Anfrage an das Modell…',
+      'die Maschine prüft den Entwurf…',
+      'Reparaturversuch %d von %d',
+      'Keine Fehler, aber ein Teil der Proberenders kommt leer heraus — prüfen Sie die Pluralformen. Der Entwurf liegt im KI-Bereich, nicht übernommen.',
+      'Der Entwurf ist sauber, aber ein eingebundenes Fragment hat einen Fehler. Reparieren Sie jene Datei — Neugenerieren kann das nicht.',
+      '%d Fehler bleiben nach %d Reparaturversuchen. Der Entwurf liegt im KI-Bereich, nicht übernommen.',
+      'Das Dokument hat sich geändert, während die Antwort unterwegs war. Der Entwurf liegt im KI-Bereich, nicht übernommen.',
+      'Dieses Profil authentifiziert sich, und kein Schlüssel ist angeheftet. Geben Sie den Schlüssel im KI-Bereich ein.',
+      'Der Endpunkt verweist an eine andere Adresse (%s). Ihr wurde nicht gefolgt; ändern Sie das Profil, wenn das beabsichtigt ist.',
+      'Offenes http, das diesen Rechner verlässt, würde Schlüssel und Text im Klartext senden. Verwenden Sie https.',
+      'Der Endpunkt hat den Schlüssel abgelehnt. Prüfen Sie ihn im KI-Bereich.',
+      'Der Endpunkt meldet ein Anfragelimit oder ein erschöpftes Kontingent. Versuchen Sie es später.',
+      'Der Prompt ist länger, als dieses Modell annimmt.',
+      'Die Anfrage kam nicht durch: %s',
+      'Der Endpunkt hat geantwortet, aber in einer Form, die diese Anwendung nicht lesen kann: %s',
+      'Die Antwort enthielt keine Vorlage.',
+      'Der Endpunkt meldet: %s',
+      'Verbindung',
+      'Format',
+      'Endpunkt',
+      'Modell',
+      'Autorisierung',
+      'keine',
+      'API-Schlüssel',
+      'Schlüssel',
+      'Schlüssel anheften',
+      'Schlüssel vergessen',
+      'ein Schlüssel ist an diesen Endpunkt angeheftet',
+      'kein Schlüssel angeheftet',
+      'der Endpunkt hat sich geändert — geben Sie den Schlüssel erneut ein, um ihn an die neue Adresse anzuheften',
+      'Senden erlaubt',
+      'An diesen Endpunkt senden?',
+      '„Erzeugen“ und „Reparieren“ senden das Briefing, die aktuelle Vorlage und die deklarierten Variablen an den Endpunkt dieses Profils:'#10'%s'#10#10'Bei Autorisierung mit API-Schlüssel reist der Schlüssel in den Kopfzeilen der Anfrage. Zu keinem anderen Zeitpunkt wird etwas gesendet, und die Adresse ändert sich nie von selbst: eine Umleitung wird abgelehnt und angezeigt. Was die Software an jener Adresse mit dem Text tut, bestimmt ihr Betreiber.'#10#10'Sie können dies jederzeit in den KI-Einstellungen abschalten.'
   );
 
 implementation

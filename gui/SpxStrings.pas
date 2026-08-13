@@ -238,7 +238,22 @@ const
     0, 0, 0, 0, 0, 0, 0,
     { Replace, and what it says afterwards -- a button sized to its own text and a status
       line that spans the panel, so neither sits in a slot fixed at a number. }
-    0, 0
+    0, 0,
+
+    { R1-4. The strip's two buttons are MEASURED and the chain shifts around them (the same
+      rule as the segmented switch), the progress and outcome sentences go to the status bar
+      and the panel's status line, the profile labels are hung off their fields by
+      PlaceLabels, and the consent text is a message box -- so none of these sits in a slot
+      fixed at a number, and a budget here would fail a translation for no gain on screen.
+      Several outcome sentences carry %s or %d, which a budgeted string may not do at all. }
+    0, 0, 0,
+    0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

@@ -139,7 +139,47 @@ const
       'strumentale',
       'prepositivo',
       'Sostituisci il documento',
-      'Documento sostituito. Il verdetto è nel pannello delle diagnostiche.'
+      'Documento sostituito. Il verdetto è nel pannello delle diagnostiche.',
+
+      (* R1-4: the loop in the window (spec §4.5). Italian shares one word for the template
+         and the LLM ("modello"), so what is sent is "il prompt" and "il modello" stays the
+         LLM alone. *)
+      'Correggi',
+      'Impostazioni IA…',
+      'fermato',
+      'richiesta al modello…',
+      'il motore verifica la bozza…',
+      'tentativo di correzione %d di %d',
+      'Nessun errore, ma parte dei render di prova esce vuota — controllate le forme del plurale. La bozza è nel pannello IA, non applicata.',
+      'La bozza è pulita, ma un frammento incluso contiene un errore. Correggete quel file — rigenerare non può ripararlo.',
+      'Restano %d errori dopo %d tentativi di correzione. La bozza è nel pannello IA, non applicata.',
+      'Il documento è cambiato mentre la risposta era in viaggio. La bozza è nel pannello IA, non applicata.',
+      'Questo profilo si autentica e nessuna chiave è collegata. Inserite la chiave nel pannello IA.',
+      'L''endpoint chiede di rivolgersi a un altro indirizzo (%s). Non è stato seguito; cambiate il profilo se è voluto.',
+      'Http in chiaro oltre questa macchina invierebbe la chiave e il testo in chiaro. Usate https.',
+      'L''endpoint ha rifiutato la chiave. Controllatela nel pannello IA.',
+      'L''endpoint segnala un limite di richieste o una quota esaurita. Riprovate più tardi.',
+      'Il prompt è più lungo di quanto questo modello accetti.',
+      'La richiesta non è passata: %s',
+      'L''endpoint ha risposto, ma in una forma che questa applicazione non può leggere: %s',
+      'La risposta non conteneva alcun modello.',
+      'L''endpoint segnala: %s',
+      'Connessione',
+      'Formato',
+      'Endpoint',
+      'Modello',
+      'Autorizzazione',
+      'nessuna',
+      'Chiave API',
+      'Chiave',
+      'Collega la chiave',
+      'Dimentica la chiave',
+      'una chiave è collegata a questo endpoint',
+      'nessuna chiave collegata',
+      'l''endpoint è cambiato — inserite la chiave di nuovo per collegarla al nuovo indirizzo',
+      'Invio consentito',
+      'Inviare a questo endpoint?',
+      '"Genera" e "Correggi" inviano il brief, il modello attuale e le variabili dichiarate all''endpoint di questo profilo:'#10'%s'#10#10'Con l''autorizzazione a chiave API, la chiave viaggia nelle intestazioni della richiesta. Nient''altro viene inviato in nessun altro momento, e l''indirizzo non cambia mai da solo: un reindirizzamento viene rifiutato e mostrato. Ciò che il software a quell''indirizzo fa del testo dipende dal suo operatore.'#10#10'Potete disattivarlo in qualsiasi momento nelle impostazioni IA.'
   );
 
 implementation

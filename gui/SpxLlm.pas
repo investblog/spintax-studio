@@ -88,6 +88,32 @@ type
     TimeoutMs: Integer;   (* SpxHttp's default when zero *)
   end;
 
+  (* THE PROFILE AS IT IS SAVED -- identity and grants, no secret in it, ever.
+
+     THE KEY FOLLOWS THE PROFILE, NOT THE ADDRESS FIELD. One `openai-compatible` profile is
+     OpenAI, OpenRouter, Ollama and any gateway: edit the endpoint and a key stored "for the
+     profile" would quietly go to a new recipient -- the same defect as a followed redirect,
+     except this time the cause is ours. So the Credential Manager target is `byok/<Id>`, and
+     KeyOrigin records the NORMALISED ORIGIN (scheme+host+port, SpxLlmOrigin) the key was
+     entered for. A key whose origin no longer matches the endpoint's is DETACHED: it stays
+     stored, it is simply never sent, and the window asks for it to be entered again. Kept
+     rather than deleted so a typo in the endpoint field cannot destroy it.
+
+     THE CONSENT IS PER RECIPIENT for the same reason (Store policy 10.5.2: the opt-in
+     describes WHO receives the data). `Network = True` is only in force while ConsentOrigin
+     matches the endpoint's origin; change the address and the next send asks again, naming
+     the new recipient. *)
+  TSpxLlmProfile = record
+    Id: string;            (* stable; the Credential Manager slot is byok/<Id> *)
+    Kind: TSpxLlmKind;
+    Endpoint: string;
+    Model: string;
+    Auth: TSpxLlmAuth;
+    Network: Boolean;      (* the 10.5.2 opt-in, granted for ConsentOrigin *)
+    ConsentOrigin: string;
+    KeyOrigin: string;     (* origin the stored key was entered for; '' means no grant *)
+  end;
+
   TSpxLlmAnswer = record
     Error: TSpxLlmError;
     Text: string;         (* the model's reply, uncleaned -- SpxCleanModelTemplate is the caller's *)
@@ -102,6 +128,31 @@ const
   SPX_ANTHROPIC_VERSION = '2023-06-01';
 
 function SpxLlmDefaultEndpoint(AKind: TSpxLlmKind): string;
+
+(* The profile a fresh install has: the localhost preset (spec §4.5 -- a convenience address,
+   NOT a privacy guarantee), no credential, no consent. Nothing can be sent from it until the
+   reader grants both. *)
+function SpxLlmDefaultProfile: TSpxLlmProfile;
+
+(* The NORMALISED ORIGIN of a URL -- `scheme://host:port`, lowercased, default port written
+   out -- which is this unit's whole notion of "the same recipient". The path deliberately
+   does not participate: `/v1/chat/completions` and `/v1/messages` on one server are one
+   recipient. '' for anything SpxHttpParseUrl refuses, and '' never matches any grant. *)
+function SpxLlmOrigin(const AUrl: string): string;
+
+(* The words the settings file stores -- a WORD, never an ordinal: this project has already
+   paid for "wrote 3, read back 2" when an enum gained a member. FromWord answers False for
+   anything it does not recognise, so a half-written file falls back to the caller's default
+   instead of silently becoming a different mode. *)
+function SpxLlmKindWord(AKind: TSpxLlmKind): string;
+function SpxLlmKindFromWord(const AWord: string; out AKind: TSpxLlmKind): Boolean;
+function SpxLlmAuthWord(AAuth: TSpxLlmAuth): string;
+function SpxLlmAuthFromWord(const AWord: string; out AAuth: TSpxLlmAuth): Boolean;
+
+(* Whether the stored key / the recorded consent is IN FORCE for the endpoint the profile
+   names right now. Both are origin comparisons and nothing else -- see TSpxLlmProfile. *)
+function SpxLlmKeyAttached(const AProfile: TSpxLlmProfile): Boolean;
+function SpxLlmConsentInForce(const AProfile: TSpxLlmProfile): Boolean;
 
 (* The request body, as it will be sent. Separate so the suite can read it. *)
 function SpxLlmBuildBody(const ACfg: TSpxLlmConfig; const APrompt: TSpxBuiltPrompt): string;
@@ -135,6 +186,111 @@ begin
        somewhere they did not choose. *)
     Result := 'http://localhost:11434/v1/chat/completions';
   end;
+end;
+
+function SpxLlmDefaultProfile: TSpxLlmProfile;
+begin
+  Result := Default(TSpxLlmProfile);
+  (* One profile today, and its name is part of the Credential Manager target -- so it is a
+     constant word rather than something derived, for the reason SpxSettings pins its folder
+     name: a name that follows anything else moves the slot the key lives in. *)
+  Result.Id := 'default';
+  Result.Kind := lkOpenAiCompatible;
+  Result.Endpoint := SpxLlmDefaultEndpoint(lkOpenAiCompatible);
+  Result.Auth := laNone;
+end;
+
+function SpxLlmOrigin(const AUrl: string): string;
+var
+  host, path: string;
+  port: Integer;
+  secure: Boolean;
+begin
+  Result := '';
+  if SpxHttpParseUrl(AUrl, host, path, port, secure) <> heNone then Exit;
+  (* The parser lowercases the scheme and fills the default port in; the host is lowercased
+     here because DNS names compare case-insensitively and `API.Anthropic.com` must not read
+     as a different recipient than `api.anthropic.com`. An IPv6 literal comes back from the
+     parser WITHOUT its brackets and gets them back here: the origin is shown to the reader
+     as the recipient (the consent dialog), and `http://::1:11434` is not an address anyone
+     can read, let alone re-enter. Found by Codex review. *)
+  if secure then Result := 'https' else Result := 'http';
+  if Pos(':', host) > 0 then host := '[' + host + ']';
+  Result := Result + '://' + LowerCase(host) + ':' + IntToStr(port);
+end;
+
+function SpxLlmKindWord(AKind: TSpxLlmKind): string;
+begin
+  (* Every member named; the else is a COMPLAINT, not a guess -- `ErrName` ended with a
+     catch-all once and every member added after it read as the last one. A kind added
+     tomorrow answers '?', which fails the word round-trip by name instead of silently
+     writing another kind's word into the settings file. *)
+  case AKind of
+    lkAnthropic: Result := 'anthropic';
+    lkOpenAiCompatible: Result := 'openai-compatible';
+  else
+    Result := '?';
+  end;
+end;
+
+function SpxLlmKindFromWord(const AWord: string; out AKind: TSpxLlmKind): Boolean;
+var
+  k: TSpxLlmKind;
+begin
+  for k := Low(TSpxLlmKind) to High(TSpxLlmKind) do
+    if AWord = SpxLlmKindWord(k) then
+    begin
+      AKind := k;
+      Exit(True);
+    end;
+  AKind := Low(TSpxLlmKind);
+  Result := False;
+end;
+
+function SpxLlmAuthWord(AAuth: TSpxLlmAuth): string;
+begin
+  (* Same rule as SpxLlmKindWord: every member named, the else a complaint. *)
+  case AAuth of
+    laNone: Result := 'none';
+    laApiKey: Result := 'api-key';
+    laServiceToken: Result := 'service-token';
+  else
+    Result := '?';
+  end;
+end;
+
+function SpxLlmAuthFromWord(const AWord: string; out AAuth: TSpxLlmAuth): Boolean;
+var
+  a: TSpxLlmAuth;
+begin
+  (* `service-token` is recognised even though no window offers it (spec §6 reserves it):
+     a file written by a later version must not read back as a WEAKER mode -- mapped to
+     api-key it would send the reader's provider key to an endpoint expecting our token,
+     and mapped to none it would silently stop authenticating. *)
+  for a := Low(TSpxLlmAuth) to High(TSpxLlmAuth) do
+    if AWord = SpxLlmAuthWord(a) then
+    begin
+      AAuth := a;
+      Exit(True);
+    end;
+  AAuth := laNone;
+  Result := False;
+end;
+
+function SpxLlmKeyAttached(const AProfile: TSpxLlmProfile): Boolean;
+var
+  origin: string;
+begin
+  origin := SpxLlmOrigin(AProfile.Endpoint);
+  Result := (origin <> '') and (AProfile.KeyOrigin = origin);
+end;
+
+function SpxLlmConsentInForce(const AProfile: TSpxLlmProfile): Boolean;
+var
+  origin: string;
+begin
+  origin := SpxLlmOrigin(AProfile.Endpoint);
+  Result := AProfile.Network and (origin <> '') and (AProfile.ConsentOrigin = origin);
 end;
 
 function SpxLlmBuildBody(const ACfg: TSpxLlmConfig; const APrompt: TSpxBuiltPrompt): string;

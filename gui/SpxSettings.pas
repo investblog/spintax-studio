@@ -30,7 +30,7 @@ unit SpxSettings;
 interface
 
 uses
-  Classes, SysUtils, SpxEditorFont{$IFDEF WINDOWS}, Windirs{$ENDIF};
+  Classes, SysUtils, SpxEditorFont, SpxLlm{$IFDEF WINDOWS}, Windirs{$ENDIF};
 
 const
   (* THE HIGHEST PANEL INDEX THIS FILE WILL RESTORE, and it must be raised whenever the window
@@ -89,6 +89,13 @@ type
        the same shape as any other optional dialect, and the reason it is a SETTING rather
        than an always-visible action. *)
     GsaImport: Boolean;
+    (* THE CONNECTION PROFILE (spec §4.5) -- identity and grants only, never the key itself:
+       the key lives in the Windows Credential Manager under `byok/<Ai.Id>` (§6), and this
+       file is exactly the one people attach to bug reports. The auth mode and the request
+       format are stored as WORDS (`api-key`, `anthropic`), not ordinals: an enum that gains
+       a member must not renumber a saved choice. An old file without these keys reads back
+       as the default profile -- no network, no consent -- which is what R0 was. *)
+    Ai: TSpxLlmProfile;
   end;
 
 const
@@ -140,6 +147,7 @@ begin
   Result.HelpWidth := SPX_HELP_DEFAULT;
   { OFF. A reader who has never used GSA should not find its import in their File menu. }
   Result.GsaImport := False;
+  Result.Ai := SpxLlmDefaultProfile;
 end;
 
 function SpxConfigDir: string;
@@ -188,6 +196,7 @@ end;
 
 function SpxLoadPrefsFrom(const APath: string): TSpxPrefs;
 var lines: TStringList; i, at, n: Integer; line, key, val: string;
+    kind: TSpxLlmKind; auth: TSpxLlmAuth;
 begin
   Result := SpxDefaultPrefs;
   if not FileExists(APath) then Exit;
@@ -239,7 +248,31 @@ begin
       begin
         if val = 'dark' then Result.Theme := spxThemeDark
         else if val = 'light' then Result.Theme := spxThemeLight;
-      end;
+      end
+      { The connection profile. The words go through SpxLlm's own maps, and a word this build
+        does not recognise leaves the default in place -- the same fail-soft rule as every
+        other key, and the direction matters: an unknown AUTH word must not quietly become a
+        weaker mode. }
+      else if key = 'ai.profile' then
+      begin
+        if val <> '' then Result.Ai.Id := val;
+      end
+      else if key = 'ai.kind' then
+      begin
+        { Through a local, because FromWord writes its out-parameter even when it answers
+          False -- assigning straight into the profile would replace the default with the
+          enum's first member on any word this build does not know. }
+        if SpxLlmKindFromWord(val, kind) then Result.Ai.Kind := kind;
+      end
+      else if key = 'ai.endpoint' then Result.Ai.Endpoint := val
+      else if key = 'ai.model' then Result.Ai.Model := val
+      else if key = 'ai.auth' then
+      begin
+        if SpxLlmAuthFromWord(val, auth) then Result.Ai.Auth := auth;
+      end
+      else if key = 'ai.network' then Result.Ai.Network := ReadBool(val, Result.Ai.Network)
+      else if key = 'ai.consent.origin' then Result.Ai.ConsentOrigin := val
+      else if key = 'ai.key.origin' then Result.Ai.KeyOrigin := val;
       { An unknown key is left alone rather than reported: a file written by a later version
         must not lose its settings just because this one opened it. }
     end;
@@ -269,6 +302,15 @@ begin
     lines.Add('slide.width=' + IntToStr(APrefs.SlideWidth));
     lines.Add('help.width=' + IntToStr(APrefs.HelpWidth));
     if APrefs.Theme = spxThemeDark then lines.Add('theme=dark') else lines.Add('theme=light');
+    { The connection profile -- words, not ordinals, and no secret anywhere in this file. }
+    lines.Add('ai.profile=' + APrefs.Ai.Id);
+    lines.Add('ai.kind=' + SpxLlmKindWord(APrefs.Ai.Kind));
+    lines.Add('ai.endpoint=' + APrefs.Ai.Endpoint);
+    lines.Add('ai.model=' + APrefs.Ai.Model);
+    lines.Add('ai.auth=' + SpxLlmAuthWord(APrefs.Ai.Auth));
+    lines.Add('ai.network=' + WriteBool(APrefs.Ai.Network));
+    lines.Add('ai.consent.origin=' + APrefs.Ai.ConsentOrigin);
+    lines.Add('ai.key.origin=' + APrefs.Ai.KeyOrigin);
     try
       lines.SaveToFile(APath);
       Result := True;

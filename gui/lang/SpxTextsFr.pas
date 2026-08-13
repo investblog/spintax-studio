@@ -148,7 +148,47 @@ const
       'instrumental',
       'prépositionnel',
       'Remplacer le document',
-      'Document remplacé. Le verdict est dans le panneau des diagnostics.'
+      'Document remplacé. Le verdict est dans le panneau des diagnostics.',
+
+      (* R1-4: the loop in the window (spec §4.5). French shares one word for the template
+         and the LLM ("modèle"), so the sentences below say "l'invite" for what is sent and
+         keep "le modèle" for the LLM alone. *)
+      'Réparer',
+      'Réglages IA…',
+      'arrêté',
+      'requête au modèle…',
+      'le moteur vérifie le brouillon…',
+      'tentative de réparation %d sur %d',
+      'Aucune erreur, mais une partie des rendus d''essai ressort vide — vérifiez les formes du pluriel. Le brouillon est dans le panneau IA, non appliqué.',
+      'Le brouillon est propre, mais un fragment inclus contient une erreur. Corrigez ce fichier — régénérer ne le réparera pas.',
+      'Il reste %d erreurs après %d tentatives de réparation. Le brouillon est dans le panneau IA, non appliqué.',
+      'Le document a changé pendant que la réponse voyageait. Le brouillon est dans le panneau IA, non appliqué.',
+      'Ce profil s''authentifie, et aucune clé n''est rattachée. Saisissez la clé dans le panneau IA.',
+      'L''endpoint demande de passer par une autre adresse (%s). Elle n''a pas été suivie ; changez le profil si c''est voulu.',
+      'Du http en clair au-delà de cette machine enverrait la clé et le texte en clair. Utilisez https.',
+      'L''endpoint a refusé la clé. Vérifiez-la dans le panneau IA.',
+      'L''endpoint signale une limite de requêtes ou un quota épuisé. Réessayez plus tard.',
+      'L''invite est plus longue que ce que ce modèle accepte.',
+      'La requête n''est pas passée : %s',
+      'L''endpoint a répondu, mais sous une forme que cette application ne peut pas lire : %s',
+      'La réponse ne contenait aucun modèle.',
+      'L''endpoint signale : %s',
+      'Connexion',
+      'Format',
+      'Endpoint',
+      'Modèle',
+      'Autorisation',
+      'aucune',
+      'Clé API',
+      'Clé',
+      'Rattacher la clé',
+      'Oublier la clé',
+      'une clé est rattachée à cet endpoint',
+      'aucune clé rattachée',
+      'l''endpoint a changé — saisissez la clé à nouveau pour la rattacher à la nouvelle adresse',
+      'Envoi autorisé',
+      'Envoyer vers cet endpoint ?',
+      '« Générer » et « Réparer » envoient le brief, le modèle actuel et les variables déclarées à l''endpoint de ce profil :'#10'%s'#10#10'Avec l''autorisation par clé API, la clé voyage dans les en-têtes de la requête. Rien n''est envoyé à aucun autre moment, et l''adresse ne change jamais d''elle-même : une redirection est refusée et affichée. Ce que le logiciel à cette adresse fait du texte relève de son opérateur.'#10#10'Vous pouvez désactiver cela à tout moment dans les réglages IA.'
   );
 
 implementation

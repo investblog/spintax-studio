@@ -179,7 +179,28 @@ type
        last is a hidden mode -- the kind that gets reported as "it ate my document". Appended
        to the end of this enum on purpose: the language tables are `array[TSpxStr] of string`,
        so appending is the one edit the compiler checks for all fourteen at once. ── *)
-    sAiReplace, sAiReplaced
+    sAiReplace, sAiReplaced,
+
+    (* ── R1-4: THE LOOP REACHES THE WINDOW. `[Generate]` reuses sGenerate/sStop; everything
+       below is new, appended so the compiler checks all fourteen tables at once.
+
+       THE ERROR SENTENCES name every TSpxLlmError a reader can meet, one id per member --
+       the ErrName lesson from the other side: a shared "something went wrong" would send a
+       reader with an expired key to check their network. The three the plan demanded by name
+       are here (redirected, insecure, no-key), and a silent button would be worse than a
+       missing one.
+
+       THE PROFILE WORDS follow spec §4.5's vocabulary: the recipient is "this endpoint" --
+       an address the reader configured -- and no string below claims anything about what the
+       software at that address does or where it runs. ── *)
+    sAiFix, sAiSettings, sAiStopped,
+    sAiAsking, sAiVerifying, sAiFixRound,
+    sAiDegenerate, sAiClosure, sAiStillInvalid, sAiStale,
+    sAiErrNoKey, sAiErrRedirected, sAiErrInsecure, sAiErrAuth, sAiErrRate,
+    sAiErrContext, sAiErrTransport, sAiErrBad, sAiErrEmpty, sAiErrProvider,
+    sAiConn, sAiFormat, sAiEndpoint, sAiModel, sAiAuthMode, sAiAuthNone, sAiAuthKey,
+    sAiKey, sAiKeySave, sAiKeyForget, sAiKeyStored, sAiKeyMissing, sAiKeyDetached,
+    sAiNetwork, sAiConsentTitle, sAiConsentBody
   );
 
 implementation
