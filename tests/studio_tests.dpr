@@ -5641,6 +5641,19 @@ begin
     SpxLlmModelSuggestions(lkAnthropic)[2],
     'claude-opus-5|claude-sonnet-5|claude-haiku-4-5');
 
+  { the key-state hint: start, ellipsis, last four -- recognisable, unusable. A short key
+    shows only a four-character start (echoing most of itself would be the key), and
+    nothing shows nothing. }
+  Check('llm-key-hint/long-key-shows-start-and-tail',
+    SpxLlmKeyHint('sk-ant-api03-AAAAABBBBBCCCCCDDDDDwXyZ'),
+    'sk-ant-api03' + #$E2#$80#$A6 + 'wXyZ');
+  Check('llm-key-hint/short-key-shows-four',
+    SpxLlmKeyHint('abcdefghij'), 'abcd' + #$E2#$80#$A6);
+  { a fragment rule that can echo a whole tiny key is not a mask (Codex) }
+  Check('llm-key-hint/a-tiny-key-shows-only-the-ellipsis',
+    SpxLlmKeyHint('abc'), #$E2#$80#$A6);
+  Check('llm-key-hint/empty-shows-nothing', SpxLlmKeyHint('   '), '');
+
   { the default profile can send nothing: no auth, no consent, and the localhost preset --
     which spec §4.5 calls a convenience address, never a privacy claim }
   p := SpxLlmDefaultProfile;

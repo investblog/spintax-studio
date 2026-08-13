@@ -889,6 +889,8 @@ begin
 end;
 
 procedure TSpxAiPane.ShowKeyState;
+var
+  masked: string;
 begin
   (* A service-token profile -- reachable only from a later version's or a hand-edited
      file -- has no key path in R1: the attach controls store the BYOK namespace, the loop
@@ -901,7 +903,23 @@ begin
   FKeyForget.Enabled := FProfile.Auth <> laServiceToken;
   if FProfile.Auth = laServiceToken then FKeyState.Caption := Tr(sAiKeyMissing)
   else if FProfile.KeyOrigin = '' then FKeyState.Caption := Tr(sAiKeyMissing)
-  else if SpxLlmKeyAttached(FProfile) then FKeyState.Caption := Tr(sAiKeyStored)
+  else if SpxLlmKeyAttached(FProfile) then
+  begin
+    (* WHICH key, not merely that one exists (the owner's ask). The hint is read from the
+       store on each refresh and shown through SpxLlmKeyHint -- start, ellipsis, last
+       four: the dashboard fragment, recognisable and unusable. The FIELD stays
+       write-only; this is a caption, and the variable holding the secret is cleared the
+       line after. A store that no longer answers (deleted by hand, a fresh Windows
+       profile) falls back to the plain sentence -- the same honest state the loop would
+       later report as "enter it again". *)
+    if SpxSecretRead(skByokKey, FProfile.Id, masked) then
+    begin
+      FKeyState.Caption := SpxLlmKeyHint(masked) + ' — ' + Tr(sAiKeyStored);
+      masked := '';
+    end
+    else
+      FKeyState.Caption := Tr(sAiKeyStored);
+  end
   else FKeyState.Caption := Tr(sAiKeyDetached);
   FKeyState.Hint := FKeyState.Caption;
   FKeyState.ShowHint := True;

@@ -154,6 +154,13 @@ function SpxLlmAuthFromWord(const AWord: string; out AAuth: TSpxLlmAuth): Boolea
 function SpxLlmKeyAttached(const AProfile: TSpxLlmProfile): Boolean;
 function SpxLlmConsentInForce(const AProfile: TSpxLlmProfile): Boolean;
 
+(* WHAT THE KEY-STATE LINE MAY SHOW OF A STORED KEY: the beginning, an ellipsis, and the
+   last four -- the fragment every provider dashboard shows, enough to recognise WHICH key
+   is attached (the owner's ask: the beginnings are all alike, the tail tells them apart)
+   and not enough to use it. The SECRET stays write-only in the field; this is a caption.
+   Short keys show even less, and '' shows nothing. *)
+function SpxLlmKeyHint(const AKey: string): string;
+
 type
   TSpxModelSuggestions = array of string;
 
@@ -303,6 +310,22 @@ var
 begin
   origin := SpxLlmOrigin(AProfile.Endpoint);
   Result := AProfile.Network and (origin <> '') and (AProfile.ConsentOrigin = origin);
+end;
+
+function SpxLlmKeyHint(const AKey: string): string;
+const
+  ELLIPSIS = #$E2#$80#$A6;   (* U+2026, spelled in bytes: this unit is plain-FPC UTF-8 *)
+var
+  k: string;
+begin
+  k := Trim(AKey);
+  if k = '' then Exit('');
+  (* 12 + 4 around the ellipsis; anything at 20 or shorter shows only a four-character
+     start, and anything at 8 or shorter shows NOTHING but the ellipsis -- a fragment
+     rule that can echo a whole tiny key is not a mask (found by Codex review). *)
+  if Length(k) <= 8 then Exit(ELLIPSIS);
+  if Length(k) <= 20 then Exit(Copy(k, 1, 4) + ELLIPSIS);
+  Result := Copy(k, 1, 12) + ELLIPSIS + Copy(k, Length(k) - 3, 4);
 end;
 
 function SpxLlmModelSuggestions(AKind: TSpxLlmKind): TSpxModelSuggestions;
