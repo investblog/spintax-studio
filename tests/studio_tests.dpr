@@ -3242,6 +3242,20 @@ begin
   end;
 end;
 
+{ Occurrences of ANeedle in AHay, non-overlapping. }
+function CountPos(const ANeedle, AHay: string): Integer;
+var at: Integer;
+begin
+  Result := 0;
+  at := 1;
+  repeat
+    at := PosEx(ANeedle, AHay, at);
+    if at = 0 then Exit;
+    Inc(Result);
+    Inc(at, Length(ANeedle));
+  until False;
+end;
+
 procedure CheckManifestLanguages;
 const MANIFEST = 'packaging/AppxManifest.xml.in';
 var
@@ -3289,6 +3303,60 @@ begin
     CheckTrue('manifest/declares at least one language', declared.Count > 0);
     Check('manifest/declares every language the window speaks',
           declared.CommaText, wanted.CommaText);
+
+    { XML FORBIDS A DOUBLE HYPHEN INSIDE A COMMENT, and MakeAppx reports it as an "expected
+      '>'" at a column, which is how a prose dash in the languages comment cost a package
+      build (2026-08-14) despite the header saying, in as many words, that this file uses
+      commas. Checked by taking the comments OUT: every body between a `<!` opener and its
+      closer must be hyphen-pair-free (which also refuses a nested opener, whose `!` is
+      followed by the pair), and what remains outside must carry no pair and no unclosed
+      opener. Review round one showed the counting version blessed a nested opener, because
+      it raised both sides of the equation at once. }
+    one := s_;
+    at := Pos('<!--', one);
+    while at > 0 do
+    begin
+      stop := PosEx('-->', one, at + 4);
+      CheckTrue('manifest/every comment is closed', stop > 0);
+      if stop = 0 then Break;
+      CheckTrue('manifest/no double hyphen inside a comment',
+                CountPos('--', Copy(one, at + 4, stop - at - 4)) = 0);
+      { And no hyphen at the body's very end: `x--->` extracts a body of `x-`, pair-free,
+        yet XML forbids a comment ending in `-` and MakeAppx refuses it (review, round
+        two of this gate). }
+      CheckTrue('manifest/no hyphen closing a comment body',
+                (stop = at + 4) or (one[stop - 1] <> '-'));
+      Delete(one, at, stop - at + 3);
+      at := Pos('<!--', one);
+    end;
+    CheckTrue('manifest/no double hyphen outside a comment', CountPos('--', one) = 0);
+
+    { THE CAPABILITY PAIR, pinned exactly (N6, owner's decision 2026-08-09): runFullTrust is
+      what a packaged Win32 app is, and internetClient is deliberately declared though
+      technically unnecessary at medium IL, so the storefront says "uses your internet
+      connection" before anyone installs. Element STARTS are counted, in the Capabilities
+      block of the comment-stripped text -- review round one showed the naive version could
+      be fooled by a capability named inside a comment, or slip one past the count by
+      breaking the line before `Name`. A capability leaving OR arriving must come through
+      here, because a manifest edit is exactly where a line moves unnoticed. }
+    at := Pos('<Capabilities>', one);
+    stop := Pos('</Capabilities>', one);
+    CheckTrue('manifest/has one capabilities block', (at > 0) and (stop > at));
+    if (at > 0) and (stop > at) then
+    begin
+      one := Copy(one, at, stop - at);
+      CheckTrue('manifest/declares internetClient for the storefront',
+                Pos('<Capability Name="internetClient"', one) > 0);
+      CheckTrue('manifest/declares runFullTrust',
+                Pos('<rescap:Capability Name="runFullTrust"', one) > 0);
+      { Named counters missed what they did not name (review, round two: a
+        `<DeviceCapability>` or a `<uap:Capability>` could join while the named sum stayed
+        two), so the pin is on ELEMENTS of any name: the stripped block holds exactly three
+        `<` -- its own opening tag and the two self-closing children above. Anything
+        arriving, whatever it is called and however it wraps its lines, is a fourth. }
+      Check('manifest/exactly two elements inside Capabilities',
+            IntToStr(CountPos('<', one)), '3');
+    end;
   finally
     body.Free;
     wanted.Free;

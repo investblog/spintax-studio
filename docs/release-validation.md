@@ -1,7 +1,62 @@
 # Release validation
 
-Two records, newest first: `v0.1.1.0` was validated on 2026-08-08, `v0.1.0.0` (R0) on
+Three records, newest first: a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
+validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0.0` (R0) on
 2026-08-03 and published on 2026-08-04.
+
+---
+
+# Pre-tag check — 2026-08-14 (the first candidate that makes outgoing connections)
+
+**Not the formal record for the next version** — that one follows the convention below and
+runs against the exact artefact the next tag produces. This run answers R1-10's question
+early, before the tag exists: does the AI candidate, with the manifest as it now stands,
+pass WACK at all? It does.
+
+## Candidate
+
+Built locally by `scripts/make-msix.py` from the working tree at `VERSION` 0.1.1.0 —
+deliberately NOT submission material (the tag's CI artefact is), but carrying the same
+capability and resource declarations the next tag will (the version number itself will
+differ: the next tag must be a new one):
+
+- `internetClient` declared for the first time (N6, owner's decision 2026-08-09: technically
+  unnecessary at medium IL, declared so the storefront says "uses your internet connection"
+  before install). The suite pins the capability pair exactly.
+- Fourteen `<Resource Language>` entries (the 2026-08-09 fix), first time through MakeAppx.
+- One package build was LOST to the double-hyphen-in-XML-comment trap: the 2026-08-09
+  languages comment carried a prose ` -- ` and MakeAppx reported it as an "expected '>'"
+  at a column, exactly as the manifest's own header warns. The suite now takes the comments
+  out and holds every body hyphen-pair-free (and not hyphen-terminated), and the remainder
+  free of pairs and unclosed openers — so the next one fails as a named check instead of a
+  package build.
+
+## WACK
+
+```powershell
+appcert.exe reset
+appcert.exe test -appxpackagepath build\spintax-studio.msix `
+  -reportoutputpath build\wack\spintax-studio-wack-20260814-191344.xml
+```
+
+Result: `OVERALL_RESULT=PASS`, `PARTIAL_RUN=FALSE`. Declaring `internetClient` moved no
+required test.
+
+The optional test **Blocked Executable Files** reports three findings — one API reference
+and two blocked-executable substrings — one more than R0's two:
+
+- `shell32.dll!ShellExecuteW` — the deliberate browser action (the two marks), unchanged;
+- `reg` — the HTML entity name in `TSynHTMLSyn`'s table (`&reg;`), unchanged;
+- `dnx` — NEW, and measured before being explained: the executable contains the byte
+  sequence exactly once, inside a table of 4-byte-aligned offsets whose neighbours read
+  `8nx`, `Xnx`, `lnx` — a coincidence of binary data, not a reference to any tool. Same
+  class as `reg`: an analyzer finding in an optional test, not Store-blocking, and nothing
+  to silence.
+
+**For the next submission's certification notes:** no demo account is needed (policy
+10.3.1) — the AI feature is opt-in behind the reader's own endpoint and key, and the entire
+product is verifiable without one; the report channel is the About window's plain-text
+address, named in the listing description and the privacy policy.
 
 ---
 

@@ -15,8 +15,8 @@
 
   runFullTrust is what makes a packaged Win32 application a packaged Win32 application: it is a
   restricted capability, declared here and approved at submission, and every desktop bridge app
-  carries it. It does not widen what this program does, since R0 makes no network call, reads no
-  device and asks for nothing else.
+  carries it. Since ADR 0012 the application CAN make outgoing connections, when and only when
+  the reader configures and allows them; see internetClient below for why that is declared.
 
   MinVersion 10.0.17763 (1809) is where MSIX for desktop settled; below it the platform wants
   the older appx story, and the Store's own floor for new desktop submissions is higher still.
@@ -49,7 +49,7 @@
        It said `en-us` and nothing else until 2026-08-09, while the interface had spoken
        fourteen languages since before R0 and the help had answered in all fourteen since
        2026-08-07. `SupportedLanguages` on the live listing therefore read
-       ["English (United States)"] -- a false claim about the product on its own storefront,
+       ["English (United States)"], a false claim about the product on its own storefront,
        the same class as the `LegalCopyright="MIT"` that shipped in 0.1.0.0, and it costs a
        reader searching in their own language an application that would have answered them.
 
@@ -117,6 +117,15 @@
   </Applications>
 
   <Capabilities>
+    <!--
+      internetClient is TECHNICALLY unnecessary and declared on purpose (owner's decision,
+      2026-08-09, recorded when the network slice opened): a runFullTrust package runs at
+      medium IL and reaches the network as the user regardless. Declaring it is what makes
+      the STOREFRONT say "uses your internet connection" before anyone installs, which is
+      the honest half of an opt-in AI feature. The suite pins this pair exactly, so neither
+      line can leave or gain company unnoticed.
+    -->
+    <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 </Package>

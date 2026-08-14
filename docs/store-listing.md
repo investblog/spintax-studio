@@ -16,6 +16,14 @@ feature and names the report channel (Store policy 11.16), because the next subm
 carries Generate and Fix. Keep it separate from the developer README: the Store page
 describes the submitted product, not the repository.
 
+Refreshed 2026-08-14 for the owner's pre-submission review — the product moved in the last
+week and the copy had not: the AI draft's main path is now *turn the text you already have
+into a template* (the brief is the second mode, not the first); the draft is verified by the
+real engine before it ever replaces the document; the editor gained find-and-replace and an
+Insert menu; the report address moved into the About window. Features 6+7 and 13+14 were each
+merged to stay within Microsoft's twenty, freeing two slots for find-and-replace and the
+Insert menu.
+
 ## Short description
 
 Write, validate, preview, generate and export spintax templates in a focused offline Windows editor.
@@ -31,17 +39,19 @@ your template on the left and inspect the rendered result on the right. Alternat
 variables, directives and markup remain readable in the source while the preview shows the
 actual text produced by the engine.
 
-From a brief to a working template.
+From the text you already have — or a brief — to a working template.
 
 You do not have to hand-write every variation. This application includes optional live
-generative AI: give the built-in loop your brief and Generate asks a model provider for a
-richly varied draft, while Fix sends the engine's findings back for repair — to the endpoint
-you configure, with your own key and account when the endpoint uses them, and off until
-you turn it on. Prefer to keep the network
-out of it? Copy the prepared prompt to ChatGPT, Claude or another model and paste the draft
-back — that path needs no key and no connection. Either way Studio is where you take control:
-preview what the draft actually produces, find and fix syntax problems, refine the choices,
-and generate reproducible variants locally.
+generative AI: paste the text you already have — a product page, a letter, a description —
+and Generate turns it into a richly varied template, or describe what you want in a brief.
+The draft is not taken on trust: it is verified by the same engine that renders your preview
+before it ever replaces your document, and Fix sends the engine's own findings back for
+repair. All of it goes to the endpoint you configure, with your own key and account when the
+endpoint uses them, and it is off until you turn it on. Prefer to keep the network out of it?
+Copy the prepared prompt to ChatGPT, Claude or another model and paste the draft back — that
+path needs no key and no connection. Either way Studio is where you take control: preview
+what the draft actually produces, find and fix syntax problems, refine the choices, and
+generate reproducible variants locally.
 
 The AI connection sends only what you choose to send, to the endpoint you configured, and
 nothing until you turn it on. Found an AI draft inappropriate? Write to support@301.st — the
@@ -100,15 +110,15 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 3. Spintax syntax highlighting with bracket matching for alternatives, groups, variables and directives
 4. Precise validation diagnostics with line and column positions for faster error fixing
 5. Built-in offline help with tested examples, correct forms and repair guidance
-6. Variable inspector for definitions, references, session values and undefined names
-7. Include inspector showing targets, positions and resolution status
+6. Variable and include inspectors: definitions, references, session values, targets and resolution status
+7. Find and replace that counts and folds case exactly the way the engine does, safe in any language
 8. Visual group editor for alternatives and nested spintax groups
 9. Permutation tools for ordering alternatives and choosing controlled subsets
 10. Plural forms and language-aware content patterns for reusable templates
-11. Deterministic variant generation with seed support for repeatable results
-12. Variant list for reviewing generated outputs before export
-13. Plain text export with one generated variant per line
-14. XLSX spreadsheet export with XML-safe text and UTF-8 content
+11. Insert menu that wraps a selection into a choice, shuffle or comment and drops in ready-made constructs
+12. Deterministic variant generation with seed support for repeatable results
+13. Variant list for reviewing generated outputs before export
+14. Export as plain text with one variant per line, or as an XLSX workbook with XML-safe UTF-8 content
 15. Light and dark themes for a comfortable editing workspace
 16. Multilingual interface with 14 available UI languages
 17. Offline by default: no account, no telemetry, and no browser, Node.js, PHP or Python runtime — the optional AI link uses your own provider, and your own key when one is needed
@@ -117,6 +127,13 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
 ## Captured screenshots
+
+**STALE AS OF 2026-08-14 — recapture before submission.** The ten frames below predate the
+last week of the product: none shows the AI draft panel (the submission's headline feature
+and its disclosure), the find bar's replace row, or the Insert menu, and the menu bar in
+every frame is one menu short. The capture probes in `scripts/` still apply; the frame
+COMPOSITION is the owner's call at review time — at minimum one light and one dark frame of
+the AI panel belong in the set.
 
 Captured from the English release executable at 1500x890, with no personal documents or
 account information visible. The files are intentionally local: keep them in
