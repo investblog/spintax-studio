@@ -203,7 +203,8 @@ const
       '{?nome?allora|altrimenti}',
       'Non racchiuso: un #/ dentro o attorno alla selezione finirebbe il commento troppo presto.',
       'Non racchiuso: una | isolata, una parentesi non chiusa o un commento aperto cambierebbe il senso della condizione.',
-      'Non inserito: il cursore taglia in due un segno di commento.'
+      'Non inserito: il cursore taglia in due un segno di commento.',
+      'L''indirizzo dell''endpoint non si legge — correggetelo, poi collegate la chiave.'
   );
 
 implementation

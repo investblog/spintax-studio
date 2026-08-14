@@ -403,9 +403,10 @@ type
     procedure ReplaceKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ReplaceOneClicked(Sender: TObject);
     procedure ReplaceAllClicked(Sender: TObject);
-    { The after-effects every wholesale edit owes this window (AiReplace's list, measured:
-      SelText does not reach EditorChanged): the closer line, the loop's revision, the
-      render, and the match list. }
+    { The after-effects of a wholesale replace: the debounce cancel (the one real duty --
+      SelText DOES reach EditorChanged when its undo group closes, which arms the debounce
+      behind the explicit render), the immediate render, the match list rebuilt now, and a
+      belt of duties EditorChanged already pays. The law note sits on AiReplace. }
     procedure AfterReplaceEdit;
     procedure FindTextChanged(Sender: TObject);
     procedure FindNextClicked(Sender: TObject);
@@ -1996,23 +1997,18 @@ end;
 
 procedure TSpxMainForm.AfterReplaceEdit;
 begin
-  { AiReplace's measured list: a wholesale SelText does not reach EditorChanged, so what
-    that path would have done is owed here by hand -- the closer line for the
-    highlighter, the loop's revision, the render. Plus the match list, which now
-    describes a text that no longer exists. NOT UpdateCaption: the title's asterisk is
-    driven off the editor's own modified state and was photographed appearing after the
-    sweep and leaving after the undo -- adding a call here would be fixing what a
-    measurement already cleared (Codex raised it; the photograph answers it). }
+  (* The law, corrected by review 2026-08-15 (AiReplace has the full note): a SelText edit
+     -- partial or wholesale -- DOES reach EditorChanged when its undo group closes, and
+     the asterisk photograph was the proof all along; only `Text :=` bypasses the change
+     path. So the three duties below are a BELT over what EditorChanged just paid, kept
+     because they cost microseconds. What this procedure genuinely owes: the debounce
+     cancel (EditorChanged armed it; left running it fires a second render ~200 ms later
+     and visibly redraws a different unseeded variant -- Codex, reproduced), the immediate
+     render, and the match list rebuilt NOW rather than stale-marked. *)
   if FHighlighter <> nil then
     FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
-  { A generated variants set belongs to the text that produced it -- EditorChanged marks
-    it stale on every keystroke, and the wholesale path must too (Codex). }
   if FSet <> nil then FSet.MarkStale;
   LoopSnapshotMoved;
-  { ONE owner for the render. The partial-replace path goes through the ordinary SelText,
-    which DOES start the debounce -- left running, it would fire a second render ~200 ms
-    after this one and visibly redraw a different unseeded variant (Codex). Cancelling is
-    a no-op on the wholesale path, where the debounce never started. }
   FDebounce.Enabled := False;
   RequestRender;
   RefreshMatches;
@@ -2052,7 +2048,14 @@ var
   n: Integer;
 begin
   if HelpShowing or (FFindText.Text = '') then Exit;
-  doc := SpxReplaceAllText(FEditor.Text, FFindText.Text, FReplaceText.Text,
+  (* DocText, NOT FEditor.Text (review, 2026-08-15): the raw Text carries the terminator
+     TStrings appends to a last line that never had one, the sweep copies it verbatim, and
+     SelectAll+SelText then pastes it back as a NEW empty final line -- every sweep grew the
+     document by one line, and Save wrote bytes nobody typed. DocText strips exactly that
+     phantom (and keeps a REAL trailing newline, because FTrailingEol says the file ended
+     with one). The needle cannot span the terminator -- the find field is single-line --
+     so the match list is identical either way. *)
+  doc := SpxReplaceAllText(DocText, FFindText.Text, FReplaceText.Text,
                            FFindCase.Checked, n);
   if n > 0 then
   begin
@@ -3633,12 +3636,27 @@ end;
   preview un-narrows the moment you wrap, and a second wrap -- brackets around what you just
   put in braces -- is a silent no-op. }
 procedure TSpxMainForm.WrapSelection(const L, R: string);
-var after: TSpxRange;
+var
+  sel: TSpxSelection;
+  after: TSpxRange;
 begin
   { Whether this selection may be wrapped, and where the wrapped text will end up, is
     arithmetic -- so it lives in editor-core with checks on it. What stays here is the edit
     itself, because SelText IS SynEdit's edit API and that is what keeps undo to one step. }
-  if not SpxWrapRange(CurrentSelection(False), Length(L), Length(R), after) then Exit;
+  sel := CurrentSelection(False);
+  if not SpxWrapRange(sel, Length(L), Length(R), after) then Exit;
+  { A selection edge through the middle of a comment mark destroys the mark, whatever gets
+    wrapped -- select from between the `/` and `#` of a live opener and the wrap
+    un-comments text OUTSIDE the selection. The comment and condition wraps refuse this
+    edge; review (2026-08-15) found these two accepting it. }
+  if SpxSplitsCommentMark(TextBefore(Point(sel.Range.A.Col, sel.Range.A.Line)),
+                          FEditor.SelText) or
+     SpxSplitsCommentMark(FEditor.SelText,
+                          TextAfter(Point(sel.Range.B.Col, sel.Range.B.Line))) then
+  begin
+    SetStatusText(Tr(sInsSplitRefused));
+    Exit;
+  end;
   FEditor.SelText := L + FEditor.SelText + R;
   FEditor.BlockBegin := Point(after.A.Col, after.A.Line);
   FEditor.BlockEnd := Point(after.B.Col, after.B.Line);
@@ -4061,9 +4079,10 @@ procedure TSpxMainForm.EditorChanged(Sender: TObject);
 begin
   { The document is part of the loop's snapshot; every edit that reaches this handler bumps
     the revision -- and the Fix button follows it, because its rows now describe the
-    previous text. Wholesale Text assignments do NOT reach this handler (measured, twice),
-    which is why LoadDocument, NewClicked, AiInsert/AiReplace, SaveDocument and the GSA
-    import move the snapshot on their own. }
+    previous text. Wholesale `Text :=` assignments do NOT reach this handler (measured,
+    twice), which is why LoadDocument, NewClicked, SaveDocument and the GSA import move the
+    snapshot on their own; SelText edits DO reach it when their undo group closes (the law
+    note on AiReplace), and the wholesale SelText paths keep their own calls as a belt. }
   LoopSnapshotMoved;
   { WHERE THE LAST `#/` IS -- pushed on every keystroke, not on the debounced render, because
     SynEdit repaints on its own schedule and a stale answer here is a visibly wrong colour.
@@ -5257,11 +5276,13 @@ begin
   finally
     FEditor.EndUpdate;
   end;
-  { Explicitly, not through hoping the edit path fires OnChange: the document just moved,
-    and an answer in flight is now about the previous one (found by Codex review for the
-    Replace side; both routes get the same rule). Over-invalidating is safe. }
+  { Explicitly, as a belt -- InsertTextAtCaret DOES fire OnChange at EndUpdate (see
+    AiReplace's law note), but over-invalidating is safe and this line predates knowing
+    that. The debounce cancel is the real duty: EditorChanged just armed it, and left
+    running it would render a second time behind the explicit render below. }
   LoopSnapshotMoved;
   FlashJumpLine;
+  FDebounce.Enabled := False;
   RequestRender;
 end;
 
@@ -5284,19 +5305,24 @@ begin
   finally
     FEditor.EndUpdate;
   end;
-  { A wholesale change does not reach EditorChanged (measured, twice -- see the charter). }
+  (* THE LAW, CORRECTED BY REVIEW (2026-08-15): a SelText edit DOES reach EditorChanged --
+     OnChange fires when the undo group closes, which for an edit wrapped in BeginUpdate is
+     EndUpdate -- and the title's asterisk photograph after the replace sweep proved it (only
+     EditorChanged calls UpdateCaption on that path). What does NOT reach it is a wholesale
+     `Text :=` assignment, which is where the charter's "measured, twice" actually happened.
+     So the duties below are a BELT -- EditorChanged has just paid each of them -- kept
+     deliberately, because a belt that costs microseconds is cheaper than a behavior that
+     depends entirely on a mechanism note. The one REAL duty is the debounce cancel:
+     EditorChanged armed it, and left running it would fire a second render ~200 ms after
+     the explicit one and visibly flip an unseeded preview to a different variant. *)
   if FHighlighter <> nil then
     FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
-  { The same gap the replace slice's review found in ITS wholesale path, latent here since
-    R1-4: EditorChanged marks a generated variants set stale on every keystroke, and a
-    draft that replaces the whole document must too -- or an existing set goes on
-    presenting itself as a set of THIS text. }
   if FSet <> nil then FSet.MarkStale;
-  { And so the loop is told here too: the pane's Replace button stays usable while an op
-    flies, and without this the op's clean result would keep the old revision and overwrite
-    the manual replacement at the final check. Found by Codex review. }
+  { The loop must know either way: without this the op's clean result would keep the old
+    revision and overwrite a manual replacement at the final check. Found by Codex review. }
   LoopSnapshotMoved;
   FEditor.CaretXY := Point(1, 1);
+  FDebounce.Enabled := False;
   RequestRender;
 end;
 
@@ -5359,11 +5385,25 @@ begin
   { The profile is part of the loop's snapshot: an answer that flew under the old endpoint
     or the old auth mode must not be applied as if nothing moved. }
   LoopSnapshotMoved;
+  { AND THE SNAPSHOT MUST BE RE-ARMED (review, 2026-08-15): the Fix button gates on
+    `FLoopSourceRev = FLoop.Revision`, and only a render result re-arms that pair. Every
+    other revision bumper schedules one -- EditorChanged through the debounce, SaveDocument
+    and ReloadSet directly -- but this handler did not, so one edit in the model field or
+    the allow-list greyed Fix indefinitely: nothing pending would ever bring it back until
+    the reader touched the DOCUMENT. RuntimeChanged is the precedent, for the same reason
+    in the same words: a snapshot input moved, so the render that re-arms it goes through
+    the debounce. }
+  FDebounce.Enabled := False;
+  FDebounce.Enabled := True;
 end;
 
 procedure TSpxMainForm.AiDeclChanged(Sender: TObject);
 begin
   LoopSnapshotMoved;
+  { Same re-arm as AiProfileChanged, same reason: the declarations are a snapshot input,
+    and without a render behind the bump the Fix button greys for good. }
+  FDebounce.Enabled := False;
+  FDebounce.Enabled := True;
 end;
 
 function TSpxMainForm.LoopErrSentence(AErr: TSpxLlmError; const ADetail: string): string;

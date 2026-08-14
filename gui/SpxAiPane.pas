@@ -1063,7 +1063,10 @@ begin
   origin := SpxLlmOrigin(FProfile.Endpoint);
   if origin = '' then
   begin
-    Say(Tr(sAiKeyMissing));
+    { NOT "no key attached" (review, 2026-08-15): the key is right there in the field --
+      the ADDRESS is what cannot be read, and the old sentence sent the reader to retype
+      the key and fail the same way. Name the thing to fix. }
+    Say(Tr(sAiKeyBadEndpoint));
     ShowKeyState;
     Exit;
   end;

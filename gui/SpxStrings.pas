@@ -267,7 +267,10 @@ const
     0, 0, 0, 0, 0,
 
     { The Insert menu: six menu captions and three status sentences, all self-sizing. }
-    0, 0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0,
+
+    { The bad-endpoint attach sentence: a status line, self-sizing. }
+    0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

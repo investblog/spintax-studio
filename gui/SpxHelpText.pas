@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    '3868c5fdaa6c263b', '1161eb58753cc15f', '87e44fc97111b7a9', '062a0ca8aff5aebf', 'c5226848658b80c2', 'f6b0fb891bdfa838', 'fc6100aa3fac28ee', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '979ec94fb2757c81', '488ce59bac9e29c3', '7f61fd4b089638df', '5eae893ce9819128', '7813c6dc420189dd', '0d549262922b3331', '0cc2fc1f4ca6e6a4', 'c85b5f196fca1f91', '6bb5e85de94010ed', '04e2aa0bc9577fb5', '4ddfd411500958cc', '26e21bf1b83633da', 'b299b74f181ca9cd', 'b54956a9ee49f248', '00a887dfff5a6ef5', 'f2a15e0430e0f693', '18c7da1e110847db', 'd9d49c35432acae4', '3954defb1cdef464', '9dacb63502e5aa97', 'b8529893866ec950', 'b0b4c23a6db00dad', 'ea10d49bf126b2b6', '471885d59dbd925b', '852db05e9cfc6d02', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '6f368979a255142f', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '522657a7edcf835e', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    'fb200ed7ee863609', '1161eb58753cc15f', '87e44fc97111b7a9', '73a52d9c28790e7e', 'c5226848658b80c2', 'f6b0fb891bdfa838', '40275ea888cddd27', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '2eedbc2a2c6a16ba', '488ce59bac9e29c3', '7f61fd4b089638df', 'a29195189e5c57c0', '7813c6dc420189dd', '0d549262922b3331', '8f8c0c03fa45528c', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'a97d591402439a4d', '4ddfd411500958cc', '26e21bf1b83633da', 'a8067b8f76ecc0e9', 'b54956a9ee49f248', '00a887dfff5a6ef5', 'c165e06ea586601b', '18c7da1e110847db', 'd9d49c35432acae4', '4a2710ca46814627', '9dacb63502e5aa97', 'b8529893866ec950', 'd90d890741ed088c', 'ea10d49bf126b2b6', '471885d59dbd925b', '54dd4bf7c91a3691', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '7ab6966b4abf133a', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '961f95fcd4ef3233', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -817,8 +817,10 @@ const
       'he same text tomorrow — but the same seed in the JavaScript engine may pick a differen' +
       't alternative. Seeds are for reproducing your own work, not for matching another engin' +
       'e''s.</p>',
-    '<p>Everything here works with no network connection. There is no account, no sign-in a' +
-      'nd nothing to switch on: open the program and it is running.</p>',
+    '<p>The editor, validation, preview, variant generation and export work with no network' +
+      ' connection — the whole of the daily work. There is no account and no sign-in: open th' +
+      'e program and it is running. The one feature that can go online, the AI draft, is off ' +
+      'until you turn it on and has a chapter of its own below.</p>',
     '<h2 id="panes">The two panes</h2>',
     '<p>Type on the left. The right pane redraws after a short pause, so the preview keeps ' +
       'up with a sentence rather than with each letter.</p>',
@@ -964,9 +966,10 @@ const
     '</ul>',
     '<p><b>Attach key</b> stores the key in the Windows Credential Manager, encrypted for y' +
       'our Windows account — not in a file, and never in the document. The field then shows t' +
-      'he key''s first characters so you can tell which one is attached, and <b>Forget key</b' +
-      '> removes it. A key is attached to the place it was entered for — the scheme, the host' +
-      ' and the port: change any of those and the panel asks for it again.</p>',
+      'he key''s first characters and its last four — the beginnings are all alike, the tail ' +
+      'is what tells keys apart, and <b>Forget key</b> removes it. A key is attached to the p' +
+      'lace it was entered for — the scheme, the host and the port: change any of those and t' +
+      'he panel asks for it again.</p>',
     '<p>The first press asks in plain words — <b>Send to this endpoint?</b> — naming the re' +
       'cipient. What travels is the prompt built from your brief or text — together with the ' +
       'channel, variation and language you chose — the declared variables, the current templa' +
@@ -1768,8 +1771,10 @@ const
       'т тот же текст, — но тот же сид в движке на JavaScript может выбрать другую альтернати' +
       'ву. Сид нужен, чтобы воспроизвести свою же работу, а не чтобы совпасть с чужим движком' +
       '.</p>',
-    '<p>Всё здесь работает без сети. Ни аккаунта, ни входа, ни чего-либо, что надо включить' +
-      ': открыли — работает.</p>',
+    '<p>Редактор, валидация, превью, генерация вариантов и экспорт работают без сети — вся ' +
+      'повседневная работа. Ни аккаунта, ни входа: открыли — работает. Единственная функция, ' +
+      'умеющая выходить в сеть, — AI-черновик — выключена, пока вы её не включите, и у неё ни' +
+      'же своя глава.</p>',
     '<h2 id="panes">Две панели</h2>',
     '<p>Печатаете слева. Правая панель перерисовывается с небольшой паузой, чтобы успевать ' +
       'за фразой, а не за каждой буквой.</p>',
@@ -1778,7 +1783,7 @@ const
     '<p><small><tt><a href="ex:0">{Привет|Здравствуйте}.</a><br>→&nbsp; Привет.</tt></small' +
       '></p>',
     '<p>Кнопка <b>Другой</b> над правой панелью даёт следующий. Если нужен один и тот же — ' +
-      'например, пока вы сравниваете две правки, — включите <b>Сид</b>, и предпросмотр перест' +
+      'например, пока вы сравниваете две правки, — включите <b>сид</b>, и предпросмотр перест' +
       'анет меняться, пока вы его не выключите или не смените число.</p>',
     '<p>Переключатель над правой половиной предлагает <b>Страница</b> и <b>Исходник</b>. Ша' +
       'блоны почти всегда HTML, и вопросы «как это выглядит» и «какая разметка получилась» др' +
@@ -1914,9 +1919,9 @@ const
     '</ul>',
     '<p><b>Привязать ключ</b> кладёт ключ в диспетчер учётных данных Windows, зашифрованным' +
       ' для вашей учётной записи, — не в файл и никогда не в документ. Поле затем показывает ' +
-      'первые знаки ключа, чтобы было видно, который привязан, а <b>Забыть ключ</b> убирает е' +
-      'го. Ключ привязан к месту, для которого введён, — схеме, хосту и порту: смените любое ' +
-      'из них — и панель попросит его заново.</p>',
+      'первые знаки ключа и его последние четыре — начала у ключей одинаковые, различает их х' +
+      'вост, а <b>Забыть ключ</b> убирает его. Ключ привязан к месту, для которого введён, — ' +
+      'схеме, хосту и порту: смените любое из них — и панель попросит его заново.</p>',
     '<p>Первое нажатие спрашивает прямо — <b>Отправлять на этот эндпоинт?</b> — называя пол' +
       'учателя. Уходит промпт, собранный из вашего брифа или текста, — вместе с выбранными ка' +
       'налом, вариативностью и языком, — объявленные переменные, при починке текущий шаблон с' +
@@ -2720,8 +2725,10 @@ const
       'ieselbe Vorlage geben morgen denselben Text —, aber derselbe Startwert kann in der Jav' +
       'aScript-Maschine eine andere Alternative ziehen. Startwerte sind dazu da, Ihre eigene ' +
       'Arbeit zu reproduzieren, nicht dazu, eine andere Maschine zu treffen.</p>',
-    '<p>Alles hier funktioniert ohne Netzverbindung. Es gibt kein Konto, keine Anmeldung un' +
-      'd nichts einzuschalten: Programm öffnen, und es läuft.</p>',
+    '<p>Editor, Validierung, Vorschau, Variantenerzeugung und Export funktionieren ohne Net' +
+      'zverbindung — die ganze tägliche Arbeit. Es gibt kein Konto und keine Anmeldung: Progr' +
+      'amm öffnen, und es läuft. Die eine Funktion, die ins Netz kann — der KI-Entwurf — ist ' +
+      'aus, bis Sie sie einschalten, und hat unten ein eigenes Kapitel.</p>',
     '<h2 id="panes">Die zwei Hälften</h2>',
     '<p>Getippt wird links. Die rechte Hälfte zeichnet nach einer kurzen Pause neu, damit d' +
       'ie Vorschau einem Satz folgt und nicht jedem Buchstaben.</p>',
@@ -2832,7 +2839,7 @@ const
       '>Text zum Umwandeln</b>, fügen Sie den Text ein und drücken Sie <b>Erzeugen</b>. Der f' +
       'ertige Entwurf ersetzt das Dokument, die Vorschau rendert ihn, und das Diagnose-Panel ' +
       'urteilt — dieselbe Maschine und dasselbe Urteil wie für alles, was Sie selbst tippen. ' +
-      'Ein Ctrl+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie eigenen Text' +
+      'Ein Strg+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie eigenen Text' +
       ', denn das ist er.</p>',
     '<p>Gibt es nichts einzufügen, stellen Sie die Kopfzeile auf <b>Briefing</b> und beschr' +
       'eiben, was Sie wollen. Die Felder darüber lenken den Entwurf in beiden Modi: <b>Kanal<' +
@@ -2880,10 +2887,10 @@ const
     '</ul>',
     '<p><b>Schlüssel anheften</b> legt den Schlüssel in die Windows-Anmeldeinformationsverw' +
       'altung, verschlüsselt für Ihr Windows-Konto — nicht in eine Datei und nie ins Dokument' +
-      '. Das Feld zeigt danach die ersten Zeichen des Schlüssels, damit zu sehen ist, welcher' +
-      ' angeheftet ist, und <b>Schlüssel vergessen</b> entfernt ihn. Ein Schlüssel gehört zu ' +
-      'dem Ort, für den er eingegeben wurde — Schema, Host und Port: ändern Sie eines davon, ' +
-      'fragt das Panel erneut danach.</p>',
+      '. Das Feld zeigt danach die ersten Zeichen des Schlüssels und seine letzten vier — die' +
+      ' Anfänge gleichen sich, der Schluss unterscheidet die Schlüssel, und <b>Schlüssel verg' +
+      'essen</b> entfernt ihn. Ein Schlüssel gehört zu dem Ort, für den er eingegeben wurde —' +
+      ' Schema, Host und Port: ändern Sie eines davon, fragt das Panel erneut danach.</p>',
     '<p>Das erste Drücken fragt in klaren Worten — <b>An diesen Endpunkt senden?</b> — und ' +
       'nennt den Empfänger. Es reist der Prompt, gebaut aus Ihrem Briefing oder Text — samt g' +
       'ewähltem Kanal, gewählter Variation und Sprache —, dazu die erklärten Variablen, beim ' +
@@ -3743,8 +3750,11 @@ const
       'onnent demain le même texte — mais la même graine dans le moteur JavaScript peut tirer' +
       ' une autre variante. Les graines servent à reproduire votre propre travail, pas à reto' +
       'mber sur un autre moteur.</p>',
-    '<p>Tout fonctionne ici sans connexion réseau. Il n''y a pas de compte, pas de connexio' +
-      'n et rien à activer : ouvrez le programme et il tourne.</p>',
+    '<p>L''éditeur, la validation, l''aperçu, la génération de variantes et l''export fonct' +
+      'ionnent sans connexion réseau — tout le travail quotidien. Il n''y a ni compte ni iden' +
+      'tifiant : ouvrez le programme et il tourne. La seule fonction capable d''aller en lign' +
+      'e, le brouillon IA, est éteinte tant que vous ne l''allumez pas, et a son propre chapi' +
+      'tre plus bas.</p>',
     '<h2 id="panes">Les deux volets</h2>',
     '<p>On tape à gauche. Le volet de droite se redessine après une courte pause, pour que ' +
       'l''aperçu suive une phrase et non chaque lettre.</p>',
@@ -3902,10 +3912,10 @@ const
     '</ul>',
     '<p><b>Rattacher la clé</b> range la clé dans le Gestionnaire d''identifiants de Window' +
       's, chiffrée pour votre compte Windows — pas dans un fichier, et jamais dans le documen' +
-      't. Le champ montre ensuite les premiers caractères de la clé, pour voir laquelle est r' +
-      'attachée, et <b>Oublier la clé</b> la retire. Une clé est rattachée au lieu pour leque' +
-      'l elle a été saisie — le schéma, l''hôte et le port : changez l''un d''eux et le panne' +
-      'au la redemande.</p>',
+      't. Le champ montre ensuite les premiers caractères de la clé et ses quatre derniers — ' +
+      'les débuts se ressemblent, c''est la fin qui distingue les clés, et <b>Oublier la clé<' +
+      '/b> la retire. Une clé est rattachée au lieu pour lequel elle a été saisie — le schéma' +
+      ', l''hôte et le port : changez l''un d''eux et le panneau la redemande.</p>',
     '<p>La première pression demande en toutes lettres — <b>Envoyer vers cet endpoint ?</b>' +
       ' — en nommant le destinataire. Voyage l''invite bâtie sur votre brief ou votre texte —' +
       ' avec le canal, la variation et la langue choisis —, les variables déclarées, le gabar' +
@@ -4759,8 +4769,11 @@ const
       'o texto—, pero la misma semilla en el motor de JavaScript puede sacar otra alternativa' +
       '. Las semillas sirven para reproducir su propio trabajo, no para coincidir con otro mo' +
       'tor.</p>',
-    '<p>Todo aquí funciona sin conexión de red. No hay cuenta, no hay inicio de sesión y no' +
-      ' hay nada que activar: abra el programa y ya está funcionando.</p>',
+    '<p>El editor, la validación, la vista previa, la generación de variantes y la exportac' +
+      'ión funcionan sin conexión de red — todo el trabajo diario. No hay cuenta ni inicio de' +
+      ' sesión: abra el programa y ya está funcionando. La única función capaz de salir a la ' +
+      'red, el borrador de IA, está apagada hasta que usted la encienda, y tiene más abajo su' +
+      ' propio capítulo.</p>',
     '<h2 id="panes">Las dos mitades</h2>',
     '<p>Se escribe a la izquierda. La mitad derecha se redibuja tras una pausa breve, para ' +
       'que el avance siga a una frase y no a cada letra.</p>',
@@ -4910,10 +4923,10 @@ const
     '</ul>',
     '<p><b>Adjuntar la clave</b> guarda la clave en el Administrador de credenciales de Win' +
       'dows, cifrada para su cuenta de Windows — no en un archivo, y nunca en el documento. E' +
-      'l campo muestra después los primeros caracteres de la clave, para ver cuál está adjunt' +
-      'a, y <b>Olvidar la clave</b> la retira. Una clave queda adjunta al lugar para el que s' +
-      'e introdujo — el esquema, el host y el puerto: cambie cualquiera de ellos y el panel l' +
-      'a pedirá de nuevo.</p>',
+      'l campo muestra después los primeros caracteres de la clave y sus últimos cuatro — los' +
+      ' comienzos se parecen, la cola es lo que distingue las claves, y <b>Olvidar la clave</' +
+      'b> la retira. Una clave queda adjunta al lugar para el que se introdujo — el esquema, ' +
+      'el host y el puerto: cambie cualquiera de ellos y el panel la pedirá de nuevo.</p>',
     '<p>La primera pulsación pregunta con todas las letras — <b>¿Enviar a este endpoint?</b' +
       '> — nombrando al destinatario. Viaja la instrucción construida con su encargo o su tex' +
       'to — junto con el canal, la variación y el idioma elegidos —, las variables declaradas' +
@@ -5742,8 +5755,11 @@ const
       'llo danno domani lo stesso testo — ma lo stesso seme nel motore JavaScript può pescare' +
       ' un''altra alternativa. I semi servono a riprodurre il vostro lavoro, non a coincidere' +
       ' con un altro motore.</p>',
-    '<p>Tutto qui funziona senza connessione di rete. Non c''è un account, non c''è accesso' +
-      ' e non c''è nulla da attivare: aprite il programma e sta già funzionando.</p>',
+    '<p>L''editor, la validazione, l''anteprima, la generazione di varianti e l''esportazio' +
+      'ne funzionano senza connessione di rete — tutto il lavoro quotidiano. Non c''è account' +
+      ' né accesso: aprite il programma e sta già funzionando. L''unica funzione capace di an' +
+      'dare in rete, la bozza IA, è spenta finché non la accendete, e ha più sotto un capitol' +
+      'o suo.</p>',
     '<h2 id="panes">Le due metà</h2>',
     '<p>Si scrive a sinistra. La metà destra si ridisegna dopo una breve pausa, così l''ant' +
       'eprima segue una frase e non ogni lettera.</p>',
@@ -5893,9 +5909,10 @@ const
     '</ul>',
     '<p><b>Collega la chiave</b> ripone la chiave nel Gestore credenziali di Windows, cifra' +
       'ta per il vostro account Windows — non in un file, e mai nel documento. Il campo mostr' +
-      'a poi i primi caratteri della chiave, così si vede quale è collegata, e <b>Dimentica l' +
-      'a chiave</b> la toglie. Una chiave è legata al luogo per cui è stata inserita — schema' +
-      ', host e porta: cambiatene uno e il pannello la richiede.</p>',
+      'a poi i primi caratteri della chiave e i suoi ultimi quattro — gli inizi si somigliano' +
+      ', è la coda a distinguere le chiavi, e <b>Dimentica la chiave</b> la toglie. Una chiav' +
+      'e è legata al luogo per cui è stata inserita — schema, host e porta: cambiatene uno e ' +
+      'il pannello la richiede.</p>',
     '<p>La prima pressione chiede in parole chiare — <b>Inviare a questo endpoint?</b> — no' +
       'minando il destinatario. Viaggia il prompt costruito dal vostro brief o testo — con ca' +
       'nale, variazione e lingua scelti —, le variabili dichiarate, il modello corrente con l' +
@@ -6728,8 +6745,10 @@ const
       ' o mesmo texto —, mas a mesma semente no motor JavaScript pode tirar outra alternativa' +
       '. As sementes servem para reproduzir o seu próprio trabalho, não para bater certo com ' +
       'outro motor.</p>',
-    '<p>Tudo aqui funciona sem ligação de rede. Não há conta, não há sessão para iniciar e ' +
-      'não há nada para activar: abra o programa e já está a correr.</p>',
+    '<p>O editor, a validação, a pré-visualização, a geração de variantes e a exportação fu' +
+      'ncionam sem ligação de rede — todo o trabalho diário. Não há conta nem sessão para ini' +
+      'ciar: abra o programa e já está a correr. A única função capaz de ir à rede, o rascunh' +
+      'o de IA, está desligada até que a ligue, e tem mais abaixo um capítulo próprio.</p>',
     '<h2 id="panes">As duas metades</h2>',
     '<p>Escreve-se à esquerda. A metade direita redesenha-se após uma pausa curta, para que' +
       ' a pré-visualização acompanhe uma frase e não cada letra.</p>',
@@ -6876,9 +6895,10 @@ const
     '</ul>',
     '<p><b>Anexar a chave</b> guarda a chave no Gestor de Credenciais do Windows, cifrada p' +
       'ara a sua conta Windows — não num ficheiro, e nunca no documento. O campo mostra depoi' +
-      's os primeiros caracteres da chave, para se ver qual está anexada, e <b>Esquecer a cha' +
-      've</b> retira-a. Uma chave fica presa ao lugar para o qual foi introduzida — o esquema' +
-      ', o host e a porta: mude qualquer um deles e o painel volta a pedi-la.</p>',
+      's os primeiros caracteres da chave e os seus últimos quatro — os começos parecem-se, é' +
+      ' a cauda que distingue as chaves, e <b>Esquecer a chave</b> retira-a. Uma chave fica p' +
+      'resa ao lugar para o qual foi introduzida — o esquema, o host e a porta: mude qualquer' +
+      ' um deles e o painel volta a pedi-la.</p>',
     '<p>O primeiro toque pergunta com todas as letras — <b>Enviar para este endpoint?</b> —' +
       ' nomeando o destinatário. Viaja o pedido construído do seu resumo ou texto — com o can' +
       'al, a variação e o idioma escolhidos —, as variáveis declaradas, o modelo actual e o s' +
@@ -7693,8 +7713,10 @@ const
       'oon geven morgen dezelfde tekst —, maar hetzelfde startgetal in de JavaScript-machine ' +
       'kan een ander alternatief trekken. Startgetallen dienen om uw eigen werk te herhalen, ' +
       'niet om een andere machine te treffen.</p>',
-    '<p>Alles hier werkt zonder netwerkverbinding. Er is geen account, geen aanmelding en n' +
-      'iets om aan te zetten: open het programma en het draait.</p>',
+    '<p>De editor, validatie, voorvertoning, variantgeneratie en export werken zonder netwe' +
+      'rkverbinding — het hele dagelijkse werk. Er is geen account en geen aanmelding: open h' +
+      'et programma en het draait. De ene functie die online kan, het AI-concept, staat uit t' +
+      'ot u haar aanzet, en heeft verderop een eigen hoofdstuk.</p>',
     '<h2 id="panes">De twee helften</h2>',
     '<p>Links wordt getypt. De rechterhelft tekent na een korte pauze opnieuw, zodat de voo' +
       'rvertoning een zin volgt en niet elke letter.</p>',
@@ -7845,9 +7867,10 @@ const
     '</ul>',
     '<p><b>Sleutel koppelen</b> bergt de sleutel op in Windows Referentiebeheer, versleutel' +
       'd voor uw Windows-account — niet in een bestand, en nooit in het document. Het veld to' +
-      'ont daarna de eerste tekens van de sleutel, zodat te zien is welke gekoppeld is, en <b' +
-      '>Sleutel vergeten</b> haalt hem weg. Een sleutel hoort bij de plek waarvoor hij is ing' +
-      'evoerd — schema, host en poort: wijzig er één en het paneel vraagt er opnieuw om.</p>',
+      'ont daarna de eerste tekens van de sleutel en zijn laatste vier — de beginstukken lijk' +
+      'en op elkaar, de staart onderscheidt de sleutels, en <b>Sleutel vergeten</b> haalt hem' +
+      ' weg. Een sleutel hoort bij de plek waarvoor hij is ingevoerd — schema, host en poort:' +
+      ' wijzig er één en het paneel vraagt er opnieuw om.</p>',
     '<p>De eerste druk vraagt het in gewone woorden — <b>Naar dit endpoint versturen?</b> —' +
       ' met de ontvanger bij naam. Mee reist de prompt, gebouwd uit uw briefing of tekst — me' +
       't het gekozen kanaal, de gekozen variatie en taal —, de opgegeven variabelen, bij hers' +
@@ -8678,8 +8701,10 @@ const
       'ADA yinelenebilir kılar — aynı tohum ve aynı şablon yarın da aynı metni verir — ama ay' +
       'nı tohum JavaScript makinesinde başka bir seçenek çekebilir. Tohumlar kendi işinizi ye' +
       'niden üretmek içindir, başka bir makineyi tutturmak için değil.</p>',
-    '<p>Buradaki her şey ağ bağlantısı olmadan çalışır. Hesap yok, oturum açma yok ve açıla' +
-      'cak bir şey yok: programı açın, çalışıyor.</p>',
+    '<p>Editör, doğrulama, önizleme, çeşit üretimi ve dışa aktarma ağ bağlantısı olmadan ça' +
+      'lışır — günlük işin tamamı. Hesap yok, oturum açma yok: programı açın, çalışıyor. Ağa ' +
+      'çıkabilen tek özellik olan yapay zekâ taslağı siz açana kadar kapalıdır ve aşağıda ken' +
+      'di bölümü vardır.</p>',
     '<h2 id="panes">İki yarım</h2>',
     '<p>Sola yazılır. Sağ yarım kısa bir duraklamadan sonra yeniden çizilir, böylece önizle' +
       'me her harfi değil bir cümleyi izler.</p>',
@@ -8702,8 +8727,8 @@ const
     '<p><b>Ctrl+F</b> üst şeritte bir arama alanı açar. Yanındaki sayaç metnin kaç kez geçt' +
       'iğini ve hangi eşleşmede durduğunuzu söyler; <b>Enter</b> ileri, <b>Shift+Enter</b> ge' +
       'ri adımlar, F3 doğrudan belgeden çalışır. Alandaki kutucuk işaretlenene dek büyük-küçü' +
-      'k harf fark etmez — katlama da motorun kendisinindir, bu yüzden Kiril ya da aksanlı bi' +
-      'r harf, önizlemenin ikisini tek harf saydığı yerde diğer biçimiyle eşleşir.</p>',
+      'k harf fark etmez — katlama da makinenin kendisinindir, bu yüzden Kiril ya da aksanlı ' +
+      'bir harf, önizlemenin ikisini tek harf saydığı yerde diğer biçimiyle eşleşir.</p>',
     '<p><b>Ctrl+H</b> — ya da <b>Değiştir…</b> menü öğesi — şeride ikinci bir satır ekler: ' +
       'değiştirilecek metin ve iki düğme. <b>Değiştir</b> üzerinde durduğunuz eşleşmeyi değiş' +
       'tirip sonrakine geçer; henüz bir şey bulunmamışken ilk basış yalnızca arar. <b>Tümünü ' +
@@ -8714,8 +8739,8 @@ const
       ' Eşleşmeler üst üste bindiğinde sayaç adımın uğrayabileceği her birini sayar, ama tara' +
       'ma yalnızca harf paylaşmayanları değiştirir — bu yüzden "değiştirilen" dürüstçe daha k' +
       'üçük bir sayı diyebilir.</p>',
-    '<p>Değiştirilmiş belge, yazılmış metinle aynı motor yolundan geçer: önizleme yeniden ç' +
-      'izilir, tanılar artık orada olan hakkında yanıt verir.</p>',
+    '<p>Değiştirilmiş belge, yazılmış metinle aynı makine yolundan geçer: önizleme yeniden ' +
+      'çizilir, tanılar artık orada olan hakkında yanıt verir.</p>',
     '<h2 id="insert">İşaretleri ekleme</h2>',
     '<p>Dilin kendi işaretlerini belgeye koyan her şey <b>Ekle</b> menüsünde toplanır.</p>',
     '<p>Üç sarma komutu seçimi olduğu gibi alır: <b>{…} içine al</b> onu bir seçime, <b>[…]' +
@@ -8822,9 +8847,10 @@ const
     '</ul>',
     '<p><b>Anahtarı bağla</b>, anahtarı Windows Kimlik Bilgisi Yöneticisine koyar, Windows ' +
       'hesabınız için şifrelenmiş olarak — bir dosyaya değil ve asla belgeye değil. Alan sonr' +
-      'a anahtarın ilk karakterlerini gösterir, hangisinin bağlı olduğu görünsün diye; <b>Ana' +
-      'htarı unut</b> onu kaldırır. Anahtar, girildiği yere bağlıdır — şema, sunucu adı ve ba' +
-      'ğlantı noktası: bunlardan biri değişirse panel anahtarı yeniden ister.</p>',
+      'a anahtarın ilk karakterlerini ve son dördünü gösterir — başlangıçlar birbirine benzer' +
+      ', anahtarları kuyruk ayırt eder; <b>Anahtarı unut</b> onu kaldırır. Anahtar, girildiği' +
+      ' yere bağlıdır — şema, sunucu adı ve bağlantı noktası: bunlardan biri değişirse panel ' +
+      'anahtarı yeniden ister.</p>',
     '<p>İlk basış açık sözlerle sorar — <b>Bu uç noktaya gönderilsin mi?</b> — alıcıyı adıy' +
       'la anarak. Yola çıkan: özetinizden ya da metninizden kurulan istem — seçtiğiniz kanal,' +
       ' çeşitleme ve dille birlikte —, bildirilen değişkenler, onarımda mevcut şablon ve tanı' +
@@ -9616,8 +9642,10 @@ const
       'едній перегляд відтворюваним ТУТ — те саме зерно й той самий шаблон завтра дадуть той ' +
       'самий текст, — але те саме зерно в рушії JavaScript може витягти інший варіант. Зерна ' +
       'потрібні, щоб відтворити власну роботу, а не щоб влучити в інший рушій.</p>',
-    '<p>Усе тут працює без мережі. Немає облікового запису, немає входу і нема чого вмикати' +
-      ': відкрийте програму — і вона працює.</p>',
+    '<p>Редактор, валідація, перегляд, генерація варіантів та експорт працюють без мережі —' +
+      ' вся щоденна робота. Немає облікового запису й входу: відкрийте програму — і вона прац' +
+      'ює. Єдина функція, що вміє виходити в мережу, — AI-чернетка — вимкнена, поки ви її не ' +
+      'ввімкнете, і має нижче власну главу.</p>',
     '<h2 id="panes">Дві половини</h2>',
     '<p>Друкують ліворуч. Права половина перемальовується після короткої паузи, щоб перегля' +
       'д встигав за реченням, а не за кожною літерою.</p>',
@@ -9757,9 +9785,9 @@ const
     '</ul>',
     '<p><b>Прив''язати ключ</b> кладе ключ у диспетчер облікових даних Windows, зашифровани' +
       'м для вашого облікового запису, — не у файл і ніколи не в документ. Поле потім показує' +
-      ' перші знаки ключа, щоб було видно, який прив''язаний, а <b>Забути ключ</b> прибирає й' +
-      'ого. Ключ прив''язаний до місця, для якого введений, — схеми, хоста й порту: зміните б' +
-      'удь-що з них — і панель попросить його знову.</p>',
+      ' перші знаки ключа та його останні чотири — початки в ключів однакові, розрізняє їх хв' +
+      'іст, а <b>Забути ключ</b> прибирає його. Ключ прив''язаний до місця, для якого введени' +
+      'й, — схеми, хоста й порту: зміните будь-що з них — і панель попросить його знову.</p>',
     '<p>Перше натискання питає прямо — <b>Надсилати на цей ендпоінт?</b> — називаючи отриму' +
       'вача. Їде промпт, зібраний з вашого брифа або тексту, — разом із вибраними каналом, ва' +
       'ріативністю та мовою, — оголошені змінні, при лагодженні поточний шаблон із його діагн' +
@@ -10549,8 +10577,10 @@ const
       'і прагляд паўтаральным ТУТ — тое самае зерне і той самы шаблон заўтра дадуць той самы ' +
       'тэкст, — але тое самае зерне ў рухавіку JavaScript можа выцягнуць іншы варыянт. Зерні ' +
       'патрэбныя, каб паўтарыць уласную працу, а не каб трапіць у іншы рухавік.</p>',
-    '<p>Усё тут працуе без сеткі. Няма ўліковага запісу, няма ўваходу і няма чаго ўключаць:' +
-      ' адкрыйце праграму — і яна працуе.</p>',
+    '<p>Рэдактар, валідацыя, прагляд, генерацыя варыянтаў і экспарт працуюць без сеткі — ус' +
+      'я штодзённая праца. Няма ўліковага запісу і ўваходу: адкрыйце праграму — і яна працуе.' +
+      ' Адзіная функцыя, што ўмее выходзіць у сетку, — AI-чарнавік — выключана, пакуль вы яе ' +
+      'не ўключыце, і мае ніжэй уласны раздзел.</p>',
     '<h2 id="panes">Дзве палавіны</h2>',
     '<p>Друкуюць злева. Правая палавіна перамалёўваецца пасля кароткай паўзы, каб прагляд п' +
       'аспяваў за сказам, а не за кожнай літарай.</p>',
@@ -10691,9 +10721,9 @@ const
     '</ul>',
     '<p><b>Прывязаць ключ</b> кладзе ключ у дыспетчар уліковых даных Windows, зашыфраваным ' +
       'для вашага ўліковага запісу, — не ў файл і ніколі не ў дакумент. Поле потым паказвае п' +
-      'ершыя знакі ключа, каб было відаць, які прывязаны, а <b>Забыць ключ</b> прыбірае яго. ' +
-      'Ключ прывязаны да месца, для якога ўведзены, — схемы, хаста і порта: зменіце любое з і' +
-      'х — і панэль папросіць яго зноў.</p>',
+      'ершыя знакі ключа і яго апошнія чатыры — пачаткі ў ключоў аднолькавыя, адрознівае іх х' +
+      'вост, а <b>Забыць ключ</b> прыбірае яго. Ключ прывязаны да месца, для якога ўведзены, ' +
+      '— схемы, хаста і порта: зменіце любое з іх — і панэль папросіць яго зноў.</p>',
     '<p>Першае націсканне пытаецца проста — <b>Адпраўляць на гэты эндпоінт?</b> — называючы' +
       ' атрымальніка. Едзе промпт, сабраны з вашага брыфа або тэксту, — разам з выбранымі кан' +
       'алам, варыятыўнасцю і мовай, — аб''яўленыя зменныя, пры папраўцы бягучы шаблон з яго д' +
@@ -11489,8 +11519,9 @@ const
       ' поновљивим ОВДЕ — исто семе и исти шаблон сутра дају исти текст — али исто семе у Jav' +
       'aScript мотору може извући другу варијанту. Семена служе да поновите сопствени рад, а ' +
       'не да погодите други мотор.</p>',
-    '<p>Све овде ради без мреже. Нема налога, нема пријаве и нема шта да се укључује: отвор' +
-      'ите програм и он ради.</p>',
+    '<p>Уредник, провера, преглед, прављење варијанти и извоз раде без мреже — сав свакодне' +
+      'вни посао. Нема налога ни пријаве: отворите програм и он ради. Једина функција која ум' +
+      'е на мрежу, AI нацрт, искључена је док је не укључите, и има ниже своје поглавље.</p>',
     '<h2 id="panes">Две половине</h2>',
     '<p>Куца се лево. Десна половина се поново исцртава после кратке паузе, да преглед стиж' +
       'е за реченицом, а не за сваким словом.</p>',
@@ -11623,9 +11654,9 @@ const
     '</ul>',
     '<p><b>Привежи кључ</b> смешта кључ у Windows-ов управљач акредитивима, шифрован за ваш' +
       ' Windows налог — не у датотеку и никада у документ. Поље потом показује прве знакове к' +
-      'ључа, да се види који је привезан, а <b>Заборави кључ</b> га уклања. Кључ је привезан ' +
-      'за место за које је унет — шему, хост и порт: промените било шта од тога и панел ће га' +
-      ' затражити поново.</p>',
+      'ључа и његова последња четири — почеци су слични, реп је оно што кључеве разликује, а ' +
+      '<b>Заборави кључ</b> га уклања. Кључ је привезан за место за које је унет — шему, хост' +
+      ' и порт: промените било шта од тога и панел ће га затражити поново.</p>',
     '<p>Први притисак пита отворено — <b>Слати на овај endpoint?</b> — именујући примаоца. ' +
       'Путује упит састављен од вашег захтева или текста — заједно с изабраним каналом, вариј' +
       'ативношћу и језиком —, наведене променљиве, при поправци тренутни шаблон са својом диј' +
@@ -12403,8 +12434,10 @@ const
       'led ponovljivim OVDJE — isto sjeme i isti predložak sutra daju isti tekst — ali isto s' +
       'jeme u JavaScript motoru može izvući drugu varijantu. Sjemena služe da ponovite vlasti' +
       'ti rad, a ne da pogodite drugi motor.</p>',
-    '<p>Sve ovdje radi bez mreže. Nema računa, nema prijave i nema što uključivati: otvorit' +
-      'e program i on radi.</p>',
+    '<p>Uređivač, provjera, pregled, stvaranje varijanti i izvoz rade bez mreže — sav svako' +
+      'dnevni posao. Nema računa ni prijave: otvorite program i on radi. Jedina funkcija koja' +
+      ' zna na mrežu, AI nacrt, isključena je dok je ne uključite, i ima niže svoje poglavlje' +
+      '.</p>',
     '<h2 id="panes">Dvije polovice</h2>',
     '<p>Tipka se lijevo. Desna se polovica iznova iscrtava nakon kratke stanke, da pregled ' +
       'stiže za rečenicom, a ne za svakim slovom.</p>',
@@ -12543,9 +12576,10 @@ const
     '</ul>',
     '<p><b>Priveži ključ</b> sprema ključ u Windowsov upravitelj vjerodajnicama, šifriran z' +
       'a vaš Windows račun — ne u datoteku i nikada u dokument. Polje potom pokazuje prve zna' +
-      'kove ključa, da se vidi koji je privezan, a <b>Zaboravi ključ</b> ga uklanja. Ključ je' +
-      ' privezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo što od to' +
-      'ga i panel će ga zatražiti ponovno.</p>',
+      'kove ključa i njegova posljednja četiri — počeci su slični, rep je ono što ključeve ra' +
+      'zlikuje, a <b>Zaboravi ključ</b> ga uklanja. Ključ je privezan za mjesto za koje je un' +
+      'esen — shemu, host i port: promijenite bilo što od toga i panel će ga zatražiti ponovn' +
+      'o.</p>',
     '<p>Prvi pritisak pita otvoreno — <b>Slati na ovaj endpoint?</b> — imenujući primatelja' +
       '. Putuje upit sastavljen od vašeg zadatka ili teksta — zajedno s izabranim kanalom, va' +
       'rijativnošću i jezikom —, navedene varijable, pri popravku trenutačna šablona sa svojo' +
@@ -13329,8 +13363,10 @@ const
       'led ponovljivim OVDJE — isto sjeme i isti šablon sutra daju isti tekst — ali isto sjem' +
       'e u JavaScript motoru može izvući drugu varijantu. Sjemena služe da ponovite vlastiti ' +
       'rad, a ne da pogodite drugi motor.</p>',
-    '<p>Sve ovdje radi bez mreže. Nema računa, nema prijave i nema šta uključivati: otvorit' +
-      'e program i on radi.</p>',
+    '<p>Urednik, provjera, pregled, pravljenje varijanti i izvoz rade bez mreže — sav svako' +
+      'dnevni posao. Nema računa ni prijave: otvorite program i on radi. Jedina funkcija koja' +
+      ' zna na mrežu, AI nacrt, isključena je dok je ne uključite, i ima niže svoje poglavlje' +
+      '.</p>',
     '<h2 id="panes">Dvije polovine</h2>',
     '<p>Kuca se lijevo. Desna polovina se ponovo iscrtava nakon kratke pauze, da pregled st' +
       'iže za rečenicom, a ne za svakim slovom.</p>',
@@ -13467,9 +13503,10 @@ const
     '</ul>',
     '<p><b>Priveži ključ</b> sprema ključ u Windowsov upravljač akreditivima, šifrovan za v' +
       'aš Windows račun — ne u datoteku i nikada u dokument. Polje potom pokazuje prve znakov' +
-      'e ključa, da se vidi koji je privezan, a <b>Zaboravi ključ</b> ga uklanja. Ključ je pr' +
-      'ivezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo šta od toga ' +
-      'i panel će ga zatražiti ponovo.</p>',
+      'e ključa i njegova posljednja četiri — počeci su slični, rep je ono što ključeve razli' +
+      'kuje; tako se vidi koji je privezan, a <b>Zaboravi ključ</b> ga uklanja. Ključ je priv' +
+      'ezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo šta od toga i ' +
+      'panel će ga zatražiti ponovo.</p>',
     '<p>Prvi pritisak pita otvoreno — <b>Slati na ovaj endpoint?</b> — imenujući primaoca. ' +
       'Putuje upit sastavljen od vašeg zadatka ili teksta — zajedno s izabranim kanalom, vari' +
       'jativnošću i jezikom —, navedene varijable, pri popravci trenutni šablon sa svojom dij' +

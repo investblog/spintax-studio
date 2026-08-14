@@ -8464,6 +8464,10 @@ begin
     finally
       body.Free;
     end;
+    { A named failure, not a silent skip: a shipped language whose documents cannot be read
+      is a defect, and a leg that silently skips is how a gap survives (the platform-split
+      lesson; review 2026-08-15 flagged this Continue). }
+    CheckTrue('help/' + code + '/documents are readable for the quotes gate', all_ <> '');
     if all_ = '' then Continue;
     { Markdown WRAPS. A label whose words fall either side of a line break is still the label
       the reader sees on the control, so both sides of the comparison are flattened -- the

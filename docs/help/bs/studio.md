@@ -23,8 +23,9 @@ Ono što nije obećano, a razlika je važna pri poređenju: izvlačenje. Sjeme �
 OVDJE — isto sjeme i isti šablon sutra daju isti tekst — ali isto sjeme u JavaScript motoru može
 izvući drugu varijantu. Sjemena služe da ponovite vlastiti rad, a ne da pogodite drugi motor.
 
-Sve ovdje radi bez mreže. Nema računa, nema prijave i nema šta uključivati: otvorite program i on
-radi.
+Urednik, provjera, pregled, pravljenje varijanti i izvoz rade bez mreže — sav svakodnevni
+posao. Nema računa ni prijave: otvorite program i on radi. Jedina funkcija koja zna na mrežu,
+AI nacrt, isključena je dok je ne uključite, i ima niže svoje poglavlje.
 
 ## Dvije polovine
 
@@ -174,7 +175,8 @@ Ključ je vaš, napravljen na vašem računu — aplikacija nikada nema svoj:
   — obično ne traže ključ uopšte: postavite **Autorizacija** na **nema**.
 
 **Priveži ključ** sprema ključ u Windowsov upravljač akreditivima, šifrovan za vaš Windows račun —
-ne u datoteku i nikada u dokument. Polje potom pokazuje prve znakove ključa, da se vidi koji
+ne u datoteku i nikada u dokument. Polje potom pokazuje prve znakove ključa i njegova
+posljednja četiri — počeci su slični, rep je ono što ključeve razlikuje; tako se vidi koji
 je privezan, a **Zaboravi ključ** ga uklanja. Ključ je privezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo šta od
 toga i panel će ga zatražiti ponovo.
 

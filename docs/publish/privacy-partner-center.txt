@@ -10,11 +10,11 @@ Turning on the AI connection does not change this. A key, when your profile uses
 What leaves your computer
 With the AI connection off, which is how the application is installed: nothing. The editor, validation, rendering, variant generator, export and built-in help work without a network connection and always have.
 
-With it on, and only when you press the button that sends: the prompt goes out. That is the brief you wrote, the variable names you listed and, when you ask for a repair, the draft and the diagnostics the engine found in it. It goes to the endpoint you configured, with your key and on your account when the endpoint uses them. Nothing else is added: no identifier, no document you did not send, and no record is kept here of what you sent.
+With it on, and only when you press the button that sends: the prompt goes out. That is the brief you wrote (in the text-to-template mode, the source text you pasted), the variable names you listed and, when you ask for a repair, your current document with the diagnostics the engine found in it: the whole document as it stands, whether or not it began as an AI draft. It goes to the endpoint you configured, with your key and on your account when the endpoint uses them. Nothing else is added: no identifier, no document beyond the one you pressed the button on, and no record is kept here of what you sent.
 
-An address on your own machine is an address, not a promise. You can point this at a model running locally, something answering on http://localhost:11434, and many people will. What we can tell you is what we do: the request goes to the address in your profile and nowhere else, we are not in it, and nothing about it is reported back to us. What we cannot tell you is what the software at that address does with it next, because we did not write it and cannot see inside it. It may be exactly the local model it looks like; it may also be a proxy that forwards.
+An address on your own machine is an address, not a promise. You can point this at a model running locally, something answering on http://localhost:11434, and many people will. What we can tell you is what we do: the request goes to the address in your profile and nowhere else, we are not in it, and nothing about it is reported back to us. What we cannot tell you is what the software at that address does with it next, because we did not write it and cannot see inside it. It may be exactly the local model it looks like; it may also be a proxy that forwards. If it matters to you that nothing leaves the computer, that is a question to settle with whatever you are running there - this application cannot answer it on their behalf, and a policy that said otherwise would be guessing.
 
-The recipient does not change without you. If the address you configured answers with a redirect, the request is refused and you are told where it wanted to send you, rather than followed automatically.
+The recipient does not change without you. If the address you configured answers with a redirect, the request is refused and you are told where it wanted to send you, rather than followed automatically. Otherwise the far end could move where your prompt and your key go, and you would never see it happen.
 
 What the software at that endpoint does with what you send is its operator's to state, not ours. Any policy the operator states applies to that exchange and we are not a party to it.
 
@@ -25,7 +25,7 @@ Your settings, including interface language, theme, editor font and panel widths
 
 Your documents stay where you put them. Templates, template sets and exported variants are ordinary files in folders you choose. The application reads and writes them only when you ask it to and never copies them elsewhere.
 
-Removing the application removes its settings with it.
+Removing the application removes its settings with it. An attached AI key is the one exception: it lives in the Windows Credential Manager, not in the package, and stays there until you press Forget key in the AI settings or remove it in the Credential Manager yourself - uninstalling does not clear it.
 
 Children
 The application collects no data from anyone, of any age.

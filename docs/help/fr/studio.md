@@ -25,8 +25,10 @@ rend l'aperçu reproductible ICI — la même graine et le même gabarit donnent
 mais la même graine dans le moteur JavaScript peut tirer une autre variante. Les graines servent à
 reproduire votre propre travail, pas à retomber sur un autre moteur.
 
-Tout fonctionne ici sans connexion réseau. Il n'y a pas de compte, pas de connexion et rien à
-activer : ouvrez le programme et il tourne.
+L'éditeur, la validation, l'aperçu, la génération de variantes et l'export fonctionnent sans
+connexion réseau — tout le travail quotidien. Il n'y a ni compte ni identifiant : ouvrez le
+programme et il tourne. La seule fonction capable d'aller en ligne, le brouillon IA, est
+éteinte tant que vous ne l'allumez pas, et a son propre chapitre plus bas.
 
 ## Les deux volets
 
@@ -198,7 +200,8 @@ La clé est la vôtre, créée sur votre propre compte — l'application n'en a 
 
 **Rattacher la clé** range la clé dans le Gestionnaire d'identifiants de Windows, chiffrée pour votre
 compte Windows — pas dans un fichier, et jamais dans le document. Le champ montre ensuite les
-premiers caractères de la clé, pour voir laquelle est rattachée, et **Oublier la clé** la retire.
+premiers caractères de la clé et ses quatre derniers — les débuts se ressemblent, c'est la
+fin qui distingue les clés, et **Oublier la clé** la retire.
 Une clé est rattachée au lieu pour lequel elle a été saisie — le schéma, l'hôte et le port :
 changez l'un d'eux et le panneau la redemande.
 

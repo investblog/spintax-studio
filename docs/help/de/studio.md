@@ -27,8 +27,10 @@ morgen denselben Text —, aber derselbe Startwert kann in der JavaScript-Maschi
 Alternative ziehen. Startwerte sind dazu da, Ihre eigene Arbeit zu reproduzieren, nicht dazu,
 eine andere Maschine zu treffen.
 
-Alles hier funktioniert ohne Netzverbindung. Es gibt kein Konto, keine Anmeldung und nichts
-einzuschalten: Programm öffnen, und es läuft.
+Editor, Validierung, Vorschau, Variantenerzeugung und Export funktionieren ohne
+Netzverbindung — die ganze tägliche Arbeit. Es gibt kein Konto und keine Anmeldung: Programm
+öffnen, und es läuft. Die eine Funktion, die ins Netz kann — der KI-Entwurf — ist aus, bis Sie
+sie einschalten, und hat unten ein eigenes Kapitel.
 
 ## Die zwei Hälften
 
@@ -156,7 +158,7 @@ eine Seite. Das Panel **KI-Entwurf** macht daraus eine erste Vorlage: öffnen Si
 Werkzeugleiste, lassen Sie die Kopfzeile der linken Spalte auf **Text zum Umwandeln**, fügen Sie den Text
 ein und drücken Sie **Erzeugen**. Der fertige Entwurf ersetzt das Dokument, die Vorschau rendert
 ihn, und das Diagnose-Panel urteilt — dieselbe Maschine und dasselbe Urteil wie für alles, was
-Sie selbst tippen. Ein Ctrl+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie
+Sie selbst tippen. Ein Strg+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie
 eigenen Text, denn das ist er.
 
 Gibt es nichts einzufügen, stellen Sie die Kopfzeile auf **Briefing** und beschreiben, was Sie
@@ -201,7 +203,8 @@ eigenen:
 
 **Schlüssel anheften** legt den Schlüssel in die Windows-Anmeldeinformationsverwaltung, verschlüsselt für
 Ihr Windows-Konto — nicht in eine Datei und nie ins Dokument. Das Feld zeigt danach die ersten
-Zeichen des Schlüssels, damit zu sehen ist, welcher angeheftet ist, und **Schlüssel vergessen** entfernt
+Zeichen des Schlüssels und seine letzten vier — die Anfänge gleichen sich, der Schluss
+unterscheidet die Schlüssel, und **Schlüssel vergessen** entfernt
 ihn. Ein Schlüssel gehört zu dem Ort, für den er eingegeben wurde — Schema, Host und Port: ändern
 Sie eines davon, fragt das Panel erneut danach.
 

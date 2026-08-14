@@ -208,7 +208,8 @@ const
       '{?name?onda|inače}',
       'Nije umotano: #/ u odabiru ili oko njega završio bi komentar prerano.',
       'Nije umotano: samostalna |, nezatvorena zagrada ili otvoren komentar promijenili bi smisao uslova.',
-      'Nije umetnuto: kursor siječe oznaku komentara napola.'
+      'Nije umetnuto: kursor siječe oznaku komentara napola.',
+      'Endpoint adresa se ne može pročitati — ispravite je, pa privežite ključ.'
   );
 
 implementation

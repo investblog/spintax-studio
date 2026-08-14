@@ -23,8 +23,9 @@ Ono što nije obećano, a razlika je važna pri usporedbi: izvlačenje. Sjeme č
 OVDJE — isto sjeme i isti predložak sutra daju isti tekst — ali isto sjeme u JavaScript motoru može
 izvući drugu varijantu. Sjemena služe da ponovite vlastiti rad, a ne da pogodite drugi motor.
 
-Sve ovdje radi bez mreže. Nema računa, nema prijave i nema što uključivati: otvorite program i on
-radi.
+Uređivač, provjera, pregled, stvaranje varijanti i izvoz rade bez mreže — sav svakodnevni
+posao. Nema računa ni prijave: otvorite program i on radi. Jedina funkcija koja zna na mrežu,
+AI nacrt, isključena je dok je ne uključite, i ima niže svoje poglavlje.
 
 ## Dvije polovice
 
@@ -177,8 +178,8 @@ Ključ je vaš, napravljen na vašem računu — aplikacija nikada nema svoj:
   LM Studio — obično ne traže ključ uopće: postavite **Autorizacija** na **nema**.
 
 **Priveži ključ** sprema ključ u Windowsov upravitelj vjerodajnicama, šifriran za vaš Windows račun
-— ne u datoteku i nikada u dokument. Polje potom pokazuje prve znakove ključa, da se vidi
-koji je privezan, a **Zaboravi ključ** ga uklanja. Ključ je privezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo što od
+— ne u datoteku i nikada u dokument. Polje potom pokazuje prve znakove ključa i njegova
+posljednja četiri — počeci su slični, rep je ono što ključeve razlikuje, a **Zaboravi ključ** ga uklanja. Ključ je privezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo što od
 toga i panel će ga zatražiti ponovno.
 
 Prvi pritisak pita otvoreno — **Slati na ovaj endpoint?** — imenujući primatelja. Putuje upit sastavljen od vašeg zadatka

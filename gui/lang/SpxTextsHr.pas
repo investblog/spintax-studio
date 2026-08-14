@@ -203,7 +203,8 @@ const
       '{?name?onda|inače}',
       'Nije omotano: #/ u odabiru ili oko njega završio bi komentar prerano.',
       'Nije omotano: samostalna |, nezatvorena zagrada ili otvoren komentar promijenili bi smisao uvjeta.',
-      'Nije umetnuto: pokazivač siječe oznaku komentara napola.'
+      'Nije umetnuto: pokazivač siječe oznaku komentara napola.',
+      'Endpoint adresa se ne može pročitati — ispravite je, pa privežite ključ.'
   );
 
 implementation

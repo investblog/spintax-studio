@@ -44,11 +44,12 @@ validation, rendering, the variant generator, export and the built-in help have 
 and still do not.
 
 **With it on, and only when you press the button that sends:** the prompt goes out. That is the
-brief you wrote, the variable names you listed, and — when you ask for a repair — the draft and
-the diagnostics the engine found in it. It goes to the endpoint you configured — with your key
-and on your account when the endpoint uses them. Nothing else is added to it: no identifier,
-no document you did not send, and
-no record is kept here of what you sent.
+brief you wrote — which, in the text-to-template mode, is the source text you pasted — the
+variable names you listed, and, when you ask for a repair, your current document with the
+diagnostics the engine found in it: the whole document as it stands, whether or not it began as
+an AI draft. It goes to the endpoint you configured — with your key and on your account when
+the endpoint uses them. Nothing else is added to it: no identifier, no document beyond the one
+you pressed the button on, and no record is kept here of what you sent.
 
 **An address on your own machine is an address, not a promise.** You can point this at a model
 running locally — something answering on `http://localhost:11434`, say — and many people will.
@@ -91,7 +92,10 @@ details, and nothing that identifies you or your machine.
 ordinary files in folders you choose. The application reads and writes them only when you ask
 it to, and never copies them anywhere else.
 
-Removing the application removes its settings with it.
+Removing the application removes its settings with it. **An attached AI key is the one
+exception:** it lives in the Windows Credential Manager, not in the package, and stays
+there until you press **Forget key** in the AI settings or remove it in the Credential
+Manager yourself — uninstalling does not clear it.
 
 ## Children
 

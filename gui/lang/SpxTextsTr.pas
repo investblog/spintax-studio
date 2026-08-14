@@ -201,7 +201,8 @@ const
       '{?ad?ise|değilse}',
       'Alınmadı: seçimin içindeki veya çevresindeki bir #/ açıklamayı erken bitirirdi.',
       'Alınmadı: tek başına bir |, kapanmamış bir ayraç veya açık bir açıklama koşulun anlamını değiştirirdi.',
-      'Eklenmedi: imleç bir açıklama işaretini ikiye bölüyor.'
+      'Eklenmedi: imleç bir açıklama işaretini ikiye bölüyor.',
+      'Uç nokta adresi okunamıyor — düzeltin, sonra anahtarı bağlayın.'
   );
 
 implementation

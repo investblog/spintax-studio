@@ -212,7 +212,8 @@ const
       '{?nom?alors|sinon}',
       'Non entouré : un #/ dans la sélection ou autour d''elle terminerait le commentaire trop tôt.',
       'Non entouré : un | isolé, une parenthèse déséquilibrée ou un commentaire ouvert changerait le sens de la condition.',
-      'Non inséré : le curseur coupe une marque de commentaire en deux.'
+      'Non inséré : le curseur coupe une marque de commentaire en deux.',
+      'L''adresse de l''endpoint est illisible — corrigez-la, puis rattachez la clé.'
   );
 
 implementation

@@ -203,7 +203,8 @@ const
       '{?nome?então|senão}',
       'Não envolvido: um #/ dentro ou à volta da seleção terminaria o comentário cedo demais.',
       'Não envolvido: uma | solta, um parêntese por fechar ou um comentário aberto mudaria o que a condição diz.',
-      'Não inserido: o cursor corta ao meio uma marca de comentário.'
+      'Não inserido: o cursor corta ao meio uma marca de comentário.',
+      'O endereço do endpoint não se consegue ler — corrija-o e anexe a chave de novo.'
   );
 
 implementation

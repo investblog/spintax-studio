@@ -25,8 +25,10 @@ repetible AQUÍ —la misma semilla y la misma plantilla dan mañana el mismo te
 semilla en el motor de JavaScript puede sacar otra alternativa. Las semillas sirven para
 reproducir su propio trabajo, no para coincidir con otro motor.
 
-Todo aquí funciona sin conexión de red. No hay cuenta, no hay inicio de sesión y no hay nada que
-activar: abra el programa y ya está funcionando.
+El editor, la validación, la vista previa, la generación de variantes y la exportación
+funcionan sin conexión de red — todo el trabajo diario. No hay cuenta ni inicio de sesión:
+abra el programa y ya está funcionando. La única función capaz de salir a la red, el borrador
+de IA, está apagada hasta que usted la encienda, y tiene más abajo su propio capítulo.
 
 ## Las dos mitades
 
@@ -186,7 +188,8 @@ La clave es suya, creada en su propia cuenta — la aplicación nunca tiene una 
 
 **Adjuntar la clave** guarda la clave en el Administrador de credenciales de Windows, cifrada para su
 cuenta de Windows — no en un archivo, y nunca en el documento. El campo muestra después los
-primeros caracteres de la clave, para ver cuál está adjunta, y **Olvidar la clave** la retira. Una
+primeros caracteres de la clave y sus últimos cuatro — los comienzos se parecen, la cola es
+lo que distingue las claves, y **Olvidar la clave** la retira. Una
 clave queda adjunta al lugar para el que se introdujo — el esquema, el host y el puerto:
 cambie cualquiera de ellos y el panel la pedirá de nuevo.
 

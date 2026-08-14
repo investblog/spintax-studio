@@ -25,8 +25,10 @@ voorvertoning HIER herhaalbaar — hetzelfde startgetal en hetzelfde sjabloon ge
 tekst —, maar hetzelfde startgetal in de JavaScript-machine kan een ander alternatief trekken.
 Startgetallen dienen om uw eigen werk te herhalen, niet om een andere machine te treffen.
 
-Alles hier werkt zonder netwerkverbinding. Er is geen account, geen aanmelding en niets om aan te
-zetten: open het programma en het draait.
+De editor, validatie, voorvertoning, variantgeneratie en export werken zonder
+netwerkverbinding — het hele dagelijkse werk. Er is geen account en geen aanmelding: open het
+programma en het draait. De ene functie die online kan, het AI-concept, staat uit tot u haar
+aanzet, en heeft verderop een eigen hoofdstuk.
 
 ## De twee helften
 
@@ -192,7 +194,8 @@ zichzelf:
 
 **Sleutel koppelen** bergt de sleutel op in Windows Referentiebeheer, versleuteld voor uw
 Windows-account — niet in een bestand, en nooit in het document. Het veld toont daarna de
-eerste tekens van de sleutel, zodat te zien is welke gekoppeld is, en **Sleutel vergeten** haalt hem
+eerste tekens van de sleutel en zijn laatste vier — de beginstukken lijken op elkaar, de
+staart onderscheidt de sleutels, en **Sleutel vergeten** haalt hem
 weg. Een sleutel hoort bij de plek waarvoor hij is ingevoerd — schema, host en poort: wijzig er
 één en het paneel vraagt er opnieuw om.
 

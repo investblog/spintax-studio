@@ -234,7 +234,13 @@ type
     (* A caret parked between the two characters of `/#` or `#/`: anything inserted there
        cuts the mark in half and can resurrect commented text (measured; review round two
        and three). Every caret-insert path refuses with this sentence. *)
-    sInsSplitRefused
+    sInsSplitRefused,
+
+    (* Attach key with an endpoint the parser cannot read said "no key attached" -- but the
+       key was right there in the field; the ADDRESS was the problem, and the reader's next
+       move (retype the key) failed identically (review, 2026-08-15). The truthful sentence:
+       name the endpoint as the thing to fix. *)
+    sAiKeyBadEndpoint
   );
 
 implementation

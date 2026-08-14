@@ -25,8 +25,10 @@ pré-visualização repetível AQUI — a mesma semente e o mesmo modelo dão am
 a mesma semente no motor JavaScript pode tirar outra alternativa. As sementes servem para
 reproduzir o seu próprio trabalho, não para bater certo com outro motor.
 
-Tudo aqui funciona sem ligação de rede. Não há conta, não há sessão para iniciar e não há nada
-para activar: abra o programa e já está a correr.
+O editor, a validação, a pré-visualização, a geração de variantes e a exportação funcionam
+sem ligação de rede — todo o trabalho diário. Não há conta nem sessão para iniciar: abra o
+programa e já está a correr. A única função capaz de ir à rede, o rascunho de IA, está
+desligada até que a ligue, e tem mais abaixo um capítulo próprio.
 
 ## As duas metades
 
@@ -186,7 +188,8 @@ A chave é sua, criada na sua própria conta — a aplicação nunca tem uma pr�
 
 **Anexar a chave** guarda a chave no Gestor de Credenciais do Windows, cifrada para a sua conta
 Windows — não num ficheiro, e nunca no documento. O campo mostra depois os primeiros
-caracteres da chave, para se ver qual está anexada, e **Esquecer a chave** retira-a. Uma chave fica
+caracteres da chave e os seus últimos quatro — os começos parecem-se, é a cauda que
+distingue as chaves, e **Esquecer a chave** retira-a. Uma chave fica
 presa ao lugar para o qual foi introduzida — o esquema, o host e a porta: mude qualquer um
 deles e o painel volta a pedi-la.
 

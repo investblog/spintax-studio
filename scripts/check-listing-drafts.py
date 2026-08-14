@@ -212,6 +212,15 @@ def main():
         if count not in prose_of(text):
             notes.append('does not name the language count (%s)' % count)
 
+        # The 11.16 disclosure travels with EVERY listing, not only the English one: the
+        # report address and the AI paragraphs went into docs/store-listing.md on
+        # 2026-08-13/14, and a review (2026-08-14) found all thirteen drafts still carrying
+        # the pre-AI text with this checker reporting nothing. The address is the cheap
+        # structural proxy for the paragraphs: a draft that names it was touched by the
+        # disclosure rewrite, and one that does not was not.
+        if 'support@301.st' not in text:
+            notes.append('no AI report address (11.16 disclosure paragraphs missing?)')
+
         notes.extend(length_notes(text, bullets))
 
         print('%-6s %-9s %s' % (code, len(bullets) if bullets else '-',

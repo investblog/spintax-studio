@@ -26,7 +26,7 @@ pre-submission review's.
 
 ## 2. "Note the use of live generative AI in Partner Center during the submission process"
 
-A form action, not a file: at the `v0.1.1.0` submission, answer the AI-content question in
+A form action, not a file: at the next submission (`v0.2.0.0`), answer the AI-content question in
 Partner Center's Properties/declarations step affirmatively. It cannot be prepared further
 than this note, because the form's exact wording changes and a misquoted question is worse
 than none (the same rule the data-declaration note in

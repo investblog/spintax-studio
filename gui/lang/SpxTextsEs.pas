@@ -203,7 +203,8 @@ const
       '{?nombre?entonces|si no}',
       'No envuelto: un #/ dentro o alrededor de la selección terminaría el comentario antes de tiempo.',
       'No envuelto: una | suelta, un corchete sin cerrar o un comentario abierto cambiaría lo que dice la condición.',
-      'No insertado: el cursor parte en dos una marca de comentario.'
+      'No insertado: el cursor parte en dos una marca de comentario.',
+      'La dirección del endpoint no se puede leer — corríjala y adjunte la clave de nuevo.'
   );
 
 implementation

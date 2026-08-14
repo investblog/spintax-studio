@@ -25,8 +25,10 @@ seme rende l'anteprima ripetibile QUI — lo stesso seme e lo stesso modello dan
 testo — ma lo stesso seme nel motore JavaScript può pescare un'altra alternativa. I semi servono a
 riprodurre il vostro lavoro, non a coincidere con un altro motore.
 
-Tutto qui funziona senza connessione di rete. Non c'è un account, non c'è accesso e non c'è nulla
-da attivare: aprite il programma e sta già funzionando.
+L'editor, la validazione, l'anteprima, la generazione di varianti e l'esportazione funzionano
+senza connessione di rete — tutto il lavoro quotidiano. Non c'è account né accesso: aprite il
+programma e sta già funzionando. L'unica funzione capace di andare in rete, la bozza IA, è
+spenta finché non la accendete, e ha più sotto un capitolo suo.
 
 ## Le due metà
 
@@ -188,7 +190,7 @@ La chiave è vostra, creata sul vostro account — l'applicazione non ne ha mai 
 
 **Collega la chiave** ripone la chiave nel Gestore credenziali di Windows, cifrata per il vostro account
 Windows — non in un file, e mai nel documento. Il campo mostra poi i primi caratteri della
-chiave, così si vede quale è collegata, e **Dimentica la chiave** la toglie. Una chiave è legata al
+chiave e i suoi ultimi quattro — gli inizi si somigliano, è la coda a distinguere le chiavi, e **Dimentica la chiave** la toglie. Una chiave è legata al
 luogo per cui è stata inserita — schema, host e porta: cambiatene uno e il pannello la
 richiede.
 

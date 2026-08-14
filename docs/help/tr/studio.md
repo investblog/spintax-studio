@@ -24,8 +24,9 @@ yinelenebilir kılar — aynı tohum ve aynı şablon yarın da aynı metni veri
 JavaScript makinesinde başka bir seçenek çekebilir. Tohumlar kendi işinizi yeniden üretmek içindir,
 başka bir makineyi tutturmak için değil.
 
-Buradaki her şey ağ bağlantısı olmadan çalışır. Hesap yok, oturum açma yok ve açılacak bir şey yok:
-programı açın, çalışıyor.
+Editör, doğrulama, önizleme, çeşit üretimi ve dışa aktarma ağ bağlantısı olmadan çalışır —
+günlük işin tamamı. Hesap yok, oturum açma yok: programı açın, çalışıyor. Ağa çıkabilen tek
+özellik olan yapay zekâ taslağı siz açana kadar kapalıdır ve aşağıda kendi bölümü vardır.
 
 ## İki yarım
 
@@ -55,7 +56,7 @@ yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl ç�
 **Ctrl+F** üst şeritte bir arama alanı açar. Yanındaki sayaç metnin kaç kez geçtiğini ve
 hangi eşleşmede durduğunuzu söyler; **Enter** ileri, **Shift+Enter** geri adımlar, F3
 doğrudan belgeden çalışır. Alandaki kutucuk işaretlenene dek büyük-küçük harf fark etmez —
-katlama da motorun kendisinindir, bu yüzden Kiril ya da aksanlı bir harf, önizlemenin ikisini
+katlama da makinenin kendisinindir, bu yüzden Kiril ya da aksanlı bir harf, önizlemenin ikisini
 tek harf saydığı yerde diğer biçimiyle eşleşir.
 
 **Ctrl+H** — ya da **Değiştir…** menü öğesi — şeride ikinci bir satır ekler: değiştirilecek
@@ -69,7 +70,7 @@ döngüye girmez: değişecek yerler önceden, metnin eski hâli üzerinde belir
 paylaşmayanları değiştirir — bu yüzden "değiştirilen" dürüstçe daha küçük bir sayı
 diyebilir.
 
-Değiştirilmiş belge, yazılmış metinle aynı motor yolundan geçer: önizleme yeniden çizilir,
+Değiştirilmiş belge, yazılmış metinle aynı makine yolundan geçer: önizleme yeniden çizilir,
 tanılar artık orada olan hakkında yanıt verir.
 
 ## İşaretleri ekleme
@@ -181,7 +182,8 @@ yoktur:
 
 **Anahtarı bağla**, anahtarı Windows Kimlik Bilgisi Yöneticisine koyar, Windows hesabınız için
 şifrelenmiş olarak — bir dosyaya değil ve asla belgeye değil. Alan sonra anahtarın ilk
-karakterlerini gösterir, hangisinin bağlı olduğu görünsün diye; **Anahtarı unut** onu kaldırır.
+karakterlerini ve son dördünü gösterir — başlangıçlar birbirine benzer, anahtarları kuyruk
+ayırt eder; **Anahtarı unut** onu kaldırır.
 Anahtar, girildiği yere bağlıdır — şema, sunucu adı ve bağlantı noktası: bunlardan biri
 değişirse panel anahtarı yeniden ister.
 

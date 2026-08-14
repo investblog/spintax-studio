@@ -206,7 +206,8 @@ const
       '{?naam?dan|anders}',
       'Niet omsloten: een #/ in of rond de selectie zou de opmerking te vroeg beëindigen.',
       'Niet omsloten: een losse |, een niet-gesloten haak of een open opmerking zou de voorwaarde veranderen.',
-      'Niet ingevoegd: de cursor splijt een opmerkingsteken in tweeën.'
+      'Niet ingevoegd: de cursor splijt een opmerkingsteken in tweeën.',
+      'Het endpoint-adres is niet te lezen — herstel het en koppel dan de sleutel.'
   );
 
 implementation

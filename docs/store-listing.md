@@ -8,7 +8,7 @@ product: spintax-studio
 
 **Live since 2026-08-04:** <https://apps.microsoft.com/detail/9mw3ch7b530p>. This file is the
 copy for the NEXT submission; what the live page actually carries is recorded at the end, and
-the differences travel with the `v0.1.1.0` Partner Center visit
+the differences travel with the next Partner Center visit (`v0.2.0.0`)
 ([`publish/store-listing-edits.md`](publish/store-listing-edits.md)).
 
 Updated 2026-08-13 for the AI slice: the description now discloses the live generative AI
@@ -205,7 +205,7 @@ Spintax Studio is an offline Windows x64 desktop editor for SPINTAX templates. N
 6. Use the export actions to save TXT and XLSX output to a local folder selected by the tester.
 7. Optionally use File > Open to load a local template file. This is not required because the built-in demo covers the main workflow.
 
-The application has no sign-in, license activation, telemetry, analytics, or backend. It makes no network requests at all. It carries two brand links -- spintax.net on the tool rail and 301.st in the status bar -- which, when clicked, ask Windows to open that address in the tester's own browser; the application itself opens no connection and neither link is required to test the product. Optional AI authoring resources at spintax.net are external to the application and require no credentials in Studio.
+The application has no sign-in, license activation, telemetry, analytics, or backend, and no demo account is needed (policy 10.3.1): the optional AI feature is off as installed and sits behind the tester's own endpoint and key, and every other feature above is verifiable without it. As installed the application makes no network requests; the AI panel's Generate and Fix connect only after the tester configures an endpoint at the foot of the AI draft panel and confirms the consent dialog, and internetClient is declared for exactly this feature. The window carries two brand links -- spintax.net on the tool rail and 301.st in the status bar -- which, when clicked, ask Windows to open that address in the tester's own browser; neither link is required to test the product. AI output can be reported to support@301.st, shown as plain text in the About window (Help > About) and named in the privacy policy.
 ```
 
 ## What the live listing actually carries
@@ -216,7 +216,9 @@ marked otherwise:
 
 - Title `Spintax Studio`, short title `Spintax`, publisher `301`, category *Developer tools*,
   price `Free`, platform `x64`, listing language `English (United States)`.
-- Description and all twenty feature bullets are the text above, unchanged.
+- Description and all twenty feature bullets matched the draft as it stood at the
+2026-08-04 submission; the text above has been rewritten since (2026-08-13/14) and goes up
+with the next visit.
 - Age rating ESRB *Everyone*; the accessibility declaration is off (`Accessible: false`).
 - Package family `301.SpintaxStudio_jnd8jmenjzsm0`, ≈ 2.54 MB.
 
@@ -236,6 +238,6 @@ fixed in the tree and needs a rebuild.
 
 **None of it is submitted on its own.** Owner's decision, 2026-08-04: the two listing fields need
 no new package, but changing them is still a review cycle, and a review cycle for two lines of
-text is not worth taking. They ride with `v0.1.1.0` together with the rebuilt executable — see
+text is not worth taking. They ride with the next submission (`v0.2.0.0`) together with the rebuilt executable — see
 *What `v0.1.1.0` carries* in [`TODO.md`](TODO.md). Until then the live page stays as it is on
 purpose.

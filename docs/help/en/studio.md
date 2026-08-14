@@ -25,8 +25,10 @@ the preview repeatable HERE — the same seed and the same template give the sam
 but the same seed in the JavaScript engine may pick a different alternative. Seeds are for
 reproducing your own work, not for matching another engine's.
 
-Everything here works with no network connection. There is no account, no sign-in and nothing
-to switch on: open the program and it is running.
+The editor, validation, preview, variant generation and export work with no network
+connection — the whole of the daily work. There is no account and no sign-in: open the program
+and it is running. The one feature that can go online, the AI draft, is off until you turn it
+on and has a chapter of its own below.
 
 ## The two panes
 
@@ -185,7 +187,8 @@ The key is yours, made on your own account — the application never has one of 
 
 **Attach key** stores the key in the Windows Credential Manager, encrypted for your Windows
 account — not in a file, and never in the document. The field then shows the key's first
-characters so you can tell which one is attached, and **Forget key** removes it. A key is
+characters and its last four — the beginnings are all alike, the tail is what tells keys
+apart, and **Forget key** removes it. A key is
 attached to the place it was entered for — the scheme, the host and the port: change any of
 those and the panel asks for it again.
 

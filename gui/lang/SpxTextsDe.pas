@@ -211,7 +211,8 @@ const
       '{?name?dann|sonst}',
       'Nicht eingefasst: ein #/ in oder um die Auswahl würde den Kommentar zu früh beenden.',
       'Nicht eingefasst: ein nacktes |, eine unausgeglichene Klammer oder ein offener Kommentar würde die Bedingung verändern.',
-      'Nicht eingefügt: die Schreibmarke zerteilt eine Kommentarmarke.'
+      'Nicht eingefügt: die Schreibmarke zerteilt eine Kommentarmarke.',
+      'Die Endpunkt-Adresse lässt sich nicht lesen — korrigieren Sie sie, dann den Schlüssel anheften.'
   );
 
 implementation
