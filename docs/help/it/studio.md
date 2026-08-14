@@ -136,21 +136,84 @@ allo stesso modo: il motore lo estrae una volta per resa, che il ramo preso lo u
 L'esportazione li scrive in tre modi: come cartella XLSX, come testo semplice con una variante per
 riga, oppure come un file per variante in una cartella a vostra scelta.
 
-**Bozza IA** è il punto da cui parte un modello quando non vuoi scrivere ogni variante a
-mano. Di' nel brief che cosa ti serve, elenca le variabili che il modello può usare e premi
-**Copia il prompt**. L'applicazione non parla con nessun modello e non conserva chiavi: scrive il prompt
-perché tu lo porti a quello che già usi. Riporta la risposta e premi **Inserisci nel documento** — il motore di
-questa finestra dice allora che cosa ne pensa, nel pannello delle diagnostiche, esattamente come
-per tutto ciò che scrivi tu. Se ci sono errori, **Copia il prompt di correzione** costruisce un secondo prompt: porta l'intero documento con le righe numerate e indica i punti
-esatti che il motore ha contestato. La risposta è il documento corretto per intero, quindi
-riportala e premi **Sostituisci il documento**: **Inserisci nel documento** lascerebbe quello
-rotto dov'è e ne metterebbe una copia corretta accanto.
+**Bozza IA** scrive per voi la prima bozza di un modello — da un testo che avete
+già, o da un brief. Merita una sezione tutta sua: la prossima.
 
-La colonna del caso è la parte che vale la pena compilare. Una variabile viene inserita alla
-lettera, nulla la declina: in una lingua con i casi la frase va costruita attorno alla forma che
-il valore ha già, e un modello sceglie bene solo se gli si dice quale forma porta ogni nome. Dal
-nome non si ricava: in un vero insieme di modelli le forme strumentali stavano in una variabile
-il cui nome diceva accusativo.
+## La bozza IA
+
+Un modello di solito comincia da un testo che esiste già — una scheda prodotto, una lettera,
+una pagina. Il pannello **Bozza IA** lo trasforma in un primo modello: apritelo dalla barra degli
+strumenti, lasciate l'intestazione della colonna sinistra su **Testo da convertire**, incollate il testo e
+premete **Genera**. La bozza arrivata sostituisce il documento, l'anteprima la rende e il
+pannello di diagnostica giudica — lo stesso motore e lo stesso verdetto di qualunque cosa
+scriviate voi. Un Ctrl+Z riporta il documento di prima; da lì, correggetela come testo vostro,
+perché lo è.
+
+Se non c'è nulla da incollare, spostate l'intestazione su **Brief** e descrivete cosa
+volete. I campi sopra guidano la bozza in entrambi i modi: **Canale** — una lettera, un SMS e
+una notifica push si scrivono in registri diversi; **Variazione** — quanto le varianti possono
+allontanarsi; la lingua della risposta; e **Variabili che il modello può usare**, dichiarate per nome. La colonna del caso è la parte che vale la pena compilare. Una variabile viene inserita alla lettera, nulla la declina: in una lingua con i casi la frase va costruita attorno alla forma che il valore ha già, e un modello sceglie bene solo se gli si dice quale forma porta ogni nome. Dal nome non si ricava: in un vero insieme di modelli le forme strumentali stavano in una variabile il cui nome diceva accusativo.
+
+Alla risposta non si crede: la si verifica. La bozza passa per il motore di questa finestra
+prima di avvicinarsi al documento, e se il verdetto trova errori il ciclo chiede al modello di
+correggerli — la barra di stato conta i giri — prima di consegnare alcunché. Solo una bozza
+pulita sostituisce il documento; tutto il resto si posa in **Risposta del modello**, la riga di stato
+dice perché, e nulla di vostro viene sovrascritto. Le vostre modifiche sono protette
+allo stesso modo: se avete scritto mentre una risposta era in volo, la bozza aspetta nel
+pannello. Mentre lavora, **Genera** si legge **Ferma** — premetelo per abbandonare il giro.
+
+**Correggi** è lo stesso ciclo puntato sul documento attuale: si sveglia quando la diagnostica
+trova errori, invia il documento con le obiezioni esatte e applica la versione corretta con la
+stessa cura.
+
+### La connessione, e la chiave di chi
+
+Come installata, l'applicazione non invia nulla da nessuna parte. **Genera** e **Correggi** vanno
+in rete solo dopo che avete impostato la connessione in fondo al pannello e l'avete permessa.
+Scegliete il **Formato** che parla il vostro endpoint — **Anthropic Messages** o
+**OpenAI-compatible** —, l'indirizzo **Endpoint** e il nome in **Modello** — per Anthropic
+l'elenco sotto la freccia offre nomi correnti; altrimenti scrivete il nome che il vostro
+endpoint si aspetta. **Autorizzazione** dice se viaggia
+una chiave: **Chiave API** per i fornitori in hosting, **nessuna** per i server che non la
+vogliono.
+
+La chiave è vostra, creata sul vostro account — l'applicazione non ne ha mai una propria:
+
+- **Anthropic** — la chiave si crea su `console.anthropic.com`, sezione API keys.
+- **OpenAI** — `platform.openai.com`, sezione API keys; per inviare serve anche la
+  fatturazione attiva sull'account.
+- **OpenAI-compatible** è una famiglia, non una sola azienda: OpenRouter risponde nella stessa
+  forma con molti modelli sotto una chiave, e i server sul vostro stesso computer — Ollama,
+  LM Studio — di solito non vogliono chiave alcuna: mettete **Autorizzazione** su **nessuna**.
+
+**Collega la chiave** ripone la chiave nel Gestore credenziali di Windows, cifrata per il vostro account
+Windows — non in un file, e mai nel documento. Il campo mostra poi i primi caratteri della
+chiave, così si vede quale è collegata, e **Dimentica la chiave** la toglie. Una chiave è legata al
+luogo per cui è stata inserita — schema, host e porta: cambiatene uno e il pannello la
+richiede.
+
+La prima pressione chiede in parole chiare — **Inviare a questo endpoint?** — nominando il destinatario.
+Viaggia il prompt costruito dal vostro brief o testo — con canale, variazione e lingua
+scelti —, le variabili dichiarate, il modello corrente con la sua diagnostica quando si
+ripara, il nome del modello dal vostro profilo con un tetto alla lunghezza della risposta,
+e, sotto autorizzazione **Chiave API**, la chiave nelle intestazioni della richiesta;
+nient'altro, e in nessun altro momento. Il destinatario non cambia senza di voi:
+un redirect viene rifiutato invece che seguito, e un indirizzo `http` non cifrato è
+accettato solo su questa macchina. Il permesso si lega dove si lega la chiave — schema, host e porta — e si vede nella spunta
+**Invio consentito** delle impostazioni — toglietela in qualunque momento: nulla di
+nuovo parte, e una risposta già in volo non viene mai applicata. Cosa faccia col testo il software all'indirizzo scelto spetta al suo
+operatore dirlo: la richiesta va all'indirizzo del vostro profilo e in nessun altro posto.
+
+### Lo stesso ciclo, senza rete
+
+I prompt non hanno bisogno né di chiave né di connessione — è la stessa strada quando il
+vostro modello vive in una finestra di chat, e il ciclo qui lo fate girare voi: il motore
+giudica dopo l'incollaggio, non prima. **Copia il prompt** mette il prompt completo negli
+appunti; portatelo al modello che usate, incollate la risposta in **Risposta del modello** e premete
+**Inserisci nel documento**. Se la diagnostica trova errori, **Copia il prompt di correzione** costruisce il secondo prompt: porta
+l'intero documento con le righe numerate e nomina i punti esatti che il motore ha contestato.
+La sua risposta è il documento corretto per intero — riportatela e premete **Sostituisci il documento**;
+**Inserisci nel documento** lascerebbe quello rotto al suo posto e metterebbe accanto la copia corretta.
 
 ## L'editor di gruppi
 

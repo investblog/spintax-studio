@@ -146,22 +146,89 @@ einmal je Durchgang, ob der eingeschlagene Zweig es benutzt oder nicht.
 Der Export schreibt sie auf drei Arten heraus: als XLSX-Mappe, als reinen Text mit einer Variante
 je Zeile oder als eine Datei je Variante in einem Ordner Ihrer Wahl.
 
-**KI-Entwurf** ist der Anfang einer Vorlage, wenn Sie nicht jede Variante von Hand
-schreiben wollen. Beschreiben Sie im Briefing, was Sie brauchen, führen Sie die Variablen auf,
-die das Modell verwenden darf, und drücken Sie **Prompt kopieren**. Die Anwendung spricht mit keinem
-Modell und hält keinen Schlüssel: sie schreibt den Prompt, damit Sie ihn zu dem Modell tragen,
-das Sie ohnehin benutzen. Bringen Sie die Antwort zurück und drücken Sie **In das Dokument einfügen** — die
-Maschine in diesem Fenster sagt dann im Diagnosebereich, was sie davon hält, genau wie bei allem
-anderen, was Sie selbst tippen. Gibt es Fehler, baut **Reparatur-Prompt kopieren** einen zweiten Prompt: er trägt das ganze Dokument mit nummerierten Zeilen und benennt genau
-die Stellen, an denen die Maschine Anstoß nahm. Die Antwort darauf ist das vollständige
-korrigierte Dokument — bringen Sie es zurück und drücken Sie **Dokument ersetzen**;
-**In das Dokument einfügen** ließe das kaputte stehen und legte eine korrigierte Kopie daneben.
+**KI-Entwurf** schreibt den ersten Entwurf einer Vorlage für Sie — aus Text, den Sie
+schon haben, oder nach einem Briefing. Er verdient einen eigenen Abschnitt: den nächsten.
 
-Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlich eingesetzt,
-nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die Form herum gebaut
-werden, die der Wert schon hat, und ein Modell wählt nur dann richtig, wenn ihm gesagt wird,
-welche Form jeder Name trägt. Aus dem Namen ergibt sich das nicht: in einem echten Vorlagensatz
-standen die instrumentalen Formen in einer Variablen, deren Name Akkusativ sagte.
+## Der KI-Entwurf
+
+Eine Vorlage beginnt meist mit Text, den es schon gibt — eine Produktbeschreibung, ein Brief,
+eine Seite. Das Panel **KI-Entwurf** macht daraus eine erste Vorlage: öffnen Sie es über die
+Werkzeugleiste, lassen Sie die Kopfzeile der linken Spalte auf **Text zum Umwandeln**, fügen Sie den Text
+ein und drücken Sie **Erzeugen**. Der fertige Entwurf ersetzt das Dokument, die Vorschau rendert
+ihn, und das Diagnose-Panel urteilt — dieselbe Maschine und dasselbe Urteil wie für alles, was
+Sie selbst tippen. Ein Ctrl+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie
+eigenen Text, denn das ist er.
+
+Gibt es nichts einzufügen, stellen Sie die Kopfzeile auf **Briefing** und beschreiben, was Sie
+wollen. Die Felder darüber lenken den Entwurf in beiden Modi: **Kanal** — ein Brief, eine SMS
+und eine Push-Nachricht sind in verschiedenen Registern geschrieben; **Variation** — wie weit
+die Varianten auseinanderstehen dürfen; die Sprache der Antwort; und **Variablen, die das Modell nutzen darf**, mit Namen
+erklärt. Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlich eingesetzt, nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die Form herum gebaut werden, die der Wert schon hat, und ein Modell wählt nur dann richtig, wenn ihm gesagt wird, welche Form jeder Name trägt. Aus dem Namen ergibt sich das nicht: in einem echten Vorlagensatz standen die instrumentalen Formen in einer Variablen, deren Name Akkusativ sagte.
+
+Der Antwort wird nicht geglaubt, sie wird geprüft: der Entwurf geht durch die Maschine dieses
+Fensters, bevor er Ihrem Dokument nahekommt, und findet das Urteil Fehler, lässt die Schleife
+das Modell nachbessern — die Statusleiste zählt die Runden mit —, bevor irgendetwas übergeben
+wird. Nur ein sauberer Entwurf ersetzt das Dokument; alles andere landet stattdessen in
+**Antwort des Modells**, die Statuszeile sagt warum, und nichts von Ihnen wird überschrieben. Ihre eigenen
+Änderungen sind genauso geschützt: haben Sie getippt, während eine Antwort unterwegs war,
+wartet der Entwurf im Panel. Während der Arbeit steht auf **Erzeugen** **Stopp** — drücken Sie
+es, um die Runde abzubrechen.
+
+**Reparieren** ist dieselbe Schleife, gerichtet auf Ihr aktuelles Dokument: sie wacht auf, wenn die
+Diagnose Fehler findet, schickt das Dokument mitsamt den genauen Beanstandungen und wendet die
+korrigierte Fassung mit derselben Sorgfalt an.
+
+### Die Verbindung, und wessen Schlüssel
+
+Wie installiert sendet die Anwendung nichts, nirgendwohin. **Erzeugen** und **Reparieren** gehen erst
+ins Netz, nachdem Sie die Verbindung am Fuß des Panels eingerichtet und erlaubt haben. Wählen
+Sie das **Format**, das Ihr Endpunkt spricht — **Anthropic Messages** oder
+**OpenAI-compatible** —, die **Endpunkt**-Adresse und den Namen im Feld **Modell** — für
+Anthropic bietet die Liste unter dem Pfeil aktuelle Namen an; sonst tippen Sie den Namen, den
+Ihr Endpunkt erwartet. **Autorisierung** sagt, ob ein
+Schlüssel mitreist: **API-Schlüssel** für die gehosteten Anbieter, **keine** für Server, die
+keinen wollen.
+
+Der Schlüssel ist Ihrer, auf Ihrem eigenen Konto erstellt — die Anwendung hat nie einen
+eigenen:
+
+- **Anthropic** — den Schlüssel erstellen Sie auf `console.anthropic.com` unter API keys.
+- **OpenAI** — `platform.openai.com`, unter API keys; zum Senden muss auf dem Konto zudem
+  Billing aktiv sein.
+- **OpenAI-compatible** ist eine Familie, nicht eine Firma: OpenRouter antwortet in derselben
+  Form mit vielen Modellen unter einem Schlüssel, und Server auf Ihrem eigenen Rechner —
+  Ollama, LM Studio — wollen meist gar keinen: stellen Sie **Autorisierung** auf **keine**.
+
+**Schlüssel anheften** legt den Schlüssel in die Windows-Anmeldeinformationsverwaltung, verschlüsselt für
+Ihr Windows-Konto — nicht in eine Datei und nie ins Dokument. Das Feld zeigt danach die ersten
+Zeichen des Schlüssels, damit zu sehen ist, welcher angeheftet ist, und **Schlüssel vergessen** entfernt
+ihn. Ein Schlüssel gehört zu dem Ort, für den er eingegeben wurde — Schema, Host und Port: ändern
+Sie eines davon, fragt das Panel erneut danach.
+
+Das erste Drücken fragt in klaren Worten — **An diesen Endpunkt senden?** — und nennt den Empfänger. Es reist
+der Prompt, gebaut aus Ihrem Briefing oder Text — samt gewähltem Kanal, gewählter Variation
+und Sprache —, dazu die erklärten Variablen, beim Reparieren die aktuelle Vorlage mit ihrer
+Diagnose, der Modellname aus Ihrem Profil samt einer Obergrenze für die Antwortlänge, und
+unter **API-Schlüssel**-Autorisierung der Schlüssel in den Kopfzeilen der Anfrage;
+sonst nichts, und zu keinem anderen Zeitpunkt. Der Empfänger ändert sich nicht ohne Sie: eine
+Umleitung wird verweigert statt befolgt, und eine unverschlüsselte `http`-Adresse wird nur
+auf diesem Rechner angenommen. Die Erlaubnis bindet sich dorthin, wo auch der Schlüssel — Schema, Host und Port — und zeigt
+sich als Häkchen **Senden erlaubt** in den Einstellungen — entfernen Sie es jederzeit: nichts
+Neues wird gesendet, und eine schon unterwegs befindliche Antwort wird nie angewendet. Was die Software an der gewählten
+Adresse mit dem Text tut, hat ihr Betreiber zu sagen: die Anfrage geht an die Adresse aus
+Ihrem Profil und nirgendwo sonst.
+
+### Dieselbe Schleife, ohne Netz
+
+Die Prompts brauchen weder Schlüssel noch Verbindung — das ist zugleich der Weg, wenn Ihr
+Modell in einem Chatfenster lebt, und die Schleife drehen hier Sie selbst: die Maschine
+urteilt nach dem Einfügen, nicht davor. **Prompt kopieren** legt den vollen Prompt in die
+Zwischenablage; tragen Sie ihn zu dem Modell, das Sie ohnehin nutzen, fügen Sie die Antwort in
+**Antwort des Modells** ein und drücken Sie **In das Dokument einfügen**. Findet die Diagnose Fehler, baut **Reparatur-Prompt kopieren** den
+zweiten Prompt: er trägt das ganze Dokument mit nummerierten Zeilen und nennt die genauen
+Stellen, die die Maschine beanstandet hat. Seine Antwort ist das korrigierte Dokument im
+Ganzen — bringen Sie sie zurück und drücken Sie **Dokument ersetzen**; **In das Dokument einfügen** ließe das kaputte
+stehen und legte die korrigierte Kopie daneben.
 
 ## Der Gruppeneditor
 

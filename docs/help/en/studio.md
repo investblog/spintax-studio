@@ -136,21 +136,81 @@ or not.
 Export writes them out three ways: as an XLSX workbook, as plain text with one variant per line,
 or as one file per variant in a folder you choose.
 
-**AI draft** is where a template starts when you would rather not write every variant by
-hand. Say what you want in the brief, list the variables the model may use, and press
-**Copy prompt**. The application does not talk to a model and holds no key: it writes the prompt for
-you to take to whichever one you already use. Bring the answer back and press **Insert into document** — the
-engine in this window then says what it makes of it in the diagnostics panel, exactly as it does
-for anything you type yourself. If there are errors, **Copy repair prompt** builds a second prompt: it carries the whole document with its lines numbered and names
-the exact places the engine objected to. The answer to it is the corrected document in full,
-so bring that back and press **Replace the document** — **Insert into document** would leave
-the broken one where it is and put a corrected copy beside it.
+**AI draft** writes the first draft of a template for you — from text you already
+have, or from a brief. It does enough to deserve a section of its own: the next one.
 
-The case column is the part worth filling in. A variable is put in verbatim — nothing inflects
-it — so in a language with cases the sentence has to be built around the form the value already
-has, and a model can only choose correctly if it is told which form each name holds. It cannot
-be worked out from the name: one real template set kept its instrumental forms in a variable
-whose name said accusative.
+## The AI draft
+
+A template usually starts from text that already exists — a product description, a letter, a
+page. The **AI draft** panel turns that text into a first template: open it from the tool rail,
+leave the header of the left column on **Text to convert**, paste the text, and press **Generate**. When
+the draft arrives it replaces the document, the preview renders it, and the diagnostics panel
+judges it — the same engine and the same verdict as for anything you type. One Ctrl+Z brings
+your old document back; from there, edit it as your own text, because it is.
+
+If there is nothing to paste, switch the header to **Brief** and describe what you want. The
+fields above steer the draft either way: **Channel** — a letter, an SMS and a push notification
+are written in different registers; **Variation** — how far apart the variants should stand; the
+answer's language; and **Variables the model may use**, declared by name. The case column is the part worth filling in. A variable is put in verbatim — nothing inflects it — so in a language with cases the sentence has to be built around the form the value already has, and a model can only choose correctly if it is told which form each name holds. It cannot be worked out from the name: one real template set kept its instrumental forms in a variable whose name said accusative.
+
+The answer is not trusted, it is verified: the draft goes through this window's own engine
+before it goes anywhere near your document, and when the verdict finds errors, the loop asks
+the model to repair them — the status bar counts the rounds — before handing anything over.
+Only a clean draft replaces the document; anything less lands in **The model's answer** instead, with
+the status line saying why, and nothing of yours is overwritten. Your edits are protected
+the same way: if you typed while an answer was in flight, the draft waits in the panel. While
+it works, **Generate** reads **Stop** — press it to abandon the round.
+
+**Fix** is the same loop pointed at your current document: it wakes when the diagnostics
+find errors, sends the document together with the exact objections, and applies the corrected
+version with the same care.
+
+### The connection, and whose key
+
+As installed, the application sends nothing anywhere. **Generate** and **Fix** go on the
+network only after you set up the connection at the foot of the panel and allow it. Pick the
+**Format** your endpoint speaks — **Anthropic Messages** or **OpenAI-compatible** — the
+**Endpoint** address, and the **Model** name — for Anthropic the list under the arrow offers
+current names; elsewhere, type the name your endpoint expects. **Authorization** says whether a key travels: **API key** for the hosted
+providers, **none** for servers that want none.
+
+The key is yours, made on your own account — the application never has one of its own:
+
+- **Anthropic** — create a key at `console.anthropic.com`, under API keys.
+- **OpenAI** — `platform.openai.com`, under API keys; sending also needs billing enabled on
+  the account.
+- **OpenAI-compatible** is a family, not one company: OpenRouter answers in the same shape
+  with many models under one key, and servers on your own computer — Ollama, LM Studio —
+  usually want no key at all: set **Authorization** to **none**.
+
+**Attach key** stores the key in the Windows Credential Manager, encrypted for your Windows
+account — not in a file, and never in the document. The field then shows the key's first
+characters so you can tell which one is attached, and **Forget key** removes it. A key is
+attached to the place it was entered for — the scheme, the host and the port: change any of
+those and the panel asks for it again.
+
+The first press asks in plain words — **Send to this endpoint?** — naming the recipient. What travels is
+the prompt built from your brief or text — together with the channel, variation and language
+you chose — the declared variables, the current template and its diagnostics when repairing,
+the model name from your profile with a cap on the answer's length, and, under **API key**
+authorization, the key in the request headers; nothing else, and
+nothing at any other moment. The recipient does not change without you: a
+redirect is refused rather than followed, and an unencrypted `http` address is accepted only
+on this machine. The permission binds where the key does — the scheme, the host and the port — and shows as
+the **Sending allowed** tick in the settings — untick it at any time: nothing new is
+sent, and an answer already on its way is never applied. What the software at the address you chose does with the text is its operator's to
+state: the request goes to the address in your profile and nowhere else.
+
+### The same loop, without a network
+
+The prompts need no key and no connection at all — this is the path when your model lives in
+a chat window, and here you run the loop yourself: the engine gives its verdict after the
+paste, not before. **Copy prompt** puts the full prompt on the clipboard; take it to whichever
+model you use, paste the answer into **The model's answer**, and press **Insert into document**. If the diagnostics find
+errors, **Copy repair prompt** builds the second prompt: it carries the whole document with its lines
+numbered and names the exact places the engine objected to. Its answer is the corrected
+document in full, so bring it back and press **Replace the document** — **Insert into document** would leave the broken
+one in place and put the corrected copy beside it.
 
 ## The group editor
 

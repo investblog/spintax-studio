@@ -132,21 +132,78 @@ sayılır: makine onu her işlemede bir kez çeker, gittiğiniz dal onu kullansa
 Dışa aktarma bunları üç yolla yazar: XLSX çalışma kitabı olarak, satır başına bir çeşitleme düşen
 düz metin olarak ya da seçtiğiniz bir klasörde çeşitleme başına bir dosya olarak.
 
-**Yapay zekâ taslağı**, her çeşitlemeyi elle yazmak istemediğinizde bir şablonun başladığı yerdir.
-Ne istediğinizi özette anlatın, modelin kullanabileceği değişkenleri sıralayın ve **İstemi kopyala**
-düğmesine basın. Uygulama hiçbir modele bağlanmaz ve anahtar tutmaz: istemi, zaten kullandığınız
-modele götüresiniz diye yazar. Yanıtı geri getirip **Belgeye ekle** düğmesine basın — bu penceredeki
-makine o zaman ne düşündüğünü tanılama panelinde söyler, tıpkı kendi yazdığınız her şey için
-yaptığı gibi. Hata varsa **Düzeltme istemini kopyala**, ikinci bir istem hazırlar: numaralanmış satırlarıyla belgenin tamamını taşır ve makinenin
-itiraz ettiği tam yerleri adlandırır. Yanıt, düzeltilmiş belgenin tamamıdır; onu geri getirip
-**Belgeyi değiştir** düğmesine basın — **Belgeye ekle** bozuk olanı yerinde bırakır ve yanına
-düzeltilmiş bir kopya koyar.
+**Yapay zekâ taslağı**, bir şablonun ilk taslağını sizin yerinize yazar — elinizde olan bir
+metinden ya da bir özetten. Kendi bölümünü hak ediyor: bir sonraki.
 
-Durum sütunu, doldurmaya değer olan bölümdür. Değişken olduğu gibi yerleştirilir, onu hiçbir şey
-çekimlemez: durumları olan bir dilde cümle, değerin hâlihazırda taşıdığı biçimin çevresine
-kurulmalıdır ve model ancak her adın hangi biçimi taşıdığı söylendiğinde doğru seçer. Addan
-çıkarılamaz: gerçek bir şablon kümesinde araç durumundaki biçimler, adı belirtme durumu diyen bir
-değişkende duruyordu.
+## Yapay zekâ taslağı
+
+Bir şablon çoğunlukla zaten var olan bir metinden başlar — bir ürün açıklaması, bir mektup,
+bir sayfa. **Yapay zekâ taslağı** paneli o metni ilk şablona çevirir: paneli araç çubuğundan açın, sol
+sütunun başlığını **Dönüştürülecek metin** üzerinde bırakın, metni yapıştırın ve **Üret** düğmesine basın.
+Gelen taslak belgeyi değiştirir, önizleme onu çizer ve tanı paneli yargısını verir — kendi
+yazdıklarınızla aynı makine, aynı yargı. Bir Ctrl+Z eski belgenizi geri getirir; oradan sonra
+kendi metniniz gibi düzenleyin, çünkü öyledir.
+
+Yapıştıracak bir şey yoksa başlığı **Özet** konumuna alın ve ne istediğinizi anlatın.
+Üstteki alanlar taslağı iki kipte de yönlendirir: **Kanal** — bir mektup, bir SMS ve bir
+anlık bildirim farklı üsluplarda yazılır; **Çeşitleme** — çeşitlemeler birbirinden ne kadar
+uzaklaşabilir; yanıtın dili; ve adlarıyla bildirilen **Modelin kullanabileceği değişkenler**. Durum sütunu, doldurmaya değer olan bölümdür. Değişken olduğu gibi yerleştirilir, onu hiçbir şey çekimlemez: durumları olan bir dilde cümle, değerin hâlihazırda taşıdığı biçimin çevresine kurulmalıdır ve model ancak her adın hangi biçimi taşıdığı söylendiğinde doğru seçer. Addan çıkarılamaz: gerçek bir şablon kümesinde araç durumundaki biçimler, adı belirtme durumu diyen bir değişkende duruyordu.
+
+Yanıta inanılmaz, yanıt doğrulanır: taslak, belgenize yaklaşmadan önce bu pencerenin kendi
+makinesinden geçer ve yargı hata bulursa döngü, bir şey teslim etmeden önce modelden onları
+onarmasını ister — durum çubuğu turları sayar. Belgeyi yalnızca temiz bir taslak değiştirir;
+gerisi **Modelin yanıtı** alanına düşer, durum satırı nedenini söyler ve sizin hiçbir şeyinizin
+üzerine yazılmaz. Kendi düzenlemeleriniz de aynı biçimde korunur: yanıt yoldayken yazdıysanız
+taslak panelde bekler. Çalışırken **Üret** düğmesinde **Durdur** yazar — turu bırakmak için
+basın.
+
+**Düzelt**, aynı döngünün mevcut belgenize çevrilmiş hâlidir: tanı hata bulduğunda uyanır,
+belgeyi tam itirazlarla birlikte gönderir ve düzeltilmiş sürümü aynı özenle uygular.
+
+### Bağlantı, ve kimin anahtarı
+
+Kurulduğu hâliyle uygulama hiçbir yere hiçbir şey göndermez. **Üret** ve **Düzelt** ağa ancak
+panelin altındaki bağlantıyı kurup izin verdikten sonra çıkar. Uç noktanızın konuştuğu
+**Biçim**'i seçin — **Anthropic Messages** ya da **OpenAI-compatible** —, **Uç nokta** adresini ve
+**Model** alanındaki adı — Anthropic için okun altındaki liste güncel adlar önerir; diğer
+durumlarda uç noktanızın beklediği adı yazın. **Yetkilendirme**, anahtarın yola çıkıp çıkmayacağını söyler: barındırılan sağlayıcılar için
+**API anahtarı**, anahtar istemeyen sunucular için **yok**.
+
+Anahtar sizindir, kendi hesabınızda yapılmıştır — uygulamanın hiçbir zaman kendi anahtarı
+yoktur:
+
+- **Anthropic** — anahtarı `console.anthropic.com` üzerinde, API keys bölümünde oluşturun.
+- **OpenAI** — `platform.openai.com`, API keys bölümü; göndermek için hesapta faturalandırma
+  da açık olmalı.
+- **OpenAI-compatible** bir ailedir, tek bir şirket değil: OpenRouter aynı biçimde, tek
+  anahtar altında birçok modelle yanıt verir; kendi bilgisayarınızdaki sunucular — Ollama,
+  LM Studio — çoğunlukla hiç anahtar istemez: **Yetkilendirme** alanını **yok** yapın.
+
+**Anahtarı bağla**, anahtarı Windows Kimlik Bilgisi Yöneticisine koyar, Windows hesabınız için
+şifrelenmiş olarak — bir dosyaya değil ve asla belgeye değil. Alan sonra anahtarın ilk
+karakterlerini gösterir, hangisinin bağlı olduğu görünsün diye; **Anahtarı unut** onu kaldırır.
+Anahtar, girildiği yere bağlıdır — şema, sunucu adı ve bağlantı noktası: bunlardan biri
+değişirse panel anahtarı yeniden ister.
+
+İlk basış açık sözlerle sorar — **Bu uç noktaya gönderilsin mi?** — alıcıyı adıyla anarak. Yola çıkan: özetinizden ya da metninizden kurulan istem — seçtiğiniz kanal, çeşitleme ve
+dille birlikte —, bildirilen değişkenler, onarımda mevcut şablon ve tanısı, profilinizden model adı ve yanıt
+uzunluğu için bir tavan, **API anahtarı** yetkilendirmesinde de istek başlıklarındaki anahtar; başka hiçbir şey ve başka hiçbir anda. Alıcı sizsiz değişmez: bir yönlendirme izlenmek yerine reddedilir; şifrelenmemiş bir `http` adresi yalnızca bu
+makinede kabul edilir.
+İzin, anahtarın bağlandığı yere bağlıdır — şema, sunucu adı ve bağlantı noktası — ve
+ayarlardaki **Gönderim açık** işaretinde görünür — istediğiniz an kaldırın: yeni bir şey
+gönderilmez ve zaten yolda olan bir yanıt asla uygulanmaz. Seçtiğiniz adresteki yazılımın metinle ne yaptığını
+söylemek işletmecisine düşer: istek, profilinizdeki adrese gider ve başka hiçbir yere değil.
+
+### Aynı döngü, ağ olmadan
+
+İstemlerin ne anahtara ne bağlantıya ihtiyacı var — modeliniz bir sohbet penceresinde
+yaşıyorsa yol budur ve döngüyü burada siz çevirirsiniz: makine yargısını yapıştırmadan sonra
+verir, önce değil. **İstemi kopyala** tam istemi panoya koyar; onu kullandığınız modele götürün,
+yanıtı **Modelin yanıtı** alanına yapıştırın ve **Belgeye ekle** düğmesine basın. Tanı hata bulursa
+**Düzeltme istemini kopyala** ikinci istemi kurar: tüm belgeyi satırları numaralanmış taşır ve makinenin itiraz
+ettiği yerleri tek tek adlandırır. Onun yanıtı, düzeltilmiş belgenin tamamıdır — geri getirin
+ve **Belgeyi değiştir** düğmesine basın; **Belgeye ekle** bozuk olanı yerinde bırakır, düzeltilmiş kopyayı
+yanına koyardı.
 
 ## Grup düzenleyici
 

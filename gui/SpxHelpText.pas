@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    '1f4ee592c2e276d4', '1161eb58753cc15f', '87e44fc97111b7a9', '2437957a8ccd8ebc', 'c5226848658b80c2', 'f6b0fb891bdfa838', '11b2b913c1705dea', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '0e0814eba7ba5569', '488ce59bac9e29c3', '7f61fd4b089638df', '72042f28c98b3b54', '7813c6dc420189dd', '0d549262922b3331', '8764294e769b8cf8', 'c85b5f196fca1f91', '6bb5e85de94010ed', '4d52d106f05aab0e', '4ddfd411500958cc', '26e21bf1b83633da', 'c58d0b62283ad9fa', 'b54956a9ee49f248', '00a887dfff5a6ef5', 'bc9077c6b2104a70', '18c7da1e110847db', 'd9d49c35432acae4', '09962ce44c786665', '9dacb63502e5aa97', 'b8529893866ec950', '582131658e9cc2cd', 'ea10d49bf126b2b6', '471885d59dbd925b', '2cd4e4470d7851a0', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '2eda6e113b5480dc', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '18fcd211397f9966', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    '3868c5fdaa6c263b', '1161eb58753cc15f', '87e44fc97111b7a9', '062a0ca8aff5aebf', 'c5226848658b80c2', 'f6b0fb891bdfa838', 'fc6100aa3fac28ee', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '979ec94fb2757c81', '488ce59bac9e29c3', '7f61fd4b089638df', '5eae893ce9819128', '7813c6dc420189dd', '0d549262922b3331', '0cc2fc1f4ca6e6a4', 'c85b5f196fca1f91', '6bb5e85de94010ed', '04e2aa0bc9577fb5', '4ddfd411500958cc', '26e21bf1b83633da', 'b299b74f181ca9cd', 'b54956a9ee49f248', '00a887dfff5a6ef5', 'f2a15e0430e0f693', '18c7da1e110847db', 'd9d49c35432acae4', '3954defb1cdef464', '9dacb63502e5aa97', 'b8529893866ec950', 'b0b4c23a6db00dad', 'ea10d49bf126b2b6', '471885d59dbd925b', '852db05e9cfc6d02', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '6f368979a255142f', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '522657a7edcf835e', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -313,20 +313,21 @@ const
 
   { Each language's pages: a span into the tables below. }
   HELP_PAGE_FIRST: array[0..13] of Integer = (
-    0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416
+    0, 33, 66, 99, 132, 165, 198, 231, 264, 297, 330, 363, 396, 429
   );
   HELP_PAGE_LAST: array[0..13] of Integer = (
-    31, 63, 95, 127, 159, 191, 223, 255, 287, 319, 351, 383, 415, 447
+    32, 65, 98, 131, 164, 197, 230, 263, 296, 329, 362, 395, 428, 461
   );
-  HELP_SLUG: array[0..447] of string = (
-    'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..461] of string = (
+    'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
   );
-  HELP_TITLE: array[0..447] of string = (
+  HELP_TITLE: array[0..461] of string = (
     'Spintax Studio',
     'The two panes',
     'Find and replace',
     'Inserting the marks',
     'The panels along the bottom',
+    'The AI draft',
     'The group editor',
     'Settings',
     'Importing a GSA template',
@@ -359,6 +360,7 @@ const
     'Поиск и замена',
     'Вставка конструкций',
     'Панели снизу',
+    'AI-черновик',
     'Редактор групп',
     'Настройки',
     'Импорт GSA-шаблона',
@@ -391,6 +393,7 @@ const
     'Suchen und Ersetzen',
     'Die Markierungen einfügen',
     'Die Tafeln am unteren Rand',
+    'Der KI-Entwurf',
     'Der Gruppeneditor',
     'Einstellungen',
     'Eine GSA-Vorlage einlesen',
@@ -423,6 +426,7 @@ const
     'Rechercher et remplacer',
     'Insérer les marques',
     'Les panneaux du bas',
+    'Le brouillon IA',
     'L''éditeur de groupe',
     'Réglages',
     'Importer un gabarit GSA',
@@ -455,6 +459,7 @@ const
     'Buscar y reemplazar',
     'Insertar las marcas',
     'Los paneles de abajo',
+    'El borrador de IA',
     'El editor de grupos',
     'Ajustes',
     'Importar una plantilla GSA',
@@ -487,6 +492,7 @@ const
     'Trova e sostituisci',
     'Inserire i segni',
     'I pannelli in basso',
+    'La bozza IA',
     'L''editor di gruppi',
     'Impostazioni',
     'Importare un modello GSA',
@@ -519,6 +525,7 @@ const
     'Localizar e substituir',
     'Inserir as marcas',
     'Os painéis de baixo',
+    'O rascunho de IA',
     'O editor de grupos',
     'Definições',
     'Importar um modelo GSA',
@@ -551,6 +558,7 @@ const
     'Zoeken en vervangen',
     'De tekens invoegen',
     'De panelen onderaan',
+    'Het AI-concept',
     'De groepseditor',
     'Instellingen',
     'Een GSA-sjabloon inlezen',
@@ -583,6 +591,7 @@ const
     'Bul ve değiştir',
     'İşaretleri ekleme',
     'Alttaki paneller',
+    'Yapay zekâ taslağı',
     'Grup düzenleyici',
     'Ayarlar',
     'GSA şablonu içe aktarma',
@@ -615,6 +624,7 @@ const
     'Пошук і заміна',
     'Вставка конструкцій',
     'Панелі внизу',
+    'AI-чернетка',
     'Редактор груп',
     'Налаштування',
     'Імпорт шаблону GSA',
@@ -647,6 +657,7 @@ const
     'Пошук і замена',
     'Устаўка канструкцый',
     'Панэлі ўнізе',
+    'AI-чарнавік',
     'Рэдактар груп',
     'Налады',
     'Імпарт шаблона GSA',
@@ -679,6 +690,7 @@ const
     'Претрага и замена',
     'Уметање ознака',
     'Панели доле',
+    'AI нацрт',
     'Уређивач група',
     'Подешавања',
     'Увоз GSA шаблона',
@@ -711,6 +723,7 @@ const
     'Traženje i zamjena',
     'Umetanje oznaka',
     'Ploče dolje',
+    'AI nacrt',
     'Uređivač grupa',
     'Postavke',
     'Uvoz GSA predloška',
@@ -743,6 +756,7 @@ const
     'Pretraga i zamjena',
     'Umetanje oznaka',
     'Ploče dolje',
+    'AI nacrt',
     'Uređivač grupa',
     'Postavke',
     'Uvoz GSA šablona',
@@ -771,19 +785,19 @@ const
     'Kako izgleda ispravno',
     'Često pitaju'
   );
-  HELP_PAGE_DOC: array[0..447] of Integer = (
-    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_PAGE_DOC: array[0..461] of Integer = (
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
-  HELP_FIRST: array[0..447] of Integer = (
-    0, 7, 14, 19, 25, 36, 39, 42, 51, 56, 62, 74, 99, 109, 116, 123, 132, 136, 151, 173, 175, 185, 192, 205, 221, 246, 268, 288, 302, 315, 328, 336, 345, 352, 359, 364, 370, 381, 384, 387, 396, 401, 407, 419, 444, 454, 461, 469, 478, 482, 496, 526, 528, 539, 546, 559, 575, 600, 622, 641, 655, 668, 688, 696, 703, 710, 717, 722, 728, 739, 742, 745, 754, 759, 765, 777, 802, 812, 819, 826, 835, 839, 854, 879, 881, 891, 898, 911, 927, 952, 974, 994, 1008, 1021, 1034, 1042, 1051, 1058, 1065, 1070, 1076, 1087, 1090, 1093, 1102, 1107, 1113, 1125, 1150, 1160, 1167, 1174, 1183, 1187, 1202, 1230, 1232, 1242, 1249, 1262, 1278, 1303, 1325, 1345, 1359, 1372, 1385, 1393, 1402, 1409, 1416, 1421, 1427, 1438, 1441, 1444, 1453, 1458, 1464, 1476, 1501, 1511, 1518, 1525, 1534, 1538, 1553, 1581, 1583, 1593, 1600, 1613, 1629, 1654, 1676, 1696, 1710, 1723, 1736, 1744, 1753, 1760, 1767, 1772, 1778, 1789, 1792, 1795, 1804, 1809, 1815, 1827, 1852, 1862, 1869, 1876, 1885, 1889, 1904, 1932, 1934, 1944, 1951, 1964, 1980, 2005, 2027, 2047, 2061, 2074, 2087, 2095, 2104, 2111, 2118, 2123, 2129, 2140, 2143, 2146, 2155, 2160, 2166, 2178, 2203, 2213, 2220, 2227, 2236, 2240, 2255, 2285, 2287, 2297, 2304, 2317, 2333, 2358, 2380, 2400, 2414, 2427, 2440, 2448, 2457, 2464, 2471, 2476, 2482, 2493, 2496, 2499, 2508, 2513, 2519, 2531, 2556, 2566, 2573, 2580, 2589, 2593, 2608, 2633, 2635, 2645, 2652, 2665, 2681, 2706, 2728, 2748, 2762, 2775, 2788, 2796, 2805, 2812, 2819, 2824, 2830, 2841, 2844, 2847, 2856, 2861, 2867, 2879, 2904, 2914, 2921, 2928, 2937, 2941, 2956, 2983, 2985, 2995, 3002, 3015, 3031, 3056, 3078, 3098, 3112, 3125, 3138, 3146, 3155, 3162, 3169, 3174, 3180, 3191, 3194, 3197, 3206, 3211, 3217, 3229, 3254, 3264, 3271, 3279, 3288, 3292, 3307, 3336, 3338, 3348, 3355, 3368, 3384, 3409, 3431, 3451, 3465, 3478, 3491, 3499, 3508, 3515, 3522, 3527, 3533, 3544, 3547, 3550, 3559, 3564, 3570, 3582, 3607, 3617, 3624, 3632, 3641, 3645, 3660, 3689, 3691, 3701, 3708, 3721, 3737, 3762, 3784, 3804, 3818, 3831, 3844, 3852, 3861, 3868, 3875, 3880, 3886, 3897, 3900, 3903, 3912, 3917, 3923, 3935, 3960, 3970, 3977, 3985, 3994, 3998, 4013, 4043, 4045, 4055, 4062, 4075, 4091, 4116, 4138, 4158, 4172, 4185, 4198, 4206, 4215, 4222, 4229, 4234, 4240, 4251, 4254, 4257, 4266, 4271, 4277, 4289, 4314, 4324, 4331, 4339, 4348, 4352, 4368, 4395, 4397, 4407, 4414, 4427, 4443, 4468, 4490, 4510, 4524, 4537, 4550, 4558, 4567, 4574, 4581, 4586, 4592, 4603, 4606, 4609, 4618, 4623, 4629, 4641, 4666, 4676, 4683, 4691, 4700, 4704, 4720, 4747, 4749, 4759, 4766, 4779, 4795, 4820, 4842, 4862, 4876, 4889, 4902, 4910
+  HELP_FIRST: array[0..461] of Integer = (
+    0, 7, 14, 19, 25, 35, 52, 55, 58, 67, 72, 78, 90, 115, 125, 132, 139, 148, 152, 167, 189, 191, 201, 208, 221, 237, 262, 284, 304, 318, 331, 344, 352, 361, 368, 375, 380, 386, 396, 413, 416, 419, 428, 433, 439, 451, 476, 486, 493, 501, 510, 514, 528, 558, 560, 571, 578, 591, 607, 632, 654, 673, 687, 700, 720, 728, 735, 742, 749, 754, 760, 770, 787, 790, 793, 802, 807, 813, 825, 850, 860, 867, 874, 883, 887, 902, 927, 929, 939, 946, 959, 975, 1000, 1022, 1042, 1056, 1069, 1082, 1090, 1099, 1106, 1113, 1118, 1124, 1134, 1151, 1154, 1157, 1166, 1171, 1177, 1189, 1214, 1224, 1231, 1238, 1247, 1251, 1266, 1294, 1296, 1306, 1313, 1326, 1342, 1367, 1389, 1409, 1423, 1436, 1449, 1457, 1466, 1473, 1480, 1485, 1491, 1501, 1518, 1521, 1524, 1533, 1538, 1544, 1556, 1581, 1591, 1598, 1605, 1614, 1618, 1633, 1661, 1663, 1673, 1680, 1693, 1709, 1734, 1756, 1776, 1790, 1803, 1816, 1824, 1833, 1840, 1847, 1852, 1858, 1868, 1885, 1888, 1891, 1900, 1905, 1911, 1923, 1948, 1958, 1965, 1972, 1981, 1985, 2000, 2028, 2030, 2040, 2047, 2060, 2076, 2101, 2123, 2143, 2157, 2170, 2183, 2191, 2200, 2207, 2214, 2219, 2225, 2235, 2252, 2255, 2258, 2267, 2272, 2278, 2290, 2315, 2325, 2332, 2339, 2348, 2352, 2367, 2397, 2399, 2409, 2416, 2429, 2445, 2470, 2492, 2512, 2526, 2539, 2552, 2560, 2569, 2576, 2583, 2588, 2594, 2604, 2621, 2624, 2627, 2636, 2641, 2647, 2659, 2684, 2694, 2701, 2708, 2717, 2721, 2736, 2761, 2763, 2773, 2780, 2793, 2809, 2834, 2856, 2876, 2890, 2903, 2916, 2924, 2933, 2940, 2947, 2952, 2958, 2968, 2985, 2988, 2991, 3000, 3005, 3011, 3023, 3048, 3058, 3065, 3072, 3081, 3085, 3100, 3127, 3129, 3139, 3146, 3159, 3175, 3200, 3222, 3242, 3256, 3269, 3282, 3290, 3299, 3306, 3313, 3318, 3324, 3334, 3351, 3354, 3357, 3366, 3371, 3377, 3389, 3414, 3424, 3431, 3439, 3448, 3452, 3467, 3496, 3498, 3508, 3515, 3528, 3544, 3569, 3591, 3611, 3625, 3638, 3651, 3659, 3668, 3675, 3682, 3687, 3693, 3703, 3720, 3723, 3726, 3735, 3740, 3746, 3758, 3783, 3793, 3800, 3808, 3817, 3821, 3836, 3865, 3867, 3877, 3884, 3897, 3913, 3938, 3960, 3980, 3994, 4007, 4020, 4028, 4037, 4044, 4051, 4056, 4062, 4072, 4089, 4092, 4095, 4104, 4109, 4115, 4127, 4152, 4162, 4169, 4177, 4186, 4190, 4205, 4235, 4237, 4247, 4254, 4267, 4283, 4308, 4330, 4350, 4364, 4377, 4390, 4398, 4407, 4414, 4421, 4426, 4432, 4442, 4459, 4462, 4465, 4474, 4479, 4485, 4497, 4522, 4532, 4539, 4547, 4556, 4560, 4576, 4603, 4605, 4615, 4622, 4635, 4651, 4676, 4698, 4718, 4732, 4745, 4758, 4766, 4775, 4782, 4789, 4794, 4800, 4810, 4827, 4830, 4833, 4842, 4847, 4853, 4865, 4890, 4900, 4907, 4915, 4924, 4928, 4944, 4971, 4973, 4983, 4990, 5003, 5019, 5044, 5066, 5086, 5100, 5113, 5126, 5134
   );
-  HELP_LAST: array[0..447] of Integer = (
-    6, 13, 18, 24, 35, 38, 41, 50, 55, 61, 73, 98, 108, 115, 122, 131, 135, 150, 172, 174, 184, 191, 204, 220, 245, 267, 287, 301, 314, 327, 335, 344, 351, 358, 363, 369, 380, 383, 386, 395, 400, 406, 418, 443, 453, 460, 468, 477, 481, 495, 525, 527, 538, 545, 558, 574, 599, 621, 640, 654, 667, 687, 695, 702, 709, 716, 721, 727, 738, 741, 744, 753, 758, 764, 776, 801, 811, 818, 825, 834, 838, 853, 878, 880, 890, 897, 910, 926, 951, 973, 993, 1007, 1020, 1033, 1041, 1050, 1057, 1064, 1069, 1075, 1086, 1089, 1092, 1101, 1106, 1112, 1124, 1149, 1159, 1166, 1173, 1182, 1186, 1201, 1229, 1231, 1241, 1248, 1261, 1277, 1302, 1324, 1344, 1358, 1371, 1384, 1392, 1401, 1408, 1415, 1420, 1426, 1437, 1440, 1443, 1452, 1457, 1463, 1475, 1500, 1510, 1517, 1524, 1533, 1537, 1552, 1580, 1582, 1592, 1599, 1612, 1628, 1653, 1675, 1695, 1709, 1722, 1735, 1743, 1752, 1759, 1766, 1771, 1777, 1788, 1791, 1794, 1803, 1808, 1814, 1826, 1851, 1861, 1868, 1875, 1884, 1888, 1903, 1931, 1933, 1943, 1950, 1963, 1979, 2004, 2026, 2046, 2060, 2073, 2086, 2094, 2103, 2110, 2117, 2122, 2128, 2139, 2142, 2145, 2154, 2159, 2165, 2177, 2202, 2212, 2219, 2226, 2235, 2239, 2254, 2284, 2286, 2296, 2303, 2316, 2332, 2357, 2379, 2399, 2413, 2426, 2439, 2447, 2456, 2463, 2470, 2475, 2481, 2492, 2495, 2498, 2507, 2512, 2518, 2530, 2555, 2565, 2572, 2579, 2588, 2592, 2607, 2632, 2634, 2644, 2651, 2664, 2680, 2705, 2727, 2747, 2761, 2774, 2787, 2795, 2804, 2811, 2818, 2823, 2829, 2840, 2843, 2846, 2855, 2860, 2866, 2878, 2903, 2913, 2920, 2927, 2936, 2940, 2955, 2982, 2984, 2994, 3001, 3014, 3030, 3055, 3077, 3097, 3111, 3124, 3137, 3145, 3154, 3161, 3168, 3173, 3179, 3190, 3193, 3196, 3205, 3210, 3216, 3228, 3253, 3263, 3270, 3278, 3287, 3291, 3306, 3335, 3337, 3347, 3354, 3367, 3383, 3408, 3430, 3450, 3464, 3477, 3490, 3498, 3507, 3514, 3521, 3526, 3532, 3543, 3546, 3549, 3558, 3563, 3569, 3581, 3606, 3616, 3623, 3631, 3640, 3644, 3659, 3688, 3690, 3700, 3707, 3720, 3736, 3761, 3783, 3803, 3817, 3830, 3843, 3851, 3860, 3867, 3874, 3879, 3885, 3896, 3899, 3902, 3911, 3916, 3922, 3934, 3959, 3969, 3976, 3984, 3993, 3997, 4012, 4042, 4044, 4054, 4061, 4074, 4090, 4115, 4137, 4157, 4171, 4184, 4197, 4205, 4214, 4221, 4228, 4233, 4239, 4250, 4253, 4256, 4265, 4270, 4276, 4288, 4313, 4323, 4330, 4338, 4347, 4351, 4367, 4394, 4396, 4406, 4413, 4426, 4442, 4467, 4489, 4509, 4523, 4536, 4549, 4557, 4566, 4573, 4580, 4585, 4591, 4602, 4605, 4608, 4617, 4622, 4628, 4640, 4665, 4675, 4682, 4690, 4699, 4703, 4719, 4746, 4748, 4758, 4765, 4778, 4794, 4819, 4841, 4861, 4875, 4888, 4901, 4909, 4918
+  HELP_LAST: array[0..461] of Integer = (
+    6, 13, 18, 24, 34, 51, 54, 57, 66, 71, 77, 89, 114, 124, 131, 138, 147, 151, 166, 188, 190, 200, 207, 220, 236, 261, 283, 303, 317, 330, 343, 351, 360, 367, 374, 379, 385, 395, 412, 415, 418, 427, 432, 438, 450, 475, 485, 492, 500, 509, 513, 527, 557, 559, 570, 577, 590, 606, 631, 653, 672, 686, 699, 719, 727, 734, 741, 748, 753, 759, 769, 786, 789, 792, 801, 806, 812, 824, 849, 859, 866, 873, 882, 886, 901, 926, 928, 938, 945, 958, 974, 999, 1021, 1041, 1055, 1068, 1081, 1089, 1098, 1105, 1112, 1117, 1123, 1133, 1150, 1153, 1156, 1165, 1170, 1176, 1188, 1213, 1223, 1230, 1237, 1246, 1250, 1265, 1293, 1295, 1305, 1312, 1325, 1341, 1366, 1388, 1408, 1422, 1435, 1448, 1456, 1465, 1472, 1479, 1484, 1490, 1500, 1517, 1520, 1523, 1532, 1537, 1543, 1555, 1580, 1590, 1597, 1604, 1613, 1617, 1632, 1660, 1662, 1672, 1679, 1692, 1708, 1733, 1755, 1775, 1789, 1802, 1815, 1823, 1832, 1839, 1846, 1851, 1857, 1867, 1884, 1887, 1890, 1899, 1904, 1910, 1922, 1947, 1957, 1964, 1971, 1980, 1984, 1999, 2027, 2029, 2039, 2046, 2059, 2075, 2100, 2122, 2142, 2156, 2169, 2182, 2190, 2199, 2206, 2213, 2218, 2224, 2234, 2251, 2254, 2257, 2266, 2271, 2277, 2289, 2314, 2324, 2331, 2338, 2347, 2351, 2366, 2396, 2398, 2408, 2415, 2428, 2444, 2469, 2491, 2511, 2525, 2538, 2551, 2559, 2568, 2575, 2582, 2587, 2593, 2603, 2620, 2623, 2626, 2635, 2640, 2646, 2658, 2683, 2693, 2700, 2707, 2716, 2720, 2735, 2760, 2762, 2772, 2779, 2792, 2808, 2833, 2855, 2875, 2889, 2902, 2915, 2923, 2932, 2939, 2946, 2951, 2957, 2967, 2984, 2987, 2990, 2999, 3004, 3010, 3022, 3047, 3057, 3064, 3071, 3080, 3084, 3099, 3126, 3128, 3138, 3145, 3158, 3174, 3199, 3221, 3241, 3255, 3268, 3281, 3289, 3298, 3305, 3312, 3317, 3323, 3333, 3350, 3353, 3356, 3365, 3370, 3376, 3388, 3413, 3423, 3430, 3438, 3447, 3451, 3466, 3495, 3497, 3507, 3514, 3527, 3543, 3568, 3590, 3610, 3624, 3637, 3650, 3658, 3667, 3674, 3681, 3686, 3692, 3702, 3719, 3722, 3725, 3734, 3739, 3745, 3757, 3782, 3792, 3799, 3807, 3816, 3820, 3835, 3864, 3866, 3876, 3883, 3896, 3912, 3937, 3959, 3979, 3993, 4006, 4019, 4027, 4036, 4043, 4050, 4055, 4061, 4071, 4088, 4091, 4094, 4103, 4108, 4114, 4126, 4151, 4161, 4168, 4176, 4185, 4189, 4204, 4234, 4236, 4246, 4253, 4266, 4282, 4307, 4329, 4349, 4363, 4376, 4389, 4397, 4406, 4413, 4420, 4425, 4431, 4441, 4458, 4461, 4464, 4473, 4478, 4484, 4496, 4521, 4531, 4538, 4546, 4555, 4559, 4575, 4602, 4604, 4614, 4621, 4634, 4650, 4675, 4697, 4717, 4731, 4744, 4757, 4765, 4774, 4781, 4788, 4793, 4799, 4809, 4826, 4829, 4832, 4841, 4846, 4852, 4864, 4889, 4899, 4906, 4914, 4923, 4927, 4943, 4970, 4972, 4982, 4989, 5002, 5018, 5043, 5065, 5085, 5099, 5112, 5125, 5133, 5142
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..4918] of string = (
+  HELP_LINE: array[0..5142] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -897,22 +911,86 @@ const
       't once per render whether the branch you took uses it or not.</p>',
     '<p>Export writes them out three ways: as an XLSX workbook, as plain text with one vari' +
       'ant per line, or as one file per variant in a folder you choose.</p>',
-    '<p><b>AI draft</b> is where a template starts when you would rather not write every va' +
-      'riant by hand. Say what you want in the brief, list the variables the model may use, a' +
-      'nd press <b>Copy prompt</b>. The application does not talk to a model and holds no key' +
-      ': it writes the prompt for you to take to whichever one you already use. Bring the ans' +
-      'wer back and press <b>Insert into document</b> — the engine in this window then says w' +
-      'hat it makes of it in the diagnostics panel, exactly as it does for anything you type ' +
-      'yourself. If there are errors, <b>Copy repair prompt</b> builds a second prompt: it ca' +
-      'rries the whole document with its lines numbered and names the exact places the engine' +
-      ' objected to. The answer to it is the corrected document in full, so bring that back a' +
-      'nd press <b>Replace the document</b> — <b>Insert into document</b> would leave the bro' +
-      'ken one where it is and put a corrected copy beside it.</p>',
-    '<p>The case column is the part worth filling in. A variable is put in verbatim — nothi' +
-      'ng inflects it — so in a language with cases the sentence has to be built around the f' +
-      'orm the value already has, and a model can only choose correctly if it is told which f' +
-      'orm each name holds. It cannot be worked out from the name: one real template set kept' +
-      ' its instrumental forms in a variable whose name said accusative.</p>',
+    '<p><b>AI draft</b> writes the first draft of a template for you — from text you alread' +
+      'y have, or from a brief. It does enough to deserve a section of its own: the next one.' +
+      '</p>',
+    '<h2 id="ai">The AI draft</h2>',
+    '<p>A template usually starts from text that already exists — a product description, a ' +
+      'letter, a page. The <b>AI draft</b> panel turns that text into a first template: open ' +
+      'it from the tool rail, leave the header of the left column on <b>Text to convert</b>, ' +
+      'paste the text, and press <b>Generate</b>. When the draft arrives it replaces the docu' +
+      'ment, the preview renders it, and the diagnostics panel judges it — the same engine an' +
+      'd the same verdict as for anything you type. One Ctrl+Z brings your old document back;' +
+      ' from there, edit it as your own text, because it is.</p>',
+    '<p>If there is nothing to paste, switch the header to <b>Brief</b> and describe what y' +
+      'ou want. The fields above steer the draft either way: <b>Channel</b> — a letter, an SM' +
+      'S and a push notification are written in different registers; <b>Variation</b> — how f' +
+      'ar apart the variants should stand; the answer''s language; and <b>Variables the model' +
+      ' may use</b>, declared by name. The case column is the part worth filling in. A variab' +
+      'le is put in verbatim — nothing inflects it — so in a language with cases the sentence' +
+      ' has to be built around the form the value already has, and a model can only choose co' +
+      'rrectly if it is told which form each name holds. It cannot be worked out from the nam' +
+      'e: one real template set kept its instrumental forms in a variable whose name said acc' +
+      'usative.</p>',
+    '<p>The answer is not trusted, it is verified: the draft goes through this window''s ow' +
+      'n engine before it goes anywhere near your document, and when the verdict finds errors' +
+      ', the loop asks the model to repair them — the status bar counts the rounds — before h' +
+      'anding anything over. Only a clean draft replaces the document; anything less lands in' +
+      ' <b>The model''s answer</b> instead, with the status line saying why, and nothing of y' +
+      'ours is overwritten. Your edits are protected the same way: if you typed while an answ' +
+      'er was in flight, the draft waits in the panel. While it works, <b>Generate</b> reads ' +
+      '<b>Stop</b> — press it to abandon the round.</p>',
+    '<p><b>Fix</b> is the same loop pointed at your current document: it wakes when the dia' +
+      'gnostics find errors, sends the document together with the exact objections, and appli' +
+      'es the corrected version with the same care.</p>',
+    '<h3 id="ai-0">The connection, and whose key</h3>',
+    '<p>As installed, the application sends nothing anywhere. <b>Generate</b> and <b>Fix</b' +
+      '> go on the network only after you set up the connection at the foot of the panel and ' +
+      'allow it. Pick the <b>Format</b> your endpoint speaks — <b>Anthropic Messages</b> or <' +
+      'b>OpenAI-compatible</b> — the <b>Endpoint</b> address, and the <b>Model</b> name — for' +
+      ' Anthropic the list under the arrow offers current names; elsewhere, type the name you' +
+      'r endpoint expects. <b>Authorization</b> says whether a key travels: <b>API key</b> fo' +
+      'r the hosted providers, <b>none</b> for servers that want none.</p>',
+    '<p>The key is yours, made on your own account — the application never has one of its o' +
+      'wn:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — create a key at <code>console.anthropic.com</code>, under API k' +
+      'eys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, under API keys; sending also nee' +
+      'ds billing enabled on the account.</li>',
+    '<li><b>OpenAI-compatible</b> is a family, not one company: OpenRouter answers in the s' +
+      'ame shape with many models under one key, and servers on your own computer — Ollama, L' +
+      'M Studio — usually want no key at all: set <b>Authorization</b> to <b>none</b>.</li>',
+    '</ul>',
+    '<p><b>Attach key</b> stores the key in the Windows Credential Manager, encrypted for y' +
+      'our Windows account — not in a file, and never in the document. The field then shows t' +
+      'he key''s first characters so you can tell which one is attached, and <b>Forget key</b' +
+      '> removes it. A key is attached to the place it was entered for — the scheme, the host' +
+      ' and the port: change any of those and the panel asks for it again.</p>',
+    '<p>The first press asks in plain words — <b>Send to this endpoint?</b> — naming the re' +
+      'cipient. What travels is the prompt built from your brief or text — together with the ' +
+      'channel, variation and language you chose — the declared variables, the current templa' +
+      'te and its diagnostics when repairing, the model name from your profile with a cap on ' +
+      'the answer''s length, and, under <b>API key</b> authorization, the key in the request ' +
+      'headers; nothing else, and nothing at any other moment. The recipient does not change ' +
+      'without you: a redirect is refused rather than followed, and an unencrypted <code>http' +
+      '</code> address is accepted only on this machine. The permission binds where the key d' +
+      'oes — the scheme, the host and the port — and shows as the <b>Sending allowed</b> tick' +
+      ' in the settings — untick it at any time: nothing new is sent, and an answer already o' +
+      'n its way is never applied. What the software at the address you chose does with the t' +
+      'ext is its operator''s to state: the request goes to the address in your profile and n' +
+      'owhere else.</p>',
+    '<h3 id="ai-1">The same loop, without a network</h3>',
+    '<p>The prompts need no key and no connection at all — this is the path when your model' +
+      ' lives in a chat window, and here you run the loop yourself: the engine gives its verd' +
+      'ict after the paste, not before. <b>Copy prompt</b> puts the full prompt on the clipbo' +
+      'ard; take it to whichever model you use, paste the answer into <b>The model''s answer<' +
+      '/b>, and press <b>Insert into document</b>. If the diagnostics find errors, <b>Copy re' +
+      'pair prompt</b> builds the second prompt: it carries the whole document with its lines' +
+      ' numbered and names the exact places the engine objected to. Its answer is the correct' +
+      'ed document in full, so bring it back and press <b>Replace the document</b> — <b>Inser' +
+      't into document</b> would leave the broken one in place and put the corrected copy bes' +
+      'ide it.</p>',
     '<h2 id="groups">The group editor</h2>',
     '<p>Put the caret inside a <code>{a|b|c}</code> and open the group editor from the tool' +
       ' strip. It lists the alternatives as rows: edit them, add one, remove one, and the doc' +
@@ -1784,23 +1862,82 @@ const
       'ся им выбранная ветка или нет.</p>',
     '<p>Экспорт сохраняет их тремя способами: книгой XLSX, обычным текстом по варианту на с' +
       'троку или по файлу на вариант в папку, которую вы выберете.</p>',
-    '<p><b>AI-черновик</b> — это то, с чего начинается шаблон, когда выписывать каждый вари' +
-      'ант руками не хочется. Опишите задачу в брифе, перечислите переменные, которыми модели' +
-      ' можно пользоваться, и нажмите <b>Скопировать промпт</b>. Приложение никуда не обращае' +
-      'тся и не хранит ключей: оно составляет промпт, чтобы вы отнесли его в ту модель, котор' +
-      'ой пользуетесь. Верните ответ и нажмите <b>Вставить в документ</b> — движок в этом окн' +
-      'е скажет, что он о нём думает, в панели диагностики, ровно так же, как о любом тексте,' +
-      ' набранном вами. Если есть ошибки, <b>Скопировать промпт правки</b> составит второй пр' +
-      'омпт: он несёт весь документ с пронумерованными строками и называет те самые места, к ' +
-      'которым придрался движок. Ответ на него — исправленный документ целиком, поэтому верни' +
-      'те его и нажмите <b>Заменить документ</b>: <b>Вставить в документ</b> оставило бы слом' +
-      'анный на месте и положило рядом исправленную копию.</p>',
-    '<p>Колонка падежа — та часть, которую стоит заполнить. Переменная подставляется дослов' +
-      'но, ничто её не склоняет, поэтому в языке с падежами предложение приходится строить во' +
-      'круг той формы, которая у значения уже есть, и модель выберет верно, только если ей ск' +
-      'азать, какую форму держит каждое имя. Из имени это не выводится: в одном настоящем наб' +
-      'оре шаблонов творительные формы лежали в переменной, имя которой говорило «винительный' +
-      '».</p>',
+    '<p><b>AI-черновик</b> пишет первый черновик шаблона за вас — из текста, который у вас ' +
+      'уже есть, или по брифу. Он заслужил собственный раздел — следующий.</p>',
+    '<h2 id="ai">AI-черновик</h2>',
+    '<p>Шаблон обычно начинается с текста, который уже есть, — описание товара, письмо, стр' +
+      'аница. Панель <b>AI-черновик</b> превращает такой текст в первый шаблон: откройте её с' +
+      ' полосы инструментов, оставьте заголовок левой колонки на <b>Текст для переделки</b>, ' +
+      'вставьте текст и нажмите <b>Сгенерировать</b>. Готовый черновик заменяет документ, пре' +
+      'вью его рендерит, а панель диагностики выносит вердикт — тот же движок и тот же суд, ч' +
+      'то и для набранного руками. Один Ctrl+Z возвращает прежний документ; дальше правьте ка' +
+      'к свой текст — он и есть ваш.</p>',
+    '<p>Если вставлять нечего, переключите заголовок на <b>Бриф</b> и опишите, что нужно. П' +
+      'оля выше ведут черновик в обоих режимах: <b>Канал</b> — письмо, SMS и push-уведомление' +
+      ' написаны в разных регистрах; <b>Вариативность</b> — как далеко вариантам можно расход' +
+      'иться; язык ответа; и <b>Переменные, которые можно использовать</b>, объявленные по им' +
+      'енам. Колонка падежа — та часть, которую стоит заполнить. Переменная подставляется дос' +
+      'ловно, ничто её не склоняет, поэтому в языке с падежами предложение приходится строить' +
+      ' вокруг той формы, которая у значения уже есть, и модель выберет верно, только если ей' +
+      ' сказать, какую форму держит каждое имя. Из имени это не выводится: в одном настоящем ' +
+      'наборе шаблонов творительные формы лежали в переменной, имя которой говорило «винитель' +
+      'ный».</p>',
+    '<p>Ответу не верят — его проверяют: черновик проходит через движок этого окна до того,' +
+      ' как коснётся документа, и, если вердикт находит ошибки, петля сама просит модель их и' +
+      'справить — строка состояния считает раунды вслух, — прежде чем что-то отдать. Документ' +
+      ' заменяет только чистый черновик; всё остальное ложится в <b>Ответ модели</b>, а строк' +
+      'а состояния говорит почему — и ваше не затирается. Так же защищены ваши правки: если в' +
+      'ы печатали, пока ответ летел, черновик ждёт в панели. Пока идёт работа, <b>Сгенерирова' +
+      'ть</b> читается как <b>Стоп</b> — нажмите, чтобы бросить раунд.</p>',
+    '<p><b>Починить</b> — та же петля, направленная на текущий документ: она просыпается, к' +
+      'огда диагностика находит ошибки, отправляет документ вместе с точными претензиями и пр' +
+      'именяет исправленную версию с той же осторожностью.</p>',
+    '<h3 id="ai-0">Подключение и чей ключ</h3>',
+    '<p>Сразу после установки приложение никуда ничего не отправляет. <b>Сгенерировать</b> ' +
+      'и <b>Починить</b> выходят в сеть только после того, как вы настроите подключение в ниж' +
+      'ней части панели и разрешите его. Выберите <b>Формат</b>, на котором говорит ваш адрес' +
+      ', — <b>Anthropic Messages</b> или <b>OpenAI-compatible</b>, — адрес <b>Эндпоинт</b> и ' +
+      'имя в поле <b>Модель</b> — для Anthropic список под стрелкой предлагает актуальные име' +
+      'на; в остальных случаях впишите имя, которого ждёт ваш адрес. <b>Авторизация</b> говор' +
+      'ит, поедет ли ключ: <b>API-ключ</b> для облачных провайдеров, <b>нет</b> для серверов,' +
+      ' которым он не нужен.</p>',
+    '<p>Ключ — ваш, сделан на вашем аккаунте; своего у приложения нет:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — ключ создаётся на <code>console.anthropic.com</code>, раздел AP' +
+      'I keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, раздел API keys; для отправки на' +
+      ' аккаунте должен быть включён биллинг.</li>',
+    '<li><b>OpenAI-compatible</b> — семейство, а не одна компания: в этой же форме отвечает' +
+      ' OpenRouter — много моделей под одним ключом, — и серверы на вашем собственном компьют' +
+      'ере, Ollama или LM Studio, которым ключ обычно не нужен вовсе: поставьте <b>Авторизаци' +
+      'я</b> в <b>нет</b>.</li>',
+    '</ul>',
+    '<p><b>Привязать ключ</b> кладёт ключ в диспетчер учётных данных Windows, зашифрованным' +
+      ' для вашей учётной записи, — не в файл и никогда не в документ. Поле затем показывает ' +
+      'первые знаки ключа, чтобы было видно, который привязан, а <b>Забыть ключ</b> убирает е' +
+      'го. Ключ привязан к месту, для которого введён, — схеме, хосту и порту: смените любое ' +
+      'из них — и панель попросит его заново.</p>',
+    '<p>Первое нажатие спрашивает прямо — <b>Отправлять на этот эндпоинт?</b> — называя пол' +
+      'учателя. Уходит промпт, собранный из вашего брифа или текста, — вместе с выбранными ка' +
+      'налом, вариативностью и языком, — объявленные переменные, при починке текущий шаблон с' +
+      ' его диагностикой, имя модели из профиля с потолком длины ответа, а при авторизации <b' +
+      '>API-ключ</b> — ключ в заголовках запроса; больше ничего и ни в какой другой момент. П' +
+      'олучатель не меняется без вас: редирект отвергается, а не выполняется, а нешифрованный' +
+      ' <code>http</code> принимается только на эту машину. Разрешение привязано там же, где ' +
+      'ключ, — к схеме, хосту и порту — и видно галкой <b>Отправка разрешена</b> в настройках' +
+      ' — снимите её в любой момент: новое не отправляется, а уже летящий ответ никогда не пр' +
+      'именяется. Что делает с текстом софт по выбранному адресу — вопрос к его оператору: за' +
+      'прос уходит по адресу из профиля и никуда больше.</p>',
+    '<h3 id="ai-1">Та же петля — без сети</h3>',
+    '<p>Промптам не нужны ни ключ, ни подключение — это же путь, когда ваша модель живёт в ' +
+      'окне чата, и петлю здесь крутите вы сами: движок выносит вердикт после вставки, а не д' +
+      'о. <b>Скопировать промпт</b> кладёт полный промпт в буфер; отнесите его в ту модель, к' +
+      'оторой пользуетесь, вставьте ответ в поле <b>Ответ модели</b> и нажмите <b>Вставить в ' +
+      'документ</b>. Если диагностика найдёт ошибки, <b>Скопировать промпт правки</b> соберёт' +
+      ' второй промпт: он несёт весь документ с нумерованными строками и называет точные мест' +
+      'а, к которым у движка претензии. Ответ на него — исправленный документ целиком, так чт' +
+      'о верните его и нажмите <b>Заменить документ</b> — <b>Вставить в документ</b> оставил ' +
+      'бы сломанный на месте и положил бы исправленную копию рядом.</p>',
     '<h2 id="groups">Редактор групп</h2>',
     '<p>Поставьте курсор внутрь <code>{a|b|c}</code> и откройте редактор групп на полосе ин' +
       'струментов. Он показывает альтернативы строками: правьте, добавляйте, удаляйте — докум' +
@@ -2685,25 +2822,94 @@ const
     '<p>Der Export schreibt sie auf drei Arten heraus: als XLSX-Mappe, als reinen Text mit ' +
       'einer Variante je Zeile oder als eine Datei je Variante in einem Ordner Ihrer Wahl.</p' +
       '>',
-    '<p><b>KI-Entwurf</b> ist der Anfang einer Vorlage, wenn Sie nicht jede Variante von Ha' +
-      'nd schreiben wollen. Beschreiben Sie im Briefing, was Sie brauchen, führen Sie die Var' +
-      'iablen auf, die das Modell verwenden darf, und drücken Sie <b>Prompt kopieren</b>. Die' +
-      ' Anwendung spricht mit keinem Modell und hält keinen Schlüssel: sie schreibt den Promp' +
-      't, damit Sie ihn zu dem Modell tragen, das Sie ohnehin benutzen. Bringen Sie die Antwo' +
-      'rt zurück und drücken Sie <b>In das Dokument einfügen</b> — die Maschine in diesem Fen' +
-      'ster sagt dann im Diagnosebereich, was sie davon hält, genau wie bei allem anderen, wa' +
-      's Sie selbst tippen. Gibt es Fehler, baut <b>Reparatur-Prompt kopieren</b> einen zweit' +
-      'en Prompt: er trägt das ganze Dokument mit nummerierten Zeilen und benennt genau die S' +
-      'tellen, an denen die Maschine Anstoß nahm. Die Antwort darauf ist das vollständige kor' +
-      'rigierte Dokument — bringen Sie es zurück und drücken Sie <b>Dokument ersetzen</b>; <b' +
-      '>In das Dokument einfügen</b> ließe das kaputte stehen und legte eine korrigierte Kopi' +
-      'e daneben.</p>',
-    '<p>Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlic' +
-      'h eingesetzt, nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die' +
-      ' Form herum gebaut werden, die der Wert schon hat, und ein Modell wählt nur dann richt' +
-      'ig, wenn ihm gesagt wird, welche Form jeder Name trägt. Aus dem Namen ergibt sich das ' +
-      'nicht: in einem echten Vorlagensatz standen die instrumentalen Formen in einer Variabl' +
-      'en, deren Name Akkusativ sagte.</p>',
+    '<p><b>KI-Entwurf</b> schreibt den ersten Entwurf einer Vorlage für Sie — aus Text, den' +
+      ' Sie schon haben, oder nach einem Briefing. Er verdient einen eigenen Abschnitt: den n' +
+      'ächsten.</p>',
+    '<h2 id="ai">Der KI-Entwurf</h2>',
+    '<p>Eine Vorlage beginnt meist mit Text, den es schon gibt — eine Produktbeschreibung, ' +
+      'ein Brief, eine Seite. Das Panel <b>KI-Entwurf</b> macht daraus eine erste Vorlage: öf' +
+      'fnen Sie es über die Werkzeugleiste, lassen Sie die Kopfzeile der linken Spalte auf <b' +
+      '>Text zum Umwandeln</b>, fügen Sie den Text ein und drücken Sie <b>Erzeugen</b>. Der f' +
+      'ertige Entwurf ersetzt das Dokument, die Vorschau rendert ihn, und das Diagnose-Panel ' +
+      'urteilt — dieselbe Maschine und dasselbe Urteil wie für alles, was Sie selbst tippen. ' +
+      'Ein Ctrl+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie eigenen Text' +
+      ', denn das ist er.</p>',
+    '<p>Gibt es nichts einzufügen, stellen Sie die Kopfzeile auf <b>Briefing</b> und beschr' +
+      'eiben, was Sie wollen. Die Felder darüber lenken den Entwurf in beiden Modi: <b>Kanal<' +
+      '/b> — ein Brief, eine SMS und eine Push-Nachricht sind in verschiedenen Registern gesc' +
+      'hrieben; <b>Variation</b> — wie weit die Varianten auseinanderstehen dürfen; die Sprac' +
+      'he der Antwort; und <b>Variablen, die das Modell nutzen darf</b>, mit Namen erklärt. D' +
+      'ie Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variable wird wörtlich ei' +
+      'ngesetzt, nichts beugt sie — in einer Sprache mit Fällen muss der Satz also um die For' +
+      'm herum gebaut werden, die der Wert schon hat, und ein Modell wählt nur dann richtig, ' +
+      'wenn ihm gesagt wird, welche Form jeder Name trägt. Aus dem Namen ergibt sich das nich' +
+      't: in einem echten Vorlagensatz standen die instrumentalen Formen in einer Variablen, ' +
+      'deren Name Akkusativ sagte.</p>',
+    '<p>Der Antwort wird nicht geglaubt, sie wird geprüft: der Entwurf geht durch die Masch' +
+      'ine dieses Fensters, bevor er Ihrem Dokument nahekommt, und findet das Urteil Fehler, ' +
+      'lässt die Schleife das Modell nachbessern — die Statusleiste zählt die Runden mit —, b' +
+      'evor irgendetwas übergeben wird. Nur ein sauberer Entwurf ersetzt das Dokument; alles ' +
+      'andere landet stattdessen in <b>Antwort des Modells</b>, die Statuszeile sagt warum, u' +
+      'nd nichts von Ihnen wird überschrieben. Ihre eigenen Änderungen sind genauso geschützt' +
+      ': haben Sie getippt, während eine Antwort unterwegs war, wartet der Entwurf im Panel. ' +
+      'Während der Arbeit steht auf <b>Erzeugen</b> <b>Stopp</b> — drücken Sie es, um die Run' +
+      'de abzubrechen.</p>',
+    '<p><b>Reparieren</b> ist dieselbe Schleife, gerichtet auf Ihr aktuelles Dokument: sie ' +
+      'wacht auf, wenn die Diagnose Fehler findet, schickt das Dokument mitsamt den genauen B' +
+      'eanstandungen und wendet die korrigierte Fassung mit derselben Sorgfalt an.</p>',
+    '<h3 id="ai-0">Die Verbindung, und wessen Schlüssel</h3>',
+    '<p>Wie installiert sendet die Anwendung nichts, nirgendwohin. <b>Erzeugen</b> und <b>R' +
+      'eparieren</b> gehen erst ins Netz, nachdem Sie die Verbindung am Fuß des Panels einger' +
+      'ichtet und erlaubt haben. Wählen Sie das <b>Format</b>, das Ihr Endpunkt spricht — <b>' +
+      'Anthropic Messages</b> oder <b>OpenAI-compatible</b> —, die <b>Endpunkt</b>-Adresse un' +
+      'd den Namen im Feld <b>Modell</b> — für Anthropic bietet die Liste unter dem Pfeil akt' +
+      'uelle Namen an; sonst tippen Sie den Namen, den Ihr Endpunkt erwartet. <b>Autorisierun' +
+      'g</b> sagt, ob ein Schlüssel mitreist: <b>API-Schlüssel</b> für die gehosteten Anbiete' +
+      'r, <b>keine</b> für Server, die keinen wollen.</p>',
+    '<p>Der Schlüssel ist Ihrer, auf Ihrem eigenen Konto erstellt — die Anwendung hat nie e' +
+      'inen eigenen:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — den Schlüssel erstellen Sie auf <code>console.anthropic.com</co' +
+      'de> unter API keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, unter API keys; zum Senden muss ' +
+      'auf dem Konto zudem Billing aktiv sein.</li>',
+    '<li><b>OpenAI-compatible</b> ist eine Familie, nicht eine Firma: OpenRouter antwortet ' +
+      'in derselben Form mit vielen Modellen unter einem Schlüssel, und Server auf Ihrem eige' +
+      'nen Rechner — Ollama, LM Studio — wollen meist gar keinen: stellen Sie <b>Autorisierun' +
+      'g</b> auf <b>keine</b>.</li>',
+    '</ul>',
+    '<p><b>Schlüssel anheften</b> legt den Schlüssel in die Windows-Anmeldeinformationsverw' +
+      'altung, verschlüsselt für Ihr Windows-Konto — nicht in eine Datei und nie ins Dokument' +
+      '. Das Feld zeigt danach die ersten Zeichen des Schlüssels, damit zu sehen ist, welcher' +
+      ' angeheftet ist, und <b>Schlüssel vergessen</b> entfernt ihn. Ein Schlüssel gehört zu ' +
+      'dem Ort, für den er eingegeben wurde — Schema, Host und Port: ändern Sie eines davon, ' +
+      'fragt das Panel erneut danach.</p>',
+    '<p>Das erste Drücken fragt in klaren Worten — <b>An diesen Endpunkt senden?</b> — und ' +
+      'nennt den Empfänger. Es reist der Prompt, gebaut aus Ihrem Briefing oder Text — samt g' +
+      'ewähltem Kanal, gewählter Variation und Sprache —, dazu die erklärten Variablen, beim ' +
+      'Reparieren die aktuelle Vorlage mit ihrer Diagnose, der Modellname aus Ihrem Profil sa' +
+      'mt einer Obergrenze für die Antwortlänge, und unter <b>API-Schlüssel</b>-Autorisierung' +
+      ' der Schlüssel in den Kopfzeilen der Anfrage; sonst nichts, und zu keinem anderen Zeit' +
+      'punkt. Der Empfänger ändert sich nicht ohne Sie: eine Umleitung wird verweigert statt ' +
+      'befolgt, und eine unverschlüsselte <code>http</code>-Adresse wird nur auf diesem Rechn' +
+      'er angenommen. Die Erlaubnis bindet sich dorthin, wo auch der Schlüssel — Schema, Host' +
+      ' und Port — und zeigt sich als Häkchen <b>Senden erlaubt</b> in den Einstellungen — en' +
+      'tfernen Sie es jederzeit: nichts Neues wird gesendet, und eine schon unterwegs befindl' +
+      'iche Antwort wird nie angewendet. Was die Software an der gewählten Adresse mit dem Te' +
+      'xt tut, hat ihr Betreiber zu sagen: die Anfrage geht an die Adresse aus Ihrem Profil u' +
+      'nd nirgendwo sonst.</p>',
+    '<h3 id="ai-1">Dieselbe Schleife, ohne Netz</h3>',
+    '<p>Die Prompts brauchen weder Schlüssel noch Verbindung — das ist zugleich der Weg, we' +
+      'nn Ihr Modell in einem Chatfenster lebt, und die Schleife drehen hier Sie selbst: die ' +
+      'Maschine urteilt nach dem Einfügen, nicht davor. <b>Prompt kopieren</b> legt den volle' +
+      'n Prompt in die Zwischenablage; tragen Sie ihn zu dem Modell, das Sie ohnehin nutzen, ' +
+      'fügen Sie die Antwort in <b>Antwort des Modells</b> ein und drücken Sie <b>In das Doku' +
+      'ment einfügen</b>. Findet die Diagnose Fehler, baut <b>Reparatur-Prompt kopieren</b> d' +
+      'en zweiten Prompt: er trägt das ganze Dokument mit nummerierten Zeilen und nennt die g' +
+      'enauen Stellen, die die Maschine beanstandet hat. Seine Antwort ist das korrigierte Do' +
+      'kument im Ganzen — bringen Sie sie zurück und drücken Sie <b>Dokument ersetzen</b>; <b' +
+      '>In das Dokument einfügen</b> ließe das kaputte stehen und legte die korrigierte Kopie' +
+      ' daneben.</p>',
     '<h2 id="groups">Der Gruppeneditor</h2>',
     '<p>Setzen Sie den Cursor in ein <code>{a|b|c}</code> und öffnen Sie den Gruppeneditor ' +
       'über die Werkzeugleiste. Er listet die Alternativen als Zeilen auf: ändern, eine hinzu' +
@@ -3640,25 +3846,90 @@ const
       'a branche empruntée s''en serve ou non.</p>',
     '<p>L''export les écrit de trois manières : en classeur XLSX, en texte brut avec une va' +
       'riante par ligne ou en un fichier par variante dans un dossier de votre choix.</p>',
-    '<p><b>Brouillon IA</b> est le point de départ d''un modèle quand vous préférez ne pas ' +
-      'écrire chaque variante à la main. Dites dans le brief ce que vous voulez, listez les v' +
-      'ariables que le modèle peut employer, puis appuyez sur <b>Copier l''invite</b>. L''app' +
-      'lication ne s''adresse à aucun modèle et ne détient aucune clé : elle rédige l''invite' +
-      ' pour que vous la portiez à celui que vous utilisez déjà. Rapportez la réponse et appu' +
-      'yez sur <b>Insérer dans le document</b> — le moteur de cette fenêtre dit alors ce qu''' +
-      'il en pense dans le panneau des diagnostics, exactement comme pour tout ce que vous ta' +
-      'pez vous-même. S''il y a des erreurs, <b>Copier l''invite de correction</b> construit ' +
-      'une seconde invite : elle porte le document entier avec ses lignes numérotées et nomme' +
-      ' les endroits exacts qui ont fait tiquer le moteur. La réponse est le document corrigé' +
-      ' en entier — rapportez-la et appuyez sur <b>Remplacer le document</b> ; <b>Insérer dan' +
-      's le document</b> laisserait le document cassé en place et poserait une copie corrigée' +
-      ' à côté.</p>',
-    '<p>La colonne des cas est la partie qui vaut la peine d''être remplie. Une variable es' +
-      't insérée telle quelle, rien ne la décline : dans une langue à cas, la phrase doit don' +
-      'c être construite autour de la forme que la valeur possède déjà, et un modèle ne chois' +
-      'it correctement que si on lui dit quelle forme porte chaque nom. Cela ne se déduit pas' +
-      ' du nom : dans un vrai jeu de modèles, les formes instrumentales se trouvaient dans un' +
-      'e variable dont le nom disait accusatif.</p>',
+    '<p><b>Brouillon IA</b> écrit pour vous le premier brouillon d''un gabarit — à partir d' +
+      '''un texte que vous avez déjà, ou d''un brief. Il mérite sa propre section : la suivan' +
+      'te.</p>',
+    '<h2 id="ai">Le brouillon IA</h2>',
+    '<p>Un gabarit commence le plus souvent par un texte qui existe déjà — une fiche produi' +
+      't, une lettre, une page. Le panneau <b>Brouillon IA</b> en fait un premier gabarit : o' +
+      'uvrez-le depuis la barre d''outils, laissez l''en-tête de la colonne de gauche sur <b>' +
+      'Texte à convertir</b>, collez le texte et pressez <b>Générer</b>. Le brouillon arrivé ' +
+      'remplace le document, l''aperçu le rend, et le panneau de diagnostic juge — le même mo' +
+      'teur et le même verdict que pour tout ce que vous tapez. Un Ctrl+Z ramène votre ancien' +
+      ' document ; ensuite, corrigez-le comme votre propre texte, car c''en est un.</p>',
+    '<p>S''il n''y a rien à coller, passez l''en-tête sur <b>Brief</b> et décrivez ce que v' +
+      'ous voulez. Les champs au-dessus guident le brouillon dans les deux modes : <b>Canal</' +
+      'b> — une lettre, un SMS et une notification push ne s''écrivent pas dans le même regis' +
+      'tre ; <b>Variation</b> — jusqu''où les variantes peuvent s''écarter ; la langue de la ' +
+      'réponse ; et <b>Variables que le modèle peut utiliser</b>, déclarées par leur nom. La ' +
+      'colonne des cas est la partie qui vaut la peine d''être remplie. Une variable est insé' +
+      'rée telle quelle, rien ne la décline : dans une langue à cas, la phrase doit donc être' +
+      ' construite autour de la forme que la valeur possède déjà, et un modèle ne choisit cor' +
+      'rectement que si on lui dit quelle forme porte chaque nom. Cela ne se déduit pas du no' +
+      'm : dans un vrai jeu de modèles, les formes instrumentales se trouvaient dans une vari' +
+      'able dont le nom disait accusatif.</p>',
+    '<p>La réponse n''est pas crue, elle est vérifiée : le brouillon passe par le moteur de' +
+      ' cette fenêtre avant d''approcher votre document, et si le verdict trouve des erreurs,' +
+      ' la boucle demande elle-même au modèle de les corriger — la barre d''état compte les t' +
+      'ours — avant de rien livrer. Seul un brouillon propre remplace le document ; tout le r' +
+      'este se pose dans <b>Réponse du modèle</b>, la ligne d''état dit pourquoi, et rien de ' +
+      'vôtre n''est écrasé. Vos propres modifications sont protégées de même : si vous avez t' +
+      'apé pendant qu''une réponse volait, le brouillon attend dans le panneau. Pendant le tr' +
+      'avail, <b>Générer</b> affiche <b>Arrêter</b> — pressez pour abandonner le tour.</p>',
+    '<p><b>Réparer</b> est la même boucle pointée sur votre document actuel : elle s''éveil' +
+      'le quand le diagnostic trouve des erreurs, envoie le document avec les objections exac' +
+      'tes, et applique la version corrigée avec le même soin.</p>',
+    '<h3 id="ai-0">La connexion, et la clé de qui</h3>',
+    '<p>Telle qu''installée, l''application n''envoie rien nulle part. <b>Générer</b> et <b' +
+      '>Réparer</b> ne vont sur le réseau qu''après que vous avez configuré la connexion au p' +
+      'ied du panneau et l''avez permise. Choisissez le <b>Format</b> que parle votre endpoin' +
+      't — <b>Anthropic Messages</b> ou <b>OpenAI-compatible</b> —, l''adresse <b>Endpoint</b' +
+      '> et le nom dans <b>Modèle</b> — pour Anthropic, la liste sous la flèche propose des n' +
+      'oms actuels ; sinon, tapez le nom que votre endpoint attend. <b>Autorisation</b> dit s' +
+      'i une clé voyage : <b>Clé API</b> pour les fournisseurs hébergés, <b>aucune</b> pour l' +
+      'es serveurs qui n''en veulent pas.</p>',
+    '<p>La clé est la vôtre, créée sur votre propre compte — l''application n''en a jamais ' +
+      'une à elle :</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — créez la clé sur <code>console.anthropic.com</code>, rubrique A' +
+      'PI keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, rubrique API keys ; l''envoi dem' +
+      'ande aussi la facturation activée sur le compte.</li>',
+    '<li><b>OpenAI-compatible</b> est une famille, pas une seule société : OpenRouter répon' +
+      'd sous la même forme avec beaucoup de modèles sous une seule clé, et les serveurs sur ' +
+      'votre propre machine — Ollama, LM Studio — ne veulent d''ordinaire aucune clé : mettez' +
+      ' <b>Autorisation</b> sur <b>aucune</b>.</li>',
+    '</ul>',
+    '<p><b>Rattacher la clé</b> range la clé dans le Gestionnaire d''identifiants de Window' +
+      's, chiffrée pour votre compte Windows — pas dans un fichier, et jamais dans le documen' +
+      't. Le champ montre ensuite les premiers caractères de la clé, pour voir laquelle est r' +
+      'attachée, et <b>Oublier la clé</b> la retire. Une clé est rattachée au lieu pour leque' +
+      'l elle a été saisie — le schéma, l''hôte et le port : changez l''un d''eux et le panne' +
+      'au la redemande.</p>',
+    '<p>La première pression demande en toutes lettres — <b>Envoyer vers cet endpoint ?</b>' +
+      ' — en nommant le destinataire. Voyage l''invite bâtie sur votre brief ou votre texte —' +
+      ' avec le canal, la variation et la langue choisis —, les variables déclarées, le gabar' +
+      'it courant et son diagnostic lors d''une réparation, le nom du modèle de votre profil ' +
+      'avec un plafond sur la longueur de la réponse, et, sous l''autorisation <b>Clé API</b>' +
+      ', la clé dans les en-têtes de la requête ; rien d''autre, et à aucun autre moment. Le ' +
+      'destinataire ne change pas sans vous : une redirection est refusée au lieu d''être sui' +
+      'vie, et une adresse <code>http</code> non chiffrée n''est acceptée que sur cette machi' +
+      'ne. La permission se lie là où se lie la clé — le schéma, l''hôte et le port — et se v' +
+      'oit à la coche <b>Envoi autorisé</b> dans les réglages — décochez-la à tout moment : r' +
+      'ien de nouveau ne part, et une réponse déjà en vol n''est jamais appliquée. Ce que le ' +
+      'logiciel à l''adresse choisie fait du texte, c''est à son opérateur de le dire : la re' +
+      'quête va à l''adresse de votre profil et nulle part ailleurs.</p>',
+    '<h3 id="ai-1">La même boucle, sans réseau</h3>',
+    '<p>Les invites n''ont besoin ni de clé ni de connexion — c''est le même chemin quand v' +
+      'otre modèle vit dans une fenêtre de chat, et la boucle, ici, c''est vous qui la faites' +
+      ' tourner : le moteur juge après le collage, pas avant. <b>Copier l''invite</b> met l''' +
+      'invite complète dans le presse-papiers ; portez-la au modèle que vous utilisez, collez' +
+      ' la réponse dans <b>Réponse du modèle</b>, et pressez <b>Insérer dans le document</b>.' +
+      ' Si le diagnostic trouve des erreurs, <b>Copier l''invite de correction</b> bâtit la s' +
+      'econde invite : elle porte le document entier avec ses lignes numérotées et nomme les ' +
+      'endroits exacts que le moteur a contestés. Sa réponse est le document corrigé en entie' +
+      'r — rapportez-la et pressez <b>Remplacer le document</b> ; <b>Insérer dans le document' +
+      '</b> laisserait le document cassé en place et poserait la copie corrigée à côté.</p>',
     '<h2 id="groups">L''éditeur de groupe</h2>',
     '<p>Placez le curseur dans un <code>{a|b|c}</code> et ouvrez l''éditeur de groupe depui' +
       's la barre d''outils. Il liste les variantes en lignes : modifiez-les, ajoutez-en une,' +
@@ -4584,23 +4855,89 @@ const
     '<p>La exportación las escribe de tres maneras: como libro XLSX, como texto plano con u' +
       'na variante por línea, o como un archivo por variante en una carpeta que usted elija.<' +
       '/p>',
-    '<p><b>Borrador de IA</b> es por donde empieza una plantilla cuando prefiere no escribi' +
-      'r cada variante a mano. Diga en el encargo lo que quiere, enumere las variables que el' +
-      ' modelo puede usar y pulse <b>Copiar la instrucción</b>. La aplicación no habla con ni' +
-      'ngún modelo ni guarda ninguna clave: redacta la instrucción para que usted la lleve al' +
-      ' que ya utiliza. Traiga la respuesta y pulse <b>Insertar en el documento</b>: el motor' +
-      ' de esta ventana dirá entonces qué le parece, en el panel de diagnósticos, igual que c' +
-      'on cualquier cosa que escriba usted mismo. Si hay errores, <b>Copiar la instrucción de' +
-      ' arreglo</b> construye una segunda instrucción: lleva el documento entero con sus líne' +
-      'as numeradas y nombra los puntos exactos que el motor objetó. La respuesta es el docum' +
-      'ento corregido completo, así que tráigala y pulse <b>Reemplazar el documento</b>: <b>I' +
-      'nsertar en el documento</b> dejaría el roto donde está y pondría una copia corregida a' +
-      'l lado.</p>',
-    '<p>La columna de caso es la parte que vale la pena rellenar. Una variable se inserta t' +
-      'al cual, nada la declina: en una lengua con casos la frase debe construirse alrededor ' +
-      'de la forma que el valor ya tiene, y un modelo solo elige bien si se le dice qué forma' +
-      ' lleva cada nombre. Del nombre no se deduce: en un juego de plantillas real las formas' +
-      ' instrumentales estaban en una variable cuyo nombre decía acusativo.</p>',
+    '<p><b>Borrador de IA</b> escribe por usted el primer borrador de una plantilla — a par' +
+      'tir de un texto que ya tiene, o de un encargo. Merece una sección propia: la siguiente' +
+      '.</p>',
+    '<h2 id="ai">El borrador de IA</h2>',
+    '<p>Una plantilla suele empezar por un texto que ya existe — una ficha de producto, una' +
+      ' carta, una página. El panel <b>Borrador de IA</b> lo convierte en una primera plantil' +
+      'la: ábralo desde la barra de herramientas, deje la cabecera de la columna izquierda en' +
+      ' <b>Texto a convertir</b>, pegue el texto y pulse <b>Generar</b>. El borrador llegado ' +
+      'reemplaza el documento, la vista previa lo renderiza y el panel de diagnóstico juzga —' +
+      ' el mismo motor y el mismo veredicto que para lo que usted teclea. Un Ctrl+Z devuelve ' +
+      'su documento anterior; desde ahí, edítelo como texto propio, porque lo es.</p>',
+    '<p>Si no hay nada que pegar, pase la cabecera a <b>Encargo</b> y describa lo que quier' +
+      'e. Los campos de arriba guían el borrador en ambos modos: <b>Canal</b> — una carta, un' +
+      ' SMS y una notificación push se escriben en registros distintos; <b>Variación</b> — cu' +
+      'ánto pueden alejarse las variantes; el idioma de la respuesta; y <b>Variables que el m' +
+      'odelo puede usar</b>, declaradas por su nombre. La columna de caso es la parte que val' +
+      'e la pena rellenar. Una variable se inserta tal cual, nada la declina: en una lengua c' +
+      'on casos la frase debe construirse alrededor de la forma que el valor ya tiene, y un m' +
+      'odelo solo elige bien si se le dice qué forma lleva cada nombre. Del nombre no se dedu' +
+      'ce: en un juego de plantillas real las formas instrumentales estaban en una variable c' +
+      'uyo nombre decía acusativo.</p>',
+    '<p>A la respuesta no se le cree: se la verifica. El borrador pasa por el motor de esta' +
+      ' ventana antes de acercarse a su documento, y si el veredicto encuentra errores, el bu' +
+      'cle pide al modelo corregirlos — la barra de estado cuenta las rondas — antes de entre' +
+      'gar nada. Solo un borrador limpio reemplaza el documento; todo lo demás cae en <b>Resp' +
+      'uesta del modelo</b>, la línea de estado dice por qué, y nada suyo se sobrescribe. Sus' +
+      ' propias ediciones quedan igual de protegidas: si tecleó mientras volaba una respuesta' +
+      ', el borrador espera en el panel. Mientras trabaja, <b>Generar</b> se lee <b>Parar</b>' +
+      ' — púlselo para abandonar la ronda.</p>',
+    '<p><b>Arreglar</b> es el mismo bucle apuntado a su documento actual: despierta cuando ' +
+      'el diagnóstico encuentra errores, envía el documento con las objeciones exactas y apli' +
+      'ca la versión corregida con el mismo cuidado.</p>',
+    '<h3 id="ai-0">La conexión, y la clave de quién</h3>',
+    '<p>Tal como se instala, la aplicación no envía nada a ninguna parte. <b>Generar</b> y ' +
+      '<b>Arreglar</b> salen a la red solo después de que usted configure la conexión al pie ' +
+      'del panel y la permita. Elija el <b>Formato</b> que habla su endpoint — <b>Anthropic M' +
+      'essages</b> u <b>OpenAI-compatible</b> —, la dirección <b>Endpoint</b> y el nombre en ' +
+      '<b>Modelo</b> — para Anthropic la lista bajo la flecha ofrece nombres actuales; en los' +
+      ' demás casos, escriba el nombre que su endpoint espera. <b>Autorización</b> dice si vi' +
+      'aja una clave: <b>Clave API</b> para los proveedores alojados, <b>ninguna</b> para ser' +
+      'vidores que no la quieren.</p>',
+    '<p>La clave es suya, creada en su propia cuenta — la aplicación nunca tiene una propia' +
+      ':</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — cree la clave en <code>console.anthropic.com</code>, sección AP' +
+      'I keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, sección API keys; enviar exige a' +
+      'demás la facturación activada en la cuenta.</li>',
+    '<li><b>OpenAI-compatible</b> es una familia, no una sola empresa: OpenRouter responde ' +
+      'con la misma forma con muchos modelos bajo una clave, y los servidores en su propio eq' +
+      'uipo — Ollama, LM Studio — no suelen querer clave alguna: ponga <b>Autorización</b> en' +
+      ' <b>ninguna</b>.</li>',
+    '</ul>',
+    '<p><b>Adjuntar la clave</b> guarda la clave en el Administrador de credenciales de Win' +
+      'dows, cifrada para su cuenta de Windows — no en un archivo, y nunca en el documento. E' +
+      'l campo muestra después los primeros caracteres de la clave, para ver cuál está adjunt' +
+      'a, y <b>Olvidar la clave</b> la retira. Una clave queda adjunta al lugar para el que s' +
+      'e introdujo — el esquema, el host y el puerto: cambie cualquiera de ellos y el panel l' +
+      'a pedirá de nuevo.</p>',
+    '<p>La primera pulsación pregunta con todas las letras — <b>¿Enviar a este endpoint?</b' +
+      '> — nombrando al destinatario. Viaja la instrucción construida con su encargo o su tex' +
+      'to — junto con el canal, la variación y el idioma elegidos —, las variables declaradas' +
+      ', la plantilla actual y su diagnóstico al reparar, el nombre del modelo de su perfil c' +
+      'on un tope de longitud de la respuesta, y, bajo la autorización <b>Clave API</b>, la c' +
+      'lave en las cabeceras de la petición; nada más, y en ningún otro momento. El destinata' +
+      'rio no cambia sin usted: una redirección se rechaza en vez de seguirse, y una direcció' +
+      'n <code>http</code> sin cifrar solo se acepta en esta máquina. El permiso se liga dond' +
+      'e la clave — el esquema, el host y el puerto — y se ve en la casilla <b>Envío permitid' +
+      'o</b> de los ajustes — desmárquela en cualquier momento: nada nuevo sale, y una respue' +
+      'sta ya en vuelo no se aplica jamás. Lo que haga con el texto el software de la direcci' +
+      'ón elegida es cosa de su operador: la petición va a la dirección de su perfil y a ning' +
+      'ún otro sitio.</p>',
+    '<h3 id="ai-1">El mismo bucle, sin red</h3>',
+    '<p>Las instrucciones no necesitan ni clave ni conexión — es el mismo camino cuando su ' +
+      'modelo vive en una ventana de chat, y aquí el bucle lo hace girar usted: el motor juzg' +
+      'a después de pegar, no antes. <b>Copiar la instrucción</b> pone la instrucción complet' +
+      'a en el portapapeles; llévela al modelo que use, pegue la respuesta en <b>Respuesta de' +
+      'l modelo</b> y pulse <b>Insertar en el documento</b>. Si el diagnóstico encuentra erro' +
+      'res, <b>Copiar la instrucción de arreglo</b> construye la segunda instrucción: lleva e' +
+      'l documento entero con las líneas numeradas y nombra los lugares exactos que el motor ' +
+      'objetó. Su respuesta es el documento corregido completo — tráigala de vuelta y pulse <' +
+      'b>Reemplazar el documento</b>; <b>Insertar en el documento</b> dejaría el roto en su s' +
+      'itio y pondría la copia corregida al lado.</p>',
     '<h2 id="groups">El editor de grupos</h2>',
     '<p>Ponga el cursor dentro de un <code>{a|b|c}</code> y abra el editor de grupos desde ' +
       'la barra de herramientas. Enumera las alternativas como filas: cámbielas, añada una, q' +
@@ -5501,22 +5838,88 @@ const
     '<p>L''esportazione li scrive in tre modi: come cartella XLSX, come testo semplice con ' +
       'una variante per riga, oppure come un file per variante in una cartella a vostra scelt' +
       'a.</p>',
-    '<p><b>Bozza IA</b> è il punto da cui parte un modello quando non vuoi scrivere ogni va' +
-      'riante a mano. Di'' nel brief che cosa ti serve, elenca le variabili che il modello pu' +
-      'ò usare e premi <b>Copia il prompt</b>. L''applicazione non parla con nessun modello e' +
-      ' non conserva chiavi: scrive il prompt perché tu lo porti a quello che già usi. Riport' +
-      'a la risposta e premi <b>Inserisci nel documento</b> — il motore di questa finestra di' +
-      'ce allora che cosa ne pensa, nel pannello delle diagnostiche, esattamente come per tut' +
-      'to ciò che scrivi tu. Se ci sono errori, <b>Copia il prompt di correzione</b> costruis' +
-      'ce un secondo prompt: porta l''intero documento con le righe numerate e indica i punti' +
-      ' esatti che il motore ha contestato. La risposta è il documento corretto per intero, q' +
-      'uindi riportala e premi <b>Sostituisci il documento</b>: <b>Inserisci nel documento</b' +
-      '> lascerebbe quello rotto dov''è e ne metterebbe una copia corretta accanto.</p>',
-    '<p>La colonna del caso è la parte che vale la pena compilare. Una variabile viene inse' +
-      'rita alla lettera, nulla la declina: in una lingua con i casi la frase va costruita at' +
-      'torno alla forma che il valore ha già, e un modello sceglie bene solo se gli si dice q' +
-      'uale forma porta ogni nome. Dal nome non si ricava: in un vero insieme di modelli le f' +
-      'orme strumentali stavano in una variabile il cui nome diceva accusativo.</p>',
+    '<p><b>Bozza IA</b> scrive per voi la prima bozza di un modello — da un testo che avete' +
+      ' già, o da un brief. Merita una sezione tutta sua: la prossima.</p>',
+    '<h2 id="ai">La bozza IA</h2>',
+    '<p>Un modello di solito comincia da un testo che esiste già — una scheda prodotto, una' +
+      ' lettera, una pagina. Il pannello <b>Bozza IA</b> lo trasforma in un primo modello: ap' +
+      'ritelo dalla barra degli strumenti, lasciate l''intestazione della colonna sinistra su' +
+      ' <b>Testo da convertire</b>, incollate il testo e premete <b>Genera</b>. La bozza arri' +
+      'vata sostituisce il documento, l''anteprima la rende e il pannello di diagnostica giud' +
+      'ica — lo stesso motore e lo stesso verdetto di qualunque cosa scriviate voi. Un Ctrl+Z' +
+      ' riporta il documento di prima; da lì, correggetela come testo vostro, perché lo è.</p' +
+      '>',
+    '<p>Se non c''è nulla da incollare, spostate l''intestazione su <b>Brief</b> e descrive' +
+      'te cosa volete. I campi sopra guidano la bozza in entrambi i modi: <b>Canale</b> — una' +
+      ' lettera, un SMS e una notifica push si scrivono in registri diversi; <b>Variazione</b' +
+      '> — quanto le varianti possono allontanarsi; la lingua della risposta; e <b>Variabili ' +
+      'che il modello può usare</b>, dichiarate per nome. La colonna del caso è la parte che ' +
+      'vale la pena compilare. Una variabile viene inserita alla lettera, nulla la declina: i' +
+      'n una lingua con i casi la frase va costruita attorno alla forma che il valore ha già,' +
+      ' e un modello sceglie bene solo se gli si dice quale forma porta ogni nome. Dal nome n' +
+      'on si ricava: in un vero insieme di modelli le forme strumentali stavano in una variab' +
+      'ile il cui nome diceva accusativo.</p>',
+    '<p>Alla risposta non si crede: la si verifica. La bozza passa per il motore di questa ' +
+      'finestra prima di avvicinarsi al documento, e se il verdetto trova errori il ciclo chi' +
+      'ede al modello di correggerli — la barra di stato conta i giri — prima di consegnare a' +
+      'lcunché. Solo una bozza pulita sostituisce il documento; tutto il resto si posa in <b>' +
+      'Risposta del modello</b>, la riga di stato dice perché, e nulla di vostro viene sovras' +
+      'critto. Le vostre modifiche sono protette allo stesso modo: se avete scritto mentre un' +
+      'a risposta era in volo, la bozza aspetta nel pannello. Mentre lavora, <b>Genera</b> si' +
+      ' legge <b>Ferma</b> — premetelo per abbandonare il giro.</p>',
+    '<p><b>Correggi</b> è lo stesso ciclo puntato sul documento attuale: si sveglia quando ' +
+      'la diagnostica trova errori, invia il documento con le obiezioni esatte e applica la v' +
+      'ersione corretta con la stessa cura.</p>',
+    '<h3 id="ai-0">La connessione, e la chiave di chi</h3>',
+    '<p>Come installata, l''applicazione non invia nulla da nessuna parte. <b>Genera</b> e ' +
+      '<b>Correggi</b> vanno in rete solo dopo che avete impostato la connessione in fondo al' +
+      ' pannello e l''avete permessa. Scegliete il <b>Formato</b> che parla il vostro endpoin' +
+      't — <b>Anthropic Messages</b> o <b>OpenAI-compatible</b> —, l''indirizzo <b>Endpoint</' +
+      'b> e il nome in <b>Modello</b> — per Anthropic l''elenco sotto la freccia offre nomi c' +
+      'orrenti; altrimenti scrivete il nome che il vostro endpoint si aspetta. <b>Autorizzazi' +
+      'one</b> dice se viaggia una chiave: <b>Chiave API</b> per i fornitori in hosting, <b>n' +
+      'essuna</b> per i server che non la vogliono.</p>',
+    '<p>La chiave è vostra, creata sul vostro account — l''applicazione non ne ha mai una p' +
+      'ropria:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — la chiave si crea su <code>console.anthropic.com</code>, sezion' +
+      'e API keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, sezione API keys; per inviare se' +
+      'rve anche la fatturazione attiva sull''account.</li>',
+    '<li><b>OpenAI-compatible</b> è una famiglia, non una sola azienda: OpenRouter risponde' +
+      ' nella stessa forma con molti modelli sotto una chiave, e i server sul vostro stesso c' +
+      'omputer — Ollama, LM Studio — di solito non vogliono chiave alcuna: mettete <b>Autoriz' +
+      'zazione</b> su <b>nessuna</b>.</li>',
+    '</ul>',
+    '<p><b>Collega la chiave</b> ripone la chiave nel Gestore credenziali di Windows, cifra' +
+      'ta per il vostro account Windows — non in un file, e mai nel documento. Il campo mostr' +
+      'a poi i primi caratteri della chiave, così si vede quale è collegata, e <b>Dimentica l' +
+      'a chiave</b> la toglie. Una chiave è legata al luogo per cui è stata inserita — schema' +
+      ', host e porta: cambiatene uno e il pannello la richiede.</p>',
+    '<p>La prima pressione chiede in parole chiare — <b>Inviare a questo endpoint?</b> — no' +
+      'minando il destinatario. Viaggia il prompt costruito dal vostro brief o testo — con ca' +
+      'nale, variazione e lingua scelti —, le variabili dichiarate, il modello corrente con l' +
+      'a sua diagnostica quando si ripara, il nome del modello dal vostro profilo con un tett' +
+      'o alla lunghezza della risposta, e, sotto autorizzazione <b>Chiave API</b>, la chiave ' +
+      'nelle intestazioni della richiesta; nient''altro, e in nessun altro momento. Il destin' +
+      'atario non cambia senza di voi: un redirect viene rifiutato invece che seguito, e un i' +
+      'ndirizzo <code>http</code> non cifrato è accettato solo su questa macchina. Il permess' +
+      'o si lega dove si lega la chiave — schema, host e porta — e si vede nella spunta <b>In' +
+      'vio consentito</b> delle impostazioni — toglietela in qualunque momento: nulla di nuov' +
+      'o parte, e una risposta già in volo non viene mai applicata. Cosa faccia col testo il ' +
+      'software all''indirizzo scelto spetta al suo operatore dirlo: la richiesta va all''ind' +
+      'irizzo del vostro profilo e in nessun altro posto.</p>',
+    '<h3 id="ai-1">Lo stesso ciclo, senza rete</h3>',
+    '<p>I prompt non hanno bisogno né di chiave né di connessione — è la stessa strada quan' +
+      'do il vostro modello vive in una finestra di chat, e il ciclo qui lo fate girare voi: ' +
+      'il motore giudica dopo l''incollaggio, non prima. <b>Copia il prompt</b> mette il prom' +
+      'pt completo negli appunti; portatelo al modello che usate, incollate la risposta in <b' +
+      '>Risposta del modello</b> e premete <b>Inserisci nel documento</b>. Se la diagnostica ' +
+      'trova errori, <b>Copia il prompt di correzione</b> costruisce il secondo prompt: porta' +
+      ' l''intero documento con le righe numerate e nomina i punti esatti che il motore ha co' +
+      'ntestato. La sua risposta è il documento corretto per intero — riportatela e premete <' +
+      'b>Sostituisci il documento</b>; <b>Inserisci nel documento</b> lascerebbe quello rotto' +
+      ' al suo posto e metterebbe accanto la copia corretta.</p>',
     '<h2 id="groups">L''editor di gruppi</h2>',
     '<p>Mettete il cursore dentro un <code>{a|b|c}</code> e aprite l''editor di gruppi dall' +
       'a barra degli strumenti. Elenca le alternative come righe: modificatele, aggiungetene ' +
@@ -6420,22 +6823,85 @@ const
       '>',
     '<p>A exportação escreve-as de três maneiras: como livro XLSX, como texto simples com u' +
       'ma variante por linha, ou como um ficheiro por variante numa pasta à sua escolha.</p>',
-    '<p><b>Rascunho de IA</b> é por onde um modelo começa quando prefere não escrever cada ' +
-      'variante à mão. Diga no resumo o que quer, enumere as variáveis que o modelo pode usar' +
-      ' e carregue em <b>Copiar o pedido</b>. A aplicação não fala com nenhum modelo nem guar' +
-      'da chaves: escreve o pedido para que o leve àquele que já utiliza. Traga a resposta e ' +
-      'carregue em <b>Inserir no documento</b> — o motor desta janela diz então o que lhe par' +
-      'ece, no painel de diagnósticos, tal como faz com tudo o que escreve. Se houver erros, ' +
-      '<b>Copiar o pedido de correção</b> constrói um segundo pedido: leva o documento inteir' +
-      'o com as linhas numeradas e nomeia os pontos exatos de que o motor se queixou. A respo' +
-      'sta é o documento corrigido por inteiro, portanto traga-a e carregue em <b>Substituir ' +
-      'o documento</b>: <b>Inserir no documento</b> deixaria o estragado onde está e poria um' +
-      'a cópia corrigida ao lado.</p>',
-    '<p>A coluna do caso é a parte que vale a pena preencher. Uma variável é inserida tal c' +
-      'omo está, nada a declina: numa língua com casos a frase tem de ser construída à volta ' +
-      'da forma que o valor já tem, e um modelo só escolhe bem se lhe disserem que forma tem ' +
-      'cada nome. Do nome não se deduz: num conjunto de modelos real as formas instrumentais ' +
-      'estavam numa variável cujo nome dizia acusativo.</p>',
+    '<p><b>Rascunho de IA</b> escreve por si o primeiro rascunho de um modelo — a partir de' +
+      ' texto que já tem, ou de um resumo. Merece uma secção própria: a seguinte.</p>',
+    '<h2 id="ai">O rascunho de IA</h2>',
+    '<p>Um modelo costuma começar por um texto que já existe — uma ficha de produto, uma ca' +
+      'rta, uma página. O painel <b>Rascunho de IA</b> transforma-o num primeiro modelo: abra' +
+      '-o na barra de ferramentas, deixe o cabeçalho da coluna esquerda em <b>Texto a convert' +
+      'er</b>, cole o texto e prima <b>Gerar</b>. O rascunho chegado substitui o documento, a' +
+      ' pré-visualização renderiza-o e o painel de diagnóstico julga — o mesmo motor e o mesm' +
+      'o veredicto que para tudo o que escreve. Um Ctrl+Z devolve o documento anterior; daí e' +
+      'm diante, edite-o como texto seu, porque o é.</p>',
+    '<p>Se não houver nada para colar, mude o cabeçalho para <b>Resumo</b> e descreva o que' +
+      ' quer. Os campos acima guiam o rascunho em ambos os modos: <b>Canal</b> — uma carta, u' +
+      'm SMS e uma notificação push escrevem-se em registos diferentes; <b>Variação</b> — até' +
+      ' onde as variantes podem afastar-se; o idioma da resposta; e <b>Variáveis que o modelo' +
+      ' pode usar</b>, declaradas pelo nome. A coluna do caso é a parte que vale a pena preen' +
+      'cher. Uma variável é inserida tal como está, nada a declina: numa língua com casos a f' +
+      'rase tem de ser construída à volta da forma que o valor já tem, e um modelo só escolhe' +
+      ' bem se lhe disserem que forma tem cada nome. Do nome não se deduz: num conjunto de mo' +
+      'delos real as formas instrumentais estavam numa variável cujo nome dizia acusativo.</p' +
+      '>',
+    '<p>Na resposta não se acredita: verifica-se. O rascunho passa pelo motor desta janela ' +
+      'antes de se aproximar do documento, e se o veredicto encontrar erros, o ciclo pede ao ' +
+      'modelo que os corrija — a barra de estado conta as rondas — antes de entregar o que qu' +
+      'er que seja. Só um rascunho limpo substitui o documento; tudo o resto cai em <b>Respos' +
+      'ta do modelo</b>, a linha de estado diz porquê, e nada seu é reescrito. As suas própri' +
+      'as edições ficam igualmente protegidas: se escreveu enquanto uma resposta voava, o ras' +
+      'cunho espera no painel. Enquanto trabalha, <b>Gerar</b> lê-se <b>Parar</b> — prima-o p' +
+      'ara abandonar a ronda.</p>',
+    '<p><b>Corrigir</b> é o mesmo ciclo apontado ao documento actual: acorda quando o diagn' +
+      'óstico encontra erros, envia o documento com as objecções exactas e aplica a versão co' +
+      'rrigida com o mesmo cuidado.</p>',
+    '<h3 id="ai-0">A ligação, e a chave de quem</h3>',
+    '<p>Tal como se instala, a aplicação não envia nada para lado nenhum. <b>Gerar</b> e <b' +
+      '>Corrigir</b> só vão à rede depois de configurar a ligação no rodapé do painel e a per' +
+      'mitir. Escolha o <b>Formato</b> que o seu endpoint fala — <b>Anthropic Messages</b> ou' +
+      ' <b>OpenAI-compatible</b> —, o endereço <b>Endpoint</b> e o nome em <b>Modelo</b> — pa' +
+      'ra a Anthropic a lista sob a seta oferece nomes actuais; nos restantes casos, escreva ' +
+      'o nome que o seu endpoint espera. <b>Autorização</b> diz se viaja uma chave: <b>Chave ' +
+      'API</b> para os fornecedores alojados, <b>nenhuma</b> para servidores que não a querem' +
+      '.</p>',
+    '<p>A chave é sua, criada na sua própria conta — a aplicação nunca tem uma própria:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — crie a chave em <code>console.anthropic.com</code>, secção API ' +
+      'keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, secção API keys; enviar exige ta' +
+      'mbém facturação activa na conta.</li>',
+    '<li><b>OpenAI-compatible</b> é uma família, não uma única empresa: o OpenRouter respon' +
+      'de na mesma forma com muitos modelos sob uma chave, e os servidores no seu próprio com' +
+      'putador — Ollama, LM Studio — normalmente não querem chave nenhuma: ponha <b>Autorizaç' +
+      'ão</b> em <b>nenhuma</b>.</li>',
+    '</ul>',
+    '<p><b>Anexar a chave</b> guarda a chave no Gestor de Credenciais do Windows, cifrada p' +
+      'ara a sua conta Windows — não num ficheiro, e nunca no documento. O campo mostra depoi' +
+      's os primeiros caracteres da chave, para se ver qual está anexada, e <b>Esquecer a cha' +
+      've</b> retira-a. Uma chave fica presa ao lugar para o qual foi introduzida — o esquema' +
+      ', o host e a porta: mude qualquer um deles e o painel volta a pedi-la.</p>',
+    '<p>O primeiro toque pergunta com todas as letras — <b>Enviar para este endpoint?</b> —' +
+      ' nomeando o destinatário. Viaja o pedido construído do seu resumo ou texto — com o can' +
+      'al, a variação e o idioma escolhidos —, as variáveis declaradas, o modelo actual e o s' +
+      'eu diagnóstico ao corrigir, o nome do modelo do seu perfil com um tecto para o comprim' +
+      'ento da resposta, e, sob a autorização <b>Chave API</b>, a chave nos cabeçalhos do ped' +
+      'ido; nada mais, e em nenhum outro momento. O destinatário não muda sem si: um redirecc' +
+      'ionamento é recusado em vez de seguido, e um endereço <code>http</code> sem cifra só é' +
+      ' aceite nesta máquina. A permissão liga-se onde a chave se liga — o esquema, o host e ' +
+      'a porta — e vê-se na marca <b>Envio permitido</b> das definições — desmarque-a a qualq' +
+      'uer momento: nada de novo parte, e uma resposta já em voo nunca é aplicada. O que o so' +
+      'ftware no endereço escolhido faz com o texto é o seu operador que o diz: o pedido vai ' +
+      'para o endereço do seu perfil e para mais lado nenhum.</p>',
+    '<h3 id="ai-1">O mesmo ciclo, sem rede</h3>',
+    '<p>Os pedidos não precisam nem de chave nem de ligação — é o mesmo caminho quando o se' +
+      'u modelo vive numa janela de chat, e aqui o ciclo é você que o faz girar: o motor julg' +
+      'a depois de colar, não antes. <b>Copiar o pedido</b> põe o pedido completo na área de ' +
+      'transferência; leve-o ao modelo que usa, cole a resposta em <b>Resposta do modelo</b> ' +
+      'e prima <b>Inserir no documento</b>. Se o diagnóstico encontrar erros, <b>Copiar o ped' +
+      'ido de correção</b> constrói o segundo pedido: leva o documento inteiro com as linhas ' +
+      'numeradas e nomeia os sítios exactos a que o motor objectou. A resposta a ele é o docu' +
+      'mento corrigido por inteiro — traga-a de volta e prima <b>Substituir o documento</b>; ' +
+      '<b>Inserir no documento</b> deixaria o partido no lugar e poria a cópia corrigida ao l' +
+      'ado.</p>',
     '<h2 id="groups">O editor de grupos</h2>',
     '<p>Ponha o cursor dentro de um <code>{a|b|c}</code> e abra o editor de grupos a partir' +
       ' da barra de ferramentas. Enumera as alternativas em linhas: altere-as, acrescente uma' +
@@ -7324,24 +7790,88 @@ const
       ' nu gebruikt of niet.</p>',
     '<p>De export schrijft ze op drie manieren weg: als XLSX-werkmap, als platte tekst met ' +
       'één variant per regel, of als één bestand per variant in een map naar keuze.</p>',
-    '<p><b>AI-concept</b> is waar een sjabloon begint als u niet elke variant met de hand w' +
-      'ilt schrijven. Zeg in de briefing wat u wilt, noem de variabelen die het model mag geb' +
-      'ruiken en druk op <b>Prompt kopiëren</b>. De toepassing praat met geen enkel model en ' +
-      'houdt geen sleutel: zij schrijft de prompt zodat u hem meeneemt naar het model dat u t' +
-      'och al gebruikt. Breng het antwoord terug en druk op <b>In het document invoegen</b> —' +
-      ' de machine in dit venster zegt dan in het diagnosepaneel wat zij ervan vindt, net als' +
-      ' bij alles wat u zelf typt. Zijn er fouten, dan bouwt <b>Herstelprompt kopiëren</b> ee' +
-      'n tweede prompt: hij draagt het hele document met genummerde regels en noemt de precie' +
-      'ze plekken waar de machine bezwaar maakte. Het antwoord is het volledige verbeterde do' +
-      'cument, breng het dus terug en druk op <b>Het document vervangen</b>; <b>In het docume' +
-      'nt invoegen</b> zou het kapotte laten staan en er een verbeterde kopie naast leggen.</' +
-      'p>',
-    '<p>De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variabele' +
-      ' wordt letterlijk ingevoegd, niets verbuigt haar: in een taal met naamvallen moet de z' +
-      'in dus rond de vorm worden gebouwd die de waarde al heeft, en een model kiest alleen g' +
-      'oed als het te horen krijgt welke vorm elke naam draagt. Uit de naam volgt dat niet: i' +
-      'n een echte sjabloonverzameling stonden de instrumentalisvormen in een variabele waarv' +
-      'an de naam accusatief zei.</p>',
+    '<p><b>AI-concept</b> schrijft het eerste concept van een sjabloon voor u — uit tekst d' +
+      'ie u al hebt, of uit een briefing. Het verdient een eigen sectie: de volgende.</p>',
+    '<h2 id="ai">Het AI-concept</h2>',
+    '<p>Een sjabloon begint meestal met tekst die er al is — een productbeschrijving, een b' +
+      'rief, een pagina. Het paneel <b>AI-concept</b> maakt daar een eerste sjabloon van: ope' +
+      'n het vanaf de werkbalk, laat de kop van de linkerkolom op <b>Te converteren tekst</b>' +
+      ' staan, plak de tekst en druk op <b>Genereren</b>. Het aangekomen concept vervangt het' +
+      ' document, het voorbeeld rendert het en het diagnosepaneel oordeelt — dezelfde machine' +
+      ' en hetzelfde oordeel als voor alles wat u zelf typt. Eén Ctrl+Z brengt uw oude docume' +
+      'nt terug; bewerk het daarna als eigen tekst, want dat is het.</p>',
+    '<p>Valt er niets te plakken, zet de kop dan op <b>Briefing</b> en beschrijf wat u wilt' +
+      '. De velden erboven sturen het concept in beide standen: <b>Kanaal</b> — een brief, ee' +
+      'n sms en een pushmelding zijn in verschillende registers geschreven; <b>Variatie</b> —' +
+      ' hoe ver de varianten uiteen mogen liggen; de taal van het antwoord; en <b>Variabelen ' +
+      'die het model mag gebruiken</b>, bij naam opgegeven. De naamvalskolom is het deel dat ' +
+      'de moeite van het invullen waard is. Een variabele wordt letterlijk ingevoegd, niets v' +
+      'erbuigt haar: in een taal met naamvallen moet de zin dus rond de vorm worden gebouwd d' +
+      'ie de waarde al heeft, en een model kiest alleen goed als het te horen krijgt welke vo' +
+      'rm elke naam draagt. Uit de naam volgt dat niet: in een echte sjabloonverzameling ston' +
+      'den de instrumentalisvormen in een variabele waarvan de naam accusatief zei.</p>',
+    '<p>Het antwoord wordt niet geloofd, het wordt gecontroleerd: het concept gaat door de ' +
+      'machine van dit venster voordat het bij uw document in de buurt komt, en vindt het oor' +
+      'deel fouten, dan vraagt de lus het model ze te herstellen — de statusbalk telt de rond' +
+      'es mee — voordat er iets wordt overhandigd. Alleen een schoon concept vervangt het doc' +
+      'ument; al het andere belandt in <b>Antwoord van het model</b>, de statusregel zegt waa' +
+      'rom, en niets van u wordt overschreven. Uw eigen wijzigingen zijn net zo beschermd: ty' +
+      'pte u terwijl een antwoord onderweg was, dan wacht het concept in het paneel. Tijdens ' +
+      'het werk staat op <b>Genereren</b> <b>Stoppen</b> — druk erop om de ronde af te breken' +
+      '.</p>',
+    '<p><b>Herstellen</b> is dezelfde lus, gericht op uw huidige document: hij ontwaakt wan' +
+      'neer de diagnose fouten vindt, stuurt het document met de exacte bezwaren mee en past ' +
+      'de gecorrigeerde versie met dezelfde zorg toe.</p>',
+    '<h3 id="ai-0">De verbinding, en wiens sleutel</h3>',
+    '<p>Zoals geïnstalleerd verstuurt de toepassing niets, nergens heen. <b>Genereren</b> e' +
+      'n <b>Herstellen</b> gaan pas het net op nadat u onderaan het paneel de verbinding hebt' +
+      ' ingericht en toegestaan. Kies het <b>Formaat</b> dat uw endpoint spreekt — <b>Anthrop' +
+      'ic Messages</b> of <b>OpenAI-compatible</b> —, het <b>Endpoint</b>-adres en de naam in' +
+      ' <b>Model</b> — voor Anthropic biedt de lijst onder de pijl actuele namen; typ anders ' +
+      'de naam die uw endpoint verwacht. <b>Autorisatie</b> zegt of er een sleutel meereist: ' +
+      '<b>API-sleutel</b> voor de gehoste aanbieders, <b>geen</b> voor servers die er geen wi' +
+      'llen.</p>',
+    '<p>De sleutel is de uwe, gemaakt op uw eigen account — de toepassing heeft er nooit ee' +
+      'n van zichzelf:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — maak de sleutel op <code>console.anthropic.com</code>, onder AP' +
+      'I keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, onder API keys; versturen vraagt' +
+      ' ook geactiveerde facturering op het account.</li>',
+    '<li><b>OpenAI-compatible</b> is een familie, niet één bedrijf: OpenRouter antwoordt in' +
+      ' dezelfde vorm met veel modellen onder één sleutel, en servers op uw eigen computer — ' +
+      'Ollama, LM Studio — willen meestal helemaal geen sleutel: zet <b>Autorisatie</b> op <b' +
+      '>geen</b>.</li>',
+    '</ul>',
+    '<p><b>Sleutel koppelen</b> bergt de sleutel op in Windows Referentiebeheer, versleutel' +
+      'd voor uw Windows-account — niet in een bestand, en nooit in het document. Het veld to' +
+      'ont daarna de eerste tekens van de sleutel, zodat te zien is welke gekoppeld is, en <b' +
+      '>Sleutel vergeten</b> haalt hem weg. Een sleutel hoort bij de plek waarvoor hij is ing' +
+      'evoerd — schema, host en poort: wijzig er één en het paneel vraagt er opnieuw om.</p>',
+    '<p>De eerste druk vraagt het in gewone woorden — <b>Naar dit endpoint versturen?</b> —' +
+      ' met de ontvanger bij naam. Mee reist de prompt, gebouwd uit uw briefing of tekst — me' +
+      't het gekozen kanaal, de gekozen variatie en taal —, de opgegeven variabelen, bij hers' +
+      'tel het huidige sjabloon met zijn diagnose, de modelnaam uit uw profiel met een plafon' +
+      'd voor de lengte van het antwoord, en onder <b>API-sleutel</b>-autorisatie de sleutel ' +
+      'in de kopregels van het verzoek; verder niets, en op geen enkel ander moment. De ontva' +
+      'nger verandert niet zonder u: een omleiding wordt geweigerd in plaats van gevolgd, en ' +
+      'een onversleuteld <code>http</code>-adres wordt alleen op deze machine aanvaard. De to' +
+      'estemming bindt zich waar de sleutel dat doet — schema, host en poort — en is zichtbaa' +
+      'r als het vinkje <b>Versturen toegestaan</b> in de instellingen — haal het weg wanneer' +
+      ' u wilt: niets nieuws vertrekt, en een antwoord dat al onderweg is wordt nooit toegepa' +
+      'st. Wat de software op het gekozen adres met de tekst doet, is aan zijn beheerder om t' +
+      'e zeggen: het verzoek gaat naar het adres uit uw profiel en nergens anders heen.</p>',
+    '<h3 id="ai-1">Dezelfde lus, zonder netwerk</h3>',
+    '<p>De prompts hebben sleutel noch verbinding nodig — het is dezelfde weg wanneer uw mo' +
+      'del in een chatvenster leeft, en de lus draait u hier zelf: de machine oordeelt na het' +
+      ' plakken, niet ervoor. <b>Prompt kopiëren</b> zet de volledige prompt op het klembord;' +
+      ' breng hem naar het model dat u gebruikt, plak het antwoord in <b>Antwoord van het mod' +
+      'el</b> en druk op <b>In het document invoegen</b>. Vindt de diagnose fouten, dan bouwt' +
+      ' <b>Herstelprompt kopiëren</b> de tweede prompt: die draagt het hele document met genu' +
+      'mmerde regels en noemt de exacte plekken waartegen de machine bezwaar maakte. Het antw' +
+      'oord erop is het gecorrigeerde document in zijn geheel — breng het terug en druk op <b' +
+      '>Het document vervangen</b>; <b>In het document invoegen</b> zou het kapotte laten sta' +
+      'an en de gecorrigeerde kopie ernaast zetten.</p>',
     '<h2 id="groups">De groepseditor</h2>',
     '<p>Zet de cursor in een <code>{a|b|c}</code> en open de groepseditor vanuit de werkbal' +
       'k. Hij somt de alternatieven als regels op: wijzig ze, voeg er een toe, haal er een we' +
@@ -8239,22 +8769,84 @@ const
     '<p>Dışa aktarma bunları üç yolla yazar: XLSX çalışma kitabı olarak, satır başına bir ç' +
       'eşitleme düşen düz metin olarak ya da seçtiğiniz bir klasörde çeşitleme başına bir dos' +
       'ya olarak.</p>',
-    '<p><b>Yapay zekâ taslağı</b>, her çeşitlemeyi elle yazmak istemediğinizde bir şablonun' +
-      ' başladığı yerdir. Ne istediğinizi özette anlatın, modelin kullanabileceği değişkenler' +
-      'i sıralayın ve <b>İstemi kopyala</b> düğmesine basın. Uygulama hiçbir modele bağlanmaz' +
-      ' ve anahtar tutmaz: istemi, zaten kullandığınız modele götüresiniz diye yazar. Yanıtı ' +
-      'geri getirip <b>Belgeye ekle</b> düğmesine basın — bu penceredeki makine o zaman ne dü' +
-      'şündüğünü tanılama panelinde söyler, tıpkı kendi yazdığınız her şey için yaptığı gibi.' +
-      ' Hata varsa <b>Düzeltme istemini kopyala</b>, ikinci bir istem hazırlar: numaralanmış ' +
-      'satırlarıyla belgenin tamamını taşır ve makinenin itiraz ettiği tam yerleri adlandırır' +
-      '. Yanıt, düzeltilmiş belgenin tamamıdır; onu geri getirip <b>Belgeyi değiştir</b> düğm' +
-      'esine basın — <b>Belgeye ekle</b> bozuk olanı yerinde bırakır ve yanına düzeltilmiş bi' +
-      'r kopya koyar.</p>',
-    '<p>Durum sütunu, doldurmaya değer olan bölümdür. Değişken olduğu gibi yerleştirilir, o' +
-      'nu hiçbir şey çekimlemez: durumları olan bir dilde cümle, değerin hâlihazırda taşıdığı' +
-      ' biçimin çevresine kurulmalıdır ve model ancak her adın hangi biçimi taşıdığı söylendi' +
-      'ğinde doğru seçer. Addan çıkarılamaz: gerçek bir şablon kümesinde araç durumundaki biç' +
-      'imler, adı belirtme durumu diyen bir değişkende duruyordu.</p>',
+    '<p><b>Yapay zekâ taslağı</b>, bir şablonun ilk taslağını sizin yerinize yazar — eliniz' +
+      'de olan bir metinden ya da bir özetten. Kendi bölümünü hak ediyor: bir sonraki.</p>',
+    '<h2 id="ai">Yapay zekâ taslağı</h2>',
+    '<p>Bir şablon çoğunlukla zaten var olan bir metinden başlar — bir ürün açıklaması, bir' +
+      ' mektup, bir sayfa. <b>Yapay zekâ taslağı</b> paneli o metni ilk şablona çevirir: pane' +
+      'li araç çubuğundan açın, sol sütunun başlığını <b>Dönüştürülecek metin</b> üzerinde bı' +
+      'rakın, metni yapıştırın ve <b>Üret</b> düğmesine basın. Gelen taslak belgeyi değiştiri' +
+      'r, önizleme onu çizer ve tanı paneli yargısını verir — kendi yazdıklarınızla aynı maki' +
+      'ne, aynı yargı. Bir Ctrl+Z eski belgenizi geri getirir; oradan sonra kendi metniniz gi' +
+      'bi düzenleyin, çünkü öyledir.</p>',
+    '<p>Yapıştıracak bir şey yoksa başlığı <b>Özet</b> konumuna alın ve ne istediğinizi anl' +
+      'atın. Üstteki alanlar taslağı iki kipte de yönlendirir: <b>Kanal</b> — bir mektup, bir' +
+      ' SMS ve bir anlık bildirim farklı üsluplarda yazılır; <b>Çeşitleme</b> — çeşitlemeler ' +
+      'birbirinden ne kadar uzaklaşabilir; yanıtın dili; ve adlarıyla bildirilen <b>Modelin k' +
+      'ullanabileceği değişkenler</b>. Durum sütunu, doldurmaya değer olan bölümdür. Değişken' +
+      ' olduğu gibi yerleştirilir, onu hiçbir şey çekimlemez: durumları olan bir dilde cümle,' +
+      ' değerin hâlihazırda taşıdığı biçimin çevresine kurulmalıdır ve model ancak her adın h' +
+      'angi biçimi taşıdığı söylendiğinde doğru seçer. Addan çıkarılamaz: gerçek bir şablon k' +
+      'ümesinde araç durumundaki biçimler, adı belirtme durumu diyen bir değişkende duruyordu' +
+      '.</p>',
+    '<p>Yanıta inanılmaz, yanıt doğrulanır: taslak, belgenize yaklaşmadan önce bu pencereni' +
+      'n kendi makinesinden geçer ve yargı hata bulursa döngü, bir şey teslim etmeden önce mo' +
+      'delden onları onarmasını ister — durum çubuğu turları sayar. Belgeyi yalnızca temiz bi' +
+      'r taslak değiştirir; gerisi <b>Modelin yanıtı</b> alanına düşer, durum satırı nedenini' +
+      ' söyler ve sizin hiçbir şeyinizin üzerine yazılmaz. Kendi düzenlemeleriniz de aynı biç' +
+      'imde korunur: yanıt yoldayken yazdıysanız taslak panelde bekler. Çalışırken <b>Üret</b' +
+      '> düğmesinde <b>Durdur</b> yazar — turu bırakmak için basın.</p>',
+    '<p><b>Düzelt</b>, aynı döngünün mevcut belgenize çevrilmiş hâlidir: tanı hata bulduğun' +
+      'da uyanır, belgeyi tam itirazlarla birlikte gönderir ve düzeltilmiş sürümü aynı özenle' +
+      ' uygular.</p>',
+    '<h3 id="ai-0">Bağlantı, ve kimin anahtarı</h3>',
+    '<p>Kurulduğu hâliyle uygulama hiçbir yere hiçbir şey göndermez. <b>Üret</b> ve <b>Düze' +
+      'lt</b> ağa ancak panelin altındaki bağlantıyı kurup izin verdikten sonra çıkar. Uç nok' +
+      'tanızın konuştuğu <b>Biçim</b>''i seçin — <b>Anthropic Messages</b> ya da <b>OpenAI-co' +
+      'mpatible</b> —, <b>Uç nokta</b> adresini ve <b>Model</b> alanındaki adı — Anthropic iç' +
+      'in okun altındaki liste güncel adlar önerir; diğer durumlarda uç noktanızın beklediği ' +
+      'adı yazın. <b>Yetkilendirme</b>, anahtarın yola çıkıp çıkmayacağını söyler: barındırıl' +
+      'an sağlayıcılar için <b>API anahtarı</b>, anahtar istemeyen sunucular için <b>yok</b>.' +
+      '</p>',
+    '<p>Anahtar sizindir, kendi hesabınızda yapılmıştır — uygulamanın hiçbir zaman kendi an' +
+      'ahtarı yoktur:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — anahtarı <code>console.anthropic.com</code> üzerinde, API keys ' +
+      'bölümünde oluşturun.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, API keys bölümü; göndermek için ' +
+      'hesapta faturalandırma da açık olmalı.</li>',
+    '<li><b>OpenAI-compatible</b> bir ailedir, tek bir şirket değil: OpenRouter aynı biçimd' +
+      'e, tek anahtar altında birçok modelle yanıt verir; kendi bilgisayarınızdaki sunucular ' +
+      '— Ollama, LM Studio — çoğunlukla hiç anahtar istemez: <b>Yetkilendirme</b> alanını <b>' +
+      'yok</b> yapın.</li>',
+    '</ul>',
+    '<p><b>Anahtarı bağla</b>, anahtarı Windows Kimlik Bilgisi Yöneticisine koyar, Windows ' +
+      'hesabınız için şifrelenmiş olarak — bir dosyaya değil ve asla belgeye değil. Alan sonr' +
+      'a anahtarın ilk karakterlerini gösterir, hangisinin bağlı olduğu görünsün diye; <b>Ana' +
+      'htarı unut</b> onu kaldırır. Anahtar, girildiği yere bağlıdır — şema, sunucu adı ve ba' +
+      'ğlantı noktası: bunlardan biri değişirse panel anahtarı yeniden ister.</p>',
+    '<p>İlk basış açık sözlerle sorar — <b>Bu uç noktaya gönderilsin mi?</b> — alıcıyı adıy' +
+      'la anarak. Yola çıkan: özetinizden ya da metninizden kurulan istem — seçtiğiniz kanal,' +
+      ' çeşitleme ve dille birlikte —, bildirilen değişkenler, onarımda mevcut şablon ve tanı' +
+      'sı, profilinizden model adı ve yanıt uzunluğu için bir tavan, <b>API anahtarı</b> yetk' +
+      'ilendirmesinde de istek başlıklarındaki anahtar; başka hiçbir şey ve başka hiçbir anda' +
+      '. Alıcı sizsiz değişmez: bir yönlendirme izlenmek yerine reddedilir; şifrelenmemiş bir' +
+      ' <code>http</code> adresi yalnızca bu makinede kabul edilir. İzin, anahtarın bağlandığ' +
+      'ı yere bağlıdır — şema, sunucu adı ve bağlantı noktası — ve ayarlardaki <b>Gönderim aç' +
+      'ık</b> işaretinde görünür — istediğiniz an kaldırın: yeni bir şey gönderilmez ve zaten' +
+      ' yolda olan bir yanıt asla uygulanmaz. Seçtiğiniz adresteki yazılımın metinle ne yaptı' +
+      'ğını söylemek işletmecisine düşer: istek, profilinizdeki adrese gider ve başka hiçbir ' +
+      'yere değil.</p>',
+    '<h3 id="ai-1">Aynı döngü, ağ olmadan</h3>',
+    '<p>İstemlerin ne anahtara ne bağlantıya ihtiyacı var — modeliniz bir sohbet penceresin' +
+      'de yaşıyorsa yol budur ve döngüyü burada siz çevirirsiniz: makine yargısını yapıştırma' +
+      'dan sonra verir, önce değil. <b>İstemi kopyala</b> tam istemi panoya koyar; onu kullan' +
+      'dığınız modele götürün, yanıtı <b>Modelin yanıtı</b> alanına yapıştırın ve <b>Belgeye ' +
+      'ekle</b> düğmesine basın. Tanı hata bulursa <b>Düzeltme istemini kopyala</b> ikinci is' +
+      'temi kurar: tüm belgeyi satırları numaralanmış taşır ve makinenin itiraz ettiği yerler' +
+      'i tek tek adlandırır. Onun yanıtı, düzeltilmiş belgenin tamamıdır — geri getirin ve <b' +
+      '>Belgeyi değiştir</b> düğmesine basın; <b>Belgeye ekle</b> bozuk olanı yerinde bırakır' +
+      ', düzeltilmiş kopyayı yanına koyardı.</p>',
     '<h2 id="groups">Grup düzenleyici</h2>',
     '<p>İmleci bir <code>{a|b|c}</code> içine koyun ve araç şeridinden grup düzenleyiciyi a' +
       'çın. Seçenekleri satırlar olarak sıralar: değiştirin, bir tane ekleyin, bir tane çıkar' +
@@ -9114,22 +9706,81 @@ const
       ' раз на відтворення, користується ним обрана гілка чи ні.</p>',
     '<p>Експорт зберігає їх трьома способами: книгою XLSX, звичайним текстом по варіанту на' +
       ' рядок або по файлу на варіант у теку, яку ви оберете.</p>',
-    '<p><b>AI-чернетка</b> — це те, з чого починається шаблон, коли виписувати кожен варіан' +
-      'т руками не хочеться. Опишіть задачу в брифі, перелічіть змінні, якими моделі можна ко' +
-      'ристуватися, і натисніть <b>Скопіювати промпт</b>. Програма нікуди не звертається і не' +
-      ' зберігає ключів: вона складає промпт, щоб ви віднесли його до тієї моделі, якою корис' +
-      'туєтеся. Поверніть відповідь і натисніть <b>Вставити в документ</b> — рушій у цьому ві' +
-      'кні скаже, що він про неї думає, у панелі діагностики, так само, як про будь-який набр' +
-      'аний вами текст. Якщо є помилки, <b>Скопіювати промпт виправлення</b> складе другий пр' +
-      'омпт: він несе весь документ із пронумерованими рядками й називає ті самі місця, до як' +
-      'их причепився рушій. Відповідь на нього — виправлений документ цілком, тож поверніть й' +
-      'ого й натисніть <b>Замінити документ</b>: <b>Вставити в документ</b> залишило б зламан' +
-      'ий на місці та поклало поруч виправлену копію.</p>',
-    '<p>Колонка відмінка — та частина, яку варто заповнити. Змінна підставляється дослівно,' +
-      ' ніщо її не відмінює, тому в мові з відмінками речення доводиться будувати навколо тіє' +
-      'ї форми, яку значення вже має, і модель обере правильно, лише якщо їй сказати, яку фор' +
-      'му тримає кожне ім''я. З імені це не виводиться: в одному справжньому наборі шаблонів ' +
-      'орудні форми лежали у змінній, ім''я якої казало «знахідний».</p>',
+    '<p><b>AI-чернетка</b> пише перший чернетковий шаблон за вас — з тексту, який у вас уже' +
+      ' є, або за брифом. Він заслужив власний розділ — наступний.</p>',
+    '<h2 id="ai">AI-чернетка</h2>',
+    '<p>Шаблон зазвичай починається з тексту, який уже існує, — опис товару, лист, сторінка' +
+      '. Панель <b>AI-чернетка</b> перетворює такий текст на перший шаблон: відкрийте її з па' +
+      'нелі інструментів, залиште заголовок лівої колонки на <b>Текст для переробки</b>, вста' +
+      'вте текст і натисніть <b>Згенерувати</b>. Готова чернетка замінює документ, прев''ю її' +
+      ' рендерить, а панель діагностики виносить вердикт — той самий рушій і той самий суд, щ' +
+      'о й для набраного руками. Один Ctrl+Z повертає попередній документ; далі правте як сві' +
+      'й текст — він і є ваш.</p>',
+    '<p>Якщо вставляти нічого, перемкніть заголовок на <b>Бриф</b> і опишіть, що потрібно. ' +
+      'Поля вище ведуть чернетку в обох режимах: <b>Канал</b> — лист, SMS і push-сповіщення н' +
+      'аписані в різних регістрах; <b>Варіативність</b> — як далеко варіантам можна розходити' +
+      'ся; мова відповіді; і <b>Змінні, які можна використовувати</b>, оголошені за іменами. ' +
+      'Колонка відмінка — та частина, яку варто заповнити. Змінна підставляється дослівно, ні' +
+      'що її не відмінює, тому в мові з відмінками речення доводиться будувати навколо тієї ф' +
+      'орми, яку значення вже має, і модель обере правильно, лише якщо їй сказати, яку форму ' +
+      'тримає кожне ім''я. З імені це не виводиться: в одному справжньому наборі шаблонів ору' +
+      'дні форми лежали у змінній, ім''я якої казало «знахідний».</p>',
+    '<p>Відповіді не вірять — її перевіряють: чернетка проходить через рушій цього вікна до' +
+      ' того, як торкнеться документа, і, якщо вердикт знаходить помилки, петля сама просить ' +
+      'модель їх виправити — рядок стану рахує раунди вголос, — перш ніж щось віддати. Докуме' +
+      'нт замінює лише чиста чернетка; решта лягає в <b>Відповідь моделі</b>, а рядок стану к' +
+      'аже чому — і ваше не затирається. Так само захищені ваші правки: якщо ви друкували, по' +
+      'ки відповідь летіла, чернетка чекає в панелі. Поки триває робота, <b>Згенерувати</b> ч' +
+      'итається як <b>Стоп</b> — натисніть, щоб покинути раунд.</p>',
+    '<p><b>Полагодити</b> — та сама петля, спрямована на поточний документ: вона прокидаєть' +
+      'ся, коли діагностика знаходить помилки, надсилає документ разом із точними претензіями' +
+      ' і застосовує виправлену версію з тією ж обережністю.</p>',
+    '<h3 id="ai-0">Підключення і чий ключ</h3>',
+    '<p>Одразу після встановлення застосунок нікуди нічого не надсилає. <b>Згенерувати</b> ' +
+      'і <b>Полагодити</b> виходять у мережу лише після того, як ви налаштуєте підключення в ' +
+      'нижній частині панелі й дозволите його. Виберіть <b>Формат</b>, яким говорить ваша адр' +
+      'еса, — <b>Anthropic Messages</b> або <b>OpenAI-compatible</b>, — адресу <b>Ендпоінт</b' +
+      '> та ім''я в полі <b>Модель</b> — для Anthropic список під стрілкою пропонує актуальні' +
+      ' імена; в інших випадках впишіть ім''я, якого чекає ваша адреса. <b>Авторизація</b> ка' +
+      'же, чи поїде ключ: <b>API-ключ</b> для хмарних провайдерів, <b>немає</b> для серверів,' +
+      ' яким він не потрібен.</p>',
+    '<p>Ключ — ваш, зроблений на вашому акаунті; свого в застосунку немає:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — ключ створюється на <code>console.anthropic.com</code>, розділ ' +
+      'API keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, розділ API keys; для надсилання ' +
+      'на акаунті має бути ввімкнений білінг.</li>',
+    '<li><b>OpenAI-compatible</b> — родина, а не одна компанія: у цій же формі відповідає O' +
+      'penRouter — багато моделей під одним ключем, — і сервери на вашому власному комп''ютер' +
+      'і, Ollama чи LM Studio, яким ключ зазвичай не потрібен зовсім: поставте <b>Авторизація' +
+      '</b> у <b>немає</b>.</li>',
+    '</ul>',
+    '<p><b>Прив''язати ключ</b> кладе ключ у диспетчер облікових даних Windows, зашифровани' +
+      'м для вашого облікового запису, — не у файл і ніколи не в документ. Поле потім показує' +
+      ' перші знаки ключа, щоб було видно, який прив''язаний, а <b>Забути ключ</b> прибирає й' +
+      'ого. Ключ прив''язаний до місця, для якого введений, — схеми, хоста й порту: зміните б' +
+      'удь-що з них — і панель попросить його знову.</p>',
+    '<p>Перше натискання питає прямо — <b>Надсилати на цей ендпоінт?</b> — називаючи отриму' +
+      'вача. Їде промпт, зібраний з вашого брифа або тексту, — разом із вибраними каналом, ва' +
+      'ріативністю та мовою, — оголошені змінні, при лагодженні поточний шаблон із його діагн' +
+      'остикою, ім''я моделі з профілю зі стелею довжини відповіді, а за авторизації <b>API-к' +
+      'люч</b> — ключ у заголовках запиту; більше нічого й ні в який інший момент. Отримувач ' +
+      'не змінюється без вас: редирект відхиляється, а не виконується, а нешифрований <code>h' +
+      'ttp</code> приймається лише на цю машину. Дозвіл прив''язаний там само, де ключ, — до ' +
+      'схеми, хоста й порту — і видно галочкою <b>Надсилання дозволено</b> у налаштуваннях — ' +
+      'зніміть її будь-коли: нове не надсилається, а відповідь, що вже летить, ніколи не заст' +
+      'осовується. Що робить із текстом софт за вибраною адресою — питання до його оператора:' +
+      ' запит іде за адресою з профілю й нікуди більше.</p>',
+    '<h3 id="ai-1">Та сама петля — без мережі</h3>',
+    '<p>Промптам не потрібні ні ключ, ні підключення — це той самий шлях, коли ваша модель ' +
+      'живе у вікні чату, і петлю тут крутите ви самі: рушій виносить вердикт після вставки, ' +
+      'а не до. <b>Скопіювати промпт</b> кладе повний промпт у буфер; віднесіть його в ту мод' +
+      'ель, якою користуєтеся, вставте відповідь у поле <b>Відповідь моделі</b> і натисніть <' +
+      'b>Вставити в документ</b>. Якщо діагностика знайде помилки, <b>Скопіювати промпт випра' +
+      'влення</b> збере другий промпт: він несе весь документ із нумерованими рядками й назив' +
+      'ає точні місця, до яких у рушія претензії. Відповідь на нього — виправлений документ ц' +
+      'ілком, тож поверніть його й натисніть <b>Замінити документ</b> — <b>Вставити в докумен' +
+      'т</b> залишив би зламаний на місці й поклав би виправлену копію поруч.</p>',
     '<h2 id="groups">Редактор груп</h2>',
     '<p>Поставте курсор усередину <code>{a|b|c}</code> і відкрийте редактор груп зі смуги і' +
       'нструментів. Він перелічує варіанти рядками: правте їх, додайте один, приберіть інший ' +
@@ -9989,22 +10640,81 @@ const
       'яго раз на адтварэнне, карыстаецца ім абраная галіна ці не.</p>',
     '<p>Экспарт захоўвае іх трыма спосабамі: кнігай XLSX, звычайным тэкстам па варыянце на ' +
       'радок або па файле на варыянт у папку, якую вы абярэце.</p>',
-    '<p><b>AI-чарнавік</b> — гэта тое, з чаго пачынаецца шаблон, калі выпісваць кожны варыя' +
-      'нт рукамі не хочацца. Апішыце задачу ў брыфе, пералічыце зменныя, якімі мадэлі можна к' +
-      'арыстацца, і націсніце <b>Скапіяваць промпт</b>. Праграма нікуды не звяртаецца і не за' +
-      'хоўвае ключоў: яна складае промпт, каб вы занеслі яго ў тую мадэль, якой карыстаецеся.' +
-      ' Вярніце адказ і націсніце <b>Уставіць у дакумент</b> — рухавік у гэтым акне скажа, шт' +
-      'о ён пра яго думае, у панэлі дыягностыкі, гэтак жа, як пра любы набраны вамі тэкст. Ка' +
-      'лі ёсць памылкі, <b>Скапіяваць промпт праўкі</b> складзе другі промпт: ён нясе ўвесь д' +
-      'акумент з пранумараванымі радкамі і называе тыя самыя месцы, да якіх прычапіўся рухаві' +
-      'к. Адказ на яго — выпраўлены дакумент цалкам, таму вярніце яго і націсніце <b>Замяніць' +
-      ' дакумент</b>: <b>Уставіць у дакумент</b> пакінула б зламаны на месцы і паклала побач ' +
-      'выпраўленую копію.</p>',
-    '<p>Калонка склону — тая частка, якую варта запоўніць. Зменная падстаўляецца даслоўна, ' +
-      'нішто яе не скланяе, таму ў мове са склонамі сказ даводзіцца будаваць вакол той формы,' +
-      ' якую значэнне ўжо мае, і мадэль выбера правільна, толькі калі ёй сказаць, якую форму ' +
-      'трымае кожнае імя. З імя гэта не выводзіцца: у адным сапраўдным наборы шаблонаў творны' +
-      'я формы ляжалі ў зменнай, імя якой казала «вінавальны».</p>',
+    '<p><b>AI-чарнавік</b> піша першы чарнавік шаблона за вас — з тэксту, які ў вас ужо ёсц' +
+      'ь, або па брыфе. Ён заслужыў уласны раздзел — наступны.</p>',
+    '<h2 id="ai">AI-чарнавік</h2>',
+    '<p>Шаблон звычайна пачынаецца з тэксту, які ўжо існуе, — апісанне тавару, ліст, старон' +
+      'ка. Панэль <b>AI-чарнавік</b> ператварае такі тэкст у першы шаблон: адкрыйце яе з панэ' +
+      'лі інструментаў, пакіньце загаловак левай калонкі на <b>Тэкст для перапрацоўкі</b>, ус' +
+      'таўце тэкст і націсніце <b>Згенераваць</b>. Гатовы чарнавік замяняе дакумент, прэв''ю ' +
+      'яго рэндэрыць, а панэль дыягностыкі выносіць вердыкт — той самы рухавік і той самы суд' +
+      ', што і для набранага рукамі. Адзін Ctrl+Z вяртае ранейшы дакумент; далей праўце як св' +
+      'ой тэкст — ён і ёсць ваш.</p>',
+    '<p>Калі ўстаўляць няма чаго, пераключыце загаловак на <b>Брыф</b> і апішыце, што трэба' +
+      '. Палі вышэй вядуць чарнавік у абодвух рэжымах: <b>Канал</b> — ліст, SMS і push-паведа' +
+      'мленне напісаныя ў розных рэгістрах; <b>Варыятыўнасць</b> — як далёка варыянтам можна ' +
+      'разыходзіцца; мова адказу; і <b>Зменныя, якія можна выкарыстоўваць</b>, аб''яўленыя па' +
+      ' імёнах. Калонка склону — тая частка, якую варта запоўніць. Зменная падстаўляецца дасл' +
+      'оўна, нішто яе не скланяе, таму ў мове са склонамі сказ даводзіцца будаваць вакол той ' +
+      'формы, якую значэнне ўжо мае, і мадэль выбера правільна, толькі калі ёй сказаць, якую ' +
+      'форму трымае кожнае імя. З імя гэта не выводзіцца: у адным сапраўдным наборы шаблонаў ' +
+      'творныя формы ляжалі ў зменнай, імя якой казала «вінавальны».</p>',
+    '<p>Адказу не вераць — яго правяраюць: чарнавік праходзіць праз рухавік гэтага акна да ' +
+      'таго, як кранецца дакумента, і, калі вердыкт знаходзіць памылкі, пятля сама просіць ма' +
+      'дэль іх паправіць — радок стану лічыць раўнды ўголас, — перш чым нешта аддаць. Дакумен' +
+      'т замяняе толькі чысты чарнавік; астатняе кладзецца ў <b>Адказ мадэлі</b>, а радок ста' +
+      'ну кажа чаму — і ваша не заціраецца. Гэтак жа абаронены вашы праўкі: калі вы друкавалі' +
+      ', пакуль адказ ляцеў, чарнавік чакае ў панэлі. Пакуль ідзе праца, <b>Згенераваць</b> ч' +
+      'ытаецца як <b>Стоп</b> — націсніце, каб кінуць раўнд.</p>',
+    '<p><b>Паправіць</b> — тая самая пятля, накіраваная на бягучы дакумент: яна прачынаецца' +
+      ', калі дыягностыка знаходзіць памылкі, адпраўляе дакумент разам з дакладнымі прэтэнзія' +
+      'мі і ўжывае папраўленую версію з той жа асцярожнасцю.</p>',
+    '<h3 id="ai-0">Падключэнне і чый ключ</h3>',
+    '<p>Адразу пасля ўсталявання праграма нікуды нічога не адпраўляе. <b>Згенераваць</b> і ' +
+      '<b>Паправіць</b> выходзяць у сетку толькі пасля таго, як вы наладзіце падключэнне ў ні' +
+      'жняй частцы панэлі і дазволіце яго. Выберыце <b>Фармат</b>, на якім гаворыць ваш адрас' +
+      ', — <b>Anthropic Messages</b> або <b>OpenAI-compatible</b>, — адрас <b>Эндпоінт</b> і ' +
+      'імя ў полі <b>Мадэль</b> — для Anthropic спіс пад стрэлкай прапануе актуальныя імёны; ' +
+      'у астатніх выпадках упішыце імя, якога чакае ваш адрас. <b>Аўтарызацыя</b> кажа, ці па' +
+      'едзе ключ: <b>API-ключ</b> для воблачных правайдараў, <b>няма</b> для сервераў, якім ё' +
+      'н не патрэбны.</p>',
+    '<p>Ключ — ваш, зроблены на вашым акаўнце; свайго ў праграмы няма:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — ключ ствараецца на <code>console.anthropic.com</code>, раздзел ' +
+      'API keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, раздзел API keys; для адпраўкі н' +
+      'а акаўнце мусіць быць уключаны білінг.</li>',
+    '<li><b>OpenAI-compatible</b> — сям''я, а не адна кампанія: у гэтай жа форме адказвае O' +
+      'penRouter — шмат мадэляў пад адным ключом, — і серверы на вашым уласным камп''ютары, O' +
+      'llama ці LM Studio, якім ключ звычайна не патрэбны зусім: пастаўце <b>Аўтарызацыя</b> ' +
+      'у <b>няма</b>.</li>',
+    '</ul>',
+    '<p><b>Прывязаць ключ</b> кладзе ключ у дыспетчар уліковых даных Windows, зашыфраваным ' +
+      'для вашага ўліковага запісу, — не ў файл і ніколі не ў дакумент. Поле потым паказвае п' +
+      'ершыя знакі ключа, каб было відаць, які прывязаны, а <b>Забыць ключ</b> прыбірае яго. ' +
+      'Ключ прывязаны да месца, для якога ўведзены, — схемы, хаста і порта: зменіце любое з і' +
+      'х — і панэль папросіць яго зноў.</p>',
+    '<p>Першае націсканне пытаецца проста — <b>Адпраўляць на гэты эндпоінт?</b> — называючы' +
+      ' атрымальніка. Едзе промпт, сабраны з вашага брыфа або тэксту, — разам з выбранымі кан' +
+      'алам, варыятыўнасцю і мовай, — аб''яўленыя зменныя, пры папраўцы бягучы шаблон з яго д' +
+      'ыягностыкай, імя мадэлі з профілю са столлю даўжыні адказу, а пры аўтарызацыі <b>API-к' +
+      'люч</b> — ключ у загалоўках запыту; больш нічога і ні ў які іншы момант. Атрымальнік н' +
+      'е мяняецца без вас: рэдырэкт адхіляецца, а не выконваецца, а нешыфраваны <code>http</c' +
+      'ode> прымаецца толькі на гэтую машыну. Дазвол прывязаны там жа, дзе ключ, — да схемы, ' +
+      'хаста і порта — і бачны галачкай <b>Адпраўка дазволена</b> у наладах — зніміце яе ў лю' +
+      'бы момант: новае не адпраўляецца, а адказ, які ўжо ляціць, ніколі не ўжываецца. Што ро' +
+      'біць з тэкстам софт па выбраным адрасе — пытанне да яго аператара: запыт ідзе па адрас' +
+      'е з профілю і нікуды больш.</p>',
+    '<h3 id="ai-1">Тая самая пятля — без сеткі</h3>',
+    '<p>Промптам не патрэбныя ні ключ, ні падключэнне — гэта той самы шлях, калі ваша мадэл' +
+      'ь жыве ў акне чату, і пятлю тут круціце вы самі: рухавік выносіць вердыкт пасля ўстаўк' +
+      'і, а не да. <b>Скапіяваць промпт</b> кладзе поўны промпт у буфер; аднясіце яго ў тую м' +
+      'адэль, якой карыстаецеся, устаўце адказ у поле <b>Адказ мадэлі</b> і націсніце <b>Уста' +
+      'віць у дакумент</b>. Калі дыягностыка знойдзе памылкі, <b>Скапіяваць промпт праўкі</b>' +
+      ' збярэ другі промпт: ён нясе ўвесь дакумент з нумараванымі радкамі і называе дакладныя' +
+      ' месцы, да якіх у рухавіка прэтэнзіі. Адказ на яго — папраўлены дакумент цалкам, так ш' +
+      'то вярніце яго і націсніце <b>Замяніць дакумент</b> — <b>Уставіць у дакумент</b> пакін' +
+      'уў бы зламаны на месцы і паклаў бы папраўленую копію побач.</p>',
     '<h2 id="groups">Рэдактар груп</h2>',
     '<p>Пастаўце курсор усярэдзіну <code>{a|b|c}</code> і адкрыйце рэдактар груп з паласы і' +
       'нструментаў. Ён пералічвае варыянты радкамі: праўце іх, дадайце адзін, прыбярыце іншы ' +
@@ -10864,21 +11574,78 @@ const
       'едном по одигравању, користила га изабрана грана или не.</p>',
     '<p>Извоз их чува на три начина: као XLSX радну свеску, као обичан текст са по једном в' +
       'аријантом у реду или као по један фајл по варијанти у фасциклу коју изаберете.</p>',
-    '<p><b>AI нацрт</b> је оно чиме шаблон почиње када не желите да исписујете сваку варија' +
-      'нту ручно. Опишите шта тражите у захтеву, наведите променљиве које модел сме да корист' +
-      'и и притисните <b>Копирај упит</b>. Програм се никуда не обраћа и не чува кључеве: он ' +
-      'саставља упит да га однесете моделу којим се већ служите. Вратите одговор и притисните' +
-      ' <b>Убаци у документ</b> — мотор у овом прозору тада каже шта о њему мисли, у панелу д' +
-      'ијагностике, исто као и о било ком тексту који сами укуцате. Ако има грешака, <b>Копир' +
-      'ај упит за поправку</b> саставља други упит: носи цео документ с нумерисаним редовима ' +
-      'и именује баш она места на која се мотор пожалио. Одговор је исправљен документ у цели' +
-      'ни, зато га вратите и притисните <b>Замени документ</b>: <b>Убаци у документ</b> би по' +
-      'кварени оставио где јесте и поред њега ставио исправљену копију.</p>',
-    '<p>Колона падежа је део који вреди попунити. Променљива се уноси дословно, ништа је не' +
-      ' мења по падежима, па се у језику са падежима реченица мора градити око облика који вр' +
-      'едност већ има, а модел бира тачно само ако му се каже који облик држи свако име. Из и' +
-      'мена се то не може извести: у једном стварном скупу шаблона инструментал је стајао у п' +
-      'роменљивој чије је име говорило акузатив.</p>',
+    '<p><b>AI нацрт</b> пише први нацрт шаблона за вас — из текста који већ имате, или из з' +
+      'ахтева. Заслужио је сопствени одељак: следећи.</p>',
+    '<h2 id="ai">AI нацрт</h2>',
+    '<p>Шаблон обично почиње текстом који већ постоји — опис производа, писмо, страница. Па' +
+      'нел <b>AI нацрт</b> претвара тај текст у први шаблон: отворите га са траке с алаткама,' +
+      ' оставите заглавље леве колоне на <b>Текст за претварање</b>, налепите текст и притисн' +
+      'ите <b>Генериши</b>. Приспели нацрт замењује документ, преглед га исцртава, а панел ди' +
+      'јагностике суди — исти мотор и иста пресуда као за све што сами куцате. Један Ctrl+Z в' +
+      'раћа претходни документ; одатле га уређујте као свој текст, јер то и јесте.</p>',
+    '<p>Ако нема шта да се налепи, пребаците заглавље на <b>Захтев</b> и опишите шта желите' +
+      '. Поља изнад воде нацрт у оба режима: <b>Канал</b> — писмо, SMS и push обавештење пишу' +
+      ' се у различитим регистрима; <b>Варијативност</b> — колико варијанте смеју да се разиђ' +
+      'у; језик одговора; и <b>Променљиве које модел сме да користи</b>, наведене по имену. К' +
+      'олона падежа је део који вреди попунити. Променљива се уноси дословно, ништа је не мењ' +
+      'а по падежима, па се у језику са падежима реченица мора градити око облика који вредно' +
+      'ст већ има, а модел бира тачно само ако му се каже који облик држи свако име. Из имена' +
+      ' се то не може извести: у једном стварном скупу шаблона инструментал је стајао у проме' +
+      'нљивој чије је име говорило акузатив.</p>',
+    '<p>Одговору се не верује — он се проверава: нацрт пролази кроз мотор овог прозора пре ' +
+      'него што се приближи документу, а нађе ли пресуда грешке, петља сама тражи од модела д' +
+      'а их поправи — статусна трака броји рунде — пре него што ишта преда. Документ замењује' +
+      ' само чист нацрт; све остало пада у <b>Одговор модела</b>, статусни ред каже зашто, и ' +
+      'ништа ваше се не преписује. Исто су заштићене и ваше измене: ако сте куцали док је одг' +
+      'овор летео, нацрт чека у панелу. Док ради, на дугмету <b>Генериши</b> пише <b>Заустави' +
+      '</b> — притисните да напустите рунду.</p>',
+    '<p><b>Поправи</b> је иста петља уперена у тренутни документ: буди се кад дијагностика ' +
+      'нађе грешке, шаље документ заједно с тачним примедбама и примењује исправљену верзију ' +
+      'с истом пажњом.</p>',
+    '<h3 id="ai-0">Веза, и чији кључ</h3>',
+    '<p>Како је инсталирана, апликација не шаље ништа никуда. <b>Генериши</b> и <b>Поправи<' +
+      '/b> излазе на мрежу тек пошто у подножју панела подесите везу и дозволите је. Изаберит' +
+      'е <b>Формат</b> којим говори ваш endpoint — <b>Anthropic Messages</b> или <b>OpenAI-co' +
+      'mpatible</b> —, адресу <b>Endpoint</b> и име у пољу <b>Модел</b> — за Anthropic списак' +
+      ' под стрелицом нуди актуелна имена; иначе упишите име које ваш endpoint очекује. <b>Ау' +
+      'торизација</b> каже да ли кључ путује: <b>API кључ</b> за хостоване провајдере, <b>нем' +
+      'а</b> за сервере који га не траже.</p>',
+    '<p>Кључ је ваш, направљен на вашем налогу — апликација никада нема свој:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — кључ се прави на <code>console.anthropic.com</code>, одељак API' +
+      ' keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, одељак API keys; за слање налог ' +
+      'мора имати укључену наплату.</li>',
+    '<li><b>OpenAI-compatible</b> је породица, не једна фирма: OpenRouter одговара у истом ' +
+      'облику с много модела под једним кључем, а сервери на вашем сопственом рачунару — Olla' +
+      'ma, LM Studio — обично не траже кључ уопште: поставите <b>Ауторизација</b> на <b>нема<' +
+      '/b>.</li>',
+    '</ul>',
+    '<p><b>Привежи кључ</b> смешта кључ у Windows-ов управљач акредитивима, шифрован за ваш' +
+      ' Windows налог — не у датотеку и никада у документ. Поље потом показује прве знакове к' +
+      'ључа, да се види који је привезан, а <b>Заборави кључ</b> га уклања. Кључ је привезан ' +
+      'за место за које је унет — шему, хост и порт: промените било шта од тога и панел ће га' +
+      ' затражити поново.</p>',
+    '<p>Први притисак пита отворено — <b>Слати на овај endpoint?</b> — именујући примаоца. ' +
+      'Путује упит састављен од вашег захтева или текста — заједно с изабраним каналом, вариј' +
+      'ативношћу и језиком —, наведене променљиве, при поправци тренутни шаблон са својом диј' +
+      'агностиком, име модела из вашег профила с горњом границом дужине одговора, а под аутор' +
+      'изацијом <b>API кључ</b> — кључ у заглављима захтева; ништа више и ни у ком другом тре' +
+      'нутку. Прималац се не мења без вас: преусмерење се одбија уместо да се следи, а нешифр' +
+      'ована <code>http</code> адреса прима се само на овој машини. Дозвола се везује где и к' +
+      'ључ — за шему, хост и порт — и види се као квачица <b>Слање дозвољено</b> у подешавањи' +
+      'ма — скините је било кад: ништа ново не полази, а одговор који је већ у лету никад се ' +
+      'не примењује. Шта софтвер на изабраној адреси ради с текстом, на његовом је оператору ' +
+      'да каже: захтев иде на адресу из вашег профила и никуда више.</p>',
+    '<h3 id="ai-1">Иста петља, без мреже</h3>',
+    '<p>Упитима не требају ни кључ ни веза — то је исти пут кад ваш модел живи у прозору за' +
+      ' ћаскање, а петљу овде окрећете ви: мотор суди после лепљења, не пре. <b>Копирај упит<' +
+      '/b> ставља цео упит у оставу; однесите га моделу који користите, налепите одговор у по' +
+      'ље <b>Одговор модела</b> и притисните <b>Убаци у документ</b>. Нађе ли дијагностика гр' +
+      'ешке, <b>Копирај упит за поправку</b> саставља други упит: носи цео документ с нумерис' +
+      'аним редовима и именује тачна места којима се мотор успротивио. Одговор на њега је исп' +
+      'рављен документ у целини — вратите га и притисните <b>Замени документ</b>; <b>Убаци у ' +
+      'документ</b> би поломљени оставио на месту и ставио исправљену копију поред.</p>',
     '<h2 id="groups">Уређивач група</h2>',
     '<p>Ставите курсор унутар <code>{a|b|c}</code> и отворите уређивач група са траке алатк' +
       'и. Он набраја варијанте по редовима: мењајте их, додајте једну, уклоните другу — и док' +
@@ -11726,22 +12493,81 @@ const
       'a izvlači jednom po odigravanju, koristila ga izabrana grana ili ne.</p>',
     '<p>Izvoz ih čuva na tri načina: kao XLSX radnu knjigu, kao običan tekst s po jednom va' +
       'rijantom u retku ili kao po jednu datoteku po varijanti u mapu koju odaberete.</p>',
-    '<p><b>AI nacrt</b> je ono čime predložak počinje kad ne želite ispisivati svaku varija' +
-      'ntu rukom. Opišite što tražite u zadatku, navedite varijable koje model smije koristit' +
-      'i i pritisnite <b>Kopiraj upit</b>. Program se nikamo ne obraća i ne čuva ključeve: on' +
-      ' sastavlja upit da ga odnesete modelu kojim se već služite. Vratite odgovor i pritisni' +
-      'te <b>Umetni u dokument</b> — motor u ovom prozoru tada kaže što o njemu misli, u ploč' +
-      'i dijagnostike, jednako kao i o bilo kojem tekstu koji sami utipkate. Ako ima pogrešak' +
-      'a, <b>Kopiraj upit za popravak</b> sastavlja drugi upit: nosi cijeli dokument s numeri' +
-      'ranim recima i imenuje upravo ona mjesta na koja se motor požalio. Odgovor je ispravlj' +
-      'eni dokument u cijelosti, pa ga vratite i pritisnite <b>Zamijeni dokument</b>: <b>Umet' +
-      'ni u dokument</b> ostavio bi pokvareni gdje jest i pokraj njega stavio ispravljenu kop' +
-      'iju.</p>',
-    '<p>Stupac padeža dio je koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je n' +
-      'e mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji' +
-      ' vrijednost već ima, a model bira točno samo ako mu se kaže koji oblik drži svako ime.' +
-      ' Iz imena se to ne može izvesti: u jednom stvarnom skupu predložaka instrumental je st' +
-      'ajao u varijabli čije je ime govorilo akuzativ.</p>',
+    '<p><b>AI nacrt</b> piše prvi nacrt šablone za vas — iz teksta koji već imate, ili iz z' +
+      'adatka. Zaslužio je vlastiti odjeljak: sljedeći.</p>',
+    '<h2 id="ai">AI nacrt</h2>',
+    '<p>Šablona obično počinje tekstom koji već postoji — opis proizvoda, pismo, stranica. ' +
+      'Panel <b>AI nacrt</b> pretvara taj tekst u prvu šablonu: otvorite ga s trake s alatima' +
+      ', ostavite zaglavlje lijevog stupca na <b>Tekst za pretvorbu</b>, zalijepite tekst i p' +
+      'ritisnite <b>Generiraj</b>. Pristigli nacrt zamjenjuje dokument, pregled ga iscrtava, ' +
+      'a panel dijagnostike sudi — isti motor i ista presuda kao za sve što sami tipkate. Jed' +
+      'an Ctrl+Z vraća prijašnji dokument; odatle ga uređujte kao svoj tekst, jer to i jest.<' +
+      '/p>',
+    '<p>Ako nema što zalijepiti, prebacite zaglavlje na <b>Zadatak</b> i opišite što želite' +
+      '. Polja iznad vode nacrt u oba načina: <b>Kanal</b> — pismo, SMS i push obavijest pišu' +
+      ' se u različitim registrima; <b>Varijativnost</b> — koliko se varijante smiju razići; ' +
+      'jezik odgovora; i <b>Varijable koje model smije koristiti</b>, navedene poimence. Stup' +
+      'ac padeža dio je koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je ne mijen' +
+      'ja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji vrijed' +
+      'nost već ima, a model bira točno samo ako mu se kaže koji oblik drži svako ime. Iz ime' +
+      'na se to ne može izvesti: u jednom stvarnom skupu predložaka instrumental je stajao u ' +
+      'varijabli čije je ime govorilo akuzativ.</p>',
+    '<p>Odgovoru se ne vjeruje — on se provjerava: nacrt prolazi kroz motor ovog prozora pr' +
+      'ije nego što se približi dokumentu, a nađe li presuda greške, petlja sama traži od mod' +
+      'ela da ih popravi — statusna traka broji runde — prije nego što išta preda. Dokument z' +
+      'amjenjuje samo čist nacrt; sve ostalo pada u <b>Odgovor modela</b>, statusni redak kaž' +
+      'e zašto, i ništa vaše se ne prepisuje. Jednako su zaštićene i vaše izmjene: ako ste ti' +
+      'pkali dok je odgovor letio, nacrt čeka u panelu. Dok radi, na gumbu <b>Generiraj</b> p' +
+      'iše <b>Zaustavi</b> — pritisnite da napustite rundu.</p>',
+    '<p><b>Popravi</b> je ista petlja uperena u trenutačni dokument: budi se kad dijagnosti' +
+      'ka nađe greške, šalje dokument zajedno s točnim primjedbama i primjenjuje ispravljenu ' +
+      'verziju s istom pažnjom.</p>',
+    '<h3 id="ai-0">Veza, i čiji ključ</h3>',
+    '<p>Kako je instalirana, aplikacija ne šalje ništa nikamo. <b>Generiraj</b> i <b>Poprav' +
+      'i</b> izlaze na mrežu tek nakon što u podnožju panela postavite vezu i dopustite je. I' +
+      'zaberite <b>Format</b> kojim govori vaš endpoint — <b>Anthropic Messages</b> ili <b>Op' +
+      'enAI-compatible</b> —, adresu <b>Endpoint</b> i ime u polju <b>Model</b> — za Anthropi' +
+      'c popis pod strelicom nudi aktualna imena; inače upišite ime koje vaš endpoint očekuje' +
+      '. <b>Autorizacija</b> kaže putuje li ključ: <b>API ključ</b> za hostane pružatelje, <b' +
+      '>nema</b> za poslužitelje koji ga ne traže.</p>',
+    '<p>Ključ je vaš, napravljen na vašem računu — aplikacija nikada nema svoj:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — ključ se radi na <code>console.anthropic.com</code>, odjeljak A' +
+      'PI keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, odjeljak API keys; za slanje rač' +
+      'un mora imati uključenu naplatu.</li>',
+    '<li><b>OpenAI-compatible</b> je obitelj, ne jedna tvrtka: OpenRouter odgovara u istom ' +
+      'obliku s mnogo modela pod jednim ključem, a poslužitelji na vašem vlastitom računalu —' +
+      ' Ollama, LM Studio — obično ne traže ključ uopće: postavite <b>Autorizacija</b> na <b>' +
+      'nema</b>.</li>',
+    '</ul>',
+    '<p><b>Priveži ključ</b> sprema ključ u Windowsov upravitelj vjerodajnicama, šifriran z' +
+      'a vaš Windows račun — ne u datoteku i nikada u dokument. Polje potom pokazuje prve zna' +
+      'kove ključa, da se vidi koji je privezan, a <b>Zaboravi ključ</b> ga uklanja. Ključ je' +
+      ' privezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo što od to' +
+      'ga i panel će ga zatražiti ponovno.</p>',
+    '<p>Prvi pritisak pita otvoreno — <b>Slati na ovaj endpoint?</b> — imenujući primatelja' +
+      '. Putuje upit sastavljen od vašeg zadatka ili teksta — zajedno s izabranim kanalom, va' +
+      'rijativnošću i jezikom —, navedene varijable, pri popravku trenutačna šablona sa svojo' +
+      'm dijagnostikom, ime modela iz vašeg profila s gornjom granicom duljine odgovora, a po' +
+      'd autorizacijom <b>API ključ</b> — ključ u zaglavljima zahtjeva; ništa više i ni u koj' +
+      'em drugom trenutku. Primatelj se ne mijenja bez vas: preusmjeravanje se odbija umjesto' +
+      ' da se slijedi, a nešifrirana <code>http</code> adresa prima se samo na ovom stroju. D' +
+      'opuštenje se veže gdje i ključ — za shemu, host i port — i vidi se kao kvačica <b>Slan' +
+      'je dopušteno</b> u postavkama — skinite je bilo kad: ništa novo ne polazi, a odgovor k' +
+      'oji je već u letu nikad se ne primjenjuje. Što softver na izabranoj adresi radi s teks' +
+      'tom, na njegovu je operateru da kaže: zahtjev ide na adresu iz vašeg profila i nikamo ' +
+      'više.</p>',
+    '<h3 id="ai-1">Ista petlja, bez mreže</h3>',
+    '<p>Upitima ne trebaju ni ključ ni veza — to je isti put kad vaš model živi u prozoru z' +
+      'a čavrljanje, a petlju ovdje okrećete vi: motor sudi poslije lijepljenja, ne prije. <b' +
+      '>Kopiraj upit</b> stavlja cijeli upit u međuspremnik; odnesite ga modelu koji koristit' +
+      'e, zalijepite odgovor u polje <b>Odgovor modela</b> i pritisnite <b>Umetni u dokument<' +
+      '/b>. Nađe li dijagnostika greške, <b>Kopiraj upit za popravak</b> sastavlja drugi upit' +
+      ': nosi cijeli dokument s numeriranim recima i imenuje točna mjesta kojima se motor usp' +
+      'rotivio. Odgovor na njega je ispravljen dokument u cijelosti — vratite ga i pritisnite' +
+      ' <b>Zamijeni dokument</b>; <b>Umetni u dokument</b> bi slomljeni ostavio na mjestu i s' +
+      'tavio ispravljenu kopiju pokraj.</p>',
     '<h2 id="groups">Uređivač grupa</h2>',
     '<p>Stavite pokazivač unutar <code>{a|b|c}</code> i otvorite uređivač grupa s trake ala' +
       'ta. On nabraja varijante po retcima: mijenjajte ih, dodajte jednu, uklonite drugu — i ' +
@@ -12591,22 +13417,81 @@ const
       'vlači jednom po odigravanju, koristila ga izabrana grana ili ne.</p>',
     '<p>Izvoz ih čuva na tri načina: kao XLSX radnu svesku, kao običan tekst s po jednom va' +
       'rijantom u redu ili kao po jedan fajl po varijanti u folder koji odaberete.</p>',
-    '<p><b>AI nacrt</b> je ono čime šablon počinje kad ne želite ispisivati svaku varijantu' +
-      ' rukom. Opišite šta tražite u zadatku, navedite varijable koje model smije koristiti i' +
-      ' pritisnite <b>Kopiraj upit</b>. Program se nigdje ne obraća i ne čuva ključeve: on sa' +
-      'stavlja upit da ga odnesete modelu kojim se već služite. Vratite odgovor i pritisnite ' +
-      '<b>Umetni u dokument</b> — motor u ovom prozoru tada kaže šta o njemu misli, u ploči d' +
-      'ijagnostike, jednako kao i o bilo kojem tekstu koji sami otkucate. Ako ima grešaka, <b' +
-      '>Kopiraj upit za popravku</b> sastavlja drugi upit: nosi cijeli dokument s numerisanim' +
-      ' redovima i imenuje baš ona mjesta na koja se motor požalio. Odgovor je ispravljeni do' +
-      'kument u cijelosti, pa ga vratite i pritisnite <b>Zamijeni dokument</b>: <b>Umetni u d' +
-      'okument</b> ostavio bi pokvareni gdje jeste i pored njega stavio ispravljenu kopiju.</' +
-      'p>',
-    '<p>Kolona padeža je dio koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je n' +
-      'e mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji' +
-      ' vrijednost već ima, a model bira tačno samo ako mu se kaže koji oblik drži svako ime.' +
-      ' Iz imena se to ne može izvesti: u jednom stvarnom skupu šablona instrumental je staja' +
-      'o u varijabli čije je ime govorilo akuzativ.</p>',
+    '<p><b>AI nacrt</b> piše prvi nacrt šablona za vas — iz teksta koji već imate, ili iz z' +
+      'adatka. Zaslužio je vlastiti odjeljak: sljedeći.</p>',
+    '<h2 id="ai">AI nacrt</h2>',
+    '<p>Šablon obično počinje tekstom koji već postoji — opis proizvoda, pismo, stranica. P' +
+      'anel <b>AI nacrt</b> pretvara taj tekst u prvi šablon: otvorite ga s trake s alatima, ' +
+      'ostavite zaglavlje lijeve kolone na <b>Tekst za pretvaranje</b>, zalijepite tekst i pr' +
+      'itisnite <b>Generiši</b>. Pristigli nacrt zamjenjuje dokument, pregled ga iscrtava, a ' +
+      'panel dijagnostike sudi — isti motor i ista presuda kao za sve što sami kucate. Jedan ' +
+      'Ctrl+Z vraća prethodni dokument; odatle ga uređujte kao svoj tekst, jer to i jeste.</p' +
+      '>',
+    '<p>Ako nema šta da se zalijepi, prebacite zaglavlje na <b>Zadatak</b> i opišite šta že' +
+      'lite. Polja iznad vode nacrt u oba režima: <b>Kanal</b> — pismo, SMS i push obavješten' +
+      'je pišu se u različitim registrima; <b>Varijativnost</b> — koliko varijante smiju da s' +
+      'e raziđu; jezik odgovora; i <b>Varijable koje model smije koristiti</b>, navedene poim' +
+      'ence. Kolona padeža je dio koji vrijedi popuniti. Varijabla se unosi doslovno, ništa j' +
+      'e ne mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika k' +
+      'oji vrijednost već ima, a model bira tačno samo ako mu se kaže koji oblik drži svako i' +
+      'me. Iz imena se to ne može izvesti: u jednom stvarnom skupu šablona instrumental je st' +
+      'ajao u varijabli čije je ime govorilo akuzativ.</p>',
+    '<p>Odgovoru se ne vjeruje — on se provjerava: nacrt prolazi kroz motor ovog prozora pr' +
+      'ije nego što se približi dokumentu, a nađe li presuda greške, petlja sama traži od mod' +
+      'ela da ih popravi — statusna traka broji runde — prije nego što išta preda. Dokument z' +
+      'amjenjuje samo čist nacrt; sve ostalo pada u <b>Odgovor modela</b>, statusni red kaže ' +
+      'zašto, i ništa vaše se ne prepisuje. Jednako su zaštićene i vaše izmjene: ako ste kuca' +
+      'li dok je odgovor letio, nacrt čeka u panelu. Dok radi, na dugmetu <b>Generiši</b> piš' +
+      'e <b>Zaustavi</b> — pritisnite da napustite rundu.</p>',
+    '<p><b>Popravi</b> je ista petlja uperena u trenutni dokument: budi se kad dijagnostika' +
+      ' nađe greške, šalje dokument zajedno s tačnim primjedbama i primjenjuje ispravljenu ve' +
+      'rziju s istom pažnjom.</p>',
+    '<h3 id="ai-0">Veza, i čiji ključ</h3>',
+    '<p>Kako je instalirana, aplikacija ne šalje ništa nikuda. <b>Generiši</b> i <b>Popravi' +
+      '</b> izlaze na mrežu tek nakon što u podnožju panela postavite vezu i dozvolite je. Iz' +
+      'aberite <b>Format</b> kojim govori vaš endpoint — <b>Anthropic Messages</b> ili <b>Ope' +
+      'nAI-compatible</b> —, adresu <b>Endpoint</b> i ime u polju <b>Model</b> — za Anthropic' +
+      ' spisak pod strelicom nudi aktuelna imena; inače upišite ime koje vaš endpoint očekuje' +
+      '. <b>Autorizacija</b> kaže putuje li ključ: <b>API ključ</b> za hostovane provajdere, ' +
+      '<b>nema</b> za servere koji ga ne traže.</p>',
+    '<p>Ključ je vaš, napravljen na vašem računu — aplikacija nikada nema svoj:</p>',
+    '<ul>',
+    '<li><b>Anthropic</b> — ključ se pravi na <code>console.anthropic.com</code>, odjeljak ' +
+      'API keys.</li>',
+    '<li><b>OpenAI</b> — <code>platform.openai.com</code>, odjeljak API keys; za slanje rač' +
+      'un mora imati uključenu naplatu.</li>',
+    '<li><b>OpenAI-compatible</b> je porodica, ne jedna firma: OpenRouter odgovara u istom ' +
+      'obliku s mnogo modela pod jednim ključem, a serveri na vašem vlastitom računaru — Olla' +
+      'ma, LM Studio — obično ne traže ključ uopšte: postavite <b>Autorizacija</b> na <b>nema' +
+      '</b>.</li>',
+    '</ul>',
+    '<p><b>Priveži ključ</b> sprema ključ u Windowsov upravljač akreditivima, šifrovan za v' +
+      'aš Windows račun — ne u datoteku i nikada u dokument. Polje potom pokazuje prve znakov' +
+      'e ključa, da se vidi koji je privezan, a <b>Zaboravi ključ</b> ga uklanja. Ključ je pr' +
+      'ivezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo šta od toga ' +
+      'i panel će ga zatražiti ponovo.</p>',
+    '<p>Prvi pritisak pita otvoreno — <b>Slati na ovaj endpoint?</b> — imenujući primaoca. ' +
+      'Putuje upit sastavljen od vašeg zadatka ili teksta — zajedno s izabranim kanalom, vari' +
+      'jativnošću i jezikom —, navedene varijable, pri popravci trenutni šablon sa svojom dij' +
+      'agnostikom, ime modela iz vašeg profila s gornjom granicom dužine odgovora, a pod auto' +
+      'rizacijom <b>API ključ</b> — ključ u zaglavljima zahtjeva; ništa više i ni u kojem dru' +
+      'gom trenutku. Primalac se ne mijenja bez vas: preusmjeravanje se odbija umjesto da se ' +
+      'slijedi, a nešifrovana <code>http</code> adresa prima se samo na ovoj mašini. Dozvola ' +
+      'se veže gdje i ključ — za shemu, host i port — i vidi se kao kvačica <b>Slanje dozvolj' +
+      'eno</b> u postavkama — skinite je bilo kad: ništa novo ne polazi, a odgovor koji je ve' +
+      'ć u letu nikad se ne primjenjuje. Šta softver na izabranoj adresi radi s tekstom, na n' +
+      'jegovom je operateru da kaže: zahtjev ide na adresu iz vašeg profila i nikuda više.</p' +
+      '>',
+    '<h3 id="ai-1">Ista petlja, bez mreže</h3>',
+    '<p>Upitima ne trebaju ni ključ ni veza — to je isti put kad vaš model živi u prozoru z' +
+      'a ćaskanje, a petlju ovdje okrećete vi: motor sudi poslije lijepljenja, ne prije. <b>K' +
+      'opiraj upit</b> stavlja cijeli upit u međuspremnik; odnesite ga modelu koji koristite,' +
+      ' zalijepite odgovor u polje <b>Odgovor modela</b> i pritisnite <b>Umetni u dokument</b' +
+      '>. Nađe li dijagnostika greške, <b>Kopiraj upit za popravku</b> sastavlja drugi upit: ' +
+      'nosi cijeli dokument s numerisanim redovima i imenuje tačna mjesta kojima se motor usp' +
+      'rotivio. Odgovor na njega je ispravljen dokument u cjelini — vratite ga i pritisnite <' +
+      'b>Zamijeni dokument</b>; <b>Umetni u dokument</b> bi slomljeni ostavio na mjestu i sta' +
+      'vio ispravljenu kopiju pored.</p>',
     '<h2 id="groups">Uređivač grupa</h2>',
     '<p>Stavite kursor unutar <code>{a|b|c}</code> i otvorite uređivač grupa s trake alata.' +
       ' On nabraja varijante po redovima: mijenjajte ih, dodajte jednu, uklonite drugu — i do' +
@@ -15127,15 +16012,17 @@ const
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
   HELP_ANCHOR_FIRST: array[0..13] of Integer = (
-    0, 31, 62, 93, 124, 155, 186, 217, 248, 279, 310, 341, 372, 403
+    0, 33, 66, 99, 132, 165, 198, 231, 264, 297, 330, 363, 396, 429
   );
   HELP_ANCHOR_LAST: array[0..13] of Integer = (
-    30, 61, 92, 123, 154, 185, 216, 247, 278, 309, 340, 371, 402, 433
+    32, 65, 98, 131, 164, 197, 230, 263, 296, 329, 362, 395, 428, 461
   );
-  HELP_ANCHOR_PAGE: array[0..433] of Integer = (
-    10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29
+  HELP_ANCHOR_PAGE: array[0..461] of Integer = (
+    5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30, 5, 5, 11, 11, 12, 12, 12, 13, 16, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 29, 30
   );
-  HELP_ANCHOR_ID: array[0..433] of string = (
+  HELP_ANCHOR_ID: array[0..461] of string = (
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15167,6 +16054,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15198,6 +16087,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15229,6 +16120,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15260,6 +16153,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15291,6 +16186,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15322,6 +16219,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15353,6 +16252,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15384,6 +16285,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15415,6 +16318,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15446,6 +16351,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15477,6 +16384,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15508,6 +16417,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15539,6 +16450,8 @@ const
     'note.unknown-target',
     'note.too-deep',
     'abbreviations-0',
+    'ai-0',
+    'ai-1',
     'choices-0',
     'choices-1',
     'shuffles-0',
@@ -15571,7 +16484,9 @@ const
     'note.too-deep',
     'abbreviations-0'
   );
-  HELP_ANCHOR_TITLE: array[0..433] of string = (
+  HELP_ANCHOR_TITLE: array[0..461] of string = (
+    'The connection, and whose key',
+    'The same loop, without a network',
     'Nesting',
     'An empty option',
     'The separator',
@@ -15604,6 +16519,8 @@ const
     '`note.unknown-target` — the set is empty, so there is nothing to judge by',
     '`note.too-deep` — includes nested too deeply',
     'An abbreviation keeps the next word lowercase',
+    'Подключение и чей ключ',
+    'Та же петля — без сети',
     'Вложенность',
     'Пустой вариант',
     'Разделитель',
@@ -15635,6 +16552,8 @@ const
     '`note.unknown-target` — набор пуст, и судить не о чем',
     '`note.too-deep` — вставки вложены слишком глубоко',
     'Сокращение оставляет следующее слово строчным',
+    'Die Verbindung, und wessen Schlüssel',
+    'Dieselbe Schleife, ohne Netz',
     'Verschachtelung',
     'Eine leere Möglichkeit',
     'Das Trennzeichen',
@@ -15667,6 +16586,8 @@ const
     '`note.unknown-target` — der Satz ist leer, es ist nichts zu beurteilen',
     '`note.too-deep` — Einfügungen zu tief verschachtelt',
     'Eine Abkürzung lässt das nächste Wort klein',
+    'La connexion, et la clé de qui',
+    'La même boucle, sans réseau',
     'Imbrication',
     'Une possibilité vide',
     'Le séparateur',
@@ -15698,6 +16619,8 @@ const
     '`note.unknown-target` — le jeu est vide, il n''y a rien pour juger',
     '`note.too-deep` — inclusions imbriquées trop profond',
     'Une abréviation laisse le mot suivant en minuscule',
+    'La conexión, y la clave de quién',
+    'El mismo bucle, sin red',
     'Anidamiento',
     'Una posibilidad vacía',
     'El separador',
@@ -15730,6 +16653,8 @@ const
     '`note.unknown-target` — el juego está vacío, no hay con qué juzgar',
     '`note.too-deep` — inclusiones anidadas demasiado hondo',
     'Una abreviatura deja en minúscula la palabra siguiente',
+    'La connessione, e la chiave di chi',
+    'Lo stesso ciclo, senza rete',
     'Annidamento',
     'Una possibilità vuota',
     'Il separatore',
@@ -15762,6 +16687,8 @@ const
     '`note.unknown-target` — l''insieme è vuoto, non c''è con cosa giudicare',
     '`note.too-deep` — inclusioni annidate troppo in profondità',
     'Un''abbreviazione lascia minuscola la parola seguente',
+    'A ligação, e a chave de quem',
+    'O mesmo ciclo, sem rede',
     'Encaixe',
     'Uma possibilidade vazia',
     'O separador',
@@ -15793,6 +16720,8 @@ const
     '`note.unknown-target` — o conjunto está vazio, não há com que julgar',
     '`note.too-deep` — inclusões encaixadas fundo demais',
     'Uma abreviatura deixa em minúscula a palavra seguinte',
+    'De verbinding, en wiens sleutel',
+    'Dezelfde lus, zonder netwerk',
     'Nesting',
     'Een lege mogelijkheid',
     'Het scheidingsteken',
@@ -15825,6 +16754,8 @@ const
     '`note.unknown-target` — de verzameling is leeg, er valt niets aan af te meten',
     '`note.too-deep` — invoegingen te diep genest',
     'Een afkorting laat het volgende woord klein',
+    'Bağlantı, ve kimin anahtarı',
+    'Aynı döngü, ağ olmadan',
     'İç içelik',
     'Boş bir olasılık',
     'Ayırıcı',
@@ -15857,6 +16788,8 @@ const
     '`note.unknown-target` — küme boş, kıyaslanacak bir şey yok',
     '`note.too-deep` — eklemeler çok derin iç içe',
     'Bir kısaltma sonraki sözcüğü küçük bırakır',
+    'Підключення і чий ключ',
+    'Та сама петля — без мережі',
     'Вкладеність',
     'Порожня можливість',
     'Роздільник',
@@ -15889,6 +16822,8 @@ const
     '`note.unknown-target` — набір порожній, і судити нема по чому',
     '`note.too-deep` — вставки вкладені надто глибоко',
     'Скорочення лишає наступне слово малим',
+    'Падключэнне і чый ключ',
+    'Тая самая пятля — без сеткі',
     'Укладзенасць',
     'Пустая магчымасць',
     'Падзяляльнік',
@@ -15921,6 +16856,8 @@ const
     '`note.unknown-target` — набор пусты, і судзіць няма па чым',
     '`note.too-deep` — устаўкі ўкладзеныя занадта глыбока',
     'Скарачэнне пакідае наступнае слова малым',
+    'Веза, и чији кључ',
+    'Иста петља, без мреже',
     'Угнежђеност',
     'Празна могућност',
     'Раздвајач',
@@ -15953,6 +16890,8 @@ const
     '`note.unknown-target` — скуп је празан, и нема се по чему судити',
     '`note.too-deep` — уметања су угнежђена превише дубоко',
     'Скраћеница оставља следећу реч малом',
+    'Veza, i čiji ključ',
+    'Ista petlja, bez mreže',
     'Ugniježđenost',
     'Prazna mogućnost',
     'Razdjeljivač',
@@ -15985,6 +16924,8 @@ const
     '`note.unknown-target` — skup je prazan, i nema se po čemu suditi',
     '`note.too-deep` — umetanja su ugniježđena preduboko',
     'Kratica ostavlja sljedeću riječ malom',
+    'Veza, i čiji ključ',
+    'Ista petlja, bez mreže',
     'Ugniježđenost',
     'Prazna mogućnost',
     'Razdjeljivač',
@@ -16018,8 +16959,8 @@ const
     '`note.too-deep` — umetanja su ugniježđena preduboko',
     'Skraćenica ostavlja sljedeću riječ malom'
   );
-  HELP_ANCHOR_CODE: array[0..433] of Boolean = (
-    False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
+  HELP_ANCHOR_CODE: array[0..461] of Boolean = (
+    False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, True, False, True, True, True, True, True, True, True, True, True, True, True, True, False
   );
 
 function SpxHelpLangCode(ALang: Integer): string;

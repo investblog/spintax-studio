@@ -140,21 +140,85 @@ genomen tak hem nu gebruikt of niet.
 De export schrijft ze op drie manieren weg: als XLSX-werkmap, als platte tekst met één variant per
 regel, of als één bestand per variant in een map naar keuze.
 
-**AI-concept** is waar een sjabloon begint als u niet elke variant met de hand wilt
-schrijven. Zeg in de briefing wat u wilt, noem de variabelen die het model mag gebruiken en druk
-op **Prompt kopiëren**. De toepassing praat met geen enkel model en houdt geen sleutel: zij schrijft de
-prompt zodat u hem meeneemt naar het model dat u toch al gebruikt. Breng het antwoord terug en
-druk op **In het document invoegen** — de machine in dit venster zegt dan in het diagnosepaneel wat zij ervan
-vindt, net als bij alles wat u zelf typt. Zijn er fouten, dan bouwt **Herstelprompt kopiëren** een tweede prompt: hij draagt het hele document met genummerde regels en noemt de precieze
-plekken waar de machine bezwaar maakte. Het antwoord is het volledige verbeterde document,
-breng het dus terug en druk op **Het document vervangen**; **In het document invoegen** zou het
-kapotte laten staan en er een verbeterde kopie naast leggen.
+**AI-concept** schrijft het eerste concept van een sjabloon voor u — uit tekst die u
+al hebt, of uit een briefing. Het verdient een eigen sectie: de volgende.
 
-De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variabele wordt
-letterlijk ingevoegd, niets verbuigt haar: in een taal met naamvallen moet de zin dus rond de
-vorm worden gebouwd die de waarde al heeft, en een model kiest alleen goed als het te horen
-krijgt welke vorm elke naam draagt. Uit de naam volgt dat niet: in een echte sjabloonverzameling
-stonden de instrumentalisvormen in een variabele waarvan de naam accusatief zei.
+## Het AI-concept
+
+Een sjabloon begint meestal met tekst die er al is — een productbeschrijving, een brief, een
+pagina. Het paneel **AI-concept** maakt daar een eerste sjabloon van: open het vanaf de werkbalk,
+laat de kop van de linkerkolom op **Te converteren tekst** staan, plak de tekst en druk op **Genereren**. Het
+aangekomen concept vervangt het document, het voorbeeld rendert het en het diagnosepaneel
+oordeelt — dezelfde machine en hetzelfde oordeel als voor alles wat u zelf typt. Eén Ctrl+Z
+brengt uw oude document terug; bewerk het daarna als eigen tekst, want dat is het.
+
+Valt er niets te plakken, zet de kop dan op **Briefing** en beschrijf wat u wilt. De velden
+erboven sturen het concept in beide standen: **Kanaal** — een brief, een sms en een
+pushmelding zijn in verschillende registers geschreven; **Variatie** — hoe ver de varianten
+uiteen mogen liggen; de taal van het antwoord; en **Variabelen die het model mag gebruiken**, bij naam opgegeven.
+De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variabele wordt letterlijk ingevoegd, niets verbuigt haar: in een taal met naamvallen moet de zin dus rond de vorm worden gebouwd die de waarde al heeft, en een model kiest alleen goed als het te horen krijgt welke vorm elke naam draagt. Uit de naam volgt dat niet: in een echte sjabloonverzameling stonden de instrumentalisvormen in een variabele waarvan de naam accusatief zei.
+
+Het antwoord wordt niet geloofd, het wordt gecontroleerd: het concept gaat door de machine van
+dit venster voordat het bij uw document in de buurt komt, en vindt het oordeel fouten, dan
+vraagt de lus het model ze te herstellen — de statusbalk telt de rondes mee — voordat er iets
+wordt overhandigd. Alleen een schoon concept vervangt het document; al het andere belandt in
+**Antwoord van het model**, de statusregel zegt waarom, en niets van u wordt overschreven. Uw eigen
+wijzigingen zijn net zo beschermd: typte u terwijl een antwoord onderweg was, dan wacht het
+concept in het paneel. Tijdens het werk staat op **Genereren** **Stoppen** — druk erop om de ronde
+af te breken.
+
+**Herstellen** is dezelfde lus, gericht op uw huidige document: hij ontwaakt wanneer de diagnose
+fouten vindt, stuurt het document met de exacte bezwaren mee en past de gecorrigeerde versie
+met dezelfde zorg toe.
+
+### De verbinding, en wiens sleutel
+
+Zoals geïnstalleerd verstuurt de toepassing niets, nergens heen. **Genereren** en **Herstellen** gaan
+pas het net op nadat u onderaan het paneel de verbinding hebt ingericht en toegestaan. Kies
+het **Formaat** dat uw endpoint spreekt — **Anthropic Messages** of **OpenAI-compatible** —, het
+**Endpoint**-adres en de naam in **Model** — voor Anthropic biedt de lijst onder de pijl
+actuele namen; typ anders de naam die uw endpoint verwacht. **Autorisatie** zegt of er een sleutel meereist: **API-sleutel** voor de gehoste
+aanbieders, **geen** voor servers die er geen willen.
+
+De sleutel is de uwe, gemaakt op uw eigen account — de toepassing heeft er nooit een van
+zichzelf:
+
+- **Anthropic** — maak de sleutel op `console.anthropic.com`, onder API keys.
+- **OpenAI** — `platform.openai.com`, onder API keys; versturen vraagt ook geactiveerde
+  facturering op het account.
+- **OpenAI-compatible** is een familie, niet één bedrijf: OpenRouter antwoordt in dezelfde
+  vorm met veel modellen onder één sleutel, en servers op uw eigen computer — Ollama,
+  LM Studio — willen meestal helemaal geen sleutel: zet **Autorisatie** op **geen**.
+
+**Sleutel koppelen** bergt de sleutel op in Windows Referentiebeheer, versleuteld voor uw
+Windows-account — niet in een bestand, en nooit in het document. Het veld toont daarna de
+eerste tekens van de sleutel, zodat te zien is welke gekoppeld is, en **Sleutel vergeten** haalt hem
+weg. Een sleutel hoort bij de plek waarvoor hij is ingevoerd — schema, host en poort: wijzig er
+één en het paneel vraagt er opnieuw om.
+
+De eerste druk vraagt het in gewone woorden — **Naar dit endpoint versturen?** — met de ontvanger bij naam. Mee
+reist de prompt, gebouwd uit uw briefing of tekst — met het gekozen kanaal, de gekozen
+variatie en taal —, de opgegeven variabelen, bij herstel het huidige sjabloon met zijn
+diagnose, de modelnaam uit uw profiel met een plafond voor de lengte van het antwoord, en
+onder **API-sleutel**-autorisatie de sleutel in de kopregels van het verzoek;
+verder niets, en op geen enkel ander moment. De ontvanger verandert niet zonder u: een
+omleiding wordt geweigerd in plaats van gevolgd, en een onversleuteld `http`-adres wordt
+alleen op deze machine aanvaard. De toestemming bindt zich waar de sleutel dat doet — schema, host en poort — en is zichtbaar
+als het vinkje **Versturen toegestaan** in de instellingen — haal het weg wanneer u wilt: niets
+nieuws vertrekt, en een antwoord dat al onderweg is wordt nooit toegepast. Wat de software op het gekozen adres met de tekst doet, is
+aan zijn beheerder om te zeggen: het verzoek gaat naar het adres uit uw profiel en nergens
+anders heen.
+
+### Dezelfde lus, zonder netwerk
+
+De prompts hebben sleutel noch verbinding nodig — het is dezelfde weg wanneer uw model in
+een chatvenster leeft, en de lus draait u hier zelf: de machine oordeelt na het plakken, niet
+ervoor. **Prompt kopiëren** zet de volledige prompt op het klembord; breng hem
+naar het model dat u gebruikt, plak het antwoord in **Antwoord van het model** en druk op **In het document invoegen**. Vindt de
+diagnose fouten, dan bouwt **Herstelprompt kopiëren** de tweede prompt: die draagt het hele document met
+genummerde regels en noemt de exacte plekken waartegen de machine bezwaar maakte. Het antwoord
+erop is het gecorrigeerde document in zijn geheel — breng het terug en druk op **Het document vervangen**;
+**In het document invoegen** zou het kapotte laten staan en de gecorrigeerde kopie ernaast zetten.
 
 ## De groepseditor
 

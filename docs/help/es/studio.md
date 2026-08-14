@@ -137,21 +137,81 @@ igual: el motor lo saca una vez por render, use o no la rama que usted tomó.
 La exportación las escribe de tres maneras: como libro XLSX, como texto plano con una variante por
 línea, o como un archivo por variante en una carpeta que usted elija.
 
-**Borrador de IA** es por donde empieza una plantilla cuando prefiere no escribir cada variante
-a mano. Diga en el encargo lo que quiere, enumere las variables que el modelo puede usar y pulse
-**Copiar la instrucción**. La aplicación no habla con ningún modelo ni guarda ninguna clave: redacta la
-instrucción para que usted la lleve al que ya utiliza. Traiga la respuesta y pulse **Insertar en el documento**:
-el motor de esta ventana dirá entonces qué le parece, en el panel de diagnósticos, igual que con
-cualquier cosa que escriba usted mismo. Si hay errores, **Copiar la instrucción de arreglo** construye una segunda instrucción: lleva el documento entero con sus líneas numeradas y
-nombra los puntos exactos que el motor objetó. La respuesta es el documento corregido completo,
-así que tráigala y pulse **Reemplazar el documento**: **Insertar en el documento** dejaría el
-roto donde está y pondría una copia corregida al lado.
+**Borrador de IA** escribe por usted el primer borrador de una plantilla — a partir de
+un texto que ya tiene, o de un encargo. Merece una sección propia: la siguiente.
 
-La columna de caso es la parte que vale la pena rellenar. Una variable se inserta tal cual, nada
-la declina: en una lengua con casos la frase debe construirse alrededor de la forma que el valor
-ya tiene, y un modelo solo elige bien si se le dice qué forma lleva cada nombre. Del nombre no
-se deduce: en un juego de plantillas real las formas instrumentales estaban en una variable cuyo
-nombre decía acusativo.
+## El borrador de IA
+
+Una plantilla suele empezar por un texto que ya existe — una ficha de producto, una carta, una
+página. El panel **Borrador de IA** lo convierte en una primera plantilla: ábralo desde la barra de
+herramientas, deje la cabecera de la columna izquierda en **Texto a convertir**, pegue el texto y pulse
+**Generar**. El borrador llegado reemplaza el documento, la vista previa lo renderiza y el panel
+de diagnóstico juzga — el mismo motor y el mismo veredicto que para lo que usted teclea. Un
+Ctrl+Z devuelve su documento anterior; desde ahí, edítelo como texto propio, porque lo es.
+
+Si no hay nada que pegar, pase la cabecera a **Encargo** y describa lo que quiere. Los campos
+de arriba guían el borrador en ambos modos: **Canal** — una carta, un SMS y una notificación
+push se escriben en registros distintos; **Variación** — cuánto pueden alejarse las variantes;
+el idioma de la respuesta; y **Variables que el modelo puede usar**, declaradas por su nombre. La columna de caso es la parte que vale la pena rellenar. Una variable se inserta tal cual, nada la declina: en una lengua con casos la frase debe construirse alrededor de la forma que el valor ya tiene, y un modelo solo elige bien si se le dice qué forma lleva cada nombre. Del nombre no se deduce: en un juego de plantillas real las formas instrumentales estaban en una variable cuyo nombre decía acusativo.
+
+A la respuesta no se le cree: se la verifica. El borrador pasa por el motor de esta ventana
+antes de acercarse a su documento, y si el veredicto encuentra errores, el bucle pide al
+modelo corregirlos — la barra de estado cuenta las rondas — antes de entregar nada. Solo un
+borrador limpio reemplaza el documento; todo lo demás cae en **Respuesta del modelo**, la línea de estado
+dice por qué, y nada suyo se sobrescribe. Sus propias ediciones quedan igual de
+protegidas: si tecleó mientras volaba una respuesta, el borrador espera en el panel. Mientras
+trabaja, **Generar** se lee **Parar** — púlselo para abandonar la ronda.
+
+**Arreglar** es el mismo bucle apuntado a su documento actual: despierta cuando el diagnóstico
+encuentra errores, envía el documento con las objeciones exactas y aplica la versión corregida
+con el mismo cuidado.
+
+### La conexión, y la clave de quién
+
+Tal como se instala, la aplicación no envía nada a ninguna parte. **Generar** y **Arreglar** salen
+a la red solo después de que usted configure la conexión al pie del panel y la permita. Elija
+el **Formato** que habla su endpoint — **Anthropic Messages** u **OpenAI-compatible** —, la
+dirección **Endpoint** y el nombre en **Modelo** — para Anthropic la lista bajo la flecha ofrece
+nombres actuales; en los demás casos, escriba el nombre que su endpoint espera. **Autorización** dice si viaja una clave: **Clave API**
+para los proveedores alojados, **ninguna** para servidores que no la quieren.
+
+La clave es suya, creada en su propia cuenta — la aplicación nunca tiene una propia:
+
+- **Anthropic** — cree la clave en `console.anthropic.com`, sección API keys.
+- **OpenAI** — `platform.openai.com`, sección API keys; enviar exige además la facturación
+  activada en la cuenta.
+- **OpenAI-compatible** es una familia, no una sola empresa: OpenRouter responde con la misma
+  forma con muchos modelos bajo una clave, y los servidores en su propio equipo — Ollama,
+  LM Studio — no suelen querer clave alguna: ponga **Autorización** en **ninguna**.
+
+**Adjuntar la clave** guarda la clave en el Administrador de credenciales de Windows, cifrada para su
+cuenta de Windows — no en un archivo, y nunca en el documento. El campo muestra después los
+primeros caracteres de la clave, para ver cuál está adjunta, y **Olvidar la clave** la retira. Una
+clave queda adjunta al lugar para el que se introdujo — el esquema, el host y el puerto:
+cambie cualquiera de ellos y el panel la pedirá de nuevo.
+
+La primera pulsación pregunta con todas las letras — **¿Enviar a este endpoint?** — nombrando al
+destinatario. Viaja la instrucción construida con su encargo o su texto — junto con el canal, la variación
+y el idioma elegidos —, las variables declaradas, la plantilla actual y su diagnóstico al
+reparar, el nombre del modelo de su perfil con un tope de longitud de la respuesta, y, bajo
+la autorización **Clave API**, la clave en las cabeceras de la petición;
+nada más, y en ningún otro momento. El destinatario no cambia sin usted: una
+redirección se rechaza en vez de seguirse, y una dirección `http` sin cifrar solo se acepta
+en esta máquina. El permiso se liga donde la clave — el esquema, el host y el puerto — y se ve en la casilla
+**Envío permitido** de los ajustes — desmárquela en cualquier momento: nada
+nuevo sale, y una respuesta ya en vuelo no se aplica jamás. Lo que haga con el texto el software de la dirección elegida es cosa de su
+operador: la petición va a la dirección de su perfil y a ningún otro sitio.
+
+### El mismo bucle, sin red
+
+Las instrucciones no necesitan ni clave ni conexión — es el mismo camino cuando su modelo
+vive en una ventana de chat, y aquí el bucle lo hace girar usted: el motor juzga después de
+pegar, no antes. **Copiar la instrucción** pone la instrucción completa en el
+portapapeles; llévela al modelo que use, pegue la respuesta en **Respuesta del modelo** y pulse **Insertar en el documento**.
+Si el diagnóstico encuentra errores, **Copiar la instrucción de arreglo** construye la segunda instrucción: lleva el
+documento entero con las líneas numeradas y nombra los lugares exactos que el motor objetó. Su
+respuesta es el documento corregido completo — tráigala de vuelta y pulse **Reemplazar el documento**;
+**Insertar en el documento** dejaría el roto en su sitio y pondría la copia corregida al lado.
 
 ## El editor de grupos
 

@@ -137,21 +137,82 @@ que seguiu.
 A exportação escreve-as de três maneiras: como livro XLSX, como texto simples com uma variante por
 linha, ou como um ficheiro por variante numa pasta à sua escolha.
 
-**Rascunho de IA** é por onde um modelo começa quando prefere não escrever cada variante à mão.
-Diga no resumo o que quer, enumere as variáveis que o modelo pode usar e carregue em **Copiar o pedido**.
-A aplicação não fala com nenhum modelo nem guarda chaves: escreve o pedido para que o leve àquele
-que já utiliza. Traga a resposta e carregue em **Inserir no documento** — o motor desta janela diz então o
-que lhe parece, no painel de diagnósticos, tal como faz com tudo o que escreve. Se houver erros,
-**Copiar o pedido de correção** constrói um segundo pedido: leva o documento inteiro com as linhas numeradas e nomeia os
-pontos exatos de que o motor se queixou. A resposta é o documento corrigido por inteiro,
-portanto traga-a e carregue em **Substituir o documento**: **Inserir no documento** deixaria o
-estragado onde está e poria uma cópia corrigida ao lado.
+**Rascunho de IA** escreve por si o primeiro rascunho de um modelo — a partir de texto
+que já tem, ou de um resumo. Merece uma secção própria: a seguinte.
 
-A coluna do caso é a parte que vale a pena preencher. Uma variável é inserida tal como está, nada
-a declina: numa língua com casos a frase tem de ser construída à volta da forma que o valor já
-tem, e um modelo só escolhe bem se lhe disserem que forma tem cada nome. Do nome não se deduz:
-num conjunto de modelos real as formas instrumentais estavam numa variável cujo nome dizia
-acusativo.
+## O rascunho de IA
+
+Um modelo costuma começar por um texto que já existe — uma ficha de produto, uma carta, uma
+página. O painel **Rascunho de IA** transforma-o num primeiro modelo: abra-o na barra de ferramentas,
+deixe o cabeçalho da coluna esquerda em **Texto a converter**, cole o texto e prima **Gerar**. O rascunho
+chegado substitui o documento, a pré-visualização renderiza-o e o painel de diagnóstico julga
+— o mesmo motor e o mesmo veredicto que para tudo o que escreve. Um Ctrl+Z devolve o documento
+anterior; daí em diante, edite-o como texto seu, porque o é.
+
+Se não houver nada para colar, mude o cabeçalho para **Resumo** e descreva o que quer. Os
+campos acima guiam o rascunho em ambos os modos: **Canal** — uma carta, um SMS e uma
+notificação push escrevem-se em registos diferentes; **Variação** — até onde as variantes podem
+afastar-se; o idioma da resposta; e **Variáveis que o modelo pode usar**, declaradas pelo nome. A coluna do caso é a parte que vale a pena preencher. Uma variável é inserida tal como está, nada a declina: numa língua com casos a frase tem de ser construída à volta da forma que o valor já tem, e um modelo só escolhe bem se lhe disserem que forma tem cada nome. Do nome não se deduz: num conjunto de modelos real as formas instrumentais estavam numa variável cujo nome dizia acusativo.
+
+Na resposta não se acredita: verifica-se. O rascunho passa pelo motor desta janela antes de se
+aproximar do documento, e se o veredicto encontrar erros, o ciclo pede ao modelo que os
+corrija — a barra de estado conta as rondas — antes de entregar o que quer que seja. Só um
+rascunho limpo substitui o documento; tudo o resto cai em **Resposta do modelo**, a linha de estado diz
+porquê, e nada seu é reescrito. As suas próprias edições ficam igualmente protegidas: se
+escreveu enquanto uma resposta voava, o rascunho espera no painel. Enquanto trabalha, **Gerar**
+lê-se **Parar** — prima-o para abandonar a ronda.
+
+**Corrigir** é o mesmo ciclo apontado ao documento actual: acorda quando o diagnóstico encontra
+erros, envia o documento com as objecções exactas e aplica a versão corrigida com o mesmo
+cuidado.
+
+### A ligação, e a chave de quem
+
+Tal como se instala, a aplicação não envia nada para lado nenhum. **Gerar** e **Corrigir** só vão
+à rede depois de configurar a ligação no rodapé do painel e a permitir. Escolha o **Formato**
+que o seu endpoint fala — **Anthropic Messages** ou **OpenAI-compatible** —, o endereço
+**Endpoint** e o nome em **Modelo** — para a Anthropic a lista sob a seta oferece nomes actuais;
+nos restantes casos, escreva o nome que o seu endpoint espera. **Autorização** diz se viaja uma chave: **Chave API** para os fornecedores alojados,
+**nenhuma** para servidores que não a querem.
+
+A chave é sua, criada na sua própria conta — a aplicação nunca tem uma própria:
+
+- **Anthropic** — crie a chave em `console.anthropic.com`, secção API keys.
+- **OpenAI** — `platform.openai.com`, secção API keys; enviar exige também facturação activa
+  na conta.
+- **OpenAI-compatible** é uma família, não uma única empresa: o OpenRouter responde na mesma
+  forma com muitos modelos sob uma chave, e os servidores no seu próprio computador — Ollama,
+  LM Studio — normalmente não querem chave nenhuma: ponha **Autorização** em **nenhuma**.
+
+**Anexar a chave** guarda a chave no Gestor de Credenciais do Windows, cifrada para a sua conta
+Windows — não num ficheiro, e nunca no documento. O campo mostra depois os primeiros
+caracteres da chave, para se ver qual está anexada, e **Esquecer a chave** retira-a. Uma chave fica
+presa ao lugar para o qual foi introduzida — o esquema, o host e a porta: mude qualquer um
+deles e o painel volta a pedi-la.
+
+O primeiro toque pergunta com todas as letras — **Enviar para este endpoint?** — nomeando o destinatário.
+Viaja o pedido construído do seu resumo ou texto — com o canal, a variação e o idioma
+escolhidos —, as variáveis declaradas, o modelo actual e o seu diagnóstico ao corrigir, o
+nome do modelo do seu perfil com um tecto para o comprimento da resposta, e, sob a
+autorização **Chave API**, a chave nos cabeçalhos do pedido; nada mais, e em nenhum
+outro momento. O destinatário não muda sem si: um redireccionamento é
+recusado em vez de seguido, e um endereço `http` sem cifra só é aceite nesta máquina. A permissão liga-se onde a chave se liga — o esquema, o host e a porta — e vê-se na marca
+**Envio permitido** das definições —
+desmarque-a a qualquer momento: nada de novo parte, e uma resposta já em voo nunca é
+aplicada. O que o software no endereço
+escolhido faz com o texto é o seu operador que o diz: o pedido vai para o endereço do seu
+perfil e para mais lado nenhum.
+
+### O mesmo ciclo, sem rede
+
+Os pedidos não precisam nem de chave nem de ligação — é o mesmo caminho quando o seu modelo
+vive numa janela de chat, e aqui o ciclo é você que o faz girar: o motor julga depois de
+colar, não antes. **Copiar o pedido** põe o pedido completo na área de transferência;
+leve-o ao modelo que usa, cole a resposta em **Resposta do modelo** e prima **Inserir no documento**. Se o diagnóstico
+encontrar erros, **Copiar o pedido de correção** constrói o segundo pedido: leva o documento inteiro com as linhas
+numeradas e nomeia os sítios exactos a que o motor objectou. A resposta a ele é o documento
+corrigido por inteiro — traga-a de volta e prima **Substituir o documento**; **Inserir no documento** deixaria o partido
+no lugar e poria a cópia corrigida ao lado.
 
 ## O editor de grupos
 

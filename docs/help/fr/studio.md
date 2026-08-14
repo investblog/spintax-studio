@@ -143,23 +143,88 @@ rendu, que la branche empruntée s'en serve ou non.
 L'export les écrit de trois manières : en classeur XLSX, en texte brut avec une variante par ligne
 ou en un fichier par variante dans un dossier de votre choix.
 
-**Brouillon IA** est le point de départ d'un modèle quand vous préférez ne pas écrire chaque
-variante à la main. Dites dans le brief ce que vous voulez, listez les variables que le modèle
-peut employer, puis appuyez sur **Copier l'invite**. L'application ne s'adresse à aucun modèle et ne
-détient aucune clé : elle rédige l'invite pour que vous la portiez à celui que vous utilisez
-déjà. Rapportez la réponse et appuyez sur **Insérer dans le document** — le moteur de cette fenêtre dit alors ce
-qu'il en pense dans le panneau des diagnostics, exactement comme pour tout ce que vous tapez
-vous-même. S'il y a des erreurs, **Copier l'invite de correction** construit une seconde invite : elle porte le document entier avec ses lignes numérotées et
-nomme les endroits exacts qui ont fait tiquer le moteur. La réponse est le document corrigé en
-entier — rapportez-la et appuyez sur **Remplacer le document** ; **Insérer dans le document**
-laisserait le document cassé en place et poserait une copie corrigée à côté.
+**Brouillon IA** écrit pour vous le premier brouillon d'un gabarit — à partir d'un
+texte que vous avez déjà, ou d'un brief. Il mérite sa propre section : la suivante.
 
-La colonne des cas est la partie qui vaut la peine d'être remplie. Une variable est insérée
-telle quelle, rien ne la décline : dans une langue à cas, la phrase doit donc être construite
-autour de la forme que la valeur possède déjà, et un modèle ne choisit correctement que si on
-lui dit quelle forme porte chaque nom. Cela ne se déduit pas du nom : dans un vrai jeu de
-modèles, les formes instrumentales se trouvaient dans une variable dont le nom disait
-accusatif.
+## Le brouillon IA
+
+Un gabarit commence le plus souvent par un texte qui existe déjà — une fiche produit, une
+lettre, une page. Le panneau **Brouillon IA** en fait un premier gabarit : ouvrez-le depuis la barre
+d'outils, laissez l'en-tête de la colonne de gauche sur **Texte à convertir**, collez le texte et pressez
+**Générer**. Le brouillon arrivé remplace le document, l'aperçu le rend, et le panneau de
+diagnostic juge — le même moteur et le même verdict que pour tout ce que vous tapez. Un
+Ctrl+Z ramène votre ancien document ; ensuite, corrigez-le comme votre propre texte, car c'en
+est un.
+
+S'il n'y a rien à coller, passez l'en-tête sur **Brief** et décrivez ce que vous voulez. Les
+champs au-dessus guident le brouillon dans les deux modes : **Canal** — une lettre, un SMS et
+une notification push ne s'écrivent pas dans le même registre ; **Variation** — jusqu'où les
+variantes peuvent s'écarter ; la langue de la réponse ; et **Variables que le modèle peut utiliser**, déclarées par leur
+nom. La colonne des cas est la partie qui vaut la peine d'être remplie. Une variable est insérée telle quelle, rien ne la décline : dans une langue à cas, la phrase doit donc être construite autour de la forme que la valeur possède déjà, et un modèle ne choisit correctement que si on lui dit quelle forme porte chaque nom. Cela ne se déduit pas du nom : dans un vrai jeu de modèles, les formes instrumentales se trouvaient dans une variable dont le nom disait accusatif.
+
+La réponse n'est pas crue, elle est vérifiée : le brouillon passe par le moteur de cette
+fenêtre avant d'approcher votre document, et si le verdict trouve des erreurs, la boucle
+demande elle-même au modèle de les corriger — la barre d'état compte les tours — avant de rien
+livrer. Seul un brouillon propre remplace le document ; tout le reste se pose dans
+**Réponse du modèle**, la ligne d'état dit pourquoi, et rien de vôtre n'est écrasé. Vos propres
+modifications sont protégées de même : si vous avez tapé pendant qu'une réponse volait, le
+brouillon attend dans le panneau. Pendant le travail, **Générer** affiche **Arrêter** — pressez
+pour abandonner le tour.
+
+**Réparer** est la même boucle pointée sur votre document actuel : elle s'éveille quand le
+diagnostic trouve des erreurs, envoie le document avec les objections exactes, et applique la
+version corrigée avec le même soin.
+
+### La connexion, et la clé de qui
+
+Telle qu'installée, l'application n'envoie rien nulle part. **Générer** et **Réparer** ne vont sur
+le réseau qu'après que vous avez configuré la connexion au pied du panneau et l'avez permise.
+Choisissez le **Format** que parle votre endpoint — **Anthropic Messages** ou
+**OpenAI-compatible** —, l'adresse **Endpoint** et le nom dans **Modèle** — pour Anthropic,
+la liste sous la flèche propose des noms actuels ; sinon, tapez le nom que votre endpoint
+attend. **Autorisation** dit si une clé voyage :
+**Clé API** pour les fournisseurs hébergés, **aucune** pour les serveurs qui n'en
+veulent pas.
+
+La clé est la vôtre, créée sur votre propre compte — l'application n'en a jamais une à elle :
+
+- **Anthropic** — créez la clé sur `console.anthropic.com`, rubrique API keys.
+- **OpenAI** — `platform.openai.com`, rubrique API keys ; l'envoi demande aussi la
+  facturation activée sur le compte.
+- **OpenAI-compatible** est une famille, pas une seule société : OpenRouter répond sous la
+  même forme avec beaucoup de modèles sous une seule clé, et les serveurs sur votre propre
+  machine — Ollama, LM Studio — ne veulent d'ordinaire aucune clé : mettez **Autorisation** sur
+  **aucune**.
+
+**Rattacher la clé** range la clé dans le Gestionnaire d'identifiants de Windows, chiffrée pour votre
+compte Windows — pas dans un fichier, et jamais dans le document. Le champ montre ensuite les
+premiers caractères de la clé, pour voir laquelle est rattachée, et **Oublier la clé** la retire.
+Une clé est rattachée au lieu pour lequel elle a été saisie — le schéma, l'hôte et le port :
+changez l'un d'eux et le panneau la redemande.
+
+La première pression demande en toutes lettres — **Envoyer vers cet endpoint ?** — en nommant le destinataire.
+Voyage l'invite bâtie sur votre brief ou votre texte — avec le canal, la variation et la
+langue choisis —, les variables déclarées, le gabarit courant et son diagnostic lors d'une
+réparation, le nom du modèle de votre profil avec un plafond sur la longueur de la réponse,
+et, sous l'autorisation **Clé API**, la clé dans les en-têtes de la requête ;
+rien d'autre, et à aucun autre moment. Le destinataire ne change pas sans vous :
+une redirection est refusée au lieu d'être suivie, et une adresse `http` non chiffrée n'est
+acceptée que sur cette machine. La permission se lie là où se lie la clé — le schéma, l'hôte et le port — et se voit à la
+coche **Envoi autorisé** dans les réglages — décochez-la à tout moment : rien de
+nouveau ne part, et une réponse déjà en vol n'est jamais appliquée. Ce que le logiciel à l'adresse choisie fait du texte, c'est à son opérateur de le
+dire : la requête va à l'adresse de votre profil et nulle part ailleurs.
+
+### La même boucle, sans réseau
+
+Les invites n'ont besoin ni de clé ni de connexion — c'est le même chemin quand votre modèle
+vit dans une fenêtre de chat, et la boucle, ici, c'est vous qui la faites tourner : le moteur
+juge après le collage, pas avant. **Copier l'invite** met l'invite complète dans le presse-papiers ;
+portez-la au modèle que vous utilisez, collez la réponse dans **Réponse du modèle**, et pressez
+**Insérer dans le document**. Si le diagnostic trouve des erreurs, **Copier l'invite de correction** bâtit la seconde invite : elle porte
+le document entier avec ses lignes numérotées et nomme les endroits exacts que le moteur a
+contestés. Sa réponse est le document corrigé en entier — rapportez-la et pressez
+**Remplacer le document** ; **Insérer dans le document** laisserait le document cassé en place et poserait la copie corrigée
+à côté.
 
 ## L'éditeur de groupe
 

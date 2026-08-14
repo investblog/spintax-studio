@@ -71,7 +71,7 @@ DOCS = ['studio', 'syntax', 'diagnostics']
 
 DOC_SLUGS = {
     'studio': [
-        'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa',
+        'studio', 'panes', 'replace', 'insert', 'panels', 'ai', 'groups', 'settings', 'gsa',
     ],
     'diagnostics': [
         'about', 'reading', 'brackets', 'definitions', 'variables', 'includes',

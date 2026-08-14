@@ -130,21 +130,75 @@ isto: motor ga izvlači jednom po odigravanju, koristila ga izabrana grana ili n
 Izvoz ih čuva na tri načina: kao XLSX radnu knjigu, kao običan tekst s po jednom varijantom u retku
 ili kao po jednu datoteku po varijanti u mapu koju odaberete.
 
-**AI nacrt** je ono čime predložak počinje kad ne želite ispisivati svaku varijantu
-rukom. Opišite što tražite u zadatku, navedite varijable koje model smije koristiti i pritisnite
-**Kopiraj upit**. Program se nikamo ne obraća i ne čuva ključeve: on sastavlja upit da ga odnesete
-modelu kojim se već služite. Vratite odgovor i pritisnite **Umetni u dokument** — motor u ovom prozoru
-tada kaže što o njemu misli, u ploči dijagnostike, jednako kao i o bilo kojem tekstu koji sami
-utipkate. Ako ima pogrešaka, **Kopiraj upit za popravak** sastavlja drugi upit: nosi cijeli dokument s numeriranim recima i imenuje upravo ona mjesta
-na koja se motor požalio. Odgovor je ispravljeni dokument u cijelosti, pa ga vratite i
-pritisnite **Zamijeni dokument**: **Umetni u dokument** ostavio bi pokvareni gdje jest i
-pokraj njega stavio ispravljenu kopiju.
+**AI nacrt** piše prvi nacrt šablone za vas — iz teksta koji već imate, ili iz
+zadatka. Zaslužio je vlastiti odjeljak: sljedeći.
 
-Stupac padeža dio je koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je ne mijenja po
-padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji vrijednost već ima, a
-model bira točno samo ako mu se kaže koji oblik drži svako ime. Iz imena se to ne može izvesti:
-u jednom stvarnom skupu predložaka instrumental je stajao u varijabli čije je ime govorilo
-akuzativ.
+## AI nacrt
+
+Šablona obično počinje tekstom koji već postoji — opis proizvoda, pismo, stranica. Panel
+**AI nacrt** pretvara taj tekst u prvu šablonu: otvorite ga s trake s alatima, ostavite zaglavlje
+lijevog stupca na **Tekst za pretvorbu**, zalijepite tekst i pritisnite **Generiraj**. Pristigli nacrt
+zamjenjuje dokument, pregled ga iscrtava, a panel dijagnostike sudi — isti motor i ista
+presuda kao za sve što sami tipkate. Jedan Ctrl+Z vraća prijašnji dokument; odatle ga
+uređujte kao svoj tekst, jer to i jest.
+
+Ako nema što zalijepiti, prebacite zaglavlje na **Zadatak** i opišite što želite. Polja iznad
+vode nacrt u oba načina: **Kanal** — pismo, SMS i push obavijest pišu se u različitim
+registrima; **Varijativnost** — koliko se varijante smiju razići; jezik odgovora; i **Varijable koje model smije koristiti**,
+navedene poimence. Stupac padeža dio je koji vrijedi popuniti. Varijabla se unosi doslovno, ništa je ne mijenja po padežima, pa se u jeziku s padežima rečenica mora graditi oko oblika koji vrijednost već ima, a model bira točno samo ako mu se kaže koji oblik drži svako ime. Iz imena se to ne može izvesti: u jednom stvarnom skupu predložaka instrumental je stajao u varijabli čije je ime govorilo akuzativ.
+
+Odgovoru se ne vjeruje — on se provjerava: nacrt prolazi kroz motor ovog prozora prije nego
+što se približi dokumentu, a nađe li presuda greške, petlja sama traži od modela da ih
+popravi — statusna traka broji runde — prije nego što išta preda. Dokument zamjenjuje samo
+čist nacrt; sve ostalo pada u **Odgovor modela**, statusni redak kaže zašto, i ništa vaše se ne
+prepisuje. Jednako su zaštićene i vaše izmjene: ako ste tipkali dok je odgovor letio, nacrt
+čeka u panelu. Dok radi, na gumbu **Generiraj** piše **Zaustavi** — pritisnite da napustite rundu.
+
+**Popravi** je ista petlja uperena u trenutačni dokument: budi se kad dijagnostika nađe greške,
+šalje dokument zajedno s točnim primjedbama i primjenjuje ispravljenu verziju s istom pažnjom.
+
+### Veza, i čiji ključ
+
+Kako je instalirana, aplikacija ne šalje ništa nikamo. **Generiraj** i **Popravi** izlaze na mrežu
+tek nakon što u podnožju panela postavite vezu i dopustite je. Izaberite **Format** kojim
+govori vaš endpoint — **Anthropic Messages** ili **OpenAI-compatible** —, adresu **Endpoint** i
+ime u polju **Model** — za Anthropic popis pod strelicom nudi aktualna imena; inače upišite
+ime koje vaš endpoint očekuje.
+**Autorizacija** kaže putuje li ključ: **API ključ** za hostane pružatelje, **nema** za
+poslužitelje koji ga ne traže.
+
+Ključ je vaš, napravljen na vašem računu — aplikacija nikada nema svoj:
+
+- **Anthropic** — ključ se radi na `console.anthropic.com`, odjeljak API keys.
+- **OpenAI** — `platform.openai.com`, odjeljak API keys; za slanje račun mora imati
+  uključenu naplatu.
+- **OpenAI-compatible** je obitelj, ne jedna tvrtka: OpenRouter odgovara u istom obliku s
+  mnogo modela pod jednim ključem, a poslužitelji na vašem vlastitom računalu — Ollama,
+  LM Studio — obično ne traže ključ uopće: postavite **Autorizacija** na **nema**.
+
+**Priveži ključ** sprema ključ u Windowsov upravitelj vjerodajnicama, šifriran za vaš Windows račun
+— ne u datoteku i nikada u dokument. Polje potom pokazuje prve znakove ključa, da se vidi
+koji je privezan, a **Zaboravi ključ** ga uklanja. Ključ je privezan za mjesto za koje je unesen — shemu, host i port: promijenite bilo što od
+toga i panel će ga zatražiti ponovno.
+
+Prvi pritisak pita otvoreno — **Slati na ovaj endpoint?** — imenujući primatelja. Putuje upit sastavljen od vašeg zadatka
+ili teksta — zajedno s izabranim kanalom, varijativnošću i jezikom —, navedene varijable, pri
+popravku trenutačna šablona sa svojom dijagnostikom, ime modela iz vašeg profila s gornjom
+granicom duljine odgovora, a pod autorizacijom **API ključ** — ključ u zaglavljima zahtjeva; ništa više i ni u kojem drugom trenutku. Primatelj se ne mijenja bez vas: preusmjeravanje se odbija umjesto da se slijedi, a nešifrirana `http` adresa prima se samo
+na ovom stroju. Dopuštenje se veže gdje i ključ — za shemu, host i port — i vidi se kao kvačica **Slanje dopušteno** u
+postavkama — skinite je bilo kad: ništa novo ne
+polazi, a odgovor koji je već u letu nikad se ne primjenjuje. Što softver na izabranoj adresi radi s tekstom, na njegovu je operateru
+da kaže: zahtjev ide na adresu iz vašeg profila i nikamo više.
+
+### Ista petlja, bez mreže
+
+Upitima ne trebaju ni ključ ni veza — to je isti put kad vaš model živi u prozoru za
+čavrljanje, a petlju ovdje okrećete vi: motor sudi poslije lijepljenja, ne prije. **Kopiraj upit** stavlja cijeli upit u međuspremnik; odnesite ga modelu koji koristite,
+zalijepite odgovor u polje **Odgovor modela** i pritisnite **Umetni u dokument**. Nađe li dijagnostika greške,
+**Kopiraj upit za popravak** sastavlja drugi upit: nosi cijeli dokument s numeriranim recima i imenuje točna
+mjesta kojima se motor usprotivio. Odgovor na njega je ispravljen dokument u cijelosti —
+vratite ga i pritisnite **Zamijeni dokument**; **Umetni u dokument** bi slomljeni ostavio na mjestu i stavio
+ispravljenu kopiju pokraj.
 
 ## Uređivač grupa
 

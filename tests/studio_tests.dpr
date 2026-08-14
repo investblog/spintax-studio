@@ -8215,7 +8215,7 @@ type
     Why: string;
   end;
 const
-  HELP_UI_QUOTES: array[0..25] of TSpxUiQuote = (
+  HELP_UI_QUOTES: array[0..29] of TSpxUiQuote = (
     (Id: sColLiteral;      Why: 'the session-value column'),
     (Id: sSeed;            Why: 'the seed tick-box'),
     (Id: sReroll;          Why: 'the reroll button'),
@@ -8255,7 +8255,13 @@ const
     (Id: sMenuInsSet;      Why: 'the #set insert item'),
     (Id: sMenuInsDef;      Why: 'the #def insert item'),
     (Id: sMenuInsInclude;  Why: 'the #include insert item'),
-    (Id: sMenuInsCond;     Why: 'the condition insert item'));
+    (Id: sMenuInsCond;     Why: 'the condition insert item'),
+    (* The live loop (R1-7): the AI chapter is instructions to press these four -- the two
+       verbs, the key's attach button, and the tick that is the reader's off-switch. *)
+    (Id: sGenerate;        Why: 'the generate button'),
+    (Id: sAiFix;           Why: 'the fix button'),
+    (Id: sAiKeySave;       Why: 'the attach-key button'),
+    (Id: sAiNetwork;       Why: 'the sending-allowed tick'));
 
 { Every run of blank characters becomes one space, so a wrapped line reads as a sentence --
   and a blockquote's `> ` marker at the start of a continuation line goes with it. Without
