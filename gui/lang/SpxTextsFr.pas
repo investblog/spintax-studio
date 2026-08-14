@@ -195,7 +195,14 @@ const
 
       (* the brief column's two modes (UX pass 2026-08-13) *)
       'Texte à convertir',
-      'Collez d''abord le texte à convertir.'
+      'Collez d''abord le texte à convertir.',
+
+      (* find and replace (UX-plan item 8, 2026-08-14) *)
+      'Remplacer…',
+      'remplacer par',
+      'Remplacer',
+      'Tout remplacer',
+      'Remplacés : %d'
   );
 
 implementation

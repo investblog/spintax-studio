@@ -52,6 +52,30 @@ Selecteer een deel van het sjabloon en alleen dat deel wordt weergegeven — bin
 het hele document, zodat een fragment dat een bovenaan gedefinieerde variabele gebruikt eruit komt
 zoals het op zijn plaats zal doen.
 
+## Zoeken en vervangen
+
+**Ctrl+F** opent een zoekveld in de kopregel. De teller ernaast zegt hoe vaak de tekst
+voorkomt en op welk resultaat u staat; **Enter** stapt vooruit, **Shift+Enter** terug, F3
+werkt rechtstreeks vanuit het document. Hoofdletters tellen pas met het vinkje naast het
+veld — en het vouwen is dat van de machine zelf, zodat een cyrillische of geaccentueerde
+letter precies daar met zijn andere vorm samenvalt waar ook het voorbeeld ze één letter
+noemt.
+
+**Ctrl+H** — of het menu-item **Vervangen…** — geeft de balk een tweede rij: de vervanging
+en twee knoppen. **Vervangen** wijzigt het resultaat waarop u staat en stapt naar het
+volgende; zolang er niets gevonden is, zoekt de eerste druk alleen. **Alles vervangen** gaat
+in één keer door het hele document, en de statusbalk zegt hoeveel plaatsen er veranderd zijn;
+één Ctrl+Z neemt de hele doorgang terug.
+
+De vervanging is letterlijk. Ze mag leeg zijn — dat wist — en mag de gezochte tekst bevatten
+zonder de doorgang in een kring te sturen: de plaatsen worden vooraf bepaald, op de tekst
+zoals hij was. Overlappen resultaten elkaar, dan telt de teller elk dat een stap kan
+bezoeken, maar de doorgang verandert alleen die welke geen letters delen — "vervangen" mag
+dus eerlijk een kleiner getal noemen.
+
+Een vervangen document gaat door dezelfde machine als getypte tekst: het voorbeeld tekent
+opnieuw en de diagnose antwoordt over wat er nu staat.
+
 ## De panelen onderaan
 
 De werkbalk aan de zijkant opent vier panelen, één tegelijk.

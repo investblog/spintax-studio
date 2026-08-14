@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    'be3ab9ec808b2934', '1161eb58753cc15f', '87e44fc97111b7a9', 'adf57424e6602ca7', 'c5226848658b80c2', 'f6b0fb891bdfa838', '09308ed618481791', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '98e6f0e6b9b841fb', '488ce59bac9e29c3', '7f61fd4b089638df', '4393de3df8011894', '7813c6dc420189dd', '0d549262922b3331', 'f3d1ab11a6cced65', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'c119b11e736b526e', '4ddfd411500958cc', '26e21bf1b83633da', '1bc034a0ce3bfcb4', 'b54956a9ee49f248', '00a887dfff5a6ef5', '1999c3faa67bcd1f', '18c7da1e110847db', 'd9d49c35432acae4', '479621ff94149c25', '9dacb63502e5aa97', 'b8529893866ec950', 'f9c075cdb27b31b0', 'ea10d49bf126b2b6', '471885d59dbd925b', '34f94f93bc344e0f', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '2e031cf578a86d26', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '3cc9e29f8be16541', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    'aaac7d0ee2c7ceae', '1161eb58753cc15f', '87e44fc97111b7a9', 'f7ee210436259e5c', 'c5226848658b80c2', 'f6b0fb891bdfa838', '7ac226d0b244ed59', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', 'b9a183a2485288d7', '488ce59bac9e29c3', '7f61fd4b089638df', 'c10f457a64c3680f', '7813c6dc420189dd', '0d549262922b3331', '1e4801611127481b', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'e818ef2c3214bfde', '4ddfd411500958cc', '26e21bf1b83633da', 'dc1c8960c749d8a2', 'b54956a9ee49f248', '00a887dfff5a6ef5', '61f979862124e64f', '18c7da1e110847db', 'd9d49c35432acae4', '1696dda3178324e1', '9dacb63502e5aa97', 'b8529893866ec950', '34969a4cd386a69a', 'ea10d49bf126b2b6', '471885d59dbd925b', 'e4e0d3bf9a37892b', '56ba422eb944d0c7', '2a4bb2d8392a4ede', 'e967a375af7d4c85', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '99c91476088e0733', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -313,17 +313,18 @@ const
 
   { Each language's pages: a span into the tables below. }
   HELP_PAGE_FIRST: array[0..13] of Integer = (
-    0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360, 390
+    0, 31, 62, 93, 124, 155, 186, 217, 248, 279, 310, 341, 372, 403
   );
   HELP_PAGE_LAST: array[0..13] of Integer = (
-    29, 59, 89, 119, 149, 179, 209, 239, 269, 299, 329, 359, 389, 419
+    30, 61, 92, 123, 154, 185, 216, 247, 278, 309, 340, 371, 402, 433
   );
-  HELP_SLUG: array[0..419] of string = (
-    'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..433] of string = (
+    'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
   );
-  HELP_TITLE: array[0..419] of string = (
+  HELP_TITLE: array[0..433] of string = (
     'Spintax Studio',
     'The two panes',
+    'Find and replace',
     'The panels along the bottom',
     'The group editor',
     'Settings',
@@ -354,6 +355,7 @@ const
     'Frequently asked',
     'Spintax Studio',
     'Две панели',
+    'Поиск и замена',
     'Панели снизу',
     'Редактор групп',
     'Настройки',
@@ -384,6 +386,7 @@ const
     'Часто спрашивают',
     'Spintax Studio',
     'Die zwei Hälften',
+    'Suchen und Ersetzen',
     'Die Tafeln am unteren Rand',
     'Der Gruppeneditor',
     'Einstellungen',
@@ -414,6 +417,7 @@ const
     'Häufig gefragt',
     'Spintax Studio',
     'Les deux volets',
+    'Rechercher et remplacer',
     'Les panneaux du bas',
     'L''éditeur de groupe',
     'Réglages',
@@ -444,6 +448,7 @@ const
     'Questions fréquentes',
     'Spintax Studio',
     'Las dos mitades',
+    'Buscar y reemplazar',
     'Los paneles de abajo',
     'El editor de grupos',
     'Ajustes',
@@ -474,6 +479,7 @@ const
     'Preguntas frecuentes',
     'Spintax Studio',
     'Le due metà',
+    'Trova e sostituisci',
     'I pannelli in basso',
     'L''editor di gruppi',
     'Impostazioni',
@@ -504,6 +510,7 @@ const
     'Domande frequenti',
     'Spintax Studio',
     'As duas metades',
+    'Localizar e substituir',
     'Os painéis de baixo',
     'O editor de grupos',
     'Definições',
@@ -534,6 +541,7 @@ const
     'Perguntas frequentes',
     'Spintax Studio',
     'De twee helften',
+    'Zoeken en vervangen',
     'De panelen onderaan',
     'De groepseditor',
     'Instellingen',
@@ -564,6 +572,7 @@ const
     'Veelgestelde vragen',
     'Spintax Studio',
     'İki yarım',
+    'Bul ve değiştir',
     'Alttaki paneller',
     'Grup düzenleyici',
     'Ayarlar',
@@ -594,6 +603,7 @@ const
     'Sık sorulanlar',
     'Spintax Studio',
     'Дві половини',
+    'Пошук і заміна',
     'Панелі внизу',
     'Редактор груп',
     'Налаштування',
@@ -624,6 +634,7 @@ const
     'Часто питають',
     'Spintax Studio',
     'Дзве палавіны',
+    'Пошук і замена',
     'Панэлі ўнізе',
     'Рэдактар груп',
     'Налады',
@@ -654,6 +665,7 @@ const
     'Часта пытаюць',
     'Spintax Studio',
     'Две половине',
+    'Претрага и замена',
     'Панели доле',
     'Уређивач група',
     'Подешавања',
@@ -684,6 +696,7 @@ const
     'Често питају',
     'Spintax Studio',
     'Dvije polovice',
+    'Traženje i zamjena',
     'Ploče dolje',
     'Uređivač grupa',
     'Postavke',
@@ -714,6 +727,7 @@ const
     'Često pitaju',
     'Spintax Studio',
     'Dvije polovine',
+    'Pretraga i zamjena',
     'Ploče dolje',
     'Uređivač grupa',
     'Postavke',
@@ -743,19 +757,19 @@ const
     'Kako izgleda ispravno',
     'Često pitaju'
   );
-  HELP_PAGE_DOC: array[0..419] of Integer = (
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_PAGE_DOC: array[0..433] of Integer = (
+    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
-  HELP_FIRST: array[0..419] of Integer = (
-    0, 7, 14, 25, 28, 31, 40, 45, 51, 63, 88, 98, 105, 112, 121, 125, 140, 162, 164, 174, 181, 194, 210, 235, 257, 277, 291, 304, 317, 325, 334, 341, 348, 359, 362, 365, 374, 379, 385, 397, 422, 432, 439, 447, 456, 460, 474, 504, 506, 517, 524, 537, 553, 578, 600, 619, 633, 646, 666, 674, 681, 688, 695, 706, 709, 712, 721, 726, 732, 744, 769, 779, 786, 793, 802, 806, 821, 846, 848, 858, 865, 878, 894, 919, 941, 961, 975, 988, 1001, 1009, 1018, 1025, 1032, 1043, 1046, 1049, 1058, 1063, 1069, 1081, 1106, 1116, 1123, 1130, 1139, 1143, 1158, 1186, 1188, 1198, 1205, 1218, 1234, 1259, 1281, 1301, 1315, 1328, 1341, 1349, 1358, 1365, 1372, 1383, 1386, 1389, 1398, 1403, 1409, 1421, 1446, 1456, 1463, 1470, 1479, 1483, 1498, 1526, 1528, 1538, 1545, 1558, 1574, 1599, 1621, 1641, 1655, 1668, 1681, 1689, 1698, 1705, 1712, 1723, 1726, 1729, 1738, 1743, 1749, 1761, 1786, 1796, 1803, 1810, 1819, 1823, 1838, 1866, 1868, 1878, 1885, 1898, 1914, 1939, 1961, 1981, 1995, 2008, 2021, 2029, 2038, 2045, 2052, 2063, 2066, 2069, 2078, 2083, 2089, 2101, 2126, 2136, 2143, 2150, 2159, 2163, 2178, 2208, 2210, 2220, 2227, 2240, 2256, 2281, 2303, 2323, 2337, 2350, 2363, 2371, 2380, 2387, 2394, 2405, 2408, 2411, 2420, 2425, 2431, 2443, 2468, 2478, 2485, 2492, 2501, 2505, 2520, 2545, 2547, 2557, 2564, 2577, 2593, 2618, 2640, 2660, 2674, 2687, 2700, 2708, 2717, 2724, 2731, 2742, 2745, 2748, 2757, 2762, 2768, 2780, 2805, 2815, 2822, 2829, 2838, 2842, 2857, 2884, 2886, 2896, 2903, 2916, 2932, 2957, 2979, 2999, 3013, 3026, 3039, 3047, 3056, 3063, 3070, 3081, 3084, 3087, 3096, 3101, 3107, 3119, 3144, 3154, 3161, 3169, 3178, 3182, 3197, 3226, 3228, 3238, 3245, 3258, 3274, 3299, 3321, 3341, 3355, 3368, 3381, 3389, 3398, 3405, 3412, 3423, 3426, 3429, 3438, 3443, 3449, 3461, 3486, 3496, 3503, 3511, 3520, 3524, 3539, 3568, 3570, 3580, 3587, 3600, 3616, 3641, 3663, 3683, 3697, 3710, 3723, 3731, 3740, 3747, 3754, 3765, 3768, 3771, 3780, 3785, 3791, 3803, 3828, 3838, 3845, 3853, 3862, 3866, 3881, 3911, 3913, 3923, 3930, 3943, 3959, 3984, 4006, 4026, 4040, 4053, 4066, 4074, 4083, 4090, 4097, 4108, 4111, 4114, 4123, 4128, 4134, 4146, 4171, 4181, 4188, 4196, 4205, 4209, 4225, 4252, 4254, 4264, 4271, 4284, 4300, 4325, 4347, 4367, 4381, 4394, 4407, 4415, 4424, 4431, 4438, 4449, 4452, 4455, 4464, 4469, 4475, 4487, 4512, 4522, 4529, 4537, 4546, 4550, 4566, 4593, 4595, 4605, 4612, 4625, 4641, 4666, 4688, 4708, 4722, 4735, 4748, 4756
+  HELP_FIRST: array[0..433] of Integer = (
+    0, 7, 14, 19, 30, 33, 36, 45, 50, 56, 68, 93, 103, 110, 117, 126, 130, 145, 167, 169, 179, 186, 199, 215, 240, 262, 282, 296, 309, 322, 330, 339, 346, 353, 358, 369, 372, 375, 384, 389, 395, 407, 432, 442, 449, 457, 466, 470, 484, 514, 516, 527, 534, 547, 563, 588, 610, 629, 643, 656, 676, 684, 691, 698, 705, 710, 721, 724, 727, 736, 741, 747, 759, 784, 794, 801, 808, 817, 821, 836, 861, 863, 873, 880, 893, 909, 934, 956, 976, 990, 1003, 1016, 1024, 1033, 1040, 1047, 1052, 1063, 1066, 1069, 1078, 1083, 1089, 1101, 1126, 1136, 1143, 1150, 1159, 1163, 1178, 1206, 1208, 1218, 1225, 1238, 1254, 1279, 1301, 1321, 1335, 1348, 1361, 1369, 1378, 1385, 1392, 1397, 1408, 1411, 1414, 1423, 1428, 1434, 1446, 1471, 1481, 1488, 1495, 1504, 1508, 1523, 1551, 1553, 1563, 1570, 1583, 1599, 1624, 1646, 1666, 1680, 1693, 1706, 1714, 1723, 1730, 1737, 1742, 1753, 1756, 1759, 1768, 1773, 1779, 1791, 1816, 1826, 1833, 1840, 1849, 1853, 1868, 1896, 1898, 1908, 1915, 1928, 1944, 1969, 1991, 2011, 2025, 2038, 2051, 2059, 2068, 2075, 2082, 2087, 2098, 2101, 2104, 2113, 2118, 2124, 2136, 2161, 2171, 2178, 2185, 2194, 2198, 2213, 2243, 2245, 2255, 2262, 2275, 2291, 2316, 2338, 2358, 2372, 2385, 2398, 2406, 2415, 2422, 2429, 2434, 2445, 2448, 2451, 2460, 2465, 2471, 2483, 2508, 2518, 2525, 2532, 2541, 2545, 2560, 2585, 2587, 2597, 2604, 2617, 2633, 2658, 2680, 2700, 2714, 2727, 2740, 2748, 2757, 2764, 2771, 2776, 2787, 2790, 2793, 2802, 2807, 2813, 2825, 2850, 2860, 2867, 2874, 2883, 2887, 2902, 2929, 2931, 2941, 2948, 2961, 2977, 3002, 3024, 3044, 3058, 3071, 3084, 3092, 3101, 3108, 3115, 3120, 3131, 3134, 3137, 3146, 3151, 3157, 3169, 3194, 3204, 3211, 3219, 3228, 3232, 3247, 3276, 3278, 3288, 3295, 3308, 3324, 3349, 3371, 3391, 3405, 3418, 3431, 3439, 3448, 3455, 3462, 3467, 3478, 3481, 3484, 3493, 3498, 3504, 3516, 3541, 3551, 3558, 3566, 3575, 3579, 3594, 3623, 3625, 3635, 3642, 3655, 3671, 3696, 3718, 3738, 3752, 3765, 3778, 3786, 3795, 3802, 3809, 3814, 3825, 3828, 3831, 3840, 3845, 3851, 3863, 3888, 3898, 3905, 3913, 3922, 3926, 3941, 3971, 3973, 3983, 3990, 4003, 4019, 4044, 4066, 4086, 4100, 4113, 4126, 4134, 4143, 4150, 4157, 4162, 4173, 4176, 4179, 4188, 4193, 4199, 4211, 4236, 4246, 4253, 4261, 4270, 4274, 4290, 4317, 4319, 4329, 4336, 4349, 4365, 4390, 4412, 4432, 4446, 4459, 4472, 4480, 4489, 4496, 4503, 4508, 4519, 4522, 4525, 4534, 4539, 4545, 4557, 4582, 4592, 4599, 4607, 4616, 4620, 4636, 4663, 4665, 4675, 4682, 4695, 4711, 4736, 4758, 4778, 4792, 4805, 4818, 4826
   );
-  HELP_LAST: array[0..419] of Integer = (
-    6, 13, 24, 27, 30, 39, 44, 50, 62, 87, 97, 104, 111, 120, 124, 139, 161, 163, 173, 180, 193, 209, 234, 256, 276, 290, 303, 316, 324, 333, 340, 347, 358, 361, 364, 373, 378, 384, 396, 421, 431, 438, 446, 455, 459, 473, 503, 505, 516, 523, 536, 552, 577, 599, 618, 632, 645, 665, 673, 680, 687, 694, 705, 708, 711, 720, 725, 731, 743, 768, 778, 785, 792, 801, 805, 820, 845, 847, 857, 864, 877, 893, 918, 940, 960, 974, 987, 1000, 1008, 1017, 1024, 1031, 1042, 1045, 1048, 1057, 1062, 1068, 1080, 1105, 1115, 1122, 1129, 1138, 1142, 1157, 1185, 1187, 1197, 1204, 1217, 1233, 1258, 1280, 1300, 1314, 1327, 1340, 1348, 1357, 1364, 1371, 1382, 1385, 1388, 1397, 1402, 1408, 1420, 1445, 1455, 1462, 1469, 1478, 1482, 1497, 1525, 1527, 1537, 1544, 1557, 1573, 1598, 1620, 1640, 1654, 1667, 1680, 1688, 1697, 1704, 1711, 1722, 1725, 1728, 1737, 1742, 1748, 1760, 1785, 1795, 1802, 1809, 1818, 1822, 1837, 1865, 1867, 1877, 1884, 1897, 1913, 1938, 1960, 1980, 1994, 2007, 2020, 2028, 2037, 2044, 2051, 2062, 2065, 2068, 2077, 2082, 2088, 2100, 2125, 2135, 2142, 2149, 2158, 2162, 2177, 2207, 2209, 2219, 2226, 2239, 2255, 2280, 2302, 2322, 2336, 2349, 2362, 2370, 2379, 2386, 2393, 2404, 2407, 2410, 2419, 2424, 2430, 2442, 2467, 2477, 2484, 2491, 2500, 2504, 2519, 2544, 2546, 2556, 2563, 2576, 2592, 2617, 2639, 2659, 2673, 2686, 2699, 2707, 2716, 2723, 2730, 2741, 2744, 2747, 2756, 2761, 2767, 2779, 2804, 2814, 2821, 2828, 2837, 2841, 2856, 2883, 2885, 2895, 2902, 2915, 2931, 2956, 2978, 2998, 3012, 3025, 3038, 3046, 3055, 3062, 3069, 3080, 3083, 3086, 3095, 3100, 3106, 3118, 3143, 3153, 3160, 3168, 3177, 3181, 3196, 3225, 3227, 3237, 3244, 3257, 3273, 3298, 3320, 3340, 3354, 3367, 3380, 3388, 3397, 3404, 3411, 3422, 3425, 3428, 3437, 3442, 3448, 3460, 3485, 3495, 3502, 3510, 3519, 3523, 3538, 3567, 3569, 3579, 3586, 3599, 3615, 3640, 3662, 3682, 3696, 3709, 3722, 3730, 3739, 3746, 3753, 3764, 3767, 3770, 3779, 3784, 3790, 3802, 3827, 3837, 3844, 3852, 3861, 3865, 3880, 3910, 3912, 3922, 3929, 3942, 3958, 3983, 4005, 4025, 4039, 4052, 4065, 4073, 4082, 4089, 4096, 4107, 4110, 4113, 4122, 4127, 4133, 4145, 4170, 4180, 4187, 4195, 4204, 4208, 4224, 4251, 4253, 4263, 4270, 4283, 4299, 4324, 4346, 4366, 4380, 4393, 4406, 4414, 4423, 4430, 4437, 4448, 4451, 4454, 4463, 4468, 4474, 4486, 4511, 4521, 4528, 4536, 4545, 4549, 4565, 4592, 4594, 4604, 4611, 4624, 4640, 4665, 4687, 4707, 4721, 4734, 4747, 4755, 4764
+  HELP_LAST: array[0..433] of Integer = (
+    6, 13, 18, 29, 32, 35, 44, 49, 55, 67, 92, 102, 109, 116, 125, 129, 144, 166, 168, 178, 185, 198, 214, 239, 261, 281, 295, 308, 321, 329, 338, 345, 352, 357, 368, 371, 374, 383, 388, 394, 406, 431, 441, 448, 456, 465, 469, 483, 513, 515, 526, 533, 546, 562, 587, 609, 628, 642, 655, 675, 683, 690, 697, 704, 709, 720, 723, 726, 735, 740, 746, 758, 783, 793, 800, 807, 816, 820, 835, 860, 862, 872, 879, 892, 908, 933, 955, 975, 989, 1002, 1015, 1023, 1032, 1039, 1046, 1051, 1062, 1065, 1068, 1077, 1082, 1088, 1100, 1125, 1135, 1142, 1149, 1158, 1162, 1177, 1205, 1207, 1217, 1224, 1237, 1253, 1278, 1300, 1320, 1334, 1347, 1360, 1368, 1377, 1384, 1391, 1396, 1407, 1410, 1413, 1422, 1427, 1433, 1445, 1470, 1480, 1487, 1494, 1503, 1507, 1522, 1550, 1552, 1562, 1569, 1582, 1598, 1623, 1645, 1665, 1679, 1692, 1705, 1713, 1722, 1729, 1736, 1741, 1752, 1755, 1758, 1767, 1772, 1778, 1790, 1815, 1825, 1832, 1839, 1848, 1852, 1867, 1895, 1897, 1907, 1914, 1927, 1943, 1968, 1990, 2010, 2024, 2037, 2050, 2058, 2067, 2074, 2081, 2086, 2097, 2100, 2103, 2112, 2117, 2123, 2135, 2160, 2170, 2177, 2184, 2193, 2197, 2212, 2242, 2244, 2254, 2261, 2274, 2290, 2315, 2337, 2357, 2371, 2384, 2397, 2405, 2414, 2421, 2428, 2433, 2444, 2447, 2450, 2459, 2464, 2470, 2482, 2507, 2517, 2524, 2531, 2540, 2544, 2559, 2584, 2586, 2596, 2603, 2616, 2632, 2657, 2679, 2699, 2713, 2726, 2739, 2747, 2756, 2763, 2770, 2775, 2786, 2789, 2792, 2801, 2806, 2812, 2824, 2849, 2859, 2866, 2873, 2882, 2886, 2901, 2928, 2930, 2940, 2947, 2960, 2976, 3001, 3023, 3043, 3057, 3070, 3083, 3091, 3100, 3107, 3114, 3119, 3130, 3133, 3136, 3145, 3150, 3156, 3168, 3193, 3203, 3210, 3218, 3227, 3231, 3246, 3275, 3277, 3287, 3294, 3307, 3323, 3348, 3370, 3390, 3404, 3417, 3430, 3438, 3447, 3454, 3461, 3466, 3477, 3480, 3483, 3492, 3497, 3503, 3515, 3540, 3550, 3557, 3565, 3574, 3578, 3593, 3622, 3624, 3634, 3641, 3654, 3670, 3695, 3717, 3737, 3751, 3764, 3777, 3785, 3794, 3801, 3808, 3813, 3824, 3827, 3830, 3839, 3844, 3850, 3862, 3887, 3897, 3904, 3912, 3921, 3925, 3940, 3970, 3972, 3982, 3989, 4002, 4018, 4043, 4065, 4085, 4099, 4112, 4125, 4133, 4142, 4149, 4156, 4161, 4172, 4175, 4178, 4187, 4192, 4198, 4210, 4235, 4245, 4252, 4260, 4269, 4273, 4289, 4316, 4318, 4328, 4335, 4348, 4364, 4389, 4411, 4431, 4445, 4458, 4471, 4479, 4488, 4495, 4502, 4507, 4518, 4521, 4524, 4533, 4538, 4544, 4556, 4581, 4591, 4598, 4606, 4615, 4619, 4635, 4662, 4664, 4674, 4681, 4694, 4710, 4735, 4757, 4777, 4791, 4804, 4817, 4825, 4834
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..4764] of string = (
+  HELP_LINE: array[0..4834] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -795,6 +809,25 @@ const
     '<p>Select part of the template and only that part is rendered — in the document''s own' +
       ' scope, so a fragment that uses a variable defined at the top still renders the way it' +
       ' will in place.</p>',
+    '<h2 id="replace">Find and replace</h2>',
+    '<p>Press <b>Ctrl+F</b> and a search field opens in the header. The counter beside it s' +
+      'ays how many places the text occurs and which one you stand on; <b>Enter</b> steps for' +
+      'ward, <b>Shift+Enter</b> steps back, and F3 works straight from the document. Case doe' +
+      's not matter until you tick the case box beside the field — and the folding is the eng' +
+      'ine''s own, so a Cyrillic or accented letter matches its other case exactly where the ' +
+      'preview would call them one letter.</p>',
+    '<p>Press <b>Ctrl+H</b> — or the <b>Replace…</b> menu item — and the bar grows a second' +
+      ' row: the replacement and two buttons. <b>Replace</b> changes the occurrence you stand' +
+      ' on and steps to the next; while nothing is found yet, the first press only finds. <b>' +
+      'Replace all</b> sweeps the whole document at once and the status bar says how many pla' +
+      'ces changed; one Ctrl+Z takes the whole sweep back.</p>',
+    '<p>The replacement is literal. It may be empty — that deletes — and it may contain the' +
+      ' text you searched for without sending the sweep in circles: the places to change are ' +
+      'decided first, on the text as it was. When occurrences overlap, the counter counts eve' +
+      'ry one a step can visit, but a sweep can only change those that do not share letters —' +
+      ' so "replaced" may honestly report a smaller number than the counter.</p>',
+    '<p>A replaced document goes through the same engine pass as typed text: the preview re' +
+      'draws, and the diagnostics answer about what is now there.</p>',
     '<h2 id="panels">The panels along the bottom</h2>',
     '<p>The strip of tools down the side opens four panels, one at a time.</p>',
     '<p><b>Diagnostics</b> lists what the engine found wrong, each with the line and column' +
@@ -1639,6 +1672,25 @@ const
     '<p>Выделите часть шаблона — отрендерится только она, причём в области видимости докуме' +
       'нта: фрагмент, который пользуется переменной из начала файла, покажет то же, что покаж' +
       'ет на своём месте.</p>',
+    '<h2 id="replace">Поиск и замена</h2>',
+    '<p>Нажмите <b>Ctrl+F</b> — в шапке откроется поле поиска. Счётчик рядом говорит, сколь' +
+      'ко раз текст встречается и на котором вхождении вы стоите; <b>Enter</b> шагает вперёд,' +
+      ' <b>Shift+Enter</b> — назад, F3 работает прямо из документа. Регистр не важен, пока не' +
+      ' включена галка регистра у поля, — а складывает буквы движок, так что кириллическая ил' +
+      'и акцентированная буква совпадает со своей парой ровно там, где превью считает их одно' +
+      'й буквой.</p>',
+    '<p>Нажмите <b>Ctrl+H</b> — или пункт меню <b>Заменить…</b> — и у полосы появится втора' +
+      'я строка: замена и две кнопки. <b>Заменить</b> меняет вхождение, на котором вы стоите,' +
+      ' и шагает к следующему; пока ничего не найдено, первое нажатие только ищет. <b>Заменит' +
+      'ь все</b> проходит весь документ разом, и строка состояния говорит, сколько мест измен' +
+      'илось; один Ctrl+Z возвращает весь проход обратно.</p>',
+    '<p>Замена буквальна. Она может быть пустой — это удаление — и может содержать искомый ' +
+      'текст, не загоняя проход в круг: места решаются заранее, по тексту, каким он был. Когд' +
+      'а вхождения перекрываются, счётчик считает каждое, куда можно шагнуть, а проход меняет' +
+      ' лишь те, что не делят между собой буквы, — поэтому «заменено» может честно назвать чи' +
+      'сло меньше счётчика.</p>',
+    '<p>Заменённый документ проходит тот же путь движка, что и набранный: превью перерисовы' +
+      'вается, и диагностика отвечает про то, что стоит в документе теперь.</p>',
     '<h2 id="panels">Панели снизу</h2>',
     '<p>Полоса инструментов сбоку открывает четыре панели, по одной за раз.</p>',
     '<p><b>Диагностика</b> перечисляет то, что движок счёл неверным, со строкой и колонкой ' +
@@ -2492,6 +2544,27 @@ const
     '<p>Markieren Sie einen Teil der Vorlage, und nur dieser Teil wird gerendert — im Geltu' +
       'ngsbereich des ganzen Dokuments, sodass ein Ausschnitt, der eine oben definierte Varia' +
       'ble benutzt, so herauskommt, wie er es an seiner Stelle tun wird.</p>',
+    '<h2 id="replace">Suchen und Ersetzen</h2>',
+    '<p><b>Strg+F</b> öffnet ein Suchfeld in der Kopfzeile. Der Zähler daneben sagt, wie of' +
+      't der Text vorkommt und auf welchem Treffer Sie stehen; <b>Enter</b> springt vorwärts,' +
+      ' <b>Umschalt+Enter</b> zurück, F3 funktioniert direkt aus dem Dokument. Groß- und Klei' +
+      'nschreibung zählt erst mit dem Häkchen neben dem Feld — und die Faltung ist die der Ma' +
+      'schine selbst, sodass ein kyrillischer oder akzentuierter Buchstabe genau dort seiner ' +
+      'anderen Form entspricht, wo auch die Vorschau beide für einen Buchstaben hält.</p>',
+    '<p><b>Strg+H</b> — oder der Menüpunkt <b>Ersetzen…</b> — gibt der Leiste eine zweite Z' +
+      'eile: die Ersetzung und zwei Schaltflächen. <b>Ersetzen</b> ändert den Treffer, auf de' +
+      'm Sie stehen, und springt zum nächsten; solange noch nichts gefunden ist, sucht der er' +
+      'ste Druck nur. <b>Alle ersetzen</b> geht in einem Zug durch das ganze Dokument, und di' +
+      'e Statusleiste sagt, wie viele Stellen sich geändert haben; ein einziges Strg+Z nimmt ' +
+      'den ganzen Durchgang zurück.</p>',
+    '<p>Die Ersetzung ist wörtlich. Sie darf leer sein — das löscht — und sie darf den gesu' +
+      'chten Text enthalten, ohne den Durchgang im Kreis zu schicken: die Stellen werden vora' +
+      'b bestimmt, am Text, wie er war. Überlappen sich Treffer, zählt der Zähler jeden, den ' +
+      'ein Schritt besuchen kann, der Durchgang ändert aber nur die, die sich keine Buchstabe' +
+      'n teilen — „ersetzt“ darf darum ehrlich eine kleinere Zahl nennen.</p>',
+    '<p>Ein ersetztes Dokument nimmt denselben Weg durch die Maschine wie getipptes: die Vo' +
+      'rschau wird neu gezeichnet, und die Diagnose antwortet über das, was jetzt dasteht.</p' +
+      '>',
     '<h2 id="panels">Die Tafeln am unteren Rand</h2>',
     '<p>Die Werkzeugleiste an der Seite öffnet vier Tafeln, immer eine davon.</p>',
     '<p><b>Diagnose</b> listet auf, was die Maschine beanstandet, jeweils mit Zeile und Spa' +
@@ -3402,6 +3475,27 @@ const
     '<p>Sélectionnez une partie du gabarit et seule cette partie est rendue — dans la porté' +
       'e du document entier, si bien qu''un extrait utilisant une variable définie plus haut ' +
       'sort comme il le fera à sa place.</p>',
+    '<h2 id="replace">Rechercher et remplacer</h2>',
+    '<p><b>Ctrl+F</b> ouvre un champ de recherche dans l''en-tête. Le compteur à côté dit c' +
+      'ombien de fois le texte apparaît et sur quelle occurrence vous êtes ; <b>Entrée</b> av' +
+      'ance, <b>Maj+Entrée</b> recule, F3 fonctionne depuis le document. La casse ne compte q' +
+      'u''avec la case cochée près du champ — et le pliage est celui du moteur, si bien qu''u' +
+      'ne lettre cyrillique ou accentuée correspond à son autre casse exactement là où l''ape' +
+      'rçu les tient pour une seule lettre.</p>',
+    '<p><b>Ctrl+H</b> — ou l''élément de menu <b>Remplacer…</b> — donne à la barre une seco' +
+      'nde ligne : le remplacement et deux boutons. <b>Remplacer</b> change l''occurrence où ' +
+      'vous êtes et passe à la suivante ; tant que rien n''est trouvé, la première pression n' +
+      'e fait que chercher. <b>Tout remplacer</b> parcourt tout le document d''un coup, et la' +
+      ' barre d''état dit combien d''endroits ont changé ; un seul Ctrl+Z reprend tout le par' +
+      'cours.</p>',
+    '<p>Le remplacement est littéral. Il peut être vide — cela supprime — et peut contenir ' +
+      'le texte cherché sans faire tourner le parcours en rond : les endroits sont décidés d' +
+      '''avance, sur le texte tel qu''il était. Quand des occurrences se chevauchent, le comp' +
+      'teur compte chacune qu''un pas peut visiter, mais le parcours ne change que celles qui' +
+      ' ne partagent pas de lettres — « remplacés » peut donc honnêtement annoncer un nombre ' +
+      'plus petit.</p>',
+    '<p>Un document remplacé prend le même chemin du moteur que du texte tapé : l''aperçu s' +
+      'e redessine, et le diagnostic répond sur ce qui s''y trouve désormais.</p>',
     '<h2 id="panels">Les panneaux du bas</h2>',
     '<p>La barre d''outils sur le côté ouvre quatre panneaux, un à la fois.</p>',
     '<p><b>Diagnostics</b> liste ce que le moteur a jugé fautif, chaque fois avec la ligne ' +
@@ -4306,6 +4400,26 @@ const
     '<p>Seleccione una parte de la plantilla y solo esa parte se renderiza —en el ámbito de' +
       'l documento entero, de modo que un fragmento que usa una variable definida arriba sale' +
       ' como saldrá en su sitio.</p>',
+    '<h2 id="replace">Buscar y reemplazar</h2>',
+    '<p><b>Ctrl+F</b> abre un campo de búsqueda en la cabecera. El contador de al lado dice' +
+      ' cuántas veces aparece el texto y en qué aparición está usted; <b>Intro</b> avanza, <b' +
+      '>Mayús+Intro</b> retrocede, F3 funciona desde el documento. Las mayúsculas no cuentan ' +
+      'hasta marcar la casilla junto al campo — y el plegado es el del motor, de modo que una' +
+      ' letra cirílica o acentuada coincide con su otra caja exactamente donde la vista previ' +
+      'a las considera una misma letra.</p>',
+    '<p><b>Ctrl+H</b> — o el elemento de menú <b>Reemplazar…</b> — añade a la barra una seg' +
+      'unda fila: el reemplazo y dos botones. <b>Reemplazar</b> cambia la aparición en la que' +
+      ' está y pasa a la siguiente; mientras no haya nada encontrado, la primera pulsación so' +
+      'lo busca. <b>Reemplazar todo</b> recorre el documento entero de una vez, y la barra de' +
+      ' estado dice cuántos lugares cambiaron; un solo Ctrl+Z deshace el recorrido completo.<' +
+      '/p>',
+    '<p>El reemplazo es literal. Puede estar vacío — eso borra — y puede contener el texto ' +
+      'buscado sin meter el recorrido en un círculo: los lugares se deciden antes, sobre el t' +
+      'exto tal como estaba. Cuando las apariciones se solapan, el contador cuenta cada una q' +
+      'ue un paso puede visitar, pero el recorrido solo cambia las que no comparten letras — ' +
+      '«reemplazados» puede decir honestamente un número menor.</p>',
+    '<p>Un documento reemplazado pasa por el mismo motor que el texto escrito: la vista pre' +
+      'via se redibuja y el diagnóstico responde sobre lo que hay ahora.</p>',
     '<h2 id="panels">Los paneles de abajo</h2>',
     '<p>La barra de herramientas del lateral abre cuatro paneles, uno cada vez.</p>',
     '<p><b>Diagnóstico</b> enumera lo que el motor ha encontrado mal, cada cosa con la líne' +
@@ -5179,6 +5293,26 @@ const
     '<p>Selezionate una parte del modello e solo quella viene resa — nell''ambito dell''int' +
       'ero documento, così che un frammento che usa una variabile definita in alto esca come ' +
       'uscirà al suo posto.</p>',
+    '<h2 id="replace">Trova e sostituisci</h2>',
+    '<p><b>Ctrl+F</b> apre un campo di ricerca nell''intestazione. Il contatore accanto dic' +
+      'e quante volte il testo compare e su quale occorrenza vi trovate; <b>Invio</b> avanza,' +
+      ' <b>Maiusc+Invio</b> torna indietro, F3 funziona direttamente dal documento. Le maiusc' +
+      'ole contano solo con la casella accanto al campo — e la piegatura è quella del motore,' +
+      ' così una lettera cirillica o accentata coincide con l''altra sua forma esattamente do' +
+      've l''anteprima le considera una sola lettera.</p>',
+    '<p><b>Ctrl+H</b> — o la voce di menu <b>Sostituisci…</b> — dà alla barra una seconda r' +
+      'iga: la sostituzione e due pulsanti. <b>Sostituisci</b> cambia l''occorrenza su cui vi' +
+      ' trovate e passa alla successiva; finché non c''è nulla di trovato, la prima pressione' +
+      ' cerca soltanto. <b>Sostituisci tutto</b> percorre l''intero documento in una volta, e' +
+      ' la barra di stato dice quanti punti sono cambiati; un solo Ctrl+Z riprende l''intero ' +
+      'passaggio.</p>',
+    '<p>La sostituzione è letterale. Può essere vuota — questo cancella — e può contenere i' +
+      'l testo cercato senza mandare il passaggio in circolo: i punti si decidono prima, sul ' +
+      'testo com''era. Quando le occorrenze si sovrappongono, il contatore conta ognuna che u' +
+      'n passo può visitare, ma il passaggio cambia solo quelle che non condividono lettere —' +
+      ' «sostituiti» può quindi onestamente dire un numero minore.</p>',
+    '<p>Un documento sostituito passa per lo stesso motore del testo digitato: l''anteprima' +
+      ' si ridisegna e la diagnostica risponde su ciò che c''è ora.</p>',
     '<h2 id="panels">I pannelli in basso</h2>',
     '<p>La barra degli strumenti di lato apre quattro pannelli, uno per volta.</p>',
     '<p><b>Diagnostica</b> elenca ciò che il motore ha trovato sbagliato, ogni volta con la' +
@@ -6055,6 +6189,25 @@ const
     '<p>Seleccione uma parte do modelo e só essa parte é composta — no âmbito do documento ' +
       'inteiro, de modo que um excerto que use uma variável definida em cima sai como sairá n' +
       'o seu lugar.</p>',
+    '<h2 id="replace">Localizar e substituir</h2>',
+    '<p><b>Ctrl+F</b> abre um campo de pesquisa no cabeçalho. O contador ao lado diz quanta' +
+      's vezes o texto ocorre e em que ocorrência está; <b>Enter</b> avança, <b>Shift+Enter</' +
+      'b> recua, F3 funciona diretamente do documento. As maiúsculas só contam com a caixa ma' +
+      'rcada junto ao campo — e a dobragem é a do motor, pelo que uma letra cirílica ou acent' +
+      'uada coincide com a sua outra caixa exatamente onde a pré-visualização as tem por uma ' +
+      'só letra.</p>',
+    '<p><b>Ctrl+H</b> — ou o item de menu <b>Substituir…</b> — dá à barra uma segunda linha' +
+      ': a substituição e dois botões. <b>Substituir</b> muda a ocorrência em que está e pass' +
+      'a à seguinte; enquanto nada estiver encontrado, a primeira pressão apenas procura. <b>' +
+      'Substituir tudo</b> percorre o documento inteiro de uma vez, e a barra de estado diz q' +
+      'uantos lugares mudaram; um único Ctrl+Z desfaz o percurso todo.</p>',
+    '<p>A substituição é literal. Pode estar vazia — isso apaga — e pode conter o texto pro' +
+      'curado sem pôr o percurso em círculo: os lugares decidem-se antes, sobre o texto tal c' +
+      'omo estava. Quando as ocorrências se sobrepõem, o contador conta cada uma que um passo' +
+      ' pode visitar, mas o percurso só muda as que não partilham letras — «substituídos» pod' +
+      'e assim dizer honestamente um número menor.</p>',
+    '<p>Um documento substituído passa pelo mesmo motor que o texto escrito: a pré-visualiz' +
+      'ação redesenha-se e o diagnóstico responde sobre o que lá está agora.</p>',
     '<h2 id="panels">Os painéis de baixo</h2>',
     '<p>A barra de ferramentas ao lado abre quatro painéis, um de cada vez.</p>',
     '<p><b>Diagnóstico</b> enumera o que o motor achou errado, cada coisa com a linha e a c' +
@@ -6914,6 +7067,25 @@ const
     '<p>Selecteer een deel van het sjabloon en alleen dat deel wordt weergegeven — binnen h' +
       'et bereik van het hele document, zodat een fragment dat een bovenaan gedefinieerde var' +
       'iabele gebruikt eruit komt zoals het op zijn plaats zal doen.</p>',
+    '<h2 id="replace">Zoeken en vervangen</h2>',
+    '<p><b>Ctrl+F</b> opent een zoekveld in de kopregel. De teller ernaast zegt hoe vaak de' +
+      ' tekst voorkomt en op welk resultaat u staat; <b>Enter</b> stapt vooruit, <b>Shift+Ent' +
+      'er</b> terug, F3 werkt rechtstreeks vanuit het document. Hoofdletters tellen pas met h' +
+      'et vinkje naast het veld — en het vouwen is dat van de machine zelf, zodat een cyrilli' +
+      'sche of geaccentueerde letter precies daar met zijn andere vorm samenvalt waar ook het' +
+      ' voorbeeld ze één letter noemt.</p>',
+    '<p><b>Ctrl+H</b> — of het menu-item <b>Vervangen…</b> — geeft de balk een tweede rij: ' +
+      'de vervanging en twee knoppen. <b>Vervangen</b> wijzigt het resultaat waarop u staat e' +
+      'n stapt naar het volgende; zolang er niets gevonden is, zoekt de eerste druk alleen. <' +
+      'b>Alles vervangen</b> gaat in één keer door het hele document, en de statusbalk zegt h' +
+      'oeveel plaatsen er veranderd zijn; één Ctrl+Z neemt de hele doorgang terug.</p>',
+    '<p>De vervanging is letterlijk. Ze mag leeg zijn — dat wist — en mag de gezochte tekst' +
+      ' bevatten zonder de doorgang in een kring te sturen: de plaatsen worden vooraf bepaald' +
+      ', op de tekst zoals hij was. Overlappen resultaten elkaar, dan telt de teller elk dat ' +
+      'een stap kan bezoeken, maar de doorgang verandert alleen die welke geen letters delen ' +
+      '— "vervangen" mag dus eerlijk een kleiner getal noemen.</p>',
+    '<p>Een vervangen document gaat door dezelfde machine als getypte tekst: het voorbeeld ' +
+      'tekent opnieuw en de diagnose antwoordt over wat er nu staat.</p>',
     '<h2 id="panels">De panelen onderaan</h2>',
     '<p>De werkbalk aan de zijkant opent vier panelen, één tegelijk.</p>',
     '<p><b>Diagnose</b> somt op wat de machine verkeerd vond, telkens met de regel en de ko' +
@@ -7792,6 +7964,24 @@ const
     '<p>Şablonun bir bölümünü seçin, yalnız o bölüm işlenir — belgenin bütününün kapsamında' +
       ', böylece yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl çıkacak' +
       'sa öyle çıkar.</p>',
+    '<h2 id="replace">Bul ve değiştir</h2>',
+    '<p><b>Ctrl+F</b> üst şeritte bir arama alanı açar. Yanındaki sayaç metnin kaç kez geçt' +
+      'iğini ve hangi eşleşmede durduğunuzu söyler; <b>Enter</b> ileri, <b>Shift+Enter</b> ge' +
+      'ri adımlar, F3 doğrudan belgeden çalışır. Alandaki kutucuk işaretlenene dek büyük-küçü' +
+      'k harf fark etmez — katlama da motorun kendisinindir, bu yüzden Kiril ya da aksanlı bi' +
+      'r harf, önizlemenin ikisini tek harf saydığı yerde diğer biçimiyle eşleşir.</p>',
+    '<p><b>Ctrl+H</b> — ya da <b>Değiştir…</b> menü öğesi — şeride ikinci bir satır ekler: ' +
+      'değiştirilecek metin ve iki düğme. <b>Değiştir</b> üzerinde durduğunuz eşleşmeyi değiş' +
+      'tirip sonrakine geçer; henüz bir şey bulunmamışken ilk basış yalnızca arar. <b>Tümünü ' +
+      'değiştir</b> belgeyi tek seferde tarar ve durum çubuğu kaç yerin değiştiğini söyler; t' +
+      'ek bir Ctrl+Z tüm taramayı geri alır.</p>',
+    '<p>Değiştirme harfi harfinedir. Boş olabilir — bu siler — ve aranan metni içerebilir; ' +
+      'tarama döngüye girmez: değişecek yerler önceden, metnin eski hâli üzerinde belirlenir.' +
+      ' Eşleşmeler üst üste bindiğinde sayaç adımın uğrayabileceği her birini sayar, ama tara' +
+      'ma yalnızca harf paylaşmayanları değiştirir — bu yüzden "değiştirilen" dürüstçe daha k' +
+      'üçük bir sayı diyebilir.</p>',
+    '<p>Değiştirilmiş belge, yazılmış metinle aynı motor yolundan geçer: önizleme yeniden ç' +
+      'izilir, tanılar artık orada olan hakkında yanıt verir.</p>',
     '<h2 id="panels">Alttaki paneller</h2>',
     '<p>Yandaki araç şeridi dört paneli, her seferinde birini açar.</p>',
     '<p><b>Tanılama</b> makinenin yanlış bulduklarını, her birini başladığı satır ve sütunl' +
@@ -8628,6 +8818,25 @@ const
       'тесь.</p>',
     '<p>Виділіть частину шаблону — і відтвориться лише вона, у межах усього документа, тож ' +
       'уривок, який вживає змінну, визначену вгорі, вийде так, як вийде на своєму місці.</p>',
+    '<h2 id="replace">Пошук і заміна</h2>',
+    '<p>Натисніть <b>Ctrl+F</b> — у шапці відкриється поле пошуку. Лічильник поруч каже, ск' +
+      'ільки разів текст трапляється і на якому входженні ви стоїте; <b>Enter</b> крокує впер' +
+      'ед, <b>Shift+Enter</b> — назад, F3 працює просто з документа. Регістр не важить, доки ' +
+      'не увімкнено галочку біля поля, — а згортає літери рушій, тож кирилична чи акцентована' +
+      ' літера збігається зі своєю парою саме там, де попередній перегляд вважає їх однією лі' +
+      'терою.</p>',
+    '<p>Натисніть <b>Ctrl+H</b> — або пункт меню <b>Замінити…</b> — і смуга отримає другий ' +
+      'рядок: заміну й дві кнопки. <b>Замінити</b> змінює входження, на якому ви стоїте, і кр' +
+      'окує до наступного; поки нічого не знайдено, перше натискання лише шукає. <b>Замінити ' +
+      'всі</b> проходить увесь документ разом, і рядок стану каже, скільки місць змінилося; о' +
+      'дин Ctrl+Z повертає весь прохід назад.</p>',
+    '<p>Заміна буквальна. Вона може бути порожньою — це видалення — і може містити шуканий ' +
+      'текст, не заганяючи прохід у коло: місця вирішуються заздалегідь, за текстом, яким він' +
+      ' був. Коли входження перекриваються, лічильник рахує кожне, куди можна крокнути, а про' +
+      'хід змінює лише ті, що не ділять літер, — тому «замінено» може чесно назвати число мен' +
+      'ше за лічильник.</p>',
+    '<p>Замінений документ проходить той самий шлях рушія, що й набраний: попередній перегл' +
+      'яд перемальовується, і діагностика відповідає про те, що стоїть тепер.</p>',
     '<h2 id="panels">Панелі внизу</h2>',
     '<p>Смуга інструментів збоку відкриває чотири панелі, по одній за раз.</p>',
     '<p><b>Діагностика</b> перелічує те, що рушій вважає хибним, щоразу з рядком і стовпцем' +
@@ -9462,6 +9671,25 @@ const
       'е, на што вы глядзіце.</p>',
     '<p>Вылучыце частку шаблона — і адтворыцца толькі яна, у межах усяго дакумента, таму ўр' +
       'ывак, які ўжывае зменную, вызначаную ўверсе, выйдзе так, як выйдзе на сваім месцы.</p>',
+    '<h2 id="replace">Пошук і замена</h2>',
+    '<p>Націсніце <b>Ctrl+F</b> — у шапцы адкрыецца поле пошуку. Лічыльнік побач кажа, коль' +
+      'кі разоў тэкст сустракаецца і на якім уваходжанні вы стаіце; <b>Enter</b> крочыць напе' +
+      'рад, <b>Shift+Enter</b> — назад, F3 працуе проста з дакумента. Рэгістр не мае значэння' +
+      ', пакуль не ўключана галачка каля поля, — а згортвае літары рухавік, таму кірылічная ц' +
+      'і акцэнтаваная літара супадае са сваёй парай якраз там, дзе папярэдні прагляд лічыць і' +
+      'х адной літарай.</p>',
+    '<p>Націсніце <b>Ctrl+H</b> — або пункт меню <b>Замяніць…</b> — і паласа атрымае другі ' +
+      'радок: замену і дзве кнопкі. <b>Замяніць</b> мяняе ўваходжанне, на якім вы стаіце, і к' +
+      'рочыць да наступнага; пакуль нічога не знойдзена, першы націск толькі шукае. <b>Замяні' +
+      'ць усе</b> праходзіць увесь дакумент разам, і радок стану кажа, колькі месцаў змянілас' +
+      'я; адзін Ctrl+Z вяртае ўвесь праход назад.</p>',
+    '<p>Замена літаральная. Яна можа быць пустой — гэта выдаленне — і можа змяшчаць шуканы ' +
+      'тэкст, не заганяючы праход у кола: месцы вырашаюцца загадзя, па тэксце, якім ён быў. К' +
+      'алі ўваходжанні перакрываюцца, лічыльнік лічыць кожнае, куды можна крочыць, а праход м' +
+      'яняе толькі тыя, што не дзеляць літар, — таму «заменена» можа сумленна назваць лік мен' +
+      'шы за лічыльнік.</p>',
+    '<p>Заменены дакумент праходзіць той самы шлях рухавіка, што і набраны: папярэдні прагл' +
+      'яд перамалёўваецца, і дыягностыка адказвае пра тое, што стаіць цяпер.</p>',
     '<h2 id="panels">Панэлі ўнізе</h2>',
     '<p>Паласа інструментаў збоку адкрывае чатыры панэлі, па адной за раз.</p>',
     '<p><b>Дыягностыка</b> пералічвае тое, што рухавік лічыць памылковым, кожны раз з радко' +
@@ -10301,6 +10529,23 @@ const
       '</p>',
     '<p>Означите део шаблона и одиграће се само он, у оквиру целог документа, па одломак ко' +
       'ји користи променљиву дефинисану горе излази онако како излази на свом месту.</p>',
+    '<h2 id="replace">Претрага и замена</h2>',
+    '<p>Притисните <b>Ctrl+F</b> — у заглављу се отвара поље претраге. Бројач поред каже ко' +
+      'лико се пута текст јавља и на ком сте појављивању; <b>Enter</b> корача напред, <b>Shif' +
+      't+Enter</b> назад, F3 ради право из документа. Величина слова не важи док се не укључи' +
+      ' кућица уз поље — а слова склапа мотор, па се ћирилично или акцентовано слово поклапа ' +
+      'са својим паром тачно тамо где их и преглед сматра једним словом.</p>',
+    '<p>Притисните <b>Ctrl+H</b> — или ставку менија <b>Замени…</b> — и трака добија други ' +
+      'ред: замену и два дугмета. <b>Замени</b> мења појављивање на коме стојите и корача на ' +
+      'следеће; док ништа није нађено, први притисак само тражи. <b>Замени све</b> пролази це' +
+      'о документ одједном, а статусна трака каже колико се места променило; једно Ctrl+Z вра' +
+      'ћа цео пролаз.</p>',
+    '<p>Замена је дословна. Може бити празна — то брише — и може садржати тражени текст, а ' +
+      'да пролаз не уђе у круг: места се одлучују унапред, над текстом какав је био. Када се ' +
+      'појављивања преклапају, бројач броји свако које корак може посетити, али пролаз мења с' +
+      'амо она која не деле слова — па „замењено“ може поштено рећи мањи број.</p>',
+    '<p>Замењени документ пролази исти пут мотора као и откуцани: преглед се исцртава нанов' +
+      'о, а дијагностика одговара о ономе што сада стоји.</p>',
     '<h2 id="panels">Панели доле</h2>',
     '<p>Трака алатки са стране отвара четири панела, по један у исто време.</p>',
     '<p><b>Дијагностика</b> набраја оно што мотор сматра погрешним, сваки пут са редом и ко' +
@@ -11122,6 +11367,25 @@ const
     '<p>Označite dio predloška i odigrat će se samo on, u okviru cijelog dokumenta, pa odlo' +
       'mak koji koristi varijablu definiranu gore izlazi onako kako izlazi na svom mjestu.</p' +
       '>',
+    '<h2 id="replace">Traženje i zamjena</h2>',
+    '<p>Pritisnite <b>Ctrl+F</b> — u zaglavlju se otvara polje pretrage. Brojač pokraj njeg' +
+      'a kaže koliko se puta tekst javlja i na kojem ste pojavljivanju; <b>Enter</b> korača n' +
+      'aprijed, <b>Shift+Enter</b> natrag, F3 radi izravno iz dokumenta. Velika i mala slova ' +
+      'ne broje se dok se ne uključi kućica uz polje — a slova sklapa motor, pa se ćirilično ' +
+      'ili naglašeno slovo poklapa sa svojim parom točno ondje gdje ih i pretpregled drži jed' +
+      'nim slovom.</p>',
+    '<p>Pritisnite <b>Ctrl+H</b> — ili stavku izbornika <b>Zamijeni…</b> — i traka dobiva d' +
+      'rugi red: zamjenu i dva gumba. <b>Zamijeni</b> mijenja pojavljivanje na kojem stojite ' +
+      'i korača na sljedeće; dok ništa nije nađeno, prvi pritisak samo traži. <b>Zamijeni sve' +
+      '</b> prolazi cijeli dokument odjednom, a statusna traka kaže koliko se mjesta promijen' +
+      'ilo; jedan Ctrl+Z vraća cijeli prolaz.</p>',
+    '<p>Zamjena je doslovna. Može biti prazna — to briše — i može sadržavati traženi tekst,' +
+      ' a da prolaz ne uđe u krug: mjesta se odlučuju unaprijed, nad tekstom kakav je bio. Ka' +
+      'd se pojavljivanja preklapaju, brojač broji svako koje korak može posjetiti, ali prola' +
+      'z mijenja samo ona koja ne dijele slova — pa „zamijenjeno“ može pošteno reći manji bro' +
+      'j.</p>',
+    '<p>Zamijenjeni dokument prolazi isti put motora kao i otipkani: pretpregled se iscrtav' +
+      'a iznova, a dijagnostika odgovara o onome što sada stoji.</p>',
     '<h2 id="panels">Ploče dolje</h2>',
     '<p>Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.</p>',
     '<p><b>Dijagnostika</b> nabraja ono što motor smatra pogrešnim, svaki put s retkom i st' +
@@ -11947,6 +12211,25 @@ const
       'edate.</p>',
     '<p>Označite dio šablona i odigrat će se samo on, u okviru cijelog dokumenta, pa odloma' +
       'k koji koristi varijablu definisanu gore izlazi onako kako izlazi na svom mjestu.</p>',
+    '<h2 id="replace">Pretraga i zamjena</h2>',
+    '<p>Pritisnite <b>Ctrl+F</b> — u zaglavlju se otvara polje pretrage. Brojač pored njega' +
+      ' kaže koliko se puta tekst javlja i na kojem ste pojavljivanju; <b>Enter</b> korača na' +
+      'prijed, <b>Shift+Enter</b> nazad, F3 radi direktno iz dokumenta. Velika i mala slova n' +
+      'e broje se dok se ne uključi kućica uz polje — a slova sklapa motor, pa se ćirilično i' +
+      'li naglašeno slovo poklapa sa svojim parom tačno tamo gdje ih i pregled smatra jednim ' +
+      'slovom.</p>',
+    '<p>Pritisnite <b>Ctrl+H</b> — ili stavku menija <b>Zamijeni…</b> — i traka dobija drug' +
+      'i red: zamjenu i dva dugmeta. <b>Zamijeni</b> mijenja pojavljivanje na kojem stojite i' +
+      ' korača na sljedeće; dok ništa nije nađeno, prvi pritisak samo traži. <b>Zamijeni sve<' +
+      '/b> prolazi cijeli dokument odjednom, a statusna traka kaže koliko se mjesta promijeni' +
+      'lo; jedan Ctrl+Z vraća cijeli prolaz.</p>',
+    '<p>Zamjena je doslovna. Može biti prazna — to briše — i može sadržavati traženi tekst,' +
+      ' a da prolaz ne uđe u krug: mjesta se odlučuju unaprijed, nad tekstom kakav je bio. Ka' +
+      'd se pojavljivanja preklapaju, brojač broji svako koje korak može posjetiti, ali prola' +
+      'z mijenja samo ona koja ne dijele slova — pa „zamijenjeno“ može pošteno reći manji bro' +
+      'j.</p>',
+    '<p>Zamijenjeni dokument prolazi isti put motora kao i otkucani: pregled se iscrtava iz' +
+      'nova, a dijagnostika odgovara o onome što sada stoji.</p>',
     '<h2 id="panels">Ploče dolje</h2>',
     '<p>Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.</p>',
     '<p><b>Dijagnostika</b> nabraja ono što motor smatra pogrešnim, svaki put s redom i kol' +
@@ -14519,7 +14802,7 @@ const
     30, 61, 92, 123, 154, 185, 216, 247, 278, 309, 340, 371, 402, 433
   );
   HELP_ANCHOR_PAGE: array[0..433] of Integer = (
-    8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 8, 8, 9, 9, 9, 10, 13, 20, 20, 20, 21, 21, 21, 21, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27
+    9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28
   );
   HELP_ANCHOR_ID: array[0..433] of string = (
     'choices-0',

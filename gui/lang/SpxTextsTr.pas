@@ -184,7 +184,14 @@ const
 
       (* the brief column's two modes (UX pass 2026-08-13) *)
       'Dönüştürülecek metin',
-      'Önce dönüştürülecek metni yapıştırın.'
+      'Önce dönüştürülecek metni yapıştırın.',
+
+      (* find and replace (UX-plan item 8, 2026-08-14) *)
+      'Değiştir…',
+      'şununla değiştir',
+      'Değiştir',
+      'Tümünü değiştir',
+      'Değiştirilen: %d'
   );
 
 implementation

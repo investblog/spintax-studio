@@ -212,7 +212,13 @@ type
        the column's header, so its selected item NAMES what the box holds: the reader's own
        text to convert (the main path -- no brief to invent), or a free-form brief (sAiBrief,
        reused as the item). sAiNeedText is the empty-box message of the first mode. ── *)
-    sAiModeFromText, sAiNeedText
+    sAiModeFromText, sAiNeedText,
+
+    (* ── FIND AND REPLACE (UX-plan item 8, designed 2026-08-14). The bar's second row:
+       the menu verb, the field's cue, the two buttons, and the status sentence that
+       reports REPLACEMENTS -- which can honestly be fewer than the counter's matches,
+       because overlaps are stepped through, never replaced twice. ── *)
+    sMenuReplace, sReplaceWith, sReplaceOne, sReplaceAll, sReplacedCount
   );
 
 implementation

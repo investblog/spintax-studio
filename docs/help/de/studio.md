@@ -56,6 +56,30 @@ Markieren Sie einen Teil der Vorlage, und nur dieser Teil wird gerendert — im 
 des ganzen Dokuments, sodass ein Ausschnitt, der eine oben definierte Variable benutzt, so
 herauskommt, wie er es an seiner Stelle tun wird.
 
+## Suchen und Ersetzen
+
+**Strg+F** öffnet ein Suchfeld in der Kopfzeile. Der Zähler daneben sagt, wie oft der Text
+vorkommt und auf welchem Treffer Sie stehen; **Enter** springt vorwärts, **Umschalt+Enter**
+zurück, F3 funktioniert direkt aus dem Dokument. Groß- und Kleinschreibung zählt erst mit dem
+Häkchen neben dem Feld — und die Faltung ist die der Maschine selbst, sodass ein kyrillischer
+oder akzentuierter Buchstabe genau dort seiner anderen Form entspricht, wo auch die Vorschau
+beide für einen Buchstaben hält.
+
+**Strg+H** — oder der Menüpunkt **Ersetzen…** — gibt der Leiste eine zweite Zeile: die
+Ersetzung und zwei Schaltflächen. **Ersetzen** ändert den Treffer, auf dem Sie stehen, und
+springt zum nächsten; solange noch nichts gefunden ist, sucht der erste Druck nur. **Alle
+ersetzen** geht in einem Zug durch das ganze Dokument, und die Statusleiste sagt, wie viele
+Stellen sich geändert haben; ein einziges Strg+Z nimmt den ganzen Durchgang zurück.
+
+Die Ersetzung ist wörtlich. Sie darf leer sein — das löscht — und sie darf den gesuchten Text
+enthalten, ohne den Durchgang im Kreis zu schicken: die Stellen werden vorab bestimmt, am
+Text, wie er war. Überlappen sich Treffer, zählt der Zähler jeden, den ein Schritt besuchen
+kann, der Durchgang ändert aber nur die, die sich keine Buchstaben teilen — „ersetzt“ darf
+darum ehrlich eine kleinere Zahl nennen.
+
+Ein ersetztes Dokument nimmt denselben Weg durch die Maschine wie getipptes: die Vorschau
+wird neu gezeichnet, und die Diagnose antwortet über das, was jetzt dasteht.
+
 ## Die Tafeln am unteren Rand
 
 Die Werkzeugleiste an der Seite öffnet vier Tafeln, immer eine davon.

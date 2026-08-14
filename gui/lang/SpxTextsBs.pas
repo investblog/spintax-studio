@@ -191,7 +191,14 @@ const
 
       (* the brief column's two modes (UX pass 2026-08-13) *)
       'Tekst za pretvaranje',
-      'Prvo zalijepite tekst za pretvaranje.'
+      'Prvo zalijepite tekst za pretvaranje.',
+
+      (* find and replace (UX-plan item 8, 2026-08-14) *)
+      'Zamijeni…',
+      'zamijeni sa',
+      'Zamijeni',
+      'Zamijeni sve',
+      'Zamijenjeno: %d'
   );
 
 implementation

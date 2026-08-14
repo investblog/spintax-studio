@@ -52,6 +52,29 @@ não se lê como prosa. O interruptor por cima da metade muda o que está a ver.
 Seleccione uma parte do modelo e só essa parte é composta — no âmbito do documento inteiro, de
 modo que um excerto que use uma variável definida em cima sai como sairá no seu lugar.
 
+## Localizar e substituir
+
+**Ctrl+F** abre um campo de pesquisa no cabeçalho. O contador ao lado diz quantas vezes o
+texto ocorre e em que ocorrência está; **Enter** avança, **Shift+Enter** recua, F3 funciona
+diretamente do documento. As maiúsculas só contam com a caixa marcada junto ao campo — e a
+dobragem é a do motor, pelo que uma letra cirílica ou acentuada coincide com a sua outra
+caixa exatamente onde a pré-visualização as tem por uma só letra.
+
+**Ctrl+H** — ou o item de menu **Substituir…** — dá à barra uma segunda linha: a
+substituição e dois botões. **Substituir** muda a ocorrência em que está e passa à seguinte;
+enquanto nada estiver encontrado, a primeira pressão apenas procura. **Substituir tudo**
+percorre o documento inteiro de uma vez, e a barra de estado diz quantos lugares mudaram; um
+único Ctrl+Z desfaz o percurso todo.
+
+A substituição é literal. Pode estar vazia — isso apaga — e pode conter o texto procurado
+sem pôr o percurso em círculo: os lugares decidem-se antes, sobre o texto tal como estava.
+Quando as ocorrências se sobrepõem, o contador conta cada uma que um passo pode visitar, mas
+o percurso só muda as que não partilham letras — «substituídos» pode assim dizer
+honestamente um número menor.
+
+Um documento substituído passa pelo mesmo motor que o texto escrito: a pré-visualização
+redesenha-se e o diagnóstico responde sobre o que lá está agora.
+
 ## Os painéis de baixo
 
 A barra de ferramentas ao lado abre quatro painéis, um de cada vez.

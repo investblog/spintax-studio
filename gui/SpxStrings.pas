@@ -260,7 +260,11 @@ const
 
     { The brief column's two modes (UX pass): a combo header and a status sentence, both
       self-sizing. }
-    0, 0
+    0, 0,
+
+    { Find and replace: a menu item, a cue banner, two measured buttons and a status
+      sentence with %d -- none sits in a slot fixed at a number. }
+    0, 0, 0, 0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

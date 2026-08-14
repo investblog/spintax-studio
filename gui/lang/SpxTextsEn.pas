@@ -191,7 +191,14 @@ const
 
       (* the brief column's two modes (UX pass 2026-08-13) *)
       'Text to convert',
-      'Paste the text to convert first.'
+      'Paste the text to convert first.',
+
+      (* find and replace (UX-plan item 8, 2026-08-14) *)
+      'Replace…',
+      'replace with',
+      'Replace',
+      'Replace all',
+      'Replaced: %d'
   );
 
 implementation

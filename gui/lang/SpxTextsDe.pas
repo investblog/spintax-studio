@@ -194,7 +194,14 @@ const
 
       (* the brief column's two modes (UX pass 2026-08-13) *)
       'Text zum Umwandeln',
-      'Zuerst den umzuwandelnden Text einfügen.'
+      'Zuerst den umzuwandelnden Text einfügen.',
+
+      (* find and replace (UX-plan item 8, 2026-08-14) *)
+      'Ersetzen…',
+      'ersetzen durch',
+      'Ersetzen',
+      'Alle ersetzen',
+      'Ersetzt: %d'
   );
 
 implementation

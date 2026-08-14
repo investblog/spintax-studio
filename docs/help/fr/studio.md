@@ -53,6 +53,29 @@ Sélectionnez une partie du gabarit et seule cette partie est rendue — dans la
 entier, si bien qu'un extrait utilisant une variable définie plus haut sort comme il le fera à sa
 place.
 
+## Rechercher et remplacer
+
+**Ctrl+F** ouvre un champ de recherche dans l'en-tête. Le compteur à côté dit combien de fois
+le texte apparaît et sur quelle occurrence vous êtes ; **Entrée** avance, **Maj+Entrée**
+recule, F3 fonctionne depuis le document. La casse ne compte qu'avec la case cochée près du
+champ — et le pliage est celui du moteur, si bien qu'une lettre cyrillique ou accentuée
+correspond à son autre casse exactement là où l'aperçu les tient pour une seule lettre.
+
+**Ctrl+H** — ou l'élément de menu **Remplacer…** — donne à la barre une seconde ligne : le
+remplacement et deux boutons. **Remplacer** change l'occurrence où vous êtes et passe à la
+suivante ; tant que rien n'est trouvé, la première pression ne fait que chercher. **Tout
+remplacer** parcourt tout le document d'un coup, et la barre d'état dit combien d'endroits ont
+changé ; un seul Ctrl+Z reprend tout le parcours.
+
+Le remplacement est littéral. Il peut être vide — cela supprime — et peut contenir le texte
+cherché sans faire tourner le parcours en rond : les endroits sont décidés d'avance, sur le
+texte tel qu'il était. Quand des occurrences se chevauchent, le compteur compte chacune qu'un
+pas peut visiter, mais le parcours ne change que celles qui ne partagent pas de lettres —
+« remplacés » peut donc honnêtement annoncer un nombre plus petit.
+
+Un document remplacé prend le même chemin du moteur que du texte tapé : l'aperçu se
+redessine, et le diagnostic répond sur ce qui s'y trouve désormais.
+
 ## Les panneaux du bas
 
 La barre d'outils sur le côté ouvre quatre panneaux, un à la fois.

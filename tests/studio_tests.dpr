@@ -8185,7 +8185,7 @@ type
     Why: string;
   end;
 const
-  HELP_UI_QUOTES: array[0..16] of TSpxUiQuote = (
+  HELP_UI_QUOTES: array[0..19] of TSpxUiQuote = (
     (Id: sColLiteral;      Why: 'the session-value column'),
     (Id: sSeed;            Why: 'the seed tick-box'),
     (Id: sReroll;          Why: 'the reroll button'),
@@ -8210,7 +8210,13 @@ const
        the whole corrected document -- the paragraph that used to say the repair prompt points
        at spans "instead of at the whole document" was false in all fourteen, and hid the fact
        a reader needs: pressing Insert on that answer duplicates their template. *)
-    (Id: sAiReplace;       Why: 'the replace button'));
+    (Id: sAiReplace;       Why: 'the replace button'),
+    (* Find and replace (UX-plan item 8): the section is instructions to press these, in
+       fourteen documents written in one sitting -- the same reason the AI panel's three
+       are here. *)
+    (Id: sMenuReplace;     Why: 'the replace menu item'),
+    (Id: sReplaceOne;      Why: 'the replace-one button'),
+    (Id: sReplaceAll;      Why: 'the replace-all button'));
 
 { Every run of blank characters becomes one space, so a wrapped line reads as a sentence --
   and a blockquote's `> ` marker at the start of a continuation line goes with it. Without
@@ -8689,7 +8695,7 @@ begin
 end;
 
 procedure TestFind;
-var m: TSpxMatches; i: Integer; ok: Boolean;
+var m: TSpxMatches; i, rc: Integer; ok: Boolean;
 begin
   { Positions are the EDITOR's: 1-based lines, 1-based code-point columns, end exclusive --
     the same model a diagnostic uses, so a match can be selected by the machinery that
@@ -8764,6 +8770,39 @@ begin
   { What it does do: the same letter in the other case, one code point for one. }
   m := SpxFindAll('straße', 'STRAßE', False);
   CheckTrue('find/but-the-same-letter-in-either-case-does', Length(m) = 1);
+
+  { ── replace-all: the same matcher, one splice ── }
+  Check('replace/basic', SpxReplaceAllText('раз два раз', 'раз', 'три', True, rc),
+        'три два три');
+  CheckTrue('replace/basic-count', rc = 2);
+  { The fold is the engine's, inherited from the finder -- not SynEdit's own rules. }
+  Check('replace/folding-follows-the-engine',
+        SpxReplaceAllText('Кофе кофе КОФЕ', 'кофе', 'чай', False, rc), 'чай чай чай');
+  CheckTrue('replace/folding-count', rc = 3);
+  { The list is computed once and the original is never rescanned: a replacement that
+    contains the needle cannot loop, and does not breed. }
+  Check('replace/a-replacement-containing-the-needle-does-not-loop',
+        SpxReplaceAllText('ab', 'ab', 'abab', True, rc), 'abab');
+  CheckTrue('replace/no-rescan-count', rc = 1);
+  { The finder counts overlaps ('аа' in 'ааа' is two, stepping wants both); the splice
+    takes the first and steps past what it consumed -- so replacements can honestly be
+    fewer than the counter's matches. }
+  Check('replace/overlaps-are-not-replaced-twice',
+        SpxReplaceAllText('ааа', 'аа', 'X', True, rc), 'Xа');
+  CheckTrue('replace/overlap-count-is-replacements-not-matches', rc = 1);
+  { A deletion is a replacement with nothing. }
+  Check('replace/empty-replacement-deletes', SpxReplaceAllText('a-b-c', '-', '', True, rc),
+        'abc');
+  { An empty needle replaces nothing and says so. }
+  Check('replace/empty-needle-changes-nothing',
+        SpxReplaceAllText('текст', '', 'x', True, rc), 'текст');
+  CheckTrue('replace/empty-needle-count-is-zero', rc = 0);
+  { Every byte between matches is copied verbatim -- the document's own CRLF included. }
+  Check('replace/crlf-survives',
+        SpxReplaceAllText('раз'#13#10'два', 'два', 'три', True, rc), 'раз'#13#10'три');
+  { And a length-changing fold before the match cannot shift the splice. }
+  Check('replace/a-folding-character-does-not-shift-the-splice',
+        SpxReplaceAllText('straße und weg', 'UND', '&', False, rc), 'straße & weg');
 
   { The fast case-folding path is hand-rolled arithmetic for ASCII and Cyrillic, so it is
     checked against the ENGINE's table for every code point in the ranges it claims. A search

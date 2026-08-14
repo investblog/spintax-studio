@@ -50,6 +50,28 @@ atladığı hafif eğri bir yerleşim verir, etiket dolu bir düzyazı ise düzy
 Şablonun bir bölümünü seçin, yalnız o bölüm işlenir — belgenin bütününün kapsamında, böylece
 yukarıda tanımlanmış bir değişkeni kullanan bir parça, yerinde nasıl çıkacaksa öyle çıkar.
 
+## Bul ve değiştir
+
+**Ctrl+F** üst şeritte bir arama alanı açar. Yanındaki sayaç metnin kaç kez geçtiğini ve
+hangi eşleşmede durduğunuzu söyler; **Enter** ileri, **Shift+Enter** geri adımlar, F3
+doğrudan belgeden çalışır. Alandaki kutucuk işaretlenene dek büyük-küçük harf fark etmez —
+katlama da motorun kendisinindir, bu yüzden Kiril ya da aksanlı bir harf, önizlemenin ikisini
+tek harf saydığı yerde diğer biçimiyle eşleşir.
+
+**Ctrl+H** — ya da **Değiştir…** menü öğesi — şeride ikinci bir satır ekler: değiştirilecek
+metin ve iki düğme. **Değiştir** üzerinde durduğunuz eşleşmeyi değiştirip sonrakine geçer;
+henüz bir şey bulunmamışken ilk basış yalnızca arar. **Tümünü değiştir** belgeyi tek seferde
+tarar ve durum çubuğu kaç yerin değiştiğini söyler; tek bir Ctrl+Z tüm taramayı geri alır.
+
+Değiştirme harfi harfinedir. Boş olabilir — bu siler — ve aranan metni içerebilir; tarama
+döngüye girmez: değişecek yerler önceden, metnin eski hâli üzerinde belirlenir. Eşleşmeler
+üst üste bindiğinde sayaç adımın uğrayabileceği her birini sayar, ama tarama yalnızca harf
+paylaşmayanları değiştirir — bu yüzden "değiştirilen" dürüstçe daha küçük bir sayı
+diyebilir.
+
+Değiştirilmiş belge, yazılmış metinle aynı motor yolundan geçer: önizleme yeniden çizilir,
+tanılar artık orada olan hakkında yanıt verir.
+
 ## Alttaki paneller
 
 Yandaki araç şeridi dört paneli, her seferinde birini açar.

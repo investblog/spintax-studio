@@ -189,7 +189,14 @@ const
 
       (* the brief column's two modes (UX pass 2026-08-13) *)
       'Te converteren tekst',
-      'Plak eerst de te converteren tekst.'
+      'Plak eerst de te converteren tekst.',
+
+      (* find and replace (UX-plan item 8, 2026-08-14) *)
+      'Vervangen…',
+      'vervangen door',
+      'Vervangen',
+      'Alles vervangen',
+      'Vervangen: %d'
   );
 
 implementation

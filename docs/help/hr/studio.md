@@ -49,6 +49,28 @@ iznad polovice mijenja ono u što gledate.
 Označite dio predloška i odigrat će se samo on, u okviru cijelog dokumenta, pa odlomak koji koristi
 varijablu definiranu gore izlazi onako kako izlazi na svom mjestu.
 
+## Traženje i zamjena
+
+Pritisnite **Ctrl+F** — u zaglavlju se otvara polje pretrage. Brojač pokraj njega kaže
+koliko se puta tekst javlja i na kojem ste pojavljivanju; **Enter** korača naprijed,
+**Shift+Enter** natrag, F3 radi izravno iz dokumenta. Velika i mala slova ne broje se dok se
+ne uključi kućica uz polje — a slova sklapa motor, pa se ćirilično ili naglašeno slovo
+poklapa sa svojim parom točno ondje gdje ih i pretpregled drži jednim slovom.
+
+Pritisnite **Ctrl+H** — ili stavku izbornika **Zamijeni…** — i traka dobiva drugi red:
+zamjenu i dva gumba. **Zamijeni** mijenja pojavljivanje na kojem stojite i korača na
+sljedeće; dok ništa nije nađeno, prvi pritisak samo traži. **Zamijeni sve** prolazi cijeli
+dokument odjednom, a statusna traka kaže koliko se mjesta promijenilo; jedan Ctrl+Z vraća
+cijeli prolaz.
+
+Zamjena je doslovna. Može biti prazna — to briše — i može sadržavati traženi tekst, a da
+prolaz ne uđe u krug: mjesta se odlučuju unaprijed, nad tekstom kakav je bio. Kad se
+pojavljivanja preklapaju, brojač broji svako koje korak može posjetiti, ali prolaz mijenja
+samo ona koja ne dijele slova — pa „zamijenjeno“ može pošteno reći manji broj.
+
+Zamijenjeni dokument prolazi isti put motora kao i otipkani: pretpregled se iscrtava iznova,
+a dijagnostika odgovara o onome što sada stoji.
+
 ## Ploče dolje
 
 Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.

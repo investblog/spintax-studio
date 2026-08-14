@@ -514,6 +514,17 @@ type
   An empty needle matches nothing, which is what a search box holds most of the time. }
 function SpxFindAll(const Text, Needle: string; MatchCase: Boolean): TSpxMatches;
 
+{ Replace-all as ONE text splice, driven by the SAME matcher the counter and the
+  navigation answer with -- that is the design's whole argument: SynEdit's own search
+  folds case by its own rules, and a second matcher would be two rules about one thing.
+  The list is computed once and the original is never rescanned, so a replacement that
+  contains the needle ('a' -> 'aa') cannot loop. Spans go to byte offsets through
+  SpxDocOffset; everything between them is copied verbatim, byte for byte -- the
+  document's own line endings included. ACount reports the number of replacements; an
+  empty needle matches nothing and replaces nothing. }
+function SpxReplaceAllText(const Doc, Needle, AWith: string; MatchCase: Boolean;
+  out ACount: Integer): string;
+
 { Which match to show for "next" / "previous", given where the caret is. Returns an index
   into Matches, or -1 when there are none. Wraps around the ends: a search that stops at the
   bottom of the file makes the user scroll back by hand, which is what the wrap is for.
@@ -1826,6 +1837,34 @@ begin
     Inc(i, cpLen);
   end;
   SetLength(Result, count_);
+end;
+
+function SpxReplaceAllText(const Doc, Needle, AWith: string; MatchCase: Boolean;
+  out ACount: Integer): string;
+var
+  m: TSpxMatches;
+  i, from, a, b: Integer;
+begin
+  ACount := 0;
+  m := SpxFindAll(Doc, Needle, MatchCase);
+  if Length(m) = 0 then Exit(Doc);
+  Result := '';
+  from := 1;
+  for i := 0 to High(m) do
+  begin
+    a := SpxDocOffset(Doc, m[i].Line, m[i].Col);
+    { OVERLAPS ARE STEPPED THROUGH, NOT REPLACED TWICE. The finder deliberately reports
+      them -- two occurrences of a doubled letter in a tripled one -- because a reader
+      stepping wants both; a splice that honoured both would eat bytes the previous
+      replacement already consumed. So the count here can honestly be SMALLER than the
+      bar's counter, and the status line reports replacements, not matches. }
+    if a < from then Continue;
+    b := SpxDocOffset(Doc, m[i].EndLine, m[i].EndCol);
+    Result := Result + Copy(Doc, from, a - from) + AWith;
+    from := b;
+    Inc(ACount);
+  end;
+  Result := Result + Copy(Doc, from, Length(Doc) - from + 1);
 end;
 
 function SpxStepMatch(const Matches: TSpxMatches; Line, Col: Integer;

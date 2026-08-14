@@ -51,6 +51,29 @@ as prose. The switch above the pane changes which one you are looking at.
 Select part of the template and only that part is rendered — in the document's own scope, so a
 fragment that uses a variable defined at the top still renders the way it will in place.
 
+## Find and replace
+
+Press **Ctrl+F** and a search field opens in the header. The counter beside it says how many
+places the text occurs and which one you stand on; **Enter** steps forward, **Shift+Enter**
+steps back, and F3 works straight from the document. Case does not matter until you tick the
+case box beside the field — and the folding is the engine's own, so a Cyrillic or accented
+letter matches its other case exactly where the preview would call them one letter.
+
+Press **Ctrl+H** — or the **Replace…** menu item — and the bar grows a second row: the
+replacement and two buttons. **Replace** changes the occurrence you stand on and steps to the
+next; while nothing is found yet, the first press only finds. **Replace all** sweeps the whole
+document at once and the status bar says how many places changed; one Ctrl+Z takes the whole
+sweep back.
+
+The replacement is literal. It may be empty — that deletes — and it may contain the text you
+searched for without sending the sweep in circles: the places to change are decided first, on
+the text as it was. When occurrences overlap, the counter counts every one a step can visit,
+but a sweep can only change those that do not share letters — so "replaced" may honestly
+report a smaller number than the counter.
+
+A replaced document goes through the same engine pass as typed text: the preview redraws, and
+the diagnostics answer about what is now there.
+
 ## The panels along the bottom
 
 The strip of tools down the side opens four panels, one at a time.

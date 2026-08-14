@@ -51,6 +51,29 @@ prosa. L'interruttore sopra la metà cambia ciò che state guardando.
 Selezionate una parte del modello e solo quella viene resa — nell'ambito dell'intero documento,
 così che un frammento che usa una variabile definita in alto esca come uscirà al suo posto.
 
+## Trova e sostituisci
+
+**Ctrl+F** apre un campo di ricerca nell'intestazione. Il contatore accanto dice quante volte
+il testo compare e su quale occorrenza vi trovate; **Invio** avanza, **Maiusc+Invio** torna
+indietro, F3 funziona direttamente dal documento. Le maiuscole contano solo con la casella
+accanto al campo — e la piegatura è quella del motore, così una lettera cirillica o accentata
+coincide con l'altra sua forma esattamente dove l'anteprima le considera una sola lettera.
+
+**Ctrl+H** — o la voce di menu **Sostituisci…** — dà alla barra una seconda riga: la
+sostituzione e due pulsanti. **Sostituisci** cambia l'occorrenza su cui vi trovate e passa
+alla successiva; finché non c'è nulla di trovato, la prima pressione cerca soltanto.
+**Sostituisci tutto** percorre l'intero documento in una volta, e la barra di stato dice
+quanti punti sono cambiati; un solo Ctrl+Z riprende l'intero passaggio.
+
+La sostituzione è letterale. Può essere vuota — questo cancella — e può contenere il testo
+cercato senza mandare il passaggio in circolo: i punti si decidono prima, sul testo com'era.
+Quando le occorrenze si sovrappongono, il contatore conta ognuna che un passo può visitare,
+ma il passaggio cambia solo quelle che non condividono lettere — «sostituiti» può quindi
+onestamente dire un numero minore.
+
+Un documento sostituito passa per lo stesso motore del testo digitato: l'anteprima si
+ridisegna e la diagnostica risponde su ciò che c'è ora.
+
 ## I pannelli in basso
 
 La barra degli strumenti di lato apre quattro pannelli, uno per volta.

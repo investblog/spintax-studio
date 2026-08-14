@@ -52,6 +52,29 @@ Seleccione una parte de la plantilla y solo esa parte se renderiza —en el ámb
 entero, de modo que un fragmento que usa una variable definida arriba sale como saldrá en su
 sitio.
 
+## Buscar y reemplazar
+
+**Ctrl+F** abre un campo de búsqueda en la cabecera. El contador de al lado dice cuántas
+veces aparece el texto y en qué aparición está usted; **Intro** avanza, **Mayús+Intro**
+retrocede, F3 funciona desde el documento. Las mayúsculas no cuentan hasta marcar la casilla
+junto al campo — y el plegado es el del motor, de modo que una letra cirílica o acentuada
+coincide con su otra caja exactamente donde la vista previa las considera una misma letra.
+
+**Ctrl+H** — o el elemento de menú **Reemplazar…** — añade a la barra una segunda fila: el
+reemplazo y dos botones. **Reemplazar** cambia la aparición en la que está y pasa a la
+siguiente; mientras no haya nada encontrado, la primera pulsación solo busca. **Reemplazar
+todo** recorre el documento entero de una vez, y la barra de estado dice cuántos lugares
+cambiaron; un solo Ctrl+Z deshace el recorrido completo.
+
+El reemplazo es literal. Puede estar vacío — eso borra — y puede contener el texto buscado
+sin meter el recorrido en un círculo: los lugares se deciden antes, sobre el texto tal como
+estaba. Cuando las apariciones se solapan, el contador cuenta cada una que un paso puede
+visitar, pero el recorrido solo cambia las que no comparten letras — «reemplazados» puede
+decir honestamente un número menor.
+
+Un documento reemplazado pasa por el mismo motor que el texto escrito: la vista previa se
+redibuja y el diagnóstico responde sobre lo que hay ahora.
+
 ## Los paneles de abajo
 
 La barra de herramientas del lateral abre cuatro paneles, uno cada vez.

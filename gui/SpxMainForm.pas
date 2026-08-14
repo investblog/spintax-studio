@@ -196,6 +196,11 @@ type
     FFindPrev: TSpeedButton;
     FFindNext: TSpeedButton;
     FFindClose: TSpeedButton;
+    { ── replace: the bar's second row (UX-plan item 8, designed 2026-08-14) ── }
+    FReplaceText: TEdit;
+    FReplaceOne: TButton;
+    FReplaceAll: TButton;
+    FReplaceOpen: Boolean;
     { Visible only when the bar is NOT, in the place the field takes when it is. }
     FFindOpen: TSpeedButton;
     FMatches: TSpxMatches;
@@ -376,6 +381,15 @@ type
     procedure SetStatusText(const AText: string);
     procedure ShowFindBar;
     procedure HideFindBar;
+    procedure ShowReplaceBar;
+    procedure ReplaceMenuClicked(Sender: TObject);
+    procedure ReplaceKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure ReplaceOneClicked(Sender: TObject);
+    procedure ReplaceAllClicked(Sender: TObject);
+    { The after-effects every wholesale edit owes this window (AiReplace's list, measured:
+      SelText does not reach EditorChanged): the closer line, the loop's revision, the
+      render, and the match list. }
+    procedure AfterReplaceEdit;
     procedure FindTextChanged(Sender: TObject);
     procedure FindNextClicked(Sender: TObject);
     procedure FindPrevClicked(Sender: TObject);
@@ -1287,6 +1301,27 @@ begin
   FFindClose.ShowHint := True;
   FFindClose.Visible := False;
   FFindClose.OnClick := @FindCloseClicked;
+
+  { ── the replace row (UX-plan item 8): built hidden, opened by Ctrl+H. The field is a
+     TEdit like the search box above it -- which is also what keeps the needle single-line,
+     and with it every match. Captions and the cue arrive in Retranslate. ── }
+  FReplaceText := TEdit.Create(Self);
+  FReplaceText.Parent := FTop;
+  FReplaceText.Visible := False;
+  FReplaceText.TextHint := Tr(sReplaceWith);
+  FReplaceText.OnKeyDown := @ReplaceKeyDown;
+
+  FReplaceOne := TButton.Create(Self);
+  FReplaceOne.Parent := FTop;
+  FReplaceOne.Visible := False;
+  FReplaceOne.Caption := Tr(sReplaceOne);
+  FReplaceOne.OnClick := @ReplaceOneClicked;
+
+  FReplaceAll := TButton.Create(Self);
+  FReplaceAll.Parent := FTop;
+  FReplaceAll.Visible := False;
+  FReplaceAll.Caption := Tr(sReplaceAll);
+  FReplaceAll.OnClick := @ReplaceAllClicked;
 end;
 
 { THE TOP STRIP, laid out from both edges.
@@ -1394,8 +1429,9 @@ begin
 end;
 
 procedure TSpxMainForm.LayoutTopStrip;
-var right_, leftEnd, x, y, fieldW, fixed, editorEnd: Integer;
-  helpMode: Boolean;
+var right_, leftEnd, x, y, fieldW, fixed, editorEnd, w1, w2, targetH: Integer;
+  helpMode, showRep: Boolean;
+  bmp: TBitmap;
 
   procedure PlaceRight(C: TControl; W, H, Y: Integer);
   begin
@@ -1586,6 +1622,18 @@ begin
       FFindOpen.SetBounds(Px(Self, 8), Px(Self, 6), Px(Self, 30), Px(Self, 26));
   end;
 
+  { The replace row exists only under an OPEN bar and never over the help -- the bar up
+    there searches the page, and the page is read-only. Decided here, from the truth, like
+    the block and the rail. }
+  showRep := FReplaceOpen and FFindText.Visible and (not helpMode) and
+             (FReplaceText <> nil);
+  if FReplaceText <> nil then
+  begin
+    FReplaceText.Visible := showRep;
+    FReplaceOne.Visible := showRep;
+    FReplaceAll.Visible := showRep;
+  end;
+
   if not FFindText.Visible then
   begin
     FTop.Height := Px(Self, 38);
@@ -1608,7 +1656,7 @@ begin
   begin
     y := Px(Self, 0);
     fieldW := leftEnd - x - fixed;
-    FTop.Height := Px(Self, 38);
+    targetH := Px(Self, 38);
   end
   else
   begin
@@ -1619,7 +1667,7 @@ begin
     if (editorEnd > 0) and (editorEnd < fieldW) then fieldW := editorEnd;
     fieldW := fieldW - x - fixed;
     if fieldW < Px(Self, 90) then fieldW := Px(Self, 90);
-    FTop.Height := Px(Self, 70);
+    targetH := Px(Self, 70);
   end;
 
   if helpMode then
@@ -1641,6 +1689,34 @@ begin
   FFindCount.SetBounds(x, y + Px(Self, 11), Px(Self, 110), Px(Self, 16));
   Inc(x, Px(Self, 118));
   FFindClose.SetBounds(x, y + Px(Self, 6), Px(Self, 30), Px(Self, 26));
+
+  { ── the replace row, directly under the search row (UX-plan item 8). The field starts
+     where the search field starts and takes its width, so the pair reads as a pair; the
+     two buttons are measured offscreen like every caption-sized control here. The strip
+     grows by one more row: 38->70, or 70->102 when search itself already wrapped. ── }
+  if showRep then
+  begin
+    bmp := TBitmap.Create;
+    try
+      bmp.Canvas.Font.Assign(Font);
+      w1 := bmp.Canvas.TextWidth(FReplaceOne.Caption) + Px(Self, 24);
+      w2 := bmp.Canvas.TextWidth(FReplaceAll.Caption) + Px(Self, 24);
+    finally
+      bmp.Free;
+    end;
+    Inc(y, Px(Self, 32));
+    FReplaceText.SetBounds(FFindText.Left, y + Px(Self, 7), FFindText.Width, Px(Self, 24));
+    x := FFindText.Left + FFindText.Width + Px(Self, 8);
+    FReplaceOne.SetBounds(x, y + Px(Self, 6), w1, Px(Self, 26));
+    Inc(x, w1 + Px(Self, 6));
+    FReplaceAll.SetBounds(x, y + Px(Self, 6), w2, Px(Self, 26));
+    Inc(targetH, Px(Self, 32));
+  end;
+  { ONE assignment, at the end. OnResize calls this routine synchronously, so a height
+    written in a branch and grown afterwards oscillated 38<->70 through nested passes --
+    a reentrant pass must find the height it would compute already in place and stop
+    (found by Codex review). }
+  FTop.Height := targetH;
 end;
 
 procedure TSpxMainForm.ShowFindBar;
@@ -1655,6 +1731,9 @@ begin
   if (not HelpShowing) and (FEditor.SelAvail) and
      (Pos(LineEnding, FEditor.SelText) = 0) then
     FFindText.Text := FEditor.SelText;
+  { Ctrl+F narrows an open replace bar back to search alone -- ShowReplaceBar re-raises
+    the flag after calling through here. }
+  FReplaceOpen := False;
   FFindText.Visible := True;
   FFindPrev.Visible := True;
   FFindNext.Visible := True;
@@ -1672,6 +1751,7 @@ end;
 
 procedure TSpxMainForm.HideFindBar;
 begin
+  FReplaceOpen := False;
   FFindText.Visible := False;
   FFindPrev.Visible := False;
   FFindNext.Visible := False;
@@ -1860,6 +1940,128 @@ end;
 procedure TSpxMainForm.FindMenuClicked(Sender: TObject);
 begin
   ShowFindBar;
+end;
+
+procedure TSpxMainForm.ShowReplaceBar;
+begin
+  { The visible-result rule, the same one the group editor and the panels obey: asked for
+    over the help, replace closes it and opens over the document -- the bar up there
+    searches a read-only page, and a menu action must do something the eye can see. }
+  if HelpShowing then HelpPaneClosed(nil);
+  ShowFindBar;
+  FReplaceOpen := True;
+  LayoutTopStrip;
+  { With a needle already in the box the hand wants the replacement next; without one,
+    the search field keeps the focus ShowFindBar gave it. }
+  if (FFindText.Text <> '') and FReplaceText.CanSetFocus then
+  begin
+    FReplaceText.SetFocus;
+    FReplaceText.SelectAll;
+  end;
+end;
+
+procedure TSpxMainForm.ReplaceMenuClicked(Sender: TObject);
+begin
+  ShowReplaceBar;
+end;
+
+procedure TSpxMainForm.ReplaceKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    VK_RETURN:
+      begin
+        ReplaceOneClicked(nil);
+        Key := 0;
+      end;
+    VK_ESCAPE:
+      begin
+        { The row never exists over the help, so Escape means only one thing here. }
+        HideFindBar;
+        Key := 0;
+      end;
+  end;
+end;
+
+procedure TSpxMainForm.AfterReplaceEdit;
+begin
+  { AiReplace's measured list: a wholesale SelText does not reach EditorChanged, so what
+    that path would have done is owed here by hand -- the closer line for the
+    highlighter, the loop's revision, the render. Plus the match list, which now
+    describes a text that no longer exists. NOT UpdateCaption: the title's asterisk is
+    driven off the editor's own modified state and was photographed appearing after the
+    sweep and leaving after the undo -- adding a call here would be fixing what a
+    measurement already cleared (Codex raised it; the photograph answers it). }
+  if FHighlighter <> nil then
+    FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
+  { A generated variants set belongs to the text that produced it -- EditorChanged marks
+    it stale on every keystroke, and the wholesale path must too (Codex). }
+  if FSet <> nil then FSet.MarkStale;
+  LoopSnapshotMoved;
+  { ONE owner for the render. The partial-replace path goes through the ordinary SelText,
+    which DOES start the debounce -- left running, it would fire a second render ~200 ms
+    after this one and visibly redraw a different unseeded variant (Codex). Cancelling is
+    a no-op on the wholesale path, where the debounce never started. }
+  FDebounce.Enabled := False;
+  RequestRender;
+  RefreshMatches;
+end;
+
+{ FIRST FIND, THEN REPLACE -- the classic pair: a press with the current match selected
+  replaces it and steps on; any other press only steps. "The current match" is answered by
+  the SAME matcher as everything else: the selection must be one whole occurrence of the
+  needle, checked with SpxFindAll over the selection itself -- never by comparing strings
+  under some second folding rule. }
+procedure TSpxMainForm.ReplaceOneClicked(Sender: TObject);
+var
+  sel: string;
+  m: TSpxMatches;
+begin
+  if HelpShowing or (not FFindText.Visible) or (FFindText.Text = '') then Exit;
+  sel := FEditor.SelText;
+  if sel <> '' then
+  begin
+    m := SpxFindAll(sel, FFindText.Text, FFindCase.Checked);
+    if (Length(m) = 1) and
+       (SpxDocOffset(sel, m[0].Line, m[0].Col) = 1) and
+       (SpxDocOffset(sel, m[0].EndLine, m[0].EndCol) = Length(sel) + 1) then
+    begin
+      FEditor.SelText := FReplaceText.Text;
+      AfterReplaceEdit;
+      StepToMatch(False);
+      Exit;
+    end;
+  end;
+  StepToMatch(False);
+end;
+
+procedure TSpxMainForm.ReplaceAllClicked(Sender: TObject);
+var
+  doc: string;
+  n: Integer;
+begin
+  if HelpShowing or (FFindText.Text = '') then Exit;
+  doc := SpxReplaceAllText(FEditor.Text, FFindText.Text, FReplaceText.Text,
+                           FFindCase.Checked, n);
+  if n > 0 then
+  begin
+    { ONE undo step for the whole sweep -- the group editor's precedent. BeginUpdate is
+      paint, BeginUndoBlock is history; both close in finally. }
+    FEditor.BeginUpdate;
+    FEditor.BeginUndoBlock;
+    try
+      FEditor.SelectAll;
+      FEditor.SelText := doc;
+    finally
+      FEditor.EndUndoBlock;
+      FEditor.EndUpdate;
+    end;
+    AfterReplaceEdit;
+  end
+  else
+    RefreshMatches;
+  { REPLACEMENTS, not matches: the counter can honestly say more when occurrences overlap,
+    and the sentence must not repeat its number. }
+  SetStatusText(Format(Tr(sReplacedCount), [n]));
 end;
 
 procedure TSpxMainForm.FindKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -2307,6 +2509,7 @@ begin
   { The same three glyphs the find bar wears, so the menu and the bar name one action with one
     picture rather than teaching it twice. }
   IconItem(editMenu, Tr(sMenuFind), Ord('F'), [ssCtrl], @FindMenuClicked, SPX_ICON_SEARCH);
+  Item(editMenu, Tr(sMenuReplace), Ord('H'), [ssCtrl], @ReplaceMenuClicked);
   IconItem(editMenu, Tr(sMenuFindNext), VK_F3, [], @FindNextClicked, SPX_ICON_NEXT);
   IconItem(editMenu, Tr(sMenuFindPrev), VK_F3, [ssShift], @FindPrevClicked, SPX_ICON_PREV);
   Item(editMenu, '-', 0, [], nil);
@@ -3663,6 +3866,14 @@ begin
   FModes.SetCaption(0, Tr(sViewPage));
   FModes.SetCaption(1, Tr(sViewSource));
   FFindCase.Caption := Tr(sFindCase);
+  { The replace row: the buttons' captions size them (LayoutTopStrip measures), and the
+    field says what it is for through its cue banner -- the key field's pattern. }
+  if FReplaceText <> nil then
+  begin
+    FReplaceText.TextHint := Tr(sReplaceWith);
+    FReplaceOne.Caption := Tr(sReplaceOne);
+    FReplaceAll.Caption := Tr(sReplaceAll);
+  end;
   { THE FIND BAR'S FOUR BUTTONS CARRY NO CAPTION AT ALL NOW -- they are icons, so the tooltip
     is the only text on them and the only thing a language can change. Missing them left the
     bar in the language it was built in while the rest of the window switched, which is
@@ -4853,6 +5064,11 @@ begin
   { A wholesale change does not reach EditorChanged (measured, twice -- see the charter). }
   if FHighlighter <> nil then
     FHighlighter.SetCloserLine(SpxLastCloserLine(FEditor.Lines));
+  { The same gap the replace slice's review found in ITS wholesale path, latent here since
+    R1-4: EditorChanged marks a generated variants set stale on every keystroke, and a
+    draft that replaces the whole document must too -- or an existing set goes on
+    presenting itself as a set of THIS text. }
+  if FSet <> nil then FSet.MarkStale;
   { And so the loop is told here too: the pane's Replace button stays usable while an op
     flies, and without this the op's clean result would keep the old revision and overwrite
     the manual replacement at the final check. Found by Codex review. }
