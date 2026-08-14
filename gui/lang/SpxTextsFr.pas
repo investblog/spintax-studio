@@ -202,7 +202,17 @@ const
       'remplacer par',
       'Remplacer',
       'Tout remplacer',
-      'Remplacés : %d'
+      'Remplacés : %d',
+
+      'Insertion',
+      'Entourer de /#…#/',
+      '#set %nom% = valeur',
+      '#def %nom% = {a|b}',
+      '#include "nom"',
+      '{?nom?alors|sinon}',
+      'Non entouré : un #/ dans la sélection ou autour d''elle terminerait le commentaire trop tôt.',
+      'Non entouré : un | isolé, une parenthèse déséquilibrée ou un commentaire ouvert changerait le sens de la condition.',
+      'Non inséré : le curseur coupe une marque de commentaire en deux.'
   );
 
 implementation

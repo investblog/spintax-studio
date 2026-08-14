@@ -419,6 +419,101 @@ function SpxPreviewSame(const A, B: TSpxPreviewAsk): Boolean;
 function SpxWrapRange(const Sel: TSpxSelection; LeftLen, RightLen: Integer;
   out NewRange: TSpxRange): Boolean;
 
+{ ── the Insert menu's arithmetic ─────────────────────────────────────────── }
+
+{ Whether a comment stands OPEN after S, by the engine's own scan: outside a comment `/#`
+  opens one, inside it the first `#/` closes it and a further `/#` is inert (comments do
+  not nest), and the closer search starts AFTER the opener -- so `/#/` is open, not a pair
+  (measured: `a /#/x#/ b` renders `A b`). A stray `#/` with nothing open is plain text and
+  changes nothing. }
+function SpxCommentOpen(const S: string): Boolean;
+
+{ Whether an edit landing between A's end and B's start would cut an existing comment mark
+  in half -- the document had `/#` or `#/` there as CONTIGUOUS characters, and anything
+  inserted between them destroys the token. Measured: the caret parked between the `/` and
+  `#` of `A /# x #/ B` (renders `A  B`) and the bare pair inserted there gives
+  `A //#  #/# x #/ B`, which renders `A /# x #/ B` -- the commented text comes back to
+  life, marks and all. Found by review, round two: three part-wise scans cannot see a token
+  that none of the parts contains whole. }
+function SpxSplitsCommentMark(const A, B: string): Boolean;
+
+{ Whether the selection may be wrapped in /# #/ and everything AROUND it keep its meaning.
+  The engine is SILENT about every way this fails -- the one recorded exception to "ask the
+  engine" -- and a review found the ways the first, selection-only guard missed, each then
+  reproduced on the engine before being believed:
+
+    * a `#/` inside the selection escapes the wrap (`/#'a#/b'#/` frees `b`);
+    * a wrap INSIDE an open comment donates its closer to it -- `A /# x y #/ B` rendered
+      `A B` and, with `x` wrapped, `A y #/ B`: the tail broke loose;
+    * a selection whose `/#` was paired with a `#/` BEYOND it widows that closer --
+      `A x /# y z #/ B` rendered `A x B` and, with `x /# y` wrapped, `A z #/ B`.
+
+  So all three strings speak: Prefix is the document before the selection, Suffix after it,
+  and the three must be the continuous document -- a boundary that cuts a `/#` or `#/` in
+  half is refused outright (SpxSplitsCommentMark). A selection with an UNTERMINATED `/#`
+  and no closer beyond is still allowed -- since the engine's v0.5.0 that opener was plain
+  text, and commenting it out is exactly what the user asked for. Note the prefix scan is
+  deliberately NAIVE about a dead opener there: the wrap ADDS a closer, which would bring
+  a dead prefix opener to life and let it swallow the text between them -- so "open by the
+  naive scan" is exactly the right refusal. An empty selection inserts the bare pair, so
+  the same call guards it. }
+function SpxWrapCommentAllowed(const Prefix, Sel, Suffix: string): Boolean;
+
+(* Whether a selection may become the THEN branch of a condition without changing what the
+   condition says. Refused: a `|` outside any braces or brackets (adds a branch); an
+   unbalanced brace or bracket (swallows the condition's frame); a boundary cutting a
+   comment mark in half; and comment state -- a wrap inside an open comment (Prefix) or a
+   selection whose comment closes beyond it hands half the frame to the comment strip,
+   measured: `A /# x y #/ z B` rendered `A z B` and, with `y #/ z` wrapped, `A z|else} B`.
+
+   Comment state here is the ENGINE's, not the naive scan: this wrap adds no closer, so a
+   `/#` is a comment only if a `#/` follows somewhere in the continuous text, and
+   otherwise it is plain text (the engine's v0.5.0 rule) -- wrapping `y /# z` with no
+   closer beyond is safe and allowed, measured: with the macro set, the branch renders
+   `y /# z` intact. That cuts BOTH ways: a bar after a dead opener is LIVE and still
+   refuses, while text inside a COMPLETE comment within the selection is stripped before
+   the engine parses anything, so its bars and brackets do not count. Both bracket kinds
+   count elsewhere, independently: `[a|b]` carries its own separator and is a legal
+   branch, while a selection that interleaves the two kinds is already broken in the
+   document and the render's verdict owns that. *)
+function SpxCondThenAllowed(const Prefix, Sel, Suffix: string): Boolean;
+
+{ The placeholder to select inside an Insert-menu template: between the FIRST pair of
+  AMark characters (`%` for #set/#def, `"` for #include). Byte offsets, 1-based, because
+  the placeholder word is localized and may be Cyrillic. False when the pair is not there
+  or holds nothing -- the caller then inserts nothing rather than something unselectable,
+  so a broken translation fails loudly in the pinned shape checks instead of silently in a
+  user's document. }
+function SpxTemplatePlaceholder(const T: string; AMark: Char;
+  out PhStart, PhLen: Integer): Boolean;
+
+(* A condition template `{?name?then|else}` taken apart: Prefix is up to and including the
+   `?` that ends the name, Suffix is from the `|` before the else-branch to the end, and
+   PhStart/PhLen select the name (bytes, 1-based). A selection wraps as
+   Prefix + selection + Suffix; without one the whole template goes in. False on any shape
+   this cannot be read from -- same contract as the placeholder above. *)
+function SpxCondParts(const T: string; out Prefix, Suffix: string;
+  out PhStart, PhLen: Integer): Boolean;
+
+type
+  { Where an inserted line-directive goes, relative to the caret. }
+  TSpxInsertPlan = record
+    Text: string;          { hand this to the editor at the caret }
+    BreakBefore: Boolean;  { the directive went to the line below the caret }
+    PhStart: Integer;      { 1-based byte offset of the placeholder WITHIN the directive }
+    PhLen: Integer;        { its byte length }
+  end;
+
+{ Placement for #set / #def / #include: the directive must be FIRST on its line -- spaces
+  and tabs before it are allowed, anything else is not (the help's measured fact; a
+  mid-line directive is silently plain text). So: text before the caret that is more than
+  blanks pushes the directive onto a new line, and ANY text after the caret pushes a line
+  break behind it -- trailing text would otherwise join the directive's own line and
+  become part of its value. False on an empty or multi-line directive, or placeholder
+  bounds outside it. }
+function SpxDirectivePlan(const BeforeCaret, AfterCaret, Directive: string;
+  PhStart, PhLen: Integer; out Plan: TSpxInsertPlan): Boolean;
+
 { ── what the page view may be handed (ADR 0004, revised) ─────────────────── }
 
 { Whether output would show as an empty pane. Not `Trim(S) = ''`: the RTL trims bytes up to
@@ -1618,6 +1713,205 @@ begin
     Inc(NewRange.B.Col, LeftLen + RightLen)
   else
     Inc(NewRange.B.Col, RightLen);
+  Result := True;
+end;
+
+{ ── the Insert menu's arithmetic ─────────────────────────────────────────── }
+
+function SpxCommentOpen(const S: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  i := 1;
+  while i < Length(S) do
+  begin
+    if not Result and (S[i] = '/') and (S[i + 1] = '#') then
+    begin
+      Result := True;
+      Inc(i, 2);
+    end
+    else if Result and (S[i] = '#') and (S[i + 1] = '/') then
+    begin
+      Result := False;
+      Inc(i, 2);
+    end
+    else
+      Inc(i);
+  end;
+end;
+
+function SpxSplitsCommentMark(const A, B: string): Boolean;
+var
+  la, fb: Char;
+begin
+  Result := False;
+  if (A = '') or (B = '') then Exit;
+  la := A[Length(A)];
+  fb := B[1];
+  Result := ((la = '/') and (fb = '#')) or ((la = '#') and (fb = '/'));
+end;
+
+function SpxWrapCommentAllowed(const Prefix, Sel, Suffix: string): Boolean;
+begin
+  Result := False;
+  { An edit boundary through the middle of an existing mark destroys that mark, whatever
+    else the scans say -- and the parts no longer add up to the document the scans assume. }
+  if Sel = '' then
+  begin
+    if SpxSplitsCommentMark(Prefix, Suffix) then Exit;
+  end
+  else if SpxSplitsCommentMark(Prefix, Sel) or SpxSplitsCommentMark(Sel, Suffix) then
+    Exit;
+  { Inside an open comment the wrap's own closer would close IT and free the tail -- and a
+    DEAD opener in the prefix is open too, here: the wrap adds the closer that would bring
+    it to life. }
+  if SpxCommentOpen(Prefix) then Exit;
+  { A closer inside the selection escapes the wrap. }
+  if Pos('#/', Sel) > 0 then Exit;
+  { A selection that leaves a comment open (its `#/` is banned above, so any `/#` does)
+    widows the closer beyond it, if there is one -- and if there is none, that opener was
+    plain text and commenting it out is the request. }
+  if SpxCommentOpen(Sel) and (Pos('#/', Suffix) > 0) then Exit;
+  Result := True;
+end;
+
+function SpxCondThenAllowed(const Prefix, Sel, Suffix: string): Boolean;
+var
+  i, j, braces, brackets: Integer;
+
+  { The first `#/` in Sel at or after position From, 0 when there is none. }
+  function CloserFrom(From: Integer): Integer;
+  var
+    k: Integer;
+  begin
+    Result := 0;
+    for k := From to Length(Sel) - 1 do
+      if (Sel[k] = '#') and (Sel[k + 1] = '/') then Exit(k);
+  end;
+
+begin
+  Result := False;
+  { The same empty-selection shape as the comment wrap: with nothing selected the two
+    boundaries are one, and the pair to inspect is prefix against suffix. }
+  if Sel = '' then
+  begin
+    if SpxSplitsCommentMark(Prefix, Suffix) then Exit;
+  end
+  else if SpxSplitsCommentMark(Prefix, Sel) or SpxSplitsCommentMark(Sel, Suffix) then
+    Exit;
+  { A comment open across the selection's start hands the frame to the strip -- but only a
+    REAL one: a prefix opener with no closer anywhere later is plain text (v0.5.0). }
+  if SpxCommentOpen(Prefix) and ((Pos('#/', Sel) > 0) or (Pos('#/', Suffix) > 0)) then
+    Exit;
+  braces := 0;
+  brackets := 0;
+  i := 1;
+  while i <= Length(Sel) do
+  begin
+    if (i < Length(Sel)) and (Sel[i] = '/') and (Sel[i + 1] = '#') then
+    begin
+      { An opener is a comment only as far as its closer. Closed inside the selection: the
+        content is stripped before the engine parses, so nothing in it counts. Closed
+        beyond the selection: the wrap's frame would be swallowed -- refuse. No closer
+        anywhere: plain text, and what follows it stays LIVE. }
+      j := CloserFrom(i + 2);
+      if j > 0 then
+      begin
+        i := j + 2;
+        Continue;
+      end;
+      if Pos('#/', Suffix) > 0 then Exit;
+      Inc(i, 2);
+      Continue;
+    end;
+    case Sel[i] of
+      '{': Inc(braces);
+      '}': begin
+             Dec(braces);
+             if braces < 0 then Exit;
+           end;
+      '[': Inc(brackets);
+      ']': begin
+             Dec(brackets);
+             if brackets < 0 then Exit;
+           end;
+      '|': if (braces = 0) and (brackets = 0) then Exit;
+    end;
+    Inc(i);
+  end;
+  Result := (braces = 0) and (brackets = 0);
+end;
+
+function SpxTemplatePlaceholder(const T: string; AMark: Char;
+  out PhStart, PhLen: Integer): Boolean;
+var
+  i, j: Integer;
+begin
+  Result := False;
+  PhStart := 0;
+  PhLen := 0;
+  i := Pos(AMark, T);
+  if i = 0 then Exit;
+  j := i + 1;
+  while (j <= Length(T)) and (T[j] <> AMark) do Inc(j);
+  if (j > Length(T)) or (j = i + 1) then Exit;
+  PhStart := i + 1;
+  PhLen := j - i - 1;
+  Result := True;
+end;
+
+function SpxCondParts(const T: string; out Prefix, Suffix: string;
+  out PhStart, PhLen: Integer): Boolean;
+var
+  q, p: Integer;
+begin
+  Result := False;
+  Prefix := '';
+  Suffix := '';
+  PhStart := 0;
+  PhLen := 0;
+  if (Length(T) < 7) or (T[1] <> '{') or (T[2] <> '?') or (T[Length(T)] <> '}') then Exit;
+  q := 3;
+  while (q <= Length(T)) and (T[q] <> '?') do Inc(q);
+  if (q > Length(T)) or (q = 3) then Exit;
+  p := q + 1;
+  while (p <= Length(T)) and (T[p] <> '|') do Inc(p);
+  if p > Length(T) then Exit;
+  Prefix := Copy(T, 1, q);
+  Suffix := Copy(T, p, Length(T) - p + 1);
+  PhStart := 3;
+  PhLen := q - 3;
+  Result := True;
+end;
+
+function SpxDirectivePlan(const BeforeCaret, AfterCaret, Directive: string;
+  PhStart, PhLen: Integer; out Plan: TSpxInsertPlan): Boolean;
+var
+  i: Integer;
+  blank: Boolean;
+begin
+  Plan.Text := '';
+  Plan.BreakBefore := False;
+  Plan.PhStart := 0;
+  Plan.PhLen := 0;
+  Result := False;
+  if Directive = '' then Exit;
+  if (Pos(#10, Directive) > 0) or (Pos(#13, Directive) > 0) then Exit;
+  if (PhStart < 1) or (PhLen < 1) or (PhStart + PhLen - 1 > Length(Directive)) then Exit;
+  blank := True;
+  for i := 1 to Length(BeforeCaret) do
+    if not (BeforeCaret[i] in [' ', #9]) then
+    begin
+      blank := False;
+      Break;
+    end;
+  Plan.BreakBefore := not blank;
+  Plan.Text := Directive;
+  if Plan.BreakBefore then Plan.Text := LineEnding + Plan.Text;
+  if AfterCaret <> '' then Plan.Text := Plan.Text + LineEnding;
+  Plan.PhStart := PhStart;
+  Plan.PhLen := PhLen;
   Result := True;
 end;
 

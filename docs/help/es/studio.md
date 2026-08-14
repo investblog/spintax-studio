@@ -75,6 +75,31 @@ decir honestamente un número menor.
 Un documento reemplazado pasa por el mismo motor que el texto escrito: la vista previa se
 redibuja y el diagnóstico responde sobre lo que hay ahora.
 
+## Insertar las marcas
+
+Todo lo que pone en el documento las marcas del propio lenguaje está en el menú **Insertar**.
+
+Los tres comandos de envoltura toman la selección tal cual: **Envolver en {…}** la convierte en una
+elección, **Envolver en […]** en una baraja, **Envolver en /#…#/** (Ctrl+/) en un comentario. La envoltura en comentario rechaza cuando un `#/` dentro o alrededor de la selección — o un
+comentario ya abierto en ese punto — terminaría un comentario antes de tiempo: el primer cierre
+gana esté donde esté, parte del texto quedaría fuera; la barra de estado lo dice, porque el
+motor calla. Sin selección, Ctrl+/ inserta el par y deja el cursor dentro.
+
+Las construcciones de abajo caen exactamente como el menú las lee. **#set %nombre% = valor**, **#def %nombre% = {a|b}** y **#include "nombre"**
+toman una línea propia — una directiva solo cuenta cuando abre su línea, así que el texto
+antes del cursor queda arriba y el de después baja — y el nombre queda seleccionado, listo
+para escribir encima. Mantenga los nombres en letras latinas: un nombre en otro alfabeto,
+silenciosamente, no es un nombre. El destino de `#include` es la excepción — se compara con
+los nombres de sus fragmentos exactamente como está escrito.
+
+**{?nombre?entonces|si no}** va dentro de la línea. Con una selección, el texto seleccionado se vuelve la mitad
+«entonces» — una forma de hacer condicional lo ya escrito; sin selección se inserta la forma
+entera. Una selección con una `|` suelta, un corchete sin cerrar o un comentario abierto se rechaza: la
+envoltura cambiaría lo que dice en vez de enmarcarlo.
+
+El último elemento pone en el documento el ejemplo abierto en la ayuda — el botón del propio
+panel de ayuda, hecho alcanzable desde el teclado.
+
 ## Los paneles de abajo
 
 La barra de herramientas del lateral abre cuatro paneles, uno cada vez.

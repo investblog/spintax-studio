@@ -80,6 +80,31 @@ darum ehrlich eine kleinere Zahl nennen.
 Ein ersetztes Dokument nimmt denselben Weg durch die Maschine wie getipptes: die Vorschau
 wird neu gezeichnet, und die Diagnose antwortet über das, was jetzt dasteht.
 
+## Die Markierungen einfügen
+
+Alles, was die Markierungen dieser Sprache ins Dokument setzt, sammelt das Menü **Einfügen**.
+
+Die drei Einfass-Befehle nehmen die Auswahl, wie sie steht: **In {…} einfassen** macht sie zur Auswahl,
+**In […] einfassen** zum Mischen, **In /#…#/ einfassen** (Strg+/) zum Kommentar. Das Einfassen in einen Kommentar lehnt ab, wenn ein `#/` in oder um die Auswahl — oder ein an
+dieser Stelle bereits offener Kommentar — einen Kommentar zu früh beenden würde: das erste
+Schlusszeichen gewinnt, wo immer es steht, Text fiele heraus; die Statusleiste sagt es, weil die
+Maschine schweigt. Ohne Auswahl fügt Strg+/ das Paar ein und lässt die Schreibmarke
+darin stehen.
+
+Die Konstrukte darunter landen genau so, wie das Menü sie liest. **#set %name% = Wert**, **#def %name% = {a|b}** und **#include "name"**
+nehmen eine eigene Zeile — eine Direktive zählt nur, wenn sie ihre Zeile beginnt, Text vor
+der Schreibmarke bleibt also oben und Text danach rückt nach unten — und der Name ist danach
+ausgewählt, bereit zum Überschreiben. Namen bleiben in lateinischen Buchstaben: ein Name in
+einem anderen Alphabet ist stillschweigend keiner. Die Ausnahme ist das Ziel von `#include` —
+es wird buchstabengetreu mit den Fragmentnamen verglichen.
+
+**{?name?dann|sonst}** steht in der Zeile selbst. Mit Auswahl wird der ausgewählte Text zur „dann“-Hälfte —
+so wird bereits Geschriebenes bedingt; ohne Auswahl geht die ganze Form hinein. Eine Auswahl mit einem nackten `|`, einer unausgeglichenen Klammer oder einem offenen Kommentar
+wird abgelehnt: das Einfassen würde den Sinn ändern statt ihn zu rahmen.
+
+Der letzte Punkt setzt das in der Hilfe geöffnete Beispiel ins Dokument — die Schaltfläche
+der Hilfe selbst, von der Tastatur aus erreichbar gemacht.
+
 ## Die Tafeln am unteren Rand
 
 Die Werkzeugleiste an der Seite öffnet vier Tafeln, immer eine davon.

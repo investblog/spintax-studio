@@ -121,6 +121,11 @@ ICONS = [
     # The brand link, and the only item in these menus that leaves the application: the glyph
     # says so, which is worth more here than the brand would be.
     ('SPX_ICON_LINK', 'open-in-new', 'Help > the site link'),
+    # Replace shipped without a glyph (the owner caught it). MDI's own name for the action:
+    # the magnifier -- kinship with `magnify` one menu row above -- with the cycle arrow that
+    # says "swap what it found". Weighed against `file-replace-outline` (replaces a FILE, the
+    # wrong object) and `text-search` (still just search), side by side at 16 and 20.
+    ('SPX_ICON_REPLACE', 'find-replace', 'Edit > Replace -- the find bar grown a second row'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that

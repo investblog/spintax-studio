@@ -74,6 +74,30 @@ report a smaller number than the counter.
 A replaced document goes through the same engine pass as typed text: the preview redraws, and
 the diagnostics answer about what is now there.
 
+## Inserting the marks
+
+Everything that puts this language's own marks into the document sits in the **Insert** menu.
+
+The three wrap commands take the selection as it stands: **Wrap in {…}** makes it a choice, **Wrap in […]**
+a shuffle, and **Wrap in /#…#/** (Ctrl+/) a comment. The comment wrap refuses when a `#/` in or around the selection — or a comment already open at
+that spot — would end a comment early: the first closer wins wherever it stands, text would fall
+back out, and the status bar says so because the engine does not. With nothing selected,
+Ctrl+/ inserts the pair and leaves the caret inside it.
+
+The constructs below land exactly as the menu reads them. **#set %name% = value**, **#def %name% = {a|b}** and **#include "name"** take a line
+of their own — a directive counts only when it starts its line, so text before the caret
+stays above and text after it moves below — and the name comes out selected, ready to be
+typed over. Keep names in Latin letters: a name in another alphabet is silently not a name.
+The `#include` target is the one exception — it is compared to your fragment names exactly as
+written.
+
+**{?name?then|else}** is inline. With a selection, the selected text becomes the "then" half — a way to make
+what is already written conditional; with nothing selected the whole shape goes in. A selection carrying a bare `|`, an unbalanced bracket or an open comment is refused: the wrap
+would change what it says instead of framing it.
+
+The last item puts the example open in the help into the document — the help pane's own
+button, made reachable from the keyboard.
+
 ## The panels along the bottom
 
 The strip of tools down the side opens four panels, one at a time.

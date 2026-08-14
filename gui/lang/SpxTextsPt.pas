@@ -193,7 +193,17 @@ const
       'substituir por',
       'Substituir',
       'Substituir tudo',
-      'Substituídos: %d'
+      'Substituídos: %d',
+
+      'Inserir',
+      'Envolver em /#…#/',
+      '#set %nome% = valor',
+      '#def %nome% = {a|b}',
+      '#include "nome"',
+      '{?nome?então|senão}',
+      'Não envolvido: um #/ dentro ou à volta da seleção terminaria o comentário cedo demais.',
+      'Não envolvido: uma | solta, um parêntese por fechar ou um comentário aberto mudaria o que a condição diz.',
+      'Não inserido: o cursor corta ao meio uma marca de comentário.'
   );
 
 implementation

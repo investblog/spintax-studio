@@ -2809,6 +2809,20 @@ begin
       Inc(i, 2);
       Continue;
     end;
+    { A MACRO REFERENCE, not a specifier: the Insert menu's captions carry the product
+      language's own %name% placeholders, which Format never sees. Two or more letters
+      between two percents is a macro and is consumed whole -- a real specifier's type is a
+      single letter, so this cannot swallow one. Without this, the Turkish %ad% read as a
+      '%a' specifier where English has '%n', which is exactly the false alarm. }
+    n := i + 1;
+    while (n <= Length(S)) and (((S[n] >= 'a') and (S[n] <= 'z')) or
+                                ((S[n] >= 'A') and (S[n] <= 'Z'))) do
+      Inc(n);
+    if (n <= Length(S)) and (S[n] = '%') and (n - i - 1 >= 2) then
+    begin
+      i := n + 1;
+      Continue;
+    end;
     Inc(i);
     { an explicit argument index, `%1:s`, which also moves the implicit counter after it }
     n := 0;
@@ -8185,7 +8199,7 @@ type
     Why: string;
   end;
 const
-  HELP_UI_QUOTES: array[0..19] of TSpxUiQuote = (
+  HELP_UI_QUOTES: array[0..25] of TSpxUiQuote = (
     (Id: sColLiteral;      Why: 'the session-value column'),
     (Id: sSeed;            Why: 'the seed tick-box'),
     (Id: sReroll;          Why: 'the reroll button'),
@@ -8216,7 +8230,16 @@ const
        are here. *)
     (Id: sMenuReplace;     Why: 'the replace menu item'),
     (Id: sReplaceOne;      Why: 'the replace-one button'),
-    (Id: sReplaceAll;      Why: 'the replace-all button'));
+    (Id: sReplaceAll;      Why: 'the replace-all button'),
+    (* The Insert menu. The construct captions ARE the inserted bytes, so the help quoting
+       them wrongly would misquote the insertion itself -- and the section is instructions
+       to press them, in fourteen documents written in one sitting. *)
+    (Id: sMenuInsert;      Why: 'the Insert menu'),
+    (Id: sMenuWrapComment; Why: 'the comment-wrap item'),
+    (Id: sMenuInsSet;      Why: 'the #set insert item'),
+    (Id: sMenuInsDef;      Why: 'the #def insert item'),
+    (Id: sMenuInsInclude;  Why: 'the #include insert item'),
+    (Id: sMenuInsCond;     Why: 'the condition insert item'));
 
 { Every run of blank characters becomes one space, so a wrapped line reads as a sentence --
   and a blockquote's `> ` marker at the start of a continuation line goes with it. Without
@@ -8857,6 +8880,213 @@ begin
   CheckTrue('step/backwards-past-the-start-wraps', SpxStepMatch(m, 1, 1, True) = 2);
   m := nil;
   CheckTrue('step/nothing-to-step-through', SpxStepMatch(m, 1, 1, False) = -1);
+end;
+
+{ ── 8bab. the Insert menu's arithmetic ───────────────────────────────────── }
+
+procedure TestInsertMenu;
+const
+  ASCII_NAME = ['a'..'z', 'A'..'Z', '0'..'9', '_'];
+var
+  ps, pl, i: Integer;
+  pre, suf, t, code: string;
+  plan: TSpxInsertPlan;
+  lang: TSpxLang;
+  ok: Boolean;
+begin
+  { ── the comment-state scan both wrap guards stand on ── }
+  CheckTrue('comstate/empty-is-closed', not SpxCommentOpen(''));
+  CheckTrue('comstate/an-opener-opens', SpxCommentOpen('/#'));
+  CheckTrue('comstate/a-pair-closes', not SpxCommentOpen('/# x #/'));
+  { The closer search starts AFTER the opener -- /#/ is open, matching the engine's own
+    scan (the seam measurement below). }
+  CheckTrue('comstate/the-opener-lends-nothing', SpxCommentOpen('/#/'));
+  CheckTrue('comstate/an-inner-opener-is-inert', not SpxCommentOpen('/# /# #/'));
+  CheckTrue('comstate/a-second-opener-reopens', SpxCommentOpen('/# #/ /#'));
+  CheckTrue('comstate/a-stray-closer-is-text', not SpxCommentOpen('a #/ b'));
+
+  { ── the comment-wrap guard: the one recorded exception to "ask the engine" ── }
+  CheckTrue('inswrap/plain-text-is-wrappable', SpxWrapCommentAllowed('', 'abc', ''));
+  CheckTrue('inswrap/an-opener-inside-is-inert', SpxWrapCommentAllowed('', 'a/#b', ''));
+  CheckTrue('inswrap/a-closer-inside-is-refused', not SpxWrapCommentAllowed('', 'a#/b', ''));
+  CheckTrue('inswrap/a-bare-closer-is-refused', not SpxWrapCommentAllowed('', '#/', ''));
+  { The two context refusals a review found and the engine confirmed (the renders are
+    pinned below): inside an open comment the wrap's closer frees the tail, and a selection
+    whose /# was paired with a #/ beyond it widows that closer. }
+  CheckTrue('inswrap/inside-an-open-comment-is-refused',
+            not SpxWrapCommentAllowed('A /# x ', 'y', ' #/ B'));
+  CheckTrue('inswrap/after-a-closed-comment-is-fine',
+            SpxWrapCommentAllowed('A /# x #/ ', 'y', ' B'));
+  CheckTrue('inswrap/a-widowed-closer-is-refused',
+            not SpxWrapCommentAllowed('A ', 'x /# y', ' z #/ B'));
+  { An unterminated opener with no closer beyond is plain text since the engine's v0.5.0,
+    and commenting it out is exactly what was asked. }
+  CheckTrue('inswrap/an-unterminated-opener-may-be-commented-out',
+            SpxWrapCommentAllowed('A ', 'x /# y', ' z'));
+  { The empty selection inserts the bare pair, guarded by the same call. }
+  CheckTrue('inswrap/the-bare-pair-refuses-inside-a-comment',
+            not SpxWrapCommentAllowed('A /# x ', '', ' #/ B'));
+  { Round two: a boundary cutting an existing mark in half defeats part-wise scanning --
+    the caret between the / and # of an opener, or a selection edge through either mark. }
+  CheckTrue('inswrap/a-split-opener-at-the-caret-is-refused',
+            not SpxWrapCommentAllowed('A /', '', '# x #/ B'));
+  CheckTrue('inswrap/a-split-opener-at-the-selection-start-is-refused',
+            not SpxWrapCommentAllowed('A /', '# x', ' B'));
+  CheckTrue('inswrap/a-split-closer-at-the-selection-end-is-refused',
+            not SpxWrapCommentAllowed('A /# x ', 'y #', '/ B'));
+  { A dead opener in the prefix is refused TOO -- this wrap adds the closer that would
+    bring it to life and swallow the text between them. }
+  CheckTrue('inswrap/a-dead-prefix-opener-is-refused',
+            not SpxWrapCommentAllowed('A /# x ', 'y', ' B'));
+
+  { The seam facts the guard's narrowness rests on, measured on the engine rather than
+    reasoned about -- the first draft of the guard "knew" a leading slash would close the
+    comment at the seam, and the engine disagreed: the closer scan starts AFTER the opener,
+    so the opener's own # can pair with nothing. }
+  Check('inswrap/a-leading-slash-does-not-close-the-seam',
+        RenderFirst('a /#/x#/ b', True), 'A b');
+  Check('inswrap/a-trailing-hash-does-not-open-one',
+        RenderFirst('a /#x##/ b', True), 'A b');
+  { And the harms the guard exists to prevent, each measured before being believed. A #/
+    inside the wrap escapes it; a wrap inside an open comment closes IT and frees the tail
+    (before the wrap this document rendered 'A B'); a selection stealing a comment's opener
+    widows its closer (before: 'A x B'). }
+  CheckTrue('inswrap/the-escape-the-guard-prevents-is-real',
+            RenderFirst('a /#x#/y#/ b', True) <> 'A b');
+  Check('inswrap/the-inside-corruption-is-real',
+        RenderFirst('A /# /#x#/ y #/ B', True), 'A y #/ B');
+  Check('inswrap/the-widowed-closer-is-real',
+        RenderFirst('A /#x /# y#/ z #/ B', True), 'A z #/ B');
+  { And the split-mark corruption (round two): the pair inserted between the / and # of a
+    live opener destroys it, and the commented text comes back, marks and all. }
+  Check('inswrap/the-split-opener-baseline', RenderFirst('A /# x #/ B', False), 'A  B');
+  Check('inswrap/the-split-opener-corruption-is-real',
+        RenderFirst('A //#  #/# x #/ B', False), 'A /# x #/ B');
+
+  { ── the condition-wrap guard ── }
+  CheckTrue('condwrap/plain-text', SpxCondThenAllowed('', 'x', ''));
+  CheckTrue('condwrap/a-nested-choice-keeps-its-bar', SpxCondThenAllowed('', '{a|b}', ''));
+  CheckTrue('condwrap/a-permutation-keeps-its-bar', SpxCondThenAllowed('', '[a|b]', ''));
+  CheckTrue('condwrap/nesting-inside-prose', SpxCondThenAllowed('', 'a{b|c}d', ''));
+  CheckTrue('condwrap/a-bare-bar-adds-a-branch', not SpxCondThenAllowed('', 'a|b', ''));
+  CheckTrue('condwrap/an-unclosed-brace', not SpxCondThenAllowed('', '{a', ''));
+  CheckTrue('condwrap/a-stray-closer', not SpxCondThenAllowed('', 'a}', ''));
+  CheckTrue('condwrap/a-stray-bracket-closer', not SpxCondThenAllowed('', ']', ''));
+  { Comment state, by the ENGINE's rule rather than the naive scan (round two): an opener
+    is a comment only if a closer follows somewhere; otherwise it is plain text and what
+    follows it stays live. So: a real comment across either edge of the frame refuses; a
+    dead opener does not; a bar after a dead opener still counts; a COMPLETE comment
+    inside the selection shields its bar (stripped before the parse). }
+  CheckTrue('condwrap/inside-an-open-comment-is-refused',
+            not SpxCondThenAllowed('A /# x ', 'y', ' #/ B'));
+  CheckTrue('condwrap/an-open-comment-closing-in-the-selection-is-refused',
+            not SpxCondThenAllowed('A /# x ', 'y #/ z', ' B'));
+  CheckTrue('condwrap/a-dead-prefix-opener-is-plain-text',
+            SpxCondThenAllowed('A /# x ', 'y', ' B'));
+  CheckTrue('condwrap/a-selection-comment-closing-beyond-is-refused',
+            not SpxCondThenAllowed('', 'y /# z', ' t #/ u'));
+  CheckTrue('condwrap/a-dead-opener-in-the-selection-is-allowed',
+            SpxCondThenAllowed('', 'y /# z', ' tail'));
+  CheckTrue('condwrap/a-live-bar-after-a-dead-opener-still-refuses',
+            not SpxCondThenAllowed('', 'y /# a|b', ''));
+  CheckTrue('condwrap/a-complete-comment-shields-its-bar',
+            SpxCondThenAllowed('', 'a /# | #/ b', ''));
+  CheckTrue('condwrap/a-bar-after-a-closed-comment-counts',
+            not SpxCondThenAllowed('', '/# x #/ a|b', ''));
+  CheckTrue('condwrap/a-split-mark-at-the-edge-is-refused',
+            not SpxCondThenAllowed('A /', '# x', ' B'));
+  { Round three: with nothing selected the two boundaries are one, and the empty selection
+    made both split checks vacuous -- the caret between the marks slipped through. }
+  CheckTrue('condwrap/a-split-opener-at-the-empty-caret-is-refused',
+            not SpxCondThenAllowed('A /', '', '# x #/ B'));
+  CheckTrue('condwrap/an-empty-selection-elsewhere-is-fine',
+            SpxCondThenAllowed('A x', '', ' y B'));
+  Check('condwrap/the-comment-corruption-is-real',
+        RenderFirst('A /# x {?name?y #/ z|else} B', True), 'A z|else} B');
+  { The dead-opener allowance is the engine's own reading: the branch survives intact. }
+  Check('condwrap/the-dead-opener-branch-renders-intact',
+        RenderFirst('#set %name% = 1'#10'{?name?y /# z|else}', False), #10'y /# z');
+
+  { ── the placeholder parse the menu items live or die by ── }
+  CheckTrue('instpl/set-shape',
+            SpxTemplatePlaceholder('#set %name% = value', '%', ps, pl)
+            and (ps = 7) and (pl = 4));
+  CheckTrue('instpl/include-holds-bytes-not-letters',
+            SpxTemplatePlaceholder('#include "имя"', '"', ps, pl)
+            and (ps = 11) and (pl = 6));
+  CheckTrue('instpl/no-mark-is-a-refusal', not SpxTemplatePlaceholder('#set name', '%', ps, pl));
+  CheckTrue('instpl/an-unclosed-pair', not SpxTemplatePlaceholder('#set %name', '%', ps, pl));
+  CheckTrue('instpl/an-empty-pair-selects-nothing',
+            not SpxTemplatePlaceholder('#set %% = v', '%', ps, pl));
+
+  CheckTrue('instpl/cond-shape',
+            SpxCondParts('{?name?then|else}', pre, suf, ps, pl)
+            and (pre = '{?name?') and (suf = '|else}') and (ps = 3) and (pl = 4));
+  CheckTrue('instpl/cond-else-may-carry-a-space',
+            SpxCondParts('{?nombre?entonces|si no}', pre, suf, ps, pl)
+            and (pre = '{?nombre?') and (suf = '|si no}') and (pl = 6));
+  CheckTrue('instpl/cond-needs-a-name', not SpxCondParts('{??then|else}', pre, suf, ps, pl));
+  CheckTrue('instpl/cond-needs-an-else-bar', not SpxCondParts('{?name?then}', pre, suf, ps, pl));
+  CheckTrue('instpl/cond-needs-its-frame', not SpxCondParts('x', pre, suf, ps, pl));
+
+  { ── where a line-directive lands ── }
+  CheckTrue('insplan/an-empty-line-takes-it-as-is',
+            SpxDirectivePlan('', '', '#set %n% = v', 7, 1, plan)
+            and (plan.Text = '#set %n% = v') and not plan.BreakBefore);
+  CheckTrue('insplan/text-before-pushes-it-down',
+            SpxDirectivePlan('ab', '', '#set %n% = v', 7, 1, plan)
+            and (plan.Text = LineEnding + '#set %n% = v') and plan.BreakBefore);
+  { Blanks before the caret are NOT text: the engine allows spaces and tabs ahead of a
+    directive (the help's measured fact), so indentation does not force a new line. }
+  CheckTrue('insplan/indentation-is-not-text',
+            SpxDirectivePlan('  '#9, 'x', '#set %n% = v', 7, 1, plan)
+            and (plan.Text = '#set %n% = v' + LineEnding) and not plan.BreakBefore);
+  { Text AFTER the caret would join the directive's line and become part of its value. }
+  CheckTrue('insplan/text-after-pushes-a-break-behind',
+            SpxDirectivePlan('a', 'b', '#set %n% = v', 7, 1, plan)
+            and (plan.Text = LineEnding + '#set %n% = v' + LineEnding));
+  CheckTrue('insplan/placeholder-out-of-bounds', not SpxDirectivePlan('', '', 'ab', 2, 2, plan));
+  CheckTrue('insplan/no-empty-directive', not SpxDirectivePlan('', '', '', 1, 1, plan));
+  CheckTrue('insplan/no-multiline-directive',
+            not SpxDirectivePlan('', '', 'a'#10'b', 1, 1, plan));
+
+  { ── every language's templates parse, and every inserted NAME is Latin ──
+    The caption IS the inserted text, so a translation that breaks the shape kills the menu
+    item silently (the handler refuses), and a translation that localizes the name inserts
+    an identifier the engine silently does not recognise -- the help's own fact, in every
+    language: a name outside the Latin alphabet is not a name. The include target is exempt,
+    it is a slug compared exactly and may be anything. }
+  for lang := Low(TSpxLang) to High(TSpxLang) do
+  begin
+    code := SpxLangCode(lang);
+    t := SpxStrIn(lang, sMenuInsSet);
+    CheckTrue('inslang/' + code + '/set-starts-as-a-directive', Copy(t, 1, 6) = '#set %');
+    ok := SpxTemplatePlaceholder(t, '%', ps, pl);
+    CheckTrue('inslang/' + code + '/set-parses', ok);
+    if ok then
+      for i := ps to ps + pl - 1 do
+        CheckTrue('inslang/' + code + '/set-name-is-latin', t[i] in ASCII_NAME);
+    t := SpxStrIn(lang, sMenuInsDef);
+    CheckTrue('inslang/' + code + '/def-starts-as-a-directive', Copy(t, 1, 6) = '#def %');
+    CheckTrue('inslang/' + code + '/def-carries-a-choice',
+              (Pos('{', t) > 0) and (Pos('|', t) > Pos('{', t)) and (t[Length(t)] = '}'));
+    ok := SpxTemplatePlaceholder(t, '%', ps, pl);
+    CheckTrue('inslang/' + code + '/def-parses', ok);
+    if ok then
+      for i := ps to ps + pl - 1 do
+        CheckTrue('inslang/' + code + '/def-name-is-latin', t[i] in ASCII_NAME);
+    t := SpxStrIn(lang, sMenuInsInclude);
+    CheckTrue('inslang/' + code + '/include-starts-as-a-directive',
+              Copy(t, 1, 10) = '#include "');
+    CheckTrue('inslang/' + code + '/include-parses',
+              SpxTemplatePlaceholder(t, '"', ps, pl));
+    t := SpxStrIn(lang, sMenuInsCond);
+    ok := SpxCondParts(t, pre, suf, ps, pl);
+    CheckTrue('inslang/' + code + '/cond-parses', ok);
+    if ok then
+      for i := ps to ps + pl - 1 do
+        CheckTrue('inslang/' + code + '/cond-name-is-latin', t[i] in ASCII_NAME);
+  end;
 end;
 
 { ── 8baa. what the page view may be handed ───────────────────────────────── }
@@ -11017,6 +11247,7 @@ begin
   TestHelpUnit;
   TestSessionValues;
   TestFind;
+  TestInsertMenu;
   TestPageDocument;
   TestDirectiveEditing;
   TestModelDirIndex;

@@ -218,7 +218,21 @@ type
        the menu verb, the field's cue, the two buttons, and the status sentence that
        reports REPLACEMENTS -- which can honestly be fewer than the counter's matches,
        because overlaps are stepped through, never replaced twice. ── *)
-    sMenuReplace, sReplaceWith, sReplaceOne, sReplaceAll, sReplacedCount
+    sMenuReplace, sReplaceWith, sReplaceOne, sReplaceAll, sReplacedCount,
+
+    (* ── THE INSERT MENU (owner, 2026-08-14): the wraps move out of Edit, a comment wrap
+       joins them, and the constructs the owner asked for -- #set, #def, #include and the
+       condition -- become one menu. The four construct captions ARE the inserted text,
+       byte for byte, so the menu cannot promise one thing and land another; their shapes
+       and the Latin NAME placeholders are pinned per language in TestInsertMenu. The two
+       refusals are status-line sentences: the engine is silent about both harms (a #/
+       escaping a comment, a bare | adding a branch), so the guard has to speak. ── *)
+    sMenuInsert, sMenuWrapComment, sMenuInsSet, sMenuInsDef, sMenuInsInclude, sMenuInsCond,
+    sWrapCommentRefused, sCondWrapRefused,
+    (* A caret parked between the two characters of `/#` or `#/`: anything inserted there
+       cuts the mark in half and can resurrect commented text (measured; review round two
+       and three). Every caret-insert path refuses with this sentence. *)
+    sInsSplitRefused
   );
 
 implementation

@@ -74,6 +74,31 @@ onestamente dire un numero minore.
 Un documento sostituito passa per lo stesso motore del testo digitato: l'anteprima si
 ridisegna e la diagnostica risponde su ciò che c'è ora.
 
+## Inserire i segni
+
+Tutto ciò che mette nel documento i segni del linguaggio stesso sta nel menu **Inserisci**.
+
+I tre comandi di racchiusura prendono la selezione così com'è: **Racchiudi in {…}** la rende una scelta,
+**Racchiudi in […]** un rimescolamento, **Racchiudi in /#…#/** (Ctrl+/) un commento. La racchiusura in commento rifiuta quando un `#/` dentro o attorno alla selezione — o un
+commento già aperto in quel punto — finirebbe un commento troppo presto: il primo segno di
+chiusura vince ovunque si trovi, parte del testo ricadrebbe fuori; lo dice la barra di stato,
+perché il motore tace. Senza selezione, Ctrl+/ inserisce la coppia e lascia il cursore all'interno.
+
+I costrutti sotto arrivano esattamente come il menu li legge. **#set %nome% = valore**, **#def %nome% = {a|b}** e **#include "nome"** prendono
+una riga propria — una direttiva conta solo quando apre la sua riga, quindi il testo prima
+del cursore resta sopra e quello dopo scende — e il nome esce selezionato, pronto per essere
+sovrascritto. Tenete i nomi in lettere latine: un nome in un altro alfabeto, in silenzio,
+non è un nome. La destinazione di `#include` è l'eccezione — viene confrontata con i nomi dei
+vostri frammenti esattamente com'è scritta.
+
+**{?nome?allora|altrimenti}** sta dentro la riga. Con una selezione, il testo selezionato diventa la metà «allora» —
+un modo per rendere condizionale ciò che è già scritto; senza selezione entra la forma
+intera. Una selezione con una `|` nuda, una parentesi non chiusa o un commento aperto viene rifiutata:
+la racchiusura cambierebbe ciò che dice invece di incorniciarlo.
+
+L'ultima voce mette nel documento l'esempio aperto nella guida — il pulsante del pannello
+della guida stesso, reso raggiungibile dalla tastiera.
+
 ## I pannelli in basso
 
 La barra degli strumenti di lato apre quattro pannelli, uno per volta.

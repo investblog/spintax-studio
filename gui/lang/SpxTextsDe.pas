@@ -201,7 +201,17 @@ const
       'ersetzen durch',
       'Ersetzen',
       'Alle ersetzen',
-      'Ersetzt: %d'
+      'Ersetzt: %d',
+
+      'Einfügen',
+      'In /#…#/ einfassen',
+      '#set %name% = Wert',
+      '#def %name% = {a|b}',
+      '#include "name"',
+      '{?name?dann|sonst}',
+      'Nicht eingefasst: ein #/ in oder um die Auswahl würde den Kommentar zu früh beenden.',
+      'Nicht eingefasst: ein nacktes |, eine unausgeglichene Klammer oder ein offener Kommentar würde die Bedingung verändern.',
+      'Nicht eingefügt: die Schreibmarke zerteilt eine Kommentarmarke.'
   );
 
 implementation

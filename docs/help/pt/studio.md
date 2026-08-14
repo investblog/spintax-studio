@@ -75,6 +75,30 @@ honestamente um número menor.
 Um documento substituído passa pelo mesmo motor que o texto escrito: a pré-visualização
 redesenha-se e o diagnóstico responde sobre o que lá está agora.
 
+## Inserir as marcas
+
+Tudo o que põe no documento as marcas da própria linguagem está no menu **Inserir**.
+
+Os três comandos de envolvimento tomam a seleção como está: **Envolver em {…}** faz dela uma escolha,
+**Envolver em […]** um baralhar, **Envolver em /#…#/** (Ctrl+/) um comentário. O envolvimento em comentário recusa quando um `#/` dentro ou à volta da seleção — ou um
+comentário já aberto nesse ponto — terminaria um comentário cedo demais: o primeiro fecho ganha
+onde quer que esteja, texto cairia fora; a barra de estado di-lo, porque o motor se cala. Sem seleção, Ctrl+/ insere o par e deixa o cursor lá dentro.
+
+As construções abaixo caem exatamente como o menu as lê. **#set %nome% = valor**, **#def %nome% = {a|b}** e **#include "nome"** tomam uma
+linha própria — uma diretiva só conta quando abre a sua linha, o texto antes do cursor fica
+por isso acima e o de depois desce — e o nome sai selecionado, pronto a ser escrito por
+cima. Mantenha os nomes em letras latinas: um nome noutro alfabeto, silenciosamente, não é
+um nome. O alvo de `#include` é a exceção — é comparado com os nomes dos seus fragmentos
+exatamente como está escrito.
+
+**{?nome?então|senão}** vive dentro da linha. Com uma seleção, o texto selecionado torna-se a metade «então» —
+uma forma de tornar condicional o que já está escrito; sem seleção entra a forma inteira.
+Uma seleção com um `|` solto, um parêntese por fechar ou um comentário aberto é recusada: o
+envolvimento mudaria o que ela diz em vez de a emoldurar.
+
+O último item põe no documento o exemplo aberto na ajuda — o botão do próprio painel de
+ajuda, tornado alcançável pelo teclado.
+
 ## Os painéis de baixo
 
 A barra de ferramentas ao lado abre quatro painéis, um de cada vez.

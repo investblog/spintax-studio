@@ -264,7 +264,10 @@ const
 
     { Find and replace: a menu item, a cue banner, two measured buttons and a status
       sentence with %d -- none sits in a slot fixed at a number. }
-    0, 0, 0, 0, 0
+    0, 0, 0, 0, 0,
+
+    { The Insert menu: six menu captions and three status sentences, all self-sizing. }
+    0, 0, 0, 0, 0, 0, 0, 0, 0
   );
 
 (* The table for a language, or English when that language has no file yet. The fallback is

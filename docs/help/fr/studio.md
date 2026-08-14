@@ -76,6 +76,33 @@ pas peut visiter, mais le parcours ne change que celles qui ne partagent pas de 
 Un document remplacé prend le même chemin du moteur que du texte tapé : l'aperçu se
 redessine, et le diagnostic répond sur ce qui s'y trouve désormais.
 
+## Insérer les marques
+
+Tout ce qui pose dans le document les marques du langage lui-même se trouve dans le menu
+**Insertion**.
+
+Les trois commandes d'entourage prennent la sélection telle quelle : **Entourer de {…}** en fait un
+choix, **Entourer de […]** un brassage, **Entourer de /#…#/** (Ctrl+/) un commentaire. L'entourage en commentaire refuse quand un `#/` dans la sélection ou autour d'elle — ou un
+commentaire déjà ouvert à cet endroit — terminerait un commentaire trop tôt : la première marque
+fermante gagne où qu'elle soit, du texte retomberait dehors ; la barre d'état le dit, parce que
+le moteur se tait. Sans sélection, Ctrl+/ insère la paire et laisse le
+curseur dedans.
+
+Les constructions en dessous se posent exactement comme le menu les lit. **#set %nom% = valeur**, **#def %nom% = {a|b}** et
+**#include "nom"** prennent leur propre ligne — une directive ne compte que si elle ouvre sa ligne, le
+texte avant le curseur reste donc au-dessus et le texte après descend — et le nom ressort
+sélectionné, prêt à être remplacé. Gardez les noms en lettres latines : un nom dans un autre
+alphabet n'en est silencieusement pas un. La cible de `#include` est l'exception — elle est
+comparée aux noms de vos fragments exactement telle qu'écrite.
+
+**{?nom?alors|sinon}** s'écrit dans la ligne. Avec une sélection, le texte sélectionné devient la moitié
+« alors » — une façon de rendre conditionnel ce qui est déjà écrit ; sans sélection, la forme
+entière est insérée. Une sélection portant un `|` nu, un crochet déséquilibré ou un commentaire ouvert est refusée :
+l'entourage changerait ce qu'elle dit au lieu de l'encadrer.
+
+Le dernier élément pose dans le document l'exemple ouvert dans l'aide — le bouton du panneau
+d'aide lui-même, rendu accessible au clavier.
+
 ## Les panneaux du bas
 
 La barre d'outils sur le côté ouvre quatre panneaux, un à la fois.

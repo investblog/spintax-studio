@@ -72,6 +72,29 @@ diyebilir.
 Değiştirilmiş belge, yazılmış metinle aynı motor yolundan geçer: önizleme yeniden çizilir,
 tanılar artık orada olan hakkında yanıt verir.
 
+## İşaretleri ekleme
+
+Dilin kendi işaretlerini belgeye koyan her şey **Ekle** menüsünde toplanır.
+
+Üç sarma komutu seçimi olduğu gibi alır: **{…} içine al** onu bir seçime, **[…] içine al** bir karıştırmaya,
+**/#…#/ içine al** (Ctrl+/) bir açıklamaya çevirir. Açıklamaya sarma, seçimin içindeki veya çevresindeki bir `#/` — ya da o noktada zaten açık bir
+açıklama — bir açıklamayı erken bitirecekse geri çevirir: ilk kapatma işareti nerede durursa
+dursun kazanır, metin dışarı düşerdi; bunu durum çubuğu söyler, çünkü makine susar. Seçim yokken Ctrl+/
+çifti ekler ve imleci içinde bırakır.
+
+Alttaki yapılar menüde okundukları gibi düşer. **#set %ad% = değer**, **#def %ad% = {a|b}** ve **#include "ad"** kendi satırlarını alır —
+bir yönerge yalnızca satırını açtığında sayılır, imleçten önceki metin bu yüzden yukarıda
+kalır, sonrası aşağı iner — ve ad seçili çıkar, üzerine yazılmaya hazır. Adları Latin
+harfleriyle tutun: başka bir alfabedeki ad, sessizce, ad değildir. `#include` hedefi tek
+istisnadır — parça adlarınızla yazıldığı gibi, harfi harfine karşılaştırılır.
+
+**{?ad?ise|değilse}** satırın içinde yaşar. Seçim varken seçili metin "ise" yarısı olur — zaten yazılmış
+olanı koşullu kılmanın yolu; seçim yokken bütün biçim girer. Yalın bir `|`, kapanmamış bir ayraç veya açık bir açıklama taşıyan seçim geri çevrilir: sarma,
+çerçevelemek yerine söylediğini değiştirirdi.
+
+Son öğe, yardımda açık olan örneği belgeye koyar — yardım panelinin kendi düğmesi, klavyeden
+erişilir kılınmış hali.
+
 ## Alttaki paneller
 
 Yandaki araç şeridi dört paneli, her seferinde birini açar.

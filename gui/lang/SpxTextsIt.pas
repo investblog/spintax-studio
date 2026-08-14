@@ -193,7 +193,17 @@ const
       'sostituisci con',
       'Sostituisci',
       'Sostituisci tutto',
-      'Sostituiti: %d'
+      'Sostituiti: %d',
+
+      'Inserisci',
+      'Racchiudi in /#…#/',
+      '#set %nome% = valore',
+      '#def %nome% = {a|b}',
+      '#include "nome"',
+      '{?nome?allora|altrimenti}',
+      'Non racchiuso: un #/ dentro o attorno alla selezione finirebbe il commento troppo presto.',
+      'Non racchiuso: una | isolata, una parentesi non chiusa o un commento aperto cambierebbe il senso della condizione.',
+      'Non inserito: il cursore taglia in due un segno di commento.'
   );
 
 implementation

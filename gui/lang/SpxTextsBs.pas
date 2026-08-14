@@ -198,7 +198,17 @@ const
       'zamijeni sa',
       'Zamijeni',
       'Zamijeni sve',
-      'Zamijenjeno: %d'
+      'Zamijenjeno: %d',
+
+      'Umetanje',
+      'Umotaj u /#…#/',
+      '#set %name% = vrijednost',
+      '#def %name% = {a|b}',
+      '#include "name"',
+      '{?name?onda|inače}',
+      'Nije umotano: #/ u odabiru ili oko njega završio bi komentar prerano.',
+      'Nije umotano: samostalna |, nezatvorena zagrada ili otvoren komentar promijenili bi smisao uslova.',
+      'Nije umetnuto: kursor siječe oznaku komentara napola.'
   );
 
 implementation

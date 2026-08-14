@@ -341,6 +341,23 @@ type
     function CurrentSelection(WithText: Boolean): TSpxSelection;
     procedure WrapBracesClicked(Sender: TObject);
     procedure WrapBracketsClicked(Sender: TObject);
+    procedure WrapCommentClicked(Sender: TObject);
+    { The document's text strictly before / strictly after a LOGICAL point, for the wrap
+      guards' comment-state scan. Joined with #10 -- the scan reads token order, not line
+      endings. }
+    function TextBefore(const P: TPoint): string;
+    function TextAfter(const P: TPoint): string;
+    { True (with the status line told) when the caret sits between the two characters of a
+      comment mark -- every caret-insert path refuses then, because anything dropped there
+      cuts the mark in half and can resurrect commented text. }
+    function CaretSplitsMark: Boolean;
+    { A line-directive from the Insert menu: the caption IS the inserted text, AMark
+      brackets the placeholder to select (`%` for #set/#def, `"` for #include). }
+    procedure InsertDirective(AId: TSpxStr; AMark: Char);
+    procedure InsertSetClicked(Sender: TObject);
+    procedure InsertDefClicked(Sender: TObject);
+    procedure InsertIncludeClicked(Sender: TObject);
+    procedure InsertCondClicked(Sender: TObject);
     { AFlash lights the landed row for a moment. Off for stepping through search matches: that
       step REPEATS, and the timer re-arms, so holding F3 would leave a row permanently washed --
       the wash would stop meaning "just arrived" and start meaning "selected". A match is
@@ -2444,7 +2461,8 @@ procedure TSpxMainForm.BuildMenu;
 
 var
   bar: TMainMenu;              { not `menu`: TForm already has a Menu property }
-  fileMenu, editMenu, viewMenu, helpMenu, langMenu, fontMenu, sideItem: TMenuItem;
+  fileMenu, editMenu, insertMenu, viewMenu, helpMenu, langMenu, fontMenu,
+  sideItem: TMenuItem;
   lang: TSpxLang;
   fi: Integer;
   keepHeight: Integer;
@@ -2509,14 +2527,12 @@ begin
   { The same three glyphs the find bar wears, so the menu and the bar name one action with one
     picture rather than teaching it twice. }
   IconItem(editMenu, Tr(sMenuFind), Ord('F'), [ssCtrl], @FindMenuClicked, SPX_ICON_SEARCH);
-  Item(editMenu, Tr(sMenuReplace), Ord('H'), [ssCtrl], @ReplaceMenuClicked);
+  { The glyph the owner caught missing: MDI's own name for the action -- the magnifier with
+    the cycle arrow, kin to `magnify` one row up. }
+  IconItem(editMenu, Tr(sMenuReplace), Ord('H'), [ssCtrl], @ReplaceMenuClicked,
+           SPX_ICON_REPLACE);
   IconItem(editMenu, Tr(sMenuFindNext), VK_F3, [], @FindNextClicked, SPX_ICON_NEXT);
   IconItem(editMenu, Tr(sMenuFindPrev), VK_F3, [ssShift], @FindPrevClicked, SPX_ICON_PREV);
-  Item(editMenu, '-', 0, [], nil);
-  IconItem(editMenu, Tr(sMenuWrapBraces), Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked,
-           SPX_ICON_GROUP);
-  IconItem(editMenu, Tr(sMenuWrapBrackets), Ord('P'), [ssCtrl, ssShift],
-           @WrapBracketsClicked, SPX_ICON_BRACKETS);
   { The zoom, in a menu as well as on the wheel -- the project's rule: a hotkey nobody can
     find is a hotkey nobody uses. Ctrl+= rather than Ctrl++ because that is the key a person
     presses; Ctrl+- and Ctrl+0 are the pair everyone else uses for the same three actions.
@@ -2536,12 +2552,38 @@ begin
   IconItem(editMenu, Tr(sMenuReroll), Ord('R'), [ssCtrl], @RerollClicked, SPX_ICON_REROLL);
   IconItem(editMenu, Tr(sMenuCopyResult), Ord('C'), [ssCtrl, ssShift], @CopyClicked,
            SPX_ICON_COPY);
+  (* THE INSERT MENU (owner's call, 2026-08-14). Everything that puts this language's own
+     marks into the document, in one place: the two wraps (moved from Edit with their keys
+     and glyphs), a comment wrap, the constructs -- #set, #def, #include, the condition --
+     and the help example's insert. Edit keeps what edits or reads what is already there.
+
+     The construct captions ARE the inserted text, byte for byte -- the menu cannot promise
+     one thing and land another, and TestInsertMenu pins every language's shapes. No
+     shortcuts on them: insertion is rare, and the menu is where it is FOUND (the project's
+     rule about hotkeys, read the other way). No glyphs yet either -- they come as a second
+     pass now that the item list is settled, and items without pictures are legal (the
+     panels and themes live that way). *)
+  insertMenu := TMenuItem.Create(Self);
+  insertMenu.Caption := Tr(sMenuInsert);
+  bar.Items.Add(insertMenu);
+  IconItem(insertMenu, Tr(sMenuWrapBraces), Ord('G'), [ssCtrl, ssShift], @WrapBracesClicked,
+           SPX_ICON_GROUP);
+  IconItem(insertMenu, Tr(sMenuWrapBrackets), Ord('P'), [ssCtrl, ssShift],
+           @WrapBracketsClicked, SPX_ICON_BRACKETS);
+  { Ctrl+/ -- the key every editor uses for "comment this", on VK_OEM_2, the key that
+    carries `/` on the US layout. Not in SynEdit's Ctrl tables, so it takes nothing away. }
+  Item(insertMenu, Tr(sMenuWrapComment), VK_OEM_2, [ssCtrl], @WrapCommentClicked);
+  Item(insertMenu, '-', 0, [], nil);
+  Item(insertMenu, Tr(sMenuInsSet), 0, [], @InsertSetClicked);
+  Item(insertMenu, Tr(sMenuInsDef), 0, [], @InsertDefClicked);
+  Item(insertMenu, Tr(sMenuInsInclude), 0, [], @InsertIncludeClicked);
+  Item(insertMenu, Tr(sMenuInsCond), 0, [], @InsertCondClicked);
   (* PUT THIS EXAMPLE IN MY DOCUMENT -- the second command in this window that a pointer was
      the only way to reach. Its button lives in the preview's offer strip and is a
      TSpeedButton, so the keyboard could not have it.
 
-     THE EDIT MENU rather than Help, because the act edits the document; the strip's own
-     caption is reused, so this costs no string id.
+     THE INSERT MENU because the act inserts -- it lived in Edit only while there was no
+     menu whose name said so; the strip's own caption is reused, so this costs no string id.
 
      DISABLED RATHER THAN ABSENT when there is no example, and rather than silently doing
      nothing: SpxHelpOffersInsert is the same predicate the strip itself is shown by, so the
@@ -2550,8 +2592,8 @@ begin
 
      No shortcut: the command is live only while the help is open on an example, and a global
      key for a mode-specific action is one a reader presses and sees nothing happen. *)
-  Item(editMenu, '-', 0, [], nil);
-  FInsertItem := IconItem(editMenu, Tr(sHelpExampleInsert), 0, [], @InsertHelpExample,
+  Item(insertMenu, '-', 0, [], nil);
+  FInsertItem := IconItem(insertMenu, Tr(sHelpExampleInsert), 0, [], @InsertHelpExample,
                           SPX_ICON_INSERT);
   { KEPT rather than computed here. The bar is rebuilt on a language change, a panel toggle, a
     theme switch -- and on none of the paths that decide whether there IS an example, so a state
@@ -3614,6 +3656,208 @@ end;
 procedure TSpxMainForm.WrapBracketsClicked(Sender: TObject);
 begin
   WrapSelection('[', ']');
+end;
+
+{ The comment wrap cannot go through WrapSelection alone: the engine is SILENT about text
+  that carries `#/` -- the first closer ends the comment wherever it stands, and the rest
+  escapes with no diagnostic (the charter's fact, and the one recorded exception to "decide
+  by asking the engine"). So the guard speaks in the status line instead. The seam needs no
+  guard: the closer scan starts AFTER the opener, measured in TestInsertMenu.
+
+  With nothing selected the pair goes in around the caret -- `/#  #/`, caret between the
+  two spaces, so typing lands inside the comment. All-ASCII, so the caret arithmetic is the
+  same in bytes and columns. }
+function TSpxMainForm.TextBefore(const P: TPoint): string;
+var
+  parts: TStringList;
+  i: Integer;
+begin
+  parts := TStringList.Create;
+  try
+    for i := 0 to P.Y - 2 do
+      if i < FEditor.Lines.Count then parts.Add(FEditor.Lines[i]);
+    if (P.Y >= 1) and (P.Y <= FEditor.Lines.Count) then
+      parts.Add(Copy(FEditor.Lines[P.Y - 1], 1, P.X - 1))
+    else
+      parts.Add('');
+    parts.LineBreak := #10;
+    Result := parts.Text;
+    { TStringList.Text terminates the last line; the guards compare the BOUNDARY character
+      against the selection's first, and a phantom newline there would hide a mark cut in
+      half (review, round two). }
+    if (Result <> '') and (Result[Length(Result)] = #10) then
+      SetLength(Result, Length(Result) - 1);
+  finally
+    parts.Free;
+  end;
+end;
+
+function TSpxMainForm.TextAfter(const P: TPoint): string;
+var
+  parts: TStringList;
+  i: Integer;
+begin
+  parts := TStringList.Create;
+  try
+    if (P.Y >= 1) and (P.Y <= FEditor.Lines.Count) then
+      parts.Add(Copy(FEditor.Lines[P.Y - 1], P.X, MaxInt))
+    else
+      parts.Add('');
+    for i := P.Y to FEditor.Lines.Count - 1 do
+      parts.Add(FEditor.Lines[i]);
+    parts.LineBreak := #10;
+    Result := parts.Text;
+    if (Result <> '') and (Result[Length(Result)] = #10) then
+      SetLength(Result, Length(Result) - 1);
+  finally
+    parts.Free;
+  end;
+end;
+
+procedure TSpxMainForm.WrapCommentClicked(Sender: TObject);
+var
+  sel: TSpxSelection;
+  after: TSpxRange;
+  caret: TPoint;
+begin
+  if FEditor.SelAvail then
+  begin
+    sel := CurrentSelection(True);
+    { Column and line selections are refused the same way the other two wraps refuse them. }
+    if not SpxWrapRange(sel, 2, 2, after) then Exit;
+    if not SpxWrapCommentAllowed(TextBefore(Point(sel.Range.A.Col, sel.Range.A.Line)),
+                                 sel.Text,
+                                 TextAfter(Point(sel.Range.B.Col, sel.Range.B.Line))) then
+    begin
+      SetStatusText(Tr(sWrapCommentRefused));
+      Exit;
+    end;
+    FEditor.SelText := '/#' + FEditor.SelText + '#/';
+    FEditor.BlockBegin := Point(after.A.Col, after.A.Line);
+    FEditor.BlockEnd := Point(after.B.Col, after.B.Line);
+  end
+  else
+  begin
+    caret := FEditor.LogicalCaretXY;
+    { The bare pair carries a closer of its own, so the same guard decides -- inside an
+      open comment it would close IT and free the tail (measured in TestInsertMenu). }
+    if not SpxWrapCommentAllowed(TextBefore(caret), '', TextAfter(caret)) then
+    begin
+      SetStatusText(Tr(sWrapCommentRefused));
+      Exit;
+    end;
+    FEditor.SelText := '/#  #/';
+    FEditor.LogicalCaretXY := Point(caret.X + 3, caret.Y);
+  end;
+end;
+
+{ One handler for #set / #def / #include; the CAPTION is inserted, byte for byte, so the
+  menu cannot promise one thing and land another (the per-language shapes are pinned in
+  TestInsertMenu). The placement -- a directive must be FIRST on its line, blanks aside,
+  and text after the caret must not join its value -- is SpxDirectivePlan's arithmetic; what
+  stays here is the edit, through SelText, which is one undo step (the wraps' measured
+  precedent). The placeholder NAME is selected afterwards so typing replaces it at once --
+  it is Latin in every language, because a name outside the Latin alphabet is silently not
+  a name at all. }
+function TSpxMainForm.CaretSplitsMark: Boolean;
+var
+  caret: TPoint;
+begin
+  caret := FEditor.LogicalCaretXY;
+  Result := SpxSplitsCommentMark(TextBefore(caret), TextAfter(caret));
+  if Result then SetStatusText(Tr(sInsSplitRefused));
+end;
+
+procedure TSpxMainForm.InsertDirective(AId: TSpxStr; AMark: Char);
+var
+  t, line: string;
+  ps, pl, col: Integer;
+  plan: TSpxInsertPlan;
+  caret: TPoint;
+begin
+  t := Tr(AId);
+  if not SpxTemplatePlaceholder(t, AMark, ps, pl) then Exit;
+  { A selection collapses to the caret rather than being replaced: these items INSERT, and
+    eating a selection would be the one thing their name does not say. }
+  if FEditor.SelAvail then
+  begin
+    FEditor.BlockBegin := FEditor.LogicalCaretXY;
+    FEditor.BlockEnd := FEditor.LogicalCaretXY;
+  end;
+  if CaretSplitsMark then Exit;
+  caret := FEditor.LogicalCaretXY;
+  line := '';
+  if (caret.Y >= 1) and (caret.Y <= FEditor.Lines.Count) then
+    line := FEditor.Lines[caret.Y - 1];
+  if not SpxDirectivePlan(Copy(line, 1, caret.X - 1), Copy(line, caret.X, MaxInt),
+                          t, ps, pl, plan) then Exit;
+  FEditor.SelText := plan.Text;
+  { The placeholder's line and byte column. On its own line the directive starts at 1; in
+    place it starts at the caret, whose prefix is blanks -- one byte each either way. }
+  if plan.BreakBefore then
+    col := plan.PhStart
+  else
+    col := caret.X + plan.PhStart - 1;
+  FEditor.BlockBegin := Point(col, caret.Y + Ord(plan.BreakBefore));
+  FEditor.BlockEnd := Point(col + plan.PhLen, caret.Y + Ord(plan.BreakBefore));
+end;
+
+procedure TSpxMainForm.InsertSetClicked(Sender: TObject);
+begin
+  InsertDirective(sMenuInsSet, '%');
+end;
+
+procedure TSpxMainForm.InsertDefClicked(Sender: TObject);
+begin
+  InsertDirective(sMenuInsDef, '%');
+end;
+
+procedure TSpxMainForm.InsertIncludeClicked(Sender: TObject);
+begin
+  InsertDirective(sMenuInsInclude, '"');
+end;
+
+{ The condition is INLINE, so it is half insert, half wrap: a normal selection becomes the
+  THEN branch -- "make this text conditional" -- and with nothing selected the whole
+  template goes in. Either way the NAME is selected afterwards. The guard is
+  SpxCondThenAllowed: a bare | would add a branch and an unbalanced bracket would swallow
+  the frame, and the engine reports neither as what it is. }
+procedure TSpxMainForm.InsertCondClicked(Sender: TObject);
+var
+  t, pre, suf: string;
+  ps, pl: Integer;
+  sel: TSpxSelection;
+  after: TSpxRange;
+  caret: TPoint;
+  nameLine, nameCol: Integer;
+begin
+  t := Tr(sMenuInsCond);
+  if not SpxCondParts(t, pre, suf, ps, pl) then Exit;
+  if FEditor.SelAvail then
+  begin
+    sel := CurrentSelection(True);
+    if not SpxWrapRange(sel, Length(pre), Length(suf), after) then Exit;
+    if not SpxCondThenAllowed(TextBefore(Point(sel.Range.A.Col, sel.Range.A.Line)),
+                              sel.Text,
+                              TextAfter(Point(sel.Range.B.Col, sel.Range.B.Line))) then
+    begin
+      SetStatusText(Tr(sCondWrapRefused));
+      Exit;
+    end;
+    nameLine := sel.Range.A.Line;
+    nameCol := sel.Range.A.Col + ps - 1;
+    FEditor.SelText := pre + FEditor.SelText + suf;
+  end
+  else
+  begin
+    if CaretSplitsMark then Exit;
+    caret := FEditor.LogicalCaretXY;
+    nameLine := caret.Y;
+    nameCol := caret.X + ps - 1;
+    FEditor.SelText := t;
+  end;
+  FEditor.BlockBegin := Point(nameCol, nameLine);
+  FEditor.BlockEnd := Point(nameCol + pl, nameLine);
 end;
 
 procedure TSpxMainForm.RuntimeChanged(Sender: TObject);

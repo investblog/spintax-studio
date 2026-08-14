@@ -71,6 +71,29 @@ samo ona koja ne dijele slova — pa „zamijenjeno“ može pošteno reći manj
 Zamijenjeni dokument prolazi isti put motora kao i otipkani: pretpregled se iscrtava iznova,
 a dijagnostika odgovara o onome što sada stoji.
 
+## Umetanje oznaka
+
+Sve što u dokument stavlja oznake samog jezika skupljeno je u izborniku **Umetanje**.
+
+Tri naredbe omatanja uzimaju odabir kakav jest: **Omotaj u {…}** ga čini izborom, **Omotaj u […]** —
+miješanjem, **Omotaj u /#…#/** (Ctrl+/) — komentarom. Omatanje u komentar odbija kad bi `#/` u odabiru ili oko njega — ili komentar već otvoren na tom
+mjestu — završio komentar prerano: prva zatvarajuća oznaka pobjeđuje gdje god stajala, tekst bi
+ispao van; to kaže statusna traka, jer motor šuti. Bez odabira Ctrl+/ umeće par i
+ostavlja pokazivač unutra.
+
+Konstrukcije ispod padaju točno onako kako ih izbornik čita. **#set %name% = vrijednost**, **#def %name% = {a|b}** i **#include "name"** zauzimaju
+vlastiti redak — direktiva se računa samo kad otvara svoj redak, pa tekst prije pokazivača
+ostaje iznad, a tekst poslije silazi niže — a ime izlazi odabrano, spremno za tipkanje
+preko. Držite imena latinicom: ime u drugom pismu, šutke, nije ime. Cilj `#include` je
+iznimka — uspoređuje se s imenima vaših fragmenata točno kako je napisan.
+
+**{?name?onda|inače}** živi unutar retka. S odabirom odabrani tekst postaje polovica „onda" — način da se već
+napisano učini uvjetnim; bez odabira ulazi cijeli oblik. Odabir s golom `|`, nezatvorenom zagradom ili otvorenim komentarom biva odbijen: omatanje bi
+promijenilo što kaže umjesto da ga uokviri.
+
+Posljednja stavka stavlja u dokument primjer otvoren u pomoći — gumb samog panela pomoći,
+učinjen dohvatljivim s tipkovnice.
+
 ## Ploče dolje
 
 Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.

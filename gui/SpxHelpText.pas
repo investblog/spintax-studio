@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    'aaac7d0ee2c7ceae', '1161eb58753cc15f', '87e44fc97111b7a9', 'f7ee210436259e5c', 'c5226848658b80c2', 'f6b0fb891bdfa838', '7ac226d0b244ed59', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', 'b9a183a2485288d7', '488ce59bac9e29c3', '7f61fd4b089638df', 'c10f457a64c3680f', '7813c6dc420189dd', '0d549262922b3331', '1e4801611127481b', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'e818ef2c3214bfde', '4ddfd411500958cc', '26e21bf1b83633da', 'dc1c8960c749d8a2', 'b54956a9ee49f248', '00a887dfff5a6ef5', '61f979862124e64f', '18c7da1e110847db', 'd9d49c35432acae4', '1696dda3178324e1', '9dacb63502e5aa97', 'b8529893866ec950', '34969a4cd386a69a', 'ea10d49bf126b2b6', '471885d59dbd925b', 'e4e0d3bf9a37892b', '56ba422eb944d0c7', '2a4bb2d8392a4ede', 'e967a375af7d4c85', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '99c91476088e0733', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    '1f4ee592c2e276d4', '1161eb58753cc15f', '87e44fc97111b7a9', '2437957a8ccd8ebc', 'c5226848658b80c2', 'f6b0fb891bdfa838', '11b2b913c1705dea', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '0e0814eba7ba5569', '488ce59bac9e29c3', '7f61fd4b089638df', '72042f28c98b3b54', '7813c6dc420189dd', '0d549262922b3331', '8764294e769b8cf8', 'c85b5f196fca1f91', '6bb5e85de94010ed', '4d52d106f05aab0e', '4ddfd411500958cc', '26e21bf1b83633da', 'c58d0b62283ad9fa', 'b54956a9ee49f248', '00a887dfff5a6ef5', 'bc9077c6b2104a70', '18c7da1e110847db', 'd9d49c35432acae4', '09962ce44c786665', '9dacb63502e5aa97', 'b8529893866ec950', '582131658e9cc2cd', 'ea10d49bf126b2b6', '471885d59dbd925b', '2cd4e4470d7851a0', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '2eda6e113b5480dc', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '18fcd211397f9966', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -313,18 +313,19 @@ const
 
   { Each language's pages: a span into the tables below. }
   HELP_PAGE_FIRST: array[0..13] of Integer = (
-    0, 31, 62, 93, 124, 155, 186, 217, 248, 279, 310, 341, 372, 403
+    0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416
   );
   HELP_PAGE_LAST: array[0..13] of Integer = (
-    30, 61, 92, 123, 154, 185, 216, 247, 278, 309, 340, 371, 402, 433
+    31, 63, 95, 127, 159, 191, 223, 255, 287, 319, 351, 383, 415, 447
   );
-  HELP_SLUG: array[0..433] of string = (
-    'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
+  HELP_SLUG: array[0..447] of string = (
+    'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq', 'studio', 'panes', 'replace', 'insert', 'panels', 'groups', 'settings', 'gsa', 'language', 'reading-syntax', 'choices', 'shuffles', 'macros', 'conditions', 'counting', 'fragments', 'remarks', 'tidying', 'silences', 'next', 'about', 'reading', 'brackets', 'definitions', 'variables', 'includes', 'plurals', 'permutations', 'notes', 'abbreviations', 'correct', 'faq'
   );
-  HELP_TITLE: array[0..433] of string = (
+  HELP_TITLE: array[0..447] of string = (
     'Spintax Studio',
     'The two panes',
     'Find and replace',
+    'Inserting the marks',
     'The panels along the bottom',
     'The group editor',
     'Settings',
@@ -356,6 +357,7 @@ const
     'Spintax Studio',
     'Две панели',
     'Поиск и замена',
+    'Вставка конструкций',
     'Панели снизу',
     'Редактор групп',
     'Настройки',
@@ -387,6 +389,7 @@ const
     'Spintax Studio',
     'Die zwei Hälften',
     'Suchen und Ersetzen',
+    'Die Markierungen einfügen',
     'Die Tafeln am unteren Rand',
     'Der Gruppeneditor',
     'Einstellungen',
@@ -418,6 +421,7 @@ const
     'Spintax Studio',
     'Les deux volets',
     'Rechercher et remplacer',
+    'Insérer les marques',
     'Les panneaux du bas',
     'L''éditeur de groupe',
     'Réglages',
@@ -449,6 +453,7 @@ const
     'Spintax Studio',
     'Las dos mitades',
     'Buscar y reemplazar',
+    'Insertar las marcas',
     'Los paneles de abajo',
     'El editor de grupos',
     'Ajustes',
@@ -480,6 +485,7 @@ const
     'Spintax Studio',
     'Le due metà',
     'Trova e sostituisci',
+    'Inserire i segni',
     'I pannelli in basso',
     'L''editor di gruppi',
     'Impostazioni',
@@ -511,6 +517,7 @@ const
     'Spintax Studio',
     'As duas metades',
     'Localizar e substituir',
+    'Inserir as marcas',
     'Os painéis de baixo',
     'O editor de grupos',
     'Definições',
@@ -542,6 +549,7 @@ const
     'Spintax Studio',
     'De twee helften',
     'Zoeken en vervangen',
+    'De tekens invoegen',
     'De panelen onderaan',
     'De groepseditor',
     'Instellingen',
@@ -573,6 +581,7 @@ const
     'Spintax Studio',
     'İki yarım',
     'Bul ve değiştir',
+    'İşaretleri ekleme',
     'Alttaki paneller',
     'Grup düzenleyici',
     'Ayarlar',
@@ -604,6 +613,7 @@ const
     'Spintax Studio',
     'Дві половини',
     'Пошук і заміна',
+    'Вставка конструкцій',
     'Панелі внизу',
     'Редактор груп',
     'Налаштування',
@@ -635,6 +645,7 @@ const
     'Spintax Studio',
     'Дзве палавіны',
     'Пошук і замена',
+    'Устаўка канструкцый',
     'Панэлі ўнізе',
     'Рэдактар груп',
     'Налады',
@@ -666,6 +677,7 @@ const
     'Spintax Studio',
     'Две половине',
     'Претрага и замена',
+    'Уметање ознака',
     'Панели доле',
     'Уређивач група',
     'Подешавања',
@@ -697,6 +709,7 @@ const
     'Spintax Studio',
     'Dvije polovice',
     'Traženje i zamjena',
+    'Umetanje oznaka',
     'Ploče dolje',
     'Uređivač grupa',
     'Postavke',
@@ -728,6 +741,7 @@ const
     'Spintax Studio',
     'Dvije polovine',
     'Pretraga i zamjena',
+    'Umetanje oznaka',
     'Ploče dolje',
     'Uređivač grupa',
     'Postavke',
@@ -757,19 +771,19 @@ const
     'Kako izgleda ispravno',
     'Često pitaju'
   );
-  HELP_PAGE_DOC: array[0..433] of Integer = (
-    0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_PAGE_DOC: array[0..447] of Integer = (
+    0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
-  HELP_FIRST: array[0..433] of Integer = (
-    0, 7, 14, 19, 30, 33, 36, 45, 50, 56, 68, 93, 103, 110, 117, 126, 130, 145, 167, 169, 179, 186, 199, 215, 240, 262, 282, 296, 309, 322, 330, 339, 346, 353, 358, 369, 372, 375, 384, 389, 395, 407, 432, 442, 449, 457, 466, 470, 484, 514, 516, 527, 534, 547, 563, 588, 610, 629, 643, 656, 676, 684, 691, 698, 705, 710, 721, 724, 727, 736, 741, 747, 759, 784, 794, 801, 808, 817, 821, 836, 861, 863, 873, 880, 893, 909, 934, 956, 976, 990, 1003, 1016, 1024, 1033, 1040, 1047, 1052, 1063, 1066, 1069, 1078, 1083, 1089, 1101, 1126, 1136, 1143, 1150, 1159, 1163, 1178, 1206, 1208, 1218, 1225, 1238, 1254, 1279, 1301, 1321, 1335, 1348, 1361, 1369, 1378, 1385, 1392, 1397, 1408, 1411, 1414, 1423, 1428, 1434, 1446, 1471, 1481, 1488, 1495, 1504, 1508, 1523, 1551, 1553, 1563, 1570, 1583, 1599, 1624, 1646, 1666, 1680, 1693, 1706, 1714, 1723, 1730, 1737, 1742, 1753, 1756, 1759, 1768, 1773, 1779, 1791, 1816, 1826, 1833, 1840, 1849, 1853, 1868, 1896, 1898, 1908, 1915, 1928, 1944, 1969, 1991, 2011, 2025, 2038, 2051, 2059, 2068, 2075, 2082, 2087, 2098, 2101, 2104, 2113, 2118, 2124, 2136, 2161, 2171, 2178, 2185, 2194, 2198, 2213, 2243, 2245, 2255, 2262, 2275, 2291, 2316, 2338, 2358, 2372, 2385, 2398, 2406, 2415, 2422, 2429, 2434, 2445, 2448, 2451, 2460, 2465, 2471, 2483, 2508, 2518, 2525, 2532, 2541, 2545, 2560, 2585, 2587, 2597, 2604, 2617, 2633, 2658, 2680, 2700, 2714, 2727, 2740, 2748, 2757, 2764, 2771, 2776, 2787, 2790, 2793, 2802, 2807, 2813, 2825, 2850, 2860, 2867, 2874, 2883, 2887, 2902, 2929, 2931, 2941, 2948, 2961, 2977, 3002, 3024, 3044, 3058, 3071, 3084, 3092, 3101, 3108, 3115, 3120, 3131, 3134, 3137, 3146, 3151, 3157, 3169, 3194, 3204, 3211, 3219, 3228, 3232, 3247, 3276, 3278, 3288, 3295, 3308, 3324, 3349, 3371, 3391, 3405, 3418, 3431, 3439, 3448, 3455, 3462, 3467, 3478, 3481, 3484, 3493, 3498, 3504, 3516, 3541, 3551, 3558, 3566, 3575, 3579, 3594, 3623, 3625, 3635, 3642, 3655, 3671, 3696, 3718, 3738, 3752, 3765, 3778, 3786, 3795, 3802, 3809, 3814, 3825, 3828, 3831, 3840, 3845, 3851, 3863, 3888, 3898, 3905, 3913, 3922, 3926, 3941, 3971, 3973, 3983, 3990, 4003, 4019, 4044, 4066, 4086, 4100, 4113, 4126, 4134, 4143, 4150, 4157, 4162, 4173, 4176, 4179, 4188, 4193, 4199, 4211, 4236, 4246, 4253, 4261, 4270, 4274, 4290, 4317, 4319, 4329, 4336, 4349, 4365, 4390, 4412, 4432, 4446, 4459, 4472, 4480, 4489, 4496, 4503, 4508, 4519, 4522, 4525, 4534, 4539, 4545, 4557, 4582, 4592, 4599, 4607, 4616, 4620, 4636, 4663, 4665, 4675, 4682, 4695, 4711, 4736, 4758, 4778, 4792, 4805, 4818, 4826
+  HELP_FIRST: array[0..447] of Integer = (
+    0, 7, 14, 19, 25, 36, 39, 42, 51, 56, 62, 74, 99, 109, 116, 123, 132, 136, 151, 173, 175, 185, 192, 205, 221, 246, 268, 288, 302, 315, 328, 336, 345, 352, 359, 364, 370, 381, 384, 387, 396, 401, 407, 419, 444, 454, 461, 469, 478, 482, 496, 526, 528, 539, 546, 559, 575, 600, 622, 641, 655, 668, 688, 696, 703, 710, 717, 722, 728, 739, 742, 745, 754, 759, 765, 777, 802, 812, 819, 826, 835, 839, 854, 879, 881, 891, 898, 911, 927, 952, 974, 994, 1008, 1021, 1034, 1042, 1051, 1058, 1065, 1070, 1076, 1087, 1090, 1093, 1102, 1107, 1113, 1125, 1150, 1160, 1167, 1174, 1183, 1187, 1202, 1230, 1232, 1242, 1249, 1262, 1278, 1303, 1325, 1345, 1359, 1372, 1385, 1393, 1402, 1409, 1416, 1421, 1427, 1438, 1441, 1444, 1453, 1458, 1464, 1476, 1501, 1511, 1518, 1525, 1534, 1538, 1553, 1581, 1583, 1593, 1600, 1613, 1629, 1654, 1676, 1696, 1710, 1723, 1736, 1744, 1753, 1760, 1767, 1772, 1778, 1789, 1792, 1795, 1804, 1809, 1815, 1827, 1852, 1862, 1869, 1876, 1885, 1889, 1904, 1932, 1934, 1944, 1951, 1964, 1980, 2005, 2027, 2047, 2061, 2074, 2087, 2095, 2104, 2111, 2118, 2123, 2129, 2140, 2143, 2146, 2155, 2160, 2166, 2178, 2203, 2213, 2220, 2227, 2236, 2240, 2255, 2285, 2287, 2297, 2304, 2317, 2333, 2358, 2380, 2400, 2414, 2427, 2440, 2448, 2457, 2464, 2471, 2476, 2482, 2493, 2496, 2499, 2508, 2513, 2519, 2531, 2556, 2566, 2573, 2580, 2589, 2593, 2608, 2633, 2635, 2645, 2652, 2665, 2681, 2706, 2728, 2748, 2762, 2775, 2788, 2796, 2805, 2812, 2819, 2824, 2830, 2841, 2844, 2847, 2856, 2861, 2867, 2879, 2904, 2914, 2921, 2928, 2937, 2941, 2956, 2983, 2985, 2995, 3002, 3015, 3031, 3056, 3078, 3098, 3112, 3125, 3138, 3146, 3155, 3162, 3169, 3174, 3180, 3191, 3194, 3197, 3206, 3211, 3217, 3229, 3254, 3264, 3271, 3279, 3288, 3292, 3307, 3336, 3338, 3348, 3355, 3368, 3384, 3409, 3431, 3451, 3465, 3478, 3491, 3499, 3508, 3515, 3522, 3527, 3533, 3544, 3547, 3550, 3559, 3564, 3570, 3582, 3607, 3617, 3624, 3632, 3641, 3645, 3660, 3689, 3691, 3701, 3708, 3721, 3737, 3762, 3784, 3804, 3818, 3831, 3844, 3852, 3861, 3868, 3875, 3880, 3886, 3897, 3900, 3903, 3912, 3917, 3923, 3935, 3960, 3970, 3977, 3985, 3994, 3998, 4013, 4043, 4045, 4055, 4062, 4075, 4091, 4116, 4138, 4158, 4172, 4185, 4198, 4206, 4215, 4222, 4229, 4234, 4240, 4251, 4254, 4257, 4266, 4271, 4277, 4289, 4314, 4324, 4331, 4339, 4348, 4352, 4368, 4395, 4397, 4407, 4414, 4427, 4443, 4468, 4490, 4510, 4524, 4537, 4550, 4558, 4567, 4574, 4581, 4586, 4592, 4603, 4606, 4609, 4618, 4623, 4629, 4641, 4666, 4676, 4683, 4691, 4700, 4704, 4720, 4747, 4749, 4759, 4766, 4779, 4795, 4820, 4842, 4862, 4876, 4889, 4902, 4910
   );
-  HELP_LAST: array[0..433] of Integer = (
-    6, 13, 18, 29, 32, 35, 44, 49, 55, 67, 92, 102, 109, 116, 125, 129, 144, 166, 168, 178, 185, 198, 214, 239, 261, 281, 295, 308, 321, 329, 338, 345, 352, 357, 368, 371, 374, 383, 388, 394, 406, 431, 441, 448, 456, 465, 469, 483, 513, 515, 526, 533, 546, 562, 587, 609, 628, 642, 655, 675, 683, 690, 697, 704, 709, 720, 723, 726, 735, 740, 746, 758, 783, 793, 800, 807, 816, 820, 835, 860, 862, 872, 879, 892, 908, 933, 955, 975, 989, 1002, 1015, 1023, 1032, 1039, 1046, 1051, 1062, 1065, 1068, 1077, 1082, 1088, 1100, 1125, 1135, 1142, 1149, 1158, 1162, 1177, 1205, 1207, 1217, 1224, 1237, 1253, 1278, 1300, 1320, 1334, 1347, 1360, 1368, 1377, 1384, 1391, 1396, 1407, 1410, 1413, 1422, 1427, 1433, 1445, 1470, 1480, 1487, 1494, 1503, 1507, 1522, 1550, 1552, 1562, 1569, 1582, 1598, 1623, 1645, 1665, 1679, 1692, 1705, 1713, 1722, 1729, 1736, 1741, 1752, 1755, 1758, 1767, 1772, 1778, 1790, 1815, 1825, 1832, 1839, 1848, 1852, 1867, 1895, 1897, 1907, 1914, 1927, 1943, 1968, 1990, 2010, 2024, 2037, 2050, 2058, 2067, 2074, 2081, 2086, 2097, 2100, 2103, 2112, 2117, 2123, 2135, 2160, 2170, 2177, 2184, 2193, 2197, 2212, 2242, 2244, 2254, 2261, 2274, 2290, 2315, 2337, 2357, 2371, 2384, 2397, 2405, 2414, 2421, 2428, 2433, 2444, 2447, 2450, 2459, 2464, 2470, 2482, 2507, 2517, 2524, 2531, 2540, 2544, 2559, 2584, 2586, 2596, 2603, 2616, 2632, 2657, 2679, 2699, 2713, 2726, 2739, 2747, 2756, 2763, 2770, 2775, 2786, 2789, 2792, 2801, 2806, 2812, 2824, 2849, 2859, 2866, 2873, 2882, 2886, 2901, 2928, 2930, 2940, 2947, 2960, 2976, 3001, 3023, 3043, 3057, 3070, 3083, 3091, 3100, 3107, 3114, 3119, 3130, 3133, 3136, 3145, 3150, 3156, 3168, 3193, 3203, 3210, 3218, 3227, 3231, 3246, 3275, 3277, 3287, 3294, 3307, 3323, 3348, 3370, 3390, 3404, 3417, 3430, 3438, 3447, 3454, 3461, 3466, 3477, 3480, 3483, 3492, 3497, 3503, 3515, 3540, 3550, 3557, 3565, 3574, 3578, 3593, 3622, 3624, 3634, 3641, 3654, 3670, 3695, 3717, 3737, 3751, 3764, 3777, 3785, 3794, 3801, 3808, 3813, 3824, 3827, 3830, 3839, 3844, 3850, 3862, 3887, 3897, 3904, 3912, 3921, 3925, 3940, 3970, 3972, 3982, 3989, 4002, 4018, 4043, 4065, 4085, 4099, 4112, 4125, 4133, 4142, 4149, 4156, 4161, 4172, 4175, 4178, 4187, 4192, 4198, 4210, 4235, 4245, 4252, 4260, 4269, 4273, 4289, 4316, 4318, 4328, 4335, 4348, 4364, 4389, 4411, 4431, 4445, 4458, 4471, 4479, 4488, 4495, 4502, 4507, 4518, 4521, 4524, 4533, 4538, 4544, 4556, 4581, 4591, 4598, 4606, 4615, 4619, 4635, 4662, 4664, 4674, 4681, 4694, 4710, 4735, 4757, 4777, 4791, 4804, 4817, 4825, 4834
+  HELP_LAST: array[0..447] of Integer = (
+    6, 13, 18, 24, 35, 38, 41, 50, 55, 61, 73, 98, 108, 115, 122, 131, 135, 150, 172, 174, 184, 191, 204, 220, 245, 267, 287, 301, 314, 327, 335, 344, 351, 358, 363, 369, 380, 383, 386, 395, 400, 406, 418, 443, 453, 460, 468, 477, 481, 495, 525, 527, 538, 545, 558, 574, 599, 621, 640, 654, 667, 687, 695, 702, 709, 716, 721, 727, 738, 741, 744, 753, 758, 764, 776, 801, 811, 818, 825, 834, 838, 853, 878, 880, 890, 897, 910, 926, 951, 973, 993, 1007, 1020, 1033, 1041, 1050, 1057, 1064, 1069, 1075, 1086, 1089, 1092, 1101, 1106, 1112, 1124, 1149, 1159, 1166, 1173, 1182, 1186, 1201, 1229, 1231, 1241, 1248, 1261, 1277, 1302, 1324, 1344, 1358, 1371, 1384, 1392, 1401, 1408, 1415, 1420, 1426, 1437, 1440, 1443, 1452, 1457, 1463, 1475, 1500, 1510, 1517, 1524, 1533, 1537, 1552, 1580, 1582, 1592, 1599, 1612, 1628, 1653, 1675, 1695, 1709, 1722, 1735, 1743, 1752, 1759, 1766, 1771, 1777, 1788, 1791, 1794, 1803, 1808, 1814, 1826, 1851, 1861, 1868, 1875, 1884, 1888, 1903, 1931, 1933, 1943, 1950, 1963, 1979, 2004, 2026, 2046, 2060, 2073, 2086, 2094, 2103, 2110, 2117, 2122, 2128, 2139, 2142, 2145, 2154, 2159, 2165, 2177, 2202, 2212, 2219, 2226, 2235, 2239, 2254, 2284, 2286, 2296, 2303, 2316, 2332, 2357, 2379, 2399, 2413, 2426, 2439, 2447, 2456, 2463, 2470, 2475, 2481, 2492, 2495, 2498, 2507, 2512, 2518, 2530, 2555, 2565, 2572, 2579, 2588, 2592, 2607, 2632, 2634, 2644, 2651, 2664, 2680, 2705, 2727, 2747, 2761, 2774, 2787, 2795, 2804, 2811, 2818, 2823, 2829, 2840, 2843, 2846, 2855, 2860, 2866, 2878, 2903, 2913, 2920, 2927, 2936, 2940, 2955, 2982, 2984, 2994, 3001, 3014, 3030, 3055, 3077, 3097, 3111, 3124, 3137, 3145, 3154, 3161, 3168, 3173, 3179, 3190, 3193, 3196, 3205, 3210, 3216, 3228, 3253, 3263, 3270, 3278, 3287, 3291, 3306, 3335, 3337, 3347, 3354, 3367, 3383, 3408, 3430, 3450, 3464, 3477, 3490, 3498, 3507, 3514, 3521, 3526, 3532, 3543, 3546, 3549, 3558, 3563, 3569, 3581, 3606, 3616, 3623, 3631, 3640, 3644, 3659, 3688, 3690, 3700, 3707, 3720, 3736, 3761, 3783, 3803, 3817, 3830, 3843, 3851, 3860, 3867, 3874, 3879, 3885, 3896, 3899, 3902, 3911, 3916, 3922, 3934, 3959, 3969, 3976, 3984, 3993, 3997, 4012, 4042, 4044, 4054, 4061, 4074, 4090, 4115, 4137, 4157, 4171, 4184, 4197, 4205, 4214, 4221, 4228, 4233, 4239, 4250, 4253, 4256, 4265, 4270, 4276, 4288, 4313, 4323, 4330, 4338, 4347, 4351, 4367, 4394, 4396, 4406, 4413, 4426, 4442, 4467, 4489, 4509, 4523, 4536, 4549, 4557, 4566, 4573, 4580, 4585, 4591, 4602, 4605, 4608, 4617, 4622, 4628, 4640, 4665, 4675, 4682, 4690, 4699, 4703, 4719, 4746, 4748, 4758, 4765, 4778, 4794, 4819, 4841, 4861, 4875, 4888, 4901, 4909, 4918
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..4834] of string = (
+  HELP_LINE: array[0..4918] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -828,6 +842,30 @@ const
       ' so "replaced" may honestly report a smaller number than the counter.</p>',
     '<p>A replaced document goes through the same engine pass as typed text: the preview re' +
       'draws, and the diagnostics answer about what is now there.</p>',
+    '<h2 id="insert">Inserting the marks</h2>',
+    '<p>Everything that puts this language''s own marks into the document sits in the <b>In' +
+      'sert</b> menu.</p>',
+    '<p>The three wrap commands take the selection as it stands: <b>Wrap in {…}</b> makes i' +
+      't a choice, <b>Wrap in […]</b> a shuffle, and <b>Wrap in /#…#/</b> (Ctrl+/) a comment.' +
+      ' The comment wrap refuses when a <code>#/</code> in or around the selection — or a com' +
+      'ment already open at that spot — would end a comment early: the first closer wins wher' +
+      'ever it stands, text would fall back out, and the status bar says so because the engin' +
+      'e does not. With nothing selected, Ctrl+/ inserts the pair and leaves the caret inside' +
+      ' it.</p>',
+    '<p>The constructs below land exactly as the menu reads them. <b>#set %name% = value</b' +
+      '>, <b>#def %name% = {a|b}</b> and <b>#include "name"</b> take a line of their own — a ' +
+      'directive counts only when it starts its line, so text before the caret stays above an' +
+      'd text after it moves below — and the name comes out selected, ready to be typed over.' +
+      ' Keep names in Latin letters: a name in another alphabet is silently not a name. The <' +
+      'code>#include</code> target is the one exception — it is compared to your fragment nam' +
+      'es exactly as written.</p>',
+    '<p><b>{?name?then|else}</b> is inline. With a selection, the selected text becomes the' +
+      ' "then" half — a way to make what is already written conditional; with nothing selecte' +
+      'd the whole shape goes in. A selection carrying a bare <code>|</code>, an unbalanced b' +
+      'racket or an open comment is refused: the wrap would change what it says instead of fr' +
+      'aming it.</p>',
+    '<p>The last item puts the example open in the help into the document — the help pane''' +
+      's own button, made reachable from the keyboard.</p>',
     '<h2 id="panels">The panels along the bottom</h2>',
     '<p>The strip of tools down the side opens four panels, one at a time.</p>',
     '<p><b>Diagnostics</b> lists what the engine found wrong, each with the line and column' +
@@ -1691,6 +1729,28 @@ const
       'сло меньше счётчика.</p>',
     '<p>Заменённый документ проходит тот же путь движка, что и набранный: превью перерисовы' +
       'вается, и диагностика отвечает про то, что стоит в документе теперь.</p>',
+    '<h2 id="insert">Вставка конструкций</h2>',
+    '<p>Всё, что ставит в документ метки самого языка, собрано в меню <b>Вставка</b>.</p>',
+    '<p>Три команды обёртки берут выделение как есть: <b>Обернуть в {…}</b> делает его выбо' +
+      'ром, <b>Обернуть в […]</b> — перестановкой, <b>Обернуть в /#…#/</b> (Ctrl+/) — коммент' +
+      'арием. Обёртка в комментарий откажет, если <code>#/</code> в выделении или вокруг него' +
+      ' — или уже открытый в этом месте комментарий — оборвал бы комментарий раньше времени: ' +
+      'первый закрывающий знак побеждает, где бы ни стоял, и часть текста выпала бы наружу; о' +
+      'б этом скажет строка состояния, потому что движок промолчит. Без выделения Ctrl+/ вста' +
+      'вляет пару и оставляет курсор внутри.</p>',
+    '<p>Конструкции ниже ложатся ровно так, как читаются в меню. <b>#set %name% = значение<' +
+      '/b>, <b>#def %name% = {а|б}</b> и <b>#include "имя"</b> встают на собственную строку —' +
+      ' директива считается, только когда открывает свою строку, так что текст до курсора ост' +
+      'аётся выше, а текст после уходит ниже, — и имя оказывается выделенным, готовым к набор' +
+      'у. Имена пишутся латиницей: имя в другом алфавите именем не является — молча. Исключен' +
+      'ие — цель <code>#include</code>: она сравнивается с именами фрагментов буквально, как ' +
+      'написана.</p>',
+    '<p><b>{?name?тогда|иначе}</b> — конструкция внутри строки. С выделением выделенный тек' +
+      'ст становится половиной «тогда» — так уже написанное делается условным; без выделения ' +
+      'вставляется вся форма. Выделение с одиночной <code>|</code>, незакрытой скобкой или от' +
+      'крытым комментарием получит отказ: обёртка изменила бы смысл, а не обрамила его.</p>',
+    '<p>Последний пункт вставляет в документ пример, открытый в справке, — та же кнопка пан' +
+      'ели помощи, ставшая достижимой с клавиатуры.</p>',
     '<h2 id="panels">Панели снизу</h2>',
     '<p>Полоса инструментов сбоку открывает четыре панели, по одной за раз.</p>',
     '<p><b>Диагностика</b> перечисляет то, что движок счёл неверным, со строкой и колонкой ' +
@@ -2565,6 +2625,30 @@ const
     '<p>Ein ersetztes Dokument nimmt denselben Weg durch die Maschine wie getipptes: die Vo' +
       'rschau wird neu gezeichnet, und die Diagnose antwortet über das, was jetzt dasteht.</p' +
       '>',
+    '<h2 id="insert">Die Markierungen einfügen</h2>',
+    '<p>Alles, was die Markierungen dieser Sprache ins Dokument setzt, sammelt das Menü <b>' +
+      'Einfügen</b>.</p>',
+    '<p>Die drei Einfass-Befehle nehmen die Auswahl, wie sie steht: <b>In {…} einfassen</b>' +
+      ' macht sie zur Auswahl, <b>In […] einfassen</b> zum Mischen, <b>In /#…#/ einfassen</b>' +
+      ' (Strg+/) zum Kommentar. Das Einfassen in einen Kommentar lehnt ab, wenn ein <code>#/<' +
+      '/code> in oder um die Auswahl — oder ein an dieser Stelle bereits offener Kommentar — ' +
+      'einen Kommentar zu früh beenden würde: das erste Schlusszeichen gewinnt, wo immer es s' +
+      'teht, Text fiele heraus; die Statusleiste sagt es, weil die Maschine schweigt. Ohne Au' +
+      'swahl fügt Strg+/ das Paar ein und lässt die Schreibmarke darin stehen.</p>',
+    '<p>Die Konstrukte darunter landen genau so, wie das Menü sie liest. <b>#set %name% = W' +
+      'ert</b>, <b>#def %name% = {a|b}</b> und <b>#include "name"</b> nehmen eine eigene Zeil' +
+      'e — eine Direktive zählt nur, wenn sie ihre Zeile beginnt, Text vor der Schreibmarke b' +
+      'leibt also oben und Text danach rückt nach unten — und der Name ist danach ausgewählt,' +
+      ' bereit zum Überschreiben. Namen bleiben in lateinischen Buchstaben: ein Name in einem' +
+      ' anderen Alphabet ist stillschweigend keiner. Die Ausnahme ist das Ziel von <code>#inc' +
+      'lude</code> — es wird buchstabengetreu mit den Fragmentnamen verglichen.</p>',
+    '<p><b>{?name?dann|sonst}</b> steht in der Zeile selbst. Mit Auswahl wird der ausgewähl' +
+      'te Text zur „dann“-Hälfte — so wird bereits Geschriebenes bedingt; ohne Auswahl geht d' +
+      'ie ganze Form hinein. Eine Auswahl mit einem nackten <code>|</code>, einer unausgeglic' +
+      'henen Klammer oder einem offenen Kommentar wird abgelehnt: das Einfassen würde den Sin' +
+      'n ändern statt ihn zu rahmen.</p>',
+    '<p>Der letzte Punkt setzt das in der Hilfe geöffnete Beispiel ins Dokument — die Schal' +
+      'tfläche der Hilfe selbst, von der Tastatur aus erreichbar gemacht.</p>',
     '<h2 id="panels">Die Tafeln am unteren Rand</h2>',
     '<p>Die Werkzeugleiste an der Seite öffnet vier Tafeln, immer eine davon.</p>',
     '<p><b>Diagnose</b> listet auf, was die Maschine beanstandet, jeweils mit Zeile und Spa' +
@@ -3496,6 +3580,30 @@ const
       'plus petit.</p>',
     '<p>Un document remplacé prend le même chemin du moteur que du texte tapé : l''aperçu s' +
       'e redessine, et le diagnostic répond sur ce qui s''y trouve désormais.</p>',
+    '<h2 id="insert">Insérer les marques</h2>',
+    '<p>Tout ce qui pose dans le document les marques du langage lui-même se trouve dans le' +
+      ' menu <b>Insertion</b>.</p>',
+    '<p>Les trois commandes d''entourage prennent la sélection telle quelle : <b>Entourer d' +
+      'e {…}</b> en fait un choix, <b>Entourer de […]</b> un brassage, <b>Entourer de /#…#/</' +
+      'b> (Ctrl+/) un commentaire. L''entourage en commentaire refuse quand un <code>#/</code' +
+      '> dans la sélection ou autour d''elle — ou un commentaire déjà ouvert à cet endroit — ' +
+      'terminerait un commentaire trop tôt : la première marque fermante gagne où qu''elle so' +
+      'it, du texte retomberait dehors ; la barre d''état le dit, parce que le moteur se tait' +
+      '. Sans sélection, Ctrl+/ insère la paire et laisse le curseur dedans.</p>',
+    '<p>Les constructions en dessous se posent exactement comme le menu les lit. <b>#set %n' +
+      'om% = valeur</b>, <b>#def %nom% = {a|b}</b> et <b>#include "nom"</b> prennent leur pro' +
+      'pre ligne — une directive ne compte que si elle ouvre sa ligne, le texte avant le curs' +
+      'eur reste donc au-dessus et le texte après descend — et le nom ressort sélectionné, pr' +
+      'êt à être remplacé. Gardez les noms en lettres latines : un nom dans un autre alphabet' +
+      ' n''en est silencieusement pas un. La cible de <code>#include</code> est l''exception ' +
+      '— elle est comparée aux noms de vos fragments exactement telle qu''écrite.</p>',
+    '<p><b>{?nom?alors|sinon}</b> s''écrit dans la ligne. Avec une sélection, le texte séle' +
+      'ctionné devient la moitié « alors » — une façon de rendre conditionnel ce qui est déjà' +
+      ' écrit ; sans sélection, la forme entière est insérée. Une sélection portant un <code>' +
+      '|</code> nu, un crochet déséquilibré ou un commentaire ouvert est refusée : l''entoura' +
+      'ge changerait ce qu''elle dit au lieu de l''encadrer.</p>',
+    '<p>Le dernier élément pose dans le document l''exemple ouvert dans l''aide — le bouton' +
+      ' du panneau d''aide lui-même, rendu accessible au clavier.</p>',
     '<h2 id="panels">Les panneaux du bas</h2>',
     '<p>La barre d''outils sur le côté ouvre quatre panneaux, un à la fois.</p>',
     '<p><b>Diagnostics</b> liste ce que le moteur a jugé fautif, chaque fois avec la ligne ' +
@@ -4420,6 +4528,30 @@ const
       '«reemplazados» puede decir honestamente un número menor.</p>',
     '<p>Un documento reemplazado pasa por el mismo motor que el texto escrito: la vista pre' +
       'via se redibuja y el diagnóstico responde sobre lo que hay ahora.</p>',
+    '<h2 id="insert">Insertar las marcas</h2>',
+    '<p>Todo lo que pone en el documento las marcas del propio lenguaje está en el menú <b>' +
+      'Insertar</b>.</p>',
+    '<p>Los tres comandos de envoltura toman la selección tal cual: <b>Envolver en {…}</b> ' +
+      'la convierte en una elección, <b>Envolver en […]</b> en una baraja, <b>Envolver en /#…' +
+      '#/</b> (Ctrl+/) en un comentario. La envoltura en comentario rechaza cuando un <code>#' +
+      '/</code> dentro o alrededor de la selección — o un comentario ya abierto en ese punto ' +
+      '— terminaría un comentario antes de tiempo: el primer cierre gana esté donde esté, par' +
+      'te del texto quedaría fuera; la barra de estado lo dice, porque el motor calla. Sin se' +
+      'lección, Ctrl+/ inserta el par y deja el cursor dentro.</p>',
+    '<p>Las construcciones de abajo caen exactamente como el menú las lee. <b>#set %nombre%' +
+      ' = valor</b>, <b>#def %nombre% = {a|b}</b> y <b>#include "nombre"</b> toman una línea ' +
+      'propia — una directiva solo cuenta cuando abre su línea, así que el texto antes del cu' +
+      'rsor queda arriba y el de después baja — y el nombre queda seleccionado, listo para es' +
+      'cribir encima. Mantenga los nombres en letras latinas: un nombre en otro alfabeto, sil' +
+      'enciosamente, no es un nombre. El destino de <code>#include</code> es la excepción — s' +
+      'e compara con los nombres de sus fragmentos exactamente como está escrito.</p>',
+    '<p><b>{?nombre?entonces|si no}</b> va dentro de la línea. Con una selección, el texto ' +
+      'seleccionado se vuelve la mitad «entonces» — una forma de hacer condicional lo ya escr' +
+      'ito; sin selección se inserta la forma entera. Una selección con una <code>|</code> su' +
+      'elta, un corchete sin cerrar o un comentario abierto se rechaza: la envoltura cambiarí' +
+      'a lo que dice en vez de enmarcarlo.</p>',
+    '<p>El último elemento pone en el documento el ejemplo abierto en la ayuda — el botón d' +
+      'el propio panel de ayuda, hecho alcanzable desde el teclado.</p>',
     '<h2 id="panels">Los paneles de abajo</h2>',
     '<p>La barra de herramientas del lateral abre cuatro paneles, uno cada vez.</p>',
     '<p><b>Diagnóstico</b> enumera lo que el motor ha encontrado mal, cada cosa con la líne' +
@@ -5313,6 +5445,30 @@ const
       ' «sostituiti» può quindi onestamente dire un numero minore.</p>',
     '<p>Un documento sostituito passa per lo stesso motore del testo digitato: l''anteprima' +
       ' si ridisegna e la diagnostica risponde su ciò che c''è ora.</p>',
+    '<h2 id="insert">Inserire i segni</h2>',
+    '<p>Tutto ciò che mette nel documento i segni del linguaggio stesso sta nel menu <b>Ins' +
+      'erisci</b>.</p>',
+    '<p>I tre comandi di racchiusura prendono la selezione così com''è: <b>Racchiudi in {…}' +
+      '</b> la rende una scelta, <b>Racchiudi in […]</b> un rimescolamento, <b>Racchiudi in /' +
+      '#…#/</b> (Ctrl+/) un commento. La racchiusura in commento rifiuta quando un <code>#/</' +
+      'code> dentro o attorno alla selezione — o un commento già aperto in quel punto — finir' +
+      'ebbe un commento troppo presto: il primo segno di chiusura vince ovunque si trovi, par' +
+      'te del testo ricadrebbe fuori; lo dice la barra di stato, perché il motore tace. Senza' +
+      ' selezione, Ctrl+/ inserisce la coppia e lascia il cursore all''interno.</p>',
+    '<p>I costrutti sotto arrivano esattamente come il menu li legge. <b>#set %nome% = valo' +
+      're</b>, <b>#def %nome% = {a|b}</b> e <b>#include "nome"</b> prendono una riga propria ' +
+      '— una direttiva conta solo quando apre la sua riga, quindi il testo prima del cursore ' +
+      'resta sopra e quello dopo scende — e il nome esce selezionato, pronto per essere sovra' +
+      'scritto. Tenete i nomi in lettere latine: un nome in un altro alfabeto, in silenzio, n' +
+      'on è un nome. La destinazione di <code>#include</code> è l''eccezione — viene confront' +
+      'ata con i nomi dei vostri frammenti esattamente com''è scritta.</p>',
+    '<p><b>{?nome?allora|altrimenti}</b> sta dentro la riga. Con una selezione, il testo se' +
+      'lezionato diventa la metà «allora» — un modo per rendere condizionale ciò che è già sc' +
+      'ritto; senza selezione entra la forma intera. Una selezione con una <code>|</code> nud' +
+      'a, una parentesi non chiusa o un commento aperto viene rifiutata: la racchiusura cambi' +
+      'erebbe ciò che dice invece di incorniciarlo.</p>',
+    '<p>L''ultima voce mette nel documento l''esempio aperto nella guida — il pulsante del ' +
+      'pannello della guida stesso, reso raggiungibile dalla tastiera.</p>',
     '<h2 id="panels">I pannelli in basso</h2>',
     '<p>La barra degli strumenti di lato apre quattro pannelli, uno per volta.</p>',
     '<p><b>Diagnostica</b> elenca ciò che il motore ha trovato sbagliato, ogni volta con la' +
@@ -6208,6 +6364,30 @@ const
       'e assim dizer honestamente um número menor.</p>',
     '<p>Um documento substituído passa pelo mesmo motor que o texto escrito: a pré-visualiz' +
       'ação redesenha-se e o diagnóstico responde sobre o que lá está agora.</p>',
+    '<h2 id="insert">Inserir as marcas</h2>',
+    '<p>Tudo o que põe no documento as marcas da própria linguagem está no menu <b>Inserir<' +
+      '/b>.</p>',
+    '<p>Os três comandos de envolvimento tomam a seleção como está: <b>Envolver em {…}</b> ' +
+      'faz dela uma escolha, <b>Envolver em […]</b> um baralhar, <b>Envolver em /#…#/</b> (Ct' +
+      'rl+/) um comentário. O envolvimento em comentário recusa quando um <code>#/</code> den' +
+      'tro ou à volta da seleção — ou um comentário já aberto nesse ponto — terminaria um com' +
+      'entário cedo demais: o primeiro fecho ganha onde quer que esteja, texto cairia fora; a' +
+      ' barra de estado di-lo, porque o motor se cala. Sem seleção, Ctrl+/ insere o par e dei' +
+      'xa o cursor lá dentro.</p>',
+    '<p>As construções abaixo caem exatamente como o menu as lê. <b>#set %nome% = valor</b>' +
+      ', <b>#def %nome% = {a|b}</b> e <b>#include "nome"</b> tomam uma linha própria — uma di' +
+      'retiva só conta quando abre a sua linha, o texto antes do cursor fica por isso acima e' +
+      ' o de depois desce — e o nome sai selecionado, pronto a ser escrito por cima. Mantenha' +
+      ' os nomes em letras latinas: um nome noutro alfabeto, silenciosamente, não é um nome. ' +
+      'O alvo de <code>#include</code> é a exceção — é comparado com os nomes dos seus fragme' +
+      'ntos exatamente como está escrito.</p>',
+    '<p><b>{?nome?então|senão}</b> vive dentro da linha. Com uma seleção, o texto seleciona' +
+      'do torna-se a metade «então» — uma forma de tornar condicional o que já está escrito; ' +
+      'sem seleção entra a forma inteira. Uma seleção com um <code>|</code> solto, um parênte' +
+      'se por fechar ou um comentário aberto é recusada: o envolvimento mudaria o que ela diz' +
+      ' em vez de a emoldurar.</p>',
+    '<p>O último item põe no documento o exemplo aberto na ajuda — o botão do próprio paine' +
+      'l de ajuda, tornado alcançável pelo teclado.</p>',
     '<h2 id="panels">Os painéis de baixo</h2>',
     '<p>A barra de ferramentas ao lado abre quatro painéis, um de cada vez.</p>',
     '<p><b>Diagnóstico</b> enumera o que o motor achou errado, cada coisa com a linha e a c' +
@@ -7086,6 +7266,30 @@ const
       '— "vervangen" mag dus eerlijk een kleiner getal noemen.</p>',
     '<p>Een vervangen document gaat door dezelfde machine als getypte tekst: het voorbeeld ' +
       'tekent opnieuw en de diagnose antwoordt over wat er nu staat.</p>',
+    '<h2 id="insert">De tekens invoegen</h2>',
+    '<p>Alles wat de tekens van de taal zelf in het document zet, staat in het menu <b>Invo' +
+      'egen</b>.</p>',
+    '<p>De drie omsluitopdrachten nemen de selectie zoals ze is: <b>Omsluiten met {…}</b> m' +
+      'aakt er een keuze van, <b>Omsluiten met […]</b> een schudbeurt, <b>Omsluiten met /#…#/' +
+      '</b> (Ctrl+/) een opmerking. Het omsluiten in een opmerking weigert wanneer een <code>' +
+      '#/</code> in of rond de selectie — of een op die plek al open opmerking — een opmerkin' +
+      'g te vroeg zou beëindigen: het eerste sluitteken wint waar het ook staat, tekst zou er' +
+      'uit vallen; de statusbalk zegt het, omdat de machine zwijgt. Zonder selectie voegt Ctr' +
+      'l+/ het paar in en laat de cursor erbinnen.</p>',
+    '<p>De constructies eronder landen precies zoals het menu ze leest. <b>#set %naam% = wa' +
+      'arde</b>, <b>#def %naam% = {a|b}</b> en <b>#include "naam"</b> nemen een eigen regel —' +
+      ' een richtlijn telt alleen wanneer ze haar regel opent, tekst vóór de cursor blijft du' +
+      's boven en tekst erna schuift omlaag — en de naam komt geselecteerd tevoorschijn, klaa' +
+      'r om overheen te typen. Houd namen in Latijnse letters: een naam in een ander alfabet ' +
+      'is stilzwijgend geen naam. Het doel van <code>#include</code> is de uitzondering — het' +
+      ' wordt precies zoals geschreven met uw fragmentnamen vergeleken.</p>',
+    '<p><b>{?naam?dan|anders}</b> staat in de regel zelf. Met een selectie wordt de geselec' +
+      'teerde tekst de "dan"-helft — een manier om wat er al staat voorwaardelijk te maken; z' +
+      'onder selectie gaat de hele vorm erin. Een selectie met een kale <code>|</code>, een n' +
+      'iet-gesloten haak of een open opmerking wordt geweigerd: het omsluiten zou veranderen ' +
+      'wat ze zegt in plaats van het in te kaderen.</p>',
+    '<p>Het laatste item zet het in de hulp geopende voorbeeld in het document — de knop va' +
+      'n het hulppaneel zelf, bereikbaar gemaakt vanaf het toetsenbord.</p>',
     '<h2 id="panels">De panelen onderaan</h2>',
     '<p>De werkbalk aan de zijkant opent vier panelen, één tegelijk.</p>',
     '<p><b>Diagnose</b> somt op wat de machine verkeerd vond, telkens met de regel en de ko' +
@@ -7982,6 +8186,27 @@ const
       'üçük bir sayı diyebilir.</p>',
     '<p>Değiştirilmiş belge, yazılmış metinle aynı motor yolundan geçer: önizleme yeniden ç' +
       'izilir, tanılar artık orada olan hakkında yanıt verir.</p>',
+    '<h2 id="insert">İşaretleri ekleme</h2>',
+    '<p>Dilin kendi işaretlerini belgeye koyan her şey <b>Ekle</b> menüsünde toplanır.</p>',
+    '<p>Üç sarma komutu seçimi olduğu gibi alır: <b>{…} içine al</b> onu bir seçime, <b>[…]' +
+      ' içine al</b> bir karıştırmaya, <b>/#…#/ içine al</b> (Ctrl+/) bir açıklamaya çevirir.' +
+      ' Açıklamaya sarma, seçimin içindeki veya çevresindeki bir <code>#/</code> — ya da o no' +
+      'ktada zaten açık bir açıklama — bir açıklamayı erken bitirecekse geri çevirir: ilk kap' +
+      'atma işareti nerede durursa dursun kazanır, metin dışarı düşerdi; bunu durum çubuğu sö' +
+      'yler, çünkü makine susar. Seçim yokken Ctrl+/ çifti ekler ve imleci içinde bırakır.</p' +
+      '>',
+    '<p>Alttaki yapılar menüde okundukları gibi düşer. <b>#set %ad% = değer</b>, <b>#def %a' +
+      'd% = {a|b}</b> ve <b>#include "ad"</b> kendi satırlarını alır — bir yönerge yalnızca s' +
+      'atırını açtığında sayılır, imleçten önceki metin bu yüzden yukarıda kalır, sonrası aşa' +
+      'ğı iner — ve ad seçili çıkar, üzerine yazılmaya hazır. Adları Latin harfleriyle tutun:' +
+      ' başka bir alfabedeki ad, sessizce, ad değildir. <code>#include</code> hedefi tek isti' +
+      'snadır — parça adlarınızla yazıldığı gibi, harfi harfine karşılaştırılır.</p>',
+    '<p><b>{?ad?ise|değilse}</b> satırın içinde yaşar. Seçim varken seçili metin "ise" yarı' +
+      'sı olur — zaten yazılmış olanı koşullu kılmanın yolu; seçim yokken bütün biçim girer. ' +
+      'Yalın bir <code>|</code>, kapanmamış bir ayraç veya açık bir açıklama taşıyan seçim ge' +
+      'ri çevrilir: sarma, çerçevelemek yerine söylediğini değiştirirdi.</p>',
+    '<p>Son öğe, yardımda açık olan örneği belgeye koyar — yardım panelinin kendi düğmesi, ' +
+      'klavyeden erişilir kılınmış hali.</p>',
     '<h2 id="panels">Alttaki paneller</h2>',
     '<p>Yandaki araç şeridi dört paneli, her seferinde birini açar.</p>',
     '<p><b>Tanılama</b> makinenin yanlış bulduklarını, her birini başladığı satır ve sütunl' +
@@ -8837,6 +9062,27 @@ const
       'ше за лічильник.</p>',
     '<p>Замінений документ проходить той самий шлях рушія, що й набраний: попередній перегл' +
       'яд перемальовується, і діагностика відповідає про те, що стоїть тепер.</p>',
+    '<h2 id="insert">Вставка конструкцій</h2>',
+    '<p>Усе, що ставить у документ позначки самої мови, зібрано в меню <b>Вставка</b>.</p>',
+    '<p>Три команди обгортання беруть виділення як є: <b>Обгорнути в {…}</b> робить його ви' +
+      'бором, <b>Обгорнути в […]</b> — перемішуванням, <b>Обгорнути в /#…#/</b> (Ctrl+/) — ко' +
+      'ментарем. Обгортання в коментар відмовить, якщо <code>#/</code> у виділенні чи довкола' +
+      ' нього — або вже відкритий у цьому місці коментар — обірвав би коментар зарано: перший' +
+      ' закривальний знак перемагає, хоч би де стояв, і частина тексту випала б назовні; про ' +
+      'це скаже рядок стану, бо рушій мовчить. Без виділення Ctrl+/ вставляє пару й лишає кур' +
+      'сор усередині.</p>',
+    '<p>Конструкції нижче лягають рівно так, як читаються в меню. <b>#set %name% = значення' +
+      '</b>, <b>#def %name% = {а|б}</b> та <b>#include "name"</b> стають на власний рядок — д' +
+      'иректива рахується, лише коли відкриває свій рядок, тож текст до курсора лишається вищ' +
+      'е, а текст після йде нижче, — а ім''я виходить виділеним, готовим до набору. Імена пиш' +
+      'уться латиницею: ім''я в іншій абетці іменем не є — мовчки. Виняток — ціль <code>#incl' +
+      'ude</code>: її порівнюють з іменами фрагментів буквально, як написано.</p>',
+    '<p><b>{?name?тоді|інакше}</b> — конструкція всередині рядка. З виділенням виділений те' +
+      'кст стає половиною «тоді» — так уже написане робиться умовним; без виділення вставляєт' +
+      'ься вся форма. Виділення з одинокою <code>|</code>, незакритою дужкою або відкритим ко' +
+      'ментарем дістане відмову: обгортання змінило б зміст, а не обрамило його.</p>',
+    '<p>Останній пункт вставляє в документ приклад, відкритий у довідці, — та сама кнопка п' +
+      'анелі довідки, зроблена досяжною з клавіатури.</p>',
     '<h2 id="panels">Панелі внизу</h2>',
     '<p>Смуга інструментів збоку відкриває чотири панелі, по одній за раз.</p>',
     '<p><b>Діагностика</b> перелічує те, що рушій вважає хибним, щоразу з рядком і стовпцем' +
@@ -9690,6 +9936,28 @@ const
       'шы за лічыльнік.</p>',
     '<p>Заменены дакумент праходзіць той самы шлях рухавіка, што і набраны: папярэдні прагл' +
       'яд перамалёўваецца, і дыягностыка адказвае пра тое, што стаіць цяпер.</p>',
+    '<h2 id="insert">Устаўка канструкцый</h2>',
+    '<p>Усё, што ставіць у дакумент пазнакі самой мовы, сабрана ў меню <b>Устаўка</b>.</p>',
+    '<p>Тры каманды абгортвання бяруць вылучэнне як ёсць: <b>Абгарнуць у {…}</b> робіць яго' +
+      ' выбарам, <b>Абгарнуць у […]</b> — перамешваннем, <b>Абгарнуць у /#…#/</b> (Ctrl+/) — ' +
+      'каментарыем. Абгортванне ў каментарый адмовіць, калі <code>#/</code> у вылучэнні або в' +
+      'акол яго — ці ўжо адкрыты ў гэтым месцы каментарый — абарваў бы каментарый зарана: пер' +
+      'шы закрывальны знак перамагае, дзе б ні стаяў, і частка тэксту выпала б вонкі; пра гэт' +
+      'а скажа радок стану, бо рухавік маўчыць. Без вылучэння Ctrl+/ устаўляе пару і пакідае ' +
+      'курсор усярэдзіне.</p>',
+    '<p>Канструкцыі ніжэй кладуцца роўна так, як чытаюцца ў меню. <b>#set %name% = значэнне' +
+      '</b>, <b>#def %name% = {а|б}</b> і <b>#include "name"</b> становяцца на ўласны радок —' +
+      ' дырэктыва лічыцца, толькі калі адкрывае свой радок, таму тэкст да курсора застаецца в' +
+      'ышэй, а тэкст пасля сыходзіць ніжэй, — а імя выходзіць вылучаным, гатовым да набору. І' +
+      'мёны пішуцца лацінкай: імя ў іншым алфавіце імем не з''яўляецца — моўчкі. Выключэнне —' +
+      ' мэта <code>#include</code>: яе параўноўваюць з імёнамі фрагментаў літаральна, як напі' +
+      'сана.</p>',
+    '<p><b>{?name?тады|інакш}</b> — канструкцыя ўнутры радка. З вылучэннем вылучаны тэкст с' +
+      'тановіцца палавінай «тады» — так ужо напісанае робіцца ўмоўным; без вылучэння ўстаўляе' +
+      'цца ўся форма. Вылучэнне з адзінокай <code>|</code>, незакрытай дужкай або адкрытым ка' +
+      'ментарыем атрымае адмову: абгортванне змяніла б сэнс, а не абрамляла яго.</p>',
+    '<p>Апошні пункт устаўляе ў дакумент прыклад, адкрыты ў даведцы, — тая самая кнопка пан' +
+      'элі дапамогі, зробленая дасяжнай з клавіятуры.</p>',
     '<h2 id="panels">Панэлі ўнізе</h2>',
     '<p>Паласа інструментаў збоку адкрывае чатыры панэлі, па адной за раз.</p>',
     '<p><b>Дыягностыка</b> пералічвае тое, што рухавік лічыць памылковым, кожны раз з радко' +
@@ -10546,6 +10814,27 @@ const
       'амо она која не деле слова — па „замењено“ може поштено рећи мањи број.</p>',
     '<p>Замењени документ пролази исти пут мотора као и откуцани: преглед се исцртава нанов' +
       'о, а дијагностика одговара о ономе што сада стоји.</p>',
+    '<h2 id="insert">Уметање ознака</h2>',
+    '<p>Све што у документ ставља ознаке самог језика скупљено је у менију <b>Уметање</b>.<' +
+      '/p>',
+    '<p>Три наредбе умотавања узимају избор какав јесте: <b>Умотај у {…}</b> га чини изборо' +
+      'м, <b>Умотај у […]</b> — мешањем, <b>Умотај у /#…#/</b> (Ctrl+/) — коментаром. Умотава' +
+      'ње у коментар одбија кад би <code>#/</code> у избору или око њега — или коментар већ о' +
+      'творен на том месту — завршио коментар прерано: прва затварајућа ознака побеђује где г' +
+      'од да стоји, текст би испао напоље; то каже статусна трака, јер мотор ћути. Без избора' +
+      ' Ctrl+/ умеће пар и оставља курсор унутра.</p>',
+    '<p>Конструкције испод падају тачно онако како их мени чита. <b>#set %name% = вредност<' +
+      '/b>, <b>#def %name% = {а|б}</b> и <b>#include "name"</b> заузимају сопствени ред — дир' +
+      'ектива се рачуна само кад отвара свој ред, па текст пре курсора остаје изнад, а текст ' +
+      'после силази ниже — а име излази изабрано, спремно за куцање преко. Држите имена латин' +
+      'ицом: име у другом писму, ћутке, није име. Циљ <code>#include</code> је изузетак — пор' +
+      'еди се с именима ваших фрагмената тачно како је написан.</p>',
+    '<p><b>{?name?онда|иначе}</b> живи унутар реда. С избором изабрани текст постаје полови' +
+      'на „онда" — начин да се већ написано учини условним; без избора улази цео облик. Избор' +
+      ' са голом <code>|</code>, незатвореном заградом или отвореним коментаром бива одбијен:' +
+      ' умотавање би променило шта каже уместо да га уоквири.</p>',
+    '<p>Последња ставка ставља у документ пример отворен у помоћи — дугме самог панела помо' +
+      'ћи, учињено дохватљивим с тастатуре.</p>',
     '<h2 id="panels">Панели доле</h2>',
     '<p>Трака алатки са стране отвара четири панела, по један у исто време.</p>',
     '<p><b>Дијагностика</b> набраја оно што мотор сматра погрешним, сваки пут са редом и ко' +
@@ -11386,6 +11675,27 @@ const
       'j.</p>',
     '<p>Zamijenjeni dokument prolazi isti put motora kao i otipkani: pretpregled se iscrtav' +
       'a iznova, a dijagnostika odgovara o onome što sada stoji.</p>',
+    '<h2 id="insert">Umetanje oznaka</h2>',
+    '<p>Sve što u dokument stavlja oznake samog jezika skupljeno je u izborniku <b>Umetanje' +
+      '</b>.</p>',
+    '<p>Tri naredbe omatanja uzimaju odabir kakav jest: <b>Omotaj u {…}</b> ga čini izborom' +
+      ', <b>Omotaj u […]</b> — miješanjem, <b>Omotaj u /#…#/</b> (Ctrl+/) — komentarom. Omata' +
+      'nje u komentar odbija kad bi <code>#/</code> u odabiru ili oko njega — ili komentar ve' +
+      'ć otvoren na tom mjestu — završio komentar prerano: prva zatvarajuća oznaka pobjeđuje ' +
+      'gdje god stajala, tekst bi ispao van; to kaže statusna traka, jer motor šuti. Bez odab' +
+      'ira Ctrl+/ umeće par i ostavlja pokazivač unutra.</p>',
+    '<p>Konstrukcije ispod padaju točno onako kako ih izbornik čita. <b>#set %name% = vrije' +
+      'dnost</b>, <b>#def %name% = {a|b}</b> i <b>#include "name"</b> zauzimaju vlastiti reda' +
+      'k — direktiva se računa samo kad otvara svoj redak, pa tekst prije pokazivača ostaje i' +
+      'znad, a tekst poslije silazi niže — a ime izlazi odabrano, spremno za tipkanje preko. ' +
+      'Držite imena latinicom: ime u drugom pismu, šutke, nije ime. Cilj <code>#include</code' +
+      '> je iznimka — uspoređuje se s imenima vaših fragmenata točno kako je napisan.</p>',
+    '<p><b>{?name?onda|inače}</b> živi unutar retka. S odabirom odabrani tekst postaje polo' +
+      'vica „onda" — način da se već napisano učini uvjetnim; bez odabira ulazi cijeli oblik.' +
+      ' Odabir s golom <code>|</code>, nezatvorenom zagradom ili otvorenim komentarom biva od' +
+      'bijen: omatanje bi promijenilo što kaže umjesto da ga uokviri.</p>',
+    '<p>Posljednja stavka stavlja u dokument primjer otvoren u pomoći — gumb samog panela p' +
+      'omoći, učinjen dohvatljivim s tipkovnice.</p>',
     '<h2 id="panels">Ploče dolje</h2>',
     '<p>Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.</p>',
     '<p><b>Dijagnostika</b> nabraja ono što motor smatra pogrešnim, svaki put s retkom i st' +
@@ -12230,6 +12540,27 @@ const
       'j.</p>',
     '<p>Zamijenjeni dokument prolazi isti put motora kao i otkucani: pregled se iscrtava iz' +
       'nova, a dijagnostika odgovara o onome što sada stoji.</p>',
+    '<h2 id="insert">Umetanje oznaka</h2>',
+    '<p>Sve što u dokument stavlja oznake samog jezika skupljeno je u meniju <b>Umetanje</b' +
+      '>.</p>',
+    '<p>Tri naredbe umotavanja uzimaju odabir kakav jest: <b>Umotaj u {…}</b> ga čini izbor' +
+      'om, <b>Umotaj u […]</b> — miješanjem, <b>Umotaj u /#…#/</b> (Ctrl+/) — komentarom. Umo' +
+      'tavanje u komentar odbija kad bi <code>#/</code> u odabiru ili oko njega — ili komenta' +
+      'r već otvoren na tom mjestu — završio komentar prerano: prva zatvarajuća oznaka pobjeđ' +
+      'uje gdje god stajala, tekst bi ispao van; to kaže statusna traka, jer motor šuti. Bez ' +
+      'odabira Ctrl+/ umeće par i ostavlja pokazivač unutra.</p>',
+    '<p>Konstrukcije ispod padaju tačno onako kako ih meni čita. <b>#set %name% = vrijednos' +
+      't</b>, <b>#def %name% = {a|b}</b> i <b>#include "name"</b> zauzimaju vlastiti red — di' +
+      'rektiva se računa samo kad otvara svoj red, pa tekst prije pokazivača ostaje iznad, a ' +
+      'tekst poslije silazi niže — a ime izlazi odabrano, spremno za kucanje preko. Držite im' +
+      'ena latinicom: ime u drugom pismu, šutke, nije ime. Cilj <code>#include</code> je izuz' +
+      'etak — poredi se s imenima vaših fragmenata tačno kako je napisan.</p>',
+    '<p><b>{?name?onda|inače}</b> živi unutar reda. S odabirom odabrani tekst postaje polov' +
+      'ina „onda" — način da se već napisano učini uslovnim; bez odabira ulazi cijeli oblik. ' +
+      'Odabir s golom <code>|</code>, nezatvorenom zagradom ili otvorenim komentarom biva odb' +
+      'ijen: umotavanje bi promijenilo šta kaže umjesto da ga uokviri.</p>',
+    '<p>Posljednja stavka stavlja u dokument primjer otvoren u pomoći — dugme samog panela ' +
+      'pomoći, učinjeno dohvatljivim s tastature.</p>',
     '<h2 id="panels">Ploče dolje</h2>',
     '<p>Traka alata sa strane otvara četiri ploče, po jednu u isto vrijeme.</p>',
     '<p><b>Dijagnostika</b> nabraja ono što motor smatra pogrešnim, svaki put s redom i kol' +
@@ -14802,7 +15133,7 @@ const
     30, 61, 92, 123, 154, 185, 216, 247, 278, 309, 340, 371, 402, 433
   );
   HELP_ANCHOR_PAGE: array[0..433] of Integer = (
-    9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 9, 9, 10, 10, 10, 11, 14, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28
+    10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29, 10, 10, 11, 11, 11, 12, 15, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 25, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 28, 29
   );
   HELP_ANCHOR_ID: array[0..433] of string = (
     'choices-0',

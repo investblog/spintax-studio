@@ -193,7 +193,17 @@ const
       'zamijeni s',
       'Zamijeni',
       'Zamijeni sve',
-      'Zamijenjeno: %d'
+      'Zamijenjeno: %d',
+
+      'Umetanje',
+      'Omotaj u /#…#/',
+      '#set %name% = vrijednost',
+      '#def %name% = {a|b}',
+      '#include "name"',
+      '{?name?onda|inače}',
+      'Nije omotano: #/ u odabiru ili oko njega završio bi komentar prerano.',
+      'Nije omotano: samostalna |, nezatvorena zagrada ili otvoren komentar promijenili bi smisao uvjeta.',
+      'Nije umetnuto: pokazivač siječe oznaku komentara napola.'
   );
 
 implementation

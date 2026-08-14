@@ -196,7 +196,17 @@ const
       'vervangen door',
       'Vervangen',
       'Alles vervangen',
-      'Vervangen: %d'
+      'Vervangen: %d',
+
+      'Invoegen',
+      'Omsluiten met /#…#/',
+      '#set %naam% = waarde',
+      '#def %naam% = {a|b}',
+      '#include "naam"',
+      '{?naam?dan|anders}',
+      'Niet omsloten: een #/ in of rond de selectie zou de opmerking te vroeg beëindigen.',
+      'Niet omsloten: een losse |, een niet-gesloten haak of een open opmerking zou de voorwaarde veranderen.',
+      'Niet ingevoegd: de cursor splijt een opmerkingsteken in tweeën.'
   );
 
 implementation

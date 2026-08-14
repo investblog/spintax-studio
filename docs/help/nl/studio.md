@@ -76,6 +76,30 @@ dus eerlijk een kleiner getal noemen.
 Een vervangen document gaat door dezelfde machine als getypte tekst: het voorbeeld tekent
 opnieuw en de diagnose antwoordt over wat er nu staat.
 
+## De tekens invoegen
+
+Alles wat de tekens van de taal zelf in het document zet, staat in het menu **Invoegen**.
+
+De drie omsluitopdrachten nemen de selectie zoals ze is: **Omsluiten met {…}** maakt er een keuze van,
+**Omsluiten met […]** een schudbeurt, **Omsluiten met /#…#/** (Ctrl+/) een opmerking. Het omsluiten in een opmerking weigert wanneer een `#/` in of rond de selectie — of een op die
+plek al open opmerking — een opmerking te vroeg zou beëindigen: het eerste sluitteken wint waar
+het ook staat, tekst zou eruit vallen; de statusbalk zegt het, omdat de machine zwijgt. Zonder selectie voegt Ctrl+/ het paar in en laat de cursor erbinnen.
+
+De constructies eronder landen precies zoals het menu ze leest. **#set %naam% = waarde**, **#def %naam% = {a|b}** en **#include "naam"** nemen
+een eigen regel — een richtlijn telt alleen wanneer ze haar regel opent, tekst vóór de
+cursor blijft dus boven en tekst erna schuift omlaag — en de naam komt geselecteerd
+tevoorschijn, klaar om overheen te typen. Houd namen in Latijnse letters: een naam in een
+ander alfabet is stilzwijgend geen naam. Het doel van `#include` is de uitzondering — het
+wordt precies zoals geschreven met uw fragmentnamen vergeleken.
+
+**{?naam?dan|anders}** staat in de regel zelf. Met een selectie wordt de geselecteerde tekst de "dan"-helft —
+een manier om wat er al staat voorwaardelijk te maken; zonder selectie gaat de hele vorm
+erin. Een selectie met een kale `|`, een niet-gesloten haak of een open opmerking wordt geweigerd: het
+omsluiten zou veranderen wat ze zegt in plaats van het in te kaderen.
+
+Het laatste item zet het in de hulp geopende voorbeeld in het document — de knop van het
+hulppaneel zelf, bereikbaar gemaakt vanaf het toetsenbord.
+
 ## De panelen onderaan
 
 De werkbalk aan de zijkant opent vier panelen, één tegelijk.

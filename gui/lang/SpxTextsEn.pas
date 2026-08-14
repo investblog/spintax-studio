@@ -198,7 +198,17 @@ const
       'replace with',
       'Replace',
       'Replace all',
-      'Replaced: %d'
+      'Replaced: %d',
+
+      'Insert',
+      'Wrap in /#…#/',
+      '#set %name% = value',
+      '#def %name% = {a|b}',
+      '#include "name"',
+      '{?name?then|else}',
+      'Not wrapped: a #/ in or around the selection would end the comment early.',
+      'Not wrapped: a bare |, an unbalanced bracket or an open comment would change what the condition says.',
+      'Not inserted: the caret splits a comment mark in two.'
   );
 
 implementation
