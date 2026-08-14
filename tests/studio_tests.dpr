@@ -6249,18 +6249,18 @@ begin
       FindClose(rec);
     end;
   end;
-  { EXACTLY THREE, because the policy names three -- the spintax.net ribbon on the rail, the
-    301.st mark in the status bar, and the Help menu's report item (Store policy 11.16),
-    which hands a mailto to the shell. A fourth is not a defect in itself; it is a list in a
+  { EXACTLY TWO, because the policy names two -- the spintax.net ribbon on the rail and the
+    301.st mark in the status bar. A third is not a defect in itself; it is a list in a
     published document becoming incomplete, which is why this number moves only together with
-    the page. It read one until 2026-08-04 and two until 2026-08-13, and both times the count
-    is what forced the page to be edited when a link was added rather than after somebody
-    noticed. }
-  Check('offline/exactly three links hand an address to the shell', IntToStr(opens), '3');
+    the page. It read one until 2026-08-04, two until 2026-08-13, and three until 2026-08-14,
+    when the owner moved the report channel into the About box as plain text and the mailto
+    hand-off went with it -- each move forced the page to be edited together with the code
+    rather than after somebody noticed. }
+  Check('offline/exactly two links hand an address to the shell', IntToStr(opens), '2');
 
-  { And the one MAIL address among them, counted and named across the same files: an address
-    that lives in the code, three policy copies and the listing is an address that drifts,
-    so the code's copy is pinned to the same string the documents are pinned to below. }
+  { And no MAIL address among them at all, since 2026-08-14: the report channel is About-box
+    text, not a mailto. The scan still walks every unit and still holds any mailto it finds
+    to the support address, so a stray one fails twice -- once by name, once by count. }
   mails := 0;
   for d := 0 to High(dirs) do
   begin
@@ -6288,7 +6288,15 @@ begin
       FindClose(rec);
     end;
   end;
-  Check('offline/exactly one mailto in the product', IntToStr(mails), '1');
+  { ZERO since 2026-08-14: the report channel is a line of plain text in the About box, and
+    the one mailto went with the menu item it belonged to. The scan stays, because a mailto
+    reappearing anywhere is this list growing without its page. }
+  Check('offline/no mailto in the product', IntToStr(mails), '0');
+  { The address itself is still IN the product -- displayed, not handed to the shell -- and
+    it is pinned here as source text so it cannot drift from the copies below. }
+  low_ := LowerCase(SpxReadTextFile('gui/SpxAboutForm.pas'));
+  CheckTrue('offline/the About box carries the support address as plain text',
+            Pos('spx_support_email = '#39'support@301.st'#39, low_) > 0);
 
   (* ▁▁▁ AND THE PUBLISHED COPIES SAY THE SAME ▁▁▁
 
@@ -6362,20 +6370,31 @@ begin
       whatever the operator states is what governs. The pin follows the claim. }
     CheckTrue('privacy/' + name_ + ' says the operator''s stated policy governs that exchange',
               Pos('policy the operator states applies', LowerCase(low_)) > 0);
-    { The report channel (Store policy 11.16), named by the menu item's own words so the
-      reader of the policy can find it in the window. Arrived 2026-08-13 with the third
-      link, and asked SECTION BY SECTION, not as a token count: two hits could both sit in
-      one paragraph, which is the token-not-behaviour gap the Codex passes named twice.
-      The links paragraph is anchored by its own "three links" head and must name the item
-      within its ~1200 characters; the contact section is anchored by the question sentence
-      all three copies share. }
-    at := Pos('three links', low_);
-    stop := PosEx('Report inappropriate AI output', low_, at);
-    CheckTrue('privacy/' + name_ + ' names the report item inside the links paragraph',
-              (at > 0) and (stop > 0) and (stop - at < 1200));
+    { The report channel (Store policy 11.16), asked SECTION BY SECTION, not as a token
+      count: two hits could both sit in one paragraph, which is the token-not-behaviour gap
+      the Codex passes named twice. Since 2026-08-14 the channel is the About window's plain
+      text, so the links paragraph is anchored by its own "two links" head and must place
+      the address IN the About window within its ~1200 characters; the contact section is
+      anchored by the question sentence all three copies share. And the old head is pinned
+      OUT, because both published copies once went stale exactly by keeping a superseded
+      sentence. }
+    CheckTrue('privacy/' + name_ + ' no longer claims three links',
+              Pos('three links', low_) = 0);
+    { The EFFECTIVE DATE, pinned in every copy: the policy's own rule is that it moves when
+      the link list changes, and a reverted copy carrying the old date is exactly the drift
+      the published pages have had twice. One literal, three copies -- when the list next
+      changes, this string moves with it in the same commit. }
+    CheckTrue('privacy/' + name_ + ' carries the current effective date',
+              Pos('14 August 2026', low_) > 0);
+    at := Pos('two links', low_);
+    stop := PosEx('About window', low_, at);
+    CheckTrue('privacy/' + name_ + ' homes the report address in the About window',
+              (at > 0) and (stop > 0) and (stop - at < 1200) and
+              (PosEx('support@301.st', low_, at) > 0) and
+              (PosEx('support@301.st', low_, at) - at < 1200));
     at := Pos('Questions about this policy', low_);
-    CheckTrue('privacy/' + name_ + ' names the report item in the contact section',
-              (at > 0) and (PosEx('Report inappropriate AI output', low_, at) > 0));
+    CheckTrue('privacy/' + name_ + ' points the contact section at the About window',
+              (at > 0) and (PosEx('About window', low_, at) > 0));
     { The stale paragraph that contradicted the top of its own document: "Changes to this
       policy" still promised the AI feature was "not in this version" four days after the
       summary said the application can send. Found while opening R1-5; pinned OUT so a
@@ -6414,12 +6433,9 @@ begin
               Pos('does not call an AI service', low_) = 0);
   end;
 
-  { And the mail SUBJECT is pinned as source text -- the product name, the version constant
-    and the report words, in the one expression that builds it. A gate on the address alone
-    would stay green while the subject lost the version a report is useless without. }
-  low_ := LowerCase(SpxReadTextFile('gui/SpxMainForm.pas'));
-  CheckTrue('offline/the mail subject carries the product, the version and the report words',
-            Pos(#39'spintax studio '#39' + spx_version + '#39' - ai output report'#39, low_) > 0);
+  { The mail-subject pin went with the mailto it measured (2026-08-14): the About box shows
+    the address AND the version on the same screen, which is what the subject existed to
+    carry, and the address pin above holds the string itself. }
   { Belt and braces: nothing in the product opens a process either. }
   stop := 0;
   for d := 0 to High(dirs) do

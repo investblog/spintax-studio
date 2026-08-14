@@ -44,8 +44,8 @@ preview what the draft actually produces, find and fix syntax problems, refine t
 and generate reproducible variants locally.
 
 The AI connection sends only what you choose to send, to the endpoint you configured, and
-nothing until you turn it on. Found an AI draft inappropriate? Report it straight from the
-Help menu, or write to support@301.st.
+nothing until you turn it on. Found an AI draft inappropriate? Write to support@301.st — the
+address is in the About window.
 
 Learn the language while you work.
 
@@ -151,9 +151,10 @@ and Fix, and the description above is the disclosure.)*
   people to, and `spintax.net` is fully working. Revisit when the studio site is.
 - Support contact: `https://spintax.net` — same decision. The draft asked for
   `https://301.st/contact`. The direct contact obligation that arrives with live generative AI
-  (spec §11, Store policy 11.16) is met since 2026-08-13 by the report channel itself: the Help
-  menu's report item and `support@301.st` in the description and the privacy policy — the
-  SupportUris field can stay as decided.
+  (spec §11, Store policy 11.16) is met since 2026-08-13 by the report channel itself:
+  `support@301.st` in the description, the privacy policy and — since 2026-08-14, as plain text
+  beside the licence — the About window (the Help-menu mailto item it replaced is gone; owner's
+  call). The SupportUris field can stay as decided.
 - Additional license terms: **DECIDED — left blank** (owner, 2026-08-08). The analysis stands
   and is why the question was asked: the source licence is GPL-3.0-or-later (with the section 7
   exception in `NOTICE.md`), and Microsoft's Standard Application License Terms — which an empty

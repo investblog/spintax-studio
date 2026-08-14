@@ -53,15 +53,18 @@ What the product itself does, stated exactly — neither more nor less:
   reader's editor, on their machine, and goes no further unless they take it somewhere.
 
 Compliance beyond that is handled through duty 4: content the reader believes crosses a
-policy has a one-click route to the developer.
+policy has a named address to the developer, always available in the About window.
 
 ## 4. "Provide a means for users to report inappropriate content to the developer. You must take appropriate actions based on those reported concerns"
 
-**The means:** Help → "Report inappropriate AI output…" opens the reader's mail application
-addressed to **support@301.st** with the product and version already in the subject. The same
-address is named in the privacy policy (all three copies, suite-gated) and in the listing
-description. The menu item ships in all fourteen interface languages and is present whether
-or not the network is on — output pasted through the manual path is AI output too.
+**The means:** the About window (Help → About) shows **support@301.st** as a line of plain
+text beside the licence — "Report inappropriate AI output: support@301.st", in the reader's
+own interface language, all fourteen. The same address is named in the privacy policy (all
+three copies, suite-gated) and in the listing description. It is present whether or not the
+network is on — output pasted through the manual path is AI output too. *(Until 2026-08-14
+this was a Help-menu item that opened a mailto; the owner moved it into the About box, which
+also removed the application's one mailto hand-off to the shell — the privacy policy's link
+count moved from three to two in the same change.)*
 
 **The procedure, which is the "appropriate actions" half:**
 
@@ -78,6 +81,7 @@ or not the network is on — output pasted through the manual path is AI output 
    APPLICATION misrepresents what it sends is a defect here and is fixed as one.
 4. The reporter gets an answer at the address they wrote from: what was found and what was
    done. No report data is collected by the application itself — the exchange is ordinary
-   mail the reader initiated (privacy policy, "a link is not a request").
+   mail the reader writes in their own mail application; the application only shows the
+   address, and never opens a mail program or sends anything (privacy policy).
 
 No volume so far; this procedure is written before the first report rather than after it.

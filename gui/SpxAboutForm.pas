@@ -48,6 +48,15 @@ procedure SpxShowAbout(AOwner: TComponent);
 
 implementation
 
+const
+  { THE REPORT CHANNEL (Store policy 11.16), a line of plain text since 2026-08-14 -- the
+    owner's call: it lived in the Help menu as a mailto item, and the licence block here is
+    where the obligations already sit. PLAIN TEXT on purpose: nothing is handed to the
+    shell, so the privacy policy's link count moved from three to two when this moved in.
+    The suite pins this string to the same address the three policy copies and the listing
+    name, because an address living in five documents is an address that drifts. }
+  SPX_SUPPORT_EMAIL = 'support@301.st';
+
 type
   TSpxAboutForm = class(TForm)
   private
@@ -56,6 +65,7 @@ type
     FVersion: TLabel;
     FWhat: TLabel;
     FMeta: TLabel;
+    FReport: TLabel;
     FRule: TBevel;
     FCredits: TLabel;
     FText: TMemo;
@@ -134,6 +144,14 @@ begin
   FMeta.WordWrap := True;
   FMeta.AutoSize := False;
   FMeta.Font.Color := clGrayText;
+
+  { The report line, same grey, same rank: a detail among the obligations, in the reader's
+    language (the menu caption it descends from is already in all fourteen). }
+  FReport := TLabel.Create(Self);
+  FReport.Parent := Self;
+  FReport.WordWrap := True;
+  FReport.AutoSize := False;
+  FReport.Font.Color := clGrayText;
 
   FRule := TBevel.Create(Self);
   FRule.Parent := Self;
@@ -269,6 +287,7 @@ const
 var
   i, y, h: Integer;
   body: TStringList;
+  what_: string;
 begin
   Caption := Tr(sMenuAbout);
   { The version line is the one thing set apart, and by the SYSTEM's grey rather than a
@@ -280,6 +299,12 @@ begin
     starts where it ends. Nothing here is a guess at a line count. }
   FWhat.Caption := Tr(sAboutWhat);
   FMeta.Caption := SpxAboutLicence(0) + '   ·   spintax.net   ·   301.st';
+  { The menu caption this line descends from ends in an ellipsis -- the mark of an item
+    that OPENS something. This line opens nothing, so the ellipsis goes. }
+  what_ := Tr(sMenuReportAi);
+  if Copy(what_, Length(what_) - 2, 3) = '…' then
+    SetLength(what_, Length(what_) - 3);
+  FReport.Caption := what_ + ': ' + SPX_SUPPORT_EMAIL;
   FCredits.Caption := Tr(sAboutCredits);
 
   y := 100;
@@ -289,6 +314,10 @@ begin
   y := y + h + 10;
   h := WrapHeight(FMeta.Caption, W, FMeta.Font);
   FMeta.SetBounds(L, y, W, h);
+
+  y := y + h + 4;
+  h := WrapHeight(FReport.Caption, W, FReport.Font);
+  FReport.SetBounds(L, y, W, h);
 
   y := y + h + 14;
   FRule.SetBounds(L, y, W, 2);

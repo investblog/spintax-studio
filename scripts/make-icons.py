@@ -126,6 +126,28 @@ ICONS = [
     # says "swap what it found". Weighed against `file-replace-outline` (replaces a FILE, the
     # wrong object) and `text-search` (still just search), side by side at 16 and 20.
     ('SPX_ICON_REPLACE', 'find-replace', 'Edit > Replace -- the find bar grown a second row'),
+    # ── THE INSERT MENU'S OWN FIVE, the second pass the menu shipped without (owner approved
+    # deferring them until the item list settled). All weighed side by side at 16 and 20.
+    #
+    # A comment HIDES text from the output, and the eye is already what the page preview
+    # wears -- eye-off beside eye-outline is "not shown", drawn by the same hand. NOT `pound`:
+    # the # is these menus' directive mark as much as the comment's, and NOT a speech bubble,
+    # which is chat, not code.
+    ('SPX_ICON_WRAP_COMMENT', 'eye-off-outline', 'Insert > wrap the selection in /# #/'),
+    # The #set / #def PAIR carries the one distinction the help spends a whole section on:
+    # `#set` re-expands at every reference, `#def` expands once and remembers. Two identical
+    # frames, one wearing the 1 -- the same relation code-braces/code-brackets draw for the
+    # two wraps. NOT `sync`, which is the reroll's circle; the rectangle arrows are a
+    # different shape at 16 px, measured side by side.
+    ('SPX_ICON_INS_SET', 'repeat', 'Insert > #set -- re-expands at every reference'),
+    ('SPX_ICON_INS_DEF', 'repeat-once', 'Insert > #def -- expands once and remembers'),
+    # A fragment is a piece of a larger document: the puzzle piece, outline like the rest.
+    # NOT file-import-outline, which is the GSA import five items away in the File menu.
+    ('SPX_ICON_INS_INCLUDE', 'puzzle-outline', 'Insert > #include -- another template, in place'),
+    # The construct's own mark in the flowchart's own shape: {?name?...} asks a question and
+    # the rhombus is the decision box. A RHOMBUS, not the help panel's circle -- the two share
+    # the ? and nothing else, and they never stand in one menu.
+    ('SPX_ICON_INS_COND', 'help-rhombus-outline', 'Insert > the condition'),
 ]
 
 # Two homes, two ladders. The rail's face is 36 px and its icon 24, so 24/30/36/48 are that

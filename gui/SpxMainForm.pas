@@ -458,7 +458,6 @@ type
     procedure HelpToolClicked(Sender: TObject);
     procedure HelpMenuClicked(Sender: TObject);
     procedure AboutClicked(Sender: TObject);
-    procedure ReportAiClicked(Sender: TObject);
     procedure GsaToggleClicked(Sender: TObject);
     procedure GsaImportClicked(Sender: TObject);
     procedure HelpPaneClosed(Sender: TObject);
@@ -603,14 +602,10 @@ const
   SPX_COMPANY_HOST = '301.st';
   SPX_COMPANY_URL = 'https://301.st';
 
-  { THE REPORT CHANNEL (Store policy 11.16): the address a reader reaches when AI output is
-    not acceptable, and the SAME address the privacy policy and the listing name -- the suite
-    holds all of them to this string, because an address that lives in four documents is an
-    address that drifts. The subject gains the product and version in ReportAiClicked; what
-    is handed to the shell is an address for the READER'S mail application -- nothing is sent
-    by this application, exactly like the two marks (privacy policy, "a link is not a
-    request"). }
-  SPX_SUPPORT_MAILTO = 'mailto:support@301.st';
+  { THE REPORT CHANNEL (Store policy 11.16) lives in the About box now, as plain text beside
+    the licence -- see SpxAboutForm's SPX_SUPPORT_EMAIL, which the suite pins together with
+    the privacy copies and the listing. Nothing in this window opens a mail application any
+    more; the two marks above are the only addresses handed to the shell. }
   { THE ONE PIECE OF INTERFACE TEXT THAT IS NOT TRANSLATED, and deliberately: it is a
     signature rather than a sentence -- the line under a picture that says who made it -- and
     it is read as part of the mark beside it. Everything the window SAYS goes through
@@ -2560,9 +2555,9 @@ begin
      The construct captions ARE the inserted text, byte for byte -- the menu cannot promise
      one thing and land another, and TestInsertMenu pins every language's shapes. No
      shortcuts on them: insertion is rare, and the menu is where it is FOUND (the project's
-     rule about hotkeys, read the other way). No glyphs yet either -- they come as a second
-     pass now that the item list is settled, and items without pictures are legal (the
-     panels and themes live that way). *)
+     rule about hotkeys, read the other way). The glyphs arrived as the planned second pass
+     (2026-08-14), each weighed side by side at 16 and 20 -- the reasoning sits on the icon
+     list in scripts/make-icons.py, where the next glyph will be chosen too. *)
   insertMenu := TMenuItem.Create(Self);
   insertMenu.Caption := Tr(sMenuInsert);
   bar.Items.Add(insertMenu);
@@ -2572,12 +2567,14 @@ begin
            @WrapBracketsClicked, SPX_ICON_BRACKETS);
   { Ctrl+/ -- the key every editor uses for "comment this", on VK_OEM_2, the key that
     carries `/` on the US layout. Not in SynEdit's Ctrl tables, so it takes nothing away. }
-  Item(insertMenu, Tr(sMenuWrapComment), VK_OEM_2, [ssCtrl], @WrapCommentClicked);
+  IconItem(insertMenu, Tr(sMenuWrapComment), VK_OEM_2, [ssCtrl], @WrapCommentClicked,
+           SPX_ICON_WRAP_COMMENT);
   Item(insertMenu, '-', 0, [], nil);
-  Item(insertMenu, Tr(sMenuInsSet), 0, [], @InsertSetClicked);
-  Item(insertMenu, Tr(sMenuInsDef), 0, [], @InsertDefClicked);
-  Item(insertMenu, Tr(sMenuInsInclude), 0, [], @InsertIncludeClicked);
-  Item(insertMenu, Tr(sMenuInsCond), 0, [], @InsertCondClicked);
+  IconItem(insertMenu, Tr(sMenuInsSet), 0, [], @InsertSetClicked, SPX_ICON_INS_SET);
+  IconItem(insertMenu, Tr(sMenuInsDef), 0, [], @InsertDefClicked, SPX_ICON_INS_DEF);
+  IconItem(insertMenu, Tr(sMenuInsInclude), 0, [], @InsertIncludeClicked,
+           SPX_ICON_INS_INCLUDE);
+  IconItem(insertMenu, Tr(sMenuInsCond), 0, [], @InsertCondClicked, SPX_ICON_INS_COND);
   (* PUT THIS EXAMPLE IN MY DOCUMENT -- the second command in this window that a pointer was
      the only way to reach. Its button lives in the preview's offer strip and is a
      TSpeedButton, so the keyboard could not have it.
@@ -2775,12 +2772,11 @@ begin
     nothing is displaced. No GroupIndex: these are not radio items, and 0 is the default that
     would silently join whatever radio group is added to this menu next. }
   IconItem(helpMenu, Tr(sHelpContents), VK_F1, [], @HelpMenuClicked, SPX_ICON_HELP);
-  { THE REPORT CHANNEL (Store policy 11.16): AI output the reader finds unacceptable goes to
-    the developer, and the route lives one item under the help that explains the feature.
-    Always present, network on or off -- output pasted through the manual path is AI output
-    too, and a channel that appears only when a switch is on is a channel nobody finds. No
-    icon and no shortcut: it is used rarely and on purpose. }
-  Item(helpMenu, Tr(sMenuReportAi), 0, [], @ReportAiClicked);
+  { THE REPORT CHANNEL (Store policy 11.16) MOVED INTO THE ABOUT BOX as a line of plain text
+    (owner, 2026-08-14): the address sits with the licence and the two domains, one click
+    away behind the item below -- still present whether or not the network is on, and no
+    longer a menu item that hands a mailto to the shell. The privacy policy's link count
+    moved with it, in all three copies, and the suite pins both sides. }
   { The attributions live behind this and nowhere else in the window. NOTICE.md calls the About
     box "the copy a user can actually read", which makes this menu item the licence obligation
     rather than a courtesy. No shortcut: it is opened on purpose, once. }
@@ -5204,23 +5200,6 @@ end;
 procedure TSpxMainForm.AboutClicked(Sender: TObject);
 begin
   SpxShowAbout(Self);
-end;
-
-(* The third and last place this window hands an address to the shell, and the privacy
-   policy's list of three moves ONLY together with this code -- the suite counts these call
-   sites textually and pins the count to the page (offline/exactly three links...), which is
-   also why this comment must not spell the function name with its bracket. What
-   opens is the READER'S mail application with the address and subject filled in; nothing
-   is sent unless they press Send, which is the same line the two marks stand behind: a
-   link is not a request. The subject carries the product and the version -- the two facts
-   a report is useless without and the reader should not have to know to type. Spaces are
-   the one character in it a mailto URL cannot carry raw; SPX_VERSION is dotted digits and
-   needs nothing else encoded. *)
-procedure TSpxMainForm.ReportAiClicked(Sender: TObject);
-begin
-  OpenURL(SPX_SUPPORT_MAILTO + '?subject=' +
-          StringReplace('Spintax Studio ' + SPX_VERSION + ' - AI output report',
-                        ' ', '%20', [rfReplaceAll]));
 end;
 
 procedure TSpxMainForm.HelpCloseClicked(Sender: TObject);

@@ -1,4 +1,4 @@
-Effective 13 August 2026. Applies to Spintax Studio for Windows.
+Effective 14 August 2026. Applies to Spintax Studio for Windows.
 
 Spintax Studio is an offline desktop application. It collects nothing about you: no account, no sign-in, no telemetry, no analytics. One feature is an exception, and only once you switch it on: the AI draft can send the text you hand it to a model endpoint you choose, on your own account and your key when that endpoint requires one. It is off until you turn it on, and this policy describes exactly what it sends and to whom.
 
@@ -18,7 +18,7 @@ The recipient does not change without you. If the address you configured answers
 
 What the software at that endpoint does with what you send is its operator's to state, not ours. Any policy the operator states applies to that exchange and we are not a party to it.
 
-There are three links in the window, and a link is not a request. The spintax.net mark at the bottom of the tool rail and the 301.st mark at the right end of the status bar each do one thing when you click them: they ask Windows to open that address. Windows hands it to whatever browser you use, and the browser is what then visits the site, under its own privacy terms and that site's, exactly as if you had typed the address yourself. The third is the Help menu's Report inappropriate AI output item: it asks Windows to open your own mail application with support@301.st and a subject line already filled in, and nothing goes anywhere unless you write the message and press Send yourself. Spintax Studio is not part of any of these exchanges and sends nothing into them. Nothing is opened unless you click.
+There are two links in the window, and a link is not a request. The spintax.net mark at the bottom of the tool rail and the 301.st mark at the right end of the status bar each do one thing when you click them: they ask Windows to open that address. Windows hands it to whatever browser you use, and the browser is what then visits the site, under its own privacy terms and that site's, exactly as if you had typed the address yourself. Spintax Studio is not part of either exchange and sends nothing into them. Nothing is opened unless you click. The address for reporting AI output you find unacceptable, support@301.st, is shown as plain text in the About window (Help > About): the application never opens a mail program and never sends mail - writing there is your own act, in your own mail application.
 
 What is stored, and where
 Your settings, including interface language, theme, editor font and panel widths, are written to a text file in your user profile (%LOCALAPPDATA%). Installed from the Microsoft Store, that file lives inside the application's package container. It contains preferences only: no documents, personal details or device identifiers.
@@ -36,4 +36,4 @@ This is the version of the policy that describes the optional AI connection. The
 Contact
 Questions about this policy or the application: support@301.st
 
-To report AI output you find inappropriate, use Report inappropriate AI output in the Help menu. It opens a message to the same address with the application version already in the subject; or write to it directly. Reports are read by the developer and acted on.
+To report AI output you find inappropriate, write to support@301.st - the address is shown in the About window (Help > About). Include the application version from the same window. Reports are read by the developer and acted on.

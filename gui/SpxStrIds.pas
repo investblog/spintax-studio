@@ -202,10 +202,12 @@ type
     sAiKey, sAiKeySave, sAiKeyForget, sAiKeyStored, sAiKeyMissing, sAiKeyDetached,
     sAiNetwork, sAiConsentTitle, sAiConsentBody,
 
-    (* ── R1-5: THE REPORT CHANNEL (Store policy 11.16). One menu item that opens a mailto
-       to support@301.st with the product and version in the subject -- the "means for users
-       to report inappropriate content" the policy demands, reachable whether or not the
-       network is on: pasted AI output is AI output too. ── *)
+    (* ── R1-5: THE REPORT CHANNEL (Store policy 11.16) -- the "means for users to report
+       inappropriate content" the policy demands, reachable whether or not the network is
+       on: pasted AI output is AI output too. Born as a Help-menu mailto item; since
+       2026-08-14 (owner's call) this string is the LABEL of a plain-text line in the About
+       box, beside the licence -- the About strips its menu-era trailing ellipsis, because
+       the line opens nothing. ── *)
     sMenuReportAi,
 
     (* ── THE UX PASS (owner, 2026-08-13): the brief column's two modes. The mode combo IS

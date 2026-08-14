@@ -127,6 +127,15 @@ is a deliberate state and not a backlog of things anyone forgot.
    and becomes the published contact at submission; confirm the mailbox is live before it does.
    The `SupportUris` difference stays an owner decision at submission, not a defect to fix here.
 
+   **2026-08-14 widened what that republish must carry:** the report channel moved from the
+   Help menu into the About box as plain text (owner's call), the application's one mailto
+   went with it, and the links paragraph now counts TWO links with the report address homed
+   in the About window. `docs/publish/` already says all of it and the suite gates every
+   copy — the pending submission republishes the same two copies with one more reason. The
+   listing description's report sentence changed too (`docs/store-listing.md`: "Write to
+   support@301.st — the address is in the About window"), which is a listing-field edit in
+   the same submission.
+
 6. **The engine moved to `v0.5.1`**, 2026-08-07 (was `v0.3.3`, which is what R0 shipped
    against; `v0.4.0` and `v0.4.1` were each pinned for part of the day — see below). Nothing Studio can see changed, and that was checked rather than read off a
    changelog: the engine's whole `interface` section is byte-identical between the two tags.
@@ -1475,9 +1484,41 @@ next:
       `condwrap/a-split-opener-at-the-empty-caret-is-refused`) и общим guard'ом
       `CaretSplitsMark` на ВСЕХ путях вставки от каретки — включая #set/#def/#include,
       которые Codex не назвал, а опасность та же. Новая строка статуса `sInsSplitRefused`
-      ×14. Глифы пунктов вставки — вторым заходом
-      (по плану). Справка ×14 — раздел «Вставка конструкций» между заменой и панелями, шесть
+      ×14. Справка ×14 — раздел «Вставка конструкций» между заменой и панелями, шесть
       подписей в гейте цитат. 28686 проверок.
+
+- [x] **10. Глифы Вставки + канал жалоб в About — СДЕЛАНО** *(владелец, 2026-08-14: «Добиваем
+      отсутствующие глифы, убираем из help-меню report на емейл — вынеси просто текстом в
+      about, где лицензии»)*. Пять глифов второго захода, взвешены бок о бок на 16 и 20:
+      `eye-off-outline` для «Обернуть в /#…#/» (комментарий ПРЯЧЕТ текст из вывода — родня
+      глазу, который носит превью-страница; не `pound`: # — метка и директив тоже, и не
+      speech-bubble — это чат, не код); ПАРА `repeat`/`repeat-once` для `#set`/`#def` — две
+      одинаковые рамки, одна с единицей, ровно то различие, которому справка посвящает
+      раздел (не `sync` — это круг реролла); `puzzle-outline` для `#include` (фрагмент);
+      `help-rhombus-outline` для условия — собственный знак конструкции `{?…}` в ромбе
+      блок-схемы, НЕ круг помощи. Спрайт 37 клеток, прежние 32 отрендерились байт-в-байт до
+      перегенерации (тот же шрифт, та же проверка).
+
+      **Канал жалоб (Store policy 11.16) переехал из меню Помощь в About** — строкой серого
+      текста рядом с лицензией: «Report inappropriate AI output: support@301.st» (подпись —
+      тот же id ×14, About срезает менюшное многоточие; версия, которую нёс subject
+      mailto, — на том же экране). Пункт меню и mailto-вызов удалены: **в приложении не
+      осталось ни одного mailto**, счётчик ссылок политики съехал 3→2. Политика переписана
+      во всех трёх копиях (md, publish/html, partner-center.txt) + листинг + ai-content-report;
+      гейты обновлены и доказаны обеими сторонами (посаженное «three links» валит две
+      проверки по имени); адрес запинен в SpxAboutForm как текст источника. Опубликованные
+      копии политики теперь отстают от `docs/publish/` ещё на один факт — записано в очередь
+      `v0.1.1.0` (переиздание тех же двух копий). Проверено в окне: обход меню (Помощь —
+      три пункта, отчёта нет), фото About с новой строкой на месте.
+
+      **Codex, два раунда, пять находок, все подтверждены чтением и закрыты.** Главная —
+      её же класс уже кусал дважды: **дата вступления политики не сдвинулась вместе со
+      списком, который она датирует** (собственное правило политики: дата двигается, когда
+      меняется список ссылок) — 14 августа теперь во всех трёх копиях И ЗАПИНЕНА во всех
+      трёх (откат одной копии на старую дату валит проверку по имени; литерал двигается со
+      списком в том же коммите). Остальное: compliance-запись звала строку текста
+      «one-click route» и опиралась на «a link is not a request» для строки, которая не
+      ссылка; два комментария отстали от кода. 28691 проверка.
       «забыли режим поиска и замены включить в поставку редактора, нужно спроектировать»)*.
       Полоса поиска стоит с R0 (`FFindText` + след/пред/регистр/счётчик, `SpxFindAll`, тем же
       матчером ищет и справка); замены нет вовсе — ни поля, ни `Ctrl+H`. **Спроектировать,

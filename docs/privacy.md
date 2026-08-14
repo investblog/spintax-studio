@@ -7,15 +7,16 @@ project: spintax-studio
 
 # Privacy policy — Spintax Studio
 
-**Effective 13 August 2026. Applies to Spintax Studio for Windows.**
+**Effective 14 August 2026. Applies to Spintax Studio for Windows.**
 
 *(The date moves when the list below changes, not when the text was written. It moved from
 1 August because the window gained a second mark, on the 9th because the application gained
-the ability to send text to a model — the largest change this document has had — and on the
-13th because the window gained a third place that hands an address to the shell: the menu
-item for reporting AI output. The version is deliberately not named: this policy describes
-the application from its effective date on, and a version number pinned here would go stale
-with the first update that changes nothing above.)*
+the ability to send text to a model — the largest change this document has had — on the
+13th because the window gained a third place that handed an address to the shell, and on the
+14th because that third place went away again: the report address is now plain text in the
+About window, and the application opens no mail program at all. The version is deliberately
+not named: this policy describes the application from its effective date on, and a version
+number pinned here would go stale with the first update that changes nothing above.)*
 
 Spintax Studio is an offline desktop application. It collects nothing about you: no account, no
 sign-in, no telemetry, no analytics. One feature is an exception, and only once you switch it
@@ -67,15 +68,16 @@ you would never see it happen.
 What the software at that endpoint does with what you send is its operator's to state, not
 ours. Any policy the operator states applies to that exchange, and we are not a party to it.
 
-**The three links in the window are not an exception, because a link is not a request.** The
+**The two links in the window are not an exception, because a link is not a request.** The
 **spintax.net** mark at the bottom of the tool rail and the **301.st** mark at the right end of
 the status bar do one thing when you click them: they ask Windows to open that address. Windows
 hands it to whatever browser you use, and the browser is what then visits the site — under your
-browser's terms and that site's, exactly as if you had typed the address yourself. The third is
-the Help menu's **Report inappropriate AI output** item: it asks Windows to open your own mail
-application with **support@301.st** and a subject line already filled in, and nothing goes
-anywhere unless you write the message and press Send yourself. The application is not part of
-any of these exchanges and sends nothing into them. Nothing is opened unless you click.
+browser's terms and that site's, exactly as if you had typed the address yourself. The
+application is not part of either exchange and sends nothing into them. Nothing is opened
+unless you click. The address for reporting AI output you find unacceptable,
+**support@301.st**, is shown as plain text in the About window (Help → About): the application
+never opens a mail program and never sends mail — writing there is your own act, in your own
+mail application.
 
 ## What is stored, and where
 
@@ -108,6 +110,6 @@ moves.
 
 Questions about this policy, or about the application: **support@301.st**
 
-To report AI output you find inappropriate, use **Report inappropriate AI output** in the Help
-menu — it opens a message to the same address with the application version already in the
-subject — or write to it directly. Reports are read by the developer and acted on.
+To report AI output you find inappropriate, write to **support@301.st** — the address is shown
+in the About window (Help → About). Include the application version from the same window.
+Reports are read by the developer and acted on.
