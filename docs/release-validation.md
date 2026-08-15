@@ -1,8 +1,58 @@
 # Release validation
 
-Three records, newest first: a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
-validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0.0` (R0) on
-2026-08-03 and published on 2026-08-04.
+Four records, newest first: `v0.2.0.0` validated on 2026-08-15, a pre-tag check of the AI
+candidate on 2026-08-14, `v0.1.1.0` validated on 2026-08-08 (tagged, never submitted — the
+tree moved on), `v0.1.0.0` (R0) on 2026-08-03 and published on 2026-08-04.
+
+---
+
+# v0.2.0.0 — validated 2026-08-15
+
+The formal record for the second submission: the first package whose window can make an
+outgoing connection. Run against the **exact** artefact the tag produced, downloaded from
+the draft release rather than rebuilt locally — the convention v0.1.1.0 set.
+
+## Candidate
+
+- Tag `v0.2.0.0` → `8b977db`, built by `.github/workflows/release.yml`; CI was green on
+  that commit before the tag was cut (`ci.yml` does not run on tags).
+- `spintax-studio.msix`, 3 107 420 bytes
+- SHA-256 `f2c7045b54e6c412b3cf9e0ee5f977750a438b0d701c2d62be7a3911f46fc9b3`, **checked
+  against the published `SHA256SUMS` before the run**
+- The draft release also carries `spintax-studio.msixupload` (3 083 902 bytes,
+  SHA-256 `ffd253c3…59618` in the same `SHA256SUMS`) — the Partner Center upload artefact.
+- Identity, publisher and architecture unchanged from R0, so this is an update rather than
+  a new identity: `301.SpintaxStudio`, `CN=BEE1F94B-ABDE-4CF8-9F30-1DF4DAFDAE83`, x64.
+- Manifest read back out of the package before the run: capabilities exactly
+  `internetClient` + `rescap:runFullTrust`, fourteen `<Resource Language>` entries,
+  `Version="0.2.0.0"`.
+
+## WACK
+
+```powershell
+appcert.exe reset
+appcert.exe test -appxpackagepath build\wack-0.2.0.0\spintax-studio.msix `
+  -reportoutputpath build\wack\spintax-studio-wack-20260815-200416.xml
+```
+
+Windows 10.0.26200 (this machine), package type detected as Centennial.
+
+Result: **`OVERALL_RESULT=PASS`, `PARTIAL_RUN=FALSE`** — 23 of 24 tests PASS. The one
+non-PASS is the **optional** Blocked Executable Files analyzer with TWO findings, both
+known and both documented on the 2026-08-14 pre-run:
+
+- `shell32.dll!ShellExecuteW` — the deliberate browser action behind the window's two
+  link marks, unchanged since R0;
+- `reg` — the HTML entity name in `TSynHTMLSyn`'s table (`&reg;`), unchanged since R0.
+
+The pre-run's third finding — the `dnx` byte coincidence — does not appear against this
+binary: it was a 4-byte-aligned offset-table accident of that build's layout, and this
+build's layout differs. An analyzer finding in an optional test is not Store-blocking;
+nothing was silenced.
+
+The certification-notes note from the pre-run stands for this submission: no demo account
+is needed (policy 10.3.1), the AI feature is opt-in behind the reader's own endpoint and
+key, and the report channel is the About window's plain-text address.
 
 ---
 
