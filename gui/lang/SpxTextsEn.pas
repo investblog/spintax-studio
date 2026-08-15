@@ -71,7 +71,7 @@ const
       'Spintax Studio', 'The document has unsaved changes. Save them?', 'Untitled',
       '%s — Spintax Studio',
 
-      'ready', 'valid', 'valid, %d warnings', '%d errors', ' · %d notes', '%s · %d ms',
+      'ready', 'valid', 'valid · warnings: %d', 'errors: %d', ' · notes: %d', '%s · %d ms',
       'Show', 'Output is %d KB — the page does not redraw itself',
 
       'Close',

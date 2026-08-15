@@ -66,7 +66,7 @@ const
       'Spintax Studio', 'Il documento ha modifiche non salvate. Salvarle?', 'Senza nome',
       '%s — Spintax Studio',
 
-      'pronto', 'valido', 'valido, %d avvisi', '%d errori', ' · %d note', '%s · %d ms',
+      'pronto', 'valido', 'valido · avvisi: %d', 'errori: %d', ' · note: %d', '%s · %d ms',
       'Mostra', 'Uscita: %d KB — la pagina non si ridisegna da sola',
 
       'Chiudi',

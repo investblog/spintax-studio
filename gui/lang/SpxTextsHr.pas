@@ -66,7 +66,7 @@ const
       'Spintax Studio', 'Dokument ima nespremljene promjene. Spremiti ih?', 'Bez naslova',
       '%s — Spintax Studio',
 
-      'spreman', 'ispravno', 'ispravno, %d upozorenja', '%d grešaka', ' · %d napomena',
+      'spreman', 'ispravno', 'ispravno · upozorenja: %d', 'greške: %d', ' · napomene: %d',
       '%s · %d ms',
       'Prikaži', 'Izlaz %d KB — stranica se ne iscrtava sama',
 

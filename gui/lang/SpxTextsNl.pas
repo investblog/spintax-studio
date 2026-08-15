@@ -69,7 +69,7 @@ const
       'Naamloos',
       '%s — Spintax Studio',
 
-      'gereed', 'geldig', 'geldig, %d waarschuwingen', '%d fouten', ' · %d notities',
+      'gereed', 'geldig', 'geldig · waarschuwingen: %d', 'fouten: %d', ' · notities: %d',
       '%s · %d ms',
       'Tonen', 'Uitvoer: %d KB — de pagina tekent zichzelf niet',
 

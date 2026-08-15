@@ -75,7 +75,7 @@ const
       'Ohne Titel',
       '%s — Spintax Studio',
 
-      'bereit', 'gültig', 'gültig, %d Warnungen', '%d Fehler', ' · %d Notizen', '%s · %d ms',
+      'bereit', 'gültig', 'gültig · Warnungen: %d', 'Fehler: %d', ' · Notizen: %d', '%s · %d ms',
       'Anzeigen', 'Ausgabe: %d KB — die Seite zeichnet sich nicht neu',
 
       'Schließen',

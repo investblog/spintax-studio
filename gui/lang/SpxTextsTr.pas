@@ -65,7 +65,7 @@ const
       'Spintax Studio', 'Belgede kaydedilmemiş değişiklikler var. Kaydedilsin mi?', 'Adsız',
       '%s — Spintax Studio',
 
-      'hazır', 'geçerli', 'geçerli, %d uyarı', '%d hata', ' · %d not', '%s · %d ms',
+      'hazır', 'geçerli', 'geçerli · uyarı: %d', 'hata: %d', ' · not: %d', '%s · %d ms',
       'Göster', 'Çıktı: %d KB — sayfa kendini yenilemez',
 
       'Kapat',

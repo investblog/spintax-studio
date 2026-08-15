@@ -68,7 +68,7 @@ const
       'Spintax Studio', 'El documento tiene cambios sin guardar. ¿Guardarlos?', 'Sin título',
       '%s — Spintax Studio',
 
-      'listo', 'válido', 'válido, %d advertencias', '%d errores', ' · %d notas', '%s · %d ms',
+      'listo', 'válido', 'válido · advertencias: %d', 'errores: %d', ' · notas: %d', '%s · %d ms',
       'Mostrar', 'Salida: %d KB — la página no se redibuja sola',
 
       'Cerrar',

@@ -12,8 +12,16 @@
 #   - theme, language, which bottom panel is open, the preview face, panel widths
 #     come from %LOCALAPPDATA%\spintax-studio\settings.txt
 #   - the document comes from ParamStr(1) (SpxMainForm.pas:692)
-# A frame that needs transient UI -- an open menu, the find bar -- has no lever here and
-# is deliberately not in the set.
+# Two more levers exist since frames 07-09: a menu item fired by caption via WM_COMMAND
+# (a menu is a walkable USER object, and its items answer without focus), and mouse
+# messages sent to the child under a window-relative point. They reach STATE the window
+# keeps once asked for -- the help, the group editor, the replace bar. An open menu
+# itself and modal dialogs remain out of reach.
+#
+# WHAT THIS SCRIPT DOES NOT COVER: it assumes this machine's DPI. The window is placed
+# at a fixed 1500x890, clickAt coordinates are unscaled window pixels, and Set-FindTexts
+# recognises the find fields by a pixel height bound -- at another scale factor the
+# coordinates land elsewhere. It is an instrument for this machine, not a portable tool.
 #
 # CAPTURE IS PrintWindow(hwnd, dc, PW_RENDERFULLCONTENT). GetFormImage and PaintTo cannot
 # photograph a windowed child: a combo box or any TCustomControl comes out blank, and the
@@ -126,6 +134,97 @@ function Invoke-Button($hwnd, [string]$caption) {
   return $true
 }
 
+# Fire a menu item by caption prefix, the way a reader would reach it. Menus are USER
+# objects, readable and walkable from outside the process (GetMenu/GetSubMenu), and an
+# LCL menu item answers WM_COMMAND with its id -- no focus, no foreground, no clicking.
+# This is what makes the help panel, the group editor and the replace bar capturable:
+# they are STATE once opened, not transient popups.
+$WM_COMMAND = 0x0111
+Add-Type @"
+using System;
+using System.Text;
+using System.Runtime.InteropServices;
+public class SpxMenu {
+  [DllImport("user32.dll")] public static extern IntPtr GetMenu(IntPtr h);
+  [DllImport("user32.dll")] public static extern int GetMenuItemCount(IntPtr m);
+  [DllImport("user32.dll")] public static extern IntPtr GetSubMenu(IntPtr m, int pos);
+  [DllImport("user32.dll")] public static extern uint GetMenuItemID(IntPtr m, int pos);
+  [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetMenuStringW(IntPtr m, uint pos, StringBuilder s, int n, uint flags);
+  [DllImport("user32.dll")] public static extern bool PostMessageW(IntPtr h, uint msg, IntPtr wp, IntPtr lp);
+  [DllImport("user32.dll")] public static extern bool RedrawWindow(IntPtr h, IntPtr rect, IntPtr rgn, uint flags);
+}
+"@
+function Invoke-MenuItem($hwnd, [string]$prefix) {
+  $bar = [SpxMenu]::GetMenu($hwnd)
+  if ($bar -eq [IntPtr]::Zero) { Write-Host '  (window has no menu bar)'; return $false }
+  $MF_BYPOSITION = 0x400
+  for ($i = 0; $i -lt [SpxMenu]::GetMenuItemCount($bar); $i++) {
+    $sub = [SpxMenu]::GetSubMenu($bar, $i)
+    if ($sub -eq [IntPtr]::Zero) { continue }
+    for ($j = 0; $j -lt [SpxMenu]::GetMenuItemCount($sub); $j++) {
+      $sb = New-Object System.Text.StringBuilder 256
+      [void][SpxMenu]::GetMenuStringW($sub, $j, $sb, 256, $MF_BYPOSITION)
+      # the caption carries the shortcut after a tab; match the caption half only
+      $cap = ($sb.ToString() -split "`t")[0]
+      if ($cap.StartsWith($prefix)) {
+        $id = [SpxMenu]::GetMenuItemID($sub, $j)
+        if ($id -ne 0 -and $id -ne 4294967295) {
+          return [SpxMenu]::PostMessageW($hwnd, $WM_COMMAND, [IntPtr][int64]$id, [IntPtr]::Zero)
+        }
+      }
+    }
+  }
+  Write-Host ("  (no menu item starting '{0}')" -f $prefix)
+  return $false
+}
+
+# Fill the find bar's two fields. After the Replace menu item opens the two-row bar, the
+# top strip owns exactly two small single-line EDITs on the template half -- the needle
+# above the replacement -- and WM_SETTEXT into a native EDIT fires the same change event
+# typing would, so the counter beside the field updates itself.
+function Set-FindTexts($hwnd, [string]$needle, [string]$replacement) {
+  $edits = Get-Children $hwnd |
+           Where-Object { $_.cls -eq 'Edit' -and $_.vis -and $_.ht -lt 40 } |
+           Sort-Object y
+  if ($edits.Count -lt 2) { Write-Host '  (replace bar fields not found)'; return $false }
+  [void][SpxCap]::SendMessageW($edits[0].h, $WM_SETTEXT, [IntPtr]::Zero, $needle)
+  Start-Sleep -Milliseconds 300
+  [void][SpxCap]::SendMessageW($edits[1].h, $WM_SETTEXT, [IntPtr]::Zero, $replacement)
+  return $true
+}
+
+# Click a point given in WINDOW coordinates. Finds the deepest visible child under the
+# point and sends move+down+up with that child's client coordinates -- IPro decides which
+# link is hot on the MOVE, so the move is not optional. This is what runs a help example:
+# the template half of every example is a link, and clicking it renders it on the right.
+function Invoke-ClickAt($hwnd, [int]$wx, [int]$wy) {
+  $r = New-Object SpxCap+RECT
+  [void][SpxCap]::GetWindowRect($hwnd, [ref]$r)
+  $sx = $r.L + $wx; $sy = $r.T + $wy
+  # EnumChildWindows lists parents before children, so among the equal-rect stacked LCL
+  # containers the LAST is the deepest -- and the deepest is the one whose handler acts.
+  # Click every enclosing candidate deepest-first; a container that ignores the click is
+  # harmless, and measuring which of four identical rects is the real control is not
+  # possible from outside.
+  $cands = @(Get-Children $hwnd | Where-Object {
+    $_.vis -and $sx -ge $_.x -and $sx -lt ($_.x + $_.w) -and $sy -ge $_.y -and $sy -lt ($_.y + $_.ht)
+  })
+  if ($cands.Count -eq 0) { Write-Host '  (no child under click point)'; return $false }
+  [array]::Reverse($cands)
+  $WM_MOUSEMOVE = 0x0200; $WM_LBUTTONDOWN = 0x0201; $WM_LBUTTONUP = 0x0202
+  foreach ($t in $cands) {
+    $cx = $sx - $t.x; $cy = $sy - $t.y
+    $lp = [IntPtr](($cy -shl 16) -bor ($cx -band 0xFFFF))
+    [void][SpxCap]::SendMessageW($t.h, $WM_MOUSEMOVE, [IntPtr]::Zero, $lp)
+    Start-Sleep -Milliseconds 200
+    [void][SpxCap]::SendMessageW($t.h, $WM_LBUTTONDOWN, [IntPtr][int]1, $lp)
+    Start-Sleep -Milliseconds 100
+    [void][SpxCap]::SendMessageW($t.h, $WM_LBUTTONUP, [IntPtr]::Zero, $lp)
+    Start-Sleep -Milliseconds 400
+  }
+  return $true
+}
+
 # Fill the brief and press Generate, so the headline frame shows the feature WORKING rather
 # than an empty pane. The two tall visible EDITs in the AI page are the brief on the left
 # and the model's answer on the right; there are two buttons captioned Generate in the
@@ -194,6 +293,17 @@ $FRAMES = @(
      what = 'the same window in German - one of the fourteen interface languages' }
   @{ name = '06-dark-source';     theme = 'dark';  panel = -1; doc = 'tour.spintax';   src = 'yes';
      what = 'the preview showing rendered source rather than the page' }
+  # The three below need a menu command after launch -- state the window keeps once asked
+  # for, reached by WM_COMMAND rather than a click (menus are walkable USER objects).
+  @{ name = '07-help';            theme = 'light'; panel = -1; doc = 'tour.spintax';   src = 'no';
+     menu = 'Contents'; afterMenuMs = 2000; clickAt = @(,@(60, 333)) + @(,@(340, 176));
+     what = 'the built-in help on the Choices chapter, a clicked example rendered live' }
+  @{ name = '08-replace';         theme = 'light'; panel = -1; doc = 'tour.spintax';   src = 'no';
+     menu = 'Replace'; find = 'session'; replaceWith = 'meeting'; afterMenuMs = 1200;
+     what = 'find and replace: the two-row bar with the match counter' }
+  @{ name = '09-dark-group';      theme = 'dark';  panel = -1; doc = 'group.spintax';  src = 'no';
+     menu = 'Group under the caret'; afterMenuMs = 1500;
+     what = 'the group editor slid out beside the caret, alternatives editable' }
 )
 
 # --- settings, borrowed and returned ----------------------------------------------
@@ -291,6 +401,37 @@ try {
       # The panels fill from a worker thread; a capture that starts too early photographs
       # an empty diagnostics list. The resize also has to repaint before it is read.
       Start-Sleep -Milliseconds $SettleMs
+
+      if ($frame.menu) {
+        # Each setup step is FATAL on failure: a frame whose menu item or click target
+        # was not found would still photograph at the right size, and the size check at
+        # the end is the only other gate -- a wrong screenshot must not exit 0.
+        if (-not (Invoke-MenuItem $hwnd $frame.menu)) {
+          throw ("frame {0}: menu item '{1}' not found" -f $frame.name, $frame.menu)
+        }
+        $afterM = 1500
+        if ($frame.afterMenuMs) { $afterM = [int]$frame.afterMenuMs }
+        Start-Sleep -Milliseconds $afterM
+        if ($frame.find) {
+          if (-not (Set-FindTexts $hwnd $frame.find $frame.replaceWith)) {
+            throw ("frame {0}: replace bar fields not found" -f $frame.name)
+          }
+          Start-Sleep -Milliseconds 900
+        }
+        if ($frame.clickAt) {
+          foreach ($pt in $frame.clickAt) {
+            if (-not (Invoke-ClickAt $hwnd $pt[0] $pt[1])) {
+              throw ("frame {0}: no child under click point ({1},{2})" -f $frame.name, $pt[0], $pt[1])
+            }
+            Start-Sleep -Milliseconds 1500
+          }
+        }
+        # A layout switch can leave the IPro preview unpainted (its EraseBackground is
+        # empty and it has no resize handler) -- ask the whole tree to repaint before
+        # the photograph, or the right pane comes out white.
+        [void][SpxMenu]::RedrawWindow($hwnd, [IntPtr]::Zero, [IntPtr]::Zero, 0x0187)
+        Start-Sleep -Milliseconds 600
+      }
 
       if ($frame.click) {
         [void](Invoke-Button $hwnd $frame.click)

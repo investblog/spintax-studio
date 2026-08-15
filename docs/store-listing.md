@@ -131,19 +131,22 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 
 ## Captured screenshots
 
-**Recaptured 2026-08-15 against 0.2.0.0.** Six frames, three light and three dark, so the
+**Recaptured 2026-08-15 against 0.2.0.0.** Nine frames, five light and four dark, so the
 listing shows both supported themes. Regenerate the whole set with:
 
 ```
 .\scripts\capture-store.ps1
 ```
 
-The script is reproducible and needs no hands: every frame's state comes from
+The script is reproducible and needs no hands: frames 1-6 take their whole state from
 `%LOCALAPPDATA%\spintax-studio\settings.txt` (theme, language, which bottom panel is open,
-the preview face) and from the document passed as `ParamStr(1)`, and the capture itself is
+the preview face) and from the document passed as `ParamStr(1)`; frames 7-9 add a menu
+command and mouse messages on top of that state (see below). The capture itself is
 `PrintWindow(..., PW_RENDERFULLCONTENT)`, which needs the window to exist rather than to be
 in front. The reader's own settings file is copied aside and restored afterwards. Fixtures
-live in `scripts/store-fixtures/`.
+live in `scripts/store-fixtures/`. The script assumes this machine's display scale - its
+coordinates are unscaled window pixels - and frame 3's generation needs the attached AI key
+this machine holds; on a machine without it that frame's answer box comes out empty.
 
 Captured from the English release executable at 1500x890, with no personal documents
 visible. The files are intentionally local: keep them in `build/store-submission/` and
@@ -155,18 +158,24 @@ upload them to Partner Center from there.
 4. `spintax-04-dark-variants.png` - twenty generated variants with their seeds and lengths, the similarity filter, and the export actions.
 5. `spintax-05-dark-german.png` - the same window in German, one of the fourteen interface languages.
 6. `spintax-06-dark-source.png` - the preview showing rendered source rather than the page.
+7. `spintax-07-help.png` - the built-in help open on the Choices chapter, an example clicked and its render live on the right - the help's examples are fixtures, and clicking one runs it through the real engine.
+8. `spintax-08-replace.png` - find and replace: the two-row bar over the document, *matches: 2* counted over the document as the needle is typed.
+9. `spintax-09-dark-group.png` - the group editor slid out beside a choice, its three alternatives on their own lines, ready to edit and apply.
 
 **On the key in frame 3.** It is a real, working key and the frame is a real generation.
 What the pane displays is `SpxLlmKeyHint` - start, ellipsis, last four - which the source
 calls "the dashboard fragment, recognisable and unusable"; the field itself is write-only.
 Verified in the capture before shipping it.
 
-**Two frames the old set had and this one does not.** The variables panel's Definitions
-section sits collapsed behind a splitter that no setting carries and no message can drag, so
-it captures as an empty panel; and the group editor and help slide-outs are not persisted
-either. Reaching those needs either a new settings key or a mouse, and neither was worth
-holding the submission for. Nothing in the six depends on transient UI, which is why the
-whole set regenerates unattended.
+**How frames 7-9 are reached.** The help, the group editor and the replace bar are not
+persisted in settings, but they are all STATE once asked for, and a menu is a walkable USER
+object: the script fires the menu item by caption through `WM_COMMAND`, which needs neither
+focus nor the foreground. The help example is then clicked by sending mouse messages to the
+child under the point - deepest-first, because LCL stacks four equal-rect containers there
+and only the innermost one acts. The one thing still out of reach is the variables panel's
+Definitions section, collapsed behind a splitter no setting carries and no message can drag.
+The whole set still regenerates unattended, and a setup step that finds no target now fails
+the run instead of photographing the wrong window.
 
 Use the final Store logo assets supplied by the brand rather than a screenshot of the editor
 icon. Do not present telemetry or an always-on online service as part of Studio; the AI

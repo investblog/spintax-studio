@@ -71,7 +71,7 @@ const
       'Spintax Studio', 'Dokument ima nesačuvane izmjene. Sačuvati ih?', 'Bez naslova',
       '%s — Spintax Studio',
 
-      'spreman', 'ispravno', 'ispravno, %d upozorenja', '%d grešaka', ' · %d napomena',
+      'spreman', 'ispravno', 'ispravno · upozorenja: %d', 'greške: %d', ' · napomene: %d',
       '%s · %d ms',
       'Prikaži', 'Izlaz %d KB — stranica se ne iscrtava sama',
 

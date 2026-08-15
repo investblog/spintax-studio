@@ -74,7 +74,7 @@ const
       'Sans titre',
       '%s — Spintax Studio',
 
-      'prêt', 'valide', 'valide, %d avertissements', '%d erreurs', ' · %d notes',
+      'prêt', 'valide', 'valide · avertissements : %d', 'erreurs : %d', ' · notes : %d',
       '%s · %d ms',
       'Afficher', 'Sortie : %d Ko — la page ne se redessine pas',
 
