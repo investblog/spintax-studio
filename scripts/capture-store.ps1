@@ -273,8 +273,8 @@ $FRAMES = @(
   @{ name = '02-diagnostics';     theme = 'light'; panel = 0;  doc = 'broken.spintax'; src = 'no';
      what = 'a real syntax error with its source position and the engine diagnostic' }
   @{ name = '03-ai';              theme = 'light'; panel = 3;  doc = 'brief.spintax';  src = 'no';
-     drive = 'ai';
-     what = 'the optional AI draft panel, disclosed, with an attached key shown masked' }
+     drive = 'ai'; applyClick = 'Replace the document';
+     what = 'the AI loop complete: plain text in the brief, the draft applied, its render live' }
   @{ name = '04-dark-variants';   theme = 'dark';  panel = 2;  doc = 'tour.spintax';   src = 'no';
      click = 'Generate'; afterClickMs = 2500;
      what = 'generated variants with the seed and the export actions' }
@@ -445,6 +445,15 @@ try {
         # into a template by the feature the listing leads with.
         $brief = (Get-Content $doc -Raw -Encoding UTF8).Trim()
         [void](Invoke-AiDraft $hwnd $brief $AiTimeoutSec)
+        # And APPLY the draft: with the document and the brief holding the same plain
+        # text, the frame read as if the editor's text had been sent to the model --
+        # the owner mistook it for exactly that. Pressing Replace puts the GENERATED
+        # TEMPLATE in the editor and its render in the preview, so the frame shows the
+        # whole loop and the editor no longer mirrors the brief.
+        if ($frame.applyClick) {
+          [void](Invoke-Button $hwnd $frame.applyClick)
+          Start-Sleep -Milliseconds 2000
+        }
       }
 
       $out = Join-Path $OutDir ('spintax-' + $frame.name + '.png')
