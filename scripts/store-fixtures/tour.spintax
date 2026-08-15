@@ -1,0 +1,15 @@
+#set %name% = Alex
+#set %city% = Lisbon
+#def %product% = {the workshop|the studio session|the small-group class}
+
+{Thanks for stopping by|Good to see you|Glad you found us}, %name%.
+
+#include "intro"
+
+We run %product% in %city% every {Tuesday|Thursday|Saturday} morning, and {places go quickly|the room fills up fast|seats are limited}.
+
+We can [<minsize=2;maxsize=3;sep=", ";lastsep=" and ">cover the fundamentals|answer your questions|look at work you bring] in a single session.
+
+{?city?It is a short walk from the river.|}
+
+{See you there|Hope to see you|Come along} - %name%.

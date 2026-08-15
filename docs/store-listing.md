@@ -131,28 +131,42 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 
 ## Captured screenshots
 
-**STALE AS OF 2026-08-14 — recapture before submission.** The ten frames below predate the
-last week of the product: none shows the AI draft panel (the submission's headline feature
-and its disclosure), the find bar's replace row, or the Insert menu, and the menu bar in
-every frame is one menu short. The capture probes in `scripts/` still apply; the frame
-COMPOSITION is the owner's call at review time — at minimum one light and one dark frame of
-the AI panel belong in the set.
+**Recaptured 2026-08-15 against 0.2.0.0.** Six frames, three light and three dark, so the
+listing shows both supported themes. Regenerate the whole set with:
 
-Captured from the English release executable at 1500x890, with no personal documents or
-account information visible. The files are intentionally local: keep them in
-`build/store-submission/` and upload them to Partner Center from there. Five frames are light and five are dark so the listing shows
-the editor in both supported themes:
+```
+.\scripts\capture-store.ps1
+```
 
-1. `build/store-submission/spintax-01-diagnostics.png` - a real syntax error with source position and engine diagnostic.
-2. `build/store-submission/spintax-02-variables.png` - document definitions, session values and the Includes teaching link.
-3. `build/store-submission/spintax-03-variants.png` - 20 generated variants with seed and export actions.
-4. `build/store-submission/spintax-04-group.png` - the group editor opened from the tool rail beside the caret.
-5. `build/store-submission/spintax-05-help.png` - a valid help example selected in the Choices article and rendered on the right.
-6. `build/store-submission/spintax-06-dark-workspace.png` - the live editor and preview in the dark theme.
-7. `build/store-submission/spintax-07-dark-variables.png` - variables panel in the dark theme.
-8. `build/store-submission/spintax-08-dark-variants.png` - generated variants and export actions in the dark theme.
-9. `build/store-submission/spintax-09-dark-group.png` - editable group alternatives in the dark theme.
-10. `build/store-submission/spintax-10-dark-help.png` - the help topic tree and a rendered example while the editor is dark.
+The script is reproducible and needs no hands: every frame's state comes from
+`%LOCALAPPDATA%\spintax-studio\settings.txt` (theme, language, which bottom panel is open,
+the preview face) and from the document passed as `ParamStr(1)`, and the capture itself is
+`PrintWindow(..., PW_RENDERFULLCONTENT)`, which needs the window to exist rather than to be
+in front. The reader's own settings file is copied aside and restored afterwards. Fixtures
+live in `scripts/store-fixtures/`.
+
+Captured from the English release executable at 1500x890, with no personal documents
+visible. The files are intentionally local: keep them in `build/store-submission/` and
+upload them to Partner Center from there.
+
+1. `spintax-01-editor.png` - the two-pane shape: template on the left, live render on the right, with choices, a permutation, a conditional, variables and an include all on screen and the status bar reading *valid*.
+2. `spintax-02-diagnostics.png` - a real unclosed bracket, its source position (5:8) and the engine's own message, plus the undefined-variable warning beneath it.
+3. `spintax-03-ai.png` - **the AI draft panel doing the work**: a plain brief on the left, the generated template in the answer box, and the status line *Draft verified* - the engine checked the model's output before it can be applied. The connection row shows the provider, the endpoint, the model and an attached key.
+4. `spintax-04-dark-variants.png` - twenty generated variants with their seeds and lengths, the similarity filter, and the export actions.
+5. `spintax-05-dark-german.png` - the same window in German, one of the fourteen interface languages.
+6. `spintax-06-dark-source.png` - the preview showing rendered source rather than the page.
+
+**On the key in frame 3.** It is a real, working key and the frame is a real generation.
+What the pane displays is `SpxLlmKeyHint` - start, ellipsis, last four - which the source
+calls "the dashboard fragment, recognisable and unusable"; the field itself is write-only.
+Verified in the capture before shipping it.
+
+**Two frames the old set had and this one does not.** The variables panel's Definitions
+section sits collapsed behind a splitter that no setting carries and no message can drag, so
+it captures as an empty panel; and the group editor and help slide-outs are not persisted
+either. Reaching those needs either a new settings key or a mouse, and neither was worth
+holding the submission for. Nothing in the six depends on transient UI, which is why the
+whole set regenerates unattended.
 
 Use the final Store logo assets supplied by the brand rather than a screenshot of the editor
 icon. Do not present telemetry or an always-on online service as part of Studio; the AI
