@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    'fb200ed7ee863609', '1161eb58753cc15f', '87e44fc97111b7a9', '73a52d9c28790e7e', 'c5226848658b80c2', 'f6b0fb891bdfa838', '40275ea888cddd27', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', '2eedbc2a2c6a16ba', '488ce59bac9e29c3', '7f61fd4b089638df', 'a29195189e5c57c0', '7813c6dc420189dd', '0d549262922b3331', '8f8c0c03fa45528c', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'a97d591402439a4d', '4ddfd411500958cc', '26e21bf1b83633da', 'a8067b8f76ecc0e9', 'b54956a9ee49f248', '00a887dfff5a6ef5', 'c165e06ea586601b', '18c7da1e110847db', 'd9d49c35432acae4', '4a2710ca46814627', '9dacb63502e5aa97', 'b8529893866ec950', 'd90d890741ed088c', 'ea10d49bf126b2b6', '471885d59dbd925b', '54dd4bf7c91a3691', '56ba422eb944d0c7', '2a4bb2d8392a4ede', '7ab6966b4abf133a', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', '961f95fcd4ef3233', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    'bac2f82fe77328e3', '1161eb58753cc15f', '87e44fc97111b7a9', 'e908447ddf6f7cbf', 'c5226848658b80c2', 'f6b0fb891bdfa838', 'e05d6f8a7288a764', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', 'b4a72047b507b425', '488ce59bac9e29c3', '7f61fd4b089638df', '3f8c75118b73d98f', '7813c6dc420189dd', '0d549262922b3331', 'ab8950089825a79c', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'be3c9da1f1522b01', '4ddfd411500958cc', '26e21bf1b83633da', '335889dd80f48659', 'b54956a9ee49f248', '00a887dfff5a6ef5', '14e7aaad0600c183', '18c7da1e110847db', 'd9d49c35432acae4', 'cbed7bf2c514a8d5', '9dacb63502e5aa97', 'b8529893866ec950', 'ee229cb3a76fbe42', 'ea10d49bf126b2b6', '471885d59dbd925b', '38f95f3dd0a3854a', '56ba422eb944d0c7', '2a4bb2d8392a4ede', 'bcad9b0e49bbe8b4', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', 'bc5b347f1f9bb702', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -920,10 +920,12 @@ const
     '<p>A template usually starts from text that already exists — a product description, a ' +
       'letter, a page. The <b>AI draft</b> panel turns that text into a first template: open ' +
       'it from the tool rail, leave the header of the left column on <b>Text to convert</b>, ' +
-      'paste the text, and press <b>Generate</b>. When the draft arrives it replaces the docu' +
-      'ment, the preview renders it, and the diagnostics panel judges it — the same engine an' +
-      'd the same verdict as for anything you type. One Ctrl+Z brings your old document back;' +
-      ' from there, edit it as your own text, because it is.</p>',
+      'paste the text, and press <b>Generate</b>. The draft lands in <b>The model''s answer</' +
+      'b>, already verified — it went through this window''s own engine on the way. Applying ' +
+      'it is yours: <b>Insert into document</b> puts it where your selection stands (or at th' +
+      'e caret when nothing is selected), <b>Replace the document</b> swaps the whole text — ' +
+      'and nothing touches your document until you press one of them. One Ctrl+Z after either' +
+      ' button brings the old text back.</p>',
     '<p>If there is nothing to paste, switch the header to <b>Brief</b> and describe what y' +
       'ou want. The fields above steer the draft either way: <b>Channel</b> — a letter, an SM' +
       'S and a push notification are written in different registers; <b>Variation</b> — how f' +
@@ -937,14 +939,17 @@ const
     '<p>The answer is not trusted, it is verified: the draft goes through this window''s ow' +
       'n engine before it goes anywhere near your document, and when the verdict finds errors' +
       ', the loop asks the model to repair them — the status bar counts the rounds — before h' +
-      'anding anything over. Only a clean draft replaces the document; anything less lands in' +
-      ' <b>The model''s answer</b> instead, with the status line saying why, and nothing of y' +
-      'ours is overwritten. Your edits are protected the same way: if you typed while an answ' +
-      'er was in flight, the draft waits in the panel. While it works, <b>Generate</b> reads ' +
-      '<b>Stop</b> — press it to abandon the round.</p>',
+      'anding anything over. The answer never writes into the editor by itself: it always wai' +
+      'ts in <b>The model''s answer</b>, and the status line says how it went — a clean draft' +
+      ' says it is ready, one the loop could not fully repair says what is left, and if the d' +
+      'ocument — or anything the draft was checked against — changed while the answer flew, t' +
+      'he line warns that the verdict was about things as they were. While it works, <b>Gener' +
+      'ate</b> reads <b>Stop</b> — press it to abandon the round — a round stopped mid-check ' +
+      'can still leave its text in the box, unverified.</p>',
     '<p><b>Fix</b> is the same loop pointed at your current document: it wakes when the dia' +
-      'gnostics find errors, sends the document together with the exact objections, and appli' +
-      'es the corrected version with the same care.</p>',
+      'gnostics find errors, sends the document together with the exact objections, and the c' +
+      'orrected version waits in the same answer box — <b>Replace the document</b> is usually' +
+      ' its seat.</p>',
     '<h3 id="ai-0">The connection, and whose key</h3>',
     '<p>As installed, the application sends nothing anywhere. <b>Generate</b> and <b>Fix</b' +
       '> go on the network only after you set up the connection at the foot of the panel and ' +
@@ -980,9 +985,9 @@ const
       '</code> address is accepted only on this machine. The permission binds where the key d' +
       'oes — the scheme, the host and the port — and shows as the <b>Sending allowed</b> tick' +
       ' in the settings — untick it at any time: nothing new is sent, and an answer already o' +
-      'n its way is never applied. What the software at the address you chose does with the t' +
-      'ext is its operator''s to state: the request goes to the address in your profile and n' +
-      'owhere else.</p>',
+      'n its way lands, at most, in the answer box. What the software at the address you chos' +
+      'e does with the text is its operator''s to state: the request goes to the address in y' +
+      'our profile and nowhere else.</p>',
     '<h3 id="ai-1">The same loop, without a network</h3>',
     '<p>The prompts need no key and no connection at all — this is the path when your model' +
       ' lives in a chat window, and here you run the loop yourself: the engine gives its verd' +
@@ -993,7 +998,7 @@ const
       ' numbered and names the exact places the engine objected to. Its answer is the correct' +
       'ed document in full, so bring it back and press <b>Replace the document</b> — <b>Inser' +
       't into document</b> would leave the broken one in place and put the corrected copy bes' +
-      'ide it.</p>',
+      'ide it (unless you have text selected — then Insert replaces exactly that).</p>',
     '<h2 id="groups">The group editor</h2>',
     '<p>Put the caret inside a <code>{a|b|c}</code> and open the group editor from the tool' +
       ' strip. It lists the alternatives as rows: edit them, add one, remove one, and the doc' +
@@ -1873,10 +1878,12 @@ const
     '<p>Шаблон обычно начинается с текста, который уже есть, — описание товара, письмо, стр' +
       'аница. Панель <b>AI-черновик</b> превращает такой текст в первый шаблон: откройте её с' +
       ' полосы инструментов, оставьте заголовок левой колонки на <b>Текст для переделки</b>, ' +
-      'вставьте текст и нажмите <b>Сгенерировать</b>. Готовый черновик заменяет документ, пре' +
-      'вью его рендерит, а панель диагностики выносит вердикт — тот же движок и тот же суд, ч' +
-      'то и для набранного руками. Один Ctrl+Z возвращает прежний документ; дальше правьте ка' +
-      'к свой текст — он и есть ваш.</p>',
+      'вставьте текст и нажмите <b>Сгенерировать</b>. Черновик ложится в <b>Ответ модели</b> ' +
+      'уже проверенным — по дороге он прошёл через движок этого окна. Применяете его вы сами:' +
+      ' <b>Вставить в документ</b> ставит его на место выделения (или у курсора, если ничего ' +
+      'не выделено), <b>Заменить документ</b> меняет весь текст — и ничто не тронет ваш докум' +
+      'ент, пока вы не нажмёте одну из кнопок. Один Ctrl+Z после любой из них возвращает как ' +
+      'было.</p>',
     '<p>Если вставлять нечего, переключите заголовок на <b>Бриф</b> и опишите, что нужно. П' +
       'оля выше ведут черновик в обоих режимах: <b>Канал</b> — письмо, SMS и push-уведомление' +
       ' написаны в разных регистрах; <b>Вариативность</b> — как далеко вариантам можно расход' +
@@ -1889,14 +1896,18 @@ const
       'ный».</p>',
     '<p>Ответу не верят — его проверяют: черновик проходит через движок этого окна до того,' +
       ' как коснётся документа, и, если вердикт находит ошибки, петля сама просит модель их и' +
-      'справить — строка состояния считает раунды вслух, — прежде чем что-то отдать. Документ' +
-      ' заменяет только чистый черновик; всё остальное ложится в <b>Ответ модели</b>, а строк' +
-      'а состояния говорит почему — и ваше не затирается. Так же защищены ваши правки: если в' +
-      'ы печатали, пока ответ летел, черновик ждёт в панели. Пока идёт работа, <b>Сгенерирова' +
-      'ть</b> читается как <b>Стоп</b> — нажмите, чтобы бросить раунд.</p>',
+      'справить — строка состояния считает раунды вслух, — прежде чем что-то отдать. Сам в ре' +
+      'дактор ответ не пишет никогда: он всегда ждёт в <b>Ответ модели</b>, а строка состояни' +
+      'я говорит, чем кончилось, — чистый черновик готов к вставке, недочиненный называет, чт' +
+      'о осталось, а если документ — или что-то ещё, против чего шла проверка, — менялся, пок' +
+      'а ответ летел, строка предупредит, что вердикт был о прежнем состоянии. Пока идёт рабо' +
+      'та, <b>Сгенерировать</b> читается как <b>Стоп</b> — нажмите, чтобы бросить раунд, — ра' +
+      'унд, остановленный посреди проверки, может оставить в поле текст, который проверку не ' +
+      'прошёл.</p>',
     '<p><b>Починить</b> — та же петля, направленная на текущий документ: она просыпается, к' +
-      'огда диагностика находит ошибки, отправляет документ вместе с точными претензиями и пр' +
-      'именяет исправленную версию с той же осторожностью.</p>',
+      'огда диагностика находит ошибки, отправляет документ вместе с точными претензиями и ис' +
+      'правленная версия ждёт там же, в поле ответа, — обычно её место занимает <b>Заменить д' +
+      'окумент</b>.</p>',
     '<h3 id="ai-0">Подключение и чей ключ</h3>',
     '<p>Сразу после установки приложение никуда ничего не отправляет. <b>Сгенерировать</b> ' +
       'и <b>Починить</b> выходят в сеть только после того, как вы настроите подключение в ниж' +
@@ -1930,9 +1941,9 @@ const
       'олучатель не меняется без вас: редирект отвергается, а не выполняется, а нешифрованный' +
       ' <code>http</code> принимается только на эту машину. Разрешение привязано там же, где ' +
       'ключ, — к схеме, хосту и порту — и видно галкой <b>Отправка разрешена</b> в настройках' +
-      ' — снимите её в любой момент: новое не отправляется, а уже летящий ответ никогда не пр' +
-      'именяется. Что делает с текстом софт по выбранному адресу — вопрос к его оператору: за' +
-      'прос уходит по адресу из профиля и никуда больше.</p>',
+      ' — снимите её в любой момент: новое не отправляется, а уже летящий ответ попадёт самое' +
+      ' большее в поле ответа. Что делает с текстом софт по выбранному адресу — вопрос к его ' +
+      'оператору: запрос уходит по адресу из профиля и никуда больше.</p>',
     '<h3 id="ai-1">Та же петля — без сети</h3>',
     '<p>Промптам не нужны ни ключ, ни подключение — это же путь, когда ваша модель живёт в ' +
       'окне чата, и петлю здесь крутите вы сами: движок выносит вердикт после вставки, а не д' +
@@ -1942,7 +1953,8 @@ const
       ' второй промпт: он несёт весь документ с нумерованными строками и называет точные мест' +
       'а, к которым у движка претензии. Ответ на него — исправленный документ целиком, так чт' +
       'о верните его и нажмите <b>Заменить документ</b> — <b>Вставить в документ</b> оставил ' +
-      'бы сломанный на месте и положил бы исправленную копию рядом.</p>',
+      'бы сломанный на месте и положил бы исправленную копию рядом (разве что у вас есть выде' +
+      'ление — тогда вставка заменит именно его).</p>',
     '<h2 id="groups">Редактор групп</h2>',
     '<p>Поставьте курсор внутрь <code>{a|b|c}</code> и откройте редактор групп на полосе ин' +
       'струментов. Он показывает альтернативы строками: правьте, добавляйте, удаляйте — докум' +
@@ -2836,11 +2848,13 @@ const
     '<p>Eine Vorlage beginnt meist mit Text, den es schon gibt — eine Produktbeschreibung, ' +
       'ein Brief, eine Seite. Das Panel <b>KI-Entwurf</b> macht daraus eine erste Vorlage: öf' +
       'fnen Sie es über die Werkzeugleiste, lassen Sie die Kopfzeile der linken Spalte auf <b' +
-      '>Text zum Umwandeln</b>, fügen Sie den Text ein und drücken Sie <b>Erzeugen</b>. Der f' +
-      'ertige Entwurf ersetzt das Dokument, die Vorschau rendert ihn, und das Diagnose-Panel ' +
-      'urteilt — dieselbe Maschine und dasselbe Urteil wie für alles, was Sie selbst tippen. ' +
-      'Ein Strg+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie eigenen Text' +
-      ', denn das ist er.</p>',
+      '>Text zum Umwandeln</b>, fügen Sie den Text ein und drücken Sie <b>Erzeugen</b>. Der E' +
+      'ntwurf landet in <b>Antwort des Modells</b>, bereits geprüft — er ging unterwegs durch' +
+      ' die Maschine dieses Fensters. Das Anwenden ist Ihres: <b>In das Dokument einfügen</b>' +
+      ' setzt ihn an die Stelle Ihrer Auswahl (oder an die Schreibmarke, wenn nichts ausgewäh' +
+      'lt ist), <b>Dokument ersetzen</b> tauscht den ganzen Text — und nichts berührt Ihr Dok' +
+      'ument, bis Sie eine der beiden drücken. Ein Strg+Z nach jeder von ihnen bringt den alt' +
+      'en Text zurück.</p>',
     '<p>Gibt es nichts einzufügen, stellen Sie die Kopfzeile auf <b>Briefing</b> und beschr' +
       'eiben, was Sie wollen. Die Felder darüber lenken den Entwurf in beiden Modi: <b>Kanal<' +
       '/b> — ein Brief, eine SMS und eine Push-Nachricht sind in verschiedenen Registern gesc' +
@@ -2855,15 +2869,18 @@ const
     '<p>Der Antwort wird nicht geglaubt, sie wird geprüft: der Entwurf geht durch die Masch' +
       'ine dieses Fensters, bevor er Ihrem Dokument nahekommt, und findet das Urteil Fehler, ' +
       'lässt die Schleife das Modell nachbessern — die Statusleiste zählt die Runden mit —, b' +
-      'evor irgendetwas übergeben wird. Nur ein sauberer Entwurf ersetzt das Dokument; alles ' +
-      'andere landet stattdessen in <b>Antwort des Modells</b>, die Statuszeile sagt warum, u' +
-      'nd nichts von Ihnen wird überschrieben. Ihre eigenen Änderungen sind genauso geschützt' +
-      ': haben Sie getippt, während eine Antwort unterwegs war, wartet der Entwurf im Panel. ' +
-      'Während der Arbeit steht auf <b>Erzeugen</b> <b>Stopp</b> — drücken Sie es, um die Run' +
-      'de abzubrechen.</p>',
+      'evor irgendetwas übergeben wird. Von selbst schreibt die Antwort nie in den Editor: si' +
+      'e wartet immer in <b>Antwort des Modells</b>, und die Statuszeile sagt, wie es ausging' +
+      ' — ein sauberer Entwurf meldet sich bereit, einer, den die Schleife nicht ganz reparie' +
+      'ren konnte, nennt den Rest, und hat sich das Dokument — oder sonst etwas, wogegen gepr' +
+      'üft wurde — geändert, während die Antwort flog, warnt die Zeile, dass das Urteil den f' +
+      'rüheren Stand betraf. Während der Arbeit steht auf <b>Erzeugen</b> <b>Stopp</b> — drüc' +
+      'ken Sie es, um die Runde abzubrechen — eine mitten in der Prüfung gestoppte Runde kann' +
+      ' ihren Text ungeprüft im Feld hinterlassen.</p>',
     '<p><b>Reparieren</b> ist dieselbe Schleife, gerichtet auf Ihr aktuelles Dokument: sie ' +
       'wacht auf, wenn die Diagnose Fehler findet, schickt das Dokument mitsamt den genauen B' +
-      'eanstandungen und wendet die korrigierte Fassung mit derselben Sorgfalt an.</p>',
+      'eanstandungen und die korrigierte Fassung wartet im selben Antwortfeld — ihr Platz ist' +
+      ' meist <b>Dokument ersetzen</b>.</p>',
     '<h3 id="ai-0">Die Verbindung, und wessen Schlüssel</h3>',
     '<p>Wie installiert sendet die Anwendung nichts, nirgendwohin. <b>Erzeugen</b> und <b>R' +
       'eparieren</b> gehen erst ins Netz, nachdem Sie die Verbindung am Fuß des Panels einger' +
@@ -2902,9 +2919,9 @@ const
       'er angenommen. Die Erlaubnis bindet sich dorthin, wo auch der Schlüssel — Schema, Host' +
       ' und Port — und zeigt sich als Häkchen <b>Senden erlaubt</b> in den Einstellungen — en' +
       'tfernen Sie es jederzeit: nichts Neues wird gesendet, und eine schon unterwegs befindl' +
-      'iche Antwort wird nie angewendet. Was die Software an der gewählten Adresse mit dem Te' +
-      'xt tut, hat ihr Betreiber zu sagen: die Anfrage geht an die Adresse aus Ihrem Profil u' +
-      'nd nirgendwo sonst.</p>',
+      'iche Antwort landet höchstens im Antwortfeld. Was die Software an der gewählten Adress' +
+      'e mit dem Text tut, hat ihr Betreiber zu sagen: die Anfrage geht an die Adresse aus Ih' +
+      'rem Profil und nirgendwo sonst.</p>',
     '<h3 id="ai-1">Dieselbe Schleife, ohne Netz</h3>',
     '<p>Die Prompts brauchen weder Schlüssel noch Verbindung — das ist zugleich der Weg, we' +
       'nn Ihr Modell in einem Chatfenster lebt, und die Schleife drehen hier Sie selbst: die ' +
@@ -2916,7 +2933,7 @@ const
       'enauen Stellen, die die Maschine beanstandet hat. Seine Antwort ist das korrigierte Do' +
       'kument im Ganzen — bringen Sie sie zurück und drücken Sie <b>Dokument ersetzen</b>; <b' +
       '>In das Dokument einfügen</b> ließe das kaputte stehen und legte die korrigierte Kopie' +
-      ' daneben.</p>',
+      ' daneben (außer es ist Text ausgewählt — dann ersetzt das Einfügen genau ihn).</p>',
     '<h2 id="groups">Der Gruppeneditor</h2>',
     '<p>Setzen Sie den Cursor in ein <code>{a|b|c}</code> und öffnen Sie den Gruppeneditor ' +
       'über die Werkzeugleiste. Er listet die Alternativen als Zeilen auf: ändern, eine hinzu' +
@@ -3863,10 +3880,13 @@ const
     '<p>Un gabarit commence le plus souvent par un texte qui existe déjà — une fiche produi' +
       't, une lettre, une page. Le panneau <b>Brouillon IA</b> en fait un premier gabarit : o' +
       'uvrez-le depuis la barre d''outils, laissez l''en-tête de la colonne de gauche sur <b>' +
-      'Texte à convertir</b>, collez le texte et pressez <b>Générer</b>. Le brouillon arrivé ' +
-      'remplace le document, l''aperçu le rend, et le panneau de diagnostic juge — le même mo' +
-      'teur et le même verdict que pour tout ce que vous tapez. Un Ctrl+Z ramène votre ancien' +
-      ' document ; ensuite, corrigez-le comme votre propre texte, car c''en est un.</p>',
+      'Texte à convertir</b>, collez le texte et pressez <b>Générer</b>. Le brouillon se pose' +
+      ' dans <b>Réponse du modèle</b>, déjà vérifié — il est passé par le moteur de cette fen' +
+      'être en chemin. L''appliquer vous revient : <b>Insérer dans le document</b> le met à l' +
+      'a place de votre sélection (ou au curseur si rien n''est sélectionné), <b>Remplacer le' +
+      ' document</b> échange tout le texte — et rien ne touche votre document tant que vous n' +
+      '''avez pas pressé l''un des deux. Un Ctrl+Z après l''un ou l''autre ramène l''ancien t' +
+      'exte.</p>',
     '<p>S''il n''y a rien à coller, passez l''en-tête sur <b>Brief</b> et décrivez ce que v' +
       'ous voulez. Les champs au-dessus guident le brouillon dans les deux modes : <b>Canal</' +
       'b> — une lettre, un SMS et une notification push ne s''écrivent pas dans le même regis' +
@@ -3881,14 +3901,18 @@ const
     '<p>La réponse n''est pas crue, elle est vérifiée : le brouillon passe par le moteur de' +
       ' cette fenêtre avant d''approcher votre document, et si le verdict trouve des erreurs,' +
       ' la boucle demande elle-même au modèle de les corriger — la barre d''état compte les t' +
-      'ours — avant de rien livrer. Seul un brouillon propre remplace le document ; tout le r' +
-      'este se pose dans <b>Réponse du modèle</b>, la ligne d''état dit pourquoi, et rien de ' +
-      'vôtre n''est écrasé. Vos propres modifications sont protégées de même : si vous avez t' +
-      'apé pendant qu''une réponse volait, le brouillon attend dans le panneau. Pendant le tr' +
-      'avail, <b>Générer</b> affiche <b>Arrêter</b> — pressez pour abandonner le tour.</p>',
+      'ours — avant de rien livrer. La réponse n''écrit jamais d''elle-même dans l''éditeur :' +
+      ' elle attend toujours dans <b>Réponse du modèle</b>, et la ligne d''état dit comment c' +
+      'ela s''est fini — un brouillon propre se dit prêt, un que la boucle n''a pas pu répare' +
+      'r entièrement nomme le reste, et si le document — ou quoi que ce soit contre quoi elle' +
+      ' était vérifiée — a changé pendant que la réponse volait, la ligne prévient que le ver' +
+      'dict portait sur l''état d''avant. Pendant le travail, <b>Générer</b> affiche <b>Arrêt' +
+      'er</b> — pressez pour abandonner le tour — un tour arrêté en pleine vérification peut ' +
+      'laisser dans la réponse un texte non vérifié.</p>',
     '<p><b>Réparer</b> est la même boucle pointée sur votre document actuel : elle s''éveil' +
       'le quand le diagnostic trouve des erreurs, envoie le document avec les objections exac' +
-      'tes, et applique la version corrigée avec le même soin.</p>',
+      'tes, et la version corrigée attend dans la même réponse — sa place est le plus souvent' +
+      ' <b>Remplacer le document</b>.</p>',
     '<h3 id="ai-0">La connexion, et la clé de qui</h3>',
     '<p>Telle qu''installée, l''application n''envoie rien nulle part. <b>Générer</b> et <b' +
       '>Réparer</b> ne vont sur le réseau qu''après que vous avez configuré la connexion au p' +
@@ -3926,9 +3950,9 @@ const
       'vie, et une adresse <code>http</code> non chiffrée n''est acceptée que sur cette machi' +
       'ne. La permission se lie là où se lie la clé — le schéma, l''hôte et le port — et se v' +
       'oit à la coche <b>Envoi autorisé</b> dans les réglages — décochez-la à tout moment : r' +
-      'ien de nouveau ne part, et une réponse déjà en vol n''est jamais appliquée. Ce que le ' +
-      'logiciel à l''adresse choisie fait du texte, c''est à son opérateur de le dire : la re' +
-      'quête va à l''adresse de votre profil et nulle part ailleurs.</p>',
+      'ien de nouveau ne part, et une réponse déjà en vol atterrit, au plus, dans la réponse.' +
+      ' Ce que le logiciel à l''adresse choisie fait du texte, c''est à son opérateur de le d' +
+      'ire : la requête va à l''adresse de votre profil et nulle part ailleurs.</p>',
     '<h3 id="ai-1">La même boucle, sans réseau</h3>',
     '<p>Les invites n''ont besoin ni de clé ni de connexion — c''est le même chemin quand v' +
       'otre modèle vit dans une fenêtre de chat, et la boucle, ici, c''est vous qui la faites' +
@@ -3939,7 +3963,8 @@ const
       'econde invite : elle porte le document entier avec ses lignes numérotées et nomme les ' +
       'endroits exacts que le moteur a contestés. Sa réponse est le document corrigé en entie' +
       'r — rapportez-la et pressez <b>Remplacer le document</b> ; <b>Insérer dans le document' +
-      '</b> laisserait le document cassé en place et poserait la copie corrigée à côté.</p>',
+      '</b> laisserait le document cassé en place et poserait la copie corrigée à côté (sauf ' +
+      'si du texte est sélectionné — l''insertion remplace alors exactement celui-ci).</p>',
     '<h2 id="groups">L''éditeur de groupe</h2>',
     '<p>Placez le curseur dans un <code>{a|b|c}</code> et ouvrez l''éditeur de groupe depui' +
       's la barre d''outils. Il liste les variantes en lignes : modifiez-les, ajoutez-en une,' +
@@ -4875,10 +4900,12 @@ const
     '<p>Una plantilla suele empezar por un texto que ya existe — una ficha de producto, una' +
       ' carta, una página. El panel <b>Borrador de IA</b> lo convierte en una primera plantil' +
       'la: ábralo desde la barra de herramientas, deje la cabecera de la columna izquierda en' +
-      ' <b>Texto a convertir</b>, pegue el texto y pulse <b>Generar</b>. El borrador llegado ' +
-      'reemplaza el documento, la vista previa lo renderiza y el panel de diagnóstico juzga —' +
-      ' el mismo motor y el mismo veredicto que para lo que usted teclea. Un Ctrl+Z devuelve ' +
-      'su documento anterior; desde ahí, edítelo como texto propio, porque lo es.</p>',
+      ' <b>Texto a convertir</b>, pegue el texto y pulse <b>Generar</b>. El borrador cae en <' +
+      'b>Respuesta del modelo</b>, ya verificado — pasó por el motor de esta ventana en el ca' +
+      'mino. Aplicarlo es suyo: <b>Insertar en el documento</b> lo pone donde está su selecci' +
+      'ón (o en el cursor si no hay nada seleccionado), <b>Reemplazar el documento</b> cambia' +
+      ' todo el texto — y nada toca su documento hasta que pulse uno de los dos. Un Ctrl+Z tr' +
+      'as cualquiera de ellos devuelve el texto anterior.</p>',
     '<p>Si no hay nada que pegar, pase la cabecera a <b>Encargo</b> y describa lo que quier' +
       'e. Los campos de arriba guían el borrador en ambos modos: <b>Canal</b> — una carta, un' +
       ' SMS y una notificación push se escriben en registros distintos; <b>Variación</b> — cu' +
@@ -4892,14 +4919,18 @@ const
     '<p>A la respuesta no se le cree: se la verifica. El borrador pasa por el motor de esta' +
       ' ventana antes de acercarse a su documento, y si el veredicto encuentra errores, el bu' +
       'cle pide al modelo corregirlos — la barra de estado cuenta las rondas — antes de entre' +
-      'gar nada. Solo un borrador limpio reemplaza el documento; todo lo demás cae en <b>Resp' +
-      'uesta del modelo</b>, la línea de estado dice por qué, y nada suyo se sobrescribe. Sus' +
-      ' propias ediciones quedan igual de protegidas: si tecleó mientras volaba una respuesta' +
-      ', el borrador espera en el panel. Mientras trabaja, <b>Generar</b> se lee <b>Parar</b>' +
-      ' — púlselo para abandonar la ronda.</p>',
+      'gar nada. La respuesta nunca escribe en el editor por sí sola: siempre espera en <b>Re' +
+      'spuesta del modelo</b>, y la línea de estado dice cómo terminó — un borrador limpio se' +
+      ' declara listo, uno que el bucle no pudo reparar del todo nombra lo que queda, y si el' +
+      ' documento — o cualquier cosa contra la que se verificó — cambió mientras la respuesta' +
+      ' volaba, la línea avisa de que el veredicto era sobre el estado anterior. Mientras tra' +
+      'baja, <b>Generar</b> se lee <b>Parar</b> — púlselo para abandonar la ronda — una ronda' +
+      ' parada a mitad de la comprobación puede dejar en la respuesta un texto sin verificar.' +
+      '</p>',
     '<p><b>Arreglar</b> es el mismo bucle apuntado a su documento actual: despierta cuando ' +
-      'el diagnóstico encuentra errores, envía el documento con las objeciones exactas y apli' +
-      'ca la versión corregida con el mismo cuidado.</p>',
+      'el diagnóstico encuentra errores, envía el documento con las objeciones exactas y la v' +
+      'ersión corregida espera en la misma respuesta — su sitio suele ser <b>Reemplazar el do' +
+      'cumento</b>.</p>',
     '<h3 id="ai-0">La conexión, y la clave de quién</h3>',
     '<p>Tal como se instala, la aplicación no envía nada a ninguna parte. <b>Generar</b> y ' +
       '<b>Arreglar</b> salen a la red solo después de que usted configure la conexión al pie ' +
@@ -4937,9 +4968,9 @@ const
       'n <code>http</code> sin cifrar solo se acepta en esta máquina. El permiso se liga dond' +
       'e la clave — el esquema, el host y el puerto — y se ve en la casilla <b>Envío permitid' +
       'o</b> de los ajustes — desmárquela en cualquier momento: nada nuevo sale, y una respue' +
-      'sta ya en vuelo no se aplica jamás. Lo que haga con el texto el software de la direcci' +
-      'ón elegida es cosa de su operador: la petición va a la dirección de su perfil y a ning' +
-      'ún otro sitio.</p>',
+      'sta ya en vuelo aterriza, como mucho, en la respuesta. Lo que haga con el texto el sof' +
+      'tware de la dirección elegida es cosa de su operador: la petición va a la dirección de' +
+      ' su perfil y a ningún otro sitio.</p>',
     '<h3 id="ai-1">El mismo bucle, sin red</h3>',
     '<p>Las instrucciones no necesitan ni clave ni conexión — es el mismo camino cuando su ' +
       'modelo vive en una ventana de chat, y aquí el bucle lo hace girar usted: el motor juzg' +
@@ -4950,7 +4981,8 @@ const
       'l documento entero con las líneas numeradas y nombra los lugares exactos que el motor ' +
       'objetó. Su respuesta es el documento corregido completo — tráigala de vuelta y pulse <' +
       'b>Reemplazar el documento</b>; <b>Insertar en el documento</b> dejaría el roto en su s' +
-      'itio y pondría la copia corregida al lado.</p>',
+      'itio y pondría la copia corregida al lado (salvo que haya texto seleccionado — entonce' +
+      's la inserción reemplaza exactamente eso).</p>',
     '<h2 id="groups">El editor de grupos</h2>',
     '<p>Ponga el cursor dentro de un <code>{a|b|c}</code> y abra el editor de grupos desde ' +
       'la barra de herramientas. Enumera las alternativas como filas: cámbielas, añada una, q' +
@@ -5860,11 +5892,12 @@ const
     '<p>Un modello di solito comincia da un testo che esiste già — una scheda prodotto, una' +
       ' lettera, una pagina. Il pannello <b>Bozza IA</b> lo trasforma in un primo modello: ap' +
       'ritelo dalla barra degli strumenti, lasciate l''intestazione della colonna sinistra su' +
-      ' <b>Testo da convertire</b>, incollate il testo e premete <b>Genera</b>. La bozza arri' +
-      'vata sostituisce il documento, l''anteprima la rende e il pannello di diagnostica giud' +
-      'ica — lo stesso motore e lo stesso verdetto di qualunque cosa scriviate voi. Un Ctrl+Z' +
-      ' riporta il documento di prima; da lì, correggetela come testo vostro, perché lo è.</p' +
-      '>',
+      ' <b>Testo da convertire</b>, incollate il testo e premete <b>Genera</b>. La bozza si p' +
+      'osa in <b>Risposta del modello</b>, già verificata — per strada è passata dal motore d' +
+      'i questa finestra. Applicarla spetta a voi: <b>Inserisci nel documento</b> la mette al' +
+      ' posto della selezione (o al cursore se nulla è selezionato), <b>Sostituisci il docume' +
+      'nto</b> cambia tutto il testo — e nulla tocca il vostro documento finché non premete u' +
+      'no dei due. Un Ctrl+Z dopo l''uno o l''altro riporta il testo di prima.</p>',
     '<p>Se non c''è nulla da incollare, spostate l''intestazione su <b>Brief</b> e descrive' +
       'te cosa volete. I campi sopra guidano la bozza in entrambi i modi: <b>Canale</b> — una' +
       ' lettera, un SMS e una notifica push si scrivono in registri diversi; <b>Variazione</b' +
@@ -5878,14 +5911,17 @@ const
     '<p>Alla risposta non si crede: la si verifica. La bozza passa per il motore di questa ' +
       'finestra prima di avvicinarsi al documento, e se il verdetto trova errori il ciclo chi' +
       'ede al modello di correggerli — la barra di stato conta i giri — prima di consegnare a' +
-      'lcunché. Solo una bozza pulita sostituisce il documento; tutto il resto si posa in <b>' +
-      'Risposta del modello</b>, la riga di stato dice perché, e nulla di vostro viene sovras' +
-      'critto. Le vostre modifiche sono protette allo stesso modo: se avete scritto mentre un' +
-      'a risposta era in volo, la bozza aspetta nel pannello. Mentre lavora, <b>Genera</b> si' +
-      ' legge <b>Ferma</b> — premetelo per abbandonare il giro.</p>',
+      'lcunché. La risposta non scrive mai nell''editor da sola: aspetta sempre in <b>Rispost' +
+      'a del modello</b>, e la riga di stato dice com''è andata — una bozza pulita si dichiar' +
+      'a pronta, una che il ciclo non ha potuto riparare del tutto nomina ciò che resta, e se' +
+      ' il documento — o qualunque cosa contro cui era verificata — è cambiato mentre la risp' +
+      'osta volava, la riga avverte che il verdetto riguardava lo stato di prima. Mentre lavo' +
+      'ra, <b>Genera</b> si legge <b>Ferma</b> — premetelo per abbandonare il giro — un giro ' +
+      'fermato a metà verifica può lasciare nella risposta un testo non verificato.</p>',
     '<p><b>Correggi</b> è lo stesso ciclo puntato sul documento attuale: si sveglia quando ' +
-      'la diagnostica trova errori, invia il documento con le obiezioni esatte e applica la v' +
-      'ersione corretta con la stessa cura.</p>',
+      'la diagnostica trova errori, invia il documento con le obiezioni esatte e la versione ' +
+      'corretta aspetta nella stessa risposta — il suo posto è di solito <b>Sostituisci il do' +
+      'cumento</b>.</p>',
     '<h3 id="ai-0">La connessione, e la chiave di chi</h3>',
     '<p>Come installata, l''applicazione non invia nulla da nessuna parte. <b>Genera</b> e ' +
       '<b>Correggi</b> vanno in rete solo dopo che avete impostato la connessione in fondo al' +
@@ -5923,9 +5959,9 @@ const
       'ndirizzo <code>http</code> non cifrato è accettato solo su questa macchina. Il permess' +
       'o si lega dove si lega la chiave — schema, host e porta — e si vede nella spunta <b>In' +
       'vio consentito</b> delle impostazioni — toglietela in qualunque momento: nulla di nuov' +
-      'o parte, e una risposta già in volo non viene mai applicata. Cosa faccia col testo il ' +
-      'software all''indirizzo scelto spetta al suo operatore dirlo: la richiesta va all''ind' +
-      'irizzo del vostro profilo e in nessun altro posto.</p>',
+      'o parte, e una risposta già in volo si posa, al più, nella risposta. Cosa faccia col t' +
+      'esto il software all''indirizzo scelto spetta al suo operatore dirlo: la richiesta va ' +
+      'all''indirizzo del vostro profilo e in nessun altro posto.</p>',
     '<h3 id="ai-1">Lo stesso ciclo, senza rete</h3>',
     '<p>I prompt non hanno bisogno né di chiave né di connessione — è la stessa strada quan' +
       'do il vostro modello vive in una finestra di chat, e il ciclo qui lo fate girare voi: ' +
@@ -5936,7 +5972,8 @@ const
       ' l''intero documento con le righe numerate e nomina i punti esatti che il motore ha co' +
       'ntestato. La sua risposta è il documento corretto per intero — riportatela e premete <' +
       'b>Sostituisci il documento</b>; <b>Inserisci nel documento</b> lascerebbe quello rotto' +
-      ' al suo posto e metterebbe accanto la copia corretta.</p>',
+      ' al suo posto e metterebbe accanto la copia corretta (a meno che del testo sia selezio' +
+      'nato — allora l''inserimento sostituisce esattamente quello).</p>',
     '<h2 id="groups">L''editor di gruppi</h2>',
     '<p>Mettete il cursore dentro un <code>{a|b|c}</code> e aprite l''editor di gruppi dall' +
       'a barra degli strumenti. Elenca le alternative come righe: modificatele, aggiungetene ' +
@@ -6848,10 +6885,12 @@ const
     '<p>Um modelo costuma começar por um texto que já existe — uma ficha de produto, uma ca' +
       'rta, uma página. O painel <b>Rascunho de IA</b> transforma-o num primeiro modelo: abra' +
       '-o na barra de ferramentas, deixe o cabeçalho da coluna esquerda em <b>Texto a convert' +
-      'er</b>, cole o texto e prima <b>Gerar</b>. O rascunho chegado substitui o documento, a' +
-      ' pré-visualização renderiza-o e o painel de diagnóstico julga — o mesmo motor e o mesm' +
-      'o veredicto que para tudo o que escreve. Um Ctrl+Z devolve o documento anterior; daí e' +
-      'm diante, edite-o como texto seu, porque o é.</p>',
+      'er</b>, cole o texto e prima <b>Gerar</b>. O rascunho cai em <b>Resposta do modelo</b>' +
+      ', já verificado — passou pelo motor desta janela pelo caminho. Aplicá-lo é seu: <b>Ins' +
+      'erir no documento</b> põe-no onde está a sua selecção (ou no cursor se nada estiver se' +
+      'leccionado), <b>Substituir o documento</b> troca o texto inteiro — e nada toca no seu ' +
+      'documento até premir um dos dois. Um Ctrl+Z depois de qualquer deles devolve o texto a' +
+      'nterior.</p>',
     '<p>Se não houver nada para colar, mude o cabeçalho para <b>Resumo</b> e descreva o que' +
       ' quer. Os campos acima guiam o rascunho em ambos os modos: <b>Canal</b> — uma carta, u' +
       'm SMS e uma notificação push escrevem-se em registos diferentes; <b>Variação</b> — até' +
@@ -6865,14 +6904,16 @@ const
     '<p>Na resposta não se acredita: verifica-se. O rascunho passa pelo motor desta janela ' +
       'antes de se aproximar do documento, e se o veredicto encontrar erros, o ciclo pede ao ' +
       'modelo que os corrija — a barra de estado conta as rondas — antes de entregar o que qu' +
-      'er que seja. Só um rascunho limpo substitui o documento; tudo o resto cai em <b>Respos' +
-      'ta do modelo</b>, a linha de estado diz porquê, e nada seu é reescrito. As suas própri' +
-      'as edições ficam igualmente protegidas: se escreveu enquanto uma resposta voava, o ras' +
-      'cunho espera no painel. Enquanto trabalha, <b>Gerar</b> lê-se <b>Parar</b> — prima-o p' +
-      'ara abandonar a ronda.</p>',
+      'er que seja. A resposta nunca escreve no editor por si própria: espera sempre em <b>Re' +
+      'sposta do modelo</b>, e a linha de estado diz como acabou — um rascunho limpo declara-' +
+      'se pronto, um que o ciclo não conseguiu reparar de todo nomeia o que falta, e se o doc' +
+      'umento — ou o que quer que fosse contra que se verificou — mudou enquanto a resposta v' +
+      'oava, a linha avisa que o veredicto era sobre o estado anterior. Enquanto trabalha, <b' +
+      '>Gerar</b> lê-se <b>Parar</b> — prima-o para abandonar a ronda — uma ronda parada a me' +
+      'io da verificação pode deixar na resposta um texto por verificar.</p>',
     '<p><b>Corrigir</b> é o mesmo ciclo apontado ao documento actual: acorda quando o diagn' +
-      'óstico encontra erros, envia o documento com as objecções exactas e aplica a versão co' +
-      'rrigida com o mesmo cuidado.</p>',
+      'óstico encontra erros, envia o documento com as objecções exactas e a versão corrigida' +
+      ' espera na mesma resposta — o seu lugar costuma ser <b>Substituir o documento</b>.</p>',
     '<h3 id="ai-0">A ligação, e a chave de quem</h3>',
     '<p>Tal como se instala, a aplicação não envia nada para lado nenhum. <b>Gerar</b> e <b' +
       '>Corrigir</b> só vão à rede depois de configurar a ligação no rodapé do painel e a per' +
@@ -6908,9 +6949,9 @@ const
       'ionamento é recusado em vez de seguido, e um endereço <code>http</code> sem cifra só é' +
       ' aceite nesta máquina. A permissão liga-se onde a chave se liga — o esquema, o host e ' +
       'a porta — e vê-se na marca <b>Envio permitido</b> das definições — desmarque-a a qualq' +
-      'uer momento: nada de novo parte, e uma resposta já em voo nunca é aplicada. O que o so' +
-      'ftware no endereço escolhido faz com o texto é o seu operador que o diz: o pedido vai ' +
-      'para o endereço do seu perfil e para mais lado nenhum.</p>',
+      'uer momento: nada de novo parte, e uma resposta já em voo pousa, quando muito, na resp' +
+      'osta. O que o software no endereço escolhido faz com o texto é o seu operador que o di' +
+      'z: o pedido vai para o endereço do seu perfil e para mais lado nenhum.</p>',
     '<h3 id="ai-1">O mesmo ciclo, sem rede</h3>',
     '<p>Os pedidos não precisam nem de chave nem de ligação — é o mesmo caminho quando o se' +
       'u modelo vive numa janela de chat, e aqui o ciclo é você que o faz girar: o motor julg' +
@@ -6921,7 +6962,8 @@ const
       'numeradas e nomeia os sítios exactos a que o motor objectou. A resposta a ele é o docu' +
       'mento corrigido por inteiro — traga-a de volta e prima <b>Substituir o documento</b>; ' +
       '<b>Inserir no documento</b> deixaria o partido no lugar e poria a cópia corrigida ao l' +
-      'ado.</p>',
+      'ado (salvo se houver texto seleccionado — então a inserção substitui exactamente esse)' +
+      '.</p>',
     '<h2 id="groups">O editor de grupos</h2>',
     '<p>Ponha o cursor dentro de um <code>{a|b|c}</code> e abra o editor de grupos a partir' +
       ' da barra de ferramentas. Enumera as alternativas em linhas: altere-as, acrescente uma' +
@@ -7818,10 +7860,12 @@ const
     '<p>Een sjabloon begint meestal met tekst die er al is — een productbeschrijving, een b' +
       'rief, een pagina. Het paneel <b>AI-concept</b> maakt daar een eerste sjabloon van: ope' +
       'n het vanaf de werkbalk, laat de kop van de linkerkolom op <b>Te converteren tekst</b>' +
-      ' staan, plak de tekst en druk op <b>Genereren</b>. Het aangekomen concept vervangt het' +
-      ' document, het voorbeeld rendert het en het diagnosepaneel oordeelt — dezelfde machine' +
-      ' en hetzelfde oordeel als voor alles wat u zelf typt. Eén Ctrl+Z brengt uw oude docume' +
-      'nt terug; bewerk het daarna als eigen tekst, want dat is het.</p>',
+      ' staan, plak de tekst en druk op <b>Genereren</b>. Het concept belandt in <b>Antwoord ' +
+      'van het model</b>, al gecontroleerd — het ging onderweg door de machine van dit venste' +
+      'r. Toepassen is aan u: <b>In het document invoegen</b> zet het op de plaats van uw sel' +
+      'ectie (of bij de cursor als niets is geselecteerd), <b>Het document vervangen</b> wiss' +
+      'elt de hele tekst — en niets raakt uw document tot u een van beide indrukt. Eén Ctrl+Z' +
+      ' na elk van beide brengt de oude tekst terug.</p>',
     '<p>Valt er niets te plakken, zet de kop dan op <b>Briefing</b> en beschrijf wat u wilt' +
       '. De velden erboven sturen het concept in beide standen: <b>Kanaal</b> — een brief, ee' +
       'n sms en een pushmelding zijn in verschillende registers geschreven; <b>Variatie</b> —' +
@@ -7835,15 +7879,18 @@ const
     '<p>Het antwoord wordt niet geloofd, het wordt gecontroleerd: het concept gaat door de ' +
       'machine van dit venster voordat het bij uw document in de buurt komt, en vindt het oor' +
       'deel fouten, dan vraagt de lus het model ze te herstellen — de statusbalk telt de rond' +
-      'es mee — voordat er iets wordt overhandigd. Alleen een schoon concept vervangt het doc' +
-      'ument; al het andere belandt in <b>Antwoord van het model</b>, de statusregel zegt waa' +
-      'rom, en niets van u wordt overschreven. Uw eigen wijzigingen zijn net zo beschermd: ty' +
-      'pte u terwijl een antwoord onderweg was, dan wacht het concept in het paneel. Tijdens ' +
-      'het werk staat op <b>Genereren</b> <b>Stoppen</b> — druk erop om de ronde af te breken' +
-      '.</p>',
+      'es mee — voordat er iets wordt overhandigd. Het antwoord schrijft nooit uit zichzelf i' +
+      'n de editor: het wacht altijd in <b>Antwoord van het model</b>, en de statusregel zegt' +
+      ' hoe het afliep — een schoon concept meldt zich klaar, een dat de lus niet helemaal ko' +
+      'n herstellen noemt wat er overblijft, en veranderde het document — of iets anders waar' +
+      'tegen werd gecontroleerd — terwijl het antwoord onderweg was, dan waarschuwt de regel ' +
+      'dat het oordeel over de eerdere stand ging. Tijdens het werk staat op <b>Genereren</b>' +
+      ' <b>Stoppen</b> — druk erop om de ronde af te breken — een midden in de controle gesto' +
+      'pte ronde kan ongecontroleerde tekst in het veld achterlaten.</p>',
     '<p><b>Herstellen</b> is dezelfde lus, gericht op uw huidige document: hij ontwaakt wan' +
-      'neer de diagnose fouten vindt, stuurt het document met de exacte bezwaren mee en past ' +
-      'de gecorrigeerde versie met dezelfde zorg toe.</p>',
+      'neer de diagnose fouten vindt, stuurt het document met de exacte bezwaren mee en de ge' +
+      'corrigeerde versie wacht in hetzelfde antwoordveld — haar plaats is meestal <b>Het doc' +
+      'ument vervangen</b>.</p>',
     '<h3 id="ai-0">De verbinding, en wiens sleutel</h3>',
     '<p>Zoals geïnstalleerd verstuurt de toepassing niets, nergens heen. <b>Genereren</b> e' +
       'n <b>Herstellen</b> gaan pas het net op nadat u onderaan het paneel de verbinding hebt' +
@@ -7881,9 +7928,10 @@ const
       'een onversleuteld <code>http</code>-adres wordt alleen op deze machine aanvaard. De to' +
       'estemming bindt zich waar de sleutel dat doet — schema, host en poort — en is zichtbaa' +
       'r als het vinkje <b>Versturen toegestaan</b> in de instellingen — haal het weg wanneer' +
-      ' u wilt: niets nieuws vertrekt, en een antwoord dat al onderweg is wordt nooit toegepa' +
-      'st. Wat de software op het gekozen adres met de tekst doet, is aan zijn beheerder om t' +
-      'e zeggen: het verzoek gaat naar het adres uit uw profiel en nergens anders heen.</p>',
+      ' u wilt: niets nieuws vertrekt, en een antwoord dat al onderweg is belandt hoogstens i' +
+      'n het antwoordveld. Wat de software op het gekozen adres met de tekst doet, is aan zij' +
+      'n beheerder om te zeggen: het verzoek gaat naar het adres uit uw profiel en nergens an' +
+      'ders heen.</p>',
     '<h3 id="ai-1">Dezelfde lus, zonder netwerk</h3>',
     '<p>De prompts hebben sleutel noch verbinding nodig — het is dezelfde weg wanneer uw mo' +
       'del in een chatvenster leeft, en de lus draait u hier zelf: de machine oordeelt na het' +
@@ -7894,7 +7942,8 @@ const
       'mmerde regels en noemt de exacte plekken waartegen de machine bezwaar maakte. Het antw' +
       'oord erop is het gecorrigeerde document in zijn geheel — breng het terug en druk op <b' +
       '>Het document vervangen</b>; <b>In het document invoegen</b> zou het kapotte laten sta' +
-      'an en de gecorrigeerde kopie ernaast zetten.</p>',
+      'an en de gecorrigeerde kopie ernaast zetten (tenzij tekst is geselecteerd — dan vervan' +
+      'gt het invoegen precies die).</p>',
     '<h2 id="groups">De groepseditor</h2>',
     '<p>Zet de cursor in een <code>{a|b|c}</code> en open de groepseditor vanuit de werkbal' +
       'k. Hij somt de alternatieven als regels op: wijzig ze, voeg er een toe, haal er een we' +
@@ -8800,10 +8849,12 @@ const
     '<p>Bir şablon çoğunlukla zaten var olan bir metinden başlar — bir ürün açıklaması, bir' +
       ' mektup, bir sayfa. <b>Yapay zekâ taslağı</b> paneli o metni ilk şablona çevirir: pane' +
       'li araç çubuğundan açın, sol sütunun başlığını <b>Dönüştürülecek metin</b> üzerinde bı' +
-      'rakın, metni yapıştırın ve <b>Üret</b> düğmesine basın. Gelen taslak belgeyi değiştiri' +
-      'r, önizleme onu çizer ve tanı paneli yargısını verir — kendi yazdıklarınızla aynı maki' +
-      'ne, aynı yargı. Bir Ctrl+Z eski belgenizi geri getirir; oradan sonra kendi metniniz gi' +
-      'bi düzenleyin, çünkü öyledir.</p>',
+      'rakın, metni yapıştırın ve <b>Üret</b> düğmesine basın. Taslak, <b>Modelin yanıtı</b> ' +
+      'alanına düşer, doğrulanmış olarak — yolda bu pencerenin kendi makinesinden geçti. Uygu' +
+      'lamak sizindir: <b>Belgeye ekle</b> onu seçiminizin yerine koyar (bir şey seçili değil' +
+      'se imlece), <b>Belgeyi değiştir</b> metnin tamamını değiştirir — ve siz ikisinden biri' +
+      'ne basana kadar hiçbir şey belgenize dokunmaz. Herhangi birinden sonra bir Ctrl+Z eski' +
+      ' metni geri getirir.</p>',
     '<p>Yapıştıracak bir şey yoksa başlığı <b>Özet</b> konumuna alın ve ne istediğinizi anl' +
       'atın. Üstteki alanlar taslağı iki kipte de yönlendirir: <b>Kanal</b> — bir mektup, bir' +
       ' SMS ve bir anlık bildirim farklı üsluplarda yazılır; <b>Çeşitleme</b> — çeşitlemeler ' +
@@ -8816,14 +8867,16 @@ const
       '.</p>',
     '<p>Yanıta inanılmaz, yanıt doğrulanır: taslak, belgenize yaklaşmadan önce bu pencereni' +
       'n kendi makinesinden geçer ve yargı hata bulursa döngü, bir şey teslim etmeden önce mo' +
-      'delden onları onarmasını ister — durum çubuğu turları sayar. Belgeyi yalnızca temiz bi' +
-      'r taslak değiştirir; gerisi <b>Modelin yanıtı</b> alanına düşer, durum satırı nedenini' +
-      ' söyler ve sizin hiçbir şeyinizin üzerine yazılmaz. Kendi düzenlemeleriniz de aynı biç' +
-      'imde korunur: yanıt yoldayken yazdıysanız taslak panelde bekler. Çalışırken <b>Üret</b' +
-      '> düğmesinde <b>Durdur</b> yazar — turu bırakmak için basın.</p>',
+      'delden onları onarmasını ister — durum çubuğu turları sayar. Yanıt editöre kendiliğind' +
+      'en asla yazmaz: her zaman <b>Modelin yanıtı</b> alanında bekler ve durum satırı nasıl ' +
+      'bittiğini söyler — temiz taslak hazır olduğunu bildirir, döngünün tam onaramadığı ise ' +
+      'kalanı adlandırır; yanıt yoldayken belge — ya da doğrulamada kullanılan başka bir şey ' +
+      '— değiştiyse satır, yargının önceki durum hakkında olduğu konusunda uyarır. Çalışırken' +
+      ' <b>Üret</b> düğmesinde <b>Durdur</b> yazar — turu bırakmak için basın — denetimin ort' +
+      'asında durdurulan bir tur, kutuda doğrulanmamış metin bırakabilir.</p>',
     '<p><b>Düzelt</b>, aynı döngünün mevcut belgenize çevrilmiş hâlidir: tanı hata bulduğun' +
-      'da uyanır, belgeyi tam itirazlarla birlikte gönderir ve düzeltilmiş sürümü aynı özenle' +
-      ' uygular.</p>',
+      'da uyanır, belgeyi tam itirazlarla birlikte gönderir ve düzeltilmiş sürüm aynı yanıt k' +
+      'utusunda bekler — yeri çoğunlukla <b>Belgeyi değiştir</b> düğmesidir.</p>',
     '<h3 id="ai-0">Bağlantı, ve kimin anahtarı</h3>',
     '<p>Kurulduğu hâliyle uygulama hiçbir yere hiçbir şey göndermez. <b>Üret</b> ve <b>Düze' +
       'lt</b> ağa ancak panelin altındaki bağlantıyı kurup izin verdikten sonra çıkar. Uç nok' +
@@ -8860,9 +8913,9 @@ const
       ' <code>http</code> adresi yalnızca bu makinede kabul edilir. İzin, anahtarın bağlandığ' +
       'ı yere bağlıdır — şema, sunucu adı ve bağlantı noktası — ve ayarlardaki <b>Gönderim aç' +
       'ık</b> işaretinde görünür — istediğiniz an kaldırın: yeni bir şey gönderilmez ve zaten' +
-      ' yolda olan bir yanıt asla uygulanmaz. Seçtiğiniz adresteki yazılımın metinle ne yaptı' +
-      'ğını söylemek işletmecisine düşer: istek, profilinizdeki adrese gider ve başka hiçbir ' +
-      'yere değil.</p>',
+      ' yolda olan bir yanıt en fazla yanıt kutusuna düşer. Seçtiğiniz adresteki yazılımın me' +
+      'tinle ne yaptığını söylemek işletmecisine düşer: istek, profilinizdeki adrese gider ve' +
+      ' başka hiçbir yere değil.</p>',
     '<h3 id="ai-1">Aynı döngü, ağ olmadan</h3>',
     '<p>İstemlerin ne anahtara ne bağlantıya ihtiyacı var — modeliniz bir sohbet penceresin' +
       'de yaşıyorsa yol budur ve döngüyü burada siz çevirirsiniz: makine yargısını yapıştırma' +
@@ -8872,7 +8925,8 @@ const
       'temi kurar: tüm belgeyi satırları numaralanmış taşır ve makinenin itiraz ettiği yerler' +
       'i tek tek adlandırır. Onun yanıtı, düzeltilmiş belgenin tamamıdır — geri getirin ve <b' +
       '>Belgeyi değiştir</b> düğmesine basın; <b>Belgeye ekle</b> bozuk olanı yerinde bırakır' +
-      ', düzeltilmiş kopyayı yanına koyardı.</p>',
+      ', düzeltilmiş kopyayı yanına koyardı (metin seçiliyse başka — o zaman ekleme tam olara' +
+      'k onu değiştirir).</p>',
     '<h2 id="groups">Grup düzenleyici</h2>',
     '<p>İmleci bir <code>{a|b|c}</code> içine koyun ve araç şeridinden grup düzenleyiciyi a' +
       'çın. Seçenekleri satırlar olarak sıralar: değiştirin, bir tane ekleyin, bir tane çıkar' +
@@ -9740,10 +9794,12 @@ const
     '<p>Шаблон зазвичай починається з тексту, який уже існує, — опис товару, лист, сторінка' +
       '. Панель <b>AI-чернетка</b> перетворює такий текст на перший шаблон: відкрийте її з па' +
       'нелі інструментів, залиште заголовок лівої колонки на <b>Текст для переробки</b>, вста' +
-      'вте текст і натисніть <b>Згенерувати</b>. Готова чернетка замінює документ, прев''ю її' +
-      ' рендерить, а панель діагностики виносить вердикт — той самий рушій і той самий суд, щ' +
-      'о й для набраного руками. Один Ctrl+Z повертає попередній документ; далі правте як сві' +
-      'й текст — він і є ваш.</p>',
+      'вте текст і натисніть <b>Згенерувати</b>. Чернетка лягає у <b>Відповідь моделі</b> вже' +
+      ' перевіреною — дорогою вона пройшла через рушій цього вікна. Застосовуєте її ви самі: ' +
+      '<b>Вставити в документ</b> ставить її на місце виділення (або біля курсора, якщо нічог' +
+      'о не виділено), <b>Замінити документ</b> міняє весь текст — і ніщо не торкнеться вашог' +
+      'о документа, поки ви не натиснете одну з кнопок. Один Ctrl+Z після будь-якої з них пов' +
+      'ертає як було.</p>',
     '<p>Якщо вставляти нічого, перемкніть заголовок на <b>Бриф</b> і опишіть, що потрібно. ' +
       'Поля вище ведуть чернетку в обох режимах: <b>Канал</b> — лист, SMS і push-сповіщення н' +
       'аписані в різних регістрах; <b>Варіативність</b> — як далеко варіантам можна розходити' +
@@ -9755,14 +9811,18 @@ const
       'дні форми лежали у змінній, ім''я якої казало «знахідний».</p>',
     '<p>Відповіді не вірять — її перевіряють: чернетка проходить через рушій цього вікна до' +
       ' того, як торкнеться документа, і, якщо вердикт знаходить помилки, петля сама просить ' +
-      'модель їх виправити — рядок стану рахує раунди вголос, — перш ніж щось віддати. Докуме' +
-      'нт замінює лише чиста чернетка; решта лягає в <b>Відповідь моделі</b>, а рядок стану к' +
-      'аже чому — і ваше не затирається. Так само захищені ваші правки: якщо ви друкували, по' +
-      'ки відповідь летіла, чернетка чекає в панелі. Поки триває робота, <b>Згенерувати</b> ч' +
-      'итається як <b>Стоп</b> — натисніть, щоб покинути раунд.</p>',
+      'модель їх виправити — рядок стану рахує раунди вголос, — перш ніж щось віддати. Сама в' +
+      ' редактор відповідь не пише ніколи: вона завжди чекає у <b>Відповідь моделі</b>, а ряд' +
+      'ок стану каже, чим скінчилося, — чиста чернетка готова до вставки, недолагоджена назив' +
+      'ає, що лишилося, а якщо документ — чи щось інше, проти чого йшла перевірка, — мінявся,' +
+      ' поки відповідь летіла, рядок попередить, що вердикт був про попередній стан. Поки три' +
+      'ває робота, <b>Згенерувати</b> читається як <b>Стоп</b> — натисніть, щоб покинути раун' +
+      'д, — раунд, зупинений посеред перевірки, може лишити в полі текст, який перевірки не п' +
+      'ройшов.</p>',
     '<p><b>Полагодити</b> — та сама петля, спрямована на поточний документ: вона прокидаєть' +
       'ся, коли діагностика знаходить помилки, надсилає документ разом із точними претензіями' +
-      ' і застосовує виправлену версію з тією ж обережністю.</p>',
+      ' і виправлена версія чекає там само, в полі відповіді, — зазвичай її місце — <b>Заміни' +
+      'ти документ</b>.</p>',
     '<h3 id="ai-0">Підключення і чий ключ</h3>',
     '<p>Одразу після встановлення застосунок нікуди нічого не надсилає. <b>Згенерувати</b> ' +
       'і <b>Полагодити</b> виходять у мережу лише після того, як ви налаштуєте підключення в ' +
@@ -9796,9 +9856,9 @@ const
       'не змінюється без вас: редирект відхиляється, а не виконується, а нешифрований <code>h' +
       'ttp</code> приймається лише на цю машину. Дозвіл прив''язаний там само, де ключ, — до ' +
       'схеми, хоста й порту — і видно галочкою <b>Надсилання дозволено</b> у налаштуваннях — ' +
-      'зніміть її будь-коли: нове не надсилається, а відповідь, що вже летить, ніколи не заст' +
-      'осовується. Що робить із текстом софт за вибраною адресою — питання до його оператора:' +
-      ' запит іде за адресою з профілю й нікуди більше.</p>',
+      'зніміть її будь-коли: нове не надсилається, а відповідь, що вже летить, потрапить щона' +
+      'йбільше в поле відповіді. Що робить із текстом софт за вибраною адресою — питання до й' +
+      'ого оператора: запит іде за адресою з профілю й нікуди більше.</p>',
     '<h3 id="ai-1">Та сама петля — без мережі</h3>',
     '<p>Промптам не потрібні ні ключ, ні підключення — це той самий шлях, коли ваша модель ' +
       'живе у вікні чату, і петлю тут крутите ви самі: рушій виносить вердикт після вставки, ' +
@@ -9808,7 +9868,8 @@ const
       'влення</b> збере другий промпт: він несе весь документ із нумерованими рядками й назив' +
       'ає точні місця, до яких у рушія претензії. Відповідь на нього — виправлений документ ц' +
       'ілком, тож поверніть його й натисніть <b>Замінити документ</b> — <b>Вставити в докумен' +
-      'т</b> залишив би зламаний на місці й поклав би виправлену копію поруч.</p>',
+      'т</b> залишив би зламаний на місці й поклав би виправлену копію поруч (хіба що у вас є' +
+      ' виділення — тоді вставка замінить саме його).</p>',
     '<h2 id="groups">Редактор груп</h2>',
     '<p>Поставте курсор усередину <code>{a|b|c}</code> і відкрийте редактор груп зі смуги і' +
       'нструментів. Він перелічує варіанти рядками: правте їх, додайте один, приберіть інший ' +
@@ -10676,10 +10737,12 @@ const
     '<p>Шаблон звычайна пачынаецца з тэксту, які ўжо існуе, — апісанне тавару, ліст, старон' +
       'ка. Панэль <b>AI-чарнавік</b> ператварае такі тэкст у першы шаблон: адкрыйце яе з панэ' +
       'лі інструментаў, пакіньце загаловак левай калонкі на <b>Тэкст для перапрацоўкі</b>, ус' +
-      'таўце тэкст і націсніце <b>Згенераваць</b>. Гатовы чарнавік замяняе дакумент, прэв''ю ' +
-      'яго рэндэрыць, а панэль дыягностыкі выносіць вердыкт — той самы рухавік і той самы суд' +
-      ', што і для набранага рукамі. Адзін Ctrl+Z вяртае ранейшы дакумент; далей праўце як св' +
-      'ой тэкст — ён і ёсць ваш.</p>',
+      'таўце тэкст і націсніце <b>Згенераваць</b>. Чарнавік кладзецца ў <b>Адказ мадэлі</b> ў' +
+      'жо праверанным — па дарозе ён прайшоў праз рухавік гэтага акна. Ужываеце яго вы самі: ' +
+      '<b>Уставіць у дакумент</b> ставіць яго на месца вылучэння (або каля курсора, калі нічо' +
+      'га не вылучана), <b>Замяніць дакумент</b> мяняе ўвесь тэкст — і нішто не кранецца ваша' +
+      'га дакумента, пакуль вы не націснеце адну з кнопак. Адзін Ctrl+Z пасля любой з іх вярт' +
+      'ае як было.</p>',
     '<p>Калі ўстаўляць няма чаго, пераключыце загаловак на <b>Брыф</b> і апішыце, што трэба' +
       '. Палі вышэй вядуць чарнавік у абодвух рэжымах: <b>Канал</b> — ліст, SMS і push-паведа' +
       'мленне напісаныя ў розных рэгістрах; <b>Варыятыўнасць</b> — як далёка варыянтам можна ' +
@@ -10691,14 +10754,17 @@ const
       'творныя формы ляжалі ў зменнай, імя якой казала «вінавальны».</p>',
     '<p>Адказу не вераць — яго правяраюць: чарнавік праходзіць праз рухавік гэтага акна да ' +
       'таго, як кранецца дакумента, і, калі вердыкт знаходзіць памылкі, пятля сама просіць ма' +
-      'дэль іх паправіць — радок стану лічыць раўнды ўголас, — перш чым нешта аддаць. Дакумен' +
-      'т замяняе толькі чысты чарнавік; астатняе кладзецца ў <b>Адказ мадэлі</b>, а радок ста' +
-      'ну кажа чаму — і ваша не заціраецца. Гэтак жа абаронены вашы праўкі: калі вы друкавалі' +
-      ', пакуль адказ ляцеў, чарнавік чакае ў панэлі. Пакуль ідзе праца, <b>Згенераваць</b> ч' +
-      'ытаецца як <b>Стоп</b> — націсніце, каб кінуць раўнд.</p>',
+      'дэль іх паправіць — радок стану лічыць раўнды ўголас, — перш чым нешта аддаць. Сам у р' +
+      'эдактар адказ не піша ніколі: ён заўсёды чакае ў <b>Адказ мадэлі</b>, а радок стану ка' +
+      'жа, чым скончылася, — чысты чарнавік гатовы да ўстаўкі, недапраўлены называе, што заст' +
+      'алося, а калі дакумент — ці нешта іншае, супраць чаго ішла праверка, — мяняўся, пакуль' +
+      ' адказ ляцеў, радок папярэдзіць, што вердыкт быў пра ранейшы стан. Пакуль ідзе праца, ' +
+      '<b>Згенераваць</b> чытаецца як <b>Стоп</b> — націсніце, каб кінуць раўнд, — раўнд, спы' +
+      'нены пасярод праверкі, можа пакінуць у полі тэкст, які праверкі не прайшоў.</p>',
     '<p><b>Паправіць</b> — тая самая пятля, накіраваная на бягучы дакумент: яна прачынаецца' +
       ', калі дыягностыка знаходзіць памылкі, адпраўляе дакумент разам з дакладнымі прэтэнзія' +
-      'мі і ўжывае папраўленую версію з той жа асцярожнасцю.</p>',
+      'мі і папраўленая версія чакае там жа, у полі адказу, — звычайна яе месца — <b>Замяніць' +
+      ' дакумент</b>.</p>',
     '<h3 id="ai-0">Падключэнне і чый ключ</h3>',
     '<p>Адразу пасля ўсталявання праграма нікуды нічога не адпраўляе. <b>Згенераваць</b> і ' +
       '<b>Паправіць</b> выходзяць у сетку толькі пасля таго, як вы наладзіце падключэнне ў ні' +
@@ -10732,9 +10798,9 @@ const
       'е мяняецца без вас: рэдырэкт адхіляецца, а не выконваецца, а нешыфраваны <code>http</c' +
       'ode> прымаецца толькі на гэтую машыну. Дазвол прывязаны там жа, дзе ключ, — да схемы, ' +
       'хаста і порта — і бачны галачкай <b>Адпраўка дазволена</b> у наладах — зніміце яе ў лю' +
-      'бы момант: новае не адпраўляецца, а адказ, які ўжо ляціць, ніколі не ўжываецца. Што ро' +
-      'біць з тэкстам софт па выбраным адрасе — пытанне да яго аператара: запыт ідзе па адрас' +
-      'е з профілю і нікуды больш.</p>',
+      'бы момант: новае не адпраўляецца, а адказ, які ўжо ляціць, трапіць самае большае ў пол' +
+      'е адказу. Што робіць з тэкстам софт па выбраным адрасе — пытанне да яго аператара: зап' +
+      'ыт ідзе па адрасе з профілю і нікуды больш.</p>',
     '<h3 id="ai-1">Тая самая пятля — без сеткі</h3>',
     '<p>Промптам не патрэбныя ні ключ, ні падключэнне — гэта той самы шлях, калі ваша мадэл' +
       'ь жыве ў акне чату, і пятлю тут круціце вы самі: рухавік выносіць вердыкт пасля ўстаўк' +
@@ -10744,7 +10810,8 @@ const
       ' збярэ другі промпт: ён нясе ўвесь дакумент з нумараванымі радкамі і называе дакладныя' +
       ' месцы, да якіх у рухавіка прэтэнзіі. Адказ на яго — папраўлены дакумент цалкам, так ш' +
       'то вярніце яго і націсніце <b>Замяніць дакумент</b> — <b>Уставіць у дакумент</b> пакін' +
-      'уў бы зламаны на месцы і паклаў бы папраўленую копію побач.</p>',
+      'уў бы зламаны на месцы і паклаў бы папраўленую копію побач (хіба што ў вас ёсць вылучэ' +
+      'нне — тады ўстаўка заменіць менавіта яго).</p>',
     '<h2 id="groups">Рэдактар груп</h2>',
     '<p>Пастаўце курсор усярэдзіну <code>{a|b|c}</code> і адкрыйце рэдактар груп з паласы і' +
       'нструментаў. Ён пералічвае варыянты радкамі: праўце іх, дадайце адзін, прыбярыце іншы ' +
@@ -11611,9 +11678,11 @@ const
     '<p>Шаблон обично почиње текстом који већ постоји — опис производа, писмо, страница. Па' +
       'нел <b>AI нацрт</b> претвара тај текст у први шаблон: отворите га са траке с алаткама,' +
       ' оставите заглавље леве колоне на <b>Текст за претварање</b>, налепите текст и притисн' +
-      'ите <b>Генериши</b>. Приспели нацрт замењује документ, преглед га исцртава, а панел ди' +
-      'јагностике суди — исти мотор и иста пресуда као за све што сами куцате. Један Ctrl+Z в' +
-      'раћа претходни документ; одатле га уређујте као свој текст, јер то и јесте.</p>',
+      'ите <b>Генериши</b>. Нацрт пада у <b>Одговор модела</b>, већ проверен — успут је проша' +
+      'о кроз мотор овог прозора. Примена је ваша: <b>Убаци у документ</b> ставља га на место' +
+      ' вашег избора (или код курсора ако ништа није изабрано), <b>Замени документ</b> мења ц' +
+      'ео текст — и ништа не дира ваш документ док не притиснете једно од два дугмета. Један ' +
+      'Ctrl+Z после било ког од њих враћа стари текст.</p>',
     '<p>Ако нема шта да се налепи, пребаците заглавље на <b>Захтев</b> и опишите шта желите' +
       '. Поља изнад воде нацрт у оба режима: <b>Канал</b> — писмо, SMS и push обавештење пишу' +
       ' се у различитим регистрима; <b>Варијативност</b> — колико варијанте смеју да се разиђ' +
@@ -11625,14 +11694,17 @@ const
       'нљивој чије је име говорило акузатив.</p>',
     '<p>Одговору се не верује — он се проверава: нацрт пролази кроз мотор овог прозора пре ' +
       'него што се приближи документу, а нађе ли пресуда грешке, петља сама тражи од модела д' +
-      'а их поправи — статусна трака броји рунде — пре него што ишта преда. Документ замењује' +
-      ' само чист нацрт; све остало пада у <b>Одговор модела</b>, статусни ред каже зашто, и ' +
-      'ништа ваше се не преписује. Исто су заштићене и ваше измене: ако сте куцали док је одг' +
-      'овор летео, нацрт чека у панелу. Док ради, на дугмету <b>Генериши</b> пише <b>Заустави' +
-      '</b> — притисните да напустите рунду.</p>',
+      'а их поправи — статусна трака броји рунде — пре него што ишта преда. Одговор никад сам' +
+      ' не пише у уредник: увек чека у <b>Одговор модела</b>, а статусни ред каже како се зав' +
+      'ршило — чист нацрт јавља да је спреман, онај који петља није могла сасвим да поправи и' +
+      'менује шта је остало, а ако се документ — или било шта друго према чему је провераван ' +
+      '— мењао док је одговор летео, ред упозорава да је пресуда била о пређашњем стању. Док ' +
+      'ради, на дугмету <b>Генериши</b> пише <b>Заустави</b> — притисните да напустите рунду ' +
+      '— рунда заустављена усред провере може у пољу оставити текст који проверу није прошао.' +
+      '</p>',
     '<p><b>Поправи</b> је иста петља уперена у тренутни документ: буди се кад дијагностика ' +
-      'нађе грешке, шаље документ заједно с тачним примедбама и примењује исправљену верзију ' +
-      'с истом пажњом.</p>',
+      'нађе грешке, шаље документ заједно с тачним примедбама а исправљена верзија чека у ист' +
+      'ом пољу одговора — њено место је обично <b>Замени документ</b>.</p>',
     '<h3 id="ai-0">Веза, и чији кључ</h3>',
     '<p>Како је инсталирана, апликација не шаље ништа никуда. <b>Генериши</b> и <b>Поправи<' +
       '/b> излазе на мрежу тек пошто у подножју панела подесите везу и дозволите је. Изаберит' +
@@ -11665,9 +11737,9 @@ const
       'нутку. Прималац се не мења без вас: преусмерење се одбија уместо да се следи, а нешифр' +
       'ована <code>http</code> адреса прима се само на овој машини. Дозвола се везује где и к' +
       'ључ — за шему, хост и порт — и види се као квачица <b>Слање дозвољено</b> у подешавањи' +
-      'ма — скините је било кад: ништа ново не полази, а одговор који је већ у лету никад се ' +
-      'не примењује. Шта софтвер на изабраној адреси ради с текстом, на његовом је оператору ' +
-      'да каже: захтев иде на адресу из вашег профила и никуда више.</p>',
+      'ма — скините је било кад: ништа ново не полази, а одговор који је већ у лету слеће, на' +
+      'јвише, у поље одговора. Шта софтвер на изабраној адреси ради с текстом, на његовом је ' +
+      'оператору да каже: захтев иде на адресу из вашег профила и никуда више.</p>',
     '<h3 id="ai-1">Иста петља, без мреже</h3>',
     '<p>Упитима не требају ни кључ ни веза — то је исти пут кад ваш модел живи у прозору за' +
       ' ћаскање, а петљу овде окрећете ви: мотор суди после лепљења, не пре. <b>Копирај упит<' +
@@ -11676,7 +11748,8 @@ const
       'ешке, <b>Копирај упит за поправку</b> саставља други упит: носи цео документ с нумерис' +
       'аним редовима и именује тачна места којима се мотор успротивио. Одговор на њега је исп' +
       'рављен документ у целини — вратите га и притисните <b>Замени документ</b>; <b>Убаци у ' +
-      'документ</b> би поломљени оставио на месту и ставио исправљену копију поред.</p>',
+      'документ</b> би поломљени оставио на месту и ставио исправљену копију поред (осим ако ' +
+      'је текст изабран — тада убацивање замењује баш њега).</p>',
     '<h2 id="groups">Уређивач група</h2>',
     '<p>Ставите курсор унутар <code>{a|b|c}</code> и отворите уређивач група са траке алатк' +
       'и. Он набраја варијанте по редовима: мењајте их, додајте једну, уклоните другу — и док' +
@@ -12532,10 +12605,11 @@ const
     '<p>Šablona obično počinje tekstom koji već postoji — opis proizvoda, pismo, stranica. ' +
       'Panel <b>AI nacrt</b> pretvara taj tekst u prvu šablonu: otvorite ga s trake s alatima' +
       ', ostavite zaglavlje lijevog stupca na <b>Tekst za pretvorbu</b>, zalijepite tekst i p' +
-      'ritisnite <b>Generiraj</b>. Pristigli nacrt zamjenjuje dokument, pregled ga iscrtava, ' +
-      'a panel dijagnostike sudi — isti motor i ista presuda kao za sve što sami tipkate. Jed' +
-      'an Ctrl+Z vraća prijašnji dokument; odatle ga uređujte kao svoj tekst, jer to i jest.<' +
-      '/p>',
+      'ritisnite <b>Generiraj</b>. Nacrt pada u <b>Odgovor modela</b>, već provjeren — usput ' +
+      'je prošao kroz motor ovog prozora. Primjena je vaša: <b>Umetni u dokument</b> stavlja ' +
+      'ga na mjesto vašeg odabira (ili kod pokazivača ako ništa nije odabrano), <b>Zamijeni d' +
+      'okument</b> mijenja cijeli tekst — i ništa ne dira vaš dokument dok ne pritisnete jedn' +
+      'o od dva gumba. Jedan Ctrl+Z nakon bilo kojeg od njih vraća stari tekst.</p>',
     '<p>Ako nema što zalijepiti, prebacite zaglavlje na <b>Zadatak</b> i opišite što želite' +
       '. Polja iznad vode nacrt u oba načina: <b>Kanal</b> — pismo, SMS i push obavijest pišu' +
       ' se u različitim registrima; <b>Varijativnost</b> — koliko se varijante smiju razići; ' +
@@ -12547,14 +12621,17 @@ const
       'varijabli čije je ime govorilo akuzativ.</p>',
     '<p>Odgovoru se ne vjeruje — on se provjerava: nacrt prolazi kroz motor ovog prozora pr' +
       'ije nego što se približi dokumentu, a nađe li presuda greške, petlja sama traži od mod' +
-      'ela da ih popravi — statusna traka broji runde — prije nego što išta preda. Dokument z' +
-      'amjenjuje samo čist nacrt; sve ostalo pada u <b>Odgovor modela</b>, statusni redak kaž' +
-      'e zašto, i ništa vaše se ne prepisuje. Jednako su zaštićene i vaše izmjene: ako ste ti' +
-      'pkali dok je odgovor letio, nacrt čeka u panelu. Dok radi, na gumbu <b>Generiraj</b> p' +
-      'iše <b>Zaustavi</b> — pritisnite da napustite rundu.</p>',
+      'ela da ih popravi — statusna traka broji runde — prije nego što išta preda. Odgovor ni' +
+      'kad sam ne piše u uređivač: uvijek čeka u <b>Odgovor modela</b>, a statusni redak kaže' +
+      ' kako je završilo — čist nacrt javlja da je spreman, onaj koji petlja nije mogla sasvi' +
+      'm popraviti imenuje što je ostalo, a ako se dokument — ili bilo što drugo prema čemu j' +
+      'e provjeravan — mijenjao dok je odgovor letio, redak upozorava da je presuda bila o pr' +
+      'ijašnjem stanju. Dok radi, na gumbu <b>Generiraj</b> piše <b>Zaustavi</b> — pritisnite' +
+      ' da napustite rundu — runda zaustavljena usred provjere može u polju ostaviti tekst ko' +
+      'ji provjeru nije prošao.</p>',
     '<p><b>Popravi</b> je ista petlja uperena u trenutačni dokument: budi se kad dijagnosti' +
-      'ka nađe greške, šalje dokument zajedno s točnim primjedbama i primjenjuje ispravljenu ' +
-      'verziju s istom pažnjom.</p>',
+      'ka nađe greške, šalje dokument zajedno s točnim primjedbama a ispravljena verzija čeka' +
+      ' u istom polju odgovora — njezino je mjesto obično <b>Zamijeni dokument</b>.</p>',
     '<h3 id="ai-0">Veza, i čiji ključ</h3>',
     '<p>Kako je instalirana, aplikacija ne šalje ništa nikamo. <b>Generiraj</b> i <b>Poprav' +
       'i</b> izlaze na mrežu tek nakon što u podnožju panela postavite vezu i dopustite je. I' +
@@ -12589,9 +12666,9 @@ const
       ' da se slijedi, a nešifrirana <code>http</code> adresa prima se samo na ovom stroju. D' +
       'opuštenje se veže gdje i ključ — za shemu, host i port — i vidi se kao kvačica <b>Slan' +
       'je dopušteno</b> u postavkama — skinite je bilo kad: ništa novo ne polazi, a odgovor k' +
-      'oji je već u letu nikad se ne primjenjuje. Što softver na izabranoj adresi radi s teks' +
-      'tom, na njegovu je operateru da kaže: zahtjev ide na adresu iz vašeg profila i nikamo ' +
-      'više.</p>',
+      'oji je već u letu slijeće, najviše, u polje odgovora. Što softver na izabranoj adresi ' +
+      'radi s tekstom, na njegovu je operateru da kaže: zahtjev ide na adresu iz vašeg profil' +
+      'a i nikamo više.</p>',
     '<h3 id="ai-1">Ista petlja, bez mreže</h3>',
     '<p>Upitima ne trebaju ni ključ ni veza — to je isti put kad vaš model živi u prozoru z' +
       'a čavrljanje, a petlju ovdje okrećete vi: motor sudi poslije lijepljenja, ne prije. <b' +
@@ -12601,7 +12678,8 @@ const
       ': nosi cijeli dokument s numeriranim recima i imenuje točna mjesta kojima se motor usp' +
       'rotivio. Odgovor na njega je ispravljen dokument u cijelosti — vratite ga i pritisnite' +
       ' <b>Zamijeni dokument</b>; <b>Umetni u dokument</b> bi slomljeni ostavio na mjestu i s' +
-      'tavio ispravljenu kopiju pokraj.</p>',
+      'tavio ispravljenu kopiju pokraj (osim ako je tekst odabran — tada umetanje zamjenjuje ' +
+      'baš njega).</p>',
     '<h2 id="groups">Uređivač grupa</h2>',
     '<p>Stavite pokazivač unutar <code>{a|b|c}</code> i otvorite uređivač grupa s trake ala' +
       'ta. On nabraja varijante po retcima: mijenjajte ih, dodajte jednu, uklonite drugu — i ' +
@@ -13459,10 +13537,11 @@ const
     '<p>Šablon obično počinje tekstom koji već postoji — opis proizvoda, pismo, stranica. P' +
       'anel <b>AI nacrt</b> pretvara taj tekst u prvi šablon: otvorite ga s trake s alatima, ' +
       'ostavite zaglavlje lijeve kolone na <b>Tekst za pretvaranje</b>, zalijepite tekst i pr' +
-      'itisnite <b>Generiši</b>. Pristigli nacrt zamjenjuje dokument, pregled ga iscrtava, a ' +
-      'panel dijagnostike sudi — isti motor i ista presuda kao za sve što sami kucate. Jedan ' +
-      'Ctrl+Z vraća prethodni dokument; odatle ga uređujte kao svoj tekst, jer to i jeste.</p' +
-      '>',
+      'itisnite <b>Generiši</b>. Nacrt pada u <b>Odgovor modela</b>, već provjeren — usput je' +
+      ' prošao kroz motor ovog prozora. Primjena je vaša: <b>Umetni u dokument</b> stavlja ga' +
+      ' na mjesto vašeg odabira (ili kod kursora ako ništa nije odabrano), <b>Zamijeni dokume' +
+      'nt</b> mijenja cijeli tekst — i ništa ne dira vaš dokument dok ne pritisnete jedno od ' +
+      'dva dugmeta. Jedan Ctrl+Z nakon bilo kojeg od njih vraća stari tekst.</p>',
     '<p>Ako nema šta da se zalijepi, prebacite zaglavlje na <b>Zadatak</b> i opišite šta že' +
       'lite. Polja iznad vode nacrt u oba režima: <b>Kanal</b> — pismo, SMS i push obavješten' +
       'je pišu se u različitim registrima; <b>Varijativnost</b> — koliko varijante smiju da s' +
@@ -13474,14 +13553,17 @@ const
       'ajao u varijabli čije je ime govorilo akuzativ.</p>',
     '<p>Odgovoru se ne vjeruje — on se provjerava: nacrt prolazi kroz motor ovog prozora pr' +
       'ije nego što se približi dokumentu, a nađe li presuda greške, petlja sama traži od mod' +
-      'ela da ih popravi — statusna traka broji runde — prije nego što išta preda. Dokument z' +
-      'amjenjuje samo čist nacrt; sve ostalo pada u <b>Odgovor modela</b>, statusni red kaže ' +
-      'zašto, i ništa vaše se ne prepisuje. Jednako su zaštićene i vaše izmjene: ako ste kuca' +
-      'li dok je odgovor letio, nacrt čeka u panelu. Dok radi, na dugmetu <b>Generiši</b> piš' +
-      'e <b>Zaustavi</b> — pritisnite da napustite rundu.</p>',
+      'ela da ih popravi — statusna traka broji runde — prije nego što išta preda. Odgovor ni' +
+      'kad sam ne piše u urednik: uvijek čeka u <b>Odgovor modela</b>, a statusni red kaže ka' +
+      'ko je završilo — čist nacrt javlja da je spreman, onaj koji petlja nije mogla sasvim p' +
+      'opraviti imenuje šta je ostalo, a ako se dokument — ili bilo šta drugo prema čemu je p' +
+      'rovjeravan — mijenjao dok je odgovor letio, red upozorava da je presuda bila o prijašn' +
+      'jem stanju. Dok radi, na dugmetu <b>Generiši</b> piše <b>Zaustavi</b> — pritisnite da ' +
+      'napustite rundu — runda zaustavljena usred provjere može u polju ostaviti tekst koji p' +
+      'rovjeru nije prošao.</p>',
     '<p><b>Popravi</b> je ista petlja uperena u trenutni dokument: budi se kad dijagnostika' +
-      ' nađe greške, šalje dokument zajedno s tačnim primjedbama i primjenjuje ispravljenu ve' +
-      'rziju s istom pažnjom.</p>',
+      ' nađe greške, šalje dokument zajedno s tačnim primjedbama a ispravljena verzija čeka u' +
+      ' istom polju odgovora — njeno je mjesto obično <b>Zamijeni dokument</b>.</p>',
     '<h3 id="ai-0">Veza, i čiji ključ</h3>',
     '<p>Kako je instalirana, aplikacija ne šalje ništa nikuda. <b>Generiši</b> i <b>Popravi' +
       '</b> izlaze na mrežu tek nakon što u podnožju panela postavite vezu i dozvolite je. Iz' +
@@ -13516,9 +13598,9 @@ const
       'slijedi, a nešifrovana <code>http</code> adresa prima se samo na ovoj mašini. Dozvola ' +
       'se veže gdje i ključ — za shemu, host i port — i vidi se kao kvačica <b>Slanje dozvolj' +
       'eno</b> u postavkama — skinite je bilo kad: ništa novo ne polazi, a odgovor koji je ve' +
-      'ć u letu nikad se ne primjenjuje. Šta softver na izabranoj adresi radi s tekstom, na n' +
-      'jegovom je operateru da kaže: zahtjev ide na adresu iz vašeg profila i nikuda više.</p' +
-      '>',
+      'ć u letu slijeće, najviše, u polje odgovora. Šta softver na izabranoj adresi radi s te' +
+      'kstom, na njegovom je operateru da kaže: zahtjev ide na adresu iz vašeg profila i niku' +
+      'da više.</p>',
     '<h3 id="ai-1">Ista petlja, bez mreže</h3>',
     '<p>Upitima ne trebaju ni ključ ni veza — to je isti put kad vaš model živi u prozoru z' +
       'a ćaskanje, a petlju ovdje okrećete vi: motor sudi poslije lijepljenja, ne prije. <b>K' +
@@ -13528,7 +13610,8 @@ const
       'nosi cijeli dokument s numerisanim redovima i imenuje tačna mjesta kojima se motor usp' +
       'rotivio. Odgovor na njega je ispravljen dokument u cjelini — vratite ga i pritisnite <' +
       'b>Zamijeni dokument</b>; <b>Umetni u dokument</b> bi slomljeni ostavio na mjestu i sta' +
-      'vio ispravljenu kopiju pored.</p>',
+      'vio ispravljenu kopiju pored (osim ako je tekst odabran — tada umetanje zamjenjuje baš' +
+      ' njega).</p>',
     '<h2 id="groups">Uređivač grupa</h2>',
     '<p>Stavite kursor unutar <code>{a|b|c}</code> i otvorite uređivač grupa s trake alata.' +
       ' On nabraja varijante po redovima: mijenjajte ih, dodajte jednu, uklonite drugu — i do' +

@@ -147,9 +147,11 @@ un texto que ya tiene, o de un encargo. Merece una sección propia: la siguiente
 Una plantilla suele empezar por un texto que ya existe — una ficha de producto, una carta, una
 página. El panel **Borrador de IA** lo convierte en una primera plantilla: ábralo desde la barra de
 herramientas, deje la cabecera de la columna izquierda en **Texto a convertir**, pegue el texto y pulse
-**Generar**. El borrador llegado reemplaza el documento, la vista previa lo renderiza y el panel
-de diagnóstico juzga — el mismo motor y el mismo veredicto que para lo que usted teclea. Un
-Ctrl+Z devuelve su documento anterior; desde ahí, edítelo como texto propio, porque lo es.
+**Generar**. El borrador cae en **Respuesta del modelo**, ya verificado — pasó por el motor de esta ventana
+en el camino. Aplicarlo es suyo: **Insertar en el documento** lo pone donde está su selección (o
+en el cursor si no hay nada seleccionado), **Reemplazar el documento** cambia todo el texto — y
+nada toca su documento hasta que pulse uno de los dos. Un Ctrl+Z tras cualquiera de ellos
+devuelve el texto anterior.
 
 Si no hay nada que pegar, pase la cabecera a **Encargo** y describa lo que quiere. Los campos
 de arriba guían el borrador en ambos modos: **Canal** — una carta, un SMS y una notificación
@@ -158,15 +160,16 @@ el idioma de la respuesta; y **Variables que el modelo puede usar**, declaradas 
 
 A la respuesta no se le cree: se la verifica. El borrador pasa por el motor de esta ventana
 antes de acercarse a su documento, y si el veredicto encuentra errores, el bucle pide al
-modelo corregirlos — la barra de estado cuenta las rondas — antes de entregar nada. Solo un
-borrador limpio reemplaza el documento; todo lo demás cae en **Respuesta del modelo**, la línea de estado
-dice por qué, y nada suyo se sobrescribe. Sus propias ediciones quedan igual de
-protegidas: si tecleó mientras volaba una respuesta, el borrador espera en el panel. Mientras
-trabaja, **Generar** se lee **Parar** — púlselo para abandonar la ronda.
+modelo corregirlos — la barra de estado cuenta las rondas — antes de entregar nada. La respuesta nunca escribe en el editor por sí sola: siempre espera en **Respuesta del modelo**,
+y la línea de estado dice cómo terminó — un borrador limpio se declara listo, uno que el bucle
+no pudo reparar del todo nombra lo que queda, y si el documento — o cualquier cosa contra la que se verificó — cambió mientras la respuesta
+volaba, la línea avisa de que el veredicto era sobre el estado anterior. Mientras
+trabaja, **Generar** se lee **Parar** — púlselo para abandonar la ronda — una ronda parada a mitad de la comprobación puede dejar en la
+respuesta un texto sin verificar.
 
 **Arreglar** es el mismo bucle apuntado a su documento actual: despierta cuando el diagnóstico
-encuentra errores, envía el documento con las objeciones exactas y aplica la versión corregida
-con el mismo cuidado.
+encuentra errores, envía el documento con las objeciones exactas y la versión corregida espera en la misma respuesta — su sitio suele ser **Reemplazar el
+documento**.
 
 ### La conexión, y la clave de quién
 
@@ -202,7 +205,7 @@ nada más, y en ningún otro momento. El destinatario no cambia sin usted: una
 redirección se rechaza en vez de seguirse, y una dirección `http` sin cifrar solo se acepta
 en esta máquina. El permiso se liga donde la clave — el esquema, el host y el puerto — y se ve en la casilla
 **Envío permitido** de los ajustes — desmárquela en cualquier momento: nada
-nuevo sale, y una respuesta ya en vuelo no se aplica jamás. Lo que haga con el texto el software de la dirección elegida es cosa de su
+nuevo sale, y una respuesta ya en vuelo aterriza, como mucho, en la respuesta. Lo que haga con el texto el software de la dirección elegida es cosa de su
 operador: la petición va a la dirección de su perfil y a ningún otro sitio.
 
 ### El mismo bucle, sin red
@@ -214,7 +217,8 @@ portapapeles; llévela al modelo que use, pegue la respuesta en **Respuesta del 
 Si el diagnóstico encuentra errores, **Copiar la instrucción de arreglo** construye la segunda instrucción: lleva el
 documento entero con las líneas numeradas y nombra los lugares exactos que el motor objetó. Su
 respuesta es el documento corregido completo — tráigala de vuelta y pulse **Reemplazar el documento**;
-**Insertar en el documento** dejaría el roto en su sitio y pondría la copia corregida al lado.
+**Insertar en el documento** dejaría el roto en su sitio y pondría la copia corregida al lado
+(salvo que haya texto seleccionado — entonces la inserción reemplaza exactamente eso).
 
 ## El editor de grupos
 

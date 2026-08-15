@@ -146,10 +146,11 @@ già, o da un brief. Merita una sezione tutta sua: la prossima.
 Un modello di solito comincia da un testo che esiste già — una scheda prodotto, una lettera,
 una pagina. Il pannello **Bozza IA** lo trasforma in un primo modello: apritelo dalla barra degli
 strumenti, lasciate l'intestazione della colonna sinistra su **Testo da convertire**, incollate il testo e
-premete **Genera**. La bozza arrivata sostituisce il documento, l'anteprima la rende e il
-pannello di diagnostica giudica — lo stesso motore e lo stesso verdetto di qualunque cosa
-scriviate voi. Un Ctrl+Z riporta il documento di prima; da lì, correggetela come testo vostro,
-perché lo è.
+premete **Genera**. La bozza si posa in **Risposta del modello**, già verificata — per strada è passata dal motore
+di questa finestra. Applicarla spetta a voi: **Inserisci nel documento** la mette al posto della
+selezione (o al cursore se nulla è selezionato), **Sostituisci il documento** cambia tutto il
+testo — e nulla tocca il vostro documento finché non premete uno dei due. Un Ctrl+Z dopo l'uno o
+l'altro riporta il testo di prima.
 
 Se non c'è nulla da incollare, spostate l'intestazione su **Brief** e descrivete cosa
 volete. I campi sopra guidano la bozza in entrambi i modi: **Canale** — una lettera, un SMS e
@@ -158,15 +159,15 @@ allontanarsi; la lingua della risposta; e **Variabili che il modello può usare*
 
 Alla risposta non si crede: la si verifica. La bozza passa per il motore di questa finestra
 prima di avvicinarsi al documento, e se il verdetto trova errori il ciclo chiede al modello di
-correggerli — la barra di stato conta i giri — prima di consegnare alcunché. Solo una bozza
-pulita sostituisce il documento; tutto il resto si posa in **Risposta del modello**, la riga di stato
-dice perché, e nulla di vostro viene sovrascritto. Le vostre modifiche sono protette
-allo stesso modo: se avete scritto mentre una risposta era in volo, la bozza aspetta nel
-pannello. Mentre lavora, **Genera** si legge **Ferma** — premetelo per abbandonare il giro.
+correggerli — la barra di stato conta i giri — prima di consegnare alcunché. La risposta non scrive mai nell'editor da sola: aspetta sempre in **Risposta del modello**, e la
+riga di stato dice com'è andata — una bozza pulita si dichiara pronta, una che il ciclo non ha
+potuto riparare del tutto nomina ciò che resta, e se il documento — o qualunque cosa contro cui era verificata — è cambiato mentre la risposta
+volava, la riga avverte che il verdetto riguardava lo stato di prima. Mentre lavora, **Genera** si legge **Ferma** — premetelo per abbandonare il giro — un giro fermato a metà verifica può lasciare nella risposta
+un testo non verificato.
 
 **Correggi** è lo stesso ciclo puntato sul documento attuale: si sveglia quando la diagnostica
-trova errori, invia il documento con le obiezioni esatte e applica la versione corretta con la
-stessa cura.
+trova errori, invia il documento con le obiezioni esatte e la versione corretta aspetta nella stessa risposta — il suo posto è di solito **Sostituisci il
+documento**.
 
 ### La connessione, e la chiave di chi
 
@@ -203,7 +204,7 @@ nient'altro, e in nessun altro momento. Il destinatario non cambia senza di voi:
 un redirect viene rifiutato invece che seguito, e un indirizzo `http` non cifrato è
 accettato solo su questa macchina. Il permesso si lega dove si lega la chiave — schema, host e porta — e si vede nella spunta
 **Invio consentito** delle impostazioni — toglietela in qualunque momento: nulla di
-nuovo parte, e una risposta già in volo non viene mai applicata. Cosa faccia col testo il software all'indirizzo scelto spetta al suo
+nuovo parte, e una risposta già in volo si posa, al più, nella risposta. Cosa faccia col testo il software all'indirizzo scelto spetta al suo
 operatore dirlo: la richiesta va all'indirizzo del vostro profilo e in nessun altro posto.
 
 ### Lo stesso ciclo, senza rete
@@ -215,7 +216,9 @@ appunti; portatelo al modello che usate, incollate la risposta in **Risposta del
 **Inserisci nel documento**. Se la diagnostica trova errori, **Copia il prompt di correzione** costruisce il secondo prompt: porta
 l'intero documento con le righe numerate e nomina i punti esatti che il motore ha contestato.
 La sua risposta è il documento corretto per intero — riportatela e premete **Sostituisci il documento**;
-**Inserisci nel documento** lascerebbe quello rotto al suo posto e metterebbe accanto la copia corretta.
+**Inserisci nel documento** lascerebbe quello rotto al suo posto e metterebbe accanto la copia
+corretta (a meno che del testo sia selezionato — allora l'inserimento sostituisce esattamente
+quello).
 
 ## L'editor di gruppi
 

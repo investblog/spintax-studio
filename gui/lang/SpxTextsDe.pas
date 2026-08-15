@@ -161,7 +161,7 @@ const
       'Keine Fehler, aber ein Teil der Proberenders kommt leer heraus — prüfen Sie die Pluralformen. Der Entwurf liegt im KI-Bereich, nicht übernommen.',
       'Der Entwurf ist sauber, aber ein eingebundenes Fragment hat einen Fehler. Reparieren Sie jene Datei — Neugenerieren kann das nicht.',
       '%d Fehler bleiben nach %d Reparaturversuchen. Der Entwurf liegt im KI-Bereich, nicht übernommen.',
-      'Das Dokument hat sich geändert, während die Antwort unterwegs war. Der Entwurf liegt im KI-Bereich, nicht übernommen.',
+      'Während die Antwort unterwegs war, hat sich etwas geändert, wogegen sie geprüft wurde — das Dokument, Werte oder Einstellungen. Der Entwurf liegt im Antwortfeld, nicht übernommen.',
       'Dieses Profil authentifiziert sich, und kein Schlüssel ist angeheftet. Geben Sie den Schlüssel im KI-Bereich ein.',
       'Der Endpunkt verweist an eine andere Adresse (%s). Ihr wurde nicht gefolgt; ändern Sie das Profil, wenn das beabsichtigt ist.',
       'Offenes http, das diesen Rechner verlässt, würde Schlüssel und Text im Klartext senden. Verwenden Sie https.',
@@ -212,7 +212,8 @@ const
       'Nicht eingefasst: ein #/ in oder um die Auswahl würde den Kommentar zu früh beenden.',
       'Nicht eingefasst: ein nacktes |, eine unausgeglichene Klammer oder ein offener Kommentar würde die Bedingung verändern.',
       'Nicht eingefügt: die Schreibmarke zerteilt eine Kommentarmarke.',
-      'Die Endpunkt-Adresse lässt sich nicht lesen — korrigieren Sie sie, dann den Schlüssel anheften.'
+      'Die Endpunkt-Adresse lässt sich nicht lesen — korrigieren Sie sie, dann den Schlüssel anheften.',
+      'Entwurf geprüft. Er liegt im Antwortfeld — einfügen oder ersetzen Sie selbst.'
   );
 
 implementation

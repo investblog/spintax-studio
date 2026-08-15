@@ -156,7 +156,7 @@ const
       'Geen fouten, maar een deel van de proefrenders komt leeg terug — controleer de meervoudsvormen. Het concept staat in het AI-paneel, niet toegepast.',
       'Het concept is schoon, maar een ingesloten fragment bevat een fout. Herstel dat bestand — opnieuw genereren kan dat niet.',
       'Er blijven %d fouten over na %d herstelpogingen. Het concept staat in het AI-paneel, niet toegepast.',
-      'Het document is veranderd terwijl het antwoord onderweg was. Het concept staat in het AI-paneel, niet toegepast.',
+      'Terwijl het antwoord onderweg was, is iets veranderd waartegen het is gecontroleerd — het document, waarden of instellingen. Het concept staat in het antwoordveld, niet toegepast.',
       'Dit profiel authenticeert zich en er is geen sleutel gekoppeld. Voer de sleutel in het AI-paneel in.',
       'Het endpoint vraagt om een ander adres (%s). Het is niet gevolgd; wijzig het profiel als dit de bedoeling is.',
       'Onversleuteld http voorbij deze machine zou de sleutel en de tekst leesbaar versturen. Gebruik https.',
@@ -207,7 +207,8 @@ const
       'Niet omsloten: een #/ in of rond de selectie zou de opmerking te vroeg beëindigen.',
       'Niet omsloten: een losse |, een niet-gesloten haak of een open opmerking zou de voorwaarde veranderen.',
       'Niet ingevoegd: de cursor splijt een opmerkingsteken in tweeën.',
-      'Het endpoint-adres is niet te lezen — herstel het en koppel dan de sleutel.'
+      'Het endpoint-adres is niet te lezen — herstel het en koppel dan de sleutel.',
+      'Concept gecontroleerd. Het wacht in het antwoordveld — voeg zelf in of vervang.'
   );
 
 implementation

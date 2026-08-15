@@ -245,6 +245,10 @@ type
     FLoopNextId: Int64;
     { An op is in flight: Generate wears its Stop face and Fix waits. }
     FLoopBusy: Boolean;
+    { The status bar currently shows the verified-and-waiting sentence; a reader's edit in
+      the answer box must take it down, and ONLY it (review, 2026-08-15). Every other write
+      through SetStatusText clears the flag. }
+    FAiReadyShown: Boolean;
     { The document and the rows a Fix request is built from -- taken as a PAIR from one
       TSpxJobResult (its Source and its Rows), never the text from the editor and the rows
       from an older answer: a pair of different ages quotes spans that point at other
@@ -488,6 +492,7 @@ type
     { The AI panel's one request of this form: put a cleaned draft in the editor. }
     procedure AiInsert(const AText: string);
     procedure AiReplace(const AText: string);
+    procedure AiReplyEdited(Sender: TObject);
     { ── the authoring loop (R1-4) ── }
     procedure GenerateClicked(Sender: TObject);
     procedure FixClicked(Sender: TObject);
@@ -999,6 +1004,7 @@ begin
   FAi.Align := alClient;
   FAi.OnInsert := @AiInsert;
   FAi.OnReplace := @AiReplace;
+  FAi.OnReplyEdited := @AiReplyEdited;
   FAi.OnProfileChanged := @AiProfileChanged;
   FAi.OnEnableNetwork := @EnsureAiConsent;
   FAi.OnDeclChanged := @AiDeclChanged;
@@ -3019,6 +3025,7 @@ end;
 
 procedure TSpxMainForm.SetStatusText(const AText: string);
 begin
+  FAiReadyShown := False;
   if (FStatus = nil) or (FStatus.Panels.Count < 1) then Exit;
   FStatus.Panels[0].Text := AText;
 end;
@@ -5272,7 +5279,14 @@ begin
   if (FEditor = nil) or (AText = '') then Exit;
   FEditor.BeginUpdate;
   try
-    FEditor.InsertTextAtCaret(AText);
+    { PASTE SEMANTICS (owner's flow, 2026-08-15): with a selection active, Insert REPLACES
+      it -- the reader who selected one paragraph, took it through the brief and got an
+      enriched draft back is putting it where the original stood. InsertTextAtCaret would
+      leave the old text beside the new. Without a selection, the caret insert stands. }
+    if FEditor.SelAvail then
+      FEditor.SelText := AText
+    else
+      FEditor.InsertTextAtCaret(AText);
   finally
     FEditor.EndUpdate;
   end;
@@ -5295,6 +5309,13 @@ end;
    clears SynEdit's undo stack, and an action that can replace a document is exactly the one a
    reader will want back. `SelectAll` then `SelText` goes through the editor's own edit path,
    which records it. *)
+procedure TSpxMainForm.AiReplyEdited(Sender: TObject);
+begin
+  { The box no longer holds what was verified, so the sentence saying it does comes down --
+    and only that sentence: any other status is somebody else's and stays. }
+  if FAiReadyShown then SetStatusText('');
+end;
+
 procedure TSpxMainForm.AiReplace(const AText: string);
 begin
   if (FEditor = nil) or (AText = '') then Exit;
@@ -5578,45 +5599,69 @@ begin
   UpdateAiButtons;
   case R.Outcome of
     loClean:
-      { THE LAST CHECK RUNS HERE, on the main thread, right before applying -- Invalidate
-        and this delivery live on one thread, so `Loop.Revision = R.Revision` asked now
-        cannot be overtaken (the loop's contract, inherited from R1-3). The loop's own
-        checks narrow the window; this one closes it. }
-      if (FLoop <> nil) and (FLoop.Revision = R.Revision) then
-      begin
-        AiReplace(R.Text);
-        SetStatusText(Tr(sAiReplaced));
-      end
-      else
+      (* NOTHING WRITES INTO THE EDITOR EXCEPT THE READER'S OWN PRESS -- the owner's call,
+         2026-08-15, from real use: a clean draft used to apply itself (AiReplace here),
+         and a reader who had selected one paragraph to enrich watched their whole document
+         get overwritten by an answer they never saw land. The designed flow was always the
+         answer box plus the two buttons; the auto-apply was bolted on with the live loop
+         and is now gone. The draft is still verified before it gets here -- what changed
+         is only WHO applies it. The revision check stays for the STATUS: same revision
+         means "verified against what you see", a moved one means the document walked while
+         the answer flew, and the sentence should say which. *)
       begin
         FAi.SetReply(R.Text);
-        SetStatusText(Tr(sAiStale));
+        if (FLoop <> nil) and (FLoop.Revision = R.Revision) then
+        begin
+          SetStatusText(Tr(sAiReady));
+          { AFTER the write: SetStatusText clears the flag on every call, which is what
+            keeps it honest everywhere else. Only the ready sentence arms it -- the stale
+            warning must survive a reply edit (review, round two). }
+          FAiReadyShown := True;
+        end
+        else
+          SetStatusText(Tr(sAiStale));
       end;
     loStale:
       begin
         FAi.SetReply(R.Text);
         SetStatusText(Tr(sAiStale));
       end;
+    (* THE STALE WARNING COVERS EVERY VERDICT, not only the clean one (review, round two):
+       the loop's own terminal checks predate the no-auto-apply flow and only ever guarded
+       loClean, so a degenerate or still-invalid verdict could arrive wearing counts about
+       a snapshot the reader had already moved past. A verdict about a superseded snapshot
+       is less honest than the warning, so the warning wins the line. *)
     loDegenerate:
       begin
         FAi.SetReply(R.Text);
-        SetStatusText(Tr(sAiDegenerate));
+        if (FLoop <> nil) and (FLoop.Revision <> R.Revision) then
+          SetStatusText(Tr(sAiStale))
+        else
+          SetStatusText(Tr(sAiDegenerate));
       end;
     loClosureError:
       begin
         FAi.SetReply(R.Text);
-        SetStatusText(Tr(sAiClosure));
+        if (FLoop <> nil) and (FLoop.Revision <> R.Revision) then
+          SetStatusText(Tr(sAiStale))
+        else
+          SetStatusText(Tr(sAiClosure));
       end;
     loStillInvalid:
       begin
         FAi.SetReply(R.Text);
-        SetStatusText(Format(Tr(sAiStillInvalid), [R.DocErrors, R.FixSpent]));
+        if (FLoop <> nil) and (FLoop.Revision <> R.Revision) then
+          SetStatusText(Tr(sAiStale))
+        else
+          SetStatusText(Format(Tr(sAiStillInvalid), [R.DocErrors, R.FixSpent]));
       end;
     loNothingToFix:
       SetStatusText(Tr(sAiNoErrors));
     loCancelled:
       begin
-        { A round stopped mid-verify still carries its text; shown, never applied. }
+        { A round stopped mid-verify still carries its text -- shown in the box, possibly
+          UNVERIFIED (the check it died in never finished), and the window applies nothing;
+          the help says so in as many words since the round-two review. }
         if R.HaveText then FAi.SetReply(R.Text);
         SetStatusText(Tr(sAiStopped));
       end;

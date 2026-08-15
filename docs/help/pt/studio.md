@@ -146,10 +146,11 @@ que já tem, ou de um resumo. Merece uma secção própria: a seguinte.
 
 Um modelo costuma começar por um texto que já existe — uma ficha de produto, uma carta, uma
 página. O painel **Rascunho de IA** transforma-o num primeiro modelo: abra-o na barra de ferramentas,
-deixe o cabeçalho da coluna esquerda em **Texto a converter**, cole o texto e prima **Gerar**. O rascunho
-chegado substitui o documento, a pré-visualização renderiza-o e o painel de diagnóstico julga
-— o mesmo motor e o mesmo veredicto que para tudo o que escreve. Um Ctrl+Z devolve o documento
-anterior; daí em diante, edite-o como texto seu, porque o é.
+deixe o cabeçalho da coluna esquerda em **Texto a converter**, cole o texto e prima **Gerar**. O rascunho cai em **Resposta do modelo**, já verificado — passou pelo motor desta janela pelo
+caminho. Aplicá-lo é seu: **Inserir no documento** põe-no onde está a sua selecção (ou no cursor
+se nada estiver seleccionado), **Substituir o documento** troca o texto inteiro — e nada toca no
+seu documento até premir um dos dois. Um Ctrl+Z depois de qualquer deles devolve o texto
+anterior.
 
 Se não houver nada para colar, mude o cabeçalho para **Resumo** e descreva o que quer. Os
 campos acima guiam o rascunho em ambos os modos: **Canal** — uma carta, um SMS e uma
@@ -158,15 +159,16 @@ afastar-se; o idioma da resposta; e **Variáveis que o modelo pode usar**, decla
 
 Na resposta não se acredita: verifica-se. O rascunho passa pelo motor desta janela antes de se
 aproximar do documento, e se o veredicto encontrar erros, o ciclo pede ao modelo que os
-corrija — a barra de estado conta as rondas — antes de entregar o que quer que seja. Só um
-rascunho limpo substitui o documento; tudo o resto cai em **Resposta do modelo**, a linha de estado diz
-porquê, e nada seu é reescrito. As suas próprias edições ficam igualmente protegidas: se
-escreveu enquanto uma resposta voava, o rascunho espera no painel. Enquanto trabalha, **Gerar**
-lê-se **Parar** — prima-o para abandonar a ronda.
+corrija — a barra de estado conta as rondas — antes de entregar o que quer que seja. A resposta nunca escreve no editor por si própria: espera sempre em **Resposta do modelo**, e a
+linha de estado diz como acabou — um rascunho limpo declara-se pronto, um que o ciclo não
+conseguiu reparar de todo nomeia o que falta, e se o documento — ou o que quer que fosse contra que se verificou — mudou enquanto a resposta
+voava, a linha avisa que o veredicto era sobre o estado anterior. Enquanto trabalha, **Gerar**
+lê-se **Parar** — prima-o para abandonar a ronda — uma ronda parada a meio da verificação pode deixar na resposta
+um texto por verificar.
 
 **Corrigir** é o mesmo ciclo apontado ao documento actual: acorda quando o diagnóstico encontra
-erros, envia o documento com as objecções exactas e aplica a versão corrigida com o mesmo
-cuidado.
+erros, envia o documento com as objecções exactas e a versão corrigida espera na mesma resposta — o seu lugar costuma ser **Substituir o
+documento**.
 
 ### A ligação, e a chave de quem
 
@@ -201,8 +203,7 @@ autorização **Chave API**, a chave nos cabeçalhos do pedido; nada mais, e em 
 outro momento. O destinatário não muda sem si: um redireccionamento é
 recusado em vez de seguido, e um endereço `http` sem cifra só é aceite nesta máquina. A permissão liga-se onde a chave se liga — o esquema, o host e a porta — e vê-se na marca
 **Envio permitido** das definições —
-desmarque-a a qualquer momento: nada de novo parte, e uma resposta já em voo nunca é
-aplicada. O que o software no endereço
+desmarque-a a qualquer momento: nada de novo parte, e uma resposta já em voo pousa, quando muito, na resposta. O que o software no endereço
 escolhido faz com o texto é o seu operador que o diz: o pedido vai para o endereço do seu
 perfil e para mais lado nenhum.
 
@@ -214,8 +215,8 @@ colar, não antes. **Copiar o pedido** põe o pedido completo na área de transf
 leve-o ao modelo que usa, cole a resposta em **Resposta do modelo** e prima **Inserir no documento**. Se o diagnóstico
 encontrar erros, **Copiar o pedido de correção** constrói o segundo pedido: leva o documento inteiro com as linhas
 numeradas e nomeia os sítios exactos a que o motor objectou. A resposta a ele é o documento
-corrigido por inteiro — traga-a de volta e prima **Substituir o documento**; **Inserir no documento** deixaria o partido
-no lugar e poria a cópia corrigida ao lado.
+corrigido por inteiro — traga-a de volta e prima **Substituir o documento**; **Inserir no documento** deixaria o partido no lugar e poria a cópia corrigida ao lado (salvo se
+houver texto seleccionado — então a inserção substitui exactamente esse).
 
 ## O editor de grupos
 

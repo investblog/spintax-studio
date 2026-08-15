@@ -153,7 +153,7 @@ const
       'Sem erros, mas parte dos renders de teste sai vazia — verifique as formas do plural. O rascunho está no painel de IA, não aplicado.',
       'O rascunho está limpo, mas um fragmento incluído tem um erro. Corrija esse ficheiro — regenerar não o repara.',
       'Restam %d erros após %d tentativas de correção. O rascunho está no painel de IA, não aplicado.',
-      'O documento mudou enquanto a resposta vinha a caminho. O rascunho está no painel de IA, não aplicado.',
+      'Enquanto a resposta vinha a caminho mudou algo contra que foi verificada — o documento, valores ou definições. O rascunho está na resposta, não aplicado.',
       'Este perfil autentica-se e nenhuma chave está anexada. Introduza a chave no painel de IA.',
       'O endpoint pede para usar outro endereço (%s). Não foi seguido; mude o perfil se for intencional.',
       'Http em claro para lá desta máquina enviaria a chave e o texto às claras. Use https.',
@@ -204,7 +204,8 @@ const
       'Não envolvido: um #/ dentro ou à volta da seleção terminaria o comentário cedo demais.',
       'Não envolvido: uma | solta, um parêntese por fechar ou um comentário aberto mudaria o que a condição diz.',
       'Não inserido: o cursor corta ao meio uma marca de comentário.',
-      'O endereço do endpoint não se consegue ler — corrija-o e anexe a chave de novo.'
+      'O endereço do endpoint não se consegue ler — corrija-o e anexe a chave de novo.',
+      'Rascunho verificado. Espera na resposta — insira-o ou substitua você mesmo.'
   );
 
 implementation

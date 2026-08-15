@@ -270,6 +270,9 @@ const
     0, 0, 0, 0, 0, 0, 0, 0, 0,
 
     { The bad-endpoint attach sentence: a status line, self-sizing. }
+    0,
+
+    { The clean-draft-waiting sentence: a status line, self-sizing. }
     0
   );
 

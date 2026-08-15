@@ -141,9 +141,11 @@ metinden ya da bir özetten. Kendi bölümünü hak ediyor: bir sonraki.
 Bir şablon çoğunlukla zaten var olan bir metinden başlar — bir ürün açıklaması, bir mektup,
 bir sayfa. **Yapay zekâ taslağı** paneli o metni ilk şablona çevirir: paneli araç çubuğundan açın, sol
 sütunun başlığını **Dönüştürülecek metin** üzerinde bırakın, metni yapıştırın ve **Üret** düğmesine basın.
-Gelen taslak belgeyi değiştirir, önizleme onu çizer ve tanı paneli yargısını verir — kendi
-yazdıklarınızla aynı makine, aynı yargı. Bir Ctrl+Z eski belgenizi geri getirir; oradan sonra
-kendi metniniz gibi düzenleyin, çünkü öyledir.
+Taslak, **Modelin yanıtı** alanına düşer, doğrulanmış olarak — yolda bu pencerenin kendi
+makinesinden geçti. Uygulamak sizindir: **Belgeye ekle** onu seçiminizin yerine koyar (bir şey
+seçili değilse imlece), **Belgeyi değiştir** metnin tamamını değiştirir — ve siz ikisinden
+birine basana kadar hiçbir şey belgenize dokunmaz. Herhangi birinden sonra bir Ctrl+Z eski metni
+geri getirir.
 
 Yapıştıracak bir şey yoksa başlığı **Özet** konumuna alın ve ne istediğinizi anlatın.
 Üstteki alanlar taslağı iki kipte de yönlendirir: **Kanal** — bir mektup, bir SMS ve bir
@@ -152,14 +154,15 @@ uzaklaşabilir; yanıtın dili; ve adlarıyla bildirilen **Modelin kullanabilece
 
 Yanıta inanılmaz, yanıt doğrulanır: taslak, belgenize yaklaşmadan önce bu pencerenin kendi
 makinesinden geçer ve yargı hata bulursa döngü, bir şey teslim etmeden önce modelden onları
-onarmasını ister — durum çubuğu turları sayar. Belgeyi yalnızca temiz bir taslak değiştirir;
-gerisi **Modelin yanıtı** alanına düşer, durum satırı nedenini söyler ve sizin hiçbir şeyinizin
-üzerine yazılmaz. Kendi düzenlemeleriniz de aynı biçimde korunur: yanıt yoldayken yazdıysanız
-taslak panelde bekler. Çalışırken **Üret** düğmesinde **Durdur** yazar — turu bırakmak için
-basın.
+onarmasını ister — durum çubuğu turları sayar. Yanıt editöre kendiliğinden asla yazmaz: her zaman **Modelin yanıtı** alanında bekler ve durum
+satırı nasıl bittiğini söyler — temiz taslak hazır olduğunu bildirir, döngünün tam onaramadığı
+ise kalanı adlandırır; yanıt yoldayken belge — ya da doğrulamada kullanılan başka bir şey — değiştiyse satır, yargının
+önceki durum hakkında olduğu konusunda uyarır. Çalışırken **Üret** düğmesinde **Durdur** yazar — turu bırakmak için basın — denetimin ortasında durdurulan bir tur, kutuda doğrulanmamış metin
+bırakabilir.
 
 **Düzelt**, aynı döngünün mevcut belgenize çevrilmiş hâlidir: tanı hata bulduğunda uyanır,
-belgeyi tam itirazlarla birlikte gönderir ve düzeltilmiş sürümü aynı özenle uygular.
+belgeyi tam itirazlarla birlikte gönderir ve düzeltilmiş sürüm aynı yanıt kutusunda bekler — yeri çoğunlukla **Belgeyi değiştir**
+düğmesidir.
 
 ### Bağlantı, ve kimin anahtarı
 
@@ -193,7 +196,7 @@ uzunluğu için bir tavan, **API anahtarı** yetkilendirmesinde de istek başlı
 makinede kabul edilir.
 İzin, anahtarın bağlandığı yere bağlıdır — şema, sunucu adı ve bağlantı noktası — ve
 ayarlardaki **Gönderim açık** işaretinde görünür — istediğiniz an kaldırın: yeni bir şey
-gönderilmez ve zaten yolda olan bir yanıt asla uygulanmaz. Seçtiğiniz adresteki yazılımın metinle ne yaptığını
+gönderilmez ve zaten yolda olan bir yanıt en fazla yanıt kutusuna düşer. Seçtiğiniz adresteki yazılımın metinle ne yaptığını
 söylemek işletmecisine düşer: istek, profilinizdeki adrese gider ve başka hiçbir yere değil.
 
 ### Aynı döngü, ağ olmadan
@@ -204,8 +207,8 @@ verir, önce değil. **İstemi kopyala** tam istemi panoya koyar; onu kullandı�
 yanıtı **Modelin yanıtı** alanına yapıştırın ve **Belgeye ekle** düğmesine basın. Tanı hata bulursa
 **Düzeltme istemini kopyala** ikinci istemi kurar: tüm belgeyi satırları numaralanmış taşır ve makinenin itiraz
 ettiği yerleri tek tek adlandırır. Onun yanıtı, düzeltilmiş belgenin tamamıdır — geri getirin
-ve **Belgeyi değiştir** düğmesine basın; **Belgeye ekle** bozuk olanı yerinde bırakır, düzeltilmiş kopyayı
-yanına koyardı.
+ve **Belgeyi değiştir** düğmesine basın; **Belgeye ekle** bozuk olanı yerinde bırakır, düzeltilmiş kopyayı yanına koyardı (metin
+seçiliyse başka — o zaman ekleme tam olarak onu değiştirir).
 
 ## Grup düzenleyici
 

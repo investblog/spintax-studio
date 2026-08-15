@@ -145,10 +145,11 @@ have, or from a brief. It does enough to deserve a section of its own: the next 
 
 A template usually starts from text that already exists — a product description, a letter, a
 page. The **AI draft** panel turns that text into a first template: open it from the tool rail,
-leave the header of the left column on **Text to convert**, paste the text, and press **Generate**. When
-the draft arrives it replaces the document, the preview renders it, and the diagnostics panel
-judges it — the same engine and the same verdict as for anything you type. One Ctrl+Z brings
-your old document back; from there, edit it as your own text, because it is.
+leave the header of the left column on **Text to convert**, paste the text, and press **Generate**. The draft lands in **The model's answer**, already verified — it went through this window's own
+engine on the way. Applying it is yours: **Insert into document** puts it where your selection
+stands (or at the caret when nothing is selected), **Replace the document** swaps the whole text
+— and nothing touches your document until you press one of them. One Ctrl+Z after either button
+brings the old text back.
 
 If there is nothing to paste, switch the header to **Brief** and describe what you want. The
 fields above steer the draft either way: **Channel** — a letter, an SMS and a push notification
@@ -158,14 +159,16 @@ answer's language; and **Variables the model may use**, declared by name. The ca
 The answer is not trusted, it is verified: the draft goes through this window's own engine
 before it goes anywhere near your document, and when the verdict finds errors, the loop asks
 the model to repair them — the status bar counts the rounds — before handing anything over.
-Only a clean draft replaces the document; anything less lands in **The model's answer** instead, with
-the status line saying why, and nothing of yours is overwritten. Your edits are protected
-the same way: if you typed while an answer was in flight, the draft waits in the panel. While
-it works, **Generate** reads **Stop** — press it to abandon the round.
+The answer never writes into the editor by itself: it always waits in **The model's answer**,
+and the status line says how it went — a clean draft says it is ready, one the loop could not
+fully repair says what is left, and if the document — or anything the draft was checked against — changed while the answer flew,
+the line warns that the verdict was about things as they were. While
+it works, **Generate** reads **Stop** — press it to abandon the round — a round stopped mid-check can still leave its text in the box,
+unverified.
 
 **Fix** is the same loop pointed at your current document: it wakes when the diagnostics
-find errors, sends the document together with the exact objections, and applies the corrected
-version with the same care.
+find errors, sends the document together with the exact objections, and the corrected version waits in the same answer box — **Replace the document** is usually its
+seat.
 
 ### The connection, and whose key
 
@@ -201,7 +204,7 @@ nothing at any other moment. The recipient does not change without you: a
 redirect is refused rather than followed, and an unencrypted `http` address is accepted only
 on this machine. The permission binds where the key does — the scheme, the host and the port — and shows as
 the **Sending allowed** tick in the settings — untick it at any time: nothing new is
-sent, and an answer already on its way is never applied. What the software at the address you chose does with the text is its operator's to
+sent, and an answer already on its way lands, at most, in the answer box. What the software at the address you chose does with the text is its operator's to
 state: the request goes to the address in your profile and nowhere else.
 
 ### The same loop, without a network
@@ -212,8 +215,8 @@ paste, not before. **Copy prompt** puts the full prompt on the clipboard; take i
 model you use, paste the answer into **The model's answer**, and press **Insert into document**. If the diagnostics find
 errors, **Copy repair prompt** builds the second prompt: it carries the whole document with its lines
 numbered and names the exact places the engine objected to. Its answer is the corrected
-document in full, so bring it back and press **Replace the document** — **Insert into document** would leave the broken
-one in place and put the corrected copy beside it.
+document in full, so bring it back and press **Replace the document** — **Insert into document** would leave the broken one in place and put the corrected copy beside
+it (unless you have text selected — then Insert replaces exactly that).
 
 ## The group editor
 

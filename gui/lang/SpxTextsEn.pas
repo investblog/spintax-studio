@@ -158,7 +158,7 @@ const
       'No errors, but some test renders come out empty — check the plural forms. The draft is in the AI panel, not applied.',
       'The draft is clean, but an included fragment has an error. Fix that file — regenerating the template cannot.',
       '%d errors remain after %d fix attempts. The draft is in the AI panel, not applied.',
-      'The document changed while the answer was on its way. The draft is in the AI panel, not applied.',
+      'Something the draft was checked against changed while the answer was on its way — the document, values or settings. The draft is in the answer box, not applied.',
       'This profile authenticates, and no key is attached. Enter the key in the AI panel.',
       'The endpoint asks to go to a different address (%s). It was not followed; change the profile if that is intended.',
       'Plain http off this machine would send the key and the text in clear. Use https.',
@@ -209,7 +209,8 @@ const
       'Not wrapped: a #/ in or around the selection would end the comment early.',
       'Not wrapped: a bare |, an unbalanced bracket or an open comment would change what the condition says.',
       'Not inserted: the caret splits a comment mark in two.',
-      'The endpoint address cannot be read — fix it, then attach the key.'
+      'The endpoint address cannot be read — fix it, then attach the key.',
+      'Draft verified. It is in the answer box — apply it with Insert or Replace.'
   );
 
 implementation

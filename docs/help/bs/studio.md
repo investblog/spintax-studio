@@ -135,10 +135,10 @@ zadatka. Zaslužio je vlastiti odjeljak: sljedeći.
 
 Šablon obično počinje tekstom koji već postoji — opis proizvoda, pismo, stranica. Panel
 **AI nacrt** pretvara taj tekst u prvi šablon: otvorite ga s trake s alatima, ostavite zaglavlje
-lijeve kolone na **Tekst za pretvaranje**, zalijepite tekst i pritisnite **Generiši**. Pristigli nacrt
-zamjenjuje dokument, pregled ga iscrtava, a panel dijagnostike sudi — isti motor i ista
-presuda kao za sve što sami kucate. Jedan Ctrl+Z vraća prethodni dokument; odatle ga uređujte
-kao svoj tekst, jer to i jeste.
+lijeve kolone na **Tekst za pretvaranje**, zalijepite tekst i pritisnite **Generiši**. Nacrt pada u **Odgovor modela**, već provjeren — usput je prošao kroz motor ovog prozora.
+Primjena je vaša: **Umetni u dokument** stavlja ga na mjesto vašeg odabira (ili kod kursora ako
+ništa nije odabrano), **Zamijeni dokument** mijenja cijeli tekst — i ništa ne dira vaš dokument
+dok ne pritisnete jedno od dva dugmeta. Jedan Ctrl+Z nakon bilo kojeg od njih vraća stari tekst.
 
 Ako nema šta da se zalijepi, prebacite zaglavlje na **Zadatak** i opišite šta želite. Polja
 iznad vode nacrt u oba režima: **Kanal** — pismo, SMS i push obavještenje pišu se u
@@ -147,13 +147,15 @@ različitim registrima; **Varijativnost** — koliko varijante smiju da se razi�
 
 Odgovoru se ne vjeruje — on se provjerava: nacrt prolazi kroz motor ovog prozora prije nego
 što se približi dokumentu, a nađe li presuda greške, petlja sama traži od modela da ih
-popravi — statusna traka broji runde — prije nego što išta preda. Dokument zamjenjuje samo
-čist nacrt; sve ostalo pada u **Odgovor modela**, statusni red kaže zašto, i ništa vaše se ne
-prepisuje. Jednako su zaštićene i vaše izmjene: ako ste kucali dok je odgovor letio, nacrt
-čeka u panelu. Dok radi, na dugmetu **Generiši** piše **Zaustavi** — pritisnite da napustite rundu.
+popravi — statusna traka broji runde — prije nego što išta preda. Odgovor nikad sam ne piše u urednik: uvijek čeka u **Odgovor modela**, a statusni red kaže kako
+je završilo — čist nacrt javlja da je spreman, onaj koji petlja nije mogla sasvim popraviti
+imenuje šta je ostalo, a ako se dokument — ili bilo šta drugo prema čemu je provjeravan — mijenjao dok je odgovor
+letio, red upozorava da je presuda bila o prijašnjem stanju. Dok radi, na dugmetu **Generiši** piše **Zaustavi** — pritisnite da napustite rundu — runda zaustavljena usred provjere može u polju ostaviti tekst
+koji provjeru nije prošao.
 
 **Popravi** je ista petlja uperena u trenutni dokument: budi se kad dijagnostika nađe greške,
-šalje dokument zajedno s tačnim primjedbama i primjenjuje ispravljenu verziju s istom pažnjom.
+šalje dokument zajedno s tačnim primjedbama a ispravljena verzija čeka u istom polju odgovora — njeno je mjesto obično **Zamijeni
+dokument**.
 
 ### Veza, i čiji ključ
 
@@ -186,7 +188,7 @@ popravci trenutni šablon sa svojom dijagnostikom, ime modela iz vašeg profila 
 granicom dužine odgovora, a pod autorizacijom **API ključ** — ključ u zaglavljima zahtjeva; ništa više i ni u kojem drugom trenutku. Primalac se ne mijenja bez vas: preusmjeravanje se odbija umjesto da se slijedi, a nešifrovana `http` adresa prima se samo
 na ovoj mašini. Dozvola se veže gdje i ključ — za shemu, host i port — i vidi se kao kvačica **Slanje dozvoljeno** u
 postavkama — skinite je bilo kad: ništa novo ne
-polazi, a odgovor koji je već u letu nikad se ne primjenjuje. Šta softver na izabranoj adresi radi s tekstom, na njegovom je operateru
+polazi, a odgovor koji je već u letu slijeće, najviše, u polje odgovora. Šta softver na izabranoj adresi radi s tekstom, na njegovom je operateru
 da kaže: zahtjev ide na adresu iz vašeg profila i nikuda više.
 
 ### Ista petlja, bez mreže
@@ -196,8 +198,8 @@ Upitima ne trebaju ni ključ ni veza — to je isti put kad vaš model živi u p
 zalijepite odgovor u polje **Odgovor modela** i pritisnite **Umetni u dokument**. Nađe li dijagnostika greške,
 **Kopiraj upit za popravku** sastavlja drugi upit: nosi cijeli dokument s numerisanim redovima i imenuje tačna
 mjesta kojima se motor usprotivio. Odgovor na njega je ispravljen dokument u cjelini —
-vratite ga i pritisnite **Zamijeni dokument**; **Umetni u dokument** bi slomljeni ostavio na mjestu i stavio
-ispravljenu kopiju pored.
+vratite ga i pritisnite **Zamijeni dokument**; **Umetni u dokument** bi slomljeni ostavio na mjestu i stavio ispravljenu kopiju pored (osim ako
+je tekst odabran — tada umetanje zamjenjuje baš njega).
 
 ## Uređivač grupa
 

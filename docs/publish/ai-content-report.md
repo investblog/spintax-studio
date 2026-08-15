@@ -38,9 +38,13 @@ reason that answer changes.
 
 What the product itself does, stated exactly — neither more nor less:
 
-- Every draft is verified by the engine before the window applies it, which is a claim about
-  SYNTAX and renderability, not about content. The application does not and cannot moderate
-  meaning.
+- Every draft the live loop COMPLETES is verified by the engine before it is offered — the
+  answer waits in the panel's answer box, and only the reader's own press puts it into the
+  document (since 2026-08-15; the window never applies a draft by itself). Text from a
+  cancelled round, an edited answer box, or the manual copy-prompt path is not
+  pre-verified: it is judged the moment it lands, by the same engine, in the diagnostics
+  panel. The verification is a claim about SYNTAX and renderability, not about content:
+  the application does not and cannot moderate meaning.
 - The model and the endpoint are the reader's own choice, and any key or account involved is
   theirs (BYOK, spec §4.5). Where the endpoint's operator states a content policy, that
   policy governs generation; an endpoint can also be self-hosted or otherwise state none, and

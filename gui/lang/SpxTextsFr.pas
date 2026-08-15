@@ -162,7 +162,7 @@ const
       'Aucune erreur, mais une partie des rendus d''essai ressort vide — vérifiez les formes du pluriel. Le brouillon est dans le panneau IA, non appliqué.',
       'Le brouillon est propre, mais un fragment inclus contient une erreur. Corrigez ce fichier — régénérer ne le réparera pas.',
       'Il reste %d erreurs après %d tentatives de réparation. Le brouillon est dans le panneau IA, non appliqué.',
-      'Le document a changé pendant que la réponse voyageait. Le brouillon est dans le panneau IA, non appliqué.',
+      'Pendant que la réponse voyageait, quelque chose contre quoi elle était vérifiée a changé — le document, des valeurs ou des réglages. Le brouillon est dans la réponse, non appliqué.',
       'Ce profil s''authentifie, et aucune clé n''est rattachée. Saisissez la clé dans le panneau IA.',
       'L''endpoint demande de passer par une autre adresse (%s). Elle n''a pas été suivie ; changez le profil si c''est voulu.',
       'Du http en clair au-delà de cette machine enverrait la clé et le texte en clair. Utilisez https.',
@@ -213,7 +213,8 @@ const
       'Non entouré : un #/ dans la sélection ou autour d''elle terminerait le commentaire trop tôt.',
       'Non entouré : un | isolé, une parenthèse déséquilibrée ou un commentaire ouvert changerait le sens de la condition.',
       'Non inséré : le curseur coupe une marque de commentaire en deux.',
-      'L''adresse de l''endpoint est illisible — corrigez-la, puis rattachez la clé.'
+      'L''adresse de l''endpoint est illisible — corrigez-la, puis rattachez la clé.',
+      'Brouillon vérifié. Il attend dans la réponse — insérez-le ou remplacez vous-même.'
   );
 
 implementation

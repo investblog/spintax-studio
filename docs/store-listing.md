@@ -18,8 +18,9 @@ describes the submitted product, not the repository.
 
 Refreshed 2026-08-14 for the owner's pre-submission review — the product moved in the last
 week and the copy had not: the AI draft's main path is now *turn the text you already have
-into a template* (the brief is the second mode, not the first); the draft is verified by the
-real engine before it ever replaces the document; the editor gained find-and-replace and an
+into a template* (the brief is the second mode, not the first); a finished draft arrives verified by
+the real engine and nothing replaces the document until the reader applies it (since
+2026-08-15 the window never applies a draft by itself); the editor gained find-and-replace and an
 Insert menu; the report address moved into the About window. Features 6+7 and 13+14 were each
 merged to stay within Microsoft's twenty, freeing two slots for find-and-replace and the
 Insert menu.
@@ -44,10 +45,11 @@ From the text you already have — or a brief — to a working template.
 You do not have to hand-write every variation. This application includes optional live
 generative AI: paste the text you already have — a product page, a letter, a description —
 and Generate turns it into a richly varied template, or describe what you want in a brief.
-The draft is not taken on trust: it is verified by the same engine that renders your preview
-before it ever replaces your document, and Fix sends the engine's own findings back for
-repair. All of it goes to the endpoint you configure, with your own key and account when the
-endpoint uses them, and it is off until you turn it on. Prefer to keep the network out of it?
+The draft is not taken on trust: a finished draft arrives verified by the same engine that
+renders your preview, nothing replaces your document until you apply it yourself, and Fix
+sends the engine's own findings back for repair. All of it goes to the endpoint you
+configure, with your own key and account when the endpoint uses them, and it is off until
+you turn it on. Prefer to keep the network out of it?
 Copy the prepared prompt to ChatGPT, Claude or another model and paste the draft back — that
 path needs no key and no connection. Either way Studio is where you take control: preview
 what the draft actually produces, find and fix syntax problems, refine the choices, and

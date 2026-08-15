@@ -153,7 +153,7 @@ const
       'Sin errores, pero parte de los renders de prueba sale vacía — revise las formas del plural. El borrador está en el panel de IA, sin aplicar.',
       'El borrador está limpio, pero un fragmento incluido tiene un error. Corrija ese archivo — regenerar no puede arreglarlo.',
       'Quedan %d errores tras %d intentos de arreglo. El borrador está en el panel de IA, sin aplicar.',
-      'El documento cambió mientras la respuesta estaba en camino. El borrador está en el panel de IA, sin aplicar.',
+      'Mientras la respuesta estaba en camino cambió algo contra lo que se verificó — el documento, valores o ajustes. El borrador está en la respuesta, sin aplicar.',
       'Este perfil se autentica y no hay clave adjunta. Introduzca la clave en el panel de IA.',
       'El endpoint pide dirigirse a otra dirección (%s). No se siguió; cambie el perfil si es intencionado.',
       'El http en claro más allá de esta máquina enviaría la clave y el texto sin cifrar. Use https.',
@@ -204,7 +204,8 @@ const
       'No envuelto: un #/ dentro o alrededor de la selección terminaría el comentario antes de tiempo.',
       'No envuelto: una | suelta, un corchete sin cerrar o un comentario abierto cambiaría lo que dice la condición.',
       'No insertado: el cursor parte en dos una marca de comentario.',
-      'La dirección del endpoint no se puede leer — corríjala y adjunte la clave de nuevo.'
+      'La dirección del endpoint no se puede leer — corríjala y adjunte la clave de nuevo.',
+      'Borrador verificado. Espera en la respuesta — insértelo o reemplace usted mismo.'
   );
 
 implementation

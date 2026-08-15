@@ -156,10 +156,11 @@ schon haben, oder nach einem Briefing. Er verdient einen eigenen Abschnitt: den 
 Eine Vorlage beginnt meist mit Text, den es schon gibt — eine Produktbeschreibung, ein Brief,
 eine Seite. Das Panel **KI-Entwurf** macht daraus eine erste Vorlage: öffnen Sie es über die
 Werkzeugleiste, lassen Sie die Kopfzeile der linken Spalte auf **Text zum Umwandeln**, fügen Sie den Text
-ein und drücken Sie **Erzeugen**. Der fertige Entwurf ersetzt das Dokument, die Vorschau rendert
-ihn, und das Diagnose-Panel urteilt — dieselbe Maschine und dasselbe Urteil wie für alles, was
-Sie selbst tippen. Ein Strg+Z bringt Ihr altes Dokument zurück; ab da bearbeiten Sie ihn wie
-eigenen Text, denn das ist er.
+ein und drücken Sie **Erzeugen**. Der Entwurf landet in **Antwort des Modells**, bereits geprüft — er ging unterwegs durch die
+Maschine dieses Fensters. Das Anwenden ist Ihres: **In das Dokument einfügen** setzt ihn an die
+Stelle Ihrer Auswahl (oder an die Schreibmarke, wenn nichts ausgewählt ist), **Dokument
+ersetzen** tauscht den ganzen Text — und nichts berührt Ihr Dokument, bis Sie eine der beiden
+drücken. Ein Strg+Z nach jeder von ihnen bringt den alten Text zurück.
 
 Gibt es nichts einzufügen, stellen Sie die Kopfzeile auf **Briefing** und beschreiben, was Sie
 wollen. Die Felder darüber lenken den Entwurf in beiden Modi: **Kanal** — ein Brief, eine SMS
@@ -170,15 +171,15 @@ erklärt. Die Fallspalte ist der Teil, den auszufüllen sich lohnt. Eine Variabl
 Der Antwort wird nicht geglaubt, sie wird geprüft: der Entwurf geht durch die Maschine dieses
 Fensters, bevor er Ihrem Dokument nahekommt, und findet das Urteil Fehler, lässt die Schleife
 das Modell nachbessern — die Statusleiste zählt die Runden mit —, bevor irgendetwas übergeben
-wird. Nur ein sauberer Entwurf ersetzt das Dokument; alles andere landet stattdessen in
-**Antwort des Modells**, die Statuszeile sagt warum, und nichts von Ihnen wird überschrieben. Ihre eigenen
-Änderungen sind genauso geschützt: haben Sie getippt, während eine Antwort unterwegs war,
-wartet der Entwurf im Panel. Während der Arbeit steht auf **Erzeugen** **Stopp** — drücken Sie
-es, um die Runde abzubrechen.
+wird. Von selbst schreibt die Antwort nie in den Editor: sie wartet immer in **Antwort des Modells**,
+und die Statuszeile sagt, wie es ausging — ein sauberer Entwurf meldet sich bereit, einer, den
+die Schleife nicht ganz reparieren konnte, nennt den Rest, und hat sich das Dokument — oder sonst etwas, wogegen geprüft wurde — geändert, während die
+Antwort flog, warnt die Zeile, dass das Urteil den früheren Stand betraf. Während der Arbeit steht auf **Erzeugen** **Stopp** — drücken Sie es, um die Runde abzubrechen — eine mitten in der Prüfung gestoppte Runde kann ihren
+Text ungeprüft im Feld hinterlassen.
 
 **Reparieren** ist dieselbe Schleife, gerichtet auf Ihr aktuelles Dokument: sie wacht auf, wenn die
-Diagnose Fehler findet, schickt das Dokument mitsamt den genauen Beanstandungen und wendet die
-korrigierte Fassung mit derselben Sorgfalt an.
+Diagnose Fehler findet, schickt das Dokument mitsamt den genauen Beanstandungen und die korrigierte Fassung wartet im selben Antwortfeld — ihr Platz ist meist **Dokument
+ersetzen**.
 
 ### Die Verbindung, und wessen Schlüssel
 
@@ -217,7 +218,7 @@ sonst nichts, und zu keinem anderen Zeitpunkt. Der Empfänger ändert sich nicht
 Umleitung wird verweigert statt befolgt, und eine unverschlüsselte `http`-Adresse wird nur
 auf diesem Rechner angenommen. Die Erlaubnis bindet sich dorthin, wo auch der Schlüssel — Schema, Host und Port — und zeigt
 sich als Häkchen **Senden erlaubt** in den Einstellungen — entfernen Sie es jederzeit: nichts
-Neues wird gesendet, und eine schon unterwegs befindliche Antwort wird nie angewendet. Was die Software an der gewählten
+Neues wird gesendet, und eine schon unterwegs befindliche Antwort landet höchstens im Antwortfeld. Was die Software an der gewählten
 Adresse mit dem Text tut, hat ihr Betreiber zu sagen: die Anfrage geht an die Adresse aus
 Ihrem Profil und nirgendwo sonst.
 
@@ -230,8 +231,8 @@ Zwischenablage; tragen Sie ihn zu dem Modell, das Sie ohnehin nutzen, fügen Sie
 **Antwort des Modells** ein und drücken Sie **In das Dokument einfügen**. Findet die Diagnose Fehler, baut **Reparatur-Prompt kopieren** den
 zweiten Prompt: er trägt das ganze Dokument mit nummerierten Zeilen und nennt die genauen
 Stellen, die die Maschine beanstandet hat. Seine Antwort ist das korrigierte Dokument im
-Ganzen — bringen Sie sie zurück und drücken Sie **Dokument ersetzen**; **In das Dokument einfügen** ließe das kaputte
-stehen und legte die korrigierte Kopie daneben.
+Ganzen — bringen Sie sie zurück und drücken Sie **Dokument ersetzen**; **In das Dokument einfügen** ließe das kaputte stehen und legte die korrigierte Kopie daneben
+(außer es ist Text ausgewählt — dann ersetzt das Einfügen genau ihn).
 
 ## Der Gruppeneditor
 

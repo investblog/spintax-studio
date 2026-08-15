@@ -149,10 +149,11 @@ al hebt, of uit een briefing. Het verdient een eigen sectie: de volgende.
 
 Een sjabloon begint meestal met tekst die er al is — een productbeschrijving, een brief, een
 pagina. Het paneel **AI-concept** maakt daar een eerste sjabloon van: open het vanaf de werkbalk,
-laat de kop van de linkerkolom op **Te converteren tekst** staan, plak de tekst en druk op **Genereren**. Het
-aangekomen concept vervangt het document, het voorbeeld rendert het en het diagnosepaneel
-oordeelt — dezelfde machine en hetzelfde oordeel als voor alles wat u zelf typt. Eén Ctrl+Z
-brengt uw oude document terug; bewerk het daarna als eigen tekst, want dat is het.
+laat de kop van de linkerkolom op **Te converteren tekst** staan, plak de tekst en druk op **Genereren**. Het concept belandt in **Antwoord van het model**, al gecontroleerd — het ging onderweg door de
+machine van dit venster. Toepassen is aan u: **In het document invoegen** zet het op de plaats
+van uw selectie (of bij de cursor als niets is geselecteerd), **Het document vervangen** wisselt
+de hele tekst — en niets raakt uw document tot u een van beide indrukt. Eén Ctrl+Z na elk van
+beide brengt de oude tekst terug.
 
 Valt er niets te plakken, zet de kop dan op **Briefing** en beschrijf wat u wilt. De velden
 erboven sturen het concept in beide standen: **Kanaal** — een brief, een sms en een
@@ -163,15 +164,15 @@ De naamvalskolom is het deel dat de moeite van het invullen waard is. Een variab
 Het antwoord wordt niet geloofd, het wordt gecontroleerd: het concept gaat door de machine van
 dit venster voordat het bij uw document in de buurt komt, en vindt het oordeel fouten, dan
 vraagt de lus het model ze te herstellen — de statusbalk telt de rondes mee — voordat er iets
-wordt overhandigd. Alleen een schoon concept vervangt het document; al het andere belandt in
-**Antwoord van het model**, de statusregel zegt waarom, en niets van u wordt overschreven. Uw eigen
-wijzigingen zijn net zo beschermd: typte u terwijl een antwoord onderweg was, dan wacht het
-concept in het paneel. Tijdens het werk staat op **Genereren** **Stoppen** — druk erop om de ronde
-af te breken.
+wordt overhandigd. Het antwoord schrijft nooit uit zichzelf in de editor: het wacht altijd in **Antwoord van het
+model**, en de statusregel zegt hoe het afliep — een schoon concept meldt zich klaar, een dat de
+lus niet helemaal kon herstellen noemt wat er overblijft, en veranderde het document — of iets anders waartegen werd gecontroleerd — terwijl het antwoord
+onderweg was, dan waarschuwt de regel dat het oordeel over de eerdere stand ging. Tijdens het werk staat op **Genereren** **Stoppen** — druk erop om de ronde af te breken — een midden in de controle gestopte ronde kan
+ongecontroleerde tekst in het veld achterlaten.
 
 **Herstellen** is dezelfde lus, gericht op uw huidige document: hij ontwaakt wanneer de diagnose
-fouten vindt, stuurt het document met de exacte bezwaren mee en past de gecorrigeerde versie
-met dezelfde zorg toe.
+fouten vindt, stuurt het document met de exacte bezwaren mee en de gecorrigeerde versie wacht in hetzelfde antwoordveld — haar plaats is meestal **Het
+document vervangen**.
 
 ### De verbinding, en wiens sleutel
 
@@ -208,7 +209,7 @@ verder niets, en op geen enkel ander moment. De ontvanger verandert niet zonder 
 omleiding wordt geweigerd in plaats van gevolgd, en een onversleuteld `http`-adres wordt
 alleen op deze machine aanvaard. De toestemming bindt zich waar de sleutel dat doet — schema, host en poort — en is zichtbaar
 als het vinkje **Versturen toegestaan** in de instellingen — haal het weg wanneer u wilt: niets
-nieuws vertrekt, en een antwoord dat al onderweg is wordt nooit toegepast. Wat de software op het gekozen adres met de tekst doet, is
+nieuws vertrekt, en een antwoord dat al onderweg is belandt hoogstens in het antwoordveld. Wat de software op het gekozen adres met de tekst doet, is
 aan zijn beheerder om te zeggen: het verzoek gaat naar het adres uit uw profiel en nergens
 anders heen.
 
@@ -221,7 +222,8 @@ naar het model dat u gebruikt, plak het antwoord in **Antwoord van het model** e
 diagnose fouten, dan bouwt **Herstelprompt kopiëren** de tweede prompt: die draagt het hele document met
 genummerde regels en noemt de exacte plekken waartegen de machine bezwaar maakte. Het antwoord
 erop is het gecorrigeerde document in zijn geheel — breng het terug en druk op **Het document vervangen**;
-**In het document invoegen** zou het kapotte laten staan en de gecorrigeerde kopie ernaast zetten.
+**In het document invoegen** zou het kapotte laten staan en de gecorrigeerde kopie ernaast
+zetten (tenzij tekst is geselecteerd — dan vervangt het invoegen precies die).
 
 ## De groepseditor
 

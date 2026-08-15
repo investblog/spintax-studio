@@ -151,7 +151,7 @@ const
       'Hata yok, ama deneme çıktılarının bir kısmı boş geliyor — çoğul biçimlerini kontrol edin. Taslak yapay zekâ panelinde, uygulanmadı.',
       'Taslak temiz, ama dahil edilen bir parçada hata var. O dosyayı düzeltin — yeniden üretmek onu onaramaz.',
       '%d hata kaldı — %d düzeltme denemesinden sonra. Taslak yapay zekâ panelinde, uygulanmadı.',
-      'Yanıt yoldayken belge değişti. Taslak yapay zekâ panelinde, uygulanmadı.',
+      'Yanıt yoldayken, doğrulandığı şeylerden biri değişti — belge, değerler ya da ayarlar. Taslak yanıt kutusunda, uygulanmadı.',
       'Bu profil kimlik doğruluyor ve bağlı bir anahtar yok. Anahtarı yapay zekâ panelinde girin.',
       'Uç nokta başka bir adrese gitmeyi istiyor (%s). İzlenmedi; bu isteniyorsa profili değiştirin.',
       'Bu makinenin dışına açık http, anahtarı ve metni şifresiz gönderirdi. https kullanın.',
@@ -202,7 +202,8 @@ const
       'Alınmadı: seçimin içindeki veya çevresindeki bir #/ açıklamayı erken bitirirdi.',
       'Alınmadı: tek başına bir |, kapanmamış bir ayraç veya açık bir açıklama koşulun anlamını değiştirirdi.',
       'Eklenmedi: imleç bir açıklama işaretini ikiye bölüyor.',
-      'Uç nokta adresi okunamıyor — düzeltin, sonra anahtarı bağlayın.'
+      'Uç nokta adresi okunamıyor — düzeltin, sonra anahtarı bağlayın.',
+      'Taslak doğrulandı. Yanıt kutusunda bekliyor — eklemek ya da değiştirmek sizde.'
   );
 
 implementation

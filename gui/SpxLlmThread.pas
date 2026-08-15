@@ -47,7 +47,12 @@
  * not consume the budget, because the reader can retry it for free once the transport is
  * back.
  *
- * THE ANSWER IS APPLIED ONLY TO THE DOCUMENT THAT ASKED. A request carries an immutable
+ * NOTHING IS AUTO-APPLIED SINCE 2026-08-15 (the owner's call): every outcome is SHOWN in
+ * the answer box and the reader's own press applies it. The revision machinery below keeps
+ * its other job -- telling an answer verified against the current snapshot from one the
+ * world moved under -- and the window words its status line by that difference.
+ *
+ * THE ANSWER BELONGS ONLY TO THE DOCUMENT THAT ASKED. A request carries an immutable
  * snapshot -- the text, locale, variables and profile it was built from, summarised by a
  * REVISION number the window bumps (Invalidate) whenever any of those change. The revision
  * is compared before every retry and before a result is delivered as applicable; a stale
@@ -86,8 +91,9 @@ type
 
   TSpxLoopOutcome = (
     loNone,
-    loClean,          (* verified: no error rows, probes healthy -- the window may apply *)
-    loDegenerate,     (* no errors, but empty probes or fullwidth fallback: shown, not applied *)
+    loClean,          (* verified: no error rows, probes healthy -- shown as ready; the
+                         reader applies it (nothing auto-applies since 2026-08-15) *)
+    loDegenerate,     (* no errors, but empty probes or fullwidth fallback *)
     loClosureError,   (* the candidate is clean; a file it includes is not. Shown, not
                          applied, and no fix round is spent: a regenerated template cannot
                          repair a broken file on disk. "Clean verdict" in the spec is the
@@ -163,7 +169,7 @@ type
     (* The request's snapshot revision, echoed so the WINDOW can close the last race: the
        loop checks staleness on its own thread, but an edit can land between that check and
        the synchronized delivery. Invalidate and the delivery both run on the main thread,
-       so `Loop.Revision = R.Revision`, asked there right before applying, cannot be
+       so `Loop.Revision = R.Revision`, asked there as the result lands, cannot be
        overtaken -- the loop-side check is the early exit, this is the guarantee. *)
     Revision: Int64;
   end;
@@ -568,10 +574,11 @@ begin
   (* THE LAST CHECK RUNS WHERE THE RACE ENDS. A Cancel or a superseding Post can land after
      RunOp's own checks and before this callback -- but both of those are made from the main
      thread, and this IS the main thread, so asking here is not "later", it is AFTER the
-     last moment they could have happened. Only the applicable outcome is downgraded: the
-     text is kept and shown, it just must not be applied to a document whose reader has
-     already asked for something else. Found by review, twice -- the loop-side checks narrow
-     the window and cannot close it. *)
+     last moment they could have happened. Only the clean outcome is downgraded -- the text
+     is kept and shown either way, and since 2026-08-15 the window applies nothing itself;
+     the downgrade keeps the STATUS honest, so a round the reader overtook cannot announce
+     itself as ready. Found by review, twice -- the loop-side checks narrow the window and
+     cannot close it. *)
   FLock.Enter;
   try
     if (FResult.Outcome = loClean) and (FCancel or FHasPending) then

@@ -148,12 +148,18 @@ type
     FCases: array of TSpxVarCase;
     FOnInsert: TSpxAiInsertEvent;
     FOnReplace: TSpxAiInsertEvent;
+    { The reader edited the answer box AFTER a result landed -- whoever showed a "verified
+      and waiting" status must stop showing it, because the box no longer holds what was
+      verified (review, 2026-08-15). Programmatic SetReply does not fire this. }
+    FOnReplyEdited: TNotifyEvent;
+    FSettingReply: Boolean;
     FDocText: string;
 
     procedure CopyPromptClicked(Sender: TObject);
     procedure AcceptReply(AReplace: Boolean);
     procedure InsertClicked(Sender: TObject);
     procedure ReplaceClicked(Sender: TObject);
+    procedure ReplyChanged(Sender: TObject);
     procedure RepairClicked(Sender: TObject);
     procedure CaseEdited(Sender: TObject);
     function CollectVars: TSpxAllowedVars;
@@ -226,9 +232,9 @@ type
     function Channel: TSpxChannel;
     function Level: TSpxVariation;
     function AllowedVars: TSpxAllowedVars;
-    (* A candidate the loop could not apply -- stale, degenerate, out of fix budget --
-       lands in the reply box, where the manual Insert/Replace buttons already know what
-       to do with it. Shown, never applied: that distinction is the loop's whole table. *)
+    (* EVERY loop outcome lands here since 2026-08-15 -- clean and waiting as much as
+       stale, degenerate or out of fix budget -- and the manual Insert/Replace buttons are
+       the only way anything reaches the editor. The window applies nothing by itself. *)
     procedure SetReply(const AText: string);
     (* The manual path: §11 has the reviewer check the product with no key and no
        network, and this is that path -- the panel's own button, since the strip's
@@ -239,6 +245,7 @@ type
        with it, not in what the panel produces -- so a repair answer, which is the whole
        document, goes over the document instead of beside it. *)
     property OnReplace: TSpxAiInsertEvent read FOnReplace write FOnReplace;
+    property OnReplyEdited: TNotifyEvent read FOnReplyEdited write FOnReplyEdited;
     property OnGenerate: TNotifyEvent read FOnGenerate write FOnGenerate;
     property OnFix: TNotifyEvent read FOnFix write FOnFix;
     property OnProfileChanged: TSpxAiProfileEvent read FOnProfileChanged write FOnProfileChanged;
@@ -568,6 +575,7 @@ begin
   FReply.Align := alClient;
   FReply.ScrollBars := ssAutoBoth;
   FReply.WordWrap := False;
+  FReply.OnChange := @ReplyChanged;
 
   (* ── what to do with the answer ── *)
 
@@ -1166,7 +1174,17 @@ end;
 
 procedure TSpxAiPane.SetReply(const AText: string);
 begin
-  FReply.Text := AText;
+  FSettingReply := True;
+  try
+    FReply.Text := AText;
+  finally
+    FSettingReply := False;
+  end;
+end;
+
+procedure TSpxAiPane.ReplyChanged(Sender: TObject);
+begin
+  if (not FSettingReply) and Assigned(FOnReplyEdited) then FOnReplyEdited(Self);
 end;
 
 procedure TSpxAiPane.CopyPrompt;

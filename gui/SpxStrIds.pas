@@ -240,7 +240,12 @@ type
        key was right there in the field; the ADDRESS was the problem, and the reader's next
        move (retype the key) failed identically (review, 2026-08-15). The truthful sentence:
        name the endpoint as the thing to fix. *)
-    sAiKeyBadEndpoint
+    sAiKeyBadEndpoint,
+
+    (* The clean-draft status, since the auto-apply went (owner, 2026-08-15): the verified
+       draft WAITS in the answer box, and this sentence is what says so -- without it a
+       reader watches "verifying" end and nothing visibly happen. *)
+    sAiReady
   );
 
 implementation

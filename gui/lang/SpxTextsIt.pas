@@ -153,7 +153,7 @@ const
       'Nessun errore, ma parte dei render di prova esce vuota — controllate le forme del plurale. La bozza è nel pannello IA, non applicata.',
       'La bozza è pulita, ma un frammento incluso contiene un errore. Correggete quel file — rigenerare non può ripararlo.',
       'Restano %d errori dopo %d tentativi di correzione. La bozza è nel pannello IA, non applicata.',
-      'Il documento è cambiato mentre la risposta era in viaggio. La bozza è nel pannello IA, non applicata.',
+      'Mentre la risposta era in viaggio è cambiato qualcosa contro cui era verificata — il documento, valori o impostazioni. La bozza è nella risposta, non applicata.',
       'Questo profilo si autentica e nessuna chiave è collegata. Inserite la chiave nel pannello IA.',
       'L''endpoint chiede di rivolgersi a un altro indirizzo (%s). Non è stato seguito; cambiate il profilo se è voluto.',
       'Http in chiaro oltre questa macchina invierebbe la chiave e il testo in chiaro. Usate https.',
@@ -204,7 +204,8 @@ const
       'Non racchiuso: un #/ dentro o attorno alla selezione finirebbe il commento troppo presto.',
       'Non racchiuso: una | isolata, una parentesi non chiusa o un commento aperto cambierebbe il senso della condizione.',
       'Non inserito: il cursore taglia in due un segno di commento.',
-      'L''indirizzo dell''endpoint non si legge — correggetelo, poi collegate la chiave.'
+      'L''indirizzo dell''endpoint non si legge — correggetelo, poi collegate la chiave.',
+      'Bozza verificata. Attende nella risposta — inseritela o sostituite voi.'
   );
 
 implementation

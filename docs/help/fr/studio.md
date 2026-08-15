@@ -153,10 +153,11 @@ texte que vous avez déjà, ou d'un brief. Il mérite sa propre section : la sui
 Un gabarit commence le plus souvent par un texte qui existe déjà — une fiche produit, une
 lettre, une page. Le panneau **Brouillon IA** en fait un premier gabarit : ouvrez-le depuis la barre
 d'outils, laissez l'en-tête de la colonne de gauche sur **Texte à convertir**, collez le texte et pressez
-**Générer**. Le brouillon arrivé remplace le document, l'aperçu le rend, et le panneau de
-diagnostic juge — le même moteur et le même verdict que pour tout ce que vous tapez. Un
-Ctrl+Z ramène votre ancien document ; ensuite, corrigez-le comme votre propre texte, car c'en
-est un.
+**Générer**. Le brouillon se pose dans **Réponse du modèle**, déjà vérifié — il est passé par le moteur de
+cette fenêtre en chemin. L'appliquer vous revient : **Insérer dans le document** le met à la
+place de votre sélection (ou au curseur si rien n'est sélectionné), **Remplacer le document**
+échange tout le texte — et rien ne touche votre document tant que vous n'avez pas pressé l'un
+des deux. Un Ctrl+Z après l'un ou l'autre ramène l'ancien texte.
 
 S'il n'y a rien à coller, passez l'en-tête sur **Brief** et décrivez ce que vous voulez. Les
 champs au-dessus guident le brouillon dans les deux modes : **Canal** — une lettre, un SMS et
@@ -167,15 +168,15 @@ nom. La colonne des cas est la partie qui vaut la peine d'être remplie. Une var
 La réponse n'est pas crue, elle est vérifiée : le brouillon passe par le moteur de cette
 fenêtre avant d'approcher votre document, et si le verdict trouve des erreurs, la boucle
 demande elle-même au modèle de les corriger — la barre d'état compte les tours — avant de rien
-livrer. Seul un brouillon propre remplace le document ; tout le reste se pose dans
-**Réponse du modèle**, la ligne d'état dit pourquoi, et rien de vôtre n'est écrasé. Vos propres
-modifications sont protégées de même : si vous avez tapé pendant qu'une réponse volait, le
-brouillon attend dans le panneau. Pendant le travail, **Générer** affiche **Arrêter** — pressez
-pour abandonner le tour.
+livrer. La réponse n'écrit jamais d'elle-même dans l'éditeur : elle attend toujours dans **Réponse du
+modèle**, et la ligne d'état dit comment cela s'est fini — un brouillon propre se dit prêt, un
+que la boucle n'a pas pu réparer entièrement nomme le reste, et si le document — ou quoi que ce soit contre quoi elle était vérifiée — a changé pendant que
+la réponse volait, la ligne prévient que le verdict portait sur l'état d'avant. Pendant le travail, **Générer** affiche **Arrêter** — pressez pour abandonner le tour — un tour arrêté en pleine vérification peut laisser dans la
+réponse un texte non vérifié.
 
 **Réparer** est la même boucle pointée sur votre document actuel : elle s'éveille quand le
-diagnostic trouve des erreurs, envoie le document avec les objections exactes, et applique la
-version corrigée avec le même soin.
+diagnostic trouve des erreurs, envoie le document avec les objections exactes, et la version corrigée attend dans la même réponse — sa place est le plus souvent **Remplacer le
+document**.
 
 ### La connexion, et la clé de qui
 
@@ -214,7 +215,7 @@ rien d'autre, et à aucun autre moment. Le destinataire ne change pas sans vous 
 une redirection est refusée au lieu d'être suivie, et une adresse `http` non chiffrée n'est
 acceptée que sur cette machine. La permission se lie là où se lie la clé — le schéma, l'hôte et le port — et se voit à la
 coche **Envoi autorisé** dans les réglages — décochez-la à tout moment : rien de
-nouveau ne part, et une réponse déjà en vol n'est jamais appliquée. Ce que le logiciel à l'adresse choisie fait du texte, c'est à son opérateur de le
+nouveau ne part, et une réponse déjà en vol atterrit, au plus, dans la réponse. Ce que le logiciel à l'adresse choisie fait du texte, c'est à son opérateur de le
 dire : la requête va à l'adresse de votre profil et nulle part ailleurs.
 
 ### La même boucle, sans réseau
@@ -227,7 +228,7 @@ portez-la au modèle que vous utilisez, collez la réponse dans **Réponse du mo
 le document entier avec ses lignes numérotées et nomme les endroits exacts que le moteur a
 contestés. Sa réponse est le document corrigé en entier — rapportez-la et pressez
 **Remplacer le document** ; **Insérer dans le document** laisserait le document cassé en place et poserait la copie corrigée
-à côté.
+à côté (sauf si du texte est sélectionné — l'insertion remplace alors exactement celui-ci).
 
 ## L'éditeur de groupe
 

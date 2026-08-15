@@ -158,7 +158,7 @@ const
       'Nema grešaka, ali dio probnih rendera izlazi prazan — provjerite oblike množine. Nacrt je u AI ploči, nije primijenjen.',
       'Nacrt je čist, ali uključeni fragment sadrži grešku. Popravite tu datoteku — ponovno generisanje to ne može.',
       'Ostaje %d grešaka nakon %d pokušaja popravke. Nacrt je u AI ploči, nije primijenjen.',
-      'Dokument se promijenio dok je odgovor putovao. Nacrt je u AI ploči, nije primijenjen.',
+      'Dok je odgovor putovao, promijenilo se ono prema čemu je provjeravan — dokument, vrijednosti ili postavke. Nacrt je u polju odgovora, nije primijenjen.',
       'Ovaj se profil autentifikuje, a ključ nije privezan. Unesite ključ u AI ploči.',
       'Endpoint traži drugu adresu (%s). Nije slijeđena; promijenite profil ako je to namjerno.',
       'Otvoreni http izvan ovog računara poslao bi ključ i tekst u čistom obliku. Koristite https.',
@@ -209,7 +209,8 @@ const
       'Nije umotano: #/ u odabiru ili oko njega završio bi komentar prerano.',
       'Nije umotano: samostalna |, nezatvorena zagrada ili otvoren komentar promijenili bi smisao uslova.',
       'Nije umetnuto: kursor siječe oznaku komentara napola.',
-      'Endpoint adresa se ne može pročitati — ispravite je, pa privežite ključ.'
+      'Endpoint adresa se ne može pročitati — ispravite je, pa privežite ključ.',
+      'Nacrt je provjeren i čeka u odgovoru — umetnite ili zamijenite sami.'
   );
 
 implementation
