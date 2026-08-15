@@ -3063,9 +3063,15 @@ Submission tasks (after a demoable build):
       because the Store snapshot does not follow the site.
 - [x] **No purchases in R0** — no paywall, trial, or IAP; a free offline app keeps the first
       submission out of financial policy too.
-- [ ] **AI disclosure + report path** — **R1+ only** (once live generative AI ships): disclose
-      in listing + Partner Center, and give an in-app/listing contact for reporting problematic
-      AI output. R0 ships no AI, so this obligation does not apply to the first submission.
+- [x] **AI disclosure + report path — DUE for `0.2.0.0` and carried, ticked 2026-08-15.**
+      Written as "R1+ only" when R0 shipped no AI; the next submission ships Generate and Fix,
+      so the obligation is live. Where each duty landed: the listing discloses the AI draft in
+      the description and feature bullet 18 (`store-listing.md`); the Partner Center
+      questionnaire answers are prepared in [`publish/ai-content-report.md`](publish/ai-content-report.md)
+      (policy 11.16, verification scoped to completed live-loop drafts); the report contact is
+      `support@301.st`, in the About box as plain text and in the listing's report sentence;
+      `internetClient` is declared so the storefront says so before install (N6). Confirm the
+      mailbox is live before submission — that check stays with the owner.
 - [x] **Store listing — live 2026-08-04**, <https://apps.microsoft.com/detail/9mw3ch7b530p>.
       Copy, the twenty feature bullets and the ten screenshots came from
       [`store-listing.md`](store-listing.md); the developer README was not pasted into it.
