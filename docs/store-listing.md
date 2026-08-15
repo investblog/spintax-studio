@@ -129,6 +129,39 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
+## What's new in this version (0.2.0.0)
+
+The exact text for Partner Center's "What's new in this version" field, written 2026-08-15
+against the v0.2.0.0 tag. Every line was checked against the tag's carry list before it
+went in; the match counter and the ClearType fix were both measured to be in `v0.1.0.0`
+already (`git tag --contains`) and are deliberately absent.
+
+> Spintax Studio 0.2 introduces the optional AI draft. Turn plain text or a short brief
+> into a spintax template using your own AI provider — and your own key, when the endpoint
+> needs one; requests go only to the endpoint you configure, and there is no key or server
+> of ours. Every draft is checked by the
+> real spintax engine before the app calls it ready, and it lands in the answer box, never
+> in your document: applying it with Insert or Replace is your own act, and Insert
+> respects your selection.
+>
+> Also new in this version:
+>
+> • Insert menu — ready-made #set, #def, #include and conditions at the caret; wrap a
+> selection in a choice, a shuffle, a comment or a condition.
+> • The built-in help now answers in all fourteen interface languages and reads as an
+> author's guide.
+> • The variants panel tells you how many variants your template can produce.
+> • Import GSA Search Engine Ranker templates (File > Import GSA template, once enabled
+> in the View menu; off by default), converted and verified by the real engine.
+> • .spintax is a file type: double-click a template to open it.
+> • The horizontal splitter above the bottom panels is now visible and grabbable, and the
+> Store tile is centred.
+> • Licence: GPL-3.0-or-later, stated in the app and in the executable's version info.
+> • Engine updated to v0.5.1 — plain-text rendering several times faster.
+
+"Several times faster" rather than the engine's own "6×": that number was measured on one
+scenario (64 KB of plain text) and does not generalise to every document.
+
 ## Captured screenshots
 
 **Recaptured 2026-08-15 against 0.2.0.0.** Nine frames, five light and four dark, so the
