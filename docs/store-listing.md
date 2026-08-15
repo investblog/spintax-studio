@@ -47,24 +47,24 @@ generative AI: paste the text you already have — a product page, a letter, a d
 and Generate turns it into a richly varied template, or describe what you want in a brief.
 The draft is not taken on trust: a finished draft arrives verified by the same engine that
 renders your preview, nothing replaces your document until you apply it yourself, and Fix
-sends the engine's own findings back for repair. All of it goes to the endpoint you
+sends the engine's own findings back for repair. Everything travels to the endpoint you
 configure, with your own key and account when the endpoint uses them, and it is off until
-you turn it on. Prefer to keep the network out of it?
-Copy the prepared prompt to ChatGPT, Claude or another model and paste the draft back — that
-path needs no key and no connection. Either way Studio is where you take control: preview
-what the draft actually produces, find and fix syntax problems, refine the choices, and
-generate reproducible variants locally.
+you turn it on. Prefer to keep the network out of it? Copy the prepared prompt to ChatGPT,
+Claude or another model and paste the draft back — that path needs no key and no connection.
+Either way Studio is where you take control: preview what the draft actually produces, find
+and fix syntax problems, refine the choices, and generate reproducible variants locally.
 
-The AI connection sends only what you choose to send, to the endpoint you configured, and
-nothing until you turn it on. Found an AI draft inappropriate? Write to support@301.st — the
-address is in the About window.
+The AI connection sends only what you choose to send, to the endpoint you configured.
+Found an AI draft inappropriate? Write to support@301.st — the address is in the About
+window.
 
 Learn the language while you work.
 
 Built-in help is part of the application, not a web page you have to find. Each topic explains
 the construct in plain language, shows a working example, and connects diagnostics to the
 relevant article. Select a valid example and see its result in the preview; select a repair
-and make the corrected form yours.
+and make the corrected form yours. The interface and every help page ship in fourteen
+languages.
 
 See the structure behind the text.
 
@@ -75,18 +75,19 @@ are designed for understanding a template, not just producing another random out
 Generate variants you can reproduce.
 
 Create a set of variants locally, review the generated text, and use a seed when you need the
-same result again. Export one variant per line as plain text or send a complete set to an XLSX
-workbook. The result is yours to inspect, edit and use in your own workflow.
+same result again. Export one variant per line as plain text, send a complete set to an XLSX
+workbook, or write one file per variant into a folder you choose. The result is yours to
+inspect, edit and use in your own workflow.
 
 Built for local work.
 
-Spintax Studio works offline. It requires no account, cloud service, telemetry, browser,
-Node.js, PHP or Python runtime, and no model key — the optional AI connection is off until
-you turn it on, and even then a key only if the endpoint you point it at asks for one. Your
-templates and exports stay on your computer; nothing is sent anywhere
-except what you yourself send to the AI endpoint you configured. It is a focused Windows
-editor for authors, localization workflows, SEO content teams and anyone who needs controlled
-variation instead of opaque paraphrasing.
+Spintax Studio works offline. It requires no account, no cloud service, no telemetry, and no
+browser, Node.js, PHP or Python runtime — the optional AI connection is off until you turn
+it on, and even then a key is needed only if the endpoint you point it at asks for one. Your
+templates and exports stay on your computer; nothing is sent anywhere except what you
+yourself send to the AI endpoint you configured. It is a focused Windows editor for authors,
+localizers, SEO content teams and anyone who needs controlled variation instead of opaque
+paraphrasing.
 
 Spintax Studio is open source and built around the SPINTAX language and engine family. Learn
 the language and explore the engines at spintax.net.
@@ -115,16 +116,16 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 6. Variable and include inspectors: definitions, references, session values, targets and resolution status
 7. Find and replace that counts and folds case exactly the way the engine does, safe in any language
 8. Visual group editor for alternatives and nested spintax groups
-9. Permutation tools for ordering alternatives and choosing controlled subsets
+9. Shuffles that reorder alternatives or pick controlled subsets, with separators of your choice
 10. Plural forms and language-aware content patterns for reusable templates
 11. Insert menu that wraps a selection into a choice, shuffle or comment and drops in ready-made constructs
 12. Deterministic variant generation with seed support for repeatable results
 13. Variant list for reviewing generated outputs before export
-14. Export as plain text with one variant per line, or as an XLSX workbook with XML-safe UTF-8 content
+14. Export as plain text (one variant per line), as an XLSX workbook with XML-safe UTF-8 content, or as one file per variant
 15. Light and dark themes for a comfortable editing workspace
 16. Multilingual interface with 14 available UI languages
 17. Offline by default: no account, no telemetry, and no browser, Node.js, PHP or Python runtime — the optional AI link uses your own provider, and your own key when one is needed
-18. Local-first workflow for SEO content, localization workflows and reusable product copy
+18. Optional AI draft: turn your own text or a brief into a template — finished drafts arrive checked by the real engine, and applying them is yours
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
