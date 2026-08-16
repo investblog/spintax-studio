@@ -77,8 +77,15 @@ nothing here relicenses it.
 
 ### What `v0.2.0.0` carries — SUBMITTED 2026-08-15, LIVE the same day
 
-**Every product change below shipped in the package** (the republished WEB copies —
-privacy pages — were not measured this session and are not claimed here). Tag `v0.2.0.0`
+**Every product change below shipped in the package.** The web privacy copy caught up on
+2026-08-16: the site at spintax.studio moved to a git-deployed pipeline (GitHub Pages
+builds `dist/` from the spintax.studio repo now) and serves this repo's
+`docs/publish/privacy.html` — the copy in the site repo is byte-identical (diffed at
+copy time), and the live page was probed on its three distinguishing markers
+("Effective 14 August 2026", "two links", no "one external action"). The Store's own privacy copy had carried the
+14-August text since submission (measured off the listing's `PrivacyUri` CDN snapshot).
+The long-standing "Owner republishes" wait in item 5 below is closed by that deploy;
+future republishes are a commit to the site repo, not a hand-upload. Tag `v0.2.0.0`
 → `8b977db`, cut 2026-08-15 on the owner's
 word; formal WACK against the tag's CI artefact passed the same day
 ([`release-validation.md`](release-validation.md)); the owner submitted through Partner
@@ -104,8 +111,9 @@ submission, and on 2026-08-15 that submission happened; this block and the numbe
 below are the pre-submission history of what accumulated between the two releases. Sentences
 inside them that say a published copy "is wrong today" or that something "waits for the next
 release" describe the state before 2026-08-15 and are historical now. Only the measured
-outcomes are claimed — `store-listing.md` records the listing read-back; the republished
-privacy copies were not among this session's measurements.
+outcomes are claimed — `store-listing.md` records the listing read-back; the web privacy
+republish, unmeasured when this block was first written, was shipped and measured on
+2026-08-16 (see the section heading above).
 
 1. **`0e512d3` — the horizontal splitter**, visible and grabbable; it was five pixels and sank
    into the page frame. Landed ten hours after the tag, so the build on users' machines does
