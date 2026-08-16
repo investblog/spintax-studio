@@ -6,10 +6,11 @@ product: spintax-studio
 
 # Microsoft Store listing
 
-**Live since 2026-08-04:** <https://apps.microsoft.com/detail/9mw3ch7b530p>. This file is the
-copy for the NEXT submission; what the live page actually carries is recorded at the end, and
-the differences travel with the next Partner Center visit (`v0.2.0.0`)
-([`publish/store-listing-edits.md`](publish/store-listing-edits.md)).
+**Live since 2026-08-04; `0.2.0.0` live since 2026-08-15** (storefront `LastUpdateDateUtc`
+`2026-08-15T22:51:00Z`, read back 2026-08-16): <https://apps.microsoft.com/detail/9mw3ch7b530p>.
+This file is the copy for the NEXT submission; the measured read-back of the live page is
+recorded at the end. ([`publish/store-listing-edits.md`](publish/store-listing-edits.md) is
+dated history of the pre-`0.2.0.0` edit queue.)
 
 Updated 2026-08-13 for the AI slice: the description now discloses the live generative AI
 feature and names the report channel (Store policy 11.16), because the next submitted build
@@ -94,9 +95,9 @@ the language and explore the engines at spintax.net.
 
 ## Product features
 
-Partner Center displays these as bullets. The GSA import bullet arrived on 2026-08-06 and is
-**not on the live page yet** — it goes up with the same Partner Center visit as the licence
-corrections below. Enter each line as a separate feature; do not include the line numbers or
+Partner Center displays these as bullets. The GSA import bullet and the licence correction
+went live with the `0.2.0.0` visit on 2026-08-15 (measured: positions 20 and 19 on the
+storefront). Enter each line as a separate feature; do not include the line numbers or
 bullet characters in the Store form.
 
 **Microsoft allows twenty features, not more, and 200 characters each** — documented on
@@ -161,6 +162,16 @@ already (`git tag --contains`) and are deliberately absent.
 
 "Several times faster" rather than the engine's own "6×": that number was measured on one
 scenario (64 KB of plain text) and does not generalise to every document.
+
+**What the live page carries in this field is the PRE-review draft** — measured off the
+storefront `Notes` on 2026-08-16: the submission went in before the four Codex corrections
+above landed, so the live text says "and key" without the when-needed qualifier, "any
+construct", "View > GSA import" as the path, and locates the splitter "between the panes".
+All four are listing inaccuracies, not shipped-code defects — two of them do misdescribe
+the product ("any construct" overstates the Insert menu; "View > GSA import" is the enable
+switch, not the import path) — and a listing edit is a review cycle (owner's batching rule,
+2026-08-04), so they ride with the next visit. The block above
+is the corrected copy for that visit.
 
 ## Captured screenshots
 
@@ -269,6 +280,16 @@ The application has no sign-in, license activation, telemetry, analytics, or bac
 
 ## What the live listing actually carries
 
+**Re-read 2026-08-16, after `0.2.0.0` went live** (`LastUpdateDateUtc 2026-08-15T22:51:00Z`).
+What was actually measured, stated as measured: four description probes (the languages
+sentence, the third export path, `localizers`, `support@301.st`) are all present — markers
+of the proofread text, not a byte comparison of the whole; the feature count is twenty with
+GPL-3.0-or-later at position 19 and the GSA bullet at 20 — the other eighteen were not read
+individually; and the What's-new field WAS byte-compared, which is how the pre-review draft
+was identified. The licence bullet correction that waited since R0 is therefore on the page,
+and the rebuilt executable ships the corrected `LegalCopyright`. The paragraphs below record the
+2026-08-04 read-back and stand as history of what the R0 page carried until then:
+
 Read back from the storefront on 2026-08-04, not from the submission form — the page is the
 only place these values can be confirmed. Everything below matches the draft unless it is
 marked otherwise:
@@ -298,5 +319,5 @@ fixed in the tree and needs a rebuild.
 **None of it is submitted on its own.** Owner's decision, 2026-08-04: the two listing fields need
 no new package, but changing them is still a review cycle, and a review cycle for two lines of
 text is not worth taking. They ride with the next submission (`v0.2.0.0`) together with the rebuilt executable — see
-*What `v0.1.1.0` carries* in [`TODO.md`](TODO.md). Until then the live page stays as it is on
+*What `v0.2.0.0` carries* in [`TODO.md`](TODO.md). Until then the live page stays as it is on
 purpose.

@@ -75,17 +75,37 @@ do not** — the phrase "General Public License" appears in no file of that comp
 linked in for the HTML preview. The engine submodule stays MIT under its own repository;
 nothing here relicenses it.
 
-### What `v0.2.0.0` carries (nothing is submitted before it)
+### What `v0.2.0.0` carries — SUBMITTED 2026-08-15, LIVE the same day
+
+**Every product change below shipped in the package** (the republished WEB copies —
+privacy pages — were not measured this session and are not claimed here). Tag `v0.2.0.0`
+→ `8b977db`, cut 2026-08-15 on the owner's
+word; formal WACK against the tag's CI artefact passed the same day
+([`release-validation.md`](release-validation.md)); the owner submitted through Partner
+Center and certification passed within hours — storefront `LastUpdateDateUtc`
+`2026-08-15T22:51:00Z`. Read back 2026-08-16, as measured: four description markers
+present, twenty features with GPL at 19 and GSA at 20 (the rest not read individually),
+and the What's-new field byte-compared (`store-listing.md` records what that comparison
+found). The section heading used to say "nothing is submitted before it"; that condition
+is spent.
+
+**One thing rides to the NEXT listing visit:** the live What's-new field carries the
+pre-review draft — four wordings ("and key" unqualified, "any construct",
+"View > GSA import" as the path, the splitter "between the panes") were corrected in
+`store-listing.md` after the owner had already pasted the field. Listing inaccuracies,
+not shipped-code defects; batched per the 2026-08-04 rule.
 
 *(Drafted as `v0.1.1.0`; the owner named the next version `0.2.0.0` on 2026-08-14 — «пусть
 будет гордый 0.2» — and the `v0.1.1.0` tag is spent: validated 2026-08-08, never submitted.
 `VERSION`, the lpi resource and `SpxAbout` moved to 0.2.0.0 the same day.)*
 
-**Owner's decision, 2026-08-04: no separate Store update.** Two of these are listing-only edits
-that need no new package, but a listing edit is still a review cycle — and spending one on two
-lines of text is not worth it. Everything below goes in one submission, whenever the next
-version is cut. Until then the published `0.1.0.0` and its live listing stay as they are, which
-is a deliberate state and not a backlog of things anyone forgot.
+**Owner's decision, 2026-08-04: no separate Store update** — everything below waited for one
+submission, and on 2026-08-15 that submission happened; this block and the numbered items
+below are the pre-submission history of what accumulated between the two releases. Sentences
+inside them that say a published copy "is wrong today" or that something "waits for the next
+release" describe the state before 2026-08-15 and are historical now. Only the measured
+outcomes are claimed — `store-listing.md` records the listing read-back; the republished
+privacy copies were not among this session's measurements.
 
 1. **`0e512d3` — the horizontal splitter**, visible and grabbable; it was five pixels and sank
    into the page frame. Landed ten hours after the tag, so the build on users' machines does

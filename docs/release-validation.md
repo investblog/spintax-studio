@@ -6,7 +6,15 @@ tree moved on), `v0.1.0.0` (R0) on 2026-08-03 and published on 2026-08-04.
 
 ---
 
-# v0.2.0.0 — validated 2026-08-15
+# v0.2.0.0 — validated 2026-08-15, SUBMITTED and LIVE the same day
+
+**Published:** the owner submitted the `.msixupload` through Partner Center on 2026-08-15
+and certification passed within hours — storefront `LastUpdateDateUtc`
+`2026-08-15T22:51:00Z`, read back on 2026-08-16: four description markers present, twenty
+features with GPL at 19 and GSA at 20, the What's-new field byte-compared
+(`store-listing.md` records the read-back in full). (The first upload attempt was a
+stale local `0.1.1.0` pre-run artefact answering to the same filename — Partner Center
+refused it by full name, and the fix was the tag's own artefact from `build/wack-0.2.0.0/`.)
 
 The formal record for the second submission: the first package whose window can make an
 outgoing connection. Run against the **exact** artefact the tag produced, downloaded from
