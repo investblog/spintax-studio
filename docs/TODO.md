@@ -2212,6 +2212,41 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       looked exactly like the fix not working. The full account is in
       [`release-validation.md`](release-validation.md).
 
+## Engine `v0.8.0` is out (2026-08-19) — not taken yet
+
+- [ ] **Bump `v0.7.0` → `v0.8.0`: one commit, and it reverses a behaviour our help describes in
+      two languages.** `fix(validate): one circular-reference diagnostic per NAME, not per PATH`
+      — engine issue #2, adopting spintax-js#59. The `interface` section is **byte-identical**
+      to `v0.7.0` (diffed, not read off the notes), so it is drop-in by contract and, exactly as
+      on 2026-08-18, that is where the danger starts rather than ends.
+
+      **It is a denial-of-service fix, and Studio is in range.** Per-path emission is exponential
+      in the depth of a converging graph. The engine's own measurement on the corpus fixture
+      `validate/cycle-diamond-terminates` — 507 bytes, twenty definitions feeding a two-cycle:
+
+      ```
+      before   2 097 152 diagnostics in 7 949 ms
+      after           22 diagnostics in about 1 ms
+      ```
+
+      Studio runs `SpValidate` on the engine worker behind the editor's debounce, on a document
+      the reader is typing into. A 507-byte template costing eight seconds and two million rows
+      is a frozen panel, and it is reachable by writing definitions, not by writing an attack.
+      **Not measured here yet** — that is the first thing to do, because the number above is the
+      engine's and this project's rule is to reproduce before believing.
+
+      **And it makes a paragraph in `docs/help/{en,ru}/diagnostics.md` false.** Both say the
+      panel draws a row for *each reference that closes the circle*, with a worked count:
+      `#set %x% = %y% %y%` against `#set %y% = %x%` is *three errors, two on the first line*.
+      Per NAME that is two. The claim entered the help at the `v0.5.1` bump, when the engine
+      moved the other way; this reverses it. `TestHelpExamples` will NOT catch it — it compares
+      RENDERED output byte for byte, and this is a claim about diagnostic COUNTS in prose, which
+      is the same blind spot that let the `plural.arity` sentence go stale.
+
+      Also to re-check when it is taken: `SpxPanelRows` sorts stably and deduplicates nothing,
+      which was right for per-path and is worth re-reading for per-name; and whether any Studio
+      test pins the old count.
+
 ## Engine bumped to `v0.7.0` (2026-08-18)
 
 - [x] **Pinned, and every mirrored rule re-measured rather than assumed.** The `interface`
