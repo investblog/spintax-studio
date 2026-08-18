@@ -7217,7 +7217,7 @@ begin
        only ever asked the counter about templates the counter's author had in mind. ---- *)
 
     { The permutation's SIZE RANGE is four asymmetric branches in the engine
-      (`Spintax.pas:1830-1837`), not one rule with defaults. Only-maxsize starts at ONE;
+      (`Spintax.pas/PermMin`), not one rule with defaults. Only-maxsize starts at ONE;
       minsize=0 is a value and not an absence; and a contradictory pair WIDENS. }
     CheckCounted('perm-maxsize-only', '[<maxsize=2>aa|bb|cc]');
     CheckCounted('perm-minsize-zero', '[<minsize=0>aa|bb|cc]');
@@ -7260,7 +7260,7 @@ begin
     (* ---- A SESSION VALUE IS A TEMPLATE, AND IT OUTRANKS THE DOCUMENT ----
 
        Both measured against the engine, which overlays the host's table on top of the `#set`
-       definitions (`Spintax.pas:3145-3151`). The counter used to skip runtime variables
+       definitions (`Spintax.pas/RenderCompiled`). The counter used to skip runtime variables
        altogether, so a reader who typed `{aa|bb}` into the Variables panel was told the
        template had half the variants it has. *)
     vars.AddOrSetValue('x', '{aa|bb}');
@@ -7287,7 +7287,7 @@ begin
     (* ---- A `#def` IS ONE DRAW FOR THE DOCUMENT, wherever it is written ----
 
        The engine rolls every definition once, before the body, dependencies first, and
-       whether the body uses it or not (`Spintax.pas:3162-3184`). So it multiplies the
+       whether the body uses it or not (`Spintax.pas/OrderDefinitions`). So it multiplies the
        document once and NOT the option it happens to sit in. These two cannot be enumerated
        against the engine, because they are the case where ways and distinct texts genuinely
        differ: the second makes three texts and the first two, while both have four draws.
@@ -7304,7 +7304,7 @@ begin
     (* ---- A REDEFINED MACRO IS THE LAST ONE, and a `#def` beats a `#set` ----
 
        `ExtractDirectives` keeps the two kinds in separate maps, each last-wins
-       (`Spintax.pas:1227`), and the render lays the definitions over the sets. Reading the
+       (`Spintax.pas/ExtractDirectives`), and the render lays the definitions over the sets. Reading the
        FIRST match out of a flat list answered 2 where the engine makes 3 -- found here, not
        by review, while replacing that list with the engine's own two layers. Redefining a
        variable is the first question a reader of this project ever asked, so it is not an
@@ -7341,7 +7341,7 @@ begin
        Two of the four broke the FLOOR, which is the single promise the panel makes. ---- *)
 
     { An empty permutation option is not an option: the engine drops any part that trims empty
-      (`Spintax.pas:1589-1596`), so a trailing `|` left while editing a list cost a factor of
+      (`Spintax.pas/PhpTrim`), so a trailing `|` left while editing a list cost a factor of
       three -- reported as exact. An ENUMERATION keeps them, and the pair is what holds the
       difference. }
 
@@ -10195,6 +10195,18 @@ begin
         ShapeOf('#set %c1% = %c2%' + LineEnding + '#set %c2% = %c1%' + LineEnding +
                 '#set %s% = %s% %c1%' + LineEnding + '%s%', 'variable.self-reference'),
         'L3=1');
+
+  { TWO ROWS OF ONE CODE ON ONE EDITOR LINE, which every case above is incapable of producing
+    and which the comment at the top of this test claimed to cover. Directives split on five
+    terminators and Line/Column count the editor's three (the charter's "two line models"), so
+    a cycle written across U+2028 is two directives that the panel puts on line 1 at columns 1
+    and 16 -- measured. Without this, `SpxPanelRows` could start deduplicating on (Code, Line)
+    and all seven checks above would stay green, because every one of them expects `=1`.
+    Raised by review, which noticed the run-counting branch of ShapeOf was dead at the pin. }
+  Check('engine/circular/two definitions on one editor line are two rows',
+        ShapeOf('#set %x% = %y%' + #$E2#$80#$A8 + '#set %y% = %x%' + LineEnding + '%x%',
+                'variable.circular-reference'),
+        'L1=2');
 end;
 
 (* ▁▁▁ THE COUNTER TERMINATES ON A FAN OUT, WHICH NEITHER OF ITS GUARDS BOUNDED ▁▁▁
@@ -10296,7 +10308,7 @@ end;
    plural head gate, the whitespace class -- and each of those comments cited the engine by
    FILE AND LINE. Line numbers were the wrong currency. At the v0.7.0 bump seventeen of the
    eighteen citations pointed somewhere else, which is expected; what was not expected is that
-   three were ALREADY wrong at the pin they were written against. `Spintax.pas:1830-1837` was
+   three were ALREADY wrong at the pin they were written against. One citing a line range was
    offered as the four asymmetric permutation branches, and at v0.5.1 those lines were the
    plural fallback -- the branches were sixty lines further down. It had drifted at an earlier
    bump and nothing noticed, because nothing compares a citation to the engine.
@@ -10414,11 +10426,11 @@ end;
 procedure TestEngineCitations;
 const ENGINE_PATH = 'engine/src/Spintax.pas';
 var
-  dirs: array[0..1] of string;
+  dirs: array[0..2] of string;
   rec: TSearchRec;
   eng, body: TStringList;
   d, i, at, stop: Integer;
-  src_, txt, tail, name_, missing, seen, numbered, colonForm: string;
+  src_, txt, tail, name_, missing, seen, numbered, colonForm, pat: string;
   at2: Integer;
 begin
   if not FileExists(ENGINE_PATH) then
@@ -10436,18 +10448,30 @@ begin
     src_ := StripPascalComments(eng.Text);
     dirs[0] := 'src';
     dirs[1] := 'gui';
-    for d := Low(dirs) to High(dirs) do
+    { AND `tests/`, WHICH THIS GATE COULD NOT SEE UNTIL 2026-08-19. Six `Spintax.pas/` citations
+      live in this very file -- the `MarkCyclic` one was added by the same change that added the
+      gate -- and every one of them was invisible, along with the refusal of the banned
+      file-and-line form. Proven by review with a bogus citation: dropped into `src/` it fails
+      the gate, dropped into `tests/` it passes. A checker that does not read the file it is
+      written in is the shape this project keeps paying for.
+
+      AND `.dpr` AS WELL AS `.pas`, because the file those six citations are in is the test
+      PROGRAM: adding the directory alone would have looked like a fix and changed nothing,
+      which is how the first attempt at this went. }
+    dirs[2] := 'tests';
+    for d := Low(dirs) * 2 to High(dirs) * 2 + 1 do
     begin
-      if FindFirst(dirs[d] + '/*.pas', faAnyFile, rec) <> 0 then Continue;
+      if (d mod 2) = 0 then pat := '/*.pas' else pat := '/*.dpr';
+      if FindFirst(dirs[d div 2] + pat, faAnyFile, rec) <> 0 then Continue;
       try
         repeat
           if (rec.Attr and faDirectory) <> 0 then Continue;
           body := TStringList.Create;
           try
-            body.LoadFromFile(dirs[d] + '/' + rec.Name);
+            body.LoadFromFile(dirs[d div 2] + '/' + rec.Name);
             txt := body.Text;
             { the form this whole convention replaced, refused outright rather than renumbered }
-            if Pos('Spintax.pas:', txt) > 0 then
+            if Pos('Spintax.pas' + ':', txt) > 0 then
               colonForm := colonForm + rec.Name + ' ';
             i := 1;
             while True do
@@ -10495,9 +10519,9 @@ begin
           Trim(missing), '');
 
     { AND NO RAW LINE NUMBER SURVIVES, IN EITHER SHAPE. The rewrite that introduced the name
-      form matched `Spintax.pas:NNNN` and therefore walked straight past
-      `(Spintax.pas/ExpandVarsOnly, 1753, 1768)`, where the numbers trailed the name with no
-      file prefix of their own. The first version of THIS check then only looked at citations
+      form matched only the file-and-line shape and therefore walked straight past a citation
+      that named a routine and then trailed two line numbers after it, with no file prefix of
+      their own. The first version of THIS check then only looked at citations
       that begin `Spintax.pas/`, so the original colon form could simply be written again and
       the assertion would still pass -- review's point, and the same shape as the defect it was
       written for. Both are refused now: a colon citation anywhere, and three or more digits

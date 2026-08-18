@@ -481,9 +481,13 @@ republish, unmeasured when this block was first written, was shipped and measure
    `set.malformed` / `def.malformed` after a VT, NUL or lone CR are gone; a name defined twice
    now resolves to the LAST definition, which moves `variable.self-reference`,
    `variable.circular-reference` and `plural.count-macro` in both directions; and a circular
-   reference is reported once per REFERENCE that closes the circle rather than once per
-   definition — `#set %x% = %y% %y%` against `#set %y% = %x%` is three errors, two of them on
-   the first line, anchored on the surviving definition. **Studio's panel was already right**:
+   reference WAS reported once per REFERENCE that closes the circle rather than once per
+   definition — `#set %x% = %y% %y%` against `#set %y% = %x%` gave three errors, two of them on
+   the first line, anchored on the surviving definition. **Past tense since 2026-08-19:**
+   `v0.8.0` reversed it again, to one row per NAME that can reach the circle, so that example
+   is two rows now. Left here as the `v0.7.0` record rather than rewritten, but not left in the
+   present tense — this paragraph is the one a translator greps, and it was still asserting the
+   old shape a day after the shape changed. **Studio's panel was already right**:
    `SpxPanelRows` sorts stably and deduplicates nothing, so two findings on one character stay
    two rows. What was wrong was the help, which said in both languages that the panel draws a
    row *for each definition in the circle*. Measured, then rewritten — not adjusted to match the
@@ -2350,6 +2354,31 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       person writes, which is why it goes here rather than into the fix above. Raised by the
       Codex gate at the `v0.7.0` bump.
 
+- [ ] **`SpxPanelRows` sorts by insertion, and the "1008 ms for two million rows" figure is a
+      property of that fixture rather than of the panel.** `src/SpxStudio.pas:1326-1340` is an
+      insertion sort — linear only while the engine's rows already arrive in position order,
+      which the cycle-diamond's happen to. Measured through `SpxHealthReport` + `SpxPanelRows`
+      at the current pin, by review:
+
+      ```
+      16 000 rows, one ascending run     16 ms
+       8 000 rows, two interleaved runs  297 ms
+      16 000 rows, two interleaved runs  1 250 ms
+      32 000 rows, descending anchors    13 078 ms
+      ```
+
+      Doubling the rows roughly quadruples the time, and two interleaved runs is the ordinary
+      case rather than a corner: the engine emits per check, each ordered within itself. So the
+      `v0.7.0` number recorded above — two million rows in a further second — held only because
+      that input arrives pre-sorted; in any other order it would not have finished.
+
+      **Pre-existing and not a regression from the `v0.8.0` bump**, and it needs hundreds of KB
+      rather than 507 bytes. Recorded because the bump's own headline reads as "the freeze is
+      gone", and half of what remains is in Studio's own file — in the function that change
+      declared re-read. The engine side has a matching shape (redefining names out of order
+      feeds `AddDiagAtOrdered` descending offsets: 363 576 bytes ascending 187 ms, the same
+      size descending 15 203 ms) which the bump improved by about 14 %, not by orders.
+
 - [ ] **The group editor reads a plural head more strictly than the engine does, and the bump
       made that visible.** `PluralHeadLength` (`src/SpxTokens.pas`) stops its search for the
       `:` at the first `|` or `}`; the engine's gate is `'plural '` at the front and a `:`
@@ -2383,13 +2412,25 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       gives two, one per line. Corrected in `en` and `ru`; `de fr es it pt nl tr uk be sr hr bs`
       are unchanged.
 
-      One stale sentence per document was a footnote. Two is a **translation pass**, and it is
-      worth planning as one rather than patching a sentence at a time each time the engine
-      moves: both stale claims are in the SAME article of the same document, both are counts
-      that came from the engine, and a third bump will add a third. Whoever takes it should
-      measure the claims afresh in each language rather than translating the English — the
-      abbreviation-shielding defect on 2026-08-07 is what happens when a measured English
-      sentence is carried across.
+      **THREE stale claims each, in THREE different sections — and the record said two in one
+      until a review counted them.** Measured per document; German is the sample:
+
+      * `docs/help/de/diagnostics.md:241`, under `## Variablen` — the worked count;
+      * `docs/help/de/diagnostics.md:571`, under `## Häufig gefragt` — **the FAQ answer**, which
+        is worded differently and carries no `%y% %y%` example at all;
+      * `docs/help/de/diagnostics.md:361`, under `## Zahlformen` — the `plural.arity` sentence.
+
+      **So grep is not enough, and the obvious grep is the trap.** Hunting for "three errors,
+      two of them on the first line" finds the article in twelve languages and leaves the FAQ
+      wrong in twelve languages — the `en`/`ru` correction in this very change needed TWO hunks
+      per document for exactly that reason, and the commit message still says only those two
+      carry a FAQ, which is false. The FAQ answer's shape is "a row for every reference that
+      closes it — two places to look at, sometimes three".
+
+      Three stale claims in three sections is a **translation pass**, not a patch: whoever takes
+      it should measure the claims afresh in each language rather than translating the English,
+      because the abbreviation-shielding defect on 2026-08-07 is what happens when a measured
+      English sentence is carried across.
 
 - [ ] **Twelve help documents still carry a sentence the `v0.7.0` bump made false.** `plural.arity` in
       every language ends with a paragraph claiming the validator "counts the forms in the text
@@ -3432,7 +3473,7 @@ Decisions owed **before the relevant submission** (not switchable later):
 - [x] **README line 13 disagrees with README's own table, and with the runner.** At `v0.7.0`
       the opening paragraph says the shared corpus is "**231 of its 235 cases pass**", while the
       conformance table sums to 253 and the totals line says `PASS=253 FAIL=0 SKIP=4` over 257.
-      Run here against `W:\Projects\spintax-js\packages\conformanceixtures`: **253 / 0 / 4**,
+      Run here against `W:\Projects\spintax-js\packages\conformance\fixtures`: **253 / 0 / 4**,
       so the table is right and line 13 was incremented by one when the corpus grew by 23.
       Cosmetic, but it is the first number a reader of that README meets.
 
