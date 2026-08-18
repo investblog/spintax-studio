@@ -3327,7 +3327,13 @@ Decisions owed **before the relevant submission** (not switchable later):
       transliteration is machine-made — the draft still needs a reader of Serbian, which its own
       header says.
 
-      Rides with the next release, not alone: a listing edit is a review cycle either way.
+      **Submitted on its own on 2026-08-18, package unchanged** — the batching rule was set
+      aside for it deliberately. No new package means no new version and no download for anyone
+      already on `0.2.1.0`; `SupportedLanguages` comes from the manifest and must NOT move.
+      Verification is per LOCALE off the storefront and cache-busted, with the pre-submission
+      baseline and the two shapes of success and failure written out in
+      [`store-listing.md`](store-listing.md). Open until that read comes back Latin for
+      `sr-Latn-RS` and still Cyrillic for `sr-Cyrl-RS`.
 
 - [ ] **Nothing gates a draft's SCRIPT against the language it is filed under.** The checker
       compares bullet counts, the licence name and the language count; if `sr.md` had actually

@@ -358,11 +358,40 @@ Measured against the caps IN THE TARGET SCRIPT, because digraphs make Latin long
 description 111 → 111, description 3315 → 3353 of 10000, longest feature 154 → 156 of 200, worst
 single growth +8 characters. No field is near a limit.
 
-**The ONE thing to check in the form.** Read the two Serbian language labels in Partner Center
-before pasting. Which code sits in the main slot and which in the additional one is a fact about
-the form, and nothing here has measured it; the table above is only correct if the main slot is
-the Serbian (Latin) row. It needs a listing resubmission either way, so it rides with the next
-release rather than alone (owner's batching rule).
+**SUBMITTED ON ITS OWN, 2026-08-18 — a listing-only submission with the package unchanged.**
+The owner's batching rule ("a review cycle for two lines of text is not worth taking") was set
+aside deliberately for this one, and the shape is worth writing down because it is the first of
+its kind here: **no new package, so no new version and no download for anyone already on
+`0.2.1.0`.** The storefront's `SupportedLanguages` line is built from the manifest and must
+therefore NOT move; only the description text and `LastUpdateDateUtc` change.
+
+**How to verify it, and the baseline it is being verified against.** The storefront serves the
+listing per LOCALE, so ask it for each Serbian one directly — cache-busted, because this API
+sits behind a CDN and a plain request served an hour-old answer during the `0.2.1.0` release:
+
+```
+curl -H "Cache-Control: no-cache" "https://storeedgefd.dsx.mp.microsoft.com/v9.0/products/9MW3CH7B530P?market=RS&locale=sr-Latn-RS&deviceFamily=Windows.Desktop&_=$RANDOM"
+```
+
+Read 2026-08-18 before certification, `LastUpdateDateUtc 2026-08-18T14:46:05Z`, both Serbian
+locales returning the SAME Cyrillic text — which is the state the submission exists to end:
+
+```
+sr-Latn-RS   Пишите, проверавајте, гледајте, генеришите и извозите spintax предлошке …
+sr-Cyrl-RS   Пишите, проверавајте, гледајте, генеришите и извозите spintax предлошке …
+```
+
+Certified and correct looks like this instead, matching `marketing/store/` byte for byte:
+
+```
+sr-Latn-RS   Pišite, proveravajte, gledajte, generišite i izvozite spintax predloške …
+sr-Cyrl-RS   Пишите, проверавајте, гледајте, генеришите и извозите spintax предлошке …
+SupportedLanguages still carries "Serbian (Cyrillic)" and nothing else changed
+```
+
+If BOTH locales come back Latin, the wrong slot was filled and the Cyrillic listing is gone —
+that is the failure mode to look for, and it is why the two are read separately rather than
+one being assumed from the other.
 
 Terminology for whoever reviews it: take it from `docs/help/sr/`, the way the other thirteen
 drafts do — a different word for *engine* reads as a different product to a reader who clicks
