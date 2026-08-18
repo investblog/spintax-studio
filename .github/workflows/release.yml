@@ -89,6 +89,19 @@ jobs:
           ./tests/studio_tests
           ./tests/studio_tests_checked
 
+      # THE TAG IS WHAT SHIPS, so this question has to be asked HERE and not only in CI: `ci.yml`
+      # runs on branches and pull requests, never on tags, and 0.2.0.0 went out through this
+      # workflow with a manifest Windows would not register. A gate that does not run on the
+      # artefact users install is not a gate on the product. Ahead of make-msix.py on purpose:
+      # a package that cannot be installed should not reach a draft release.
+      - name: Windows will register the declared languages
+        shell: pwsh
+        run: |
+          New-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' -Force | Out-Null
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' `
+            -Name AllowDevelopmentWithoutDevLicense -Value 1 -Type DWord
+          ./scripts/check-manifest-languages.ps1
+
       - name: Build the MSIX upload package
         shell: bash
         run: |

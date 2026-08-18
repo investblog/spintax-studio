@@ -106,7 +106,7 @@ const
 (* ▁▁▁ THE ONE THING A LINE CANNOT ANSWER FOR ITSELF ▁▁▁
 
    `/#` opens a comment only when a `#/` comes after it -- ANYWHERE after it, to the end of
-   the document. Engine `v0.5.0` made that explicit (`Spintax.pas:955-975`): an opener with
+   the document. Engine `v0.5.0` made that explicit (`Spintax.pas/StripComments`): an opener with
    no closer is not a match, the `/` stays the ordinary character it is, and scanning resumes
    at the next position the way a regex retries. Before that the engine swallowed the rest of
    the document, and this scanner still implemented THAT world.
@@ -322,7 +322,7 @@ function LastOf(const Line, What: string): Integer; forward;
   Line-local because the rule is: PermConfigLength wants the config's `>` on the same line.
 
   AND BLANKS BEFORE THE `<` ARE PART OF IT. The engine left-trims a permutation's first part
-  before asking whether it opens with `<` (Spintax.pas:1258), the tokenizer does the same
+  before asking whether it opens with `<` (Spintax.pas/PhpLtrim), the tokenizer does the same
   (SpxScanLine, and its comment says the space may not disable the colouring), so a walk that
   required the `<` to sit against the `[` left the whole defect alive behind one space:
   measured on `[ <sep="{">a|b]`, the opener matched nothing and the inner permutation took the

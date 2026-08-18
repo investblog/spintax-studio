@@ -341,8 +341,9 @@ That is why the example at the top of this article defines `%n%` first. Without 
 would be empty whatever the number of forms, and would demonstrate nothing about arity at all.
 
 The panel and the output are answering different questions here, and that is not a contradiction:
-the row is put there by the **validator**, which counts the forms in the text and has no interest
-in the count; the emptiness comes from the **render**, which has an order of its own. Give the
+the row is put there by the **validator**, which counts the forms the render will actually split
+— a definition standing in for them is resolved first — while the emptiness comes from the
+**render**, which has an order of its own. Give the
 count a number, as the first example does, and you see what arity actually does.
 
 ### `plural.count-macro` — the count comes from `#set`, and that rerolls on every reference

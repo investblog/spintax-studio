@@ -131,6 +131,19 @@ jobs:
         with:
           submodules: recursive
 
+      # THE GATE BETWEEN THE MANIFEST AND THE DEPLOYMENT STACK. `sr` shipped in 0.2.0.0 and
+      # made the package impossible to install; every gate the project had was green, because
+      # none of them asked Windows. This one does, and it is on the windows leg because it is
+      # the only leg that can answer. Developer Mode is enabled here rather than skipped: the
+      # script fails without it on purpose.
+      - name: Windows will register the declared languages
+        shell: pwsh
+        run: |
+          New-Item -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' -Force | Out-Null
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' `
+            -Name AllowDevelopmentWithoutDevLicense -Value 1 -Type DWord
+          ./scripts/check-manifest-languages.ps1
+
       - name: Install Lazarus
         run: choco install lazarus -y --no-progress
 

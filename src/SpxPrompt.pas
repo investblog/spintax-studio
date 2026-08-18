@@ -45,7 +45,7 @@
  *    port that drops it -- its input carries a `variable.undefined` warning that must not reach
  *    the prompt.
  *
- * WHY THE MESSAGES COME FROM OUTSIDE AT ALL. `TSpDiag` has no `Message` field (Spintax.pas:180)
+ * WHY THE MESSAGES COME FROM OUTSIDE AT ALL. `TSpDiag` has no `Message` field (Spintax.pas/TSpDiag)
  * -- this engine reports a code and a span and leaves the wording to its host, and Studio's host
  * wording is `SpxDiagText`, which is deliberately phrased differently and exists in fourteen
  * languages. The JS `Diagnostic` carries an English `message`. So the caller supplies the text

@@ -103,7 +103,7 @@ type
     Text: string;
     (* DOES THIS TOKEN PUT ANYTHING IN THE OPTION IT SITS IN? A permutation option whose text
        trims empty is DROPPED by the engine, never rendered and never counted
-       (`Spintax.pas:1589-1596`: `trimmed := PhpTrim(part); if trimmed <> '' then ... Add`).
+       (`Spintax.pas/PhpTrim`: `trimmed := PhpTrim(part); if trimmed <> '' then ... Add`).
        So `[a||b]` is two options and two texts, where this walk counted three and reported
        six -- as exact.
 
@@ -160,7 +160,7 @@ type
     Current: Int64;
     MinSize, MaxSize: Integer;   { permutation subset limits; -1 = unset, as the engine }
     (* A CLOSER OF THE WRONG KIND HAS BEEN SEEN INSIDE THIS FRAME, so the engine has stopped
-       splitting its options and so must this walk. `SplitTopLevel` (`Spintax.pas:644-666`)
+       splitting its options and so must this walk. `SplitTopLevel` (`Spintax.pas/SplitTopLevel`)
        decrements the brace and bracket counters UNCONDITIONALLY -- they may go negative --
        and splits on `|` only while BOTH are zero. So a `]` inside `{...}` takes the bracket
        counter to -1 and every `|` after it stops being a separator. *)
@@ -226,7 +226,7 @@ end;
 
    ▁▁▁ THE RANGE IS THE ENGINE'S, COPIED FROM ITS SOURCE AND NOT INFERRED ▁▁▁
 
-   `Spintax.pas:1830-1837`, and the four branches are NOT symmetric -- which is exactly what a
+   `Spintax.pas/PermMin`, and the four branches are NOT symmetric -- which is exactly what a
    reasonable-looking guess gets wrong:
 
      both given   -> min, max as written
@@ -315,7 +315,7 @@ end;
    really there. Otherwise the whole thing is the separator and the permutation prints every
    option. Two engine functions, and this file used to mirror only the second:
 
-     HasConfigKey (`Spintax.pas:1397`) -- one of minsize / maxsize / sep / lastsep, at a WORD
+     HasConfigKey (`Spintax.pas/HasConfigKey`) -- one of minsize / maxsize / sep / lastsep, at a WORD
      BOUNDARY, followed after whitespace by `=`. Without it, no key is read at all. Skipping
      this gate answered 9 for `[<maxsize 2>a|b|c]` and 3 for `[<xmaxsize=1>a|b|c]`, both of
      which the engine renders as full permutations of 6 -- a separator that happens to contain
@@ -404,7 +404,7 @@ end;
    5.75 ms of the 18 it took to count a 100 KB document.
 
    TWO LAYERS, NOT ONE LIST, and they are not interchangeable. `ExtractDirectives`
-   (`Spintax.pas:1227`) keeps `#set` and `#def` in separate maps, each `AddOrSetValue` so the
+   (`Spintax.pas/ExtractDirectives`) keeps `#set` and `#def` in separate maps, each `AddOrSetValue` so the
    LAST definition of a name wins; the render then lays the definitions over the sets
    (`3145-3184`), so a `#def` beats a `#set` of the same name however they are ordered in the
    text. Taking the FIRST match out of a flat list -- which is what this did before -- answered
@@ -586,7 +586,7 @@ begin
             (* AND A CONFIG THAT BEGINS ON THE LINE AFTER THE `[`, which is a whole config and
                not a cut-off one, so the tell above never fires. The engine reaches it because
                `ParsePermConfig` runs `PhpLtrim` first and `PHP_WS` contains #10
-               (`Spintax.pas:274`, `:1502`) -- the newline is simply blank space before the
+               (`Spintax.pas/PHP_WS`, `Spintax.pas/PhpLtrim`) -- the newline is simply blank space before
                `<`. The scanner will not follow a config across a line and says so.
 
                Restricted to a DIFFERENT line on purpose. Same-line text beginning with `<`
@@ -606,7 +606,7 @@ begin
           (* A `{plural ...}` WHOSE HEAD THE SCANNER COULD NOT READ. `PluralHeadLength` wants
              the keyword and its `:` on one line with no `|` or `}` in between; the engine's
              gate is `Copy(content,1,7) = 'plural '` and a `:` ANYWHERE in the rest
-             (`Spintax.pas:1614-1618`). So `{plural 2` LF `: one|many}` and
+             (`Spintax.pas/PLURAL_PREFIX`). So `{plural 2` LF `: one|many}` and
              `{plural 2|3: one|many}` are plurals to the engine -- one variant each, since a
              plural picks a form rather than offering a choice -- and arrived here as free
              choices worth 2 and 3, as exact.
@@ -620,7 +620,7 @@ begin
              ordinary choice of two and this reported "at least 1".
 
              The engine's SECOND condition -- a `:` anywhere after the keyword
-             (`Spintax.pas:1614-1618`) -- is decided in the walk, not here: it may sit on a
+             (`Spintax.pas/PLURAL_PREFIX`) -- is decided in the walk, not here: it may sit on a
              later line, and requiring it on THIS one broke the floor for
              `{plural 2` LF `: one|many}`, which the engine reads as a plural worth one. The
              suite caught that within the run. *)
@@ -636,7 +636,7 @@ begin
           end;
         end;
         (* WHAT COUNTS AS "THE TOKEN AFTER THE BRACKET". Blank and comments do NOT: the engine
-           ltrims before parsing a config (`PhpLtrim`, `Spintax.pas:1502`) and has already
+           ltrims before parsing a config (`PhpLtrim`, `Spintax.pas/PhpLtrim`) and has already
            stripped comments, so `[ ` LF `<maxsize=1>a|b|c]` is a config to it. One space after
            the `[` used to consume this position and the next-line tell never ran -- 6, EXACT,
            against the engine's 3, which breaks the floor. Found by review. *)
@@ -672,15 +672,59 @@ end;
 
    `DefTotal` is the product of every `#def` that anything references, shared across the whole
    recursion rather than kept per document -- see the note over MacroCount. *)
+{ Whether a value can contribute anything to a count or fan anything out. Mirrors the engine's
+  own HasConstructChar (`Spintax.pas/HasConstructChar`), and it is here for the same reason the
+  engine has it: a value carrying no construct is substituted once and never expanded again, so
+  it cannot be part of an explosion and must not be charged for one.
+
+  Review measured what charging it costs: a plain `#set %x% = x` referenced 16322 times is an
+  ordinary 65 KB template whose count is exactly one, and a flat per-expansion price turned it
+  into a lower bound. The flat price was measured on the INCLUDE tree and applied to every path
+  without asking what it was paying for. }
+function CountsForBudget(const S: string): Boolean;
+var i: Integer;
+begin
+  for i := 1 to Length(S) do
+    if (S[i] = '{') or (S[i] = '[') or (S[i] = '%') then Exit(True);
+  Result := False;
+end;
+
+{ THE BUDGET ONE COUNT MAY SPEND, in characters the walk is made to read AGAIN.
+
+  `Stack` stops a macro that expands itself, the depth cap stops a long chain, and the include
+  `Seen` list stops a cycle. None of the three bounds an ACYCLIC FAN OUT, where no name repeats
+  on any path and no path is deep, yet the work is the product of the widths. Two were measured
+  here at the v0.7.0 bump: a 2624 byte document of nested macros took 19156 ms, and twelve
+  fragments each including the next ten times did not finish in 60 s. Both on the worker thread
+  the window is waiting on.
+
+  CHARACTERS, NOT CALLS: charging per call left the macro case at 15867 ms, because 40000
+  expansions are cheap and 40000 expansions of a 1000 character value are not. Plus a flat cost
+  per expansion, because a call also tokenizes, extracts directives and builds two lists, and
+  charging the text alone left the WIDE include tree at 5613 ms. Both numbers are measurements
+  of a fix that looked finished before them.
+
+  Running out is not an error and enters no new answer into the language: the count stops
+  expanding, keeps what it has and drops `Exact`, which the window already renders as a lower
+  bound. Same shape as the engine's own render budget, which leaves a reference literal. }
+const
+  SPX_COUNT_STEPS = 4 * 1024 * 1024;
+  { An expansion is not free even when its text is short: each one tokenizes, extracts the
+    fragment's directives and builds two lists. Charging the text alone under-priced a WIDE
+    tree -- twelve fragments each including the next ten times went from a hang past 60 s to
+    5613 ms, which is termination and not an answer anyone waits for. Priced at 256 characters
+    a call, measured rather than reasoned. }
+  SPX_COUNT_CALL_COST = 256;
+
 function CountText(const Doc: string; const Ctx: TSpxContext; Defs: TCMacros;
-  var Exact: Boolean; var DefTotal: Int64; Depth: Integer;
+  var Exact: Boolean; var Steps: Integer; var DefTotal: Int64; Depth: Integer;
   Seen, Stack, DefsUsed: TStringList): Int64; forward;
 
 (* A MACRO'S OWN COUNT, and WHOSE value it is.
 
    ---- A HOST VALUE OUTRANKS THE DOCUMENT. Measured, then confirmed in the engine's source:
    SpRender builds its table from the `#set` definitions and then overlays the runtime vars on
-   top (`Spintax.pas:3145-3151`), and a `#def` whose name a runtime var carries is never rolled
+   top (`Spintax.pas/RenderCompiled`), and a `#def` whose name a runtime var carries is never rolled
    at all -- the comment there says so in as many words. So a session value the reader typed
    into the Variables panel is what renders, and the `#set` in the document is dead. Measured
    before it was believed: `#set %y% = qq` with a session `y = {ee|ff}` renders `ee` or `ff`,
@@ -697,13 +741,14 @@ function CountText(const Doc: string; const Ctx: TSpxContext; Defs: TCMacros;
    value with it (measured: `%x% %x%` with `x = {aa|bb}` gives four), is re-rolled at every
    use, so it multiplies once per occurrence. A `#def` is rolled ONCE for the whole render,
    before the body, dependencies first, whether the body ends up using it or not
-   (`Spintax.pas:3162-3184`). So it multiplies the DOCUMENT once, not the option it happens to
+   (`Spintax.pas/OrderDefinitions`, rolled by `Spintax.pas/RenderCompiled`). So it multiplies the
+   DOCUMENT once, not the option it happens to
    be written in -- which is why its bookkeeping is a shared list and a shared product rather
    than anything held per construct. The version that multiplied it into the enclosing option
    answered 3 for a `#def` used in both alternatives of one choice: neither the four draws
    there are, nor the two texts that come out. *)
 function MacroCount(Model: TCMacros; const Name: string; const Ctx: TSpxContext;
-  var Exact: Boolean; var DefTotal: Int64; Depth: Integer;
+  var Exact: Boolean; var Steps: Integer; var DefTotal: Int64; Depth: Integer;
   Seen, Stack, DefsUsed: TStringList; out IsDef: Boolean): Int64;
 var hostVal: string; mac: TCMacro;
 begin
@@ -716,7 +761,7 @@ begin
     Exact := False;
     Exit;
   end;
-  { The engine stops expanding at MAX_VARIABLE_DEPTH = 50 (`Spintax.pas:273`) and renders the
+  { The engine stops expanding at MAX_VARIABLE_DEPTH = 50 (`Spintax.pas/MAX_VARIABLE_DEPTH`) and renders the
     unexpanded `%name%` as text. `Stack` IS that depth -- it holds exactly the macros being
     expanded right now -- so the guard costs nothing extra. }
   if Stack.Count >= 50 then
@@ -725,13 +770,37 @@ begin
     Exit;
   end;
 
+  (* ▁▁▁ AND A BUDGET, BECAUSE NEITHER GUARD ABOVE BOUNDS THE WORK ▁▁▁
+
+     `Stack` stops a name that expands ITSELF and the depth cap stops a long chain. An ACYCLIC
+     FAN OUT is neither: with `#set %b%` holding 200 choices, `#set %a%` naming %b% 200 times
+     and a body naming %a% 200 times, no name ever repeats on a path and no path is deep, yet
+     every occurrence recounts its value from scratch. Measured on a 2624 byte document: 19156
+     ms, on the worker thread the window is waiting for, and it grows as the product of the
+     three counts. Found by review at the v0.7.0 bump; it predates the bump, and it is the same
+     shape the engine bounded on its own side that release, from the other direction.
+
+     CHARGED IN CHARACTERS RE-WALKED, NOT IN CALLS, and the first cut got that wrong: a call
+     counter left the same document at 15867 ms, because 40000 expansions is cheap and 40000
+     expansions of a 1000 character value is not. The price of an expansion is the text it
+     makes this walk read again, which is what the budget below buys, and it is the same unit
+     the engine chose for the same reason.
+
+     The refusal is the one this function already has -- count one, drop Exact -- so it enters
+     no new answer into the language, exactly as the engine's budget leaves a reference literal
+     rather than inventing an output. A cyclic bomb was measured at 0 ms and is NOT what this
+     catches; that one Stack really does stop, which is why it was mistaken for the whole
+     defence. *)
+
   { The host's table first, because the engine reads it last. }
   if (Ctx.Vars <> nil) and Ctx.Vars.TryGetValue(LowerCase(Name), hostVal) then
   begin
     if hostVal = '' then Exit;
     Stack.Add(Name);
     try
-      Result := CountText(hostVal, Ctx, Model, Exact, DefTotal, Depth, Seen, Stack, DefsUsed);
+      if CountsForBudget(hostVal) then
+        Dec(Steps, Length(hostVal) + SPX_COUNT_CALL_COST);
+      Result := CountText(hostVal, Ctx, Model, Exact, Steps, DefTotal, Depth, Seen, Stack, DefsUsed);
     finally
       Stack.Delete(Stack.IndexOf(Name));
     end;
@@ -742,16 +811,37 @@ begin
   if not Model.TryGetValue(LowerCase(Name), mac) then Exit;
   IsDef := mac.IsDef;
   if mac.Value = '' then Exit;
+
+  { THE BUDGET GUARD SITS HERE, AFTER the lookups above and after the already-rolled test
+    below, because refusing work that was never going to be done is how a gate reports a
+    finding it did not have: an exhausted budget followed only by a def the caller has already
+    multiplied in would have flipped Exact for nothing. Review found the ordering. }
+
+  { A `#def` ALREADY ROLLED IS NOT RECOUNTED. The caller multiplies a def into the document's
+    product exactly once and ignores the value it gets for every later reference -- so counting
+    it again was work whose answer was thrown away, and once there was a budget it was work that
+    could spend the budget and turn an ordinary template's exact count into a lower bound.
+    Raised by review; the numeric answer never differed, which is why nothing noticed. }
+  if IsDef and (DefsUsed.IndexOf(Name) >= 0) then Exit;
+
+  if Steps <= 0 then
+  begin
+    Exact := False;
+    Exit;
+  end;
+
   Stack.Add(Name);
   try
-    Result := CountText(mac.Value, Ctx, Model, Exact, DefTotal, Depth, Seen, Stack, DefsUsed);
+    if CountsForBudget(mac.Value) then
+      Dec(Steps, Length(mac.Value) + SPX_COUNT_CALL_COST);
+    Result := CountText(mac.Value, Ctx, Model, Exact, Steps, DefTotal, Depth, Seen, Stack, DefsUsed);
   finally
     Stack.Delete(Stack.IndexOf(Name));
   end;
 end;
 
 function CountText(const Doc: string; const Ctx: TSpxContext; Defs: TCMacros;
-  var Exact: Boolean; var DefTotal: Int64; Depth: Integer;
+  var Exact: Boolean; var Steps: Integer; var DefTotal: Int64; Depth: Integer;
   Seen, Stack, DefsUsed: TStringList): Int64;
 var
   tokens: TCTokList;
@@ -822,7 +912,7 @@ begin
   dirs := SpExtractDirectives(Doc);
   try
   (* A DOCUMENT SCOPE, and an included fragment is one. `ResolveIncludes` calls the whole
-     render again per occurrence (`Spintax.pas:3195`), so a fragment's `#def` is rolled once
+     render again per occurrence (`Spintax.pas/ResolveIncludes`), so a fragment's `#def` is rolled once
      PER INCLUDE, not once for the outer document -- and two fragments may each define `%d%`
      without meaning the same macro. Sharing one flat, name-keyed list across the recursion
      answered 2 for a document that includes one such fragment twice and renders 4, and 2 for
@@ -926,7 +1016,7 @@ begin
           (* WHICH FRAME A CLOSER CLOSES: the nearest open one OF ITS OWN KIND, which is not
              always the top one, and neither of the two things this walk used to do.
 
-             `FindMatchingClose` (`Spintax.pas:626-640`) counts only its own bracket kind, so
+             `FindMatchingClose` (`Spintax.pas/FindMatchingClose`) counts only its own bracket kind, so
              a `]` reaches past an unclosed `{` and closes the `[` underneath -- and the frames
              it reached past were never constructs at all. Matching the top frame ONLY had two
              failure modes, both measured:
@@ -1026,7 +1116,7 @@ begin
             name_ := StringReplace(name_, '%', '', [rfReplaceAll]);
             if name_ <> '' then
             begin
-              c := MacroCount(Defs, name_, Ctx, Exact, totalHere^, Depth, Seen, Stack,
+              c := MacroCount(Defs, name_, Ctx, Exact, Steps, totalHere^, Depth, Seen, Stack,
                               defsHere, isDef);
               if isDef then
               begin
@@ -1054,9 +1144,21 @@ begin
             begin
               Seen.Add(target);
               (* A child scope: the fragment's own prelude, its OWN `#def` rolls, and nothing
-                 of this document's -- CountText owns a scope whenever it is handed no table. *)
-              Into(CountText(text_, Ctx, nil, Exact, ownTotal, Depth + 1, Seen, Stack,
-                             defsHere));
+                 of this document's -- CountText owns a scope whenever it is handed no table.
+
+                 AND IT PAYS THE SAME BUDGET, because `Seen` is a PATH guard: it is deleted
+                 again below, so a fragment reached twice by different routes is expanded
+                 twice. Twelve fragments each including the next ten times is acyclic, is
+                 within the depth cap of 20, and HUNG -- measured, past 60 s with no answer,
+                 on the worker thread. The macro budget alone did not cover it: that was
+                 charged on the two macro paths only, and this is a third. Found by probing
+                 the fix rather than by reading it, which is the only reason it is here. *)
+              Dec(Steps, Length(text_) + SPX_COUNT_CALL_COST);
+              if Steps <= 0 then
+                Exact := False          { out of budget: this subtree is not walked at all }
+              else
+                Into(CountText(text_, Ctx, nil, Exact, Steps, ownTotal, Depth + 1, Seen, Stack,
+                               defsHere));
               Seen.Delete(Seen.IndexOf(target));
             end
             else
@@ -1086,7 +1188,7 @@ begin
     if openComment then Exact := False;
 
     (* AND AN `#include` CAN RESOLVE WITHOUT BEING A DIRECTIVE IN THE SOURCE. `ResolveIncludes`
-       runs over the RENDERED text (`Spintax.pas:3194`), so `{pp|#include "f"}` resolves when
+       runs over the RENDERED text (`Spintax.pas/ResolveIncludes`), so `{pp|#include "f"}` resolves when
        that option is the one drawn -- the engine reports no directive, the scanner sees plain
        text, the two agree, and both are looking at the wrong thing. Nothing short of rendering
        can settle it, so what is detected is the possibility: body text carrying the word. A
@@ -1121,7 +1223,8 @@ begin
 end;
 
 function SpxCountVariants(const Doc: string; const Ctx: TSpxContext): TSpxCount;
-var seen, stack, defs: TStringList; defTotal: Int64;
+
+var seen, stack, defs: TStringList; defTotal: Int64; steps_: Integer;
 begin
   Result.Exact := True;
   Result.Saturated := False;
@@ -1135,7 +1238,8 @@ begin
     defs.CaseSensitive := False;
     { The `#def` product belongs to a document SCOPE and CountText owns one, so these two are
       placeholders the top-level call never reads. }
-    Result.Value := CountText(Doc, Ctx, nil, Result.Exact, defTotal, 0, seen, stack, defs);
+    steps_ := SPX_COUNT_STEPS;
+    Result.Value := CountText(Doc, Ctx, nil, Result.Exact, steps_, defTotal, 0, seen, stack, defs);
   finally
     defs.Free;
     stack.Free;

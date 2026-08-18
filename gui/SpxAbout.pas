@@ -19,11 +19,11 @@ interface
 const
   { Four parts, because that is what a Store package manifest wants. One line, in
     VERSION at the root, so the manifest and the screen cannot disagree. }
-  SPX_VERSION = '0.2.0.0';
+  SPX_VERSION = '0.2.1.0';
   { The engine this was built against -- the submodule tag, read from git at
     generation. Someone reporting a difference from another engine in the family
     needs to know which one answered here. }
-  SPX_ENGINE_VERSION = 'v0.5.1';
+  SPX_ENGINE_VERSION = 'v0.7.0';
 
 { The attributions, one line at a time, in the order NOTICE.md gives them. }
 function SpxAboutLineCount: Integer;

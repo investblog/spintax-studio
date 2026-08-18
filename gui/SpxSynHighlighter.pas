@@ -53,7 +53,7 @@ type
     (* WHERE THE `#/` IS, WHICH A LINE CANNOT KNOW.
 
        `/#` opens a comment only when a `#/` comes after it somewhere in the document
-       (engine `Spintax.pas:955-975`), and SynEdit hands this highlighter one line at a time,
+       (engine `Spintax.pas/StripComments`), and SynEdit hands this highlighter one line at a time,
        forward only. So the owner of the document pushes the answer in: the index of the last
        line carrying a `#/`, from SpxLastCloserLine.
 

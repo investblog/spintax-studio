@@ -1181,13 +1181,26 @@ end;
 
 function SpxDiagText(const Code: string; Lang: TSpxLang): string;
 begin
-  { The engine's seventeen codes as of v0.3.3, each read from the site that emits it rather
+  (* A STAR PAREN COMMENT BECAUSE IT QUOTES THE LANGUAGE, which is made of braces: the
+     example below carries a closing brace and would end a brace comment on the spot. Fourth
+     time in this repository. And the delimiters of this form are not written out here either,
+     because star paren does not nest, which is the fifth -- both halves of that rule were
+     paid for again while writing this very comment.
+
+
+     The engine's eighteen codes as of v0.7.0, each read from the site that emits it rather
     than guessed from its name. The wording states the FINDING and stops there -- the panel
     reports a verdict four implementations agree on, it does not teach style.
 
-    Paired language by language rather than as two tables, so a code cannot gain a sentence
-    in one language and keep the bare code in the other: the pair is on the screen together
-    and the suite reads both. }
+    `plural.locale-missing` arrived with v0.7.0 and is the one code here that a reader of THIS
+    application cannot meet: it needs an empty locale, and the box offers ten tags and no blank
+    (measured -- `{plural %n%: one|few|many}` answers it at locale "" and answers nothing at
+    "en" or "ru"). Its wording is carried anyway, because what is one edit away is a bare slug
+    on screen, and the suite gates the unreachability rather than believing this sentence.
+
+     Paired language by language rather than as two tables, so a code cannot gain a sentence
+     in one language and keep the bare code in the other: the pair is on the screen together
+     and the suite reads both. *)
   if Lang = spxLangRu then
   begin
     if Code = 'bracket.unclosed' then Result := 'скобка открыта и не закрыта'
@@ -1205,6 +1218,8 @@ begin
     else if Code = 'plural.count-macro' then
       Result := 'счётчик берёт значение из #set, а оно перекатывается при каждой ссылке'
     else if Code = 'plural.nested-brackets' then Result := 'скобки внутри форм множественного числа'
+    else if Code = 'plural.locale-missing' then
+      Result := 'локаль не задана — столько форм разрешится только при рендере с подходящей'
     else if Code = 'permutation.unknown-key' then Result := 'неизвестный ключ в настройке перестановки'
     else if Code = 'permutation.minsize-not-integer' then Result := 'minsize не целое число'
     else if Code = 'permutation.maxsize-not-integer' then Result := 'maxsize не целое число'
@@ -1227,6 +1242,8 @@ begin
     else if Code = 'plural.count-macro' then
       Result := 'the count comes from #set, and that rerolls on every reference'
     else if Code = 'plural.nested-brackets' then Result := 'brackets inside the plural forms'
+    else if Code = 'plural.locale-missing' then
+      Result := 'no locale is set, so this form count resolves only if one arrives at render'
     else if Code = 'permutation.unknown-key' then Result := 'unknown key in the permutation config'
     else if Code = 'permutation.minsize-not-integer' then Result := 'minsize is not a whole number'
     else if Code = 'permutation.maxsize-not-integer' then Result := 'maxsize is not a whole number'

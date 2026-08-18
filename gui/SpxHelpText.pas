@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    'bac2f82fe77328e3', '1161eb58753cc15f', '87e44fc97111b7a9', 'e908447ddf6f7cbf', 'c5226848658b80c2', 'f6b0fb891bdfa838', 'e05d6f8a7288a764', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', 'b4a72047b507b425', '488ce59bac9e29c3', '7f61fd4b089638df', '3f8c75118b73d98f', '7813c6dc420189dd', '0d549262922b3331', 'ab8950089825a79c', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'be3c9da1f1522b01', '4ddfd411500958cc', '26e21bf1b83633da', '335889dd80f48659', 'b54956a9ee49f248', '00a887dfff5a6ef5', '14e7aaad0600c183', '18c7da1e110847db', 'd9d49c35432acae4', 'cbed7bf2c514a8d5', '9dacb63502e5aa97', 'b8529893866ec950', 'ee229cb3a76fbe42', 'ea10d49bf126b2b6', '471885d59dbd925b', '38f95f3dd0a3854a', '56ba422eb944d0c7', '2a4bb2d8392a4ede', 'bcad9b0e49bbe8b4', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', 'bc5b347f1f9bb702', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    'bac2f82fe77328e3', '1161eb58753cc15f', 'de44519028f59ab7', 'e908447ddf6f7cbf', 'c5226848658b80c2', 'baeef3c47839d4b6', 'e05d6f8a7288a764', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', 'b4a72047b507b425', '488ce59bac9e29c3', '7f61fd4b089638df', '3f8c75118b73d98f', '7813c6dc420189dd', '0d549262922b3331', 'ab8950089825a79c', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'be3c9da1f1522b01', '4ddfd411500958cc', '26e21bf1b83633da', '335889dd80f48659', 'b54956a9ee49f248', '00a887dfff5a6ef5', '14e7aaad0600c183', '18c7da1e110847db', 'd9d49c35432acae4', 'cbed7bf2c514a8d5', '9dacb63502e5aa97', 'b8529893866ec950', 'ee229cb3a76fbe42', 'ea10d49bf126b2b6', '471885d59dbd925b', '38f95f3dd0a3854a', '56ba422eb944d0c7', '2a4bb2d8392a4ede', 'bcad9b0e49bbe8b4', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', 'bc5b347f1f9bb702', '47d9d375a0b29342', '2b4b7149bc00ea5e'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -1591,10 +1591,11 @@ const
       'Without it the output would be empty whatever the number of forms, and would demonstra' +
       'te nothing about arity at all.</p>',
     '<p>The panel and the output are answering different questions here, and that is not a ' +
-      'contradiction: the row is put there by the <b>validator</b>, which counts the forms in' +
-      ' the text and has no interest in the count; the emptiness comes from the <b>render</b>' +
-      ', which has an order of its own. Give the count a number, as the first example does, a' +
-      'nd you see what arity actually does.</p>',
+      'contradiction: the row is put there by the <b>validator</b>, which counts the forms th' +
+      'e render will actually split — a definition standing in for them is resolved first — w' +
+      'hile the emptiness comes from the <b>render</b>, which has an order of its own. Give t' +
+      'he count a number, as the first example does, and you see what arity actually does.</p' +
+      '>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — the count comes from <co' +
       'de>#set</code>, and that rerolls on every reference</h3>',
     '<p><small><tt><a href="ex:59">#set %n% = {1|2}</a><br><a href="ex:59">%n% {plural %n%:' +
@@ -2542,9 +2543,10 @@ const
       ' подсчёта. Поэтому пример без <code>#set %n%</code> показал бы пустоту при любом числе' +
       ' форм — и о самой арности не сказал бы ничего.</p>',
     '<p>Панель и вывод здесь говорят о разном, и это не противоречие: строку в панели стави' +
-      'т <b>проверка</b>, которая считает формы в тексте и до счётчика ей дела нет; пустоту д' +
-      'аёт <b>рендер</b>, у которого свой порядок. Определите счётчик числом — как в примере ' +
-      'выше — и увидите, что делает арность на самом деле.</p>',
+      'т <b>проверка</b>, которая считает формы, которые рендер и правда разделит — определен' +
+      'ие, стоящее вместо них, она сначала раскрывает; пустоту даёт <b>рендер</b>, у которого' +
+      ' свой порядок. Определите счётчик числом — как в примере выше — и увидите, что делает ' +
+      'арность на самом деле.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — счётчик берёт значение и' +
       'з <code>#set</code></h3>',
     '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +

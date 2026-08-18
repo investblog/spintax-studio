@@ -2144,6 +2144,181 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       Still open, and unchanged by the above: which markets get a listing at all, and the
       screenshots — a localised listing with English screenshots is worse than an English one.
 
+- [ ] **And then the fix for that made the product impossible to install.** Reported by the
+      owner on 2026-08-18 as a Store page showing *Retry* and "Something went wrong", which is
+      the Store's word for anything at all. It was ours. `AppXDeploymentServer/Operational` at
+      12:21:30, fourteen seconds before the screenshot:
+
+      ```
+      Id 404 Error   AppX Deployment operation failed for package
+                     301.SpintaxStudio_0.2.0.0_x64__jnd8jmenjzsm0 with error 0x80073CF6:
+                     ошибка 0x80070057: не удается зарегистрировать пакет, так как
+                     указанный язык ресурса "sr" недопустим.
+      ```
+
+      **`sr` was wrong twice over, and the two are independent.** Windows will not register a
+      package whose resource language is a script required language written without its script.
+      And Microsoft's published list of Store languages puts a bare `sr` under Serbian
+      **(Latin)**, beside `sr-latn-rs`, while `gui/lang/SpxTextsSr.pas` is Cyrillic — so the
+      tag also advertised the wrong script, which is why the live storefront read "Serbian"
+      next to a correctly resolved "Bosnian (Latin)" and nothing looked wrong.
+
+      Measured by registering a minimal package one language at a time: the other thirteen all
+      register, `sr` and `sr-RS` do not, `sr-Latn` and `sr-Cyrl` do with or without a region,
+      and the pair registers together. The guess that `bs` would fail the same way was
+      **refuted** — Bosnian is Latin in `gui/lang/` and its bare tag resolves to a Latin row.
+
+      Fixed as `sr-Cyrl`. `sr-Latn` is deliberately NOT declared: this list is read as the
+      languages the WINDOW speaks and there is no Latin string table, and a reader on
+      `sr-Latn-RS` already gets the application in Serbian because `SpxLangFor` cuts the tag at
+      its first separator. A Serbian **Latin listing** is a Partner Center *additional Store
+      listing language* and needs nothing in the package (owner's call, 2026-08-18 — the
+      listing gets the second description, the interface is not touched).
+
+      **Every gate was green, and that is the finding.** The suite compared the list against
+      `gui/lang/` and was answered `sr` either way, because it compares primary subtags. WACK
+      passed against the tag's artefact. Store certification accepted the submission, because
+      it reads the manifest schema and never calls `Add-AppxPackage`. Three gates, none of them
+      between the manifest and the deployment stack. Now:
+
+      * `scripts/check-manifest-languages.ps1` builds a package out of the declared tags and
+        asks Windows to register it, on the windows CI leg, failing rather than skipping when
+        Developer Mode is off. Verified by putting `sr` back: it fails, quoting the reader's
+        error.
+      * `CheckManifestLanguages` gained the two questions the deployment stack cannot answer —
+        is the tag a code the Store publishes, and does it name the script the window is
+        actually written in. Verified by putting each defect back one at a time: four
+        variations, one named failure each.
+
+      **The Codex gate then found three defects in those two gates, and each would have let the
+      same thing happen again.** The check was in `ci.yml`, which runs on branches and pull
+      requests and **not on tags** — so it was absent from `release.yml`, the workflow that
+      builds the artefact users install; it is now in both, ahead of `make-msix.py`. Both gates
+      matched `<Resource Language="` by regex over the whole file, so they read an element
+      quoted in a COMMENT as a declaration and could not see `Language = 'sr'`, which XML allows
+      and MakeAppx accepts — measured, that combination reported green over a manifest carrying
+      the very tag; both now parse. And stripping comments for the new scan quietly emptied the
+      OLD comment validator sharing the same variable, so three assertions passed by never being
+      asked; both gates now count what they could not read and fail on it, and the suite going
+      29065 → 29078 is the resurrected checks. Every one was found by reading the gate rather
+      than running it.
+
+      **Open, and the owner's call: this needs a version to ship in.** The corrections queue
+      exists because a review cycle for two lines of text is not worth taking — that reasoning
+      does not cover a package nobody can install. `git log v0.2.0.0..HEAD` is where the fix
+      is; users have the tag.
+
+## Engine bumped to `v0.7.0` (2026-08-18)
+
+- [x] **Pinned, and every mirrored rule re-measured rather than assumed.** The `interface`
+      section is byte-identical to `v0.5.1` (diffed, not taken from the release notes) while 735
+      implementation lines changed. Corpus re-run here: **PASS=253 FAIL=0 SKIP=4**; the engine's
+      own suites 541 + 94 checks clean; Studio 29084 checks, 0 failed.
+
+      What Studio gains, measured on both engines side by side:
+
+      ```
+      #def %tail% = few|many        v0.5.1  plural.arity  + renders "few"   <- false panel row
+      {plural 2: one|%tail%}   ru   v0.7.0  (none)        + renders "few"
+
+      #set %n% = {?flag?1|2}        v0.5.1  (none)        + renders ""      <- silent erasure
+      {plural %n%: one|few|many} ru v0.7.0  (none)        + renders "few"
+      ```
+
+      Plus the render-side expansion budget: `#set %a% = %b% %b%` over `#set %b% = %a% %a%`
+      killed the process before and now answers in 1366 ms with the reference left literal.
+      `SpxCount` was checked for the same bomb and does **not** have it — its `Stack` guard
+      collapses the chain, 0 ms — which was a guess until it was run.
+
+- [x] **`plural.locale-missing` added, and excluded from the help by name.** It needs an empty
+      locale; `SPX_LOCALES` has ten tags and no blank, so a reader cannot produce it. Panel
+      wording carried in both languages anyway; `TestLocaleIsNeverEmpty` gates the exclusion by
+      asking the engine per tag instead of trusting the comment.
+
+- [x] **The variant counter could be hung by a fan out, and the budget is measured in
+      characters.** `Stack` stops a macro that expands itself and the depth cap stops a long
+      chain; neither bounds an ACYCLIC fan out, where no name repeats on a path and every
+      occurrence recounts its value from scratch. A 2624 byte document took **19156 ms** on the
+      worker thread. The first fix charged a budget per CALL and left it at 15867 ms, because
+      40000 expansions are cheap and 40000 expansions of a 1000 character value are not;
+      charging the characters re-walked gives 1522 ms with `Exact = False`, and a document three
+      times larger costs the same 1438 ms, which is the property that says the bound is the
+      budget. Pinned by `TestCounterTerminates`, whose last half checks an ordinary template
+      is still exact so a too-small budget cannot make the rest pass by refusing everything.
+      Raised by the Codex gate; the earlier probe here had measured a CYCLIC bomb at 0 ms and
+      mistaken `Stack` for the whole defence.
+
+      **And the fix was finished twice more before it was finished.** `#include` is a THIRD
+      recursion the macro budget did not reach — `Seen` is deleted on the way out, so it guards
+      a cycle and not a fragment reached twice by different routes. Twelve fragments each
+      including the next ten times is acyclic and inside the depth cap of 20, and it **did not
+      finish in 60 seconds**; found by probing the fix rather than by reading it. Charging that
+      path took it to 5613 ms, and pricing the flat cost of an expansion — a call tokenizes,
+      extracts directives and builds two lists whatever its length — took it to **367 ms**. The
+      macro case ends at 1217 ms. Review also caught a `#def` being recounted at every reference
+      although the caller multiplies it in once and discards the rest: harmless in the number,
+      and once there was a budget it could spend an ordinary template's exactness. Both pinned.
+
+- [x] **Engine citations now name a routine, not a line.** Three of twenty were already wrong at
+      the old pin. `TestEngineCitations` checks every cited name still exists in the pinned
+      source; it does not check that the rule beside it still holds, which is written on it.
+
+- [ ] **The counter does not model the engine's NEW render budget, so an extreme template's
+      "exact" count can be an overcount.** `v0.7.0` bounds what variable expansion may insert at
+      1 MB per `SpRender` call and leaves the reference that overdraws it LITERAL, which means
+      the render produces fewer variants than the template describes. `SpxCount`'s budget is a
+      different thing with a different unit — a WORK limit that answers "stop walking and say so"
+      — and the two do not correspond. Codex's example: a 30000 character `#set` value ending in
+      `{a|b}`, referenced 36 times, gives the engine 35 draws and the 36th reference stays
+      literal, so the document really has 2^35 variants; the counter spends about 1.09 MB of its
+      4 MB, never trips, and reports 2^35 doubled.
+
+      Not fixed here, and the reason is that the honest fix is a SECOND accounting rather than a
+      tuning of the first: the engine charges only values carrying a construct, against one purse
+      shared with `#include` children, checked before each substitution, and a count that wants
+      to agree has to mirror that ordering exactly — which is the class of mirroring this very
+      session found already rotted in three places. It also cannot be reached by any template a
+      person writes, which is why it goes here rather than into the fix above. Raised by the
+      Codex gate at the `v0.7.0` bump.
+
+- [ ] **The group editor reads a plural head more strictly than the engine does, and the bump
+      made that visible.** `PluralHeadLength` (`src/SpxTokens.pas`) stops its search for the
+      `:` at the first `|` or `}`; the engine's gate is `'plural '` at the front and a `:`
+      ANYWHERE in the rest. `SpxCount`'s comment has recorded the engine's rule correctly since
+      it was written, so the two mirrors in this repository disagree with each other. Measured
+      through `SpxGroupAt`:
+
+      ```
+      {plural {?flag?1|2}: one|two}   engine renders "two"   Studio: CHOICE
+                                                             [plural {?flag?1|2}: one] [two]
+      {plural 2|3: one|many}          a plural to the engine  Studio: CHOICE
+                                                             [plural 2] [3: one] [many]
+      {plural %n%: one|two}           plural                  Studio: plural  (correct)
+      ```
+
+      **Pre-existing, not caused by the bump** — but `v0.7.0` resolves a conditional in the
+      count slot before the numeric test, so the first line used to render empty and now works,
+      which turns "a broken construct shown wrongly" into "a working construct shown wrongly".
+      The harm needs a deliberate edit: the head is offered as if it were a variant, and
+      replacing it rewrites a plural into a choice, which is what the user asked for and so is
+      not refused by the round trip.
+
+      Not fixed here on purpose. `PluralHeadLength` feeds the highlighter, the group editor and
+      the counter, the correct rule has to bound the search by the brace that closes THIS group
+      rather than by the first `}` on the line, and none of that belongs in a submodule pin.
+      Raised by the Codex gate; the `{plural 2|3:` half was found by widening its example.
+
+- [ ] **Twelve help documents still carry a sentence this bump made false.** `plural.arity` in
+      every language ends with a paragraph claiming the validator "counts the forms in the text
+      and has no interest in the count". Both clauses are now wrong: it counts the forms the
+      RENDERER will split, resolving a definition that stands in for them, and a conditional in
+      the count slot resolves before the numeric test. Corrected in `docs/help/en/diagnostics.md`
+      and `docs/help/ru/diagnostics.md` — the two the charter records as written by measurement.
+      `de fr es it pt nl tr uk be sr hr bs` are unchanged and need the same one-clause fix; not
+      done on a guess, because a translated sentence nobody measured is how this project has
+      shipped wrong claims before. The article's own examples are unaffected, so the gated
+      fixtures stay green and the staleness is invisible to every check.
+
 ## AI-авторинг (открыто 2026-08-09, решение — [ADR 0011](decisions/0011-ai-authoring-offline-and-the-canonical-prompt.md))
 
 Направление задано владельцем: следующий функционал — AI-интеграции. Форма первого среза
@@ -3116,6 +3291,13 @@ Decisions owed **before the relevant submission** (not switchable later):
   See spec §10/§11.
 
 ## To report to the engine
+
+- [ ] **README line 13 disagrees with README's own table, and with the runner.** At `v0.7.0`
+      the opening paragraph says the shared corpus is "**231 of its 235 cases pass**", while the
+      conformance table sums to 253 and the totals line says `PASS=253 FAIL=0 SKIP=4` over 257.
+      Run here against `W:\Projects\spintax-js\packages\conformanceixtures`: **253 / 0 / 4**,
+      so the table is right and line 13 was incremented by one when the corpus grew by 23.
+      Cosmetic, but it is the first number a reader of that README meets.
 
 - [ ] **`Spintax.Gsa.pas:626` — a tag block with ONE option is neither converted nor refused.**
       `TranslateBlock` does `if parts.Count < 2 then Exit` (returning `bkPlain`) **before** the

@@ -130,6 +130,34 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
+## What's new in this version (0.2.1.0) — DRAFT
+
+Written 2026-08-18 against the working tree, not yet against a tag: check it against
+`git log v0.2.0.0..HEAD` before it is typed into the form, the way the 0.2.0.0 block was.
+
+> Spintax Studio 0.2.1 is a repair release.
+>
+> • Fixes an installation failure. Some systems refused to install 0.2.0.0 and the Store
+> reported only "Something went wrong"; the package declared one of its fourteen languages
+> in a form Windows will not accept. Nothing else about the app changed for it.
+> • The variants panel could take a long time on a template whose macros or fragments refer
+> to each other widely. It now answers promptly, and says so when the number it gives is a
+> lower bound.
+> • Engine updated to v0.7.0. Two plural findings were wrong before it: a form list supplied
+> by a #def was reported as the wrong number of forms while rendering correctly, and a
+> conditional used as the count made the whole block disappear with nothing reported. Both
+> are right now. A template whose definitions expand into each other can no longer stall the
+> preview.
+
+Two claims here were checked rather than carried over: "some systems" rather than "all",
+because what was measured is that this machine's Windows refuses the package and the
+storefront still offered it — how far back the deployment stack accepts a bare `sr` was not
+measured. And the engine bullet names what a READER sees, not the engine's own release
+notes; the render speed-up in v0.4.0 is already live and is not repeated here.
+
+**Still to decide before the visit:** the four corrections listed under the 0.2.0.0 block
+below are still not on the live page. They ride with this visit or they wait again.
+
 ## What's new in this version (0.2.0.0)
 
 The exact text for Partner Center's "What's new in this version" field, written 2026-08-15
@@ -277,6 +305,36 @@ Spintax Studio is an offline Windows x64 desktop editor for SPINTAX templates. N
 
 The application has no sign-in, license activation, telemetry, analytics, or backend, and no demo account is needed (policy 10.3.1): the optional AI feature is off as installed and sits behind the tester's own endpoint and key, and every other feature above is verifiable without it. As installed the application makes no network requests; the AI panel's Generate and Fix connect only after the tester configures an endpoint at the foot of the AI draft panel and confirms the consent dialog, and internetClient is declared for exactly this feature. The window carries two brand links -- spintax.net on the tool rail and 301.st in the status bar -- which, when clicked, ask Windows to open that address in the tester's own browser; neither link is required to test the product. AI output can be reported to support@301.st, shown as plain text in the About window (Help > About) and named in the privacy policy.
 ```
+
+## Supported languages, and the second Serbian listing
+
+The storefront's *Supported languages* line is not written here: it is read from
+`<Resources>` in `packaging/AppxManifest.xml.in`, which is the list of languages the WINDOW
+speaks. On 2026-08-16 it read, in this order:
+
+```
+Belarusian, Bosnian (Latin), Croatian, Dutch, English (United States), French, German,
+Italian, Portuguese, Russian, Serbian, Spanish, Turkish, Ukrainian
+```
+
+**"Serbian" there was wrong, and the storefront was reporting our error faithfully.** A bare
+`sr` is listed by Microsoft under Serbian *(Latin)*, beside `sr-latn-rs`, while the window is
+Cyrillic — which is why that entry has no script beside it and "Bosnian (Latin)", correctly
+resolved from `bs`, does. The tag was also unregisterable and took the whole package down with
+it (2026-08-18; the incident is in [`TODO.md`](TODO.md)). It is now `sr-Cyrl`, so **the line
+will read `Serbian (Cyrillic)` after the next submission** — expected, not a regression.
+
+**A Serbian LATIN listing is a separate thing and does not touch the package.** Partner Center
+carries it under *Additional Store listing languages* → *Manage additional languages*, which
+Microsoft documents as the place to add languages "that are not included in your packages". So
+the second Serbian description is a listing action; the interface stays Cyrillic only (owner's
+call, 2026-08-18), and declaring `sr-Latn` in the manifest would claim a Latin window that does
+not exist. The suite now fails by name if anyone tries.
+
+Practical note for whoever writes that description: transliterate from the Serbian draft rather
+than translating afresh, and take the terminology from `docs/help/sr/` the same way the other
+thirteen drafts do — a different word for *engine* reads as a different product to a reader who
+clicks through.
 
 ## What the live listing actually carries
 

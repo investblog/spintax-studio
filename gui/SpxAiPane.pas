@@ -192,7 +192,7 @@ type
        the case column is the author's to fill and is deliberately left alone here.
 
        THE NAMES ARRIVE FOLDED, and that is harmless rather than a display bug: the engine
-       looks a variable up through `LowerAscii` (Spintax.pas:1736, 1753, 1768), so `%OwnLang%`
+       looks a variable up through `LowerAscii` (Spintax.pas/ExpandVarsOnly), so `%OwnLang%`
        and `%ownlang%` are one variable and a model handed either writes something that
        renders. Read off the engine's source, because a list that quietly renamed the author's
        variables would be worth stopping for. *)

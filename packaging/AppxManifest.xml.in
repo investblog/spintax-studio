@@ -55,14 +55,37 @@
 
        Nothing compared this list to `gui/lang/`; the suite now does, so a fifteenth language
        cannot be added to the window and forgotten here. `en-us` keeps its region because that
-       is the declaration the package was certified with; the check compares primary subtags,
-       so `pt` and `pt-br` would count as the same language either way. -->
+       is the declaration the package was certified with; the coverage check compares primary
+       subtags, so `pt` and `pt-br` would count as the same language either way.
+
+       SERBIAN CARRIES ITS SCRIPT AND THE OTHER THIRTEEN DO NOT, for two independent reasons,
+       and `sr` was wrong under both. It shipped in 0.2.0.0 and made the package IMPOSSIBLE TO
+       INSTALL: Windows refuses to register a package whose resource language is a script
+       required language written without one, and reports it as 0x80073CF6 wrapping 0x80070057,
+       "the specified resource language is invalid". The Store had certified it, because
+       certification reads the manifest schema and never calls Add-AppxPackage, so the first
+       reader to press Get saw the Store's own "Something went wrong". Measured on 2026-08-18 by
+       registering a minimal package one language at a time: the other thirteen all register,
+       `sr` and `sr-RS` do not, `sr-Latn` and `sr-Cyrl` do with or without a region.
+
+       And the SECOND reason survives the first: Microsoft's published list of Store languages
+       puts a bare `sr` under Serbian (LATIN), beside `sr-latn-rs` and the rest, while
+       `gui/lang/SpxTextsSr.pas` is Cyrillic. So the tag advertised the wrong script as well as
+       being unregisterable, which is why the live storefront read "Serbian" next to the
+       correctly resolved "Bosnian (Latin)". Bosnian and Croatian are Latin in `gui/lang/` and
+       their bare tags resolve to Latin rows, so they are right as written.
+
+       `sr-Latn` is NOT declared, deliberately. This list is read as the languages the WINDOW
+       speaks, and the window has no Latin string table; a Serbian Latin STORE LISTING is a
+       Partner Center "additional Store listing language" and needs nothing here. A reader
+       whose system is `sr-Latn-RS` already gets the application in Serbian either way, because
+       SpxLangFor cuts the tag at its first separator. -->
   <Resources>
     <Resource Language="en-us" />
     <Resource Language="ru" />
     <Resource Language="uk" />
     <Resource Language="be" />
-    <Resource Language="sr" />
+    <Resource Language="sr-Cyrl" />
     <Resource Language="hr" />
     <Resource Language="bs" />
     <Resource Language="de" />

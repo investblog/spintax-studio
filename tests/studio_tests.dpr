@@ -3256,53 +3256,387 @@ begin
   until False;
 end;
 
+(* ▁▁▁ A DECLARED LANGUAGE IS TWO CLAIMS, AND `sr` GOT BOTH WRONG ▁▁▁
+
+   `<Resource Language="sr" />` shipped in 0.2.0.0 and made the package impossible to install.
+   Windows refuses to register a package whose resource language is a script required language
+   written without its script, and says so as 0x80073CF6 wrapping 0x80070057; the Store had
+   certified it, because certification reads the manifest schema and never calls
+   Add-AppxPackage. The first reader to press Get therefore got the Store's own "Something went
+   wrong", and the live product was uninstallable for three days.
+
+   The gate above could not have caught it. It compares PRIMARY SUBTAGS, so it asks "is every
+   language the window speaks declared, and nothing else" and is answered `sr` either way. It
+   was written to catch a MISSING language and it does; it never claimed to know whether a tag
+   is one Windows or the Store will accept, and nothing else asked.
+
+   So two more questions are asked here, and each is the one the other cannot answer:
+
+   1. IS THE TAG A LANGUAGE CODE THE STORE PUBLISHES? Microsoft's list is transcribed below,
+      restricted to our fourteen. A code that is not on it, the page says in as many words, is
+      "not supported by the Store", such packages "will not be distributed to customers, and
+      may cause delays or failures in certification".
+
+   2. DOES IT NAME THE SCRIPT THE WINDOW IS ACTUALLY WRITTEN IN? This is the half that survives
+      the registration fix, and `sr` was wrong here too: Microsoft lists a bare `sr` under
+      Serbian (LATIN), beside `sr-latn-rs`, while gui/lang/SpxTextsSr.pas is Cyrillic. The live
+      storefront read "Serbian" next to a correctly resolved "Bosnian (Latin)" and nobody could
+      tell those apart by looking. The script is asked of the SHIPPED strings, not of a list
+      here, for the reason ENGINE_CODES cost once.
+
+   WHAT THIS GATE DOES NOT COVER, because a gate answers the question it asks: the table below
+   is a hand transcription of a page on learn.microsoft.com, read on 2026-08-18, and nothing in
+   this repository compares it to Microsoft. It cannot notice a code Microsoft adds, removes or
+   moves between script rows. It also does not register anything, so it cannot see the failure
+   that started this: for that, scripts/check-manifest-languages.ps1 builds a package out of
+   these very tags and asks Windows to register it, and CI runs it on the windows leg. Nor does
+   it know a language the window does not speak, by construction.
+
+   THE TWO COLUMNS DO NOT HAVE THE SAME STANDING, and saying which is which is the point of
+   this paragraph. `Row` is transcribed: it is the name of the row the code sits in on
+   Microsoft's page, nothing more. It is NOT what the storefront prints, which was the first
+   draft's claim and was already contradicted by this repository's own record: our `sr` sat in
+   the row named "Serbian (Latin)" and the live listing printed plain "Serbian". `Row` is
+   reported inside the failures below so a bad transcription is visible when something breaks,
+   and it is asserted nowhere, which is stated here rather than left to be assumed.
+
+   `Cyrillic` is the column that is asserted, and it is only partly transcribed. Microsoft
+   splits SERBIAN into two rows by script and names them, so `sr` under Serbian (Latin) is read
+   straight off the page. It does NOT split BOSNIAN: one row named plain "Bosnian" holds `bs`,
+   `bs-cyrl`, `bs-cyrl-ba`, `bs-latn`, `bs-latn-ba` together. The script for four of those is
+   taken from the code, which names its own; for the bare `bs` it is taken from the LIVE
+   STOREFRONT, which printed "Bosnian (Latin)" for our declaration on 2026-08-18.
+
+   Source, and the sentence that makes a wrong code a certification risk rather than a cosmetic
+   one:
+   learn.microsoft.com/en-us/windows/apps/publish/publish-your-app/supported-languages
+     ?pivots=store-installer-msix *)
+type
+  TSpxStoreLang = record
+    Code: string;       { lower case, exactly as Microsoft lists it }
+    Cyrillic: Boolean;  { the script the storefront resolves this code to }
+    Row: string;        { the row of Microsoft's table this code sits in }
+  end;
+
+const
+  STORE_LANGS: array[0..113] of TSpxStoreLang = (
+    (Code: 'en'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-au'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-ca'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-gb'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-ie'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-in'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-nz'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-sg'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-us'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-za'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-bz'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-hk'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-id'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-jm'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-kz'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-mt'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-my'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-ph'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-pk'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-tt'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-vn'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-zw'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-053'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-021'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-029'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-011'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-018'; Cyrillic: False; Row: 'English'),
+    (Code: 'en-014'; Cyrillic: False; Row: 'English'),
+    (Code: 'ru'; Cyrillic: True ; Row: 'Russian'),
+    (Code: 'ru-ru'; Cyrillic: True ; Row: 'Russian'),
+    (Code: 'uk'; Cyrillic: True ; Row: 'Ukrainian'),
+    (Code: 'uk-ua'; Cyrillic: True ; Row: 'Ukrainian'),
+    (Code: 'be'; Cyrillic: True ; Row: 'Belarusian'),
+    (Code: 'be-by'; Cyrillic: True ; Row: 'Belarusian'),
+    (Code: 'sr-latn'; Cyrillic: False; Row: 'Serbian (Latin)'),
+    (Code: 'sr-latn-cs'; Cyrillic: False; Row: 'Serbian (Latin)'),
+    (Code: 'sr'; Cyrillic: False; Row: 'Serbian (Latin)'),
+    (Code: 'sr-latn-ba'; Cyrillic: False; Row: 'Serbian (Latin)'),
+    (Code: 'sr-latn-me'; Cyrillic: False; Row: 'Serbian (Latin)'),
+    (Code: 'sr-latn-rs'; Cyrillic: False; Row: 'Serbian (Latin)'),
+    (Code: 'sr-cyrl'; Cyrillic: True ; Row: 'Serbian (Cyrillic)'),
+    (Code: 'sr-cyrl-ba'; Cyrillic: True ; Row: 'Serbian (Cyrillic)'),
+    (Code: 'sr-cyrl-cs'; Cyrillic: True ; Row: 'Serbian (Cyrillic)'),
+    (Code: 'sr-cyrl-me'; Cyrillic: True ; Row: 'Serbian (Cyrillic)'),
+    (Code: 'sr-cyrl-rs'; Cyrillic: True ; Row: 'Serbian (Cyrillic)'),
+    (Code: 'hr'; Cyrillic: False; Row: 'Croatian'),
+    (Code: 'hr-hr'; Cyrillic: False; Row: 'Croatian'),
+    (Code: 'hr-ba'; Cyrillic: False; Row: 'Croatian'),
+    (Code: 'bs'; Cyrillic: False; Row: 'Bosnian'),
+    (Code: 'bs-latn'; Cyrillic: False; Row: 'Bosnian'),
+    (Code: 'bs-latn-ba'; Cyrillic: False; Row: 'Bosnian'),
+    (Code: 'bs-cyrl'; Cyrillic: True ; Row: 'Bosnian'),
+    (Code: 'bs-cyrl-ba'; Cyrillic: True ; Row: 'Bosnian'),
+    (Code: 'de'; Cyrillic: False; Row: 'German'),
+    (Code: 'de-at'; Cyrillic: False; Row: 'German'),
+    (Code: 'de-ch'; Cyrillic: False; Row: 'German'),
+    (Code: 'de-de'; Cyrillic: False; Row: 'German'),
+    (Code: 'de-lu'; Cyrillic: False; Row: 'German'),
+    (Code: 'de-li'; Cyrillic: False; Row: 'German'),
+    (Code: 'fr'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-be'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-ca'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-ch'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-fr'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-lu'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-015'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-cd'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-ci'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-cm'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-ht'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-ma'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-mc'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-ml'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-re'; Cyrillic: False; Row: 'French'),
+    (Code: 'frc-latn'; Cyrillic: False; Row: 'French'),
+    (Code: 'frp-latn'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-155'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-029'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-021'; Cyrillic: False; Row: 'French'),
+    (Code: 'fr-011'; Cyrillic: False; Row: 'French'),
+    (Code: 'es'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-cl'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-co'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-es'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-mx'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-ar'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-bo'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-cr'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-do'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-ec'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-gt'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-hn'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-ni'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-pa'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-pe'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-pr'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-py'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-sv'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-us'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-uy'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-ve'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-019'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'es-419'; Cyrillic: False; Row: 'Spanish'),
+    (Code: 'it'; Cyrillic: False; Row: 'Italian'),
+    (Code: 'it-it'; Cyrillic: False; Row: 'Italian'),
+    (Code: 'it-ch'; Cyrillic: False; Row: 'Italian'),
+    (Code: 'pt-br'; Cyrillic: False; Row: 'Portuguese (Brazil)'),
+    (Code: 'pt'; Cyrillic: False; Row: 'Portuguese (Portugal)'),
+    (Code: 'pt-pt'; Cyrillic: False; Row: 'Portuguese (Portugal)'),
+    (Code: 'nl'; Cyrillic: False; Row: 'Dutch'),
+    (Code: 'nl-nl'; Cyrillic: False; Row: 'Dutch'),
+    (Code: 'nl-be'; Cyrillic: False; Row: 'Dutch'),
+    (Code: 'tr'; Cyrillic: False; Row: 'Turkish'),
+    (Code: 'tr-tr'; Cyrillic: False; Row: 'Turkish')
+  );
+
+{ The script a language table is actually written in, asked of the SHIPPED strings rather than
+  of a note in a file header, which is a claim like any other. UTF-8 Cyrillic leads with $D0 or
+  $D1 and none of the Latin diacritics these fourteen use does (Croatian's c-caron is $C4,
+  Turkish's s-cedilla is $C5), so no decoding is needed to tell one letter from the other.
+
+  IT IS A MAJORITY, NOT A PRESENCE, and the first draft of this function got that wrong: "any
+  Cyrillic byte" answered CYRILLIC for all fourteen, because every table carries the Russian
+  language name in Russian. A region sampler finds the most extreme thing in the region, not
+  the thing the region is for, which this repository has now paid for three times.
+
+  Reading the .pas files instead is worse, not better: they are mostly English PROSE, and a
+  quote scanner over prose desynchronises at the first apostrophe. SpxStrIn hands over the
+  array itself, so neither problem exists here. }
+function TableIsCyrillic(ALang: TSpxLang): Boolean;
+var id: TSpxStr; s: string; i, cyr, lat: Integer;
+begin
+  cyr := 0;
+  lat := 0;
+  for id := Low(TSpxStr) to High(TSpxStr) do
+  begin
+    s := SpxStrIn(ALang, id);
+    for i := 1 to Length(s) do
+      if (s[i] = #$D0) or (s[i] = #$D1) then
+        Inc(cyr)
+      else if ((s[i] >= 'a') and (s[i] <= 'z')) or ((s[i] >= 'A') and (s[i] <= 'Z')) then
+        Inc(lat);
+  end;
+  Result := cyr > lat;
+end;
+
+function StoreLangFor(const ATag: string; out ARow: string; out ACyrillic: Boolean): Boolean;
+var i: Integer; tag: string;
+begin
+  tag := LowerCase(Trim(ATag));
+  for i := Low(STORE_LANGS) to High(STORE_LANGS) do
+    if STORE_LANGS[i].Code = tag then
+    begin
+      ARow := STORE_LANGS[i].Row;
+      ACyrillic := STORE_LANGS[i].Cyrillic;
+      Result := True;
+      Exit;
+    end;
+  ARow := '';
+  ACyrillic := False;
+  Result := False;
+end;
+
+{ XML comments taken out before anything looks for a declaration. Both gates written for this
+  incident read a `<Resource ... />` QUOTED IN PROSE as a real one and dropped the live element
+  beside it, measured on 2026-08-18 by putting the broken tag in a comment. This project has
+  paid for reading a comment as content twice in Pascal already; the manifest is the third
+  language it has happened in. }
+function StripXmlComments(const S: string): string;
+var i, at, stop: Integer;
+begin
+  Result := '';
+  i := 1;
+  while i <= Length(S) do
+  begin
+    at := PosEx('<!--', S, i);
+    if at = 0 then
+    begin
+      Result := Result + Copy(S, i, MaxInt);
+      Exit;
+    end;
+    Result := Result + Copy(S, i, at - i);
+    stop := PosEx('-->', S, at);
+    if stop = 0 then Exit;   { unterminated: everything after it is comment }
+    i := stop + 3;
+  end;
+end;
+
+{ The Language attribute of one element, in the spellings XML ALLOWS rather than the one this
+  file happens to use: whitespace around the `=`, and either quote character. The regex the
+  first version of this gate used demanded `Language="` exactly, so `Language = 'sr'` was
+  invisible to it while MakeAppx and the deployment stack both read it, and the gates reported
+  green over a manifest that could not be installed. Returns '' when there is no readable
+  attribute, which the caller counts rather than skips. }
+function LanguageAttr(const AElem: string): string;
+var at, i: Integer; q: Char;
+begin
+  Result := '';
+  at := Pos('Language', AElem);
+  if at = 0 then Exit;
+  i := at + Length('Language');
+  while (i <= Length(AElem)) and (AElem[i] in [' ', #9, #10, #13]) do Inc(i);
+  if (i > Length(AElem)) or (AElem[i] <> '=') then Exit;
+  Inc(i);
+  while (i <= Length(AElem)) and (AElem[i] in [' ', #9, #10, #13]) do Inc(i);
+  if (i > Length(AElem)) or not (AElem[i] in ['"', '''']) then Exit;
+  q := AElem[i];
+  Inc(i);
+  at := i;
+  while (i <= Length(AElem)) and (AElem[i] <> q) do Inc(i);
+  if i > Length(AElem) then Exit;
+  Result := Copy(AElem, at, i - at);
+end;
+
 procedure CheckManifestLanguages;
 const MANIFEST = 'packaging/AppxManifest.xml.in';
 var
-  body, declared, wanted: TStringList;
-  s_, one: string;
-  i, at, stop: Integer;
+  body, tags, uniq, bases, wanted: TStringList;
+  s_, raw, one, block, row: string;
+  i, at, stop, found, seen, comments, resAt, resEnd: Integer;
   lang: TSpxLang;
+  cyr: Boolean;
 begin
   if not FileExists(MANIFEST) then
   begin
     CheckTrue('manifest/is where the suite expects it', False);
     Exit;
   end;
-  declared := TStringList.Create;
+  tags := TStringList.Create;
+  uniq := TStringList.Create;
+  bases := TStringList.Create;
   wanted := TStringList.Create;
   body := TStringList.Create;
   try
-    declared.Sorted := True;
-    declared.Duplicates := dupError;   { the same language twice is a manifest error }
+    { The FULL tag is what may not repeat; the BASE list tolerates a repeat on purpose, because
+      two SCRIPTS of one language are a legitimate pair (`sr-cyrl` beside `sr-latn`).
+
+      NEITHER LIST USES dupError ANY MORE. The older form of this check was keyed on primary
+      subtags with dupError, so the first attempt at declaring both Serbian scripts did not
+      fail, it killed the process with EStringListError and reported nothing at all. A repeat
+      is now counted and named like any other finding. }
+    tags.Sorted := False;
+    bases.Sorted := True;
+    bases.Duplicates := dupIgnore;
+    uniq.Sorted := True;
+    uniq.Duplicates := dupIgnore;
     wanted.Sorted := True;
     wanted.Duplicates := dupIgnore;
 
     body.LoadFromFile(MANIFEST);
-    s_ := body.Text;
-    i := 1;
-    while True do
+    raw := body.Text;
+    s_ := StripXmlComments(raw);
+
+    { Scoped to the Resources BLOCK, not to the whole file, so an element named anywhere else
+      cannot be counted as a declaration. }
+    resAt := Pos('<Resources>', s_);
+    resEnd := PosEx('</Resources>', s_, resAt + 1);
+    CheckTrue('manifest/has one Resources block', (resAt > 0) and (resEnd > resAt));
+    if (resAt > 0) and (resEnd > resAt) then
     begin
-      at := PosEx('<Resource ', s_, i);
-      if at = 0 then Break;
-      stop := PosEx('/>', s_, at);
-      if stop = 0 then Break;
-      one := Copy(s_, at, stop - at);
-      i := stop + 2;
-      at := Pos('Language="', one);
-      if at = 0 then Continue;
-      one := Copy(one, at + Length('Language="'), MaxInt);
-      at := Pos('"', one);
-      if at = 0 then Continue;
-      declared.Add(PrimarySubtag(Copy(one, 1, at - 1)));
+      Inc(resAt, Length('<Resources>'));
+      block := Copy(s_, resAt, resEnd - resAt);
+      seen := 0;
+      i := 1;
+      while True do
+      begin
+        at := PosEx('<Resource', block, i);
+        if at = 0 then Break;
+        stop := PosEx('>', block, at);
+        if stop = 0 then Break;
+        Inc(seen);
+        i := stop + 1;
+        one := LowerCase(Trim(LanguageAttr(Copy(block, at, stop - at))));
+        if one = '' then Continue;
+        tags.Add(one);
+        uniq.Add(one);
+        bases.Add(PrimarySubtag(one));
+      end;
+
+      { UNDER CLAIMING IS ALLOWED HERE, OVER CLAIMING IS NOT. An element this reader cannot
+        parse must become a named failure, never a silent skip: a skipped element is exactly
+        how a live `sr` sat beside a good `sr-Cyrl` with every check green. }
+      Check('manifest/every Resource element was understood',
+            IntToStr(tags.Count), IntToStr(seen));
     end;
 
     for lang := Low(TSpxLang) to High(TSpxLang) do
       wanted.Add(PrimarySubtag(SpxLangCode(lang)));
 
-    CheckTrue('manifest/declares at least one language', declared.Count > 0);
+    CheckTrue('manifest/declares at least one language', tags.Count > 0);
+    Check('manifest/no language is declared twice',
+          IntToStr(tags.Count), IntToStr(uniq.Count));
     Check('manifest/declares every language the window speaks',
-          declared.CommaText, wanted.CommaText);
+          bases.CommaText, wanted.CommaText);
+
+    { QUESTION 1: is every declared tag a code the Store publishes? }
+    for i := 0 to tags.Count - 1 do
+      CheckTrue('manifest/' + tags[i] + '/is a language code the Store publishes',
+                StoreLangFor(tags[i], row, cyr));
+
+    { QUESTION 2: does each declared tag name the script its window is written in? Asked per
+      LANGUAGE rather than per tag, so a language declared twice is answered twice and a
+      language declared under the other script is named in the failure. }
+    for lang := Low(TSpxLang) to High(TSpxLang) do
+    begin
+      found := 0;
+      for i := 0 to tags.Count - 1 do
+        if PrimarySubtag(tags[i]) = PrimarySubtag(SpxLangCode(lang)) then
+        begin
+          Inc(found);
+          if StoreLangFor(tags[i], row, cyr) then
+            Check('manifest/' + tags[i] + ' (' + row + ')/declares the script the window ' +
+                  'is written in',
+                  BoolToStr(cyr, True), BoolToStr(TableIsCyrillic(lang), True));
+        end;
+      CheckTrue('manifest/' + SpxLangCode(lang) + '/is declared at least once', found > 0);
+    end;
 
     { XML FORBIDS A DOUBLE HYPHEN INSIDE A COMMENT, and MakeAppx reports it as an "expected
       '>'" at a column, which is how a prose dash in the languages comment cost a package
@@ -3311,11 +3645,20 @@ begin
       closer must be hyphen-pair-free (which also refuses a nested opener, whose `!` is
       followed by the pair), and what remains outside must carry no pair and no unclosed
       opener. Review round one showed the counting version blessed a nested opener, because
-      it raised both sides of the equation at once. }
-    one := s_;
+      it raised both sides of the equation at once.
+
+      OVER `raw`, NOT OVER `s_`. Round three of this review caught the gate reading the
+      comment-stripped copy the resource scan needs: `Pos('<!--', ...)` was then always 0, the
+      loop never ran, and its three assertions passed by never being asked. Hence the count
+      below, which fails if this ever stops seeing a comment at all. A check that cannot find
+      its subject must say so rather than succeed, which is the same rule as the element count
+      above and the reason both exist. }
+    comments := 0;
+    one := raw;
     at := Pos('<!--', one);
     while at > 0 do
     begin
+      Inc(comments);
       stop := PosEx('-->', one, at + 4);
       CheckTrue('manifest/every comment is closed', stop > 0);
       if stop = 0 then Break;
@@ -3330,6 +3673,7 @@ begin
       at := Pos('<!--', one);
     end;
     CheckTrue('manifest/no double hyphen outside a comment', CountPos('--', one) = 0);
+    CheckTrue('manifest/the comment checks actually read a comment', comments > 0);
 
     { THE CAPABILITY PAIR, pinned exactly (N6, owner's decision 2026-08-09): runFullTrust is
       what a packaged Win32 app is, and internetClient is deliberately declared though
@@ -3360,7 +3704,9 @@ begin
   finally
     body.Free;
     wanted.Free;
-    declared.Free;
+    bases.Free;
+    uniq.Free;
+    tags.Free;
   end;
 end;
 
@@ -3844,16 +4190,51 @@ begin
 end;
 
 const
-  { Every code the pinned engine can emit, from its own sources -- the panel's coverage and the
-    help's are only as honest as this list, so it is spelled out rather than derived. At program
-    scope because two tests need it: the panel's wording and the help's article inventory. }
-  ENGINE_CODES: array[0..16] of string = (
+  { Every code the pinned engine can emit, from its own sources -- the panel's wording is only
+    as honest as this list, so it is spelled out rather than derived, and
+    `engine/codes/the engine emits none this list has not got` compares it to the engine.
+    At program scope because three tests need it. }
+  ENGINE_CODES: array[0..17] of string = (
     'bracket.unclosed', 'bracket.mismatched', 'bracket.unexpected-closing',
     'set.malformed', 'def.malformed', 'def.include-in-value', 'definition.duplicate-name',
     'include.unknown-target', 'variable.undefined', 'variable.self-reference',
     'variable.circular-reference', 'plural.arity', 'plural.count-macro',
     'plural.nested-brackets', 'permutation.unknown-key', 'permutation.minsize-not-integer',
-    'permutation.maxsize-not-integer');
+    'permutation.maxsize-not-integer', 'plural.locale-missing');
+
+  (* ▁▁▁ AND THE SHORTER LIST: WHAT A READER CAN ACTUALLY MEET ▁▁▁
+
+     The two were the same set until the engine reached v0.7.0, and the help's coverage rule
+     was written while they were: "a document either answers every code the panel CAN SHOW, or
+     it is not registered at all". `plural.locale-missing` is the first code that separates
+     them. It is raised only when the locale is EMPTY and a plural block carries a form count
+     other than the default arity of two -- measured, `{plural %n%: one|few|many}` answers it
+     at locale "" and answers nothing at "en", "ru" or any other tag.
+
+     Studio has no empty locale. `SPX_LOCALES` holds ten tags, none blank, the box is
+     csDropDownList so nothing can be typed into it, and the locale is not persisted, so every
+     run starts on 'en'. A reader therefore cannot produce this code in the panel, and an
+     article about it in fourteen languages would document something the product cannot do.
+
+     THE EXCLUSION IS GATED, NOT ASSERTED. `TestLocaleIsNeverEmpty` below asks the engine
+     itself: for every tag Studio can pass, the template that raises this code at "" must not
+     raise it. The day someone adds an "auto" or "none" entry to that list, that check fails
+     and this comment stops being true out loud rather than quietly. Wording for the panel is
+     carried anyway, in both languages, because the list above is what the engine emits and a
+     bare slug on screen is not an option we want one edit away. *)
+  READER_CODES_EXCLUDED: array[0..0] of string = ('plural.locale-missing');
+
+{ A code the engine emits that this application cannot put on screen, so the help owes it no
+  article. Both coverage checks ask this one function -- the markdown inventory and the
+  generated unit's -- because two copies of an exclusion list is how one of them ends up
+  excusing something the other still demands. }
+function IsReaderExcluded(const ACode: string): Boolean;
+var j: Integer;
+begin
+  Result := False;
+  for j := Low(READER_CODES_EXCLUDED) to High(READER_CODES_EXCLUDED) do
+    if READER_CODES_EXCLUDED[j] = ACode then Exit(True);
+end;
 
 procedure TestStrings;
 var
@@ -5022,7 +5403,12 @@ begin
   try
     missing := '';
     doubled := '';
-    for i := Low(ENGINE_CODES) to High(ENGINE_CODES) do Want(ENGINE_CODES[i]);
+    { Every code the READER can meet, which is ENGINE_CODES less the ones Studio cannot raise
+      at all -- see READER_CODES_EXCLUDED, whose single member is gated by
+      TestLocaleIsNeverEmpty rather than trusted. An article is written for a panel row
+      somebody can actually see. }
+    for i := Low(ENGINE_CODES) to High(ENGINE_CODES) do
+      if not IsReaderExcluded(ENGINE_CODES[i]) then Want(ENGINE_CODES[i]);
     { The notes are the panel's rows too, and their slugs come from the one function that
       mints them -- restating the list here would be a second source to drift. }
     for k := Low(TSpxNoteKind) to High(TSpxNoteKind) do Want(SpxNoteCode(k));
@@ -7757,8 +8143,9 @@ begin
     { EVERY CODE THE PANEL CAN SHOW HAS AN ARTICLE TO OPEN. This is the check the whole
       double-click entry point rests on, and the reason CheckHelpArticles exists one level up. }
     for i := Low(ENGINE_CODES) to High(ENGINE_CODES) do
-      CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/an article for ' + ENGINE_CODES[i],
-                SpxHelpTargetFor(lang, ENGINE_CODES[i], p_, s_));
+      if not IsReaderExcluded(ENGINE_CODES[i]) then
+        CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/an article for ' + ENGINE_CODES[i],
+                  SpxHelpTargetFor(lang, ENGINE_CODES[i], p_, s_));
     for k := Low(TSpxNoteKind) to High(TSpxNoteKind) do
       CheckTrue('help/unit/' + SpxHelpLangCode(lang) + '/an article for ' + SpxNoteCode(k),
                 SpxHelpTargetFor(lang, SpxNoteCode(k), p_, s_));
@@ -9693,6 +10080,395 @@ begin
   end;
 end;
 
+(* ▁▁▁ THE COUNTER TERMINATES ON A FAN OUT, WHICH NEITHER OF ITS GUARDS BOUNDED ▁▁▁
+
+   `Stack` stops a macro that expands ITSELF and the depth cap stops a long chain. Neither
+   bounds an ACYCLIC fan out: no name repeats on any path and no path is deep, yet every
+   occurrence recounts its value from scratch and the cost is the product of the widths.
+   Measured before the budget: a 2624 byte document took 19156 ms on the worker thread the
+   window waits for, and a 7824 byte one would have taken far longer. After: 1522 ms and
+   1438 ms -- the SAME, because the bound is the budget and not the document, which is the
+   property this pins.
+
+   The assertion is `Exact = False` rather than a stopwatch: a timing check on a shared runner
+   is a flake, and Exact is the visible consequence anyway -- the window says the number is a
+   lower bound. The ordinary template beside it is the instrument check, because a budget set
+   absurdly low would make every count inexact and this test would still pass alone.
+
+   Found by review at the v0.7.0 bump, though it predates it. The cyclic bomb the engine fixed
+   that release was measured here at 0 ms and is NOT this; mistaking one for the other is how
+   `Stack` was taken for the whole defence. *)
+procedure TestCounterTerminates;
+var doc, a, b, top, body: string; i, j: Integer; c: TSpxCount;
+  set_: TSpxTemplateSet; ctx: TSpxContext;
+begin
+  b := '';
+  for i := 1 to 200 do b := b + '{x|y}';
+  a := '';
+  for i := 1 to 200 do a := a + '%b% ';
+  top := '';
+  for i := 1 to 200 do top := top + '%a% ';
+  doc := '#set %b% = ' + b + LineEnding + '#set %a% = ' + a + LineEnding + top;
+
+  c := SpxCountVariants(doc, Default(TSpxContext));
+  CheckTrue('count/a fan out is answered as a lower bound rather than walked', not c.Exact);
+  CheckTrue('count/and it still answers something', c.Value > 0);
+
+  { AND THE SAME SHAPE THROUGH INCLUDES, which is a THIRD path and was not covered by the
+    macro budget: `Seen` is deleted again on the way out, so it guards a cycle and not a
+    fragment reached twice by different routes. Twelve fragments each including the next ten
+    times is acyclic and inside the depth cap of 20, and it did not finish in 60 seconds. }
+  set_ := TSpxTemplateSet.Create;
+  try
+    for i := 1 to 12 do
+    begin
+      body := '';
+      if i < 12 then
+        for j := 1 to 10 do body := body + '#include "f' + IntToStr(i + 1) + '"' + LineEnding
+      else
+        body := '{a|b}';
+      set_.AddOrSetValue('f' + IntToStr(i), body);
+    end;
+    ctx := Default(TSpxContext);
+    ctx.Templates := set_;
+    c := SpxCountVariants('#include "f1"', ctx);
+    CheckTrue('count/an include fan out is answered as a lower bound', not c.Exact);
+    CheckTrue('count/and the include fan out still answers something', c.Value > 0);
+  finally
+    set_.Free;
+  end;
+
+  { THE INSTRUMENT, and it is not decoration: a budget set absurdly low would make every count
+    inexact and all four checks above would pass on their own. An ordinary template must stay
+    EXACT and keep its number. A `#def` named twice belongs here too -- recounting it spent
+    budget for an answer the caller discards, which review caught and which would have shown up
+    only as an exact count quietly becoming a lower bound. }
+  c := SpxCountVariants('#set %g% = {a|b}' + LineEnding + '%g% {c|d}', Default(TSpxContext));
+  Check('count/an ordinary template is still exact', BoolToStr(c.Exact, True), 'True');
+  Check('count/and still counted right', IntToStr(c.Value), '4');
+
+  { BIG ENOUGH TO DISCRIMINATE. The first cut of this used a seven character definition, and
+    400 references to it cost far less than the budget either way -- so it passed whether or not
+    the already-rolled early exit was there, which review pointed out. At 20 KB a recount would
+    spend 8 MB against a 4 MB budget, so removing that exit turns this from exact into a lower
+    bound. The numeric answer never moves, which is exactly why nothing noticed before. }
+  body := '';
+  for i := 1 to 2000 do body := body + '{a|b|c}xxx';
+  body := '#def %d% = ' + body + LineEnding;
+  for i := 1 to 400 do body := body + '%d% ';
+  c := SpxCountVariants(body, Default(TSpxContext));
+  Check('count/a def named four hundred times is still exact',
+        BoolToStr(c.Exact, True), 'True');
+
+  { AND A PLAIN VALUE IS NOT CHARGED AT ALL, which is the engine's own rule: a value carrying
+    no construct is substituted once and never expanded again, so it cannot fan anything out.
+    An ordinary 65 KB template of one trivial macro repeated -- count exactly one -- became a
+    lower bound when a flat per-expansion price was applied to every path. Review measured it;
+    the price had been measured on the include tree and applied everywhere. }
+  body := '#set %x% = x' + LineEnding;
+  for i := 1 to 16322 do body := body + '%x% ';
+  c := SpxCountVariants(body, Default(TSpxContext));
+  Check('count/a plain macro repeated across 65 KB is still exact',
+        BoolToStr(c.Exact, True), 'True');
+  Check('count/and still answers one', IntToStr(c.Value), '1');
+end;
+
+(* ▁▁▁ A POINTER INTO THE ENGINE IS A CLAIM, AND NOTHING WAS CHECKING IT ▁▁▁
+
+   Studio MIRRORS engine rules in several places -- the counter's permutation ranges, the
+   plural head gate, the whitespace class -- and each of those comments cited the engine by
+   FILE AND LINE. Line numbers were the wrong currency. At the v0.7.0 bump seventeen of the
+   eighteen citations pointed somewhere else, which is expected; what was not expected is that
+   three were ALREADY wrong at the pin they were written against. `Spintax.pas:1830-1837` was
+   offered as the four asymmetric permutation branches, and at v0.5.1 those lines were the
+   plural fallback -- the branches were sixty lines further down. It had drifted at an earlier
+   bump and nothing noticed, because nothing compares a citation to the engine.
+
+   So citations name a THING now, not a place: `Spintax.pas/HasConfigKey`. A name survives
+   renumbering, it is what a reader would grep for anyway, and -- the part that matters -- it
+   can be checked. This does that: every name cited anywhere in src/ or gui/ must still exist
+   in the pinned engine's source.
+
+   WHAT IT DOES NOT COVER, plainly: it proves the name is still there, not that the rule beside
+   it is still what that name does. A routine can keep its name and change its mind, which is
+   what the v0.5.1 bump did to ReadPermConfig and what the charter records. This catches the
+   rename and the deletion; the behaviour is on whoever reads the diff. It also cannot notice a
+   citation that names the wrong thing correctly. *)
+{ Pascal comments taken out, so a cited name that survives only in the engine's PROSE does not
+  count as still existing. Raised by review: the boundary check below made the match a whole
+  identifier but said nothing about where it was found, while the comment above it claimed it
+  had. Brace, star-paren and line comments. STRING LITERALS ARE COPIED THROUGH RATHER THAN
+  SCANNED, and that is not tidiness: the engine is a parser for a language MADE of braces, so it
+  holds twenty string constants whose whole content is an opening brace, and a stripper that does
+  not know a quote when it sees one takes each of them for a comment opener and eats everything
+  up to the next closing brace. (Written in words rather than quoted, because this comment is
+  itself a brace comment and the quoted form closed it -- fifth time today.) Measured before the
+  fix: none of the seventeen names cited today was lost, so the gate was right by luck and the
+  next citation was one edit from being eaten. A name that appears ONLY inside an engine string
+  literal would still satisfy this, which no citation here does. }
+function StripPascalComments(const S: string): string;
+var i, n: Integer;
+begin
+  Result := '';
+  i := 1;
+  n := Length(S);
+  while i <= n do
+  begin
+    if S[i] = #39 then
+    begin
+      Result := Result + S[i];
+      Inc(i);
+      while i <= n do
+      begin
+        Result := Result + S[i];
+        if S[i] = #39 then
+        begin
+          Inc(i);
+          if (i <= n) and (S[i] = #39) then Continue;   { '' is an escaped quote }
+          Break;
+        end;
+        Inc(i);
+      end;
+    end
+    else if (S[i] = '{') then
+    begin
+      while (i <= n) and (S[i] <> '}') do Inc(i);
+      Inc(i);
+    end
+    else if (i < n) and (S[i] = '(') and (S[i + 1] = '*') then
+    begin
+      Inc(i, 2);
+      while (i < n) and not ((S[i] = '*') and (S[i + 1] = ')')) do Inc(i);
+      Inc(i, 2);
+    end
+    else if (i < n) and (S[i] = '/') and (S[i + 1] = '/') then
+    begin
+      while (i <= n) and (S[i] <> #10) do Inc(i);
+    end
+    else
+    begin
+      Result := Result + S[i];
+      Inc(i);
+    end;
+  end;
+end;
+
+{ Three digits in a row -- the shape of a line number that outlived the rename. }
+function HasThreeDigits(const S: string): Boolean;
+var i, run: Integer;
+begin
+  run := 0;
+  for i := 1 to Length(S) do
+    if (S[i] >= '0') and (S[i] <= '9') then
+    begin
+      Inc(run);
+      if run >= 3 then Exit(True);
+    end
+    else run := 0;
+  Result := False;
+end;
+
+{ A WHOLE IDENTIFIER, not a substring. `Pos` alone was satisfied by any longer name that
+  happens to contain the cited one, and by a mention inside a comment, which is a weaker claim
+  than the one this gate is making. Boundaries are the Pascal identifier characters. }
+function HasIdent(const AHay, AName: string): Boolean;
+var at: Integer;
+
+  function IdentChar(C: Char): Boolean;
+  begin
+    Result := ((C >= 'A') and (C <= 'Z')) or ((C >= 'a') and (C <= 'z')) or
+              ((C >= '0') and (C <= '9')) or (C = '_');
+  end;
+
+begin
+  Result := False;
+  if AName = '' then Exit;
+  at := 1;
+  repeat
+    at := PosEx(AName, AHay, at);
+    if at = 0 then Exit;
+    if ((at = 1) or not IdentChar(AHay[at - 1])) and
+       ((at + Length(AName) > Length(AHay)) or not IdentChar(AHay[at + Length(AName)])) then
+      Exit(True);
+    Inc(at, Length(AName));
+  until False;
+end;
+
+procedure TestEngineCitations;
+const ENGINE_PATH = 'engine/src/Spintax.pas';
+var
+  dirs: array[0..1] of string;
+  rec: TSearchRec;
+  eng, body: TStringList;
+  d, i, at, stop: Integer;
+  src_, txt, tail, name_, missing, seen, numbered, colonForm: string;
+  at2: Integer;
+begin
+  if not FileExists(ENGINE_PATH) then
+  begin
+    CheckTrue('citations/the pinned engine source is where the suite expects it', False);
+    Exit;
+  end;
+  eng := TStringList.Create;
+  missing := '';
+  seen := '';
+  numbered := '';
+  colonForm := '';
+  try
+    eng.LoadFromFile(ENGINE_PATH);
+    src_ := StripPascalComments(eng.Text);
+    dirs[0] := 'src';
+    dirs[1] := 'gui';
+    for d := Low(dirs) to High(dirs) do
+    begin
+      if FindFirst(dirs[d] + '/*.pas', faAnyFile, rec) <> 0 then Continue;
+      try
+        repeat
+          if (rec.Attr and faDirectory) <> 0 then Continue;
+          body := TStringList.Create;
+          try
+            body.LoadFromFile(dirs[d] + '/' + rec.Name);
+            txt := body.Text;
+            { the form this whole convention replaced, refused outright rather than renumbered }
+            if Pos('Spintax.pas:', txt) > 0 then
+              colonForm := colonForm + rec.Name + ' ';
+            i := 1;
+            while True do
+            begin
+              at := PosEx('Spintax.pas/', txt, i);
+              if at = 0 then Break;
+              i := at + Length('Spintax.pas/');
+              stop := i;
+              while (stop <= Length(txt)) and
+                    (txt[stop] in ['A'..'Z', 'a'..'z', '0'..'9', '_', '.']) do Inc(stop);
+              name_ := Copy(txt, i, stop - i);
+              { THE TAIL RUNS TO WHAT ACTUALLY CLOSES THE CITATION -- the enclosing `)` or the
+                end of the line, whichever comes first -- rather than to a fixed forty
+                characters, which was the first cut and which review pointed out does not
+                mean "anywhere inside a citation" at all. }
+              tail := '';
+              at2 := stop;
+              while (at2 <= Length(txt)) and (txt[at2] <> ')') and (txt[at2] <> #10) and
+                    (txt[at2] <> #13) do
+              begin
+                tail := tail + txt[at2];
+                Inc(at2);
+              end;
+              if HasThreeDigits(tail) then
+                numbered := numbered + rec.Name + ':' + name_ + ' ';
+              if name_ = '' then Continue;
+              seen := seen + name_ + ' ';
+              if not HasIdent(src_, name_) then
+                missing := missing + rec.Name + ':' + name_ + ' ';
+            end;
+          finally
+            body.Free;
+          end;
+        until FindNext(rec) <> 0;
+      finally
+        FindClose(rec);
+      end;
+    end;
+
+    { The instrument first: a scan that finds NO citation would report a clean sheet, which is
+      indistinguishable from a clean sheet. Studio has had these pointers since the counter was
+      written and losing all of them is a defect in this check, not an improvement in the code. }
+    CheckTrue('citations/some engine citations were actually found', Trim(seen) <> '');
+    Check('citations/every cited engine name still exists in the pinned engine',
+          Trim(missing), '');
+
+    { AND NO RAW LINE NUMBER SURVIVES, IN EITHER SHAPE. The rewrite that introduced the name
+      form matched `Spintax.pas:NNNN` and therefore walked straight past
+      `(Spintax.pas/ExpandVarsOnly, 1753, 1768)`, where the numbers trailed the name with no
+      file prefix of their own. The first version of THIS check then only looked at citations
+      that begin `Spintax.pas/`, so the original colon form could simply be written again and
+      the assertion would still pass -- review's point, and the same shape as the defect it was
+      written for. Both are refused now: a colon citation anywhere, and three or more digits
+      inside a name citation. }
+    Check('citations/no citation still carries a raw engine line number',
+          Trim(numbered), '');
+    Check('citations/no citation uses the file-and-line form at all',
+          Trim(colonForm), '');
+  finally
+    eng.Free;
+  end;
+end;
+
+(* ▁▁▁ THE EXCLUSION ABOVE, ASKED OF THE ENGINE RATHER THAN ARGUED ▁▁▁
+
+   READER_CODES_EXCLUDED takes `plural.locale-missing` out of the help's coverage on the
+   grounds that Studio cannot raise it. That is a claim about TWO things at once -- the locale
+   list, and what the engine does with each of its tags -- so it is measured on both sides
+   rather than reasoned from either.
+
+   The template is the one that separates them: three forms, which is not the default arity of
+   two, so an empty locale raises the code and any real tag does not. If the locale list ever
+   gains a blank or an "auto" entry, the first loop fails; if a future engine starts reporting
+   this with a locale in hand, the second does. Either way the comment beside
+   READER_CODES_EXCLUDED stops being true out loud instead of quietly, which is the whole
+   reason an exclusion is allowed to exist at all. *)
+procedure TestLocaleIsNeverEmpty;
+const PROBE = '{plural %n%: one|few|many}';
+
+  function Raises(const ATag: string): Boolean;
+  var d: TSpDiagList; i: Integer;
+  begin
+    Result := False;
+    d := SpValidate(PROBE, ATag, nil);
+    try
+      for i := 0 to d.Count - 1 do
+        if d[i].Code = 'plural.locale-missing' then Exit(True);
+    finally
+      d.Free;
+    end;
+  end;
+
+var i, d: Integer; blank, raised_: string;
+begin
+  { The instrument first: if the empty locale does NOT raise it, this whole test is measuring
+    nothing and would pass by vacuity, which is how a dead gate looks from the outside. }
+  CheckTrue('locale/the probe really does raise it with no locale', Raises(''));
+
+  blank := '';
+  raised_ := '';
+  CheckTrue('locale/the list offers at least one tag', SpxLocaleCount > 0);
+  for i := 0 to SpxLocaleCount - 1 do
+  begin
+    if Trim(SpxLocaleTag(i)) = '' then blank := blank + '#' + IntToStr(i) + ' ';
+    { REPORTED BY INDEX, NOT BY TAG. Naming the offender with the tag itself made this pass
+      for the one input it exists to catch: a blank tag appends a blank, Trim eats it, and the
+      comparison against '' succeeds. Measured by adding '' to SPX_LOCALES -- the blank check
+      above fired and this one did not. A failure message built out of the failing VALUE
+      disappears whenever that value is empty. }
+    if Raises(SpxLocaleTag(i)) then
+      raised_ := raised_ + '#' + IntToStr(i) + '="' + SpxLocaleTag(i) + '" ';
+  end;
+  Check('locale/no tag the box can offer is blank', Trim(blank), '');
+  Check('locale/no tag the box can offer raises plural.locale-missing', Trim(raised_), '');
+
+  { THE BOX IS NOT THE ONLY PLACE A TAG COMES FROM. The help renders its own examples under a
+    locale baked into the generated unit, one per document, and that is a second list handed
+    to the engine. It reaches SpRender rather than SpValidate, so it cannot put this code in
+    the panel -- but the invariant worth pinning is "no tag Studio hands the engine is blank",
+    not "no tag in one of the two lists", and finding this list only while writing the check
+    above is the argument for saying so out loud. }
+  blank := '';
+  for i := 0 to SPX_HELP_LANG_COUNT - 1 do
+    for d := 0 to SpxHelpDocCount(i) - 1 do
+      if Trim(SpxHelpLocale(i, d)) = '' then
+        blank := blank + '#' + IntToStr(i) + '/' + IntToStr(d) + ' ';
+  Check('locale/no help document renders under a blank locale', Trim(blank), '');
+
+  { AND THE PROOF IS TIED TO THE LIST IT EXCUSES. Everything above measures exactly ONE code.
+    READER_CODES_EXCLUDED drives both help gates, so a second member added later would quietly
+    drop fourteen documents' worth of obligation while this test went on passing about the
+    first one. Raised by review. Whoever adds the second code writes its reachability proof
+    here and then widens this. }
+  Check('locale/the exclusion list is exactly what this test proves',
+        IntToStr(Length(READER_CODES_EXCLUDED)) + ' ' + READER_CODES_EXCLUDED[0],
+        '1 plural.locale-missing');
+end;
+
 procedure TestValidationCache;
 var
   tset: TStrMap;
@@ -11346,6 +12122,9 @@ begin
   TestDirectiveEditing;
   TestModelDirIndex;
   TestKeepRuntime;
+  TestCounterTerminates;
+  TestEngineCitations;
+  TestLocaleIsNeverEmpty;
   TestValidationCache;
   TestDedupe;
   TestExport;
