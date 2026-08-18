@@ -223,11 +223,18 @@ Each side expands exactly **once** and then stops: `%x%` became `%y%`, not `%x%`
 unwinds rather than looping, and what survives is the other name in the circle — put `%x% %y%`
 in a document and it renders `%y% %x%`, the pair swapped.
 
-The panel draws a row for **each reference that closes the circle**, not one row for the
-circle and not one per definition. A definition that names the circle twice gets two rows
-on its own line: `#set %x% = %y% %y%` against `#set %y% = %x%` is three errors, two of them
-on the first line. The rows are not merged. And the position is on the definition that is
-actually live — where a name is defined twice, that is the **last** one.
+The panel draws one row for **each defined name that can reach the circle**, not one row for
+the circle and not one per reference. Naming the circle twice on one line does not double the
+row: `#set %x% = %y% %y%` against `#set %y% = %x%` is two errors, one on each line — the same
+as the plain pair.
+
+**A name that only leads into the circle is reported too**, which is the part that surprises:
+a chain of definitions feeding a two-name circle draws a row for every link in the chain, not
+two rows for the circle alone. A name that refers ONLY to itself is a different error —
+`variable.self-reference` — but a definition that names itself **and** reaches a circle draws
+both: `#set %s% = %s% %c1%` over a two-name circle is one self-reference and three circular
+rows, one of them on that same line. And the position is on the definition that is actually
+live — where a name is defined twice, that is the **last** one.
 
 ---
 
@@ -541,9 +548,10 @@ Both came through unchanged, and that is the trap: only the second drew a row in
 first is silent, so nothing tells you it will never be substituted. Rename it.
 
 **Why is the same error shown twice?**
-A circle of definitions draws a row for every reference that closes it — two places to look at,
-sometimes three. `#set %x% = %y% %y%` against `#set %y% = %x%` is three rows, two of them on the
-first line. They are not duplicates and they are not merged.
+A circle of definitions draws a row for every NAME that can reach it — at least two places to
+look at, and more when other definitions feed the circle. `#set %x% = %y% %y%` against
+`#set %y% = %x%` is two rows, one on each line. They are not duplicates: each row is a
+different name, and they are not merged.
 
 **The panel says error and the output looks right. Which is it?**
 Both. That happens with a redefined name: the render is correct — the last value wins — and the

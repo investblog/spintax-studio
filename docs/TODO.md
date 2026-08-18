@@ -2212,10 +2212,10 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       looked exactly like the fix not working. The full account is in
       [`release-validation.md`](release-validation.md).
 
-## Engine `v0.8.0` is out (2026-08-19) — not taken yet
+## Engine bumped to `v0.8.0` (2026-08-19)
 
-- [ ] **Bump `v0.7.0` → `v0.8.0`: one commit, and it reverses a behaviour our help describes in
-      two languages.** `fix(validate): one circular-reference diagnostic per NAME, not per PATH`
+- [x] **Bumped `v0.7.0` → `v0.8.0`: one commit, and it reversed a behaviour our help described
+      in fourteen languages.** `fix(validate): one circular-reference diagnostic per NAME, not per PATH`
       — engine issue #2, adopting spintax-js#59. The `interface` section is **byte-identical**
       to `v0.7.0` (diffed, not read off the notes), so it is drop-in by contract and, exactly as
       on 2026-08-18, that is where the danger starts rather than ends.
@@ -2243,9 +2243,39 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       RENDERED output byte for byte, and this is a claim about diagnostic COUNTS in prose, which
       is the same blind spot that let the `plural.arity` sentence go stale.
 
-      Also to re-check when it is taken: `SpxPanelRows` sorts stably and deduplicates nothing,
-      which was right for per-path and is worth re-reading for per-name; and whether any Studio
-      test pins the old count.
+      **Taken 2026-08-19. Measured here, not copied:** corpus PASS=254 FAIL=0 SKIP=4 against
+      the shared fixtures; the engine's own suites 542 and 94; Studio 29104 checks, 0 failed.
+      The `interface` section is byte-identical to `v0.7.0`, diffed at the pin.
+
+      **The DoS reproduced, and through Studio's own path rather than the engine's** — which is
+      what turned a changelog line into a fact about this product. `cycle-diamond-terminates`,
+      507 bytes:
+
+      ```
+      v0.7.0   SpxHealthReport 8859 ms, then 2 097 152 panel rows in a further 1008 ms
+      v0.8.0   SpxHealthReport 1 ms, 22 rows
+      ```
+
+      So **the shipped `0.2.1.0` freezes for about ten seconds on 507 bytes** of ordinary
+      definitions. Not a reason to submit on its own — the owner's batching rule stands — but it
+      belongs in whatever ships next, and it is written here so the decision is made knowing it.
+
+      **The shape, measured on the help's own example:** `#set %x% = %y% %y%` over
+      `#set %y% = %x%` gave 3 rows at `v0.7.0` (L1, L1, L2) and gives 2 at `v0.8.0` (L1, L2).
+      The plain pair is 2 in both, which is why it is the instrument beside it.
+
+      `SpxPanelRows` needed no change: it sorts stably and deduplicates nothing, which was
+      written for per-path and simply stops meeting two rows on one character. **No Studio test
+      pinned the count** — that is why two reversals in eleven days both passed. Now
+      `TestCircularDiagnosticShape` does: it goes through `SpxHealthReport` and `SpxPanelRows`
+      rather than `SpValidate`, counts per line so the engine's ordering cannot fail it
+      spuriously, and carries a FEEDER case, a self-loop case and the mixed case. Verified by
+      putting `v0.7.0` back: **one** named failure — the help's own example, which is the case
+      the reversal moved; the others are unchanged across it by design, and that is what makes
+      them the instrument rather than the measurement.
+
+      Help corrected in `en` and `ru`. **The other twelve still carry the stale count** — see
+      below.
 
 ## Engine bumped to `v0.7.0` (2026-08-18)
 
@@ -2347,7 +2377,21 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       rather than by the first `}` on the line, and none of that belongs in a submodule pin.
       Raised by the Codex gate; the `{plural 2|3:` half was found by widening its example.
 
-- [ ] **Twelve help documents still carry a sentence this bump made false.** `plural.arity` in
+- [ ] **The same twelve help documents now carry TWO stale sentences, and that changes what
+      this item is.** After the `v0.8.0` bump on 2026-08-19 they hold the old circular-reference
+      count as well — "three errors, two of them on the first line", where the pinned engine
+      gives two, one per line. Corrected in `en` and `ru`; `de fr es it pt nl tr uk be sr hr bs`
+      are unchanged.
+
+      One stale sentence per document was a footnote. Two is a **translation pass**, and it is
+      worth planning as one rather than patching a sentence at a time each time the engine
+      moves: both stale claims are in the SAME article of the same document, both are counts
+      that came from the engine, and a third bump will add a third. Whoever takes it should
+      measure the claims afresh in each language rather than translating the English — the
+      abbreviation-shielding defect on 2026-08-07 is what happens when a measured English
+      sentence is carried across.
+
+- [ ] **Twelve help documents still carry a sentence the `v0.7.0` bump made false.** `plural.arity` in
       every language ends with a paragraph claiming the validator "counts the forms in the text
       and has no interest in the count". Both clauses are now wrong: it counts the forms the
       RENDERER will split, resolving a definition that stands in for them, and a conditional in
@@ -3381,7 +3425,11 @@ Decisions owed **before the relevant submission** (not switchable later):
 
 ## To report to the engine
 
-- [ ] **README line 13 disagrees with README's own table, and with the runner.** At `v0.7.0`
+- [x] **FIXED UPSTREAM in `v0.8.0`** — line 13 now reads "254 of its 258", the table sums to
+      254 and the runner agrees. Kept here because the habit it argues for is the point: run
+      the corpus rather than quote it. The report as it stood:
+
+- [x] **README line 13 disagrees with README's own table, and with the runner.** At `v0.7.0`
       the opening paragraph says the shared corpus is "**231 of its 235 cases pass**", while the
       conformance table sums to 253 and the totals line says `PASS=253 FAIL=0 SKIP=4` over 257.
       Run here against `W:\Projects\spintax-js\packages\conformanceixtures`: **253 / 0 / 4**,

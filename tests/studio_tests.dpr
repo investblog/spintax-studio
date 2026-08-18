@@ -10080,6 +10080,123 @@ begin
   end;
 end;
 
+(* ▁▁▁ THE SHAPE OF THE CIRCULAR DIAGNOSTIC, PINNED AGAINST THE ENGINE ▁▁▁
+
+   The engine has reversed this twice in eleven days -- per definition, then per REFERENCE at
+   `v0.5.1`, then per NAME at `v0.8.0` -- and Studio's suite noticed NEITHER time, because
+   nothing here asked. Both times the thing that went stale was a paragraph in the help stating
+   a worked count, in fourteen languages, and both times it was found by reading the engine's
+   commit message rather than by a failing check. `TestHelpExamples` cannot see it: it
+   byte-compares RENDERED output, and this is a claim about diagnostic COUNTS in prose.
+
+   THREE THINGS THE FIRST CUT OF THIS TEST GOT WRONG, all found by review:
+
+   * It called SpValidate DIRECTLY, so it would have stayed green if SpxHealthReport or
+     SpxPanelRows later dropped or merged rows. It goes through Studio's own path now, which is
+     the one a reader sees.
+   * It compared the positions as an ORDERED string, so the same two correct rows arriving in
+     the other order would have failed it -- a spurious red about an engine detail Studio sorts
+     away anyway. Counted per line now.
+   * It had no FEEDER case, and that omission is not academic: without one, the wording this
+     test was written to protect was itself wrong. "One row per name IN the circle" is narrower
+     than the engine, which reports a name when it can REACH a cycle of two or more
+     (`Spintax.pas/MarkCyclic` says so in as many words). Five definitions, two of them the
+     circle and three only leading into it, draw FIVE rows -- measured. The help said "in the
+     circle" until that was run.
+
+   The plain pair beside the help's example is there because it did NOT move across either
+   reversal: when the help's example changes and the plain pair does not, the difference is the
+   engine's rule and not the validator falling over. (Emission stopping altogether is caught by
+   any of these on its own -- an empty shape matches none of them. That was claimed the other
+   way round here until review read it.) *)
+procedure TestCircularDiagnosticShape;
+
+  { Rows of one CODE per LINE, through the path the window uses, as a sorted `L<line>=N` list
+    so the answer does not depend on the order the engine happened to report them in. }
+  function ShapeOf(const Doc, Code: string): string;
+  var
+    ctx: TSpxContext;
+    rep: TSpxReport;
+    rows: TSpxPanelRows;
+    lines: TStringList;
+    i, run: Integer;
+  begin
+    { COLLECTED FIRST, COUNTED AFTER, and the two are separate on purpose: the first version
+      incremented a value inside a SORTED list, which FPC refuses -- and it refuses it only on
+      the branch that fires when one line carries two rows, which is precisely the input this
+      test exists to detect. Against `v0.7.0` it did not fail by name, it killed the run with
+      EStringListError and took every later test with it. Third gate this session written so
+      that its own failure path is the one that breaks. }
+    ctx := Default(TSpxContext);
+    ctx.Locale := 'en';
+    lines := TStringList.Create;
+    try
+      rep := SpxHealthReport(Doc, ctx, 0);
+      try
+        rows := SpxPanelRows(rep, spxLangEn);
+        for i := 0 to High(rows) do
+          if rows[i].Code = Code then
+            lines.Add(Format('%.6d', [rows[i].Line]));
+      finally
+        rep.Free;
+      end;
+      lines.Sort;                     { sorted AFTER filling, never mutated while sorted }
+      Result := '';
+      i := 0;
+      while i < lines.Count do
+      begin
+        run := 1;
+        while (i + run < lines.Count) and (lines[i + run] = lines[i]) do Inc(run);
+        if Result <> '' then Result := Result + ',';
+        Result := Result + 'L' + IntToStr(StrToInt(lines[i])) + '=' + IntToStr(run);
+        Inc(i, run);
+      end;
+    finally
+      lines.Free;
+    end;
+  end;
+
+begin
+  { The help's own example. Three rows at v0.7.0 with two on line 1; two now, one per line. }
+  Check('engine/circular/the help example is one row per name',
+        ShapeOf('#set %x% = %y% %y%' + LineEnding + '#set %y% = %x%' + LineEnding + '%x%', 'variable.circular-reference'),
+        'L1=1,L2=1');
+
+  { The instrument: unchanged across both reversals, so it fails if emission stops entirely. }
+  Check('engine/circular/the plain pair is two as it always was',
+        ShapeOf('#set %x% = %y%' + LineEnding + '#set %y% = %x%' + LineEnding + '%x%', 'variable.circular-reference'),
+        'L1=1,L2=1');
+
+  { THE FEEDER CASE. Two names are the circle, three only lead into it, and all five are
+    reported -- a name is listed when it can REACH a cycle, not when it is in one. This is the
+    check that would have caught the help calling it "each name in the circle". }
+  Check('engine/circular/a name that only leads into the circle is reported too',
+        ShapeOf('#set %c1% = %c2%' + LineEnding + '#set %c2% = %c1%' + LineEnding +
+              '#set %f1% = %c1%' + LineEnding + '#set %f2% = %f1%' + LineEnding +
+              '#set %f3% = %f2%' + LineEnding + '%f3%', 'variable.circular-reference'),
+        'L1=1,L2=1,L3=1,L4=1,L5=1');
+
+  { A name that refers ONLY to itself is the other code. Asserted in BOTH directions, because
+    an absence alone would also be satisfied by a validator that had stopped emitting: the
+    circular row must be gone AND the self-reference row must be there. }
+  Check('engine/circular/a pure self-loop raises no circular row',
+        ShapeOf('#set %s% = %s%' + LineEnding + '%s%', 'variable.circular-reference'), '');
+  Check('engine/circular/a pure self-loop raises the self-reference row',
+        ShapeOf('#set %s% = %s%' + LineEnding + '%s%', 'variable.self-reference'), 'L1=1');
+
+  { AND THE MIXED CASE, which is where the help's first correction was still too absolute: a
+    definition that names itself AND reaches a circle draws BOTH. Measured -- one
+    self-reference on its own line, three circular rows, one of them on that same line. }
+  Check('engine/circular/naming yourself and the circle draws the circular rows too',
+        ShapeOf('#set %c1% = %c2%' + LineEnding + '#set %c2% = %c1%' + LineEnding +
+                '#set %s% = %s% %c1%' + LineEnding + '%s%', 'variable.circular-reference'),
+        'L1=1,L2=1,L3=1');
+  Check('engine/circular/and the self-reference beside them',
+        ShapeOf('#set %c1% = %c2%' + LineEnding + '#set %c2% = %c1%' + LineEnding +
+                '#set %s% = %s% %c1%' + LineEnding + '%s%', 'variable.self-reference'),
+        'L3=1');
+end;
+
 (* ▁▁▁ THE COUNTER TERMINATES ON A FAN OUT, WHICH NEITHER OF ITS GUARDS BOUNDED ▁▁▁
 
    `Stack` stops a macro that expands ITSELF and the depth cap stops a long chain. Neither
@@ -12122,6 +12239,7 @@ begin
   TestDirectiveEditing;
   TestModelDirIndex;
   TestKeepRuntime;
+  TestCircularDiagnosticShape;
   TestCounterTerminates;
   TestEngineCitations;
   TestLocaleIsNeverEmpty;
