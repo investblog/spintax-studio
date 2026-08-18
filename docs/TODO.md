@@ -2144,7 +2144,7 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       Still open, and unchanged by the above: which markets get a listing at all, and the
       screenshots — a localised listing with English screenshots is worse than an English one.
 
-- [ ] **And then the fix for that made the product impossible to install.** Reported by the
+- [x] **And then the fix for that made the product impossible to install.** Reported by the
       owner on 2026-08-18 as a Store page showing *Retry* and "Something went wrong", which is
       the Store's word for anything at all. It was ours. `AppXDeploymentServer/Operational` at
       12:21:30, fourteen seconds before the screenshot:
@@ -2203,10 +2203,14 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       29065 → 29078 is the resurrected checks. Every one was found by reading the gate rather
       than running it.
 
-      **Open, and the owner's call: this needs a version to ship in.** The corrections queue
-      exists because a review cycle for two lines of text is not worth taking — that reasoning
-      does not cover a package nobody can install. `git log v0.2.0.0..HEAD` is where the fix
-      is; users have the tag.
+      **CLOSED 2026-08-18 by `v0.2.1.0`**, tagged the same day and live at
+      `LastUpdateDateUtc 2026-08-18T14:46:05Z`. Verified by installing: package
+      `301.SpintaxStudio_0.2.1.0_x64__jnd8jmenjzsm0`, `SignatureKind Store`, the installed
+      manifest carrying `sr-Cyrl`, and the storefront language line moving `Serbian` →
+      `Serbian (Cyrillic)`. Confirmed on a colleague's machine before this one — this machine
+      held a staged remnant of the broken build that re-registered itself on every attempt and
+      looked exactly like the fix not working. The full account is in
+      [`release-validation.md`](release-validation.md).
 
 ## Engine bumped to `v0.7.0` (2026-08-18)
 
@@ -3289,6 +3293,44 @@ Decisions owed **before the relevant submission** (not switchable later):
 - **Paid managed-AI tier needs its own ADR** before any billing (R2+): Store IAP vs
   third-party purchase API (Stripe/…), prices/terms, cancellation, Partner Center disclosure.
   See spec §10/§11.
+
+## Serbian: the listing script, open until the next release
+
+- [ ] **Swap the main Serbian listing to LATIN; the additional one keeps the Cyrillic.**
+      `0.2.1.0` went to certification with Cyrillic in BOTH Serbian listings — the additional
+      language was added during that submission and filled with the copy that existed. Known
+      when it was done, not an oversight, and it leaves one of the two in the wrong script for
+      its reader: Microsoft files a bare `sr` under Serbian (LATIN) while the package declares
+      `sr-Cyrl` for a Cyrillic window.
+
+      **The Latin draft is ready:** `marketing/store/sr-Latn.md`, transliterated from `sr.md`
+      rather than translated — the mapping is 1:1 and deterministic in that direction, so the
+      two cannot drift into saying different things. `check-listing-drafts.py` recomputes it and
+      fails if it has been hand-edited or still holds Cyrillic; `--regen-sr-latn` rewrites it.
+      Verified by hand-editing one word and by putting one Cyrillic word back: one named finding
+      each.
+
+      Measured against the caps IN THE TARGET SCRIPT, because digraphs (`љ`→`lj`, `њ`→`nj`,
+      `џ`→`dž`) make Latin longer and a length limit is exactly what this project has met at a
+      submission form before: short 111 → 111, description 3315 → 3353 of 10000, longest feature
+      154 → 156 of 200, worst growth +8 characters. Nothing near a limit.
+
+      **Before pasting, read the two language labels in Partner Center.** Which code sits in the
+      main slot and which in the additional one is a fact about the form, and nothing here has
+      measured it; the swap is only correct if the main slot is the Serbian (Latin) row. And the
+      transliteration is machine-made — the draft still needs a reader of Serbian, which its own
+      header says.
+
+      Rides with the next release, not alone: a listing edit is a review cycle either way.
+
+- [ ] **Nothing gates a draft's SCRIPT against the language it is filed under.** The checker
+      compares bullet counts, the licence name and the language count; if `sr.md` had actually
+      been Latin under a `sr-Cyrl` declaration, no gate would have said so. The `sr-Latn`
+      equality check above covers that ONE pair by construction and nothing else — a general
+      rule would be "the draft's majority script matches the script its Store row implies", and
+      it is not written. Raised 2026-08-18 while checking a report that the Serbian description
+      was Latin; it was not — it measured 4421 Cyrillic characters to 407 Latin, and the 407 were
+      `Spintax Studio`, `Windows`, `XLSX`, `GPL-3.0-or-later`, `endpoint`, `seed`.
 
 ## To report to the engine
 

@@ -31,6 +31,7 @@ Usage:
 
     python scripts/check-listing-drafts.py            # report
     python scripts/check-listing-drafts.py --strict   # and exit non-zero on any finding
+    python scripts/check-listing-drafts.py --regen-sr-latn   # rewrite the Latin draft from sr.md
 
 Exit code is 0 when there is nothing to report, or when `marketing/` is absent -- a machine
 that has never written a draft is not failing, it simply has none.
@@ -52,11 +53,63 @@ MANIFEST = os.path.join(HERE, 'packaging', 'AppxManifest.xml.in')
 SECTIONS = ('Short description', 'Description', 'Product features')
 
 # Microsoft's, not ours. See the module docstring for where each one is quoted from.
+# ADDITIONAL STORE LISTING LANGUAGES -- listings the product carries for a language the PACKAGE
+# does not declare. Microsoft documents the mechanism: Partner Center's "Additional Store listing
+# languages" -> "Manage additional languages" adds languages "that are not included in your
+# packages", so the set the storefront can show in is a SUPERSET of the set the window speaks.
+#
+# Until 2026-08-18 the two were the same here and this script assumed it, which is why a draft
+# outside the manifest was reported as an error rather than as a second, legitimate kind of
+# thing. `sr-Latn` is the first: the window is Serbian CYRILLIC (gui/lang/SpxTextsSr.pas) and the
+# package declares `sr-Cyrl` accordingly, while Microsoft's own table files a bare `sr` under
+# Serbian (LATIN) -- so a reader whose system is Serbian Latin meets a listing that is not in
+# their script unless one is written for them.
+#
+# Named here rather than inferred from the folder, so a stray file is still an error: the point
+# of this list is that adding one is a DECISION, and it is recorded where the limits are.
+ADDITIONAL_LISTING_LANGS = ('sr-Latn',)
+
 MAX_FEATURES = 20
 MAX_FEATURE_CHARS = 200
 MAX_SHORT_CHARS = 1000
 SHOWN_SHORT_CHARS = 270          # only the first 270 are shown in some views -- advisory
 MAX_DESCRIPTION_CHARS = 10000
+
+
+# SERBIAN LATIN IS NOT A SECOND TRANSLATION, IT IS THE FIRST ONE IN ANOTHER SCRIPT. The mapping
+# is 1:1 and deterministic in this direction (the ambiguity is the other way, where `nj` may be
+# one letter or two), so `sr-Latn.md` can be RECOMPUTED from `sr.md` and compared rather than
+# maintained by hand. Without that the two drift the moment one is edited, which is the shape
+# this project has paid for repeatedly: one fact in two files and nothing between them.
+#
+# Digraphs uppercase fully inside an all-caps run -- ЉУБАВ is LJUBAV, not LjUBAV.
+SR_LOWER = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'ђ': 'đ', 'е': 'e', 'ж': 'ž',
+    'з': 'z', 'и': 'i', 'ј': 'j', 'к': 'k', 'л': 'l', 'љ': 'lj', 'м': 'm', 'н': 'n',
+    'њ': 'nj', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'ћ': 'ć', 'у': 'u',
+    'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'č', 'џ': 'dž', 'ш': 'š',
+}
+SR_UPPER = {
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Ђ': 'Đ', 'Е': 'E', 'Ж': 'Ž',
+    'З': 'Z', 'И': 'I', 'Ј': 'J', 'К': 'K', 'Л': 'L', 'Љ': 'Lj', 'М': 'M', 'Н': 'N',
+    'Њ': 'Nj', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'Ћ': 'Ć', 'У': 'U',
+    'Ф': 'F', 'Х': 'H', 'Ц': 'C', 'Ч': 'Č', 'Џ': 'Dž', 'Ш': 'Š',
+}
+
+
+def to_serbian_latin(text):
+    out = []
+    for i, ch in enumerate(text):
+        if ch in SR_LOWER:
+            out.append(SR_LOWER[ch])
+        elif ch in SR_UPPER:
+            lat = SR_UPPER[ch]
+            if len(lat) == 2 and (text[i + 1] if i + 1 < len(text) else '') in SR_UPPER:
+                lat = lat.upper()
+            out.append(lat)
+        else:
+            out.append(ch)
+    return ''.join(out)
 
 
 def fail(message):
@@ -151,7 +204,22 @@ def length_notes(text, bullets):
     return notes
 
 
+def regen_sr_latn():
+    """Write sr-Latn.md from sr.md. The Latin draft is never edited: it is regenerated, which is
+    what makes the check above an equality rather than a request."""
+    cyr_path = os.path.join(DRAFTS, 'sr.md')
+    lat_path = os.path.join(DRAFTS, 'sr-Latn.md')
+    if not os.path.exists(cyr_path):
+        fail('no %s to transliterate' % cyr_path)
+    text = to_serbian_latin(io.open(cyr_path, encoding='utf-8').read())
+    io.open(lat_path, 'w', encoding='utf-8', newline='').write(text)
+    sys.stdout.write('wrote %s (%d chars)' % (lat_path, len(text)) + chr(10))
+
+
 def main():
+    if '--regen-sr-latn' in sys.argv[1:]:
+        regen_sr_latn()
+        return 0
     strict = '--strict' in sys.argv[1:]
     findings = []
 
@@ -185,8 +253,31 @@ def main():
             findings.append('%s: no draft' % code)
 
     for code in have:
-        if code not in want:
+        if code not in want and code not in ADDITIONAL_LISTING_LANGS:
             findings.append('%s: a draft for a language the window does not speak' % code)
+
+    # sr-Latn must BE the transliteration of sr, character for character
+    if 'sr-Latn' in ADDITIONAL_LISTING_LANGS:
+        cyr_path = os.path.join(DRAFTS, 'sr.md')
+        lat_path = os.path.join(DRAFTS, 'sr-Latn.md')
+        if os.path.exists(cyr_path) and os.path.exists(lat_path):
+            cyr = io.open(cyr_path, encoding='utf-8').read()
+            lat = io.open(lat_path, encoding='utf-8').read()
+            want_lat = to_serbian_latin(cyr)
+            if lat != want_lat:
+                findings.append('sr-Latn: not the transliteration of sr.md -- regenerate it '
+                                'rather than editing it (or edit sr.md and regenerate)')
+            left = [c for c in lat if 'Ѐ' <= c <= 'ӿ']
+            if left:
+                findings.append('sr-Latn: %d Cyrillic characters left in a Latin draft'
+                                % len(left))
+
+    for code in ADDITIONAL_LISTING_LANGS:
+        if code in want:
+            findings.append('%s: listed as an additional listing language, but the package '
+                            'declares it -- it is a window language, not an extra' % code)
+        elif code not in have:
+            findings.append('%s: named as an additional listing language with no draft' % code)
 
     print()
     print('%-6s %-9s %s' % ('lang', 'bullets', 'notes'))

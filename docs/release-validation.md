@@ -1,8 +1,75 @@
 # Release validation
 
-Four records, newest first: `v0.2.0.0` validated on 2026-08-15, a pre-tag check of the AI
-candidate on 2026-08-14, `v0.1.1.0` validated on 2026-08-08 (tagged, never submitted — the
-tree moved on), `v0.1.0.0` (R0) on 2026-08-03 and published on 2026-08-04.
+Five records, newest first: `v0.2.1.0` validated and published on 2026-08-18, `v0.2.0.0`
+validated on 2026-08-15, a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
+validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0.0` (R0) on
+2026-08-03 and published on 2026-08-04.
+
+---
+
+# v0.2.1.0 — validated, submitted, certified and INSTALLED on 2026-08-18
+
+**Why it exists:** `0.2.0.0` could not be installed. `<Resource Language="sr" />` is a
+script-required language written without its script, and Windows refuses to register such a
+package (`0x80073CF6` wrapping `0x80070057`); the Store showed only "Something went wrong".
+Fixed as `sr-Cyrl`. The engine also moved from `v0.5.1` to `v0.7.0` in the same release.
+
+## Candidate
+
+Tag `v0.2.1.0` → `000f329`, built by `release.yml` from the tagged commit. CI green on all
+five legs before the tag — ubuntu, macos, windows, shellcheck, gui — including the new
+package-registration step, which had never run on a GitHub runner before this release and was
+the one unverified risk going in.
+
+```
+spintax-studio.msixupload   3 091 016 bytes
+sha256 7e057904f0c647d5130ab00144e9dee788c5115bd89a6ee48ae1a916ad05a04e
+identity read OUT OF the package: Name=301.SpintaxStudio Version=0.2.1.0 x64
+```
+
+Partner Center (submission 4) read the upload back as `v0.2.1.0`, x64, min `10.0.17763.0`,
+capabilities `internetClient` + `runFullTrust`, and languages
+`be, bs, de, en-us, es, fr, hr, it, nl, pt, ru, sr-cyrl, tr, uk` — fourteen, with `sr-cyrl`.
+
+## Live, and verified by installing
+
+Storefront `LastUpdateDateUtc 2026-08-18T14:46:05Z`. The observable that says the PACKAGE went
+live rather than only the listing text is the language line: `Serbian` → **`Serbian (Cyrillic)`**,
+because that field is built from the manifest.
+
+```
+installed  301.SpintaxStudio_0.2.1.0_x64__jnd8jmenjzsm0   SignatureKind: Store
+exe        FileVersion 0.2.1.0  ProductVersion 0.2.1.0
+           LegalCopyright "Copyright (C) 2026 301.st. GPL-3.0-or-later"
+manifest   14 languages, sr-Cyrl among them, read from the INSTALLED package
+```
+
+**Installed on a colleague's machine first**, which is what separated "the release is broken"
+from "this machine is" — see below.
+
+## Two traps on the way, neither of them the package
+
+**The storefront API sits behind a CDN.** A plain request answered `14:33:27` / `Serbian` for
+an hour after a cache-busted one answered `14:46:05` / `Serbian (Cyrillic)`. On the stale
+reading this record's author twice reported that the package had not propagated, which was
+false. Read it with `Cache-Control: no-cache` and a random query parameter, and when two reads
+disagree take the NEWER: a cache can be old, never early.
+
+**A staged remnant of the broken build blocked this machine, and the tool for it lies.** The
+failed `0.2.0.0` install left the package STAGED under `S-1-5-18`, and the Store then
+re-registered that staged copy on every attempt instead of downloading — the progress bar
+reaching 100% and then failing is what "nothing to download" looks like.
+`Remove-AppxPackage -AllUsers` reported success and removed nothing as the user, elevated, and
+as `NT AUTHORITY\SYSTEM`; the deployment log said `finished successfully` while naming the
+user's SID as the target. What cleared it was `UpdateScanMethod` on
+`MDM_EnterpriseModernAppManagement_AppManagement01`.
+
+## Not carried into this release, recorded instead
+
+The group editor reads a plural head more strictly than the engine does; the variant counter
+does not model the engine's new render budget; twelve help documents still carry a sentence
+the engine bump made false; and the main Serbian listing still shows Cyrillic where its row is
+the Latin one. All four are in `docs/TODO.md` with their measurements.
 
 ---
 
