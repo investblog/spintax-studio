@@ -3303,12 +3303,18 @@ Decisions owed **before the relevant submission** (not switchable later):
       its reader: Microsoft files a bare `sr` under Serbian (LATIN) while the package declares
       `sr-Cyrl` for a Cyrillic window.
 
-      **The Latin draft is ready:** `marketing/store/sr-Latn.md`, transliterated from `sr.md`
-      rather than translated — the mapping is 1:1 and deterministic in that direction, so the
-      two cannot drift into saying different things. `check-listing-drafts.py` recomputes it and
-      fails if it has been hand-edited or still holds Cyrillic; `--regen-sr-latn` rewrites it.
-      Verified by hand-editing one word and by putting one Cyrillic word back: one named finding
-      each.
+      **The Latin draft is ready, and the drafts are named by the STORE ROW they go into:**
+      `sr-Latn.md` (Latin — the bare `sr` row — **the main listing**) and `sr-Cyrl.md`
+      (Cyrillic — `sr-cyrl` — the additional one). The rename is the point: a file called
+      `sr.md` holding Cyrillic invites being pasted into the `sr` slot, which is Microsoft's
+      LATIN row, and that is the shape of the defect that cost the release. The checker now
+      refuses a file named `sr.md` outright and says why — verified by creating one.
+
+      `sr-Latn.md` is transliterated from `sr-Cyrl.md`, not translated: the mapping is 1:1 and
+      deterministic in that direction, so the two cannot drift into saying different things.
+      `check-listing-drafts.py` recomputes it and fails if it has been hand-edited or still
+      holds Cyrillic; `--regen-sr-latn` rewrites it. Verified by hand-editing one word, by
+      putting one Cyrillic word back, and by removing the draft: one named finding each.
 
       Measured against the caps IN THE TARGET SCRIPT, because digraphs (`љ`→`lj`, `њ`→`nj`,
       `џ`→`dž`) make Latin longer and a length limit is exactly what this project has met at a

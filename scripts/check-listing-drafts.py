@@ -69,6 +69,15 @@ SECTIONS = ('Short description', 'Description', 'Product features')
 # of this list is that adding one is a DECISION, and it is recorded where the limits are.
 ADDITIONAL_LISTING_LANGS = ('sr-Latn',)
 
+# A DRAFT IS NAMED BY THE STORE ROW IT IS DESTINED FOR, not by the window language it came from,
+# and Serbian is the one place those differ. Microsoft files a bare `sr` under Serbian (LATIN);
+# the window is Cyrillic and the package declares `sr-Cyrl`. So a file called `sr.md` holding
+# Cyrillic prose is a trap with a name on it: the obvious thing to do with it is paste it into
+# the `sr` slot, which is the Latin row, and that is the exact defect that cost this product a
+# release on 2026-08-18. The files are `sr-Cyrl.md` and `sr-Latn.md`; neither can be filed wrong
+# by reading its name. This map is what lets the manifest's `sr` still find its draft.
+DRAFT_FILE = {'sr': 'sr-Cyrl'}
+
 MAX_FEATURES = 20
 MAX_FEATURE_CHARS = 200
 MAX_SHORT_CHARS = 1000
@@ -207,7 +216,7 @@ def length_notes(text, bullets):
 def regen_sr_latn():
     """Write sr-Latn.md from sr.md. The Latin draft is never edited: it is regenerated, which is
     what makes the check above an equality rather than a request."""
-    cyr_path = os.path.join(DRAFTS, 'sr.md')
+    cyr_path = os.path.join(DRAFTS, 'sr-Cyrl.md')
     lat_path = os.path.join(DRAFTS, 'sr-Latn.md')
     if not os.path.exists(cyr_path):
         fail('no %s to transliterate' % cyr_path)
@@ -249,24 +258,35 @@ def main():
     for code in want:
         if code == 'en':
             continue                      # the English source IS docs/store-listing.md
-        if code not in have:
-            findings.append('%s: no draft' % code)
+        if DRAFT_FILE.get(code, code) not in have:
+            findings.append('%s: no draft (expected %s.md)'
+                            % (code, DRAFT_FILE.get(code, code)))
 
+    expected = (set(want) | set(ADDITIONAL_LISTING_LANGS) | set(DRAFT_FILE.values())
+                ) - set(DRAFT_FILE.keys())
     for code in have:
-        if code not in want and code not in ADDITIONAL_LISTING_LANGS:
+        if code in DRAFT_FILE:
+            # The name is the trap. `sr.md` reads as "the Serbian draft" and Microsoft's `sr` is
+            # the LATIN row, so whatever is in it gets filed under Latin -- which is how Cyrillic
+            # prose would end up there again. Refused by name, not left to a reader's care.
+            findings.append('%s.md exists, and its name is the defect: %s is the %s row at '
+                            'Microsoft. Use %s.md instead.'
+                            % (code, code, 'Latin' if code == 'sr' else 'other',
+                               DRAFT_FILE[code]))
+        elif code not in expected:
             findings.append('%s: a draft for a language the window does not speak' % code)
 
     # sr-Latn must BE the transliteration of sr, character for character
     if 'sr-Latn' in ADDITIONAL_LISTING_LANGS:
-        cyr_path = os.path.join(DRAFTS, 'sr.md')
+        cyr_path = os.path.join(DRAFTS, 'sr-Cyrl.md')
         lat_path = os.path.join(DRAFTS, 'sr-Latn.md')
         if os.path.exists(cyr_path) and os.path.exists(lat_path):
             cyr = io.open(cyr_path, encoding='utf-8').read()
             lat = io.open(lat_path, encoding='utf-8').read()
             want_lat = to_serbian_latin(cyr)
             if lat != want_lat:
-                findings.append('sr-Latn: not the transliteration of sr.md -- regenerate it '
-                                'rather than editing it (or edit sr.md and regenerate)')
+                findings.append('sr-Latn: not the transliteration of sr-Cyrl.md -- regenerate '
+                                'it rather than editing it (edit sr-Cyrl.md and regenerate)')
             left = [c for c in lat if 'Ѐ' <= c <= 'ӿ']
             if left:
                 findings.append('sr-Latn: %d Cyrillic characters left in a Latin draft'

@@ -336,22 +336,33 @@ language was added during that submission and filled with the same Cyrillic copy
 was what existed. Known and deliberate, not an oversight — and it leaves one of the two showing
 a reader the wrong script, since Microsoft's own table files a bare `sr` under Serbian (LATIN).
 
-**Prepared for the next visit:** `marketing/store/sr-Latn.md`, produced by TRANSLITERATING
-`sr.md` rather than translating afresh — Serbian Cyrillic to Latin is 1:1 and deterministic in
-that direction, so the two cannot say different things. `check-listing-drafts.py` recomputes it
-and fails if the file has been hand-edited or has Cyrillic left in it, and
-`--regen-sr-latn` rewrites it; the Latin file is never edited directly. Measured against the
-caps in the target script, because digraphs make Latin longer: short description 111 → 111,
-description 3315 → 3353 of 10000, longest feature 154 → 156 of 200, worst single growth +8. No
-field is near a limit.
+**Prepared for the next visit, and the files are now named by the STORE ROW they go into:**
 
-**The swap, and the ONE thing to check in the form.** The plan is that the main Serbian listing
-takes the Latin text and the additional one keeps the Cyrillic. That is coherent only if the
-main listing's language is the row a bare `sr` belongs to, which Microsoft lists as Serbian
-(Latin) — read the two language labels in Partner Center before pasting, because which code was
-assigned to which slot is a fact about the form and nothing here has measured it. It needs a
-resubmission of the listing either way, so it rides with the next release rather than alone
-(owner's batching rule).
+| file | script | Microsoft row | Partner Center slot |
+|---|---|---|---|
+| `marketing/store/sr-Latn.md` | Latin | Serbian (Latin) — the bare `sr` | **the main Serbian listing** |
+| `marketing/store/sr-Cyrl.md` | Cyrillic | Serbian (Cyrillic) — `sr-cyrl` | the additional one |
+
+The rename matters more than it looks. A file called `sr.md` holding CYRILLIC prose is a trap
+with a name on it: the obvious thing to do with it is paste it into the `sr` slot, and `sr` is
+Microsoft's LATIN row — which is the exact shape of the defect that cost this product a release
+on 2026-08-18. `check-listing-drafts.py` now refuses a file named `sr.md` outright and says why.
+
+`sr-Latn.md` is produced by TRANSLITERATING `sr-Cyrl.md` rather than translated afresh — Serbian
+Cyrillic to Latin is 1:1 and deterministic in that direction, so the two cannot say different
+things. The checker recomputes it and fails if it has been hand-edited or still holds Cyrillic;
+`--regen-sr-latn` rewrites it, and the Latin file is never edited directly. Edit the Cyrillic
+one and regenerate.
+
+Measured against the caps IN THE TARGET SCRIPT, because digraphs make Latin longer: short
+description 111 → 111, description 3315 → 3353 of 10000, longest feature 154 → 156 of 200, worst
+single growth +8 characters. No field is near a limit.
+
+**The ONE thing to check in the form.** Read the two Serbian language labels in Partner Center
+before pasting. Which code sits in the main slot and which in the additional one is a fact about
+the form, and nothing here has measured it; the table above is only correct if the main slot is
+the Serbian (Latin) row. It needs a listing resubmission either way, so it rides with the next
+release rather than alone (owner's batching rule).
 
 Terminology for whoever reviews it: take it from `docs/help/sr/`, the way the other thirteen
 drafts do — a different word for *engine* reads as a different product to a reader who clicks
