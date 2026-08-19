@@ -228,6 +228,14 @@ type
     { What the imported FILE ended with, so the render can be clamped to it; -1 when this is
       not a converted document. See TSpxJob.MaxTrailEols. }
     FGsaTrailEols: Integer;
+    { An import in flight on the engine thread, and the source text it is converting. The
+      conversion is quadratic in the count of distinct lifted macros and used to run right
+      here, on the UI thread -- 5 s for a template with four thousand of them, measured, with
+      the window dead for all of it. The source is kept because the RESULT handler still needs
+      it: the line ending, the trailing blank lines and whether the file ended with one are
+      facts about the FILE, not about the conversion. }
+    FImportBusy: Boolean;
+    FImportSource: string;
     FStatus: TStatusBar;
     { The company mark that sits at the right end of the status bar, and the ink it was last
       sliced with -- part of the cache key for the reason EnsureSmallIcons gives: a desktop can
@@ -465,6 +473,7 @@ type
     procedure AboutClicked(Sender: TObject);
     procedure GsaToggleClicked(Sender: TObject);
     procedure GsaImportClicked(Sender: TObject);
+    procedure GsaImported(const Res: TSpxImportResult);
     procedure HelpPaneClosed(Sender: TObject);
     procedure DiagDoubleClicked(Sender: TObject);
     procedure HelpDeferred(Data: PtrInt);
@@ -682,6 +691,7 @@ begin
   FEngine := TSpxEngineThread.Create(@JobDone);
   { Only now: BuildUi has run, so the panel exists, and so does the thread. }
   FEngine.OnBatch := @BatchProgress;
+  FEngine.OnImport := @GsaImported;
   { The loop, right after the engine whose OnVerify it takes over. Torn down in StopEngine
     in the order TSpxAuthoringLoop.Create documents: loop joined first, engine freed before
     the loop object. }
@@ -5127,16 +5137,12 @@ end;
    flag already set and the text already in, or the first preview is the one thing this whole
    feature exists to avoid: a GSA template shown as something else. *)
 procedure TSpxMainForm.GsaImportClicked(Sender: TObject);
-const
-  { As many as fit a dialog nobody has to scroll -- see the list below. }
-  SPX_GSA_REFUSALS_SHOWN = 12;
 var
   dlg: TOpenDialog;
-  src, msg: string;
-  res: TSpxGsaResult;
-  i, shown: Integer;
-  seen: TStringList;
+  src: string;
+  ireq: TSpxImportRequest;
 begin
+  if FImportBusy then Exit;
   if not AskSave then Exit;
   src := '';
   dlg := TOpenDialog.Create(Self);
@@ -5150,14 +5156,55 @@ begin
     dlg.Free;
   end;
 
-  res := SpxImportGsa(src);
+  (* AND THE CONVERSION GOES TO THE WORKER, which is where every other engine call in this
+     application already went. It is quadratic in the count of DISTINCT lifted macros -- the
+     converter's lifter looks its keys up linearly -- so a large SER template stopped the
+     window: 353 ms at a thousand of them, 5 229 ms at four thousand, 18 212 ms at eight,
+     measured unoptimised, which is how this project builds. Moving it does not make it
+     shorter; the cost is the engine's and is reported. It makes the window answer.
+
+     READ-ONLY WHILE IT RUNS, and that is not decoration: the result REPLACES the document, so
+     anything typed in those seconds would be silently thrown away. AskSave has already run, so
+     there is nothing unsaved to lose at the moment the request goes out -- the guard is about
+     what happens next. The hourglass says why the editor will not take a character.
+
+     If the thread is shut down with the request still queued no answer arrives, and the flag
+     would stay set -- which is why FormClose clears it rather than trusting the round trip. *)
+  FImportBusy := True;
+  FImportSource := src;
+  FEditor.ReadOnly := True;
+  Screen.Cursor := crHourGlass;
+  ireq.Id := 0;
+  ireq.Source := src;
+  FEngine.RequestImport(ireq);
+end;
+
+{ THE OTHER HALF, on the main thread. Everything below here ran inside GsaImportClicked until
+  2026-08-19; only the conversion moved. }
+procedure TSpxMainForm.GsaImported(const Res: TSpxImportResult);
+const
+  { As many as fit a dialog nobody has to scroll -- see the list below. }
+  SPX_GSA_REFUSALS_SHOWN = 12;
+var
+  src, msg: string;
+  i, shown: Integer;
+  seen: TStringList;
+  gsa: TSpxGsaResult;
+begin
+  FImportBusy := False;
+  FEditor.ReadOnly := False;
+  Screen.Cursor := crDefault;
+  src := FImportSource;
+  FImportSource := '';
+  gsa := Res.Res;
+
   StopBatchForDocument;
   FPath := '';
-  FGsaDoc := not res.PostProcess;   { the result carries the rule; this obeys it }
+  FGsaDoc := not gsa.PostProcess;   { the result carries the rule; this obeys it }
   FGsaTrailEols := SpxTrailEols(src);
   FEol := SpxDetectEol(src);
   FTrailingEol := SpxEndsWithEol(src);
-  FEditor.Text := res.Doc;
+  FEditor.Text := gsa.Doc;
   { A wholesale assignment does not reach EditorChanged (measured, twice -- see the
     charter), so the highlighter is told here or it paints the previous document's
     answer about where the last `#/` is. }
@@ -5175,18 +5222,18 @@ begin
   FAi.ResetDeclarations;
   LoopSnapshotMoved;
   UpdateCaption;
-  FVars.SetRuntimeValues(res.Vars);
+  FVars.SetRuntimeValues(gsa.Vars);
 
   { WHAT WAS LIFTED, AND THAT IT DOES NOT SURVIVE THE SESSION. Said once, here, because the
     panel shows the values without saying where they came from or that they are temporary. }
-  msg := Format(Tr(sGsaLifted), [Length(res.Vars)]) + LineEnding + LineEnding +
+  msg := Format(Tr(sGsaLifted), [Length(gsa.Vars)]) + LineEnding + LineEnding +
          Tr(sGsaSessionOnly);
   { Both numbers, because they count different things and the list below made that visible:
     identical blocks share ONE variable and are listed once per occurrence, so "1 lifted"
     over two rows read as a contradiction on screen. }
-  if Length(res.Refused) > 0 then
+  if Length(gsa.Refused) > 0 then
     msg := msg + LineEnding + LineEnding +
-           Format(Tr(sGsaRefusedCount), [Length(res.Refused)]);
+           Format(Tr(sGsaRefusedCount), [Length(gsa.Refused)]);
   { AND EVERY REFUSAL BY NAME. The engine hands these back rather than translating them into a
     rule nobody agreed to; swallowing the list here would undo exactly that care. The original
     text is the variable's value, so the document still renders as the GSA template said. }
@@ -5198,7 +5245,7 @@ begin
      which neither scrolls nor elides, so a template with a few dozen refusals produced a
      dialog taller than the display and the rest was simply unreachable. What is dropped is
      SAID, rather than the list quietly stopping. *)
-  if Length(res.Refused) > 0 then
+  if Length(gsa.Refused) > 0 then
   begin
     msg := msg + LineEnding + LineEnding;
     seen := TStringList.Create;
@@ -5206,12 +5253,12 @@ begin
       seen.Sorted := True;
       seen.Duplicates := dupIgnore;
       shown := 0;
-      for i := 0 to High(res.Refused) do
+      for i := 0 to High(gsa.Refused) do
       begin
-        if seen.IndexOf(res.Refused[i].Name) >= 0 then Continue;
-        seen.Add(res.Refused[i].Name);
+        if seen.IndexOf(gsa.Refused[i].Name) >= 0 then Continue;
+        seen.Add(gsa.Refused[i].Name);
         if shown >= SPX_GSA_REFUSALS_SHOWN then Continue;
-        msg := msg + LineEnding + '%' + res.Refused[i].Name + '% = ' + res.Refused[i].Original;
+        msg := msg + LineEnding + '%' + gsa.Refused[i].Name + '% = ' + gsa.Refused[i].Original;
         Inc(shown);
       end;
       if seen.Count > shown then
@@ -5941,6 +5988,14 @@ begin
   FEngine.WaitFor;
   FreeAndNil(FEngine);
   FreeAndNil(FLoop);
+  { An import still queued when the thread stops never answers, so the state it set has to be
+    undone here rather than by the round trip that is not coming. The cursor especially: it is
+    Screen's, not this form's, and a stray hourglass outlives the window. }
+  if FImportBusy then
+  begin
+    FImportBusy := False;
+    Screen.Cursor := crDefault;
+  end;
 end;
 
 procedure TSpxMainForm.FormClosed(Sender: TObject; var CloseAction: TCloseAction);

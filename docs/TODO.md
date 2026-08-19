@@ -3109,28 +3109,57 @@ Anthropic **плюс** поле для OpenAI-совместимого endpoint;
 
 ## Raised by review, not yet built
 
-- [ ] **The GSA conversion runs on the UI thread and is quadratic in DISTINCT macros.**
-      `gui/SpxMainForm.pas:4341` calls `SpxImportGsa` straight from the menu handler -- every
-      other engine-family call in this application goes through `TSpxEngineThread` -- and
-      `TLifter.Ref` (`engine/src/Spintax.Gsa.pas:316`) looks its keys up with a linear
-      `FKeys.IndexOf`. Measured by the review, on this machine:
+- [x] **The GSA conversion ran on the UI thread; it runs on the worker now.** Closed
+      2026-08-19. `GsaImportClicked` called `SpxImportGsa` straight from the menu handler --
+      the one engine-family call in this application that did not go through
+      `TSpxEngineThread` -- while `TLifter.Ref` (`engine/src/Spintax.Gsa.pas`) looks its keys
+      up with a linear `FKeys.IndexOf`, so a large SER template stopped the window.
 
-      | input | distinct lifted | time |
-      |---|---|---|
-      | 1 000 x `#file[lN.txt,1,S]` (20 KB) | 1 000 | 298 ms |
-      | 2 000 x same (41 KB) | 2 000 | 1 292 ms |
-      | 4 000 x same (83 KB) | 4 000 | 4 155 ms |
-      | 4 000 x a full line (249 KB) | 4 003 | **38 922 ms** |
+      **Re-measured here before acting, and one number did not survive.** Unoptimised, which
+      is how this project's `.lpi` builds:
 
-      Text volume alone is fine -- 220 KB with 2 distinct macros is 69 ms -- so the driver is
-      the count of distinct macros, which is exactly what a large SER project template has.
-      During those 39 seconds the window is frozen with no cursor, no progress and no cancel,
-      and Windows marks it *Not Responding*.
+      ```
+      1 000 distinct #file[...]   20 KB      353 ms
+      2 000                       41 KB    1 286 ms
+      4 000                       83 KB    5 229 ms
+      8 000                      167 KB   18 212 ms
+      ```
 
-      **Not a `GAbbrevs` race**: `EnsureAbbrevs` is reached only from the post-process, and the
-      converter renders nothing. The defect is the freeze. The work is to move the call onto
-      the worker with progress and cancel, which is a slice of its own -- **deliberately not in
-      `v0.1.1.0`** (owner's decision, 2026-08-08).
+      Quadratic confirmed by the doubling. **The 38 922 ms figure recorded above for "4 000 x a
+      full line" does NOT reproduce** — at 4 000 distinct macros the cost is ~5 s whatever the
+      document's size or content, and it was tried four ways: a compact line, a 278 KB
+      full-line document, names ascending and descending, and lines carrying tag groups and
+      `%spinfile%` besides. Nothing reached 39 s at that lifted count; 8 000 distinct macros is
+      what takes ~18 s. The first three numbers reproduce closely, so the likely difference is
+      the build: with `-O2` the same four are 231 / 1 046 / 4 334 / 4 265 ms.
+
+      **And the cost is entirely the ENGINE's**, which decided the shape of the fix. Timed
+      either side of `SpGsaToSpintax`, everything Studio adds on top — the variable list, the
+      two `SortPairs` passes, the tag-block guard — is inside run-to-run noise at 1 000, 2 000
+      and 4 000 distinct macros. So there was nothing here to make faster.
+
+      **What changed is the thread, not the time.** The conversion is a fourth request kind on
+      `TSpxEngineThread`: a queue like verify, appended and popped and never replaced — a
+      render posted a keystroke later must not evict a file the reader asked for — and
+      delivered on the MAIN thread like a render, because the result replaces the document, the
+      session values and the caption. The editor goes read-only with an hourglass while it
+      runs, because the result overwrites the buffer and anything typed in those seconds would
+      be thrown away silently. `FormClose` clears that state, since a request still queued when
+      the thread stops never answers.
+
+      It was safe to run on any thread — the engine's only shared state is `GAbbrevArr`,
+      reached solely from the post-process, and `GRngCounter`, reached solely from
+      `MakeDefaultRng`, and the converter renders nothing. It goes through the worker anyway:
+      the rule that every engine call is on one thread is worth more than the exception.
+
+      Gated by `thread/both-imports-answer` and `thread/exactly-two-answers-for-two-requests`
+      (a slot instead of a queue fails both — verified), `thread/and-the-queue-is-FIFO`,
+      `thread/an-import-matches-a-direct-conversion`, and
+      `worker/the window does not convert a GSA template itself`, whose instrument is a second
+      check that the call still exists on the worker so the first cannot pass by the feature
+      having been deleted. Verified by putting the call back in the form: one named failure.
+
+      **Still open, upstream:** the quadratic lifter itself — see the report below.
 
 - [ ] **The caret path is quadratic on one very long line, and was before any of today's
       work.** `SpxMatchBracket` and `SpxConstructOf` walk the whole text, and `ConfigSkip`
@@ -3503,6 +3532,23 @@ Decisions owed **before the relevant submission** (not switchable later):
       `Spintax Studio`, `Windows`, `XLSX`, `GPL-3.0-or-later`, `endpoint`, `seed`.
 
 ## To report to the engine
+
+- [ ] **`TLifter.Ref` (`engine/src/Spintax.Gsa.pas`) is quadratic in the count of DISTINCT
+      lifted macros.** It looks its keys up with a linear `FKeys.IndexOf`, so converting a SER
+      template whose lines each carry their own `#file[...]` costs O(n²). Measured on
+      `v0.8.0`, unoptimised, through `SpGsaToSpintax` directly so nothing of Studio's is in the
+      number:
+
+      ```
+      1 000 distinct   353 ms
+      2 000          1 286 ms
+      4 000          5 229 ms
+      8 000         18 212 ms
+      ```
+
+      A dictionary instead of the list would make it linear. Studio has moved the call off its
+      UI thread so the window survives it, but the wait is still the wait — and a SER project
+      template with a file spin per line is the ordinary shape, not a stress test.
 
 - [x] **FIXED UPSTREAM in `v0.8.0`** — line 13 now reads "254 of its 258", the table sums to
       254 and the runner agrees. Kept here because the habit it argues for is the point: run

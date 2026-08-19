@@ -1877,9 +1877,14 @@ type
     BatchDone: Boolean;
     Cancelled: Boolean;
     Report: TSpxBatchReport;
+    { the import's side -- counted, because the property under test is that exactly one
+      answer arrives for exactly one request, whatever else is posted around it }
+    Imports: Integer;
+    LastImport: TSpxImportResult;
     destructor Destroy; override;
     procedure Done(const Res: TSpxJobResult);
     procedure Batch(const P: TSpxBatchProgress);
+    procedure Imported(const Res: TSpxImportResult);
   end;
 
 destructor TThreadProbe.Destroy;
@@ -1894,6 +1899,14 @@ begin
   Inc(Delivered);
   LastId := Res.Id;
   Last := Res;
+end;
+
+{ The import's side, also on the main thread -- which is the difference from verify, and the
+  reason the window can consume it directly. }
+procedure TThreadProbe.Imported(const Res: TSpxImportResult);
+begin
+  Inc(Imports);
+  LastImport := Res;
 end;
 
 { The batch's side of the same worker: every step lands here, on the main thread. }
@@ -1970,6 +1983,18 @@ end;
 { Pump Synchronize until the worker has delivered `wantId`, or give up. A console program
   has no message loop, so the main thread has to run the queue itself -- CheckSynchronize is
   what the LCL does for the form. }
+function PumpUntilImports(probe: TThreadProbe; want, timeoutMs: Integer): Boolean;
+var waited: Integer;
+begin
+  waited := 0;
+  while (probe.Imports < want) and (waited < timeoutMs) do
+  begin
+    CheckSynchronize(10);
+    Inc(waited, 10);
+  end;
+  Result := probe.Imports >= want;
+end;
+
 function PumpUntil(probe: TThreadProbe; wantId: Int64; timeoutMs: Integer): Boolean;
 var waited: Integer;
 begin
@@ -1987,6 +2012,7 @@ var
   probe: TThreadProbe;
   th: TSpxEngineThread;
   job: TSpxJob;
+  ireq: TSpxImportRequest;
   i: Integer;
 begin
   probe := TThreadProbe.Create;
@@ -2163,6 +2189,48 @@ begin
     { Without the first letter: post-process capitalizes the opening word. }
     CheckTrue('thread/last-answer-is-the-last-edit',
               Pos('равка 52:', probe.Last.Preview) > 0);
+
+    (* ▁▁▁ AND THE IMPORT, WHICH IS THE ONE ENGINE CALL THAT USED TO RUN ON THE UI THREAD ▁▁▁
+
+       Two properties, and the second is why it is not a render job. A render job is a SLOT:
+       the fifty posts above proved that a later one throws away an earlier one, which is
+       right for a preview nobody is waiting on any more. An import is a thing the reader
+       asked for by picking a file, and the fifty renders that arrive while a large template
+       converts must not evict it -- so it queues, like verify, and is popped and never
+       overwritten. The check below posts the import FIRST and then buries it under renders. *)
+    th.OnImport := probe.Imported;
+    probe.Imports := 0;
+    ireq.Id := 77;
+    ireq.Source := 'Hello {a|b} and #file[l.txt,1,S] here.';
+    th.RequestImport(ireq);
+    { A SECOND one straight after, which is the property renders do not have: two requests,
+      two answers, in order. One import replacing another is the exact defect the verify queue
+      exists to prevent, and a slot would answer once here. }
+    ireq.Id := 78;
+    ireq.Source := 'Second #file[m.txt,1,S] template.';
+    th.RequestImport(ireq);
+    { And buried under renders, which DO displace each other -- so this also says the import
+      is not simply riding the render slot. }
+    for i := 53 to 72 do
+    begin
+      job.Id := i;
+      job.Text := 'ещё ' + IntToStr(i) + ': {a|b}';
+      th.Post(job);
+    end;
+    CheckTrue('thread/both-imports-answer', PumpUntilImports(probe, 2, 10000));
+    Check('thread/exactly-two-answers-for-two-requests', IntToStr(probe.Imports), '2');
+    Check('thread/and-the-queue-is-FIFO', IntToStr(probe.LastImport.Id), '78');
+
+    { The worker is a place to run the engine, not a second implementation of it -- the same
+      claim the very first check in this test makes about a render. Compared against the
+      SECOND source, because FIFO means that is the one LastImport holds; getting this pair
+      out of step was the first version's mistake and the check said so. }
+    Check('thread/an-import-matches-a-direct-conversion',
+          probe.LastImport.Res.Doc, SpxImportGsa(ireq.Source).Doc);
+    CheckTrue('thread/and-brings-the-lifted-values-back',
+              Length(probe.LastImport.Res.Vars) = Length(SpxImportGsa(ireq.Source).Vars));
+    CheckTrue('thread/an-import-really-does-lift-something',
+              Length(probe.LastImport.Res.Vars) > 0);
   finally
     th.Shutdown;
     th.WaitFor;
@@ -10454,6 +10522,46 @@ begin
   Check('count/and still answers one', IntToStr(c.Value), '1');
 end;
 
+(* ▁▁▁ THE WINDOW DOES NOT CALL THE CONVERTER ITSELF ▁▁▁
+
+   Every engine-family call in this application goes through TSpxEngineThread, and until
+   2026-08-19 exactly one did not: `GsaImportClicked` called `SpxImportGsa` straight from the
+   menu handler. The conversion is quadratic in the count of distinct lifted macros -- 353 ms
+   at a thousand, 5 229 ms at four thousand, 18 212 ms at eight, measured unoptimised -- so a
+   large SER template stopped the window for as long as it took.
+
+   The fix moved the call; this keeps it moved. Nothing else would notice it coming back: the
+   result is identical either way, every check in the suite would stay green, and the only
+   symptom is a window that does not repaint on somebody else's machine with somebody else's
+   template.
+
+   WHAT IT DOES NOT COVER, plainly: this is a gate on SPELLING. It sees `SpxImportGsa(` in one
+   named file. It would not see the converter reached through an alias, through a helper in
+   another unit called from the form, or a different long call moved onto the UI thread. It is
+   the cheap deterministic half of a rule whose expensive half is reading the diff. *)
+procedure TestImportIsOffTheUiThread;
+const FORM = 'gui/SpxMainForm.pas';
+var body: TStringList;
+begin
+  if not FileExists(FORM) then
+  begin
+    CheckTrue('worker/the form is where the suite expects it', False);
+    Exit;
+  end;
+  body := TStringList.Create;
+  try
+    body.LoadFromFile(FORM);
+    CheckTrue('worker/the window does not convert a GSA template itself',
+              Pos('SpxImportGsa(', body.Text) = 0);
+    { THE INSTRUMENT: the call has to still exist SOMEWHERE, or the check above is passing
+      because the feature was deleted. It lives on the worker now. }
+    body.LoadFromFile('gui/SpxEngineThread.pas');
+    CheckTrue('worker/and the engine thread does', Pos('SpxImportGsa(', body.Text) > 0);
+  finally
+    body.Free;
+  end;
+end;
+
 (* ▁▁▁ A POINTER INTO THE ENGINE IS A CLAIM, AND NOTHING WAS CHECKING IT ▁▁▁
 
    Studio MIRRORS engine rules in several places -- the counter's permutation ranges, the
@@ -12417,6 +12525,7 @@ begin
   TestKeepRuntime;
   TestCircularDiagnosticShape;
   TestCounterTerminates;
+  TestImportIsOffTheUiThread;
   TestEngineCitations;
   TestLocaleIsNeverEmpty;
   TestValidationCache;

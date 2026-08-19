@@ -22,7 +22,7 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, Spintax, SpxStudio, SpxCount, SpxFiles, SpxDedupe,
-  SpxHelpText;
+  SpxGsaImport, SpxHelpText;
 
 type
   { TSpxVarPairs (what the panel sends) and TSpxVarInfos (what it receives) are declared in
@@ -262,6 +262,59 @@ type
     Rows: TSpxPanelRows;
   end;
 
+  (* ▁▁▁ AN IMPORT, WHICH IS AN ENGINE CALL LIKE ANY OTHER ▁▁▁
+
+     `SpGsaToSpintax` converts a GSA SER template, and it ran on the UI THREAD until
+     2026-08-19 -- the one engine-family call in this application that did not come through
+     here. It is quadratic in the count of DISTINCT lifted macros, because the converter's
+     lifter looks its keys up linearly, so the window simply stopped. Measured on this machine,
+     unoptimised, which is how the shipped project is built:
+
+       1 000 distinct  #file[...]   20 KB     353 ms
+       2 000                        41 KB   1 286 ms
+       4 000                        83 KB   5 229 ms
+       8 000                       167 KB  18 212 ms
+
+     Quadratic confirmed by the doubling, and the cost is the ENGINE's: timed either side of
+     `SpGsaToSpintax`, everything Studio adds on top -- the variable list, the sort, the
+     tag-block guard -- is inside run-to-run noise. So this moves the wait off the UI thread;
+     it does not make it shorter. The lifter is reported upstream.
+
+     A QUEUE, LIKE VERIFY, NEVER REPLACED: an import is a thing the reader asked for by
+     picking a file, and a render posted a keystroke later must not evict it. Delivered on the
+     MAIN thread like a render, unlike verify, because the consumer is the window: the result
+     replaces the document, the session values and the caption.
+
+     It was safe to run anywhere -- the engine's only shared state is `GAbbrevArr`, reached
+     solely from the post-process, and `GRngCounter`, reached solely from `MakeDefaultRng`, and
+     the converter renders nothing. It comes through here anyway. The rule that every engine
+     call is on one thread is worth more than the exception: whoever reads it next should not
+     have to re-derive that enumeration to know the code is sound.
+
+     TWO PRICES OF PUTTING IT HERE, both known and both accepted. A conversion already RUNNING
+     holds a shutdown for its whole length -- `Shutdown` sets a flag and this loop checks it
+     between pieces of work, and there is no way to interrupt the engine mid-convert -- so
+     closing the window during an eight-thousand-macro import waits the eighteen seconds. (It
+     does not DEADLOCK: on the main thread `TThread.WaitFor` waits on the sync event as well as
+     the handle and runs `CheckSynchronize`, so a Synchronize that slipped past the check above
+     is still serviced. FPC 3.2.2, `rtl/win/tthread.inc`.) And `Synchronize` blocks THIS thread
+     until the handler returns, so a modal dialog raised by the handler -- the import summary is
+     one -- holds the worker open the whole time it is on screen: the render the handler asked
+     for lands after the reader clicks OK. Both were paid for anyway before this moved, when the
+     entire window was frozen instead. *)
+  TSpxImportRequest = record
+    Id: Int64;
+    Source: string;       { the GSA template's text, as the FILE has it }
+  end;
+
+  TSpxImportResult = record
+    Id: Int64;
+    Res: TSpxGsaResult;
+  end;
+
+  { Main thread, through Synchronize -- see the note above. }
+  TSpxImportDone = procedure(const Res: TSpxImportResult) of object;
+
   { CALLED ON THE ENGINE THREAD, not through Synchronize. The consumer is the authoring
     loop's own thread, which waits on an event of its own -- routing the answer through the
     main thread would add a hop that only matters when it is busy, and the loop is exactly
@@ -305,6 +358,11 @@ type
       and nothing ever overwrites one -- see TSpxVerifyRequest for why. }
     FVerifyQueue: array of TSpxVerifyRequest;   // under FLock
     FOnVerify: TSpxVerifyDone;
+    { The import queue, the same shape and for the same reason: appended, popped, never
+      overwritten. One per loop turn. }
+    FImportQueue: array of TSpxImportRequest;   // under FLock
+    FImportResult: TSpxImportResult;            // worker only, read by DeliverImport
+    FOnImport: TSpxImportDone;
     FSet: TSpxTemplateSet;                // owned here, touched only on this thread
     FSetFolder: string;
     { Which help language FSet was built for, or -1 when it is an ordinary document's set. }
@@ -318,9 +376,13 @@ type
     FCache: TSpxValidationCache;
     procedure Deliver;                    // main thread, via Synchronize
     procedure DeliverBatch;               // main thread, via Synchronize
+    procedure DeliverImport;              // main thread, via Synchronize
     function TakePending(out Job: TSpxJob): Boolean;
     function TakeVerify(out Req: TSpxVerifyRequest): Boolean;
     function VerifyPending: Boolean;
+    function TakeImport(out Req: TSpxImportRequest): Boolean;
+    function ImportPending: Boolean;
+    procedure RunImport(const Req: TSpxImportRequest);
     procedure RunVerify(const Req: TSpxVerifyRequest);
     function BatchRunning: Boolean;
     function BatchStep: Boolean;
@@ -348,9 +410,15 @@ type
       thread is shut down are dropped without an answer, which is why a waiter must poll
       its own termination rather than wait forever (the loop does). }
     procedure RequestVerify(const Req: TSpxVerifyRequest);
+    { Appends -- never replaces, the same as RequestVerify. Safe from the UI thread. The
+      answer arrives through OnImport, on the MAIN thread. A request still queued when the
+      thread shuts down is dropped without an answer, so a caller that disables part of its
+      window while it waits must re-enable it on shutdown too. }
+    procedure RequestImport(const Req: TSpxImportRequest);
     procedure Shutdown;
     property OnBatch: TSpxBatchEvent read FOnBatch write FOnBatch;
     property OnVerify: TSpxVerifyDone read FOnVerify write FOnVerify;
+    property OnImport: TSpxImportDone read FOnImport write FOnImport;
   end;
 
 implementation
@@ -675,6 +743,59 @@ begin
   end;
 end;
 
+procedure TSpxEngineThread.RequestImport(const Req: TSpxImportRequest);
+begin
+  FLock.Enter;
+  try
+    SetLength(FImportQueue, Length(FImportQueue) + 1);
+    FImportQueue[High(FImportQueue)] := Req;
+  finally
+    FLock.Leave;
+  end;
+  FWake.SetEvent;
+end;
+
+function TSpxEngineThread.TakeImport(out Req: TSpxImportRequest): Boolean;
+var i: Integer;
+begin
+  FLock.Enter;
+  try
+    Result := Length(FImportQueue) > 0;
+    if Result then
+    begin
+      Req := FImportQueue[0];
+      for i := 1 to High(FImportQueue) do FImportQueue[i - 1] := FImportQueue[i];
+      SetLength(FImportQueue, Length(FImportQueue) - 1);
+    end;
+  finally
+    FLock.Leave;
+  end;
+end;
+
+function TSpxEngineThread.ImportPending: Boolean;
+begin
+  FLock.Enter;
+  try
+    Result := Length(FImportQueue) > 0;
+  finally
+    FLock.Leave;
+  end;
+end;
+
+{ The conversion itself, on this thread. Nothing here touches the set, the cache or any state
+  a render owns -- it is a pure function of the source text -- so it needs no SyncSet and
+  cannot disturb a batch in flight. }
+procedure TSpxEngineThread.RunImport(const Req: TSpxImportRequest);
+begin
+  FImportResult.Id := Req.Id;
+  FImportResult.Res := SpxImportGsa(Req.Source);
+end;
+
+procedure TSpxEngineThread.DeliverImport;
+begin
+  if Assigned(FOnImport) then FOnImport(FImportResult);
+end;
+
 { The Verify of spec §4.5: the closure validated file by file, plus N probe renders for the
   health flags. It reuses everything the interactive path owns -- the set, the cache -- and
   differs from Run in what it does NOT compute: no preview, no marks, no variables panel, no
@@ -868,7 +989,7 @@ begin
 end;
 
 procedure TSpxEngineThread.Execute;
-var job: TSpxJob; vreq: TSpxVerifyRequest;
+var job: TSpxJob; vreq: TSpxVerifyRequest; ireq: TSpxImportRequest;
 begin
   { Warm the engine's lazy global here, on the only thread that will ever touch it, before
     the first real request can arrive. }
@@ -880,7 +1001,8 @@ begin
       queued, since only one is taken per turn and the event was already reset -- the wait is
       a poll, so the loop comes straight back to the next piece of work; and it still notices
       a posted render first, because that is the one a person is waiting on. }
-    if BatchRunning or VerifyPending then FWake.WaitFor(0) else FWake.WaitFor(INFINITE);
+    if BatchRunning or VerifyPending or ImportPending then FWake.WaitFor(0)
+    else FWake.WaitFor(INFINITE);
     FWake.ResetEvent;
 
     while (not Terminated) and TakePending(job) do
@@ -893,6 +1015,16 @@ begin
       render gets its look between two verifies. Never displaced: TakeVerify only ever pops. }
     if (not Terminated) and TakeVerify(vreq) then
       RunVerify(vreq);
+
+    { An import, one per turn, on the same terms: never displaced, and delivered on the MAIN
+      thread because the window is what consumes it. It sits after the renders for the same
+      reason verify does -- a person watching the preview is waiting on those -- and before
+      the batch, because a reader who asked for a file is waiting on this. }
+    if (not Terminated) and TakeImport(ireq) then
+    begin
+      RunImport(ireq);
+      if not Terminated then Synchronize(@DeliverImport);
+    end;
 
     { Installed HERE, between renders: the one moment at which no batch state is in use.
       Replacing a running batch ends it first, and that ending is a message of its own. }
