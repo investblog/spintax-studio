@@ -1345,8 +1345,7 @@ var
      of the key precompute -- the first draft of this comment said that and was wrong. The old
      loop did `tmp := Result[i]` and assigned it back on every iteration whether or not anything
      shifted, so a sorted block still paid 2(seg - 1) managed record copies. It pays none now,
-     on top of
-     losing two Rank calls per comparison.
+     on top of losing two Rank calls per comparison.
 
      Interleaved is the ORDINARY shape, not a corner: SpValidate makes about eleven independent
      passes and each appends left to right, so a file's block is that many concatenated
