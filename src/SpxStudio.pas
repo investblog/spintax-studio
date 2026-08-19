@@ -1315,28 +1315,127 @@ var
     Inc(n);
   end;
 
-  { One sortable number per row; an unlocated finding sorts last inside its file. }
+  { One sortable number per row; an unlocated finding sorts last inside its file. Computed
+    once per row by SortFrom rather than per comparison -- see there. }
   function Rank(const Row: TSpxPanelRow): Int64;
   begin
     if Row.Line <= 0 then Result := High(Int64)
     else Result := (Int64(Row.Line) shl 32) + Row.Column;
   end;
 
-  { Insertion sort, and STABLE on purpose: two findings on the same character keep the order
-    the engine reported them in. A file's findings are counted in dozens. }
+  (* Insertion sort, and STABLE on purpose: two findings on the same character keep the order
+     the engine reported them in. A file's findings are counted in dozens, which is why it is
+     still an insertion sort. What changed is what it MOVES.
+
+     IT SORTS AN INDEX NOW. TSpxPanelRow carries four managed strings, so the old
+     `Result[j + 1] := Result[j]` was an RTTI copy paying four reference-count pairs, and the
+     shifts are the quadratic part. Those pairs are LOCKED: FPC takes the lock prefix on a
+     refcount whenever IsMultiThread is set, and this process sets it when the engine worker
+     starts, so the price is paid on every thread and not only on the worker.
+
+     Measured here, on a hand-built report so nothing but this function is timed, with
+     IsMultiThread forced on:
+
+       16 000 rows, one ascending run          6 ms  ->      4 ms
+       16 000 rows, two interleaved runs   1 726 ms  ->    118 ms
+       32 000 rows, descending            24 057 ms  ->  1 609 ms
+      100 000 rows, already in order          41 ms  ->     25 ms
+
+     The already-ordered cases got FASTER rather than merely staying put, and NOT only because
+     of the key precompute -- the first draft of this comment said that and was wrong. The old
+     loop did `tmp := Result[i]` and assigned it back on every iteration whether or not anything
+     shifted, so a sorted block still paid 2(seg - 1) managed record copies. It pays none now,
+     on top of
+     losing two Rank calls per comparison.
+
+     Interleaved is the ORDINARY shape, not a corner: SpValidate makes about eleven independent
+     passes and each appends left to right, so a file's block is that many concatenated
+     ascending runs, and Studio's notes land after them beginning with one that ranks last.
+     Descending is reachable too -- CheckVariableRefsV walks names in first-seen order while
+     anchoring each at its LAST definition, so a document that redefines variables emits
+     arbitrary offsets.
+
+     WHAT THIS IS NOT: the comparison count is still quadratic. It buys a constant, not a
+     class, and the numbers above are the whole of the claim. O(n log n) was considered and
+     refused -- the realistic input is dozens of rows, and insertion sort is stable without
+     being asked. If it is ever not enough, a stable run-detecting bottom-up merge replaces
+     this procedure without touching anything around it.
+
+     THAT STABILITY IS LOAD-BEARING, not tidy: SpxHelpForCaret picks among the rows covering
+     the caret with a strict `>` on Column, so among equal columns the FIRST row wins and this
+     order decides which article F1 opens. Measured both ways. It is also prompt order for the
+     repair loop, and ShowRows hashes it into the signature that suppresses panel rebuilds --
+     so the order must be deterministic as well as stable. Until 2026-08-19 all of that was
+     asserted in this comment and pinned nowhere; it is gated now by
+     rows/two-findings-on-one-character-keep-the-engines-order and the two help/caret checks
+     beside it. *)
   procedure SortFrom(First: Integer);
-  var i, j: Integer; tmp: TSpxPanelRow;
+  var
+    keys: array of Int64;
+    from_: array of Integer;
+    seg, i, j, k, ki: Integer;
+    kt: Int64;
+    tmp: TSpxPanelRow;
   begin
-    for i := First + 1 to n - 1 do
+    { A file with one finding or none is the common case and must cost no allocation. }
+    seg := n - First;
+    if seg < 2 then Exit;
+
+    { Built AFTER the segment is complete, so Add's doubling of Result cannot leave these two
+      describing an array they no longer index. Locals rather than scratch owned by the unit:
+      this runs on the engine worker and on the AI loop's thread, and a shared buffer would be
+      shared wrongly. Indices are bounded by n, never by High(Result) -- during the build
+      Length(Result) is the CAPACITY, not the count. }
+    SetLength(keys, seg);
+    SetLength(from_, seg);
+    for i := 0 to seg - 1 do
     begin
-      tmp := Result[i];
+      keys[i] := Rank(Result[First + i]);
+      from_[i] := i;
+    end;
+
+    { The same loop as before, on two unmanaged arrays. STRICTLY `>`: an equal key never
+      shifts, and that is the whole of the stability. }
+    for i := 1 to seg - 1 do
+    begin
+      kt := keys[i];
+      ki := from_[i];
       j := i - 1;
-      while (j >= First) and (Rank(Result[j]) > Rank(tmp)) do
+      while (j >= 0) and (keys[j] > kt) do
       begin
-        Result[j + 1] := Result[j];
+        keys[j + 1] := keys[j];
+        from_[j + 1] := from_[j];
         Dec(j);
       end;
-      Result[j + 1] := tmp;
+      keys[j + 1] := kt;
+      from_[j + 1] := ki;
+    end;
+
+    { from_[p] is where the row that belongs at p came from. Followed as CYCLES rather than
+      copied through a temporary segment: a row already in its place is not touched at all, so
+      a block that arrived in order costs nothing -- which is today's behaviour and the one
+      case no version of this may make slower. A temporary array would charge that same input
+      two managed copies per row unconditionally, and hold a second copy of the block while it
+      did. `-1` marks a slot already dealt with, written only after the value it stood for has
+      been read.
+
+      Result is uniquely referenced here (Result := nil at the top of the function, and Add's
+      SetLength), which is what makes an in-place permutation sound. Anyone who takes a second
+      reference to it mid-build breaks that. }
+    for i := 0 to seg - 1 do
+    begin
+      if (from_[i] < 0) or (from_[i] = i) then Continue;
+      tmp := Result[First + i];
+      j := i;
+      while from_[j] <> i do
+      begin
+        k := from_[j];
+        from_[j] := -1;
+        Result[First + j] := Result[First + k];
+        j := k;
+      end;
+      from_[j] := -1;
+      Result[First + j] := tmp;
     end;
   end;
 

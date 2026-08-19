@@ -2604,6 +2604,121 @@ begin
     r.Free;
   end;
 
+  (* ▁▁▁ TWO FINDINGS ON ONE CHARACTER KEEP THE ENGINE'S ORDER ▁▁▁
+
+     The sort is stable and that is load-bearing, not decorative: `SpxHelpForCaret` breaks a
+     tie between rows covering the caret with a strict `>` on Column, so the FIRST row wins and
+     decides which help article F1 opens; the repair prompt prints rows in array order; and
+     `ShowRows` hashes the order into the signature that decides whether to rebuild the list at
+     all. It was asserted in a comment beside the sort and twice in docs/TODO.md.
+
+     It was pinned NOWHERE. Until 2026-08-19 no fixture in this suite put two rows at one
+     position, so a sort with no stability whatsoever left every check green -- including the
+     one directly above, whose three rows all have distinct ranks. Found while planning to
+     replace the sort, which is the worst moment to discover that the property being preserved
+     is not measured.
+
+     TWO CLASSES OF TIE, because Rank makes two: an equal (Line, Column), and every unlocated
+     row sharing the sentinel High(Int64). Both are checked, and both matter -- after the index
+     rewrite the unlocated block is the sort's BEST case rather than its worst, so it is
+     exactly where a mistake would hide.
+
+     AND BOTH TIED PAIRS MUST MOVE. The first version of this fixture listed them already in
+     their final places, so a sort that keeps a stationary tie and reverses one it SHIFTS would
+     have passed it -- review's finding, and a fair one: a tie check that never moves anything
+     is testing the input, not the sort. The order below puts the unlocated pair at the front
+     and the located pair at the back, so the two swap ends past the fixed point in the middle
+     and each has to survive being carried. *)
+  r := TSpxReport.Create;
+  try
+    diags := TSpDiagList.Create;
+    d.Severity := 'error'; d.EndLine := 0; d.EndColumn := 0;
+    d.Code := 'nowhere-first';  d.Line := 0; d.Column := 0; diags.Add(d);
+    d.Code := 'nowhere-second'; d.Line := 0; d.Column := 0; diags.Add(d);
+    d.Code := 'middle';         d.Line := 9; d.Column := 1; diags.Add(d);
+    d.EndLine := 3; d.EndColumn := 8;
+    d.Code := 'tie-first';      d.Line := 3; d.Column := 7; diags.Add(d);
+    d.Code := 'tie-second';     d.Line := 3; d.Column := 7; diags.Add(d);
+    r.Files.Add(TSpxFileReport.Create('', diags));
+
+    rows := SpxPanelRows(r, spxLangRu);
+    CheckTrue('rows/the-tie-fixture-really-has-five-rows', Length(rows) = 5);
+    if Length(rows) = 5 then
+      Check('rows/two-findings-on-one-character-keep-the-engines-order',
+            rows[0].Code + ',' + rows[1].Code + ',' + rows[2].Code + ',' + rows[3].Code + ',' +
+            rows[4].Code,
+            'tie-first,tie-second,middle,nowhere-first,nowhere-second');
+  finally
+    r.Free;
+  end;
+
+  { AND THE ENGINE REALLY DOES REPORT TWO FINDINGS AT ONE POSITION, so the check above is
+    about the product and not about a shape only a hand-built report can make.
+    `CheckPermConfigsV` anchors both value diagnostics at the config's opening `[<` -- same
+    start, same end -- and emits minsize before maxsize. Measured, not derived: this is what
+    the run prints.
+
+    The two `@1:1` are the instrument as much as the codes are. If a later engine moves either
+    anchor, this fails saying the tie is gone rather than passing while guarding nothing. }
+  Check('rows/the-engine-reports-two-findings-at-one-position',
+        RowsOf('[<minsize=a;maxsize=b>x|y]', SpxContext('ru', nil)),
+        '<doc>/eng/error:permutation.minsize-not-integer@1:1 | ' +
+        '<doc>/eng/error:permutation.maxsize-not-integer@1:1');
+
+  (* ▁▁▁ AND THE PERMUTATION ITSELF: A ROTATION AND A REVERSAL ▁▁▁
+
+     These exist for the cycle-following permutation the sort uses to move each row once (plus
+     one saved temporary per cycle).
+     A rotation is one long cycle and a reversal is a fistful of two-cycles with a fixed point
+     in the middle; between them they exercise every branch of that walk. The tie fixture above
+     does move its rows three slots each -- its permutation is (0 3)(1 4) with 2 fixed -- but
+     every cycle in it is length two, so a LONG cycle is what these add and it is the rotation
+     that adds it.
+
+     Written as line numbers so the expected string reads as the answer rather than as a
+     restatement of the input. *)
+  r := TSpxReport.Create;
+  try
+    diags := TSpDiagList.Create;
+    d.Severity := 'error'; d.Column := 1; d.EndLine := 0; d.EndColumn := 0;
+    d.Code := 'r2'; d.Line := 2; diags.Add(d);
+    d.Code := 'r3'; d.Line := 3; diags.Add(d);
+    d.Code := 'r4'; d.Line := 4; diags.Add(d);
+    d.Code := 'r5'; d.Line := 5; diags.Add(d);
+    d.Code := 'r1'; d.Line := 1; diags.Add(d);
+    r.Files.Add(TSpxFileReport.Create('', diags));
+    rows := SpxPanelRows(r, spxLangRu);
+    if Length(rows) = 5 then
+      Check('rows/a-rotated-file-comes-back-in-order',
+            rows[0].Code + ',' + rows[1].Code + ',' + rows[2].Code + ',' + rows[3].Code + ',' +
+            rows[4].Code, 'r1,r2,r3,r4,r5')
+    else
+      CheckTrue('rows/a-rotated-file-comes-back-in-order', False);
+  finally
+    r.Free;
+  end;
+
+  r := TSpxReport.Create;
+  try
+    diags := TSpDiagList.Create;
+    d.Severity := 'error'; d.Column := 1; d.EndLine := 0; d.EndColumn := 0;
+    d.Code := 'v5'; d.Line := 5; diags.Add(d);
+    d.Code := 'v4'; d.Line := 4; diags.Add(d);
+    d.Code := 'v3'; d.Line := 3; diags.Add(d);
+    d.Code := 'v2'; d.Line := 2; diags.Add(d);
+    d.Code := 'v1'; d.Line := 1; diags.Add(d);
+    r.Files.Add(TSpxFileReport.Create('', diags));
+    rows := SpxPanelRows(r, spxLangRu);
+    if Length(rows) = 5 then
+      Check('rows/a-reversed-file-comes-back-in-order',
+            rows[0].Code + ',' + rows[1].Code + ',' + rows[2].Code + ',' + rows[3].Code + ',' +
+            rows[4].Code, 'v1,v2,v3,v4,v5')
+    else
+      CheckTrue('rows/a-reversed-file-comes-back-in-order', False);
+  finally
+    r.Free;
+  end;
+
   { The sort is PER FILE, and only a fixture with findings in two files can say so: the
     document's finding sits later in its own buffer than the fragment's does in its, so one
     global sort by position would put the fragment first and quietly destroy the documented
@@ -7868,6 +7983,9 @@ var
   ctxDoc: string;
   ctxRep: TSpxReport;
   ctxRows: TSpxPanelRows;
+  tieRep: TSpxReport;
+  tieRows: TSpxPanelRows;
+  tieRow: TSpxPanelRow;
   hits: TSpxHelpHits;
   hint: TSpxHelpHint;
 
@@ -8395,6 +8513,40 @@ begin
   { INSIDE THE FINDING: its own article, exactly. }
   CheckTrue('help/caret/on an unclosed brace opens its article',
             SpxHelpForCaret(ctxDoc, 12, 1, 12, ctxRows, 0, p_, s_) and (s_ = 'bracket.unclosed'));
+
+  (* ▁▁▁ WHY THE PANEL'S ORDER IS NOT AN INTERNAL DETAIL ▁▁▁
+
+     Two findings can cover one caret, and this search separates them with a strict `>` on
+     Column -- so among rows at the SAME column the one `SpxPanelRows` put first wins, and the
+     panel's sort order decides which article F1 opens. That is the consumer that makes the
+     sort's stability load-bearing rather than tidy, and nothing said so before 2026-08-19.
+
+     Real rows again, and a real tie: `CheckPermConfigsV` anchors both value diagnostics at the
+     config's opening `[<`, so these two share 1:1 .. 1:23 exactly. Measured.
+
+     The swap is the instrument. Without it this would pass for any number of reasons that have
+     nothing to do with order -- one code sorting before the other, one having an article and
+     the other not. With it, the ONLY thing that changed between the two lines is which row is
+     first, and the answer follows it. *)
+  tieRep := SpxHealthReport('[<minsize=a;maxsize=b>x|y]', SpxContext('ru', nil), 0);
+  try
+    tieRows := SpxPanelRows(tieRep, spxLangRu);
+  finally
+    tieRep.Free;
+  end;
+  CheckTrue('help/caret/the tie fixture really is two rows at one position',
+            (Length(tieRows) = 2) and (tieRows[0].Line = tieRows[1].Line) and
+            (tieRows[0].Column = tieRows[1].Column));
+  if Length(tieRows) = 2 then
+  begin
+    CheckTrue('help/caret/two findings on one character: the panel''s first row wins',
+              SpxHelpForCaret('[<minsize=a;maxsize=b>x|y]', 3, 1, 3, tieRows, 0, p_, s_) and
+              (s_ = 'permutation.minsize-not-integer'));
+    tieRow := tieRows[0]; tieRows[0] := tieRows[1]; tieRows[1] := tieRow;
+    CheckTrue('help/caret/and swapping the two rows swaps the article',
+              SpxHelpForCaret('[<minsize=a;maxsize=b>x|y]', 3, 1, 3, tieRows, 0, p_, s_) and
+              (s_ = 'permutation.maxsize-not-integer'));
+  end;
 
   { BEFORE the finding, in a document whose characters are two bytes each. The caret's column
     is BYTES and the finding's is CODE POINTS: `цена ` is five characters and nine bytes, so a

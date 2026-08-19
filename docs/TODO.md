@@ -2354,30 +2354,68 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       person writes, which is why it goes here rather than into the fix above. Raised by the
       Codex gate at the `v0.7.0` bump.
 
-- [ ] **`SpxPanelRows` sorts by insertion, and the "1008 ms for two million rows" figure is a
-      property of that fixture rather than of the panel.** `src/SpxStudio.pas:1326-1340` is an
-      insertion sort — linear only while the engine's rows already arrive in position order,
-      which the cycle-diamond's happen to. Measured through `SpxHealthReport` + `SpxPanelRows`
-      at the current pin, by review:
+- [x] **`SpxPanelRows` sorted by insertion and moved RECORDS; it moves indices now.** Closed
+      2026-08-19. The row is a managed record with four strings, so every shift was four
+      reference-count pairs — locked ones, because the engine worker makes the process
+      multi-threaded — and the shifts are the quadratic part. Now the key is computed once per
+      row, the insertion sort runs over an `Int64` key array and an `Integer` index array, and
+      the rows are permuted once at the end along the permutation's cycles.
+
+      **Measured on a hand-built report, so nothing but this function is timed, with
+      `IsMultiThread` forced on** (FPC skips the lock prefix when the process has never started
+      a thread, so a plain probe would time a cheaper path than the product runs):
 
       ```
-      16 000 rows, one ascending run     16 ms
-       8 000 rows, two interleaved runs  297 ms
-      16 000 rows, two interleaved runs  1 250 ms
-      32 000 rows, descending anchors    13 078 ms
+                                            before        after
+      16 000 rows, one ascending run          6 ms         4 ms
+      16 000 rows, two interleaved runs   1 726 ms       118 ms
+      32 000 rows, descending            24 057 ms     1 609 ms
+      100 000 rows, already in order         41 ms        25 ms
       ```
 
-      Doubling the rows roughly quadruples the time, and two interleaved runs is the ordinary
-      case rather than a corner: the engine emits per check, each ordered within itself. So the
-      `v0.7.0` number recorded above — two million rows in a further second — held only because
-      that input arrives pre-sorted; in any other order it would not have finished.
+      These are NOT the numbers recorded above them: those went through `SpxHealthReport` and
+      included `SpValidate`. Different harness, different question — which is why both are here
+      with their harness named.
 
-      **Pre-existing and not a regression from the `v0.8.0` bump**, and it needs hundreds of KB
-      rather than 507 bytes. Recorded because the bump's own headline reads as "the freeze is
-      gone", and half of what remains is in Studio's own file — in the function that change
-      declared re-read. The engine side has a matching shape (redefining names out of order
-      feeds `AddDiagAtOrdered` descending offsets: 363 576 bytes ascending 187 ms, the same
-      size descending 15 203 ms) which the bump improved by about 14 %, not by orders.
+      **The already-ordered cases got faster rather than merely staying put**, from two things
+      and not one: the old loop did `tmp := Result[i]` and assigned it back on every iteration
+      whether or not anything shifted, so a sorted block still paid 2(seg−1) managed record copies —
+      it pays none now — and it also loses two `Rank` calls per comparison. (The first draft of
+      this entry credited the precompute alone; review caught it.) Keeping that case free is why
+      the
+      permutation follows cycles instead of copying through a temporary array — a temporary
+      would charge every input two managed copies per row unconditionally.
+
+      **It buys a constant, not a class.** Comparisons are still quadratic. If that is ever not
+      enough, a stable run-detecting bottom-up merge replaces `SortFrom` without touching
+      anything around it.
+
+      **The stability was the real finding.** It is load-bearing — `SpxHelpForCaret` breaks a
+      tie between rows covering the caret with a strict `>` on `Column`, so the FIRST row
+      decides which article F1 opens, measured both ways — and it was asserted in a comment,
+      twice in this file, and **pinned nowhere**: no fixture put two rows at one position, so a
+      sort with no stability at all left the whole suite green. Gated now by
+      `rows/two-findings-on-one-character-keep-the-engines-order` (both classes of tie: an equal
+      `(Line, Column)`, and the unlocated rows that share the `High(Int64)` sentinel),
+      `rows/the-engine-reports-two-findings-at-one-position` (a real document —
+      `CheckPermConfigsV` anchors both value diagnostics at the config's opening `[<`), and two
+      `help/caret/...` checks that swap the rows and watch the article follow.
+      `rows/a-rotated-file-comes-back-in-order` and `rows/a-reversed-file-comes-back-in-order`
+      are what make the cycle-following permutation safe to keep.
+
+      Verified by four mutations, each read by NAME: `>` → `>=` fails exactly the four tie
+      checks; deleting the permutation fails the ordering and rotation checks; dropping a `-1`
+      marker fails the same; `SortFrom(first)` → `SortFrom(0)` fails only
+      `rows/files-keep-walk-order-across-positions`.
+
+      **No cost gate, deliberately.** A stopwatch is a flake on a shared runner by this
+      project's own precedent, and the self-calibrating ratio idea has under 3× margin after the
+      fix while costing a second per run. The measurement lives in the comment beside the code,
+      with the line saying the comparisons are still quadratic.
+
+      **And one thing that is NOT covered, said rather than assumed:** row order is prompt order
+      for the repair loop, and no `tests/fixtures/prompt-v2/` document puts two diagnostics at
+      one position — checked — so that byte-compared corpus does not exercise this coupling.
 
 - [ ] **The group editor reads a plural head more strictly than the engine does, and the bump
       made that visible.** `PluralHeadLength` (`src/SpxTokens.pas`) stops its search for the
