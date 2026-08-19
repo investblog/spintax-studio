@@ -3533,22 +3533,40 @@ Decisions owed **before the relevant submission** (not switchable later):
 
 ## To report to the engine
 
-- [ ] **`TLifter.Ref` (`engine/src/Spintax.Gsa.pas`) is quadratic in the count of DISTINCT
-      lifted macros.** It looks its keys up with a linear `FKeys.IndexOf`, so converting a SER
-      template whose lines each carry their own `#file[...]` costs O(n²). Measured on
-      `v0.8.0`, unoptimised, through `SpGsaToSpintax` directly so nothing of Studio's is in the
-      number:
+- [x] **REPORTED AND FIXED UPSTREAM, awaiting a tag** — `TLifter.Ref`
+      (`engine/src/Spintax.Gsa.pas`) was quadratic in the count of DISTINCT lifted macros: two
+      parallel `TStringList`s found with `IndexOf`, which walks them, so converting a SER
+      template whose lines each carry their own `#file[...]` cost O(n²). A SER project template
+      with a file spin per line is the ordinary shape, not a stress test.
+
+      Fixed as [investblog/spintax-win#3](https://github.com/investblog/spintax-win/pull/3),
+      branch `perf/gsa-lifter-map` — the unit already had `TStrMap` in scope, so the two lists
+      collapse into one map. Measured there, minimum of three runs, unoptimised:
 
       ```
-      1 000 distinct   353 ms
-      2 000          1 286 ms
-      4 000          5 229 ms
-      8 000         18 212 ms
+      n          before      after
+      1 000      266 ms       0 ms
+      2 000    1 266 ms      31 ms
+      4 000    5 375 ms      47 ms
+      8 000   20 375 ms      93 ms
       ```
 
-      A dictionary instead of the list would make it linear. Studio has moved the call off its
-      UI thread so the window survives it, but the wait is still the wait — and a SER project
-      template with a file spin per line is the ordinary shape, not a stress test.
+      **The absolutes moved between runs and the shape did not**, which is why the shape is
+      what the record keeps: the same input answered 12 453, 19 000 and 25 734 ms on this
+      machine under different load, and the timer's granularity is ~16 ms — most of the
+      `after` column. Doubling factors before: 4.8× / 4.2× / 3.8×. After: linear, holding to
+      128 000 distinct macros (5.5 MB) in ~2.5 s.
+
+      Verified from this side as well: **Studio's whole suite, 29 121 checks, green against
+      that branch**, and the instrument proven by putting the `v0.4.1` case defect back —
+      `gsa/two macros differing only in case are two variables` and
+      `gsa/and each keeps its own file name` fail by name. The upstream change also pins the
+      OTHER direction of the lookup, which nothing pinned before: identical text shares one
+      variable.
+
+      **Open here: the pin.** The submodule stays on `v0.8.0` until that branch is tagged, and
+      tagging is the owner's call. Until then a large SER template still takes its seconds —
+      off the UI thread, so the window answers, which is what the entry above closed.
 
 - [x] **FIXED UPSTREAM in `v0.8.0`** — line 13 now reads "254 of its 258", the table sums to
       254 and the runner agrees. Kept here because the habit it argues for is the point: run
