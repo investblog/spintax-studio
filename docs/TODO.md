@@ -3539,9 +3539,10 @@ Decisions owed **before the relevant submission** (not switchable later):
       template whose lines each carry their own `#file[...]` cost O(n²). A SER project template
       with a file spin per line is the ordinary shape, not a stress test.
 
-      Fixed as [investblog/spintax-win#3](https://github.com/investblog/spintax-win/pull/3),
-      branch `perf/gsa-lifter-map` — the unit already had `TStrMap` in scope, so the two lists
-      collapse into one map. Measured there, minimum of three runs, unoptimised:
+      Fixed and **merged into the engine's `main`** as `720de1c`
+      ([#3](https://github.com/investblog/spintax-win/pull/3)) — the unit already had
+      `TStrMap` in scope, so the two lists collapse into one map. Measured there, minimum of
+      three runs, unoptimised:
 
       ```
       n          before      after
@@ -3564,9 +3565,15 @@ Decisions owed **before the relevant submission** (not switchable later):
       OTHER direction of the lookup, which nothing pinned before: identical text shares one
       variable.
 
-      **Open here: the pin.** The submodule stays on `v0.8.0` until that branch is tagged, and
-      tagging is the owner's call. Until then a large SER template still takes its seconds —
-      off the UI thread, so the window answers, which is what the entry above closed.
+      A second commit there (`4a56610`) corrected the sentence in `docs/gsa-ser-conversion.md`
+      that had explained case-sensitivity by naming the very lookup the fix removed. The claim
+      did not move; what buys it did — the family's own rule about re-reading the sentences
+      after a change, applied on the engine's side of the boundary for once.
+
+      **Open here: the pin.** The engine's `main` carries the fix and no tag names it, so the
+      submodule stays on `v0.8.0` — tagging is the owner's call. Until then a large SER
+      template still takes its seconds, off the UI thread, so the window answers; that is what
+      the entry above closed.
 
 - [x] **FIXED UPSTREAM in `v0.8.0`** — line 13 now reads "254 of its 258", the table sums to
       254 and the runner agrees. Kept here because the habit it argues for is the point: run
