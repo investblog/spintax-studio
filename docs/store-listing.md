@@ -131,30 +131,27 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
-## What's new in this version (0.2.2.0) — DRAFT, pending the tag
+## What's new in this version (0.2.2.0)
 
-Written 2026-08-20 against `v0.2.1.0..HEAD`. **Not yet checked against a tag** — do that
-before it is typed into the form, the way the 0.2.0.0 block was.
+> **The text below is the field, verbatim and form-ready** — one line per bullet, no
+> backticks, no markdown. Partner Center keeps the breaks it is given, so a draft wrapped to
+> this file's width pastes as bullets broken across three lines; the 0.2.0.0 field was
+> unwrapped by hand at the form, and this removes that step. Microsoft's limit is **1500
+> characters** ("This field has a 1500 character limit. (Previously, this field was called
+> Release notes)"), read 2026-08-20 from the page the other limits come from; this is 963. The thirteen
+> other languages are in `marketing/store/<lang>.md` under the same heading, and
+> `check-listing-drafts.py` now REQUIRES the section, measures it and refuses a wrapped line.
 
-**It covers TWO versions on purpose.** The 0.2.1.0 notes were written and never published
-(see the block below, measured off the storefront), and this field shows one version's text
-rather than a history — so anything 0.2.1.0 changed that a reader would notice has to be
-said here or it is never said at all.
+Spintax Studio 0.2.2 is about the moments the window used to stop answering.
 
-> Spintax Studio 0.2.2 is about the moments the window used to stop answering.
->
-> • A template whose definitions refer to each other in a circle could leave the
-> diagnostics panel unresponsive for many seconds. It answers at once now, and reports one
-> finding per name rather than one for every path through the circle — so the panel is
-> shorter as well as faster.
-> • The diagnostics panel is much quicker on documents with many findings.
-> • Importing a large GSA template no longer freezes the window while it converts.
-> • Two plural findings used to be wrong: a list of forms supplied by a `#def` was reported
-> as the wrong number of forms on a template that rendered correctly, and a condition used
-> as the count made the whole block disappear with nothing reported at all. Both are right.
-> • The variants panel answers promptly on templates whose macros and fragments refer to
-> each other widely, and says when the number it gives is a lower bound.
-> • Engine updated to v0.8.0.
+• A template whose definitions refer to each other in a circle could leave the diagnostics panel unresponsive for many seconds. It answers at once now, and reports one finding per name rather than one for every path through the circle, so the panel is shorter as well as faster.
+• The diagnostics panel is much quicker on documents with many findings.
+• Importing a large GSA template no longer freezes the window while it converts.
+• Two plural findings used to be wrong: a list of forms supplied by a #def was reported as the wrong number of forms on a template that rendered correctly, and a condition used as the count made the whole block disappear with nothing reported at all. Both are right.
+• The variants panel answers promptly on templates whose macros and fragments refer to each other widely, and says when the number it gives is a lower bound.
+• Engine updated to v0.8.0.
+
+## How the 0.2.2.0 field was written
 
 **Measured, not carried over.** Each bullet, and what stands behind it:
 

@@ -50,7 +50,8 @@ DRAFTS = os.path.join(HERE, 'marketing', 'store')
 # holds that list to `TSpxLang`, so this inherits the gate instead of adding a second list.
 MANIFEST = os.path.join(HERE, 'packaging', 'AppxManifest.xml.in')
 
-SECTIONS = ('Short description', 'Description', 'Product features')
+SECTIONS = ('Short description', 'Description', 'Product features',
+            "What's new in this version")
 
 # Microsoft's, not ours. See the module docstring for where each one is quoted from.
 # ADDITIONAL STORE LISTING LANGUAGES -- listings the product carries for a language the PACKAGE
@@ -78,11 +79,25 @@ ADDITIONAL_LISTING_LANGS = ('sr-Latn',)
 # by reading its name. This map is what lets the manifest's `sr` still find its draft.
 DRAFT_FILE = {'sr': 'sr-Cyrl'}
 
+# The bullet the What's-new field uses. Microsoft asks for no bullets in PRODUCT FEATURES,
+# which it renders as a list itself; this field is free text and keeps what it is given.
+BULLET = '•'
+
 MAX_FEATURES = 20
 MAX_FEATURE_CHARS = 200
 MAX_SHORT_CHARS = 1000
 SHOWN_SHORT_CHARS = 270          # only the first 270 are shown in some views -- advisory
 MAX_DESCRIPTION_CHARS = 10000
+
+# WHAT'S NEW IN THIS VERSION -- "This field has a 1500 character limit. (Previously, this field
+# was called Release notes)", read 2026-08-20 from the same Microsoft page as the limits above.
+#
+# THE SECTION IS REQUIRED, and that is the point of adding it here. The drafts had no section
+# for this field at all, so 0.2.1.0 went out without touching it: the text had nowhere to live,
+# and the field on the live page still carries the 0.2.0.0 draft while the shipped package is a
+# version further on. The field is per LANGUAGE, so a release needs fourteen of them or it needs
+# to decide not to -- and this makes that a decision rather than an omission.
+MAX_WHATS_NEW_CHARS = 1500
 
 
 # SERBIAN LATIN IS NOT A SECOND TRANSLATION, IT IS THE FIRST ONE IN ANOTHER SCRIPT. The mapping
@@ -210,6 +225,25 @@ def length_notes(text, bullets):
     if body is not None and len(body) > MAX_DESCRIPTION_CHARS:
         notes.append('description %d chars, limit %d' % (len(body), MAX_DESCRIPTION_CHARS))
 
+    fresh = section_body(text, "What's new in this version")
+    if fresh is not None:
+        if len(fresh) > MAX_WHATS_NEW_CHARS:
+            notes.append("what's new %d chars, limit %d"
+                         % (len(fresh), MAX_WHATS_NEW_CHARS))
+        # ONE LINE PER BULLET, because the form is plain text and keeps the breaks it is
+        # given. A draft wrapped to markdown width pastes as a bullet broken across three
+        # lines -- which is what the live 0.2.0.0 field would have shown had nobody unwrapped
+        # it by hand at the form. Checked here so the unwrapping is not a manual step.
+        for number, line in enumerate(fresh.splitlines()):
+            if number == 0 or not line.strip():
+                continue          # the lead sentence, and the blank line under it
+            if not line.startswith(BULLET):
+                notes.append("what's new has a line that is neither the lead nor a "
+                             "bullet, so it is a wrapped one: %s..." % line[:40])
+                break
+        if '`' in fresh:
+            notes.append("what's new contains a backtick; the field is plain text")
+
     return notes
 
 
@@ -311,12 +345,14 @@ def main():
         elif len(bullets) != len(source_bullets):
             notes.append('%d bullets, English has %d' % (len(bullets), len(source_bullets)))
 
+        # A MISSING SECTION IS THE FINDING, not merely a file with no headings at all. This
+        # loop used to complain only when `^##` matched nowhere, so deleting one section
+        # passed -- measured on 2026-08-20 by deleting the What's-new block from de.md, which
+        # is exactly how 0.2.1.0 shipped with that field untouched. The anchors are English in
+        # every draft (checked across all fourteen), so requiring them by name is answerable.
         for section in SECTIONS:
-            if ('## ' + section) not in text and section != 'Product features':
-                # a translated heading is fine; the anchor is the English one in the template
-                if not re.search(r'^##\s+\S', text, re.M):
-                    notes.append('no sections at all')
-                    break
+            if ('## ' + section) not in text:
+                notes.append('no "## %s"' % section)
 
         if licence not in text:
             notes.append('does not name %s' % licence)
