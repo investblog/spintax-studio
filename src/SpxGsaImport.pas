@@ -127,23 +127,163 @@ function SpxImportGsa(const ASource: string): TSpxGsaResult;
 function SpxImportStillApplies(AWasRev, ANowRev: Int64;
   const AWasPath, ANowPath, AWasDoc, ANowDoc: string): Boolean;
 
+{ The order the variables panel receives after an import: the trailing run of digits in a
+  name compares as a NUMBER and the stem as text, so `<prefix><kind>1 .. <kind>12` come back
+  in the order the engine lifted them and not as m1, m10, m11, m12, m2.
+
+  PUBLIC so the rule can be checked, which is the whole reason the old one was wrong: it was
+  reachable only through an import, the shapes that expose it -- no digits, digits in the
+  middle, a run too long for Int64 -- are ones no GSA template produces, and nothing pinned
+  the order at all. See the note on the implementation for what it cost and why it is a merge
+  sort rather than the index sort SpxPanelRows uses. }
+procedure SpxSortVarPairs(var APairs: TSpxVarPairs);
+
 implementation
 
-{ Insertion sort by name: the lists here are a handful of entries, and the only property that
-  matters is that the order is the SAME every time. }
-procedure SortPairs(var APairs: TSpxVarPairs);
-var i, j: Integer; tmp: TSpxVarPair;
+(* NATURAL ORDER, AND IT IS N LOG N ------------------------------------------
+
+   TWO DEFECTS LIVED HERE, and the smaller one was the visible one.
+
+   THE ORDER. This compared names with CompareStr, and the lifter's names carry a NUMBER:
+   `__gsa_m1`, `__gsa_m2`, ... So twelve lifted file spins reached the panel as m1, m10,
+   m11, m12, m2, ... m9 -- a reader importing a SER template with a list per line met their
+   tenth list between the first and the second. Nothing pinned that order, which is how it
+   survived: it was not a decision, it was CompareStr.
+
+   The engine already hands over what is needed. Names are `<prefix><kind><N>` with a
+   per-kind counter (`Spintax.Gsa.pas/TLifter`), so lift order -- which for these is document
+   order -- is recoverable from the name itself. No engine change is wanted; the trailing run
+   of digits is compared as a NUMBER and the stem as text, which groups the kinds and orders
+   each kind the way it was lifted. A name with no trailing digits compares as its whole
+   self, so this is total over any name and not only over the ones the lifter makes.
+
+   THE COST. It was an insertion sort over a MANAGED RECORD, and its input is a TDictionary
+   key enumeration -- hash order, which is the worst case rather than an unlucky one. Roughly
+   n^2/4 record moves, each of them four reference-count pairs.
+
+   That was invisible until 2026-08-20, and honestly so: the import was measured on 08-19
+   and everything Studio adds on top WAS inside run-to-run noise, because the engine cost
+   5 229 ms at four thousand macros. Engine v0.8.1 made the lifter linear, the engine's share
+   fell to 31 ms, and what had been noise became all of it. Measured through SpxImportGsa and
+   SpGsaToSpintax in one process and one build, unoptimised, minimum of three runs:
+
+        n     engine   SpxImportGsa   Studio's own half
+    1 000         15             15                   0
+    2 000         15             62                  47
+    4 000         31            203                 172
+    8 000         62            765                 703
+   16 000        156          3 422               3 266
+
+   A share measured against a dominant cost says nothing about what happens when the dominant
+   cost goes away.
+
+   SO THIS IS A MERGE SORT, not the index-sort SpxPanelRows got. That one buys a constant and
+   says so, which is right where the input is dozens of rows; here the input is thousands, and
+   a constant on a quadratic is still a quadratic. Bottom-up, stable, over an index array; the
+   records are permuted once at the end along the permutation's cycles, so a block that is
+   already in order costs no record moves at all. *)
+
+type
+  TNatKey = record
+    Stem: string;      { the name with its trailing digits removed }
+    Num: Int64;        { those digits as a number, -1 when there are none }
+  end;
+
+function NatKeyOf(const AName: string): TNatKey;
+var i, first_: Integer;
 begin
-  for i := 1 to High(APairs) do
+  first_ := Length(AName) + 1;
+  i := Length(AName);
+  while (i >= 1) and (AName[i] >= '0') and (AName[i] <= '9') do
   begin
-    tmp := APairs[i];
-    j := i - 1;
-    while (j >= 0) and (CompareStr(APairs[j].Name, tmp.Name) > 0) do
+    first_ := i;
+    Dec(i);
+  end;
+  Result.Stem := Copy(AName, 1, first_ - 1);
+  if first_ > Length(AName) then Result.Num := -1
+  else
+    { A run long enough to overflow is not a lifter name; compare it as text instead of
+      wrapping into a small number and ordering it wrongly. }
+    if not TryStrToInt64(Copy(AName, first_, Length(AName) - first_ + 1), Result.Num) then
     begin
-      APairs[j + 1] := APairs[j];
-      Dec(j);
+      Result.Stem := AName;
+      Result.Num := -1;
     end;
-    APairs[j + 1] := tmp;
+end;
+
+function NatLess(const A, B: TNatKey): Boolean;
+var c: Integer;
+begin
+  c := CompareStr(A.Stem, B.Stem);
+  if c <> 0 then Exit(c < 0);
+  Result := A.Num < B.Num;
+end;
+
+procedure SpxSortVarPairs(var APairs: TSpxVarPairs);
+var
+  keys: array of TNatKey;
+  from_, work: array of Integer;
+  n, width, lo, mid, hi, i, j, k: Integer;
+  tmp: TSpxVarPair;
+begin
+  n := Length(APairs);
+  if n < 2 then Exit;
+
+  SetLength(keys, n);
+  SetLength(from_, n);
+  SetLength(work, n);
+  for i := 0 to n - 1 do
+  begin
+    keys[i] := NatKeyOf(APairs[i].Name);
+    from_[i] := i;
+  end;
+
+  { Bottom-up merge over the INDICES: an Integer moves, not a record with four strings. }
+  width := 1;
+  while width < n do
+  begin
+    lo := 0;
+    while lo < n do
+    begin
+      mid := lo + width;
+      if mid > n then mid := n;
+      hi := lo + 2 * width;
+      if hi > n then hi := n;
+      i := lo; j := mid; k := lo;
+      while (i < mid) and (j < hi) do
+      begin
+        { `not NatLess(left, right)` would drop stability; ask whether the RIGHT one is
+          strictly smaller, and take the left when it is not. }
+        if NatLess(keys[from_[j]], keys[from_[i]]) then
+        begin work[k] := from_[j]; Inc(j); end
+        else
+        begin work[k] := from_[i]; Inc(i); end;
+        Inc(k);
+      end;
+      while i < mid do begin work[k] := from_[i]; Inc(i); Inc(k); end;
+      while j < hi do begin work[k] := from_[j]; Inc(j); Inc(k); end;
+      lo := hi;
+    end;
+    for i := 0 to n - 1 do from_[i] := work[i];
+    width := width * 2;
+  end;
+
+  { Permute in place along the permutation's cycles, -1 marking a slot already placed. An
+    array that arrived in order costs zero record moves here. }
+  for i := 0 to n - 1 do
+  begin
+    if (from_[i] < 0) or (from_[i] = i) then Continue;
+    tmp := APairs[i];
+    j := i;
+    while from_[j] <> i do
+    begin
+      k := from_[j];
+      from_[j] := -1;
+      APairs[j] := APairs[k];
+      j := k;
+    end;
+    from_[j] := -1;
+    APairs[j] := tmp;
   end;
 end;
 
@@ -409,7 +549,10 @@ begin
       Result.Vars[n].Literal := True;
       Inc(n);
     end;
-    SortPairs(Result.Vars);
+    { NOT SORTED HERE. GuardTagBlocks below appends to this array and reads nothing but its
+      length, and nothing between here and there looks at it -- so the only sort that can be
+      observed is the one after it. Sorting twice built every key twice and merged twice, on
+      exactly the path this was made fast for. Found by Codex review, 2026-08-21. }
 
     { `name=original text`, and the name is what the block became. Split on the FIRST `=`
       only: a refused block is arbitrary text and may carry more of them. }
@@ -437,7 +580,7 @@ begin
        document was rewritten correctly and the reader was told nothing, which is the very
        defect being fixed. Caught by measuring the result, not by reading the diff. *)
     Result.Doc := GuardTagBlocks(Result.Doc, macros, Result.Vars, Result.Refused);
-    SortPairs(Result.Vars);
+    SpxSortVarPairs(Result.Vars);
   finally
     refused.Free;
     macros.Free;

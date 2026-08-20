@@ -7821,6 +7821,180 @@ begin
   end;
 end;
 
+(* THE ORDER THE PANEL RECEIVES, which nothing pinned until 2026-08-21 -- and that is why it
+   was wrong. `SortPairs` compared names with CompareStr, and the lifter's names carry a
+   NUMBER, so twelve lifted file spins arrived as m1, m10, m11, m12, m2, ... m9: a reader with
+   a list per line met their tenth list between the first and the second. It was not a
+   decision anyone made, it was the default comparison, and no check could tell.
+
+   These ask the question the old shape could not answer. What they CANNOT see is the cost --
+   this file refuses stopwatch checks (a timing check on a shared runner is a flake), so the
+   3 266 ms -> 63 ms at sixteen thousand macros lives in the comment on SortPairs, measured. *)
+procedure TestGsaImportOrder;
+var
+  src: string; res: TSpxGsaResult; i: Integer; names: string; sb: TStringList;
+begin
+  sb := TStringList.Create;
+  try
+    for i := 1 to 12 do
+      sb.Add('Line ' + IntToStr(i) + ' #file[list' + IntToStr(i) + '.txt,1,S] tail.');
+    src := sb.Text;
+  finally sb.Free; end;
+
+  res := SpxImportGsa(src);
+  names := '';
+  for i := 0 to High(res.Vars) do
+  begin
+    if names <> '' then names := names + ',';
+    names := names + res.Vars[i].Name;
+  end;
+  { Twelve, so that 10 11 12 exist -- with nine or fewer the defect is invisible, which is the
+    shape a smaller fixture would have had. }
+  Check('gsa/lifted macros come back in the order they were lifted',
+        names,
+        '__gsa_m1,__gsa_m2,__gsa_m3,__gsa_m4,__gsa_m5,__gsa_m6,' +
+        '__gsa_m7,__gsa_m8,__gsa_m9,__gsa_m10,__gsa_m11,__gsa_m12');
+
+  { And the values travel with their names rather than being sorted apart from them. }
+  CheckTrue('gsa/and each name still carries its own text',
+            (Length(res.Vars) = 12) and
+            (Pos('list1.txt', res.Vars[0].Value) > 0) and
+            (Pos('list10.txt', res.Vars[9].Value) > 0) and
+            (Pos('list12.txt', res.Vars[11].Value) > 0));
+end;
+
+(* AND THE RULE ITSELF, away from the engine: a trailing run of digits compares as a NUMBER
+   and the stem as text. Exercised directly because SortPairs is reachable only through an
+   import otherwise, and these shapes -- no digits at all, digits in the middle, a run too
+   long for Int64 -- are ones no GSA template produces. Totality is the point: this sorts any
+   name, not only the ones the lifter makes. *)
+procedure TestNaturalOrder;
+  function Sorted(const ANames, AValues: array of string): TSpxVarPairs;
+  var i: Integer;
+  begin
+    { Explicit, because SetLength READS the result first and -Sew makes that a build error --
+      the pre-commit pass runs it and build.sh does not, so this was caught at the commit. }
+    Result := nil;
+    SetLength(Result, Length(ANames));
+    for i := 0 to High(ANames) do
+    begin
+      Result[i].Name := ANames[i];
+      if Length(AValues) > i then Result[i].Value := AValues[i]
+      else Result[i].Value := 'v' + IntToStr(i);
+      Result[i].Literal := True;
+    end;
+    SpxSortVarPairs(Result);
+  end;
+
+  function Order(const ANames: array of string): string;
+  var v: TSpxVarPairs; i: Integer;
+  begin
+    v := Sorted(ANames, []);
+    Result := '';
+    { The separator is decided by the INDEX, not by whether the accumulator is still empty --
+      an empty first name made the two the same question and swallowed a comma, so the empty
+      case failed against a correct sort. The instrument, not the code; found by running it. }
+    for i := 0 to High(v) do
+    begin
+      if i > 0 then Result := Result + ',';
+      Result := Result + v[i].Name;
+    end;
+  end;
+
+  { The VALUES in the sorted order, because equal names cannot tell each other apart. }
+  function OrderValues(const ANames, AValues: array of string): string;
+  var v: TSpxVarPairs; i: Integer;
+  begin
+    v := Sorted(ANames, AValues);
+    Result := '';
+    for i := 0 to High(v) do
+    begin
+      if i > 0 then Result := Result + ',';
+      Result := Result + v[i].Value;
+    end;
+  end;
+begin
+  Check('order/numbers compare as numbers, not as text',
+        Order(['a10', 'a9', 'a1']), 'a1,a9,a10');
+  { The stem groups first, so two kinds do not interleave however their numbers run. }
+  Check('order/the stem groups before the number decides',
+        Order(['b1', 'a10', 'b2', 'a2']), 'a2,a10,b1,b2');
+  { No digits: the whole name is the stem, and a bare stem sorts before its numbered kin
+    because it has no number at all. }
+  Check('order/a name without digits is ordered too',
+        Order(['a2', 'a', 'a1']), 'a,a1,a2');
+  { Digits that are not TRAILING are part of the stem. }
+  Check('order/only the trailing run is a number',
+        Order(['x2y10', 'x2y2']), 'x2y2,x2y10');
+  { A run too long for Int64 is compared as text rather than wrapped into a small number --
+    the branch that would otherwise order it wrongly and silently. }
+  Check('order/an overlong digit run falls back to text',
+        Order(['n99999999999999999999', 'n1']), 'n1,n99999999999999999999');
+  { Already in order costs no moves and must still come back in order. }
+  Check('order/a sorted array is left alone',
+        Order(['a1', 'a2', 'a3']), 'a1,a2,a3');
+  { Reversed, which is the permutation a cycle-following pass gets wrong if a marker is
+    dropped -- the same case the panel sort needed. }
+  Check('order/a reversed array comes back in order',
+        Order(['a5', 'a4', 'a3', 'a2', 'a1']), 'a1,a2,a3,a4,a5');
+  { One 5-cycle. What these two do NOT do is catch a dropped `-1` marker in the permutation:
+    that mutation does not fail here, it kills the process (runtime error 217, reading
+    `from_[-1]` after an earlier cycle's marker). A red build, but not a named failure --
+    written down because the difference is the whole point of naming checks. }
+  Check('order/a rotated array comes back in order',
+        Order(['a2', 'a3', 'a4', 'a5', 'a1']), 'a1,a2,a3,a4,a5');
+
+  (* THE EDGE OF THE DOMAIN, which the comment on SpxSortVarPairs claims and nothing asked
+     about until Codex said so on 2026-08-21. "Total over any name" is a claim, and these are
+     the names an import never produces: nothing at all, digits and nothing else, and a stem
+     that is not ASCII. A scan that mishandled any of them would have been found by a reader
+     rather than by a check. (Codex's own example -- an off-by-one leaving the first digit in
+     the stem -- was REFUTED by putting it in: five checks fail by name. The general point
+     stood anyway.) *)
+  Check('order/an empty name sorts and does not crash',
+        Order(['b1', '', 'a1']), ',a1,b1');
+  { All digits: the stem is empty, so these order purely numerically and before any name. }
+  Check('order/a name that is only digits is a number with an empty stem',
+        Order(['a1', '10', '9']), '9,10,a1');
+  { A Cyrillic stem, byte-wise longer than its character count -- the scan walks BYTES, and a
+    trailing digit after one is still a trailing digit. }
+  Check('order/a non-ASCII stem keeps its trailing number',
+        Order(['имя10', 'имя9', 'имя1']), 'имя1,имя9,имя10');
+  { THREE overlong runs, not the single pair that was here: one pair cannot see a fallback
+    that is inconsistent across a third key. }
+  Check('order/overlong runs stay consistent among themselves',
+        Order(['n99999999999999999999', 'n1', 'n88888888888888888888']),
+        'n1,n88888888888888888888,n99999999999999999999');
+
+  (* AND A PAIR WHERE TEXT AND NUMBER DISAGREE, because the three above do not: 1 < 888… <
+     999… reads the same either way, so an arbitrary-precision fallback would satisfy them
+     and the comment that used to sit here claimed otherwise. 10^20 and 10^20-1 separate the
+     two -- textually `n1000…` comes first, numerically it comes second -- so this pins that
+     the fallback really is TEXT and not a wider number. Codex, 2026-08-21. *)
+  Check('order/the overlong fallback is text, where text and number disagree',
+        Order(['n99999999999999999999', 'n100000000000000000000']),
+        'n100000000000000000000,n99999999999999999999');
+
+  (* AND A TIE, which is the only shape that can see stability -- and the reason this case
+     exists is that it was MISSING. The merge's tie rule was mutated (asking whether the left
+     is not smaller, instead of whether the right is strictly smaller) and every check above
+     stayed green, because an import's names come from a dictionary's keys and are unique, so
+     no two of them ever tie. A claim about stability that no case can observe is decoration;
+     this function is public now and its caller is free to pass duplicates. Values carry the
+     order, since the names cannot. *)
+  Check('order/equal names keep the order they arrived in',
+        OrderValues(['b1', 'a1', 'a1', 'a1'], ['w', 'x', 'y', 'z']), 'x,y,z,w');
+
+  (* AND DISTINCT NAMES THAT ARE THE SAME KEY, which is the sharper case and which I first
+     argued did not exist: `a01` and `a1` both reduce to stem `a`, number 1, because the scan
+     consumes the whole trailing run and StrToInt64 does not care about a leading zero.
+     Measured after being told, not reasoned about again. It is sharper than the identical
+     names above because a comparator that added a textual tie-break would still pass those
+     and would reorder these. Codex, 2026-08-21. *)
+  Check('order/distinct names with the same key keep their arrival order',
+        OrderValues(['a01', 'a1'], ['first', 'second']), 'first,second');
+end;
+
 procedure TestGsaImport;
 var
   res: TSpxGsaResult;
@@ -12600,6 +12774,8 @@ begin
   TestLlmProfile;
   TestSecrets;
   TestAbout;
+  TestGsaImportOrder;
+  TestNaturalOrder;
   TestGsaImport;
   TestVariantCount;
   TestBrandMark;

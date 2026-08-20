@@ -3531,8 +3531,7 @@ Decisions owed **before the relevant submission** (not switchable later):
       was Latin; it was not — it measured 4421 Cyrillic characters to 407 Latin, and the 407 were
       `Spintax Studio`, `Windows`, `XLSX`, `GPL-3.0-or-later`, `endpoint`, `seed`.
 
-- [ ] **`SortPairs` (`src/SpxGsaImport.pas`) is quadratic, and it now dominates the GSA
-      import.** It is an insertion sort over `TSpxVarPairs` — a managed record — and its input
+- [x] **FIXED 2026-08-21. `SortPairs` was quadratic AND ordered the panel wrongly.** It is an insertion sort over `TSpxVarPairs` — a managed record — and its input
       is a `TDictionary` key enumeration, i.e. hash order, which is the worst case rather than
       an unlucky one. n²/4 moves: about 64 million at sixteen thousand lifted macros.
 
@@ -3562,7 +3561,54 @@ Decisions owed **before the relevant submission** (not switchable later):
       costs 31 now. A share measured against a dominant cost says nothing about what happens
       when the dominant cost goes away.
 
+      **And the cost was the SMALLER of the two defects.** `CompareStr` on a name that carries
+      a number ordered twelve lifted file spins as m1, m10, m11, m12, m2 … m9 — a reader with
+      a list per line met their tenth list between the first and the second. **Nothing pinned
+      that order**, which is why it survived: it was never a decision, it was the default
+      comparison.
+
+      Fixed as a natural-order merge sort — the trailing digit run compares as a NUMBER, the
+      stem as text — with the records permuted once along the permutation's cycles. A merge
+      rather than the index-insertion `SpxPanelRows` uses, because that one buys a constant
+      and says so, which is right for dozens of rows and not for thousands. Measured again,
+      same probe, same build:
+
+      ```
+           n   engine   SpxImportGsa   Studio's own half
+       1 000        0              0                   0
+       2 000       15             16                   1
+       4 000       31             47                  16
+       8 000       78             94                  16
+      16 000      140            203                  63
+      ```
+
+      3 266 ms → 63. 17 checks, and the rule is public (`SpxSortVarPairs`) because it was
+      reachable only through an import before and the shapes that expose it — no digits,
+      digits in the middle, an overlong run — are ones no GSA template makes.
+
+      **The stability case was missing and the mutation found it.** Inverting the merge's tie
+      rule left every check green: an import's names are dictionary keys and never tie, so a
+      claim about stability had nothing that could see it. There are two now, and the sharper
+      one came from review: `a01` and `a1` are DISTINCT names that reduce to the same key, so
+      a comparator that grew a textual tie-break would pass the identical-name case and fail
+      this one. I had argued that case did not exist; it does, and one run said so.
+
+      **This count was wrong twice while being written** — ten, then eleven, and it is 17,
+      taken from the suite's own delta rather than counted by hand. A number in a record is a
+      claim, and this one is about the record itself.
+
 ## To report to the engine
+
+- [ ] **`SpGsaToSpintax`'s header does not say that the lifted names carry lift order.** It
+      describes `MacroVars` as receiving "one entry per lifted construct" and stops there. The
+      names are `<prefix><kind><N>` with a per-kind counter (`TLifter`), so the order is
+      recoverable — but a consumer has to read the implementation to learn that, and the
+      container it arrives in is a dictionary whose enumeration is hash order.
+
+      Studio did not: it sorted the names as text and shipped m1, m10, m11, m12, m2 to the
+      panel. **Not an engine defect and no API change is wanted** — everything needed is
+      already there. Two lines in the header would stop the next consumer inventing an order,
+      which is the only reason this is worth reporting at all.
 
 - [x] **REPORTED AND FIXED UPSTREAM, awaiting a tag** — `TLifter.Ref`
       (`engine/src/Spintax.Gsa.pas`) was quadratic in the count of DISTINCT lifted macros: two
