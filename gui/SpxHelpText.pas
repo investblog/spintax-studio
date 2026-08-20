@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    'bac2f82fe77328e3', '1161eb58753cc15f', '38df3cd4190ac46b', 'e908447ddf6f7cbf', 'c5226848658b80c2', '434752b56808b4b8', 'e05d6f8a7288a764', '45a56cf11fcf0166', 'f8b274bfea4a3b9d', 'b4a72047b507b425', '488ce59bac9e29c3', '7f61fd4b089638df', '3f8c75118b73d98f', '7813c6dc420189dd', '0d549262922b3331', 'ab8950089825a79c', 'c85b5f196fca1f91', '6bb5e85de94010ed', 'be3c9da1f1522b01', '4ddfd411500958cc', '26e21bf1b83633da', '335889dd80f48659', 'b54956a9ee49f248', '00a887dfff5a6ef5', '14e7aaad0600c183', '18c7da1e110847db', 'd9d49c35432acae4', 'cbed7bf2c514a8d5', '9dacb63502e5aa97', 'b8529893866ec950', 'ee229cb3a76fbe42', 'ea10d49bf126b2b6', '471885d59dbd925b', '38f95f3dd0a3854a', '56ba422eb944d0c7', '2a4bb2d8392a4ede', 'bcad9b0e49bbe8b4', 'f938d7a90e73bc73', 'e3f2c5289cd05d42', 'bc5b347f1f9bb702', '47d9d375a0b29342', '2b4b7149bc00ea5e'
+    'bac2f82fe77328e3', '1161eb58753cc15f', '38df3cd4190ac46b', 'e908447ddf6f7cbf', 'c5226848658b80c2', '434752b56808b4b8', 'e05d6f8a7288a764', '45a56cf11fcf0166', '89a8ff0a570a7147', 'b4a72047b507b425', '488ce59bac9e29c3', 'ea2383e9db780d10', '3f8c75118b73d98f', '7813c6dc420189dd', '503c829c41759228', 'ab8950089825a79c', 'c85b5f196fca1f91', 'c434023fabaad742', 'be3c9da1f1522b01', '4ddfd411500958cc', '1c4c3b93a10a0ace', '335889dd80f48659', 'b54956a9ee49f248', '4247434725480d75', '14e7aaad0600c183', '18c7da1e110847db', '8c12a62b81359e52', 'cbed7bf2c514a8d5', '9dacb63502e5aa97', 'd33afaa14aeb660b', 'ee229cb3a76fbe42', 'ea10d49bf126b2b6', '98b8a4033fabe327', '38f95f3dd0a3854a', '56ba422eb944d0c7', '6edb66eefdd4c6b7', 'bcad9b0e49bbe8b4', 'f938d7a90e73bc73', '08cc0b89d53a1d0a', 'bc5b347f1f9bb702', '47d9d375a0b29342', '430cd907796bd630'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -789,15 +789,15 @@ const
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..461] of Integer = (
-    0, 7, 14, 19, 25, 35, 52, 55, 58, 67, 72, 78, 90, 115, 125, 132, 139, 148, 152, 167, 189, 191, 201, 208, 221, 237, 263, 285, 305, 319, 332, 345, 353, 362, 369, 376, 381, 387, 397, 414, 417, 420, 429, 434, 440, 452, 477, 487, 494, 502, 511, 515, 529, 559, 561, 572, 579, 592, 608, 634, 656, 675, 689, 702, 722, 730, 737, 744, 751, 756, 762, 772, 789, 792, 795, 804, 809, 815, 827, 852, 862, 869, 876, 885, 889, 904, 929, 931, 941, 948, 961, 977, 1002, 1024, 1044, 1058, 1071, 1084, 1092, 1101, 1108, 1115, 1120, 1126, 1136, 1153, 1156, 1159, 1168, 1173, 1179, 1191, 1216, 1226, 1233, 1240, 1249, 1253, 1268, 1296, 1298, 1308, 1315, 1328, 1344, 1369, 1391, 1411, 1425, 1438, 1451, 1459, 1468, 1475, 1482, 1487, 1493, 1503, 1520, 1523, 1526, 1535, 1540, 1546, 1558, 1583, 1593, 1600, 1607, 1616, 1620, 1635, 1663, 1665, 1675, 1682, 1695, 1711, 1736, 1758, 1778, 1792, 1805, 1818, 1826, 1835, 1842, 1849, 1854, 1860, 1870, 1887, 1890, 1893, 1902, 1907, 1913, 1925, 1950, 1960, 1967, 1974, 1983, 1987, 2002, 2030, 2032, 2042, 2049, 2062, 2078, 2103, 2125, 2145, 2159, 2172, 2185, 2193, 2202, 2209, 2216, 2221, 2227, 2237, 2254, 2257, 2260, 2269, 2274, 2280, 2292, 2317, 2327, 2334, 2341, 2350, 2354, 2369, 2399, 2401, 2411, 2418, 2431, 2447, 2472, 2494, 2514, 2528, 2541, 2554, 2562, 2571, 2578, 2585, 2590, 2596, 2606, 2623, 2626, 2629, 2638, 2643, 2649, 2661, 2686, 2696, 2703, 2710, 2719, 2723, 2738, 2763, 2765, 2775, 2782, 2795, 2811, 2836, 2858, 2878, 2892, 2905, 2918, 2926, 2935, 2942, 2949, 2954, 2960, 2970, 2987, 2990, 2993, 3002, 3007, 3013, 3025, 3050, 3060, 3067, 3074, 3083, 3087, 3102, 3129, 3131, 3141, 3148, 3161, 3177, 3202, 3224, 3244, 3258, 3271, 3284, 3292, 3301, 3308, 3315, 3320, 3326, 3336, 3353, 3356, 3359, 3368, 3373, 3379, 3391, 3416, 3426, 3433, 3441, 3450, 3454, 3469, 3498, 3500, 3510, 3517, 3530, 3546, 3571, 3593, 3613, 3627, 3640, 3653, 3661, 3670, 3677, 3684, 3689, 3695, 3705, 3722, 3725, 3728, 3737, 3742, 3748, 3760, 3785, 3795, 3802, 3810, 3819, 3823, 3838, 3867, 3869, 3879, 3886, 3899, 3915, 3940, 3962, 3982, 3996, 4009, 4022, 4030, 4039, 4046, 4053, 4058, 4064, 4074, 4091, 4094, 4097, 4106, 4111, 4117, 4129, 4154, 4164, 4171, 4179, 4188, 4192, 4207, 4237, 4239, 4249, 4256, 4269, 4285, 4310, 4332, 4352, 4366, 4379, 4392, 4400, 4409, 4416, 4423, 4428, 4434, 4444, 4461, 4464, 4467, 4476, 4481, 4487, 4499, 4524, 4534, 4541, 4549, 4558, 4562, 4578, 4605, 4607, 4617, 4624, 4637, 4653, 4678, 4700, 4720, 4734, 4747, 4760, 4768, 4777, 4784, 4791, 4796, 4802, 4812, 4829, 4832, 4835, 4844, 4849, 4855, 4867, 4892, 4902, 4909, 4917, 4926, 4930, 4946, 4973, 4975, 4985, 4992, 5005, 5021, 5046, 5068, 5088, 5102, 5115, 5128, 5136
+    0, 7, 14, 19, 25, 35, 52, 55, 58, 67, 72, 78, 90, 115, 125, 132, 139, 148, 152, 167, 189, 191, 201, 208, 221, 237, 263, 285, 305, 319, 332, 345, 353, 362, 369, 376, 381, 387, 397, 414, 417, 420, 429, 434, 440, 452, 477, 487, 494, 502, 511, 515, 529, 559, 561, 572, 579, 592, 608, 634, 656, 675, 689, 702, 722, 730, 737, 744, 751, 756, 762, 772, 789, 792, 795, 804, 809, 815, 827, 852, 862, 869, 876, 885, 889, 904, 929, 931, 941, 948, 961, 977, 1003, 1025, 1045, 1059, 1072, 1085, 1093, 1102, 1109, 1116, 1121, 1127, 1137, 1154, 1157, 1160, 1169, 1174, 1180, 1192, 1217, 1227, 1234, 1241, 1250, 1254, 1269, 1297, 1299, 1309, 1316, 1329, 1345, 1371, 1393, 1413, 1427, 1440, 1453, 1461, 1470, 1477, 1484, 1489, 1495, 1505, 1522, 1525, 1528, 1537, 1542, 1548, 1560, 1585, 1595, 1602, 1609, 1618, 1622, 1637, 1665, 1667, 1677, 1684, 1697, 1713, 1739, 1761, 1781, 1795, 1808, 1821, 1829, 1838, 1845, 1852, 1857, 1863, 1873, 1890, 1893, 1896, 1905, 1910, 1916, 1928, 1953, 1963, 1970, 1977, 1986, 1990, 2005, 2033, 2035, 2045, 2052, 2065, 2081, 2107, 2129, 2149, 2163, 2176, 2189, 2197, 2206, 2213, 2220, 2225, 2231, 2241, 2258, 2261, 2264, 2273, 2278, 2284, 2296, 2321, 2331, 2338, 2345, 2354, 2358, 2373, 2403, 2405, 2415, 2422, 2435, 2451, 2477, 2499, 2519, 2533, 2546, 2559, 2567, 2576, 2583, 2590, 2595, 2601, 2611, 2628, 2631, 2634, 2643, 2648, 2654, 2666, 2691, 2701, 2708, 2715, 2724, 2728, 2743, 2768, 2770, 2780, 2787, 2800, 2816, 2842, 2864, 2884, 2898, 2911, 2924, 2932, 2941, 2948, 2955, 2960, 2966, 2976, 2993, 2996, 2999, 3008, 3013, 3019, 3031, 3056, 3066, 3073, 3080, 3089, 3093, 3108, 3135, 3137, 3147, 3154, 3167, 3183, 3209, 3231, 3251, 3265, 3278, 3291, 3299, 3308, 3315, 3322, 3327, 3333, 3343, 3360, 3363, 3366, 3375, 3380, 3386, 3398, 3423, 3433, 3440, 3448, 3457, 3461, 3476, 3505, 3507, 3517, 3524, 3537, 3553, 3579, 3601, 3621, 3635, 3648, 3661, 3669, 3678, 3685, 3692, 3697, 3703, 3713, 3730, 3733, 3736, 3745, 3750, 3756, 3768, 3793, 3803, 3810, 3818, 3827, 3831, 3846, 3875, 3877, 3887, 3894, 3907, 3923, 3949, 3971, 3991, 4005, 4018, 4031, 4039, 4048, 4055, 4062, 4067, 4073, 4083, 4100, 4103, 4106, 4115, 4120, 4126, 4138, 4163, 4173, 4180, 4188, 4197, 4201, 4216, 4246, 4248, 4258, 4265, 4278, 4294, 4320, 4342, 4362, 4376, 4389, 4402, 4410, 4419, 4426, 4433, 4438, 4444, 4454, 4471, 4474, 4477, 4486, 4491, 4497, 4509, 4534, 4544, 4551, 4559, 4568, 4572, 4588, 4615, 4617, 4627, 4634, 4647, 4663, 4689, 4711, 4731, 4745, 4758, 4771, 4779, 4788, 4795, 4802, 4807, 4813, 4823, 4840, 4843, 4846, 4855, 4860, 4866, 4878, 4903, 4913, 4920, 4928, 4937, 4941, 4957, 4984, 4986, 4996, 5003, 5016, 5032, 5058, 5080, 5100, 5114, 5127, 5140, 5148
   );
   HELP_LAST: array[0..461] of Integer = (
-    6, 13, 18, 24, 34, 51, 54, 57, 66, 71, 77, 89, 114, 124, 131, 138, 147, 151, 166, 188, 190, 200, 207, 220, 236, 262, 284, 304, 318, 331, 344, 352, 361, 368, 375, 380, 386, 396, 413, 416, 419, 428, 433, 439, 451, 476, 486, 493, 501, 510, 514, 528, 558, 560, 571, 578, 591, 607, 633, 655, 674, 688, 701, 721, 729, 736, 743, 750, 755, 761, 771, 788, 791, 794, 803, 808, 814, 826, 851, 861, 868, 875, 884, 888, 903, 928, 930, 940, 947, 960, 976, 1001, 1023, 1043, 1057, 1070, 1083, 1091, 1100, 1107, 1114, 1119, 1125, 1135, 1152, 1155, 1158, 1167, 1172, 1178, 1190, 1215, 1225, 1232, 1239, 1248, 1252, 1267, 1295, 1297, 1307, 1314, 1327, 1343, 1368, 1390, 1410, 1424, 1437, 1450, 1458, 1467, 1474, 1481, 1486, 1492, 1502, 1519, 1522, 1525, 1534, 1539, 1545, 1557, 1582, 1592, 1599, 1606, 1615, 1619, 1634, 1662, 1664, 1674, 1681, 1694, 1710, 1735, 1757, 1777, 1791, 1804, 1817, 1825, 1834, 1841, 1848, 1853, 1859, 1869, 1886, 1889, 1892, 1901, 1906, 1912, 1924, 1949, 1959, 1966, 1973, 1982, 1986, 2001, 2029, 2031, 2041, 2048, 2061, 2077, 2102, 2124, 2144, 2158, 2171, 2184, 2192, 2201, 2208, 2215, 2220, 2226, 2236, 2253, 2256, 2259, 2268, 2273, 2279, 2291, 2316, 2326, 2333, 2340, 2349, 2353, 2368, 2398, 2400, 2410, 2417, 2430, 2446, 2471, 2493, 2513, 2527, 2540, 2553, 2561, 2570, 2577, 2584, 2589, 2595, 2605, 2622, 2625, 2628, 2637, 2642, 2648, 2660, 2685, 2695, 2702, 2709, 2718, 2722, 2737, 2762, 2764, 2774, 2781, 2794, 2810, 2835, 2857, 2877, 2891, 2904, 2917, 2925, 2934, 2941, 2948, 2953, 2959, 2969, 2986, 2989, 2992, 3001, 3006, 3012, 3024, 3049, 3059, 3066, 3073, 3082, 3086, 3101, 3128, 3130, 3140, 3147, 3160, 3176, 3201, 3223, 3243, 3257, 3270, 3283, 3291, 3300, 3307, 3314, 3319, 3325, 3335, 3352, 3355, 3358, 3367, 3372, 3378, 3390, 3415, 3425, 3432, 3440, 3449, 3453, 3468, 3497, 3499, 3509, 3516, 3529, 3545, 3570, 3592, 3612, 3626, 3639, 3652, 3660, 3669, 3676, 3683, 3688, 3694, 3704, 3721, 3724, 3727, 3736, 3741, 3747, 3759, 3784, 3794, 3801, 3809, 3818, 3822, 3837, 3866, 3868, 3878, 3885, 3898, 3914, 3939, 3961, 3981, 3995, 4008, 4021, 4029, 4038, 4045, 4052, 4057, 4063, 4073, 4090, 4093, 4096, 4105, 4110, 4116, 4128, 4153, 4163, 4170, 4178, 4187, 4191, 4206, 4236, 4238, 4248, 4255, 4268, 4284, 4309, 4331, 4351, 4365, 4378, 4391, 4399, 4408, 4415, 4422, 4427, 4433, 4443, 4460, 4463, 4466, 4475, 4480, 4486, 4498, 4523, 4533, 4540, 4548, 4557, 4561, 4577, 4604, 4606, 4616, 4623, 4636, 4652, 4677, 4699, 4719, 4733, 4746, 4759, 4767, 4776, 4783, 4790, 4795, 4801, 4811, 4828, 4831, 4834, 4843, 4848, 4854, 4866, 4891, 4901, 4908, 4916, 4925, 4929, 4945, 4972, 4974, 4984, 4991, 5004, 5020, 5045, 5067, 5087, 5101, 5114, 5127, 5135, 5144
+    6, 13, 18, 24, 34, 51, 54, 57, 66, 71, 77, 89, 114, 124, 131, 138, 147, 151, 166, 188, 190, 200, 207, 220, 236, 262, 284, 304, 318, 331, 344, 352, 361, 368, 375, 380, 386, 396, 413, 416, 419, 428, 433, 439, 451, 476, 486, 493, 501, 510, 514, 528, 558, 560, 571, 578, 591, 607, 633, 655, 674, 688, 701, 721, 729, 736, 743, 750, 755, 761, 771, 788, 791, 794, 803, 808, 814, 826, 851, 861, 868, 875, 884, 888, 903, 928, 930, 940, 947, 960, 976, 1002, 1024, 1044, 1058, 1071, 1084, 1092, 1101, 1108, 1115, 1120, 1126, 1136, 1153, 1156, 1159, 1168, 1173, 1179, 1191, 1216, 1226, 1233, 1240, 1249, 1253, 1268, 1296, 1298, 1308, 1315, 1328, 1344, 1370, 1392, 1412, 1426, 1439, 1452, 1460, 1469, 1476, 1483, 1488, 1494, 1504, 1521, 1524, 1527, 1536, 1541, 1547, 1559, 1584, 1594, 1601, 1608, 1617, 1621, 1636, 1664, 1666, 1676, 1683, 1696, 1712, 1738, 1760, 1780, 1794, 1807, 1820, 1828, 1837, 1844, 1851, 1856, 1862, 1872, 1889, 1892, 1895, 1904, 1909, 1915, 1927, 1952, 1962, 1969, 1976, 1985, 1989, 2004, 2032, 2034, 2044, 2051, 2064, 2080, 2106, 2128, 2148, 2162, 2175, 2188, 2196, 2205, 2212, 2219, 2224, 2230, 2240, 2257, 2260, 2263, 2272, 2277, 2283, 2295, 2320, 2330, 2337, 2344, 2353, 2357, 2372, 2402, 2404, 2414, 2421, 2434, 2450, 2476, 2498, 2518, 2532, 2545, 2558, 2566, 2575, 2582, 2589, 2594, 2600, 2610, 2627, 2630, 2633, 2642, 2647, 2653, 2665, 2690, 2700, 2707, 2714, 2723, 2727, 2742, 2767, 2769, 2779, 2786, 2799, 2815, 2841, 2863, 2883, 2897, 2910, 2923, 2931, 2940, 2947, 2954, 2959, 2965, 2975, 2992, 2995, 2998, 3007, 3012, 3018, 3030, 3055, 3065, 3072, 3079, 3088, 3092, 3107, 3134, 3136, 3146, 3153, 3166, 3182, 3208, 3230, 3250, 3264, 3277, 3290, 3298, 3307, 3314, 3321, 3326, 3332, 3342, 3359, 3362, 3365, 3374, 3379, 3385, 3397, 3422, 3432, 3439, 3447, 3456, 3460, 3475, 3504, 3506, 3516, 3523, 3536, 3552, 3578, 3600, 3620, 3634, 3647, 3660, 3668, 3677, 3684, 3691, 3696, 3702, 3712, 3729, 3732, 3735, 3744, 3749, 3755, 3767, 3792, 3802, 3809, 3817, 3826, 3830, 3845, 3874, 3876, 3886, 3893, 3906, 3922, 3948, 3970, 3990, 4004, 4017, 4030, 4038, 4047, 4054, 4061, 4066, 4072, 4082, 4099, 4102, 4105, 4114, 4119, 4125, 4137, 4162, 4172, 4179, 4187, 4196, 4200, 4215, 4245, 4247, 4257, 4264, 4277, 4293, 4319, 4341, 4361, 4375, 4388, 4401, 4409, 4418, 4425, 4432, 4437, 4443, 4453, 4470, 4473, 4476, 4485, 4490, 4496, 4508, 4533, 4543, 4550, 4558, 4567, 4571, 4587, 4614, 4616, 4626, 4633, 4646, 4662, 4688, 4710, 4730, 4744, 4757, 4770, 4778, 4787, 4794, 4801, 4806, 4812, 4822, 4839, 4842, 4845, 4854, 4859, 4865, 4877, 4902, 4912, 4919, 4927, 4936, 4940, 4956, 4983, 4985, 4995, 5002, 5015, 5031, 5057, 5079, 5099, 5113, 5126, 5139, 5147, 5156
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..5144] of string = (
+  HELP_LINE: array[0..5156] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -3501,12 +3501,20 @@ const
       'tt ihn zu laufen, und übrig bleibt der andere Name aus dem Kreis — setzen Sie <code>%x' +
       '% %y%</code> in ein Dokument, und es gibt <code>%y% %x%</code> aus, das Paar vertausch' +
       't.</p>',
-    '<p>Die Tafel zeichnet eine Zeile für <b>jede Nennung, die den Kreis schließt</b>, nich' +
-      't eine Zeile für den Kreis und nicht eine je Festlegung. Eine Festlegung, die den Krei' +
-      's zweimal nennt, bekommt zwei Zeilen auf ihrer eigenen Zeile: <code>#set %x% = %y% %y%' +
-      '</code> gegen <code>#set %y% = %x%</code> sind drei Fehler, zwei davon in der ersten Z' +
-      'eile. Die Zeilen werden nicht zusammengefasst. Und die Stelle liegt auf der Festlegung' +
-      ', die wirklich gilt: ist der Name zweimal festgelegt, ist das die <b>letzte</b>.</p>',
+    '<p>Die Tafel zeichnet eine Zeile für <b>jeden festgelegten Namen, von dem aus der Krei' +
+      's erreichbar ist</b>, nicht eine Zeile für den Kreis und nicht eine je Nennung. Den Kr' +
+      'eis zweimal in einer Zeile zu nennen verdoppelt die Zeile nicht: <code>#set %x% = %y% ' +
+      '%y%</code> gegen <code>#set %y% = %x%</code> sind zwei Fehler, einer je Zeile — genau ' +
+      'wie beim einfachen Paar.</p>',
+    '<p><b>Ein Name, der nur in den Kreis hineinführt, wird ebenfalls gemeldet</b>, und das' +
+      ' ist der überraschende Teil: eine Kette von Festlegungen, die einen Kreis aus zwei Nam' +
+      'en speist, zieht eine Zeile für jedes Glied der Kette und nicht zwei Zeilen für den Kr' +
+      'eis allein. Ein Name, der NUR auf sich selbst verweist, ist ein anderer Fehler — <code' +
+      '>variable.self-reference</code> —, aber eine Festlegung, die sich selbst nennt <b>und<' +
+      '/b> einen Kreis erreicht, zieht beide: <code>#set %s% = %s% %c1%</code> über einem Kre' +
+      'is aus zwei Namen ist eine Selbstreferenz und drei Kreis-Zeilen, davon eine auf dersel' +
+      'ben Zeile. Und die Stelle liegt auf der Festlegung, die wirklich gilt: ist der Name zw' +
+      'eimal festgelegt, ist das die <b>letzte</b>.</p>',
     '<hr>',
     '<h2 id="includes">Einfügungen</h2>',
     '<h3 id="includes-0"><code>#include</code> wirkt nur am Zeilenanfang</h3>',
@@ -3586,10 +3594,11 @@ const
       'as wäre die Ausgabe bei jeder Zahl von Formen leer und zeigte über die Anzahl gar nich' +
       'ts.</p>',
     '<p>Die Tafel und die Ausgabe beantworten hier verschiedene Fragen, und das ist kein Wi' +
-      'derspruch: die Zeile setzt die <b>Prüfung</b> dorthin, die die Formen im Text zählt un' +
-      'd sich für die Zahl nicht interessiert; die Leere kommt vom <b>Rendern</b>, das seine ' +
-      'eigene Reihenfolge hat. Geben Sie der Zahl eine Ziffer, wie es das erste Beispiel tut,' +
-      ' und Sie sehen, was die Anzahl wirklich tut.</p>',
+      'derspruch: die Zeile setzt die <b>Prüfung</b> dorthin, die die Formen zählt, die das R' +
+      'endern wirklich trennen wird — eine Festlegung, die für sie einsteht, wird zuvor aufge' +
+      'löst; die Leere kommt vom <b>Rendern</b>, das seine eigene Reihenfolge hat. Geben Sie ' +
+      'der Zahl eine Ziffer, wie es das erste Beispiel tut, und Sie sehen, was die Anzahl wir' +
+      'klich tut.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — die Zahl kommt aus einem' +
       ' <code>#set</code>, und das würfelt bei jeder Nennung neu</h3>',
     '<p><small><tt><a href="ex:60">#set %n% = {1|2}</a><br><a href="ex:60">%n% {plural %n%:' +
@@ -3743,8 +3752,11 @@ const
       'den wird. Benennen Sie es um. Im <b>Wert</b> sind Umlaute dagegen völlig in Ordnung.</' +
       'p>',
     '<p><b>Warum wird derselbe Fehler zweimal gezeigt?</b> Ein Kreis von Festlegungen zieht' +
-      ' eine Zeile für jede Nennung, die ihn schließt — zwei Stellen zum Ansehen, manchmal dr' +
-      'ei. Das sind keine Dubletten, und sie werden nicht zusammengefasst.</p>',
+      ' eine Zeile für jeden NAMEN, von dem aus er erreichbar ist — mindestens zwei Stellen z' +
+      'um Ansehen, und mehr, wenn andere Festlegungen den Kreis speisen. <code>#set %x% = %y%' +
+      ' %y%</code> gegen <code>#set %y% = %x%</code> sind zwei Zeilen, eine je Zeile. Das sin' +
+      'd keine Dubletten: jede Zeile steht für einen anderen Namen, und sie werden nicht zusa' +
+      'mmengefasst.</p>',
     '<p><b>Die Tafel sagt Fehler und die Ausgabe sieht richtig aus. Was denn nun?</b> Beide' +
       's. Das kommt bei einem doppelt festgelegten Namen vor: das Rendern ist richtig — der l' +
       'etzte Wert gewinnt — und das Dokument ist mehrdeutig. Das Urteil gilt dem Dokument und' +
@@ -4525,12 +4537,20 @@ const
       ' est devenu <code>%y%</code> et non <code>%x%</code>. Le moteur déroule le cercle au l' +
       'ieu de le parcourir, et ce qui survit est l''autre nom du cercle — mettez <code>%x% %y' +
       '%</code> dans un document et il sort <code>%y% %x%</code>, la paire inversée.</p>',
-    '<p>Le panneau trace une ligne pour <b>chaque mention qui ferme le cercle</b>, non une ' +
-      'ligne pour le cercle ni une par définition. Une définition qui nomme le cercle deux fo' +
-      'is obtient deux lignes sur sa propre ligne : <code>#set %x% = %y% %y%</code> contre <c' +
-      'ode>#set %y% = %x%</code> fait trois erreurs, dont deux sur la première. Les lignes ne' +
-      ' sont pas fusionnées. Et la position se pose sur la définition qui vaut vraiment : si ' +
-      'le nom est défini deux fois, c''est la <b>dernière</b>.</p>',
+    '<p>Le panneau trace une ligne pour <b>chaque nom défini depuis lequel le cercle est at' +
+      'teignable</b>, non une ligne pour le cercle ni une par mention. Nommer le cercle deux ' +
+      'fois sur une ligne ne double pas la ligne : <code>#set %x% = %y% %y%</code> contre <co' +
+      'de>#set %y% = %x%</code> fait deux erreurs, une sur chaque ligne — exactement comme la' +
+      ' paire simple.</p>',
+    '<p><b>Un nom qui ne fait que mener au cercle est signalé lui aussi</b>, et c''est la p' +
+      'art qui surprend : une chaîne de définitions qui alimente un cercle de deux noms trace' +
+      ' une ligne pour chaque maillon de la chaîne, et non deux lignes pour le cercle seul. U' +
+      'n nom qui ne renvoie QU''à lui-même est une autre erreur — <code>variable.self-referen' +
+      'ce</code> — mais une définition qui se nomme elle-même <b>et</b> atteint un cercle tra' +
+      'ce les deux : <code>#set %s% = %s% %c1%</code> au-dessus d''un cercle de deux noms fai' +
+      't une auto-référence et trois lignes circulaires, dont une sur cette même ligne. Et la' +
+      ' position se pose sur la définition qui vaut vraiment : si le nom est défini deux fois' +
+      ', c''est la <b>dernière</b>.</p>',
     '<hr>',
     '<h2 id="includes">Inclusions</h2>',
     '<h3 id="includes-0"><code>#include</code> ne marche qu''en début de ligne</h3>',
@@ -4616,9 +4636,10 @@ const
       'ien du tout sur le nombre.</p>',
     '<p>Le panneau et la sortie répondent ici à des questions différentes, et ce n''est pas' +
       ' une contradiction : la ligne est posée par la <b>vérification</b>, qui compte les for' +
-      'mes dans le texte et se moque du compte ; le vide vient du <b>rendu</b>, qui a son pro' +
-      'pre ordre. Donnez un chiffre au compte, comme le fait le premier exemple, et vous voye' +
-      'z ce que le nombre de formes fait vraiment.</p>',
+      'mes que le rendu va réellement séparer — une définition qui tient leur place est résol' +
+      'ue d''abord ; le vide vient du <b>rendu</b>, qui a son propre ordre. Donnez un chiffre' +
+      ' au compteur, comme le fait le premier exemple, et vous verrez ce que le nombre de for' +
+      'mes fait vraiment.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — le compte vient d''un <c' +
       'ode>#set</code>, et cela retire à chaque mention</h3>',
     '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
@@ -4770,8 +4791,11 @@ const
       'is substitué. Renommez-le. Dans la <b>valeur</b>, en revanche, les accents ne posent a' +
       'ucun problème.</p>',
     '<p><b>Pourquoi la même erreur est-elle montrée deux fois ?</b> Un cercle de définition' +
-      's tire une ligne pour chaque mention qui le ferme — deux endroits à regarder, parfois ' +
-      'trois. Ce ne sont pas des doublons, et ils ne sont pas fusionnés.</p>',
+      's trace une ligne pour chaque NOM depuis lequel il est atteignable — au moins deux end' +
+      'roits à regarder, et davantage si d''autres définitions alimentent le cercle. <code>#s' +
+      'et %x% = %y% %y%</code> contre <code>#set %y% = %x%</code> fait deux lignes, une sur c' +
+      'haque ligne. Ce ne sont pas des doublons : chaque ligne porte sur un nom différent, et' +
+      ' elles ne sont pas fusionnées.</p>',
     '<p><b>Le panneau dit erreur et la sortie a l''air juste. Alors ?</b> Les deux. Cela ar' +
       'rive avec un nom défini deux fois : le rendu est juste — la dernière valeur gagne — et' +
       ' le document est ambigu. Le verdict porte sur le document et non sur cette sortie-là.<' +
@@ -5524,12 +5548,19 @@ const
       'lvió <code>%y%</code> y no <code>%x%</code>. El motor desenrolla el círculo en vez de ' +
       'recorrerlo, y lo que sobrevive es el otro nombre del círculo: ponga <code>%x% %y%</cod' +
       'e> en un documento y saldrá <code>%y% %x%</code>, la pareja al revés.</p>',
-    '<p>El panel dibuja una fila por <b>cada mención que cierra el círculo</b>, no una fila' +
-      ' para el círculo ni una por definición. Una definición que nombra el círculo dos veces' +
-      ' recibe dos filas en su propia línea: <code>#set %x% = %y% %y%</code> contra <code>#se' +
-      't %y% = %x%</code> son tres errores, dos de ellos en la primera línea. Las filas no se' +
-      ' juntan. Y la posición se pone sobre la definición que de verdad vale: si el nombre es' +
-      'tá definido dos veces, esa es la <b>última</b>.</p>',
+    '<p>El panel dibuja una fila por <b>cada nombre definido desde el que se alcanza el cír' +
+      'culo</b>, no una fila para el círculo ni una por mención. Nombrar el círculo dos veces' +
+      ' en una línea no duplica la fila: <code>#set %x% = %y% %y%</code> contra <code>#set %y' +
+      '% = %x%</code> son dos errores, uno en cada línea — igual que la pareja simple.</p>',
+    '<p><b>Un nombre que solo lleva al círculo también se informa</b>, y esa es la parte qu' +
+      'e sorprende: una cadena de definiciones que alimenta un círculo de dos nombres dibuja ' +
+      'una fila por cada eslabón de la cadena, y no dos filas para el círculo solo. Un nombre' +
+      ' que se refiere SOLO a sí mismo es otro error — <code>variable.self-reference</code> —' +
+      ', pero una definición que se nombra a sí misma <b>y</b> alcanza un círculo dibuja las ' +
+      'dos: <code>#set %s% = %s% %c1%</code> sobre un círculo de dos nombres es una autorrefe' +
+      'rencia y tres filas circulares, una de ellas en esa misma línea. Y la posición se pone' +
+      ' sobre la definición que de verdad vale: si el nombre está definido dos veces, esa es ' +
+      'la <b>última</b>.</p>',
     '<hr>',
     '<h2 id="includes">Inclusiones</h2>',
     '<h3 id="includes-0"><code>#include</code> solo funciona al principio de línea</h3>',
@@ -5612,11 +5643,11 @@ const
     '<p>Por eso el ejemplo del principio de este artículo define <code>%n%</code> primero. ' +
       'Sin eso la salida estaría vacía con cualquier número de formas y no mostraría nada sob' +
       're la cantidad.</p>',
-    '<p>El panel y la salida responden aquí a preguntas distintas, y no es contradicción: l' +
-      'a fila la pone la <b>comprobación</b>, que cuenta las formas del texto y de la cuenta ' +
-      'no se ocupa; el vacío lo da el <b>render</b>, que tiene su propio orden. Dele una cifr' +
-      'a a la cuenta, como hace el primer ejemplo, y verá lo que la cantidad de formas hace d' +
-      'e verdad.</p>',
+    '<p>El panel y la salida responden aquí a preguntas distintas, y no es una contradicció' +
+      'n: la fila la pone la <b>comprobación</b>, que cuenta las formas que la representación' +
+      ' va a separar de verdad — una definición que ocupa su lugar se resuelve antes; el vací' +
+      'o lo da la <b>representación</b>, que tiene su propio orden. Dele una cifra al contado' +
+      'r, como hace el primer ejemplo, y verá lo que hace de verdad el número de formas.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — la cuenta viene de un <c' +
       'ode>#set</code>, y eso vuelve a tirar en cada mención</h3>',
     '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
@@ -5764,9 +5795,11 @@ const
       ' panel. La primera es silenciosa, así que nada le avisa de que nunca se sustituirá. Cá' +
       'mbiele el nombre. En el <b>valor</b>, en cambio, las tildes y la <code>ñ</code> no dan' +
       ' ningún problema.</p>',
-    '<p><b>¿Por qué se muestra dos veces el mismo error?</b> Un círculo de definiciones sac' +
-      'a una fila por cada mención que lo cierra: dos sitios que mirar, a veces tres. No son ' +
-      'duplicados y no se juntan.</p>',
+    '<p><b>¿Por qué se muestra dos veces el mismo error?</b> Un círculo de definiciones dib' +
+      'uja una fila por cada NOMBRE desde el que se alcanza — al menos dos sitios que mirar, ' +
+      'y más si otras definiciones alimentan el círculo. <code>#set %x% = %y% %y%</code> cont' +
+      'ra <code>#set %y% = %x%</code> son dos filas, una en cada línea. No son duplicados: ca' +
+      'da fila es de un nombre distinto, y no se juntan.</p>',
     '<p><b>El panel dice error y la salida parece correcta. ¿En qué quedamos?</b> En las do' +
       's cosas. Eso pasa con un nombre definido dos veces: el render es correcto —gana el últ' +
       'imo valor— y el documento es ambiguo. El veredicto es sobre el documento, no sobre est' +
@@ -6515,12 +6548,20 @@ const
       ' è diventato <code>%y%</code> e non <code>%x%</code>. Il motore srotola il cerchio inv' +
       'ece di percorrerlo, e ciò che sopravvive è l''altro nome del cerchio: mettete <code>%x' +
       '% %y%</code> in un documento e uscirà <code>%y% %x%</code>, la coppia rovesciata.</p>',
-    '<p>Il pannello traccia una riga per <b>ogni menzione che chiude il cerchio</b>, non un' +
-      'a riga per il cerchio né una per definizione. Una definizione che nomina il cerchio du' +
-      'e volte riceve due righe sulla propria riga: <code>#set %x% = %y% %y%</code> contro <c' +
-      'ode>#set %y% = %x%</code> fa tre errori, due dei quali sulla prima. Le righe non vengo' +
-      'no unite. E la posizione si posa sulla definizione che vale davvero: se il nome è defi' +
-      'nito due volte, è l''<b>ultima</b>.</p>',
+    '<p>Il pannello traccia una riga per <b>ogni nome definito da cui il cerchio è raggiung' +
+      'ibile</b>, non una riga per il cerchio né una per menzione. Nominare il cerchio due vo' +
+      'lte su una riga non raddoppia la riga: <code>#set %x% = %y% %y%</code> contro <code>#s' +
+      'et %y% = %x%</code> fa due errori, uno per riga — esattamente come la coppia semplice.' +
+      '</p>',
+    '<p><b>Anche un nome che porta soltanto dentro il cerchio viene segnalato</b>, ed è la ' +
+      'parte che sorprende: una catena di definizioni che alimenta un cerchio di due nomi tra' +
+      'ccia una riga per ogni anello della catena, e non due righe per il cerchio da solo. Un' +
+      ' nome che rimanda SOLO a se stesso è un altro errore — <code>variable.self-reference</' +
+      'code> — ma una definizione che nomina se stessa <b>e</b> raggiunge un cerchio le tracc' +
+      'ia entrambe: <code>#set %s% = %s% %c1%</code> sopra un cerchio di due nomi è un''autor' +
+      'eferenza e tre righe circolari, una delle quali su quella stessa riga. E la posizione ' +
+      'si posa sulla definizione che vale davvero: se il nome è definito due volte, è l''<b>u' +
+      'ltima</b>.</p>',
     '<hr>',
     '<h2 id="includes">Inclusioni</h2>',
     '<h3 id="includes-0"><code>#include</code> funziona solo a inizio riga</h3>',
@@ -6605,9 +6646,10 @@ const
       'o. Senza, l''uscita sarebbe vuota con qualsiasi numero di forme e non mostrerebbe null' +
       'a sul numero.</p>',
     '<p>Il pannello e l''uscita rispondono qui a domande diverse, e non è una contraddizion' +
-      'e: la riga la mette la <b>verifica</b>, che conta le forme nel testo e del conteggio n' +
-      'on si occupa; il vuoto lo dà la <b>resa</b>, che ha un ordine suo. Date una cifra al c' +
-      'onteggio, come fa il primo esempio, e vedete cosa il numero di forme fa davvero.</p>',
+      'e: la riga la mette il <b>controllo</b>, che conta le forme che il rendering separerà ' +
+      'davvero — una definizione che sta al loro posto viene risolta prima; il vuoto viene da' +
+      'l <b>rendering</b>, che ha un ordine suo. Dia un numero al contatore, come fa il primo' +
+      ' esempio, e vedrà che cosa fa davvero il numero di forme.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — il conteggio viene da un' +
       ' <code>#set</code>, e quello rilancia a ogni menzione</h3>',
     '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
@@ -6758,9 +6800,11 @@ const
       ' riga nel pannello. La prima è silenziosa, quindi nulla vi dice che non verrà mai sost' +
       'ituita. Rinominatela. Nel <b>valore</b>, invece, le accentate non danno alcun problema' +
       '.</p>',
-    '<p><b>Perché lo stesso errore è mostrato due volte?</b> Un cerchio di definizioni tira' +
-      ' una riga per ogni menzione che lo chiude: due punti da guardare, a volte tre. Non son' +
-      'o doppioni e non vengono uniti.</p>',
+    '<p><b>Perché lo stesso errore è mostrato due volte?</b> Un cerchio di definizioni trac' +
+      'cia una riga per ogni NOME da cui è raggiungibile — almeno due punti da guardare, e di' +
+      ' più se altre definizioni alimentano il cerchio. <code>#set %x% = %y% %y%</code> contr' +
+      'o <code>#set %y% = %x%</code> fa due righe, una per riga. Non sono duplicati: ogni rig' +
+      'a riguarda un nome diverso, e non vengono unite.</p>',
     '<p><b>Il pannello dice errore e l''uscita sembra giusta. Come sta la cosa?</b> In entr' +
       'ambi i modi. Succede con un nome definito due volte: la resa è giusta — vince l''ultim' +
       'o valore — e il documento è ambiguo. Il verdetto riguarda il documento e non questa si' +
@@ -7494,12 +7538,18 @@ const
       'ssou a <code>%y%</code> e não a <code>%x%</code>. O motor desenrola o círculo em vez d' +
       'e o percorrer, e o que sobrevive é o outro nome do círculo: ponha <code>%x% %y%</code>' +
       ' num documento e sairá <code>%y% %x%</code>, o par trocado.</p>',
-    '<p>O painel traça uma linha por <b>cada menção que fecha o círculo</b>, e não uma linh' +
-      'a para o círculo nem uma por definição. Uma definição que nomeie o círculo duas vezes ' +
-      'recebe duas linhas na sua própria linha: <code>#set %x% = %y% %y%</code> contra <code>' +
-      '#set %y% = %x%</code> dá três erros, dois deles na primeira. As linhas não são juntada' +
-      's. E a posição assenta na definição que vale mesmo: se o nome estiver definido duas ve' +
-      'zes, é a <b>última</b>.</p>',
+    '<p>O painel desenha uma linha por <b>cada nome definido a partir do qual o círculo é a' +
+      'lcançável</b>, não uma linha para o círculo nem uma por menção. Nomear o círculo duas ' +
+      'vezes numa linha não duplica a linha: <code>#set %x% = %y% %y%</code> contra <code>#se' +
+      't %y% = %x%</code> são dois erros, um em cada linha — tal como o par simples.</p>',
+    '<p><b>Um nome que apenas leva ao círculo também é comunicado</b>, e é essa a parte que' +
+      ' surpreende: uma cadeia de definições que alimenta um círculo de dois nomes desenha um' +
+      'a linha por cada elo da cadeia, e não duas linhas só para o círculo. Um nome que remet' +
+      'e APENAS para si próprio é outro erro — <code>variable.self-reference</code> — mas uma' +
+      ' definição que se nomeia a si própria <b>e</b> alcança um círculo desenha as duas: <co' +
+      'de>#set %s% = %s% %c1%</code> sobre um círculo de dois nomes é uma autorreferência e t' +
+      'rês linhas circulares, uma delas nessa mesma linha. E a posição assenta na definição q' +
+      'ue vale mesmo: se o nome estiver definido duas vezes, é a <b>última</b>.</p>',
     '<hr>',
     '<h2 id="includes">Inclusões</h2>',
     '<h3 id="includes-0"><code>#include</code> só funciona no princípio da linha</h3>',
@@ -7581,10 +7631,11 @@ const
     '<p>É por isso que o exemplo no topo deste artigo define <code>%n%</code> primeiro. Sem' +
       ' isso a saída estaria vazia com qualquer número de formas e não mostraria nada sobre o' +
       ' número.</p>',
-    '<p>O painel e a saída respondem aqui a perguntas diferentes, e não é contradição: a li' +
-      'nha é posta pela <b>verificação</b>, que conta as formas no texto e da contagem não tr' +
-      'ata; o vazio vem da <b>composição</b>, que tem uma ordem sua. Dê um algarismo à contag' +
-      'em, como faz o primeiro exemplo, e verá o que o número de formas faz mesmo.</p>',
+    '<p>O painel e a saída respondem aqui a perguntas diferentes, e não é uma contradição: ' +
+      'a linha é posta pela <b>verificação</b>, que conta as formas que a renderização vai me' +
+      'smo separar — uma definição que ocupa o lugar delas é resolvida antes; o vazio vem da ' +
+      '<b>renderização</b>, que tem uma ordem própria. Dê um número ao contador, como faz o p' +
+      'rimeiro exemplo, e verá o que o número de formas faz realmente.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — a contagem vem de um <co' +
       'de>#set</code>, e esse volta a tirar a cada menção</h3>',
     '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
@@ -7732,9 +7783,11 @@ const
     '<p>Ambas passaram intactas, e a armadilha está aí: só a segunda puxou uma linha no pai' +
       'nel. A primeira é silenciosa, logo nada lhe diz que nunca será substituída. Mude-lhe o' +
       ' nome. No <b>valor</b>, pelo contrário, os acentos não dão problema nenhum.</p>',
-    '<p><b>Porque é que o mesmo erro é mostrado duas vezes?</b> Um círculo de definições pu' +
-      'xa uma linha por cada menção que o fecha: dois sítios para ver, às vezes três. Não são' +
-      ' duplicados e não são juntados.</p>',
+    '<p><b>Porque é que o mesmo erro aparece duas vezes?</b> Um círculo de definições desen' +
+      'ha uma linha por cada NOME a partir do qual é alcançável — pelo menos dois sítios para' +
+      ' olhar, e mais se outras definições alimentarem o círculo. <code>#set %x% = %y% %y%</c' +
+      'ode> contra <code>#set %y% = %x%</code> são duas linhas, uma em cada linha. Não são du' +
+      'plicados: cada linha é de um nome diferente, e não são fundidas.</p>',
     '<p><b>O painel diz erro e a saída parece certa. Afinal?</b> As duas coisas. Acontece c' +
       'om um nome definido duas vezes: a composição está certa — ganha o último valor — e o d' +
       'ocumento é ambíguo. O veredicto é sobre o documento e não sobre esta saída em particul' +
@@ -8489,12 +8542,20 @@ const
       ' van hem rond te gaan, en wat overblijft is de andere naam uit de cirkel — zet <code>%' +
       'x% %y%</code> in een document en het geeft <code>%y% %x%</code>, het paar omgedraaid.<' +
       '/p>',
-    '<p>Het paneel tekent een regel voor <b>elke vermelding die de cirkel sluit</b>, niet é' +
-      'én regel voor de cirkel en niet één per vastlegging. Een vastlegging die de cirkel twe' +
-      'e keer noemt krijgt twee regels op haar eigen regel: <code>#set %x% = %y% %y%</code> t' +
-      'egen <code>#set %y% = %x%</code> zijn drie fouten, twee daarvan op de eerste. De regel' +
-      's worden niet samengevoegd. En de positie ligt op de vastlegging die echt geldt: is de' +
-      ' naam twee keer vastgelegd, dan is dat de <b>laatste</b>.</p>',
+    '<p>Het paneel tekent één regel voor <b>elke gedefinieerde naam van waaruit de cirkel b' +
+      'ereikbaar is</b>, niet één regel voor de cirkel en niet één per vermelding. De cirkel ' +
+      'twee keer op één regel noemen verdubbelt de regel niet: <code>#set %x% = %y% %y%</code' +
+      '> tegenover <code>#set %y% = %x%</code> zijn twee fouten, één per regel — net als het ' +
+      'gewone paar.</p>',
+    '<p><b>Een naam die alleen maar naar de cirkel leidt, wordt ook gemeld</b>, en dat is h' +
+      'et deel dat verrast: een keten van definities die een cirkel van twee namen voedt, tek' +
+      'ent een regel voor elke schakel van de keten, en niet twee regels voor de cirkel allee' +
+      'n. Een naam die ALLEEN naar zichzelf verwijst is een andere fout — <code>variable.self' +
+      '-reference</code> — maar een definitie die zichzelf noemt <b>én</b> een cirkel bereikt' +
+      ', tekent ze allebei: <code>#set %s% = %s% %c1%</code> boven een cirkel van twee namen ' +
+      'is één zelfverwijzing en drie cirkelregels, waarvan één op diezelfde regel. En de posi' +
+      'tie ligt op de definitie die echt geldt: staat de naam twee keer gedefinieerd, dan is ' +
+      'dat de <b>laatste</b>.</p>',
     '<hr>',
     '<h2 id="includes">Invoegingen</h2>',
     '<h3 id="includes-0"><code>#include</code> werkt alleen aan het begin van een regel</h3' +
@@ -8576,10 +8637,11 @@ const
       ' dat zou de uitvoer bij elk aantal vormen leeg zijn en over het aantal helemaal niets ' +
       'tonen.</p>',
     '<p>Het paneel en de uitvoer beantwoorden hier verschillende vragen, en dat is geen teg' +
-      'enspraak: de regel wordt gezet door de <b>controle</b>, die de vormen in de tekst telt' +
-      ' en zich om de telling niet bekommert; de leegte komt van de <b>weergave</b>, die een ' +
-      'eigen volgorde heeft. Geef de telling een cijfer, zoals het eerste voorbeeld doet, en ' +
-      'u ziet wat het aantal vormen werkelijk doet.</p>',
+      'enspraak: de regel wordt gezet door de <b>controle</b>, die de vormen telt die het ren' +
+      'deren echt zal splitsen — een definitie die voor hen instaat wordt eerst opgelost; de ' +
+      'leegte komt van het <b>renderen</b>, dat een eigen volgorde heeft. Geef de teller een ' +
+      'cijfer, zoals het eerste voorbeeld doet, en u ziet wat het aantal vormen werkelijk doe' +
+      't.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — de telling komt uit een ' +
       '<code>#set</code>, en die loot bij elke vermelding opnieuw</h3>',
     '<p><small><tt><a href="ex:60">#set %n% = {1|2}</a><br><a href="ex:60">%n% {plural %n%:' +
@@ -8728,9 +8790,12 @@ const
       'egel in het paneel. De eerste is stil, dus niets vertelt u dat hij nooit zal worden in' +
       'gevuld. Hernoem hem. In de <b>waarde</b> daarentegen geven trema''s en accenten geen e' +
       'nkel probleem.</p>',
-    '<p><b>Waarom wordt dezelfde fout twee keer getoond?</b> Een cirkel van vastleggingen t' +
-      'rekt een regel voor elke vermelding die hem sluit — twee plekken om naar te kijken, so' +
-      'ms drie. Het zijn geen doublures en ze worden niet samengevoegd.</p>',
+    '<p><b>Waarom wordt dezelfde fout twee keer getoond?</b> Een cirkel van definities trek' +
+      't een regel voor elke NAAM van waaruit hij bereikbaar is — ten minste twee plekken om ' +
+      'naar te kijken, en meer als andere definities de cirkel voeden. <code>#set %x% = %y% %' +
+      'y%</code> tegenover <code>#set %y% = %x%</code> zijn twee regels, één per regel. Het z' +
+      'ijn geen duplicaten: elke regel gaat over een andere naam, en ze worden niet samengevo' +
+      'egd.</p>',
     '<p><b>Het paneel zegt fout en de uitvoer lijkt goed. Hoe zit het?</b> Allebei. Dat geb' +
       'eurt bij een twee keer vastgelegde naam: de weergave klopt — de laatste waarde wint — ' +
       'en het document is dubbelzinnig. Het oordeel gaat over het document en niet over deze ' +
@@ -9452,11 +9517,18 @@ const
       '> değil <code>%y%</code> oldu. Makine daireyi dolaşmak yerine çözer ve sağ kalan, dair' +
       'edeki öteki addır — bir belgeye <code>%x% %y%</code> koyun, <code>%y% %x%</code> verir' +
       ', çift ters çevrilmiş olarak.</p>',
-    '<p>Panel, <b>daireyi kapatan her anımsatma için</b> bir satır çizer; daire için bir sa' +
-      'tır ya da tanım başına bir satır değil. Daireyi iki kez anan bir tanım kendi satırında' +
-      ' iki satır alır: <code>#set %x% = %y% %y%</code> ile <code>#set %y% = %x%</code> üç ha' +
-      'ta eder, ikisi birinci satırda. Satırlar birleştirilmez. Ve konum, gerçekten geçerli o' +
-      'lan tanımın üstündedir: ad iki kez tanımlıysa bu <b>sonuncusudur</b>.</p>',
+    '<p>Panel, <b>dairenin kendisinden ulaşılabildiği her tanımlı ad için</b> bir satır çiz' +
+      'er; daire için bir satır ya da anımsatma başına bir satır değil. Daireyi bir satırda i' +
+      'ki kez anmak satırı ikiye katlamaz: <code>#set %x% = %y% %y%</code> ile <code>#set %y%' +
+      ' = %x%</code> iki hata eder, her satırda bir tane — tıpkı yalın çift gibi.</p>',
+    '<p><b>Yalnızca daireye götüren bir ad da bildirilir</b> ve şaşırtan kısım budur: iki a' +
+      'dlı bir daireyi besleyen bir tanım zinciri, zincirin her halkası için bir satır çizer;' +
+      ' dairenin kendisi için iki satır değil. YALNIZCA kendine gönderme yapan bir ad başka b' +
+      'ir hatadır — <code>variable.self-reference</code> — ama hem kendini anan <b>hem de</b>' +
+      ' bir daireye ulaşan bir tanım ikisini birden çizer: iki adlı bir dairenin üzerindeki <' +
+      'code>#set %s% = %s% %c1%</code> bir öz-gönderme ve üç daire satırıdır, biri aynı satır' +
+      'da. Ve konum, gerçekten geçerli olan tanımın üstündedir: ad iki kez tanımlanmışsa <b>s' +
+      'onuncusudur</b>.</p>',
     '<hr>',
     '<h2 id="includes">Eklemeler</h2>',
     '<h3 id="includes-0"><code>#include</code> yalnızca satır başında çalışır</h3>',
@@ -9534,10 +9606,11 @@ const
     '<p>Bu maddenin başındaki örnek <code>%n%</code> değişkenini bu yüzden önce tanımlar. O' +
       'nsuz çıktı, biçim sayısı ne olursa olsun boş kalırdı ve sayı hakkında hiçbir şey göste' +
       'rmezdi.</p>',
-    '<p>Panel ile çıktı burada ayrı soruları yanıtlar ve bu bir çelişki değildir: satırı, m' +
-      'etindeki biçimleri sayan ve sayıyla ilgilenmeyen <b>denetim</b> koyar; boşluğu ise ken' +
-      'di sırası olan <b>işleme</b> verir. Sayıya bir rakam verin, ilk örnekteki gibi, ve biç' +
-      'im sayısının gerçekte ne yaptığını görürsünüz.</p>',
+    '<p>Panel ile çıktı burada ayrı soruları yanıtlar ve bu bir çelişki değildir: satırı, i' +
+      'şlemenin gerçekten ayıracağı biçimleri sayan <b>denetim</b> koyar — onların yerini tut' +
+      'an bir tanım önce çözülür; boşluğu ise kendi sırası olan <b>işleme</b> verir. Sayıya b' +
+      'ir rakam verin, ilk örnekteki gibi, ve biçim sayısının gerçekte ne yaptığını görürsünü' +
+      'z.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — sayı bir <code>#set</cod' +
       'e>ten geliyor, o da her anımsatmada yeniden çekiyor</h3>',
     '<p><small><tt><a href="ex:61">#set %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
@@ -9676,9 +9749,11 @@ const
     '<p>İkisi de değişmeden geçti ve tuzak burada: yalnızca ikincisi panelde bir satır çekt' +
       'i. Birincisi sessizdir, dolayısıyla hiçbir şey size onun asla yerine konmayacağını söy' +
       'lemez. Adını değiştirin. <b>Değerde</b> ise Türkçe harfler hiç sorun çıkarmaz.</p>',
-    '<p><b>Aynı hata neden iki kez gösteriliyor?</b> Bir tanım dairesi, onu kapatan her anı' +
-      'msatma için bir satır çeker — bakılacak iki yer, bazen üç. Bunlar kopya değildir ve bi' +
-      'rleştirilmezler.</p>',
+    '<p><b>Aynı hata neden iki kez gösteriliyor?</b> Bir tanım dairesi, kendisinden ulaşıla' +
+      'bilen her AD için bir satır çeker — bakılacak en az iki yer, başka tanımlar daireyi be' +
+      'sliyorsa daha fazlası. <code>#set %x% = %y% %y%</code> ile <code>#set %y% = %x%</code>' +
+      ' iki satır eder, her satırda bir tane. Bunlar kopya değildir: her satır başka bir adı ' +
+      'anlatır ve birleştirilmezler.</p>',
     '<p><b>Panel hata diyor ama çıktı doğru görünüyor. Hangisi?</b> İkisi de. Bu, iki kez t' +
       'anımlanmış bir adda olur: işleme doğrudur — son değer kazanır — ve belge çift anlamlıd' +
       'ır. Hüküm belge hakkındadır, bu tek çıktı hakkında değil.</p>',
@@ -10395,11 +10470,17 @@ const
       'ав <code>%y%</code>, а не <code>%x%</code>. Рушій розкручує коло, а не ходить по ньому' +
       ', і виживає друге імʼя з кола — поставте в документ <code>%x% %y%</code>, і він видаст' +
       'ь <code>%y% %x%</code>, пару навпаки.</p>',
-    '<p>Панель малює рядок на <b>кожну згадку, що замикає коло</b>, а не один на коло і не ' +
-      'один на визначення. Визначення, яке називає коло двічі, дістає два рядки на своєму ряд' +
-      'ку: <code>#set %x% = %y% %y%</code> проти <code>#set %y% = %x%</code> — це три помилки' +
-      ', дві з них на першому. Рядки не зливаються. А позиція лягає на визначення, яке справд' +
-      'і діє: якщо імʼя задано двічі, це <b>останнє</b>.</p>',
+    '<p>Помилка видається на <b>кожне визначене ім''я, з якого досяжне коло</b>, а не одна ' +
+      'на коло і не одна на згадку. Назвати коло двічі в одному рядку не подвоює рядок: <code' +
+      '>#set %x% = %y% %y%</code> проти <code>#set %y% = %x%</code> — це дві помилки, по одні' +
+      'й на рядок, рівно як у простої пари.</p>',
+    '<p><b>Ім''я, яке лише веде в коло, теж потрапляє до списку</b> — це й дивує: ланцюжок ' +
+      'визначень, що живить коло з двох імен, дає рядок на кожну ланку ланцюжка, а не два ряд' +
+      'ки на саме коло. Ім''я, що посилається ЛИШЕ на себе, — це інша помилка, <code>variable' +
+      '.self-reference</code>; але визначення, яке називає і себе, і шлях у коло, дістає обид' +
+      'ві: <code>#set %s% = %s% %c1%</code> над колом із двох імен — це одна self-reference і' +
+      ' три circular-reference, одна з них на тому самому рядку. А позиція — на тому визначен' +
+      'ні, яке справді живе: якщо ім''я задано двічі, це <b>останнє</b> з них.</p>',
     '<hr>',
     '<h2 id="includes">Вставки</h2>',
     '<h3 id="includes-0"><code>#include</code> працює лише з початку рядка</h3>',
@@ -10478,9 +10559,10 @@ const
       'о вивід був би порожнім за будь-якої кількості форм і не показав би про кількість нічо' +
       'го.</p>',
     '<p>Панель і вивід тут говорять про різне, і це не суперечність: рядок у панель ставить' +
-      ' <b>перевірка</b>, яка рахує форми в тексті й до лічильника їй байдуже; порожнечу дає ' +
-      '<b>відтворення</b>, у якого свій порядок. Дайте лічильникові число, як у першому прикл' +
-      'аді, — і побачите, що кількість форм робить насправді.</p>',
+      ' <b>перевірка</b>, яка рахує форми, що їх рендер справді розділить — визначення, яке с' +
+      'тоїть замість них, вона спершу розкриває; порожнечу дає <b>рендер</b>, у якого свій по' +
+      'рядок. Дайте лічильнику число, як у першому прикладі, — і побачите, що кількість форм ' +
+      'робить насправді.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — лічильник бере значення ' +
       'з <code>#set</code>, а той тягне заново при кожній згадці</h3>',
     '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
@@ -10618,9 +10700,11 @@ const
       'е — ніщо не скаже вам, що воно ніколи не підставиться. А <code>#set %імя% = Світ</code' +
       '> — це вже <code>set.malformed</code>. Значення при цьому будь-які: <code>#set %misto%' +
       ' = Київ</code> цілком нормально.</p>',
-    '<p><b>Чому та сама помилка показана двічі?</b> Коло визначень тягне рядок на кожну зга' +
-      'дку, що його замикає, — два різні місця, іноді три. Це не дублікати, і вони не зливают' +
-      'ься.</p>',
+    '<p><b>Чому та сама помилка показана двічі?</b> Коло визначень дає рядок на кожне ІМʼЯ,' +
+      ' з якого воно досяжне, — щонайменше два різних місця, а більше, якщо коло живлять інші' +
+      ' визначення. <code>#set %x% = %y% %y%</code> проти <code>#set %y% = %x%</code> — це дв' +
+      'а рядки, по одному на рядок. Це не дублікати: кожен рядок про своє ім''я, і вони не зл' +
+      'иваються.</p>',
     '<p><b>Чому в панелі «помилка», а вивід виглядає правильно?</b> Так буває при повторном' +
       'у визначенні: відтворення коректне — перемагає останнє значення, — але документ неодно' +
       'значний. Вирок про документ, а не про конкретний вивід.</p>',
@@ -11343,11 +11427,18 @@ const
       'code>%y%</code>, а не <code>%x%</code>. Рухавік раскручвае кола, а не ходзіць па ім, і' +
       ' выжывае другое імя з кола — пастаўце ў дакумент <code>%x% %y%</code>, і ён выдасць <c' +
       'ode>%y% %x%</code>, пару наадварот.</p>',
-    '<p>Панэль малюе радок на <b>кожную згадку, што замыкае кола</b>, а не адзін на кола і ' +
-      'не адзін на вызначэнне. Вызначэнне, якое называе кола двойчы, атрымлівае два радкі на ' +
-      'сваім радку: <code>#set %x% = %y% %y%</code> супраць <code>#set %y% = %x%</code> — гэт' +
-      'а тры памылкі, дзве з іх на першым. Радкі не зліваюцца. А пазіцыя кладзецца на вызначэ' +
-      'нне, якое сапраўды дзейнічае: калі імя зададзена двойчы, гэта <b>апошняе</b>.</p>',
+    '<p>Памылка выдаецца на <b>кожнае вызначанае імя, з якога дасягальнае кола</b>, а не ад' +
+      'на на кола і не адна на згадку. Назваць кола двойчы ў адным радку не падвойвае радок: ' +
+      '<code>#set %x% = %y% %y%</code> супраць <code>#set %y% = %x%</code> — гэта дзве памылк' +
+      'і, па адной на радок, роўна як у простай пары.</p>',
+    '<p><b>Імя, якое толькі вядзе ў кола, таксама трапляе ў спіс</b> — гэта і здзіўляе: лан' +
+      'цужок вызначэнняў, які сілкуе кола з двух імёнаў, дае радок на кожнае звяно ланцужка, ' +
+      'а не два радкі на само кола. Імя, якое спасылаецца ТОЛЬКІ на сябе, — гэта іншая памылк' +
+      'а, <code>variable.self-reference</code>; але вызначэнне, якое называе і сябе, і шлях у' +
+      ' кола, атрымлівае абедзве: <code>#set %s% = %s% %c1%</code> над колам з двух імёнаў — ' +
+      'гэта адна self-reference і тры circular-reference, адна з іх на тым самым радку. А паз' +
+      'іцыя — на тым вызначэнні, якое сапраўды дзейнічае: калі імя зададзена двойчы, гэта <b>' +
+      'апошняе</b> з іх.</p>',
     '<hr>',
     '<h2 id="includes">Устаўкі</h2>',
     '<h3 id="includes-0"><code>#include</code> працуе толькі з пачатку радка</h3>',
@@ -11423,9 +11514,10 @@ const
       'Без гэтага вывад быў бы пустым пры любой колькасці формаў і не паказаў бы пра колькасц' +
       'ь нічога.</p>',
     '<p>Панэль і вывад тут гавораць пра рознае, і гэта не супярэчнасць: радок у панэль став' +
-      'іць <b>праверка</b>, якая лічыць формы ў тэксце і да лічыльніка ёй усё роўна; пустэчу ' +
-      'дае <b>адтварэнне</b>, у якога свой парадак. Дайце лічыльніку лік, як у першым прыклад' +
-      'зе, — і ўбачыце, што колькасць формаў робіць насамрэч.</p>',
+      'іць <b>праверка</b>, якая лічыць формы, што адтварэнне і праўда падзеліць — вызначэнне' +
+      ', якое стаіць замест іх, яна спярша раскрывае; пустэчу дае <b>адтварэнне</b>, у якога ' +
+      'свой парадак. Дайце лічыльніку лік, як у першым прыкладзе, — і ўбачыце, што колькасць ' +
+      'формаў робіць насамрэч.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — лічыльнік бярэ значэнне ' +
       'з <code>#set</code>, а той цягне нанова пры кожнай згадцы</h3>',
     '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
@@ -11565,9 +11657,11 @@ const
       'та першае — нішто не скажа вам, што яно ніколі не падставіцца. А <code>#set %імя% = Св' +
       'ет</code> — гэта ўжо <code>set.malformed</code>. Значэнні пры гэтым любыя: <code>#set ' +
       '%horad% = Мінск</code> цалкам нармальна.</p>',
-    '<p><b>Чаму тая самая памылка паказана двойчы?</b> Кола вызначэнняў цягне радок на кожн' +
-      'ую згадку, што яго замыкае, — два розныя месцы, часам тры. Гэта не дублікаты, і яны не' +
-      ' зліваюцца.</p>',
+    '<p><b>Чаму тая самая памылка паказана двойчы?</b> Кола вызначэнняў дае радок на кожнае' +
+      ' ІМЯ, з якога яно дасягальнае, — як мінімум два розныя месцы, а больш, калі кола сілку' +
+      'юць іншыя вызначэнні. <code>#set %x% = %y% %y%</code> супраць <code>#set %y% = %x%</co' +
+      'de> — гэта два радкі, па адным на радок. Гэта не дублікаты: кожны радок пра сваё імя, ' +
+      'і яны не зліваюцца.</p>',
     '<p><b>Чаму ў панэлі «памылка», а вывад выглядае правільна?</b> Так бывае пры паўторным' +
       ' вызначэнні: адтварэнне карэктнае — перамагае апошняе значэнне, — але дакумент неадназ' +
       'начны. Прысуд пра дакумент, а не пра канкрэтны вывад.</p>',
@@ -12267,11 +12361,17 @@ const
       'de>%y%</code>, а не <code>%x%</code>. Мотор одмотава круг, а не хода по њему, и прежив' +
       'љава друго име из круга — ставите у документ <code>%x% %y%</code> и он ће дати <code>%' +
       'y% %x%</code>, пар наопако.</p>',
-    '<p>Панел исцртава ред за <b>сваки помен који затвара круг</b>, а не један по кругу и н' +
-      'е један по дефиницији. Дефиниција која круг именује двапут добија два реда на свом ред' +
-      'у: <code>#set %x% = %y% %y%</code> према <code>#set %y% = %x%</code> — то су три грешк' +
-      'е, две од њих на првом. Редови се не сливају. А положај пада на дефиницију која стварн' +
-      'о делује: ако је име задато двапут, то је <b>последња</b>.</p>',
+    '<p>Панел исцртава ред за <b>свако дефинисано име из којег је круг достижан</b>, а не ј' +
+      'едан ред за круг ни један по помену. Именовати круг двапут у једном реду не удвостручу' +
+      'је ред: <code>#set %x% = %y% %y%</code> према <code>#set %y% = %x%</code> јесу две гре' +
+      'шке, по једна у сваком реду — исто као код проста два имена.</p>',
+    '<p><b>И име које само води у круг бива пријављено</b>, и то је део који изненађује: ла' +
+      'нац дефиниција који храни круг од два имена исцртава ред за сваку карику ланца, а не д' +
+      'ва реда за сам круг. Име које упућује САМО на себе јесте друга грешка — <code>variable' +
+      '.self-reference</code> — али дефиниција која именује и себе <b>и</b> досеже круг исцрт' +
+      'ава обе: <code>#set %s% = %s% %c1%</code> над кругом од два имена јесте једна саморефе' +
+      'ренца и три кружна реда, један од њих у том истом реду. А положај лежи на дефиницији к' +
+      'оја заиста важи: ако је име дефинисано двапут, то је <b>последња</b>.</p>',
     '<hr>',
     '<h2 id="includes">Уметања</h2>',
     '<h3 id="includes-0"><code>#include</code> ради само с почетка реда</h3>',
@@ -12346,10 +12446,11 @@ const
       'го што се питање о броју постави.</p>',
     '<p>Управо зато пример на почетку овог чланка прво дефинише <code>%n%</code>. Без тога ' +
       'би излаз био празан при било ком броју облика и о броју не би показао ништа.</p>',
-    '<p>Панел и излаз овде говоре о различитом, и то није противречност: ред у панел ставља' +
-      ' <b>провера</b>, која броји облике у тексту и до бројача јој није стало; празнину даје' +
-      ' <b>одигравање</b>, које има свој редослед. Дајте бројачу број, као у првом примеру, и' +
-      ' видећете шта број облика стварно ради.</p>',
+    '<p>Панел и излаз овде одговарају на различита питања, и то није противречност: ред пос' +
+      'тавља <b>провера</b>, која броји облике које ће приказ заиста раздвојити — дефиниција ' +
+      'која стоји уместо њих најпре се разрешава; празнину даје <b>приказ</b>, који има свој ' +
+      'редослед. Дајте бројачу цифру, као у првом примеру, и видећете шта број облика заиста ' +
+      'ради.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — бројач узима вредност из' +
       ' <code>#set</code>-а, а тај извлачи изнова при сваком помену</h3>',
     '<p><small><tt><a href="ex:64">#set %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
@@ -12487,9 +12588,11 @@ const
       'во — ништа вам неће рећи да се оно никада неће подметнути. А <code>#set %име% = Свет</' +
       'code> већ је <code>set.malformed</code>. Вредности су при томе било какве: <code>#set ' +
       '%grad% = Београд</code> сасвим је нормално.</p>',
-    '<p><b>Зашто је иста грешка приказана двапут?</b> Круг дефиниција повлачи ред за сваки ' +
-      'помен који га затвара — два различита места, понекад три. То нису дупликати, и они се ' +
-      'не сливају.</p>',
+    '<p><b>Зашто се иста грешка приказује двапут?</b> Круг дефиниција повлачи ред за свако ' +
+      'ИМЕ из којег је достижан — најмање два места за гледање, а више ако круг хране друге д' +
+      'ефиниције. <code>#set %x% = %y% %y%</code> према <code>#set %y% = %x%</code> јесу два ' +
+      'реда, по један у сваком реду. То нису дупликати: сваки ред је о другом имену и не спај' +
+      'ају се.</p>',
     '<p><b>Зашто у панелу пише «грешка», а излаз изгледа исправно?</b> Тако бива при поновн' +
       'ој дефиницији: одигравање је коректно — побеђује последња вредност — али документ је д' +
       'восмислен. Пресуда је о документу, а не о конкретном излазу.</p>',
@@ -13198,11 +13301,17 @@ const
       'de>%y%</code>, a ne <code>%x%</code>. Motor odmotava krug, a ne hoda po njemu, i preži' +
       'vljava drugo ime iz kruga — stavite u dokument <code>%x% %y%</code> i on će dati <code' +
       '>%y% %x%</code>, par naopako.</p>',
-    '<p>Ploča iscrtava redak za <b>svaki spomen koji zatvara krug</b>, a ne jedan po krugu ' +
-      'i ne jedan po definiciji. Definicija koja krug imenuje dvaput dobiva dva retka na svom' +
-      ' retku: <code>#set %x% = %y% %y%</code> prema <code>#set %y% = %x%</code> — to su tri ' +
-      'greške, dvije od njih na prvom. Redci se ne slijevaju. A položaj pada na definiciju ko' +
-      'ja stvarno djeluje: ako je ime zadano dvaput, to je <b>posljednja</b>.</p>',
+    '<p>Panel iscrtava redak za <b>svako definirano ime iz kojega je krug dostižan</b>, a n' +
+      'e jedan redak za krug ni jedan po spominjanju. Imenovati krug dvaput u jednom retku ne' +
+      ' udvostručuje redak: <code>#set %x% = %y% %y%</code> prema <code>#set %y% = %x%</code>' +
+      ' jesu dvije pogreške, po jedna u svakom retku — isto kao kod obična dva imena.</p>',
+    '<p><b>I ime koje samo vodi u krug biva prijavljeno</b>, i to je dio koji iznenađuje: l' +
+      'anac definicija koji hrani krug od dva imena iscrtava redak za svaku kariku lanca, a n' +
+      'e dva retka za sam krug. Ime koje upućuje SAMO na sebe jest druga pogreška — <code>var' +
+      'iable.self-reference</code> — ali definicija koja imenuje i sebe <b>i</b> doseže krug ' +
+      'iscrtava obje: <code>#set %s% = %s% %c1%</code> nad krugom od dva imena jest jedna sam' +
+      'oreferenca i tri kružna retka, jedan od njih u tom istom retku. A položaj leži na defi' +
+      'niciji koja zaista vrijedi: ako je ime definirano dvaput, to je <b>posljednja</b>.</p>',
     '<hr>',
     '<h2 id="includes">Umetanja</h2>',
     '<h3 id="includes-0"><code>#include</code> radi samo s početka retka</h3>',
@@ -13279,10 +13388,11 @@ const
     '<p>Upravo zato primjer na početku ovog članka najprije definira <code>%n%</code>. Bez ' +
       'toga bi izlaz bio prazan pri bilo kojem broju oblika i o broju ne bi pokazao ništa.</p' +
       '>',
-    '<p>Ploča i izlaz ovdje govore o različitom, i to nije proturječje: redak u ploču stavl' +
-      'ja <b>provjera</b>, koja broji oblike u tekstu i do brojača joj nije stalo; prazninu d' +
-      'aje <b>odigravanje</b>, koje ima svoj redoslijed. Dajte brojaču broj, kao u prvom prim' +
-      'jeru, i vidjet ćete što broj oblika stvarno radi.</p>',
+    '<p>Panel i ispis ovdje odgovaraju na različita pitanja, i to nije proturječje: redak p' +
+      'ostavlja <b>provjera</b>, koja broji oblike koje će prikaz zaista razdvojiti — definic' +
+      'ija koja stoji umjesto njih najprije se razrješava; prazninu daje <b>prikaz</b>, koji ' +
+      'ima svoj redoslijed. Dajte brojaču znamenku, kao u prvom primjeru, i vidjet ćete što b' +
+      'roj oblika zaista radi.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — brojač uzima vrijednost ' +
       'iz <code>#set</code>-a, a taj izvlači iznova pri svakom spomenu</h3>',
     '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
@@ -13421,9 +13531,11 @@ const
       ' prvo — ništa vam neće reći da se ono nikada neće podmetnuti. A <code>#set %šifra% = t' +
       'ajna</code> već je <code>set.malformed</code>. Vrijednosti su pritom bilo kakve: <code' +
       '>#set %grad% = Đakovo</code> sasvim je normalno.</p>',
-    '<p><b>Zašto je ista greška prikazana dvaput?</b> Krug definicija povlači redak za svak' +
-      'i spomen koji ga zatvara — dva različita mjesta, ponekad tri. To nisu duplikati, i oni' +
-      ' se ne slijevaju.</p>',
+    '<p><b>Zašto se ista pogreška prikazuje dvaput?</b> Krug definicija povlači redak za sv' +
+      'ako IME iz kojega je dostižan — najmanje dva mjesta za pogledati, a više ako krug hran' +
+      'e druge definicije. <code>#set %x% = %y% %y%</code> prema <code>#set %y% = %x%</code> ' +
+      'jesu dva retka, po jedan u svakom retku. To nisu duplikati: svaki je redak o drugom im' +
+      'enu i ne spajaju se.</p>',
     '<p><b>Zašto u ploči piše «greška», a izlaz izgleda ispravno?</b> Tako biva pri ponovno' +
       'j definiciji: odigravanje je korektno — pobjeđuje posljednja vrijednost — ali dokument' +
       ' je dvosmislen. Presuda je o dokumentu, a ne o konkretnom izlazu.</p>',
@@ -14129,11 +14241,17 @@ const
       'de>%y%</code>, a ne <code>%x%</code>. Motor odmotava krug, a ne hoda po njemu, i preži' +
       'vljava drugo ime iz kruga — stavite u dokument <code>%x% %y%</code> i on će dati <code' +
       '>%y% %x%</code>, par naopako.</p>',
-    '<p>Ploča iscrtava red za <b>svako pominjanje koje zatvara krug</b>, a ne jedan po krug' +
-      'u i ne jedan po definiciji. Definicija koja krug imenuje dvaput dobija dva reda na svo' +
-      'm redu: <code>#set %x% = %y% %y%</code> prema <code>#set %y% = %x%</code> — to su tri ' +
-      'greške, dvije od njih na prvom. Redovi se ne slijevaju. A položaj pada na definiciju k' +
-      'oja stvarno djeluje: ako je ime zadato dvaput, to je <b>posljednja</b>.</p>',
+    '<p>Panel iscrtava red za <b>svako definirano ime iz kojeg je krug dostižan</b>, a ne j' +
+      'edan red za krug ni jedan po spominjanju. Imenovati krug dvaput u jednom redu ne udvos' +
+      'tručuje red: <code>#set %x% = %y% %y%</code> prema <code>#set %y% = %x%</code> jesu dv' +
+      'ije greške, po jedna u svakom redu — isto kao kod obična dva imena.</p>',
+    '<p><b>I ime koje samo vodi u krug biva prijavljeno</b>, i to je dio koji iznenađuje: l' +
+      'anac definicija koji hrani krug od dva imena iscrtava red za svaku kariku lanca, a ne ' +
+      'dva reda za sam krug. Ime koje upućuje SAMO na sebe jeste druga greška — <code>variabl' +
+      'e.self-reference</code> — ali definicija koja imenuje i sebe <b>i</b> doseže krug iscr' +
+      'tava obje: <code>#set %s% = %s% %c1%</code> nad krugom od dva imena jeste jedna samore' +
+      'ferenca i tri kružna reda, jedan od njih u tom istom redu. A položaj leži na definicij' +
+      'i koja zaista vrijedi: ako je ime definirano dvaput, to je <b>posljednja</b>.</p>',
     '<hr>',
     '<h2 id="includes">Umetanja</h2>',
     '<h3 id="includes-0"><code>#include</code> radi samo s početka reda</h3>',
@@ -14209,10 +14327,11 @@ const
       'rije nego što se pitanje o broju postavi.</p>',
     '<p>Upravo zato primjer na početku ovog članka prvo definiše <code>%n%</code>. Bez toga' +
       ' bi izlaz bio prazan pri bilo kojem broju oblika i o broju ne bi pokazao ništa.</p>',
-    '<p>Ploča i izlaz ovdje govore o različitom, i to nije protivrječnost: red u ploču stav' +
-      'lja <b>provjera</b>, koja broji oblike u tekstu i do brojača joj nije stalo; prazninu ' +
-      'daje <b>odigravanje</b>, koje ima svoj redoslijed. Dajte brojaču broj, kao u prvom pri' +
-      'mjeru, i vidjet ćete šta broj oblika stvarno radi.</p>',
+    '<p>Panel i ispis ovdje odgovaraju na različita pitanja, i to nije protivrječnost: red ' +
+      'postavlja <b>provjera</b>, koja broji oblike koje će prikaz zaista razdvojiti — defini' +
+      'cija koja stoji umjesto njih najprije se razrješava; prazninu daje <b>prikaz</b>, koji' +
+      ' ima svoj redoslijed. Dajte brojaču cifru, kao u prvom primjeru, i vidjet ćete šta bro' +
+      'j oblika zaista radi.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — brojač uzima vrijednost ' +
       'iz <code>#set</code>-a, a taj izvlači iznova pri svakom pominjanju</h3>',
     '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
@@ -14351,9 +14470,11 @@ const
       'vo — ništa vam neće reći da se ono nikada neće podmetnuti. A <code>#set %šifra% = tajn' +
       'a</code> već je <code>set.malformed</code>. Vrijednosti su pritom bilo kakve: <code>#s' +
       'et %grad% = Šamac</code> sasvim je normalno.</p>',
-    '<p><b>Zašto je ista greška prikazana dvaput?</b> Krug definicija povlači red za svako ' +
-      'pominjanje koje ga zatvara — dva različita mjesta, ponekad tri. To nisu duplikati, i o' +
-      'ni se ne slijevaju.</p>',
+    '<p><b>Zašto se ista greška prikazuje dvaput?</b> Krug definicija povlači red za svako ' +
+      'IME iz kojeg je dostižan — najmanje dva mjesta za pogledati, a više ako krug hrane dru' +
+      'ge definicije. <code>#set %x% = %y% %y%</code> prema <code>#set %y% = %x%</code> jesu ' +
+      'dva reda, po jedan u svakom redu. To nisu duplikati: svaki je red o drugom imenu i ne ' +
+      'spajaju se.</p>',
     '<p><b>Zašto u ploči piše «greška», a izlaz izgleda ispravno?</b> Tako biva pri ponovno' +
       'j definiciji: odigravanje je korektno — pobjeđuje posljednja vrijednost — ali dokument' +
       ' je dvosmislen. Presuda je o dokumentu, a ne o konkretnom izlazu.</p>',

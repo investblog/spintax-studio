@@ -223,11 +223,18 @@ Cada lado desdobra-se exactamente **uma vez** e depois pára: `%x%` passou a `%y
 motor desenrola o círculo em vez de o percorrer, e o que sobrevive é o outro nome do círculo: ponha
 `%x% %y%` num documento e sairá `%y% %x%`, o par trocado.
 
-O painel traça uma linha por **cada menção que fecha o círculo**, e não uma linha para o círculo
-nem uma por definição. Uma definição que nomeie o círculo duas vezes recebe duas linhas na sua
-própria linha: `#set %x% = %y% %y%` contra `#set %y% = %x%` dá três erros, dois deles na primeira.
-As linhas não são juntadas. E a posição assenta na definição que vale mesmo: se o nome estiver
-definido duas vezes, é a **última**.
+O painel desenha uma linha por **cada nome definido a partir do qual o círculo é
+alcançável**, não uma linha para o círculo nem uma por menção. Nomear o círculo duas vezes numa
+linha não duplica a linha: `#set %x% = %y% %y%` contra `#set %y% = %x%` são dois erros, um em
+cada linha — tal como o par simples.
+
+**Um nome que apenas leva ao círculo também é comunicado**, e é essa a parte que surpreende:
+uma cadeia de definições que alimenta um círculo de dois nomes desenha uma linha por cada elo
+da cadeia, e não duas linhas só para o círculo. Um nome que remete APENAS para si próprio é
+outro erro — `variable.self-reference` — mas uma definição que se nomeia a si própria **e**
+alcança um círculo desenha as duas: `#set %s% = %s% %c1%` sobre um círculo de dois nomes é uma
+autorreferência e três linhas circulares, uma delas nessa mesma linha. E a posição assenta na
+definição que vale mesmo: se o nome estiver definido duas vezes, é a **última**.
 
 ---
 
@@ -342,10 +349,11 @@ antes de contar as formas, parando assim antes de a pergunta pelo número sequer
 É por isso que o exemplo no topo deste artigo define `%n%` primeiro. Sem isso a saída estaria vazia
 com qualquer número de formas e não mostraria nada sobre o número.
 
-O painel e a saída respondem aqui a perguntas diferentes, e não é contradição: a linha é posta pela
-**verificação**, que conta as formas no texto e da contagem não trata; o vazio vem da
-**composição**, que tem uma ordem sua. Dê um algarismo à contagem, como faz o primeiro exemplo, e
-verá o que o número de formas faz mesmo.
+O painel e a saída respondem aqui a perguntas diferentes, e não é uma contradição: a linha é
+posta pela **verificação**, que conta as formas que a renderização vai mesmo separar — uma
+definição que ocupa o lugar delas é resolvida antes; o vazio vem da **renderização**, que tem
+uma ordem própria. Dê um número ao contador, como faz o primeiro exemplo, e verá o que o número
+de formas faz realmente.
 
 ### `plural.count-macro` — a contagem vem de um `#set`, e esse volta a tirar a cada menção
 
@@ -546,9 +554,11 @@ Ambas passaram intactas, e a armadilha está aí: só a segunda puxou uma linha 
 é silenciosa, logo nada lhe diz que nunca será substituída. Mude-lhe o nome. No **valor**, pelo
 contrário, os acentos não dão problema nenhum.
 
-**Porque é que o mesmo erro é mostrado duas vezes?**
-Um círculo de definições puxa uma linha por cada menção que o fecha: dois sítios para ver, às vezes
-três. Não são duplicados e não são juntados.
+**Porque é que o mesmo erro aparece duas vezes?**
+Um círculo de definições desenha uma linha por cada NOME a partir do qual é alcançável — pelo
+menos dois sítios para olhar, e mais se outras definições alimentarem o círculo.
+`#set %x% = %y% %y%` contra `#set %y% = %x%` são duas linhas, uma em cada linha. Não são
+duplicados: cada linha é de um nome diferente, e não são fundidas.
 
 **O painel diz erro e a saída parece certa. Afinal?**
 As duas coisas. Acontece com um nome definido duas vezes: a composição está certa — ganha o último

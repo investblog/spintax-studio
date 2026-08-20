@@ -219,10 +219,18 @@ Svaka se strana razvija tačno **jednom** i staje: `%x%` je postao `%y%`, a ne `
 krug, a ne hoda po njemu, i preživljava drugo ime iz kruga — stavite u dokument `%x% %y%` i on će
 dati `%y% %x%`, par naopako.
 
-Ploča iscrtava red za **svako pominjanje koje zatvara krug**, a ne jedan po krugu i ne jedan po
-definiciji. Definicija koja krug imenuje dvaput dobija dva reda na svom redu: `#set %x% = %y% %y%`
-prema `#set %y% = %x%` — to su tri greške, dvije od njih na prvom. Redovi se ne slijevaju. A položaj
-pada na definiciju koja stvarno djeluje: ako je ime zadato dvaput, to je **posljednja**.
+Panel iscrtava red za **svako definirano ime iz kojeg je krug dostižan**, a ne jedan red za
+krug ni jedan po spominjanju. Imenovati krug dvaput u jednom redu ne udvostručuje red:
+`#set %x% = %y% %y%` prema `#set %y% = %x%` jesu dvije greške, po jedna u svakom redu — isto
+kao kod obična dva imena.
+
+**I ime koje samo vodi u krug biva prijavljeno**, i to je dio koji iznenađuje: lanac
+definicija koji hrani krug od dva imena iscrtava red za svaku kariku lanca, a ne dva reda za
+sam krug. Ime koje upućuje SAMO na sebe jeste druga greška — `variable.self-reference` — ali
+definicija koja imenuje i sebe **i** doseže krug iscrtava obje: `#set %s% = %s% %c1%` nad
+krugom od dva imena jeste jedna samoreferenca i tri kružna reda, jedan od njih u tom istom
+redu. A položaj leži na definiciji koja zaista vrijedi: ako je ime definirano dvaput, to je
+**posljednja**.
 
 ---
 
@@ -333,9 +341,10 @@ broji oblike, pa staje još prije nego što se pitanje o broju postavi.
 Upravo zato primjer na početku ovog članka prvo definiše `%n%`. Bez toga bi izlaz bio prazan pri bilo
 kojem broju oblika i o broju ne bi pokazao ništa.
 
-Ploča i izlaz ovdje govore o različitom, i to nije protivrječnost: red u ploču stavlja **provjera**,
-koja broji oblike u tekstu i do brojača joj nije stalo; prazninu daje **odigravanje**, koje ima svoj
-redoslijed. Dajte brojaču broj, kao u prvom primjeru, i vidjet ćete šta broj oblika stvarno radi.
+Panel i ispis ovdje odgovaraju na različita pitanja, i to nije protivrječnost: red postavlja
+**provjera**, koja broji oblike koje će prikaz zaista razdvojiti — definicija koja stoji umjesto
+njih najprije se razrješava; prazninu daje **prikaz**, koji ima svoj redoslijed. Dajte brojaču
+cifru, kao u prvom primjeru, i vidjet ćete šta broj oblika zaista radi.
 
 ### `plural.count-macro` — brojač uzima vrijednost iz `#set`-a, a taj izvlači iznova pri svakom pominjanju
 
@@ -529,9 +538,11 @@ Uporedite s `%sifra%`, koje red u ploči ipak povlači. Šutljivo je baš prvo �
 ono nikada neće podmetnuti. A `#set %šifra% = tajna` već je `set.malformed`. Vrijednosti su pritom
 bilo kakve: `#set %grad% = Šamac` sasvim je normalno.
 
-**Zašto je ista greška prikazana dvaput?**
-Krug definicija povlači red za svako pominjanje koje ga zatvara — dva različita mjesta, ponekad tri.
-To nisu duplikati, i oni se ne slijevaju.
+**Zašto se ista greška prikazuje dvaput?**
+Krug definicija povlači red za svako IME iz kojeg je dostižan — najmanje dva mjesta za
+pogledati, a više ako krug hrane druge definicije. `#set %x% = %y% %y%` prema
+`#set %y% = %x%` jesu dva reda, po jedan u svakom redu. To nisu duplikati: svaki je red o
+drugom imenu i ne spajaju se.
 
 **Zašto u ploči piše «greška», a izlaz izgleda ispravno?**
 Tako biva pri ponovnoj definiciji: odigravanje je korektno — pobjeđuje posljednja vrijednost — ali

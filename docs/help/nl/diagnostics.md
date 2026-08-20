@@ -230,11 +230,19 @@ Elke kant vouwt zich precies **één keer** uit en houdt dan op: `%x%` werd `%y%
 machine rolt de cirkel af in plaats van hem rond te gaan, en wat overblijft is de andere naam uit
 de cirkel — zet `%x% %y%` in een document en het geeft `%y% %x%`, het paar omgedraaid.
 
-Het paneel tekent een regel voor **elke vermelding die de cirkel sluit**, niet één regel voor de
-cirkel en niet één per vastlegging. Een vastlegging die de cirkel twee keer noemt krijgt twee
-regels op haar eigen regel: `#set %x% = %y% %y%` tegen `#set %y% = %x%` zijn drie fouten, twee
-daarvan op de eerste. De regels worden niet samengevoegd. En de positie ligt op de vastlegging die
-echt geldt: is de naam twee keer vastgelegd, dan is dat de **laatste**.
+Het paneel tekent één regel voor **elke gedefinieerde naam van waaruit de cirkel bereikbaar
+is**, niet één regel voor de cirkel en niet één per vermelding. De cirkel twee keer op één
+regel noemen verdubbelt de regel niet: `#set %x% = %y% %y%` tegenover `#set %y% = %x%` zijn
+twee fouten, één per regel — net als het gewone paar.
+
+**Een naam die alleen maar naar de cirkel leidt, wordt ook gemeld**, en dat is het deel dat
+verrast: een keten van definities die een cirkel van twee namen voedt, tekent een regel voor
+elke schakel van de keten, en niet twee regels voor de cirkel alleen. Een naam die ALLEEN naar
+zichzelf verwijst is een andere fout — `variable.self-reference` — maar een definitie die
+zichzelf noemt **én** een cirkel bereikt, tekent ze allebei: `#set %s% = %s% %c1%` boven een
+cirkel van twee namen is één zelfverwijzing en drie cirkelregels, waarvan één op diezelfde
+regel. En de positie ligt op de definitie die echt geldt: staat de naam twee keer gedefinieerd,
+dan is dat de **laatste**.
 
 ---
 
@@ -351,10 +359,11 @@ zich stelt.
 Daarom legt het voorbeeld boven aan dit artikel `%n%` eerst vast. Zonder dat zou de uitvoer bij elk
 aantal vormen leeg zijn en over het aantal helemaal niets tonen.
 
-Het paneel en de uitvoer beantwoorden hier verschillende vragen, en dat is geen tegenspraak: de
-regel wordt gezet door de **controle**, die de vormen in de tekst telt en zich om de telling niet
-bekommert; de leegte komt van de **weergave**, die een eigen volgorde heeft. Geef de telling een
-cijfer, zoals het eerste voorbeeld doet, en u ziet wat het aantal vormen werkelijk doet.
+Het paneel en de uitvoer beantwoorden hier verschillende vragen, en dat is geen tegenspraak:
+de regel wordt gezet door de **controle**, die de vormen telt die het renderen echt zal
+splitsen — een definitie die voor hen instaat wordt eerst opgelost; de leegte komt van het
+**renderen**, dat een eigen volgorde heeft. Geef de teller een cijfer, zoals het eerste
+voorbeeld doet, en u ziet wat het aantal vormen werkelijk doet.
 
 ### `plural.count-macro` — de telling komt uit een `#set`, en die loot bij elke vermelding opnieuw
 
@@ -557,8 +566,10 @@ paneel. De eerste is stil, dus niets vertelt u dat hij nooit zal worden ingevuld
 de **waarde** daarentegen geven trema's en accenten geen enkel probleem.
 
 **Waarom wordt dezelfde fout twee keer getoond?**
-Een cirkel van vastleggingen trekt een regel voor elke vermelding die hem sluit — twee plekken om
-naar te kijken, soms drie. Het zijn geen doublures en ze worden niet samengevoegd.
+Een cirkel van definities trekt een regel voor elke NAAM van waaruit hij bereikbaar is — ten
+minste twee plekken om naar te kijken, en meer als andere definities de cirkel voeden.
+`#set %x% = %y% %y%` tegenover `#set %y% = %x%` zijn twee regels, één per regel. Het zijn geen
+duplicaten: elke regel gaat over een andere naam, en ze worden niet samengevoegd.
 
 **Het paneel zegt fout en de uitvoer lijkt goed. Hoe zit het?**
 Allebei. Dat gebeurt bij een twee keer vastgelegde naam: de weergave klopt — de laatste waarde

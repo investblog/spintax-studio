@@ -232,11 +232,19 @@ Chaque côté se déploie exactement **une fois** puis s'arrête : `%x%` est dev
 `%x%`. Le moteur déroule le cercle au lieu de le parcourir, et ce qui survit est l'autre nom du
 cercle — mettez `%x% %y%` dans un document et il sort `%y% %x%`, la paire inversée.
 
-Le panneau trace une ligne pour **chaque mention qui ferme le cercle**, non une ligne pour le
-cercle ni une par définition. Une définition qui nomme le cercle deux fois obtient deux lignes sur
-sa propre ligne : `#set %x% = %y% %y%` contre `#set %y% = %x%` fait trois erreurs, dont deux sur
-la première. Les lignes ne sont pas fusionnées. Et la position se pose sur la définition qui vaut
-vraiment : si le nom est défini deux fois, c'est la **dernière**.
+Le panneau trace une ligne pour **chaque nom défini depuis lequel le cercle est
+atteignable**, non une ligne pour le cercle ni une par mention. Nommer le cercle deux fois sur
+une ligne ne double pas la ligne : `#set %x% = %y% %y%` contre `#set %y% = %x%` fait deux
+erreurs, une sur chaque ligne — exactement comme la paire simple.
+
+**Un nom qui ne fait que mener au cercle est signalé lui aussi**, et c'est la part qui
+surprend : une chaîne de définitions qui alimente un cercle de deux noms trace une ligne pour
+chaque maillon de la chaîne, et non deux lignes pour le cercle seul. Un nom qui ne renvoie
+QU'à lui-même est une autre erreur — `variable.self-reference` — mais une définition qui se
+nomme elle-même **et** atteint un cercle trace les deux : `#set %s% = %s% %c1%` au-dessus d'un
+cercle de deux noms fait une auto-référence et trois lignes circulaires, dont une sur cette
+même ligne. Et la position se pose sur la définition qui vaut vraiment : si le nom est défini
+deux fois, c'est la **dernière**.
 
 ---
 
@@ -354,9 +362,10 @@ C'est pourquoi l'exemple en tête de cet article définit `%n%` d'abord. Sans ce
 vide quel que soit le nombre de formes et ne montrerait rien du tout sur le nombre.
 
 Le panneau et la sortie répondent ici à des questions différentes, et ce n'est pas une
-contradiction : la ligne est posée par la **vérification**, qui compte les formes dans le texte et
-se moque du compte ; le vide vient du **rendu**, qui a son propre ordre. Donnez un chiffre au
-compte, comme le fait le premier exemple, et vous voyez ce que le nombre de formes fait vraiment.
+contradiction : la ligne est posée par la **vérification**, qui compte les formes que le rendu
+va réellement séparer — une définition qui tient leur place est résolue d'abord ; le vide vient
+du **rendu**, qui a son propre ordre. Donnez un chiffre au compteur, comme le fait le premier
+exemple, et vous verrez ce que le nombre de formes fait vraiment.
 
 ### `plural.count-macro` — le compte vient d'un `#set`, et cela retire à chaque mention
 
@@ -562,8 +571,10 @@ Le premier est silencieux ; rien ne vous dit donc qu'il ne sera jamais substitu�
 Dans la **valeur**, en revanche, les accents ne posent aucun problème.
 
 **Pourquoi la même erreur est-elle montrée deux fois ?**
-Un cercle de définitions tire une ligne pour chaque mention qui le ferme — deux endroits à
-regarder, parfois trois. Ce ne sont pas des doublons, et ils ne sont pas fusionnés.
+Un cercle de définitions trace une ligne pour chaque NOM depuis lequel il est atteignable —
+au moins deux endroits à regarder, et davantage si d'autres définitions alimentent le cercle.
+`#set %x% = %y% %y%` contre `#set %y% = %x%` fait deux lignes, une sur chaque ligne. Ce ne sont
+pas des doublons : chaque ligne porte sur un nom différent, et elles ne sont pas fusionnées.
 
 **Le panneau dit erreur et la sortie a l'air juste. Alors ?**
 Les deux. Cela arrive avec un nom défini deux fois : le rendu est juste — la dernière valeur

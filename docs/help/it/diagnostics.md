@@ -226,11 +226,19 @@ Ogni lato si dispiega esattamente **una volta** e poi si ferma: `%x%` è diventa
 `%x%`. Il motore srotola il cerchio invece di percorrerlo, e ciò che sopravvive è l'altro nome del
 cerchio: mettete `%x% %y%` in un documento e uscirà `%y% %x%`, la coppia rovesciata.
 
-Il pannello traccia una riga per **ogni menzione che chiude il cerchio**, non una riga per il
-cerchio né una per definizione. Una definizione che nomina il cerchio due volte riceve due righe
-sulla propria riga: `#set %x% = %y% %y%` contro `#set %y% = %x%` fa tre errori, due dei quali sulla
-prima. Le righe non vengono unite. E la posizione si posa sulla definizione che vale davvero: se il
-nome è definito due volte, è l'**ultima**.
+Il pannello traccia una riga per **ogni nome definito da cui il cerchio è raggiungibile**,
+non una riga per il cerchio né una per menzione. Nominare il cerchio due volte su una riga non
+raddoppia la riga: `#set %x% = %y% %y%` contro `#set %y% = %x%` fa due errori, uno per riga —
+esattamente come la coppia semplice.
+
+**Anche un nome che porta soltanto dentro il cerchio viene segnalato**, ed è la parte che
+sorprende: una catena di definizioni che alimenta un cerchio di due nomi traccia una riga per
+ogni anello della catena, e non due righe per il cerchio da solo. Un nome che rimanda SOLO a se
+stesso è un altro errore — `variable.self-reference` — ma una definizione che nomina se stessa
+**e** raggiunge un cerchio le traccia entrambe: `#set %s% = %s% %c1%` sopra un cerchio di due
+nomi è un'autoreferenza e tre righe circolari, una delle quali su quella stessa riga. E la
+posizione si posa sulla definizione che vale davvero: se il nome è definito due volte, è
+l'**ultima**.
 
 ---
 
@@ -345,10 +353,11 @@ conteggio prima di contare le forme, fermandosi dunque prima che la domanda sul 
 Per questo l'esempio in cima a questo articolo definisce `%n%` per primo. Senza, l'uscita sarebbe
 vuota con qualsiasi numero di forme e non mostrerebbe nulla sul numero.
 
-Il pannello e l'uscita rispondono qui a domande diverse, e non è una contraddizione: la riga la
-mette la **verifica**, che conta le forme nel testo e del conteggio non si occupa; il vuoto lo dà
-la **resa**, che ha un ordine suo. Date una cifra al conteggio, come fa il primo esempio, e vedete
-cosa il numero di forme fa davvero.
+Il pannello e l'uscita rispondono qui a domande diverse, e non è una contraddizione: la riga
+la mette il **controllo**, che conta le forme che il rendering separerà davvero — una
+definizione che sta al loro posto viene risolta prima; il vuoto viene dal **rendering**, che ha
+un ordine suo. Dia un numero al contatore, come fa il primo esempio, e vedrà che cosa fa
+davvero il numero di forme.
 
 ### `plural.count-macro` — il conteggio viene da un `#set`, e quello rilancia a ogni menzione
 
@@ -554,8 +563,10 @@ pannello. La prima è silenziosa, quindi nulla vi dice che non verrà mai sostit
 Nel **valore**, invece, le accentate non danno alcun problema.
 
 **Perché lo stesso errore è mostrato due volte?**
-Un cerchio di definizioni tira una riga per ogni menzione che lo chiude: due punti da guardare, a
-volte tre. Non sono doppioni e non vengono uniti.
+Un cerchio di definizioni traccia una riga per ogni NOME da cui è raggiungibile — almeno due
+punti da guardare, e di più se altre definizioni alimentano il cerchio. `#set %x% = %y% %y%`
+contro `#set %y% = %x%` fa due righe, una per riga. Non sono duplicati: ogni riga riguarda un
+nome diverso, e non vengono unite.
 
 **Il pannello dice errore e l'uscita sembra giusta. Come sta la cosa?**
 In entrambi i modi. Succede con un nome definito due volte: la resa è giusta — vince l'ultimo

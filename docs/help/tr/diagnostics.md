@@ -219,11 +219,18 @@ Her yan tam **bir kez** açılır ve sonra durur: `%x%`, `%x%` değil `%y%` oldu
 dolaşmak yerine çözer ve sağ kalan, dairedeki öteki addır — bir belgeye `%x% %y%` koyun, `%y% %x%`
 verir, çift ters çevrilmiş olarak.
 
-Panel, **daireyi kapatan her anımsatma için** bir satır çizer; daire için bir satır ya da tanım
-başına bir satır değil. Daireyi iki kez anan bir tanım kendi satırında iki satır alır:
-`#set %x% = %y% %y%` ile `#set %y% = %x%` üç hata eder, ikisi birinci satırda. Satırlar
-birleştirilmez. Ve konum, gerçekten geçerli olan tanımın üstündedir: ad iki kez tanımlıysa bu
-**sonuncusudur**.
+Panel, **dairenin kendisinden ulaşılabildiği her tanımlı ad için** bir satır çizer; daire
+için bir satır ya da anımsatma başına bir satır değil. Daireyi bir satırda iki kez anmak satırı
+ikiye katlamaz: `#set %x% = %y% %y%` ile `#set %y% = %x%` iki hata eder, her satırda bir tane —
+tıpkı yalın çift gibi.
+
+**Yalnızca daireye götüren bir ad da bildirilir** ve şaşırtan kısım budur: iki adlı bir
+daireyi besleyen bir tanım zinciri, zincirin her halkası için bir satır çizer; dairenin kendisi
+için iki satır değil. YALNIZCA kendine gönderme yapan bir ad başka bir hatadır —
+`variable.self-reference` — ama hem kendini anan **hem de** bir daireye ulaşan bir tanım
+ikisini birden çizer: iki adlı bir dairenin üzerindeki `#set %s% = %s% %c1%` bir öz-gönderme ve
+üç daire satırıdır, biri aynı satırda. Ve konum, gerçekten geçerli olan tanımın üstündedir: ad
+iki kez tanımlanmışsa **sonuncusudur**.
 
 ---
 
@@ -334,10 +341,10 @@ saymadan önce sayıyı denetler, dolayısıyla biçim sayısı sorusu ortaya ç
 Bu maddenin başındaki örnek `%n%` değişkenini bu yüzden önce tanımlar. Onsuz çıktı, biçim sayısı ne
 olursa olsun boş kalırdı ve sayı hakkında hiçbir şey göstermezdi.
 
-Panel ile çıktı burada ayrı soruları yanıtlar ve bu bir çelişki değildir: satırı, metindeki
-biçimleri sayan ve sayıyla ilgilenmeyen **denetim** koyar; boşluğu ise kendi sırası olan **işleme**
-verir. Sayıya bir rakam verin, ilk örnekteki gibi, ve biçim sayısının gerçekte ne yaptığını
-görürsünüz.
+Panel ile çıktı burada ayrı soruları yanıtlar ve bu bir çelişki değildir: satırı, işlemenin
+gerçekten ayıracağı biçimleri sayan **denetim** koyar — onların yerini tutan bir tanım önce
+çözülür; boşluğu ise kendi sırası olan **işleme** verir. Sayıya bir rakam verin, ilk örnekteki
+gibi, ve biçim sayısının gerçekte ne yaptığını görürsünüz.
 
 ### `plural.count-macro` — sayı bir `#set`ten geliyor, o da her anımsatmada yeniden çekiyor
 
@@ -534,8 +541,10 @@ sessizdir, dolayısıyla hiçbir şey size onun asla yerine konmayacağını sö
 **Değerde** ise Türkçe harfler hiç sorun çıkarmaz.
 
 **Aynı hata neden iki kez gösteriliyor?**
-Bir tanım dairesi, onu kapatan her anımsatma için bir satır çeker — bakılacak iki yer, bazen üç.
-Bunlar kopya değildir ve birleştirilmezler.
+Bir tanım dairesi, kendisinden ulaşılabilen her AD için bir satır çeker — bakılacak en az iki
+yer, başka tanımlar daireyi besliyorsa daha fazlası. `#set %x% = %y% %y%` ile
+`#set %y% = %x%` iki satır eder, her satırda bir tane. Bunlar kopya değildir: her satır başka
+bir adı anlatır ve birleştirilmezler.
 
 **Panel hata diyor ama çıktı doğru görünüyor. Hangisi?**
 İkisi de. Bu, iki kez tanımlanmış bir adda olur: işleme doğrudur — son değer kazanır — ve belge

@@ -236,11 +236,19 @@ Jede Seite entfaltet sich genau **einmal** und hält dann an: `%x%` wurde `%y%` 
 Die Maschine rollt den Kreis auf, statt ihn zu laufen, und übrig bleibt der andere Name aus dem
 Kreis — setzen Sie `%x% %y%` in ein Dokument, und es gibt `%y% %x%` aus, das Paar vertauscht.
 
-Die Tafel zeichnet eine Zeile für **jede Nennung, die den Kreis schließt**, nicht eine Zeile für
-den Kreis und nicht eine je Festlegung. Eine Festlegung, die den Kreis zweimal nennt, bekommt zwei
-Zeilen auf ihrer eigenen Zeile: `#set %x% = %y% %y%` gegen `#set %y% = %x%` sind drei Fehler, zwei
-davon in der ersten Zeile. Die Zeilen werden nicht zusammengefasst. Und die Stelle liegt auf der
-Festlegung, die wirklich gilt: ist der Name zweimal festgelegt, ist das die **letzte**.
+Die Tafel zeichnet eine Zeile für **jeden festgelegten Namen, von dem aus der Kreis
+erreichbar ist**, nicht eine Zeile für den Kreis und nicht eine je Nennung. Den Kreis zweimal
+in einer Zeile zu nennen verdoppelt die Zeile nicht: `#set %x% = %y% %y%` gegen
+`#set %y% = %x%` sind zwei Fehler, einer je Zeile — genau wie beim einfachen Paar.
+
+**Ein Name, der nur in den Kreis hineinführt, wird ebenfalls gemeldet**, und das ist der
+überraschende Teil: eine Kette von Festlegungen, die einen Kreis aus zwei Namen speist, zieht
+eine Zeile für jedes Glied der Kette und nicht zwei Zeilen für den Kreis allein. Ein Name, der
+NUR auf sich selbst verweist, ist ein anderer Fehler — `variable.self-reference` —, aber eine
+Festlegung, die sich selbst nennt **und** einen Kreis erreicht, zieht beide:
+`#set %s% = %s% %c1%` über einem Kreis aus zwei Namen ist eine Selbstreferenz und drei
+Kreis-Zeilen, davon eine auf derselben Zeile. Und die Stelle liegt auf der Festlegung, die
+wirklich gilt: ist der Name zweimal festgelegt, ist das die **letzte**.
 
 ---
 
@@ -357,10 +365,11 @@ aufkommt.
 Darum legt das Beispiel oben in diesem Artikel `%n%` zuerst fest. Ohne das wäre die Ausgabe bei
 jeder Zahl von Formen leer und zeigte über die Anzahl gar nichts.
 
-Die Tafel und die Ausgabe beantworten hier verschiedene Fragen, und das ist kein Widerspruch: die
-Zeile setzt die **Prüfung** dorthin, die die Formen im Text zählt und sich für die Zahl nicht
-interessiert; die Leere kommt vom **Rendern**, das seine eigene Reihenfolge hat. Geben Sie der
-Zahl eine Ziffer, wie es das erste Beispiel tut, und Sie sehen, was die Anzahl wirklich tut.
+Die Tafel und die Ausgabe beantworten hier verschiedene Fragen, und das ist kein Widerspruch:
+die Zeile setzt die **Prüfung** dorthin, die die Formen zählt, die das Rendern wirklich trennen
+wird — eine Festlegung, die für sie einsteht, wird zuvor aufgelöst; die Leere kommt vom
+**Rendern**, das seine eigene Reihenfolge hat. Geben Sie der Zahl eine Ziffer, wie es das erste
+Beispiel tut, und Sie sehen, was die Anzahl wirklich tut.
 
 ### `plural.count-macro` — die Zahl kommt aus einem `#set`, und das würfelt bei jeder Nennung neu
 
@@ -567,8 +576,10 @@ Das erste ist still, nichts sagt Ihnen also, dass es nie eingesetzt werden wird.
 um. Im **Wert** sind Umlaute dagegen völlig in Ordnung.
 
 **Warum wird derselbe Fehler zweimal gezeigt?**
-Ein Kreis von Festlegungen zieht eine Zeile für jede Nennung, die ihn schließt — zwei Stellen zum
-Ansehen, manchmal drei. Das sind keine Dubletten, und sie werden nicht zusammengefasst.
+Ein Kreis von Festlegungen zieht eine Zeile für jeden NAMEN, von dem aus er erreichbar ist —
+mindestens zwei Stellen zum Ansehen, und mehr, wenn andere Festlegungen den Kreis speisen.
+`#set %x% = %y% %y%` gegen `#set %y% = %x%` sind zwei Zeilen, eine je Zeile. Das sind keine
+Dubletten: jede Zeile steht für einen anderen Namen, und sie werden nicht zusammengefasst.
 
 **Die Tafel sagt Fehler und die Ausgabe sieht richtig aus. Was denn nun?**
 Beides. Das kommt bei einem doppelt festgelegten Namen vor: das Rendern ist richtig — der letzte

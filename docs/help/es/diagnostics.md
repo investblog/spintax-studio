@@ -225,11 +225,19 @@ Cada lado se despliega exactamente **una vez** y se para: `%x%` se volvió `%y%`
 motor desenrolla el círculo en vez de recorrerlo, y lo que sobrevive es el otro nombre del
 círculo: ponga `%x% %y%` en un documento y saldrá `%y% %x%`, la pareja al revés.
 
-El panel dibuja una fila por **cada mención que cierra el círculo**, no una fila para el círculo
-ni una por definición. Una definición que nombra el círculo dos veces recibe dos filas en su
-propia línea: `#set %x% = %y% %y%` contra `#set %y% = %x%` son tres errores, dos de ellos en la
-primera línea. Las filas no se juntan. Y la posición se pone sobre la definición que de verdad
-vale: si el nombre está definido dos veces, esa es la **última**.
+El panel dibuja una fila por **cada nombre definido desde el que se alcanza el círculo**, no
+una fila para el círculo ni una por mención. Nombrar el círculo dos veces en una línea no
+duplica la fila: `#set %x% = %y% %y%` contra `#set %y% = %x%` son dos errores, uno en cada
+línea — igual que la pareja simple.
+
+**Un nombre que solo lleva al círculo también se informa**, y esa es la parte que sorprende:
+una cadena de definiciones que alimenta un círculo de dos nombres dibuja una fila por cada
+eslabón de la cadena, y no dos filas para el círculo solo. Un nombre que se refiere SOLO a sí
+mismo es otro error — `variable.self-reference` —, pero una definición que se nombra a sí misma
+**y** alcanza un círculo dibuja las dos: `#set %s% = %s% %c1%` sobre un círculo de dos nombres
+es una autorreferencia y tres filas circulares, una de ellas en esa misma línea. Y la posición
+se pone sobre la definición que de verdad vale: si el nombre está definido dos veces, esa es la
+**última**.
 
 ---
 
@@ -344,10 +352,11 @@ plantearse.
 Por eso el ejemplo del principio de este artículo define `%n%` primero. Sin eso la salida estaría
 vacía con cualquier número de formas y no mostraría nada sobre la cantidad.
 
-El panel y la salida responden aquí a preguntas distintas, y no es contradicción: la fila la pone
-la **comprobación**, que cuenta las formas del texto y de la cuenta no se ocupa; el vacío lo da el
-**render**, que tiene su propio orden. Dele una cifra a la cuenta, como hace el primer ejemplo, y
-verá lo que la cantidad de formas hace de verdad.
+El panel y la salida responden aquí a preguntas distintas, y no es una contradicción: la fila
+la pone la **comprobación**, que cuenta las formas que la representación va a separar de
+verdad — una definición que ocupa su lugar se resuelve antes; el vacío lo da la
+**representación**, que tiene su propio orden. Dele una cifra al contador, como hace el primer
+ejemplo, y verá lo que hace de verdad el número de formas.
 
 ### `plural.count-macro` — la cuenta viene de un `#set`, y eso vuelve a tirar en cada mención
 
@@ -551,8 +560,10 @@ primera es silenciosa, así que nada le avisa de que nunca se sustituirá. Cámb
 **valor**, en cambio, las tildes y la `ñ` no dan ningún problema.
 
 **¿Por qué se muestra dos veces el mismo error?**
-Un círculo de definiciones saca una fila por cada mención que lo cierra: dos sitios que mirar, a
-veces tres. No son duplicados y no se juntan.
+Un círculo de definiciones dibuja una fila por cada NOMBRE desde el que se alcanza — al menos
+dos sitios que mirar, y más si otras definiciones alimentan el círculo. `#set %x% = %y% %y%`
+contra `#set %y% = %x%` son dos filas, una en cada línea. No son duplicados: cada fila es de un
+nombre distinto, y no se juntan.
 
 **El panel dice error y la salida parece correcta. ¿En qué quedamos?**
 En las dos cosas. Eso pasa con un nombre definido dos veces: el render es correcto —gana el último
