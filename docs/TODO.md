@@ -19,7 +19,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
-      at `engine/`, pinned to tag `v0.8.0`. Clone with `--recurse-submodules`.
+      at `engine/`, pinned to tag `v0.8.1`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
       twice the same day). The family resolves includes **inside render**, behind a host
@@ -3531,6 +3531,37 @@ Decisions owed **before the relevant submission** (not switchable later):
       was Latin; it was not — it measured 4421 Cyrillic characters to 407 Latin, and the 407 were
       `Spintax Studio`, `Windows`, `XLSX`, `GPL-3.0-or-later`, `endpoint`, `seed`.
 
+- [ ] **`SortPairs` (`src/SpxGsaImport.pas`) is quadratic, and it now dominates the GSA
+      import.** It is an insertion sort over `TSpxVarPairs` — a managed record — and its input
+      is a `TDictionary` key enumeration, i.e. hash order, which is the worst case rather than
+      an unlucky one. n²/4 moves: about 64 million at sixteen thousand lifted macros.
+
+      Measured through Studio's own entry point and the engine's, **in one process and one
+      build** so the two are comparable, unoptimised, minimum of three runs, at `v0.8.1`:
+
+      ```
+           n   engine   SpxImportGsa   Studio's own half
+       1 000       15             15                   0
+       2 000       15             62                  47
+       4 000       31            203                 172
+       8 000       62            765                 703
+      16 000      156          3 422               3 266
+      ```
+
+      The engine doubles; Studio's half quadruples. **This is the same shape `SpxPanelRows`
+      had and the same fix applies** — sort an index array of precomputed keys and permute the
+      records once along the permutation's cycles (`f4fc90b`), which took that one from
+      24 057 ms to 1 609 on 32 000 rows.
+
+      It is NOT in `0.2.2.0`: that tag was cut before the pin, so the release in certification
+      carries `v0.8.0` and the engine's quadratic. This entry is for the visit after.
+
+      **Why nothing saw it earlier:** the import was measured on 2026-08-19 and Studio's half
+      was reported as "inside run-to-run noise". That was true and is now false, and neither
+      statement was wrong when made — the engine cost 5 229 ms at four thousand macros then and
+      costs 31 now. A share measured against a dominant cost says nothing about what happens
+      when the dominant cost goes away.
+
 ## To report to the engine
 
 - [x] **REPORTED AND FIXED UPSTREAM, awaiting a tag** — `TLifter.Ref`
@@ -3570,10 +3601,15 @@ Decisions owed **before the relevant submission** (not switchable later):
       did not move; what buys it did — the family's own rule about re-reading the sentences
       after a change, applied on the engine's side of the boundary for once.
 
-      **Open here: the pin.** The engine's `main` carries the fix and no tag names it, so the
-      submodule stays on `v0.8.0` — tagging is the owner's call. Until then a large SER
-      template still takes its seconds, off the UI thread, so the window answers; that is what
-      the entry above closed.
+      **PINNED 2026-08-20 at `v0.8.1`**, whose `unit Spintax` and `Spintax.Gsa` interfaces are
+      both byte-identical to `v0.8.0` (diffed, not assumed), so it is a drop-in. Suite green,
+      29 159 checks.
+
+      **And pinning it uncovered the next one, which is ours** — see the entry below. The
+      engine is linear now and Studio's own wrapper is the quadratic, which the earlier
+      measurement could not see: "everything Studio adds on top is inside run-to-run noise"
+      was true against an engine costing 5 229 ms at four thousand macros, and stops being
+      true the moment the engine costs 31.
 
 - [x] **FIXED UPSTREAM in `v0.8.0`** — line 13 now reads "254 of its 258", the table sums to
       254 and the runner agrees. Kept here because the habit it argues for is the point: run
