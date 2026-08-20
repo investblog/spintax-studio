@@ -1,9 +1,89 @@
 # Release validation
 
-Five records, newest first: `v0.2.1.0` validated and published on 2026-08-18, `v0.2.0.0`
+Six records, newest first: `v0.2.2.0` validated on 2026-08-20 and awaiting submission,
+`v0.2.1.0` validated and published on 2026-08-18, `v0.2.0.0`
 validated on 2026-08-15, a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
 validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0.0` (R0) on
 2026-08-03 and published on 2026-08-04.
+
+---
+
+# v0.2.2.0 — validated 2026-08-20, NOT yet submitted
+
+**Why it exists:** the shipped `0.2.1.0` leaves the diagnostics panel unresponsive on a
+converging circle of definitions — 8 859 ms and 2 097 152 rows on 507 bytes of the shared
+corpus, measured through `SpxHealthReport` rather than through the engine, which is the
+difference between a dependency's changelog entry and a fact about this application. Engine
+`v0.8.0` answers in 1 ms with 22 rows. The panel's own sort and the GSA import came with it,
+and twelve help documents had to be corrected to the shape the pinned engine now produces.
+
+## Candidate
+
+Tag `v0.2.2.0` → `feb8953`, built by `release.yml` from the tagged commit. CI green on the
+commit before the tag was cut. The release job's own gates all passed, including **Windows
+will register the declared languages** — the gate that did not exist when `0.2.0.0` shipped
+unregisterable, running here against the artefact's own manifest.
+
+## Identity, read out of the package rather than off the filename
+
+Unzipped `spintax-studio.msix` from the draft release and read its `AppxManifest.xml`:
+
+```
+Identity Name : 301.SpintaxStudio
+Version       : 0.2.2.0
+Architecture  : x64
+Languages     : en-us, ru, uk, be, sr-Cyrl, hr, bs, de, fr, es, it, pt, nl, tr
+```
+
+Fourteen languages with `sr-Cyrl`. The downloaded files match the published `SHA256SUMS`
+byte for byte (`729df8df…` for the `.msix`), so what was measured is what the tag produced.
+
+**The file to upload is `spintax-studio.msixupload` from THIS draft release.** A stale local
+pre-run answered to the same filename once and identified as `0.1.1.0`; Partner Center
+refused it by full name.
+
+## WACK
+
+```powershell
+appcert.exe reset
+appcert.exe test -appxpackagepath build\wack-0.2.2.0\spintax-studio.msix `
+  -reportoutputpath build\wack\spintax-studio-wack-0.2.2.0.xml
+```
+
+Windows 10.0.26200 (this machine), run against the TAG's artefact, not a local rebuild.
+
+Result: **`OVERALL_RESULT=PASS`, `PARTIAL_RUN=FALSE`** — 23 of 24 tests PASS. The one
+non-PASS is again the **optional** Blocked Executable Files analyzer, with three findings:
+
+- `shell32.dll!ShellExecuteW` — the browser action behind the window's two link marks,
+  unchanged since R0;
+- `reg` — the HTML entity name in `TSynHTMLSyn`'s table (`&reg;`), unchanged since R0;
+- `Dnx` — **back, and the 0.2.1.0 record predicted exactly this.** That record said the
+  finding was "a 4-byte-aligned offset-table accident of that build's layout" and did not
+  appear against `0.2.1.0`'s binary. Verified here rather than repeated: the three matches
+  in `spintax-studio.exe` sit inside a table of little-endian dwords —
+  `24 4e 78 00 | e0 5c 13 00 | 33 5e 13 00 | 44 4e 78 00 | …` — where every fourth entry is
+  a pointer of the form `0x00784Exx`, whose low three bytes render as `Nx` behind whatever
+  byte precedes them. `44 4e 78` is the address `0x00784E44`, not the string. So the layout
+  moved back into the range that spells it, which is what the earlier note said would
+  decide it.
+
+An analyzer finding in an OPTIONAL test is not Store-blocking, and the same two of these
+three rode through certification twice. Nothing was silenced.
+
+## What this candidate does NOT carry
+
+The GSA lifter fix. It is merged on the engine's `main` (`720de1c`) and **no tag names it**,
+so the submodule stays at `v0.8.0` and the conversion is still quadratic in distinct lifted
+macros. It runs on the worker now, so the window answers — which is what the What's-new
+bullet says, and it deliberately does not say "faster".
+
+## Listing
+
+Fourteen What's-new texts exist for the first time, one per listing language, under
+`## What's new in this version` in `marketing/store/<lang>.md` with the English in
+`docs/store-listing.md`. Longest is French at 1067 of Microsoft's 1500. The four corrections
+to the live `0.2.0.0` field ride with this visit or wait again.
 
 ---
 
