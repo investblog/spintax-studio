@@ -1,6 +1,6 @@
 # Release validation
 
-Six records, newest first: `v0.2.2.0` validated on 2026-08-20 and awaiting submission,
+Six records, newest first: `v0.2.2.0` validated and submitted on 2026-08-20 (in certification),
 `v0.2.1.0` validated and published on 2026-08-18, `v0.2.0.0`
 validated on 2026-08-15, a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
 validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0.0` (R0) on
@@ -8,7 +8,7 @@ validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0
 
 ---
 
-# v0.2.2.0 — validated 2026-08-20, NOT yet submitted
+# v0.2.2.0 — validated and submitted 2026-08-20, IN CERTIFICATION
 
 **Why it exists:** the shipped `0.2.1.0` leaves the diagnostics panel unresponsive on a
 converging circle of definitions — 8 859 ms and 2 097 152 rows on 507 bytes of the shared
@@ -70,6 +70,26 @@ non-PASS is again the **optional** Blocked Executable Files analyzer, with three
 
 An analyzer finding in an OPTIONAL test is not Store-blocking, and the same two of these
 three rode through certification twice. Nothing was silenced.
+
+## Submitted
+
+Uploaded to Partner Center on 2026-08-20 and in certification. **Not live, and not verified**
+— this record says what the candidate WAS, and what the store does with it is a separate
+measurement. Two things to do when it certifies, both of which this project has learned by
+getting them wrong:
+
+1. **Read the storefront cache-busted.** A plain request to
+   `storeedgefd.dsx.mp.microsoft.com` served an hour-old `LastUpdateDateUtc` on 2026-08-18
+   and I twice reported the package as not propagated on that reading. A cache can only be
+   old, never early, so when two reads disagree the newer one is the fact — add
+   `Cache-Control: no-cache` and a random query parameter.
+2. **Install it.** That is the only check that answers, and it is what caught nothing about
+   `0.2.0.0` until a reader pressed Get. Confirm the package full name reads `0.2.2.0`,
+   `SignatureKind Store`, and the executable's own version resource agrees.
+
+And read what the What's-new field actually carries afterwards, because the field is where
+this product's records have drifted from reality twice: `0.2.0.0` went in as the pre-review
+draft, and `0.2.1.0` did not touch the field at all.
 
 ## What this candidate does NOT carry
 
