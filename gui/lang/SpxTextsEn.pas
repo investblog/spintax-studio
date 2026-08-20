@@ -105,6 +105,7 @@ const
       'They are session values: they are shown in the Variables panel and are NOT saved with the document. Rendering also runs without post-processing, so the template stays exactly as GSA wrote it.',
       '%d blocks were refused and left exactly as they were.',
       '…and %d more.',
+      'The import was discarded: the document changed while the template was being converted.',
 
       'Possible variants: %s',
       'Possible variants: at least %s',

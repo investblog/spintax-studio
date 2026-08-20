@@ -100,6 +100,7 @@ const
       'São valores de sessão: aparecem no painel de variáveis e NÃO são guardados com o documento. A renderização corre sem pós-processamento, para o modelo ficar tal como o GSA o escreveu.',
       '%d blocos foram recusados e deixados tal como estavam.',
       '…e mais %d.',
+      'A importação foi descartada: o documento mudou enquanto o modelo era convertido.',
 
       'Variantes possíveis: %s',
       'Variantes possíveis: pelo menos %s',

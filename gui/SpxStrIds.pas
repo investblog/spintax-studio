@@ -134,9 +134,15 @@ type
       the switch in the View menu, the File item it reveals, the file dialog's filter, and the
       two things the summary has to say — what was lifted out of the template, and that those
       values live for this session only. The refusal list needs no string of its own: it is
-      the engine's `name=text`, shown as it came. ── }
+      the engine's `name=text`, shown as it came.
+
+      A SIXTH, added 2026-08-20: the conversion runs on the worker now, and the result
+      REPLACES the document when it lands. Whatever the reader did in the meantime -- a new
+      document, another file, an AI answer applied -- would be overwritten without a word,
+      because `ReadOnly` stops a person typing and not a program assigning. So the delivery
+      refuses a document it does not recognise, and this is what it says. ── }
     sMenuGsaImport, sMenuGsaOpen, sGsaFilter, sGsaLifted, sGsaSessionOnly,
-    sGsaRefusedCount, sGsaRefusedMore,
+    sGsaRefusedCount, sGsaRefusedMore, sGsaStale,
 
     { ── HOW MANY VARIANTS THE TEMPLATE CAN MAKE, which is the question an author asks before
       they ask for fifty of them. Two sentences rather than one with a word slotted in: the

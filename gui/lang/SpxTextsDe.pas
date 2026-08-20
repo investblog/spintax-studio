@@ -109,6 +109,7 @@ const
       'Es sind Sitzungswerte: Sie stehen in der Variablen-Ansicht und werden NICHT mit dem Dokument gespeichert. Gerendert wird ohne Nachbearbeitung, damit die Vorlage genau so bleibt, wie GSA sie geschrieben hat.',
       '%d Blöcke wurden abgelehnt und unverändert gelassen.',
       '…und %d weitere.',
+      'Der Import wurde verworfen: Das Dokument hat sich geändert, während die Vorlage umgewandelt wurde.',
 
       'Mögliche Varianten: %s',
       'Mögliche Varianten: mindestens %s',

@@ -99,6 +99,7 @@ const
       'Bunlar oturum değerleridir: Değişkenler panelinde görünür ve belgeyle birlikte KAYDEDİLMEZ. Şablonun GSA''nın yazdığı gibi kalması için son işlem uygulanmadan işlenir.',
       '%d blok reddedildi ve olduğu gibi bırakıldı.',
       '…ve %d tane daha.',
+      'İçe aktarma iptal edildi: şablon dönüştürülürken belge değişti.',
 
       'Olası varyantlar: %s',
       'Olası varyantlar: en az %s',

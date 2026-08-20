@@ -102,6 +102,7 @@ const
       'Son valores de sesión: aparecen en el panel de variables y NO se guardan con el documento. La representación se hace sin posprocesado, para que la plantilla siga siendo la que escribió GSA.',
       '%d bloques han sido rechazados y dejados tal cual.',
       '…y %d más.',
+      'La importación se ha descartado: el documento ha cambiado mientras se convertía la plantilla.',
 
       'Variantes posibles: %s',
       'Variantes posibles: al menos %s',

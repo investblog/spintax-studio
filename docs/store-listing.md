@@ -6,8 +6,9 @@ product: spintax-studio
 
 # Microsoft Store listing
 
-**Live since 2026-08-04; `0.2.0.0` live since 2026-08-15** (storefront `LastUpdateDateUtc`
-`2026-08-15T22:51:00Z`, read back 2026-08-16): <https://apps.microsoft.com/detail/9mw3ch7b530p>.
+**Live since 2026-08-04; `0.2.1.0` live since 2026-08-18** (storefront `LastUpdateDateUtc`
+`2026-08-18T19:01:12Z`, read back cache-busted on 2026-08-20 — the same read found the
+What's-new field still carrying the pre-review `0.2.0.0` draft; see that section): <https://apps.microsoft.com/detail/9mw3ch7b530p>.
 This file is the copy for the NEXT submission; the measured read-back of the live page is
 recorded at the end. ([`publish/store-listing-edits.md`](publish/store-listing-edits.md) is
 dated history of the pre-`0.2.0.0` edit queue.)
@@ -130,7 +131,70 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
-## What's new in this version (0.2.1.0) — DRAFT
+## What's new in this version (0.2.2.0) — DRAFT, pending the tag
+
+Written 2026-08-20 against `v0.2.1.0..HEAD`. **Not yet checked against a tag** — do that
+before it is typed into the form, the way the 0.2.0.0 block was.
+
+**It covers TWO versions on purpose.** The 0.2.1.0 notes were written and never published
+(see the block below, measured off the storefront), and this field shows one version's text
+rather than a history — so anything 0.2.1.0 changed that a reader would notice has to be
+said here or it is never said at all.
+
+> Spintax Studio 0.2.2 is about the moments the window used to stop answering.
+>
+> • A template whose definitions refer to each other in a circle could leave the
+> diagnostics panel unresponsive for many seconds. It answers at once now, and reports one
+> finding per name rather than one for every path through the circle — so the panel is
+> shorter as well as faster.
+> • The diagnostics panel is much quicker on documents with many findings.
+> • Importing a large GSA template no longer freezes the window while it converts.
+> • Two plural findings used to be wrong: a list of forms supplied by a `#def` was reported
+> as the wrong number of forms on a template that rendered correctly, and a condition used
+> as the count made the whole block disappear with nothing reported at all. Both are right.
+> • The variants panel answers promptly on templates whose macros and fragments refer to
+> each other widely, and says when the number it gives is a lower bound.
+> • Engine updated to v0.8.0.
+
+**Measured, not carried over.** Each bullet, and what stands behind it:
+
+- The circle: `SpxHealthReport` on the corpus's own 507-byte `cycle-diamond-terminates`
+  took 8 859 ms and produced 2 097 152 panel rows on the engine 0.2.1.0 shipped; on `v0.8.0`
+  it is 1 ms and 22 rows. "Many seconds" rather than a number, because the cost depends on
+  the document. Reachable by writing definitions, not by writing an attack.
+- The panel: 16 000 rows in two interleaved runs, 1 726 ms → 118 ms; 32 000 descending,
+  24 057 ms → 1 609 ms. "Much quicker" rather than a multiplier, because the multiplier is a
+  property of the shape and the ordinary case is smaller than either.
+- The import: it was ~18 s on a template with eight thousand distinct lifted macros, on the
+  UI thread. It is on the worker now, so the window answers; the conversion still takes its
+  time. **The bullet deliberately does not say "faster"** — that is a separate engine fix
+  which is merged upstream and untagged, and if it is pinned before this ships the bullet
+  gets "and converts far more quickly" and not before.
+- The two plural findings and the variants panel are 0.2.1.0's, unpublished; wording taken
+  from that block, which was itself measured.
+
+**What is deliberately NOT here.** 0.2.1.0's installation fix. It is the largest thing that
+version did, and it has no reader: anyone who met it could not install the app at all, and
+anyone who can read this field already has a version that installs. Saying it would
+advertise a fault to the only people it never reached.
+
+**The four corrections ride with this visit.** The live field still says "your own AI
+provider and key" without the when-needed qualifier, "any construct" (which overstates the
+Insert menu), "View > GSA import" (that is the enable switch, not the import path) and
+locates the splitter "between the panes". They are fixed in the corrected 0.2.0.0 block
+below — but that block is not what goes in the form now. Whatever ships must not
+re-introduce them, and the text above avoids all four by not repeating those sentences.
+
+## What's new in this version (0.2.1.0) — WRITTEN, NEVER PUBLISHED
+
+**This text never reached the live page.** Measured on 2026-08-20 by reading the storefront
+past its cache: `Notes` still carries the pre-review 0.2.0.0 draft, ending "Engine updated
+to v0.5.1", while the live package is 0.2.1.0 and carries engine `v0.7.0`
+(`git ls-tree v0.2.1.0 engine`). So the 0.2.1.0 submission went in without touching the
+field at all, and **nobody has ever read the block below**. Kept as the record of what that
+version carried; the copy that ships next is the 0.2.2.0 block above it, which folds these
+in. The listing field is not a changelog — it shows one version's text and replaces it — so
+a change that misses its visit is not published late, it is not published.
 
 Written 2026-08-18 against the working tree, not yet against a tag: check it against
 `git log v0.2.0.0..HEAD` before it is typed into the form, the way the 0.2.0.0 block was.

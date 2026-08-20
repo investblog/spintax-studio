@@ -88,6 +88,45 @@ type
   expects without knowing a dictionary's order. }
 function SpxImportGsa(const ASource: string): TSpxGsaResult;
 
+(* ▁▁▁ AND WHETHER THE ANSWER STILL BELONGS TO THE DOCUMENT THAT ASKED FOR IT ▁▁▁
+
+   The conversion runs on the engine worker (2026-08-19) and its result REPLACES the buffer,
+   the path, the session values and the caption. `AskSave` ran before the request went out
+   and does not run again when it lands, so anything the reader did in between is destroyed
+   rather than the document they meant to replace. Setting the editor read-only does not stop
+   it: that stops a PERSON typing, and File > New, File > Open, an applied AI answer and the
+   Insert commands all assign programmatically. Found by Codex review, 2026-08-20.
+
+   The rule lives HERE, in a unit with no GUI in it, rather than inline in the form -- the
+   form is not compiled into the suite, so a comparison written there is a rule nothing can
+   check.
+
+   A REVISION FIRST, because comparing content answers the wrong question. The first version
+   compared only the path and the text, and Codex found what that cannot see: the session
+   values are in neither. They stay editable while the editor is read-only, the result
+   REPLACES them, and a reader who retyped one during the conversion lost it with the guard
+   passing. Edit-then-undo and File > New over an empty untitled document slipped through for
+   the same reason -- the state is equal, and the question is whether anything MOVED. The form
+   bumps its revision from `LoopSnapshotMoved`, which every route that touches the document or
+   its session state already calls.
+
+   It OVER-refuses, deliberately: `SettingChanged` and `AiProfileChanged` bump the same
+   revision and change nothing the result would overwrite, so changing the theme mid-import
+   drops it. That is the safe direction -- the reader can ask for the file again and cannot
+   ask for the work back -- and the status line says so.
+
+   Path and text stay as a BELT, not as the rule. They catch the one thing a revision cannot:
+   a future path that assigns the buffer wholesale and forgets to move the snapshot, which is
+   a real shape here, because `Text :=` does not reach the editor's change handler (measured,
+   twice) and every such path calls LoopSnapshotMoved by hand.
+
+   WHAT THIS CANNOT SEE, and it is the larger half: that the form actually calls it before
+   applying, that no OTHER route into the window skips it, and that the revision is bumped
+   everywhere it should be. Only the window can answer those, and the window is not under
+   test. *)
+function SpxImportStillApplies(AWasRev, ANowRev: Int64;
+  const AWasPath, ANowPath, AWasDoc, ANowDoc: string): Boolean;
+
 implementation
 
 { Insertion sort by name: the lists here are a handful of entries, and the only property that
@@ -329,6 +368,12 @@ begin
   finally
     seen.Free;
   end;
+end;
+
+function SpxImportStillApplies(AWasRev, ANowRev: Int64;
+  const AWasPath, ANowPath, AWasDoc, ANowDoc: string): Boolean;
+begin
+  Result := (AWasRev = ANowRev) and (AWasPath = ANowPath) and (AWasDoc = ANowDoc);
 end;
 
 function SpxImportGsa(const ASource: string): TSpxGsaResult;

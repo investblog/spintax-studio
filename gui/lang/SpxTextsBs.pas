@@ -106,6 +106,7 @@ const
       'To su vrijednosti sesije: vide se u panelu varijabli i NE čuvaju se uz dokument. Prikaz se računa bez naknadne obrade, pa predložak ostaje onakav kakvim ga je GSA napisao.',
       'Odbijeno blokova: %d — ostavljeni tačno kakvi su bili.',
       '…i još %d.',
+      'Uvoz je odbačen: dokument se promijenio dok se predložak pretvarao.',
 
       'Mogućih varijanti: %s',
       'Mogućih varijanti: najmanje %s',

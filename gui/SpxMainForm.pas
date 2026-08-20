@@ -236,6 +236,25 @@ type
       facts about the FILE, not about the conversion. }
     FImportBusy: Boolean;
     FImportSource: string;
+    { THE DOCUMENT THE IMPORT WAS ASKED FOR, so the answer can refuse one it does not
+      recognise. See GsaImported: `FEditor.ReadOnly` stops a PERSON typing and does not stop a
+      program assigning, so File > New, File > Open, an applied AI answer and every Insert
+      command still went through during the seconds a large template takes -- and the result
+      then replaced whatever they had done, with no second AskSave. Found by Codex review,
+      2026-08-20.
+
+      Guarded at DELIVERY rather than by disabling the routes, because the routes are a list
+      and the list is what rots: a menu item added next year is guarded by this and would not
+      be on any list. Path as well as text, since Open can load a file whose contents happen
+      to match. }
+    FImportWasPath: string;
+    FImportWasDoc: string;
+    { Bumped by LoopSnapshotMoved, which every route that touches the document or its session
+      state already calls -- so this counts MOVEMENT, where a path and a text can only be
+      compared for equality. SpxImportStillApplies says why that difference cost a data-loss
+      path the first version of this guard did not close. }
+    FDocRev: Int64;
+    FImportWasRev: Int64;
     FStatus: TStatusBar;
     { The company mark that sits at the right end of the status bar, and the ink it was last
       sliced with -- part of the cache key for the reason EnsureSmallIcons gives: a desktop can
@@ -5172,6 +5191,9 @@ begin
      would stay set -- which is why FormClose clears it rather than trusting the round trip. *)
   FImportBusy := True;
   FImportSource := src;
+  FImportWasRev := FDocRev;
+  FImportWasPath := FPath;
+  FImportWasDoc := FEditor.Text;
   FEditor.ReadOnly := True;
   Screen.Cursor := crHourGlass;
   ireq.Id := 0;
@@ -5196,6 +5218,27 @@ begin
   Screen.Cursor := crDefault;
   src := FImportSource;
   FImportSource := '';
+
+  (* AND IT REFUSES A DOCUMENT IT DOES NOT RECOGNISE. Everything below replaces the buffer,
+     the path, the session values and the caption -- so if the reader moved on while the
+     template converted, applying it destroys what they did instead of what they asked to
+     replace. AskSave ran before the request went out and does not run again here; there is
+     no second chance after the assignment.
+
+     Their later action wins, and the import is dropped rather than queued: they asked for
+     this file and can ask again, whereas the work they just did exists nowhere else. Said in
+     the status bar, because a modal appearing seconds after an unrelated action, offering to
+     overwrite it, is worse than the loss it is trying to prevent. *)
+  if not SpxImportStillApplies(FImportWasRev, FDocRev,
+                               FImportWasPath, FPath, FImportWasDoc, FEditor.Text) then
+  begin
+    FImportWasPath := '';
+    FImportWasDoc := '';
+    SetStatusText(Tr(sGsaStale));
+    Exit;
+  end;
+  FImportWasPath := '';
+  FImportWasDoc := '';
   gsa := Res.Res;
 
   StopBatchForDocument;
@@ -5511,6 +5554,7 @@ end;
 
 procedure TSpxMainForm.LoopSnapshotMoved;
 begin
+  Inc(FDocRev);
   if FLoop <> nil then FLoop.Invalidate;
   UpdateAiButtons;
 end;
@@ -5975,6 +6019,23 @@ end;
 procedure TSpxMainForm.StopEngine;
 begin
   if FEngine = nil then Exit;
+  (* THE IMPORT IS DETACHED FIRST -- before ANY wait, not merely before the engine's own.
+     `Execute` tests `not Terminated` and then calls `Synchronize`; Shutdown can set the flag
+     in between, and a main-thread `WaitFor` pumps the Synchronize queue. That is written
+     below as the reason nothing deadlocks, and it is the same reason a delivery can still
+     arrive during teardown -- whose consequence is not a deadlock but `GsaImported` replacing
+     the document and raising its modal summary over a window whose close was already
+     approved.
+
+     FIRST, because the LOOP is joined before the engine and its `WaitFor` pumps the queue
+     too: detaching after it left exactly the same hole one wait earlier. My first fix put
+     this line below and Codex found it on the re-review; the mechanism was right and the
+     placement was not, which is a distinction only reading the order catches.
+
+     A nil handler makes DeliverImport a no-op. There is no race in nilling it: the field is
+     read inside a Synchronize callback, which runs on THIS thread, so the write and the read
+     belong to the same thread. *)
+  FEngine.OnImport := nil;
   { THE ORDER IS THE LOOP'S CONTRACT (TSpxAuthoringLoop.Create): the loop is JOINED first,
     because its thread reads FEngine; the ENGINE is joined and freed before Loop.Free,
     because its callback takes the loop's lock. Both WaitFor calls run on the main thread
@@ -5994,6 +6055,8 @@ begin
   if FImportBusy then
   begin
     FImportBusy := False;
+    FImportWasPath := '';
+    FImportWasDoc := '';
     Screen.Cursor := crDefault;
   end;
 end;

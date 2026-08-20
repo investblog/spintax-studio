@@ -109,6 +109,7 @@ const
       'Ce sont des valeurs de session : elles figurent dans le panneau des variables et ne sont PAS enregistrées avec le document. Le rendu se fait sans post-traitement, afin que le modèle reste tel que GSA l''a écrit.',
       '%d blocs ont été refusés et laissés tels quels.',
       '…et %d de plus.',
+      'L''import a été abandonné : le document a changé pendant la conversion du modèle.',
 
       'Variantes possibles : %s',
       'Variantes possibles : au moins %s',

@@ -1881,6 +1881,17 @@ type
       answer arrives for exactly one request, whatever else is posted around it }
     Imports: Integer;
     LastImport: TSpxImportResult;
+    { EVERY id, IN ORDER, and the thread each callback ran on -- not a count and the last
+      one. With only those two, a worker that answered request 78 TWICE and dropped 77 passed
+      all five checks below: the count is two, the last id is 78, and the last conversion
+      matches the second source. The check called `and-the-queue-is-FIFO` could not see
+      order, which is the defect its own name denies. Found by Codex review, 2026-08-20.
+      `ImportThreads` exists for the other half: a delivery made straight from the worker
+      would satisfy a counter just as well, and delivering on the MAIN thread is the property
+      that separates an import from a verify. }
+    ImportIds: string;
+    ImportThreads: string;
+    ImportDocs: TStringList;
     destructor Destroy; override;
     procedure Done(const Res: TSpxJobResult);
     procedure Batch(const P: TSpxBatchProgress);
@@ -1889,6 +1900,7 @@ type
 
 destructor TThreadProbe.Destroy;
 begin
+  ImportDocs.Free;
   Kept.Free;
   Ids.Free;
   inherited Destroy;
@@ -1907,6 +1919,13 @@ procedure TThreadProbe.Imported(const Res: TSpxImportResult);
 begin
   Inc(Imports);
   LastImport := Res;
+  if ImportIds <> '' then ImportIds := ImportIds + ',';
+  ImportIds := ImportIds + IntToStr(Res.Id);
+  if ImportThreads <> '' then ImportThreads := ImportThreads + ',';
+  if GetCurrentThreadId = MainThreadID then ImportThreads := ImportThreads + 'main'
+  else ImportThreads := ImportThreads + 'other';
+  if ImportDocs = nil then ImportDocs := TStringList.Create;
+  ImportDocs.Add(Res.Res.Doc);
 end;
 
 { The batch's side of the same worker: every step lands here, on the main thread. }
@@ -2007,12 +2026,54 @@ begin
   Result := probe.LastId >= wantId;
 end;
 
+(* ▁▁▁ THE IMPORT'S ANSWER STILL HAS TO BELONG TO THE DOCUMENT THAT ASKED FOR IT ▁▁▁
+
+   The conversion is on the worker and lands seconds later, replacing the buffer wholesale
+   with no second AskSave. `FEditor.ReadOnly` does not make the window safe -- it stops a
+   person typing and not File > New, File > Open or an applied AI answer, every one of which
+   assigns programmatically. Codex found it on 2026-08-20.
+
+   THESE CHECKS ARE ABOUT THE RULE AND NOT ABOUT THE WINDOW. That the form asks before it
+   applies, and that no other route into it skips the question, is not visible from here --
+   gui/SpxMainForm.pas is not compiled into this suite. What is pinned is that the rule takes
+   BOTH halves seriously, because either alone lets a real case through. *)
+procedure TestImportStillApplies;
+begin
+  CheckTrue('import/an untouched document still takes the answer',
+            SpxImportStillApplies(7, 7, 'C:\a.spintax', 'C:\a.spintax', 'body', 'body'));
+
+  { THE CASE THE FIRST VERSION OF THIS RULE GOT WRONG. Every string is equal and the document
+    moved anyway: a session value was retyped, which is not in the path and not in the text,
+    and which the delivery overwrites. Also edit-then-undo, and File > New over an empty
+    untitled document -- three shapes, one missing signal. Found by Codex, 2026-08-20. }
+  CheckTrue('import/a moved revision refuses it though path and text are equal',
+            not SpxImportStillApplies(7, 8, '', '', 'body', 'body'));
+
+  { The revision alone is not enough either, and this is the belt rather than the rule: a
+    path that assigns the buffer wholesale and forgets to move the snapshot. `Text :=` does
+    not reach the editor's change handler, so that shape is real here. }
+  CheckTrue('import/a different path refuses it',
+            not SpxImportStillApplies(7, 7, 'C:\a.spintax', 'C:\b.spintax', 'body', 'body'));
+  CheckTrue('import/an edited document refuses it',
+            not SpxImportStillApplies(7, 7, 'C:\a.spintax', 'C:\a.spintax', 'body', 'body!'));
+
+  { An untitled empty document that nothing moved is untouched, not changed -- the case that
+    must still SUCCEED, or the guard would refuse every import of a fresh window. }
+  CheckTrue('import/an untitled empty document still takes the answer',
+            SpxImportStillApplies(0, 0, '', '', '', ''));
+
+  { A revision only ever moves forward, and a wrapped or reset counter is still a move. }
+  CheckTrue('import/a revision that went backwards refuses it',
+            not SpxImportStillApplies(9, 2, '', '', '', ''));
+end;
+
 procedure TestEngineThread;
 var
   probe: TThreadProbe;
   th: TSpxEngineThread;
   job: TSpxJob;
   ireq: TSpxImportRequest;
+  first: string;
   i: Integer;
 begin
   probe := TThreadProbe.Create;
@@ -2201,7 +2262,10 @@ begin
     th.OnImport := probe.Imported;
     probe.Imports := 0;
     ireq.Id := 77;
-    ireq.Source := 'Hello {a|b} and #file[l.txt,1,S] here.';
+    { Kept, because the checks below compare BOTH answers: one comparison cannot tell two
+      right answers from the same right answer delivered twice. }
+    first := 'Hello {a|b} and #file[l.txt,1,S] here.';
+    ireq.Source := first;
     th.RequestImport(ireq);
     { A SECOND one straight after, which is the property renders do not have: two requests,
       two answers, in order. One import replacing another is the exact defect the verify queue
@@ -2219,14 +2283,33 @@ begin
     end;
     CheckTrue('thread/both-imports-answer', PumpUntilImports(probe, 2, 10000));
     Check('thread/exactly-two-answers-for-two-requests', IntToStr(probe.Imports), '2');
-    Check('thread/and-the-queue-is-FIFO', IntToStr(probe.LastImport.Id), '78');
+    { THE WHOLE SEQUENCE, because a last id of 78 is also what a worker that answered 78
+      twice and lost 77 produces -- which passed every check here until 2026-08-20. }
+    Check('thread/and-the-queue-is-FIFO', probe.ImportIds, '77,78');
+    { And on the MAIN thread, which is what makes an import different from a verify. A
+      counter cannot tell the two apart. }
+    Check('thread/an-import-is-delivered-on-the-main-thread',
+          probe.ImportThreads, 'main,main');
+    { Nothing arrives afterwards. Pumping past the point where the count is satisfied is the
+      only way to see a third delivery, and a duplicate is exactly what the shape above was
+      blind to. }
+    CheckTrue('thread/and-nothing-arrives-after-the-two',
+              (not PumpUntilImports(probe, 3, 300)) and (probe.Imports = 2));
+    { 300 ms is a guess about timing, and the sequence is re-read below AFTER the worker is
+      shut down and joined -- which is the only moment at which "nothing more is coming" is a
+      fact rather than a wait. A late duplicate would otherwise land inside WaitFor's own
+      pump, after every assertion here had passed. Codex, 2026-08-20. }
 
     { The worker is a place to run the engine, not a second implementation of it -- the same
-      claim the very first check in this test makes about a render. Compared against the
-      SECOND source, because FIFO means that is the one LastImport holds; getting this pair
-      out of step was the first version's mistake and the check said so. }
+      claim the very first check in this test makes about a render. Both are compared, not
+      only the last: comparing one answer cannot distinguish two right answers from the same
+      right answer twice. }
     Check('thread/an-import-matches-a-direct-conversion',
           probe.LastImport.Res.Doc, SpxImportGsa(ireq.Source).Doc);
+    CheckTrue('thread/and-so-does-the-first-one',
+              (probe.ImportDocs <> nil) and (probe.ImportDocs.Count = 2)
+              and (probe.ImportDocs[0] = SpxImportGsa(first).Doc)
+              and (probe.ImportDocs[0] <> probe.ImportDocs[1]));
     CheckTrue('thread/and-brings-the-lifted-values-back',
               Length(probe.LastImport.Res.Vars) = Length(SpxImportGsa(ireq.Source).Vars));
     CheckTrue('thread/an-import-really-does-lift-something',
@@ -2234,6 +2317,12 @@ begin
   finally
     th.Shutdown;
     th.WaitFor;
+    { THE SEQUENCE AGAIN, now that the worker is joined and no further delivery is possible.
+      Above it was a 300 ms wait, which is a guess; here it is a fact. A duplicate arriving
+      late -- behind slower work, on a loaded runner -- would have been pumped by WaitFor
+      itself, after every assertion in the try block had already passed. Codex, 2026-08-20. }
+    Check('thread/the-sequence-still-holds-after-the-worker-is-joined',
+          probe.ImportIds, '77,78');
     th.Free;
     probe.Free;
   end;
@@ -12532,6 +12621,7 @@ begin
   TestDedupe;
   TestExport;
   TestFileLayer;
+  TestImportStillApplies;
   TestEngineThread;
   TestEngineBatch;
   TestAuthoringLoop;
