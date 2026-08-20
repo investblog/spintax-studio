@@ -23,7 +23,7 @@ const
   { The engine this was built against -- the submodule tag, read from git at
     generation. Someone reporting a difference from another engine in the family
     needs to know which one answered here. }
-  SPX_ENGINE_VERSION = 'v0.8.0';
+  SPX_ENGINE_VERSION = 'v0.8.1';
 
 { The attributions, one line at a time, in the order NOTICE.md gives them. }
 function SpxAboutLineCount: Integer;
