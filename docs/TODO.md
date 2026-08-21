@@ -3599,7 +3599,7 @@ Decisions owed **before the relevant submission** (not switchable later):
 
 ## To report to the engine
 
-- [ ] **`SpGsaToSpintax`'s header does not say that the lifted names carry lift order.** It
+- [x] **REPORTED 2026-08-21 as [investblog/spintax-win#4](https://github.com/investblog/spintax-win/issues/4).** `SpGsaToSpintax`'s header does not say that the lifted names carry lift order. It
       describes `MacroVars` as receiving "one entry per lifted construct" and stops there. The
       names are `<prefix><kind><N>` with a per-kind counter (`TLifter`), so the order is
       recoverable — but a consumer has to read the implementation to learn that, and the
@@ -3608,7 +3608,8 @@ Decisions owed **before the relevant submission** (not switchable later):
       Studio did not: it sorted the names as text and shipped m1, m10, m11, m12, m2 to the
       panel. **Not an engine defect and no API change is wanted** — everything needed is
       already there. Two lines in the header would stop the next consumer inventing an order,
-      which is the only reason this is worth reporting at all.
+      which is the only reason this is worth reporting at all. Filed as documentation, with
+      the wrong order we shipped quoted as the evidence and the fix named as ours.
 
 - [x] **REPORTED AND FIXED UPSTREAM, awaiting a tag** — `TLifter.Ref`
       (`engine/src/Spintax.Gsa.pas`) was quadratic in the count of DISTINCT lifted macros: two
