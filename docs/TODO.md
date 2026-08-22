@@ -3599,7 +3599,9 @@ Decisions owed **before the relevant submission** (not switchable later):
 
 ## To report to the engine
 
-- [x] **REPORTED 2026-08-21 as [investblog/spintax-win#4](https://github.com/investblog/spintax-win/issues/4).** `SpGsaToSpintax`'s header does not say that the lifted names carry lift order. It
+- [x] **REPORTED AND FIXED UPSTREAM 2026-08-21** — [spintax-win#4](https://github.com/investblog/spintax-win/issues/4), closed the same day in `124416d`, with the maintainer measuring all three claims before writing them into the header. Docs only, so the pin stays at `v0.8.1`.
+
+      The report as it stood: `SpGsaToSpintax`'s header does not say that the lifted names carry lift order. It
       describes `MacroVars` as receiving "one entry per lifted construct" and stops there. The
       names are `<prefix><kind><N>` with a per-kind counter (`TLifter`), so the order is
       recoverable — but a consumer has to read the implementation to learn that, and the
