@@ -3367,13 +3367,22 @@ now says which file to download, which SourceForge renders under the file list.
 
 - [ ] **Delete the `.msixupload` files from the SourceForge release folders.** Owner does this
       from the file manager; deleting published files is not an agent's action here.
-- [ ] **Decide how future releases reach SourceForge.** There is **no webhook on the GitHub
-      repository** — `gh api repos/investblog/spintax-studio/hooks` answers `[]`. The Files tab
-      was filled by the ONE-TIME import form, twice; the ongoing integration SourceForge
-      offers (which installs a webhook and copies new releases as they appear) was never
-      wired. So either press that form after every release, or wire it — and wiring is the
-      owner's, being an OAuth grant to SourceForge or a webhook on the repository rather than
-      a project edit.
+- [ ] **Wire the ongoing import, one of two ways — owner's, both of them.** There is **no
+      webhook on the GitHub repository**: `gh api repos/investblog/spintax-studio/hooks`
+      answers `[]`, so the Files tab was filled by the ONE-TIME import form, twice, and a
+      release that nobody imports simply is not there.
+
+      *The narrow way, recommended:* add one webhook by hand in the repository's settings,
+      using the payload URL and secret on
+      `sourceforge.net/p/spintax/admin/files-sf/gh_integration`. SourceForge then receives
+      events and has access to nothing.
+
+      *The automatic way, measured 2026-09-05 and stopped at the consent screen:* it asks
+      GitHub for `write:repo_hook` **and `public_repo`** — read and write to public
+      repositories. Nothing was authorised. If it is used anyway, **clear the "Add a
+      SourceForge download button into GitHub release notes" checkbox first**: it is ticked by
+      default and rewrites the release body, which is hand-written copy saying which of four
+      files to download.
 - [ ] **Store feature bullet 6 is a release behind.** The live list carries the pre-merge
       *"Variable inspector … undefined names"* instead of the merged *"Variable and include
       inspectors: … targets and resolution status"*, so the include inspector is named nowhere

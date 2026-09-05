@@ -222,8 +222,23 @@ one-time import form. What this project has is the second: everything on the Fil
 because somebody pressed Import, and `v0.2.2.0` arrived because it was pressed again.
 
 So **every future release needs that form pressed, or the integration properly wired.** Wiring
-it is the owner's: it is either an OAuth grant to SourceForge or a webhook created on the
-repository, and both are standing permissions on their account rather than a project edit.
+it is the owner's, and the two ways are not equally priced:
+
+- **SourceForge's automatic setup asks for more than it sounds like.** Started on 2026-09-05
+  and stopped at GitHub's own consent screen, which is where the scopes become visible:
+  `write:repo_hook` **and `public_repo`** — read *and write* to public repositories, not merely
+  leave to add a hook. Nothing was authorised; measured afterwards, the repository still has
+  no webhook and the release body is untouched.
+- **The manual path is strictly narrower and does the same job.** One webhook on the
+  repository, pointed at the payload URL on that admin page with the secret shown beside it. A
+  webhook only *sends* SourceForge events; it grants access to nothing. The secret is not
+  copied into this file, deliberately.
+
+**And the automatic form's checkbox is ticked by default:** *Add a SourceForge download button
+into GitHub release notes* — which rewrites the release body. Here that body is hand-written
+copy telling a reader which of four files to download, so the box wants clearing before that
+form is ever submitted. Worth writing down because it was submitted ticked on the first
+attempt; only the consent screen stopping the flow made it harmless.
 
 ## The gate
 
