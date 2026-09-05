@@ -3367,22 +3367,21 @@ now says which file to download, which SourceForge renders under the file list.
 
 - [ ] **Delete the `.msixupload` files from the SourceForge release folders.** Owner does this
       from the file manager; deleting published files is not an agent's action here.
-- [ ] **Wire the ongoing import, one of two ways — owner's, both of them.** There is **no
-      webhook on the GitHub repository**: `gh api repos/investblog/spintax-studio/hooks`
-      answers `[]`, so the Files tab was filled by the ONE-TIME import form, twice, and a
-      release that nobody imports simply is not there.
+- [x] **The ongoing import is wired** (owner, 2026-09-05), the narrow way: one webhook on the
+      repository rather than SourceForge's automatic setup, which asks GitHub for
+      `write:repo_hook` **and `public_repo`** — read and write to public repositories. Read
+      back from both sides: hook `674990351`, active, events `['release']`, content type
+      form, secret set, pointed at `sourceforge.net/p/spintax/files-sf/github_webhook`; the
+      SourceForge page reads "Integration configured"; deliveries show `ping` 200 and two
+      `release/edited` 200.
 
-      *The narrow way, recommended:* add one webhook by hand in the repository's settings,
-      using the payload URL and secret on
-      `sourceforge.net/p/spintax/admin/files-sf/gh_integration`. SourceForge then receives
-      events and has access to nothing.
+      **Not yet proven, and it is the part that matters:** those were `edited` events, and a
+      new release is `published`. Nothing visibly changed on the Files tab afterwards, which
+      says little either way — SourceForge shows each file's GitHub timestamp, not its own
+      import time. **Watch the next release**: if it does not appear on SourceForge within a
+      few minutes, the one-time import form is the fallback, and the webhook's delivery log
+      is where the answer will be.
 
-      *The automatic way, measured 2026-09-05 and stopped at the consent screen:* it asks
-      GitHub for `write:repo_hook` **and `public_repo`** — read and write to public
-      repositories. Nothing was authorised. If it is used anyway, **clear the "Add a
-      SourceForge download button into GitHub release notes" checkbox first**: it is ticked by
-      default and rewrites the release body, which is hand-written copy saying which of four
-      files to download.
 - [ ] **Store feature bullet 6 is a release behind.** The live list carries the pre-merge
       *"Variable inspector … undefined names"* instead of the merged *"Variable and include
       inspectors: … targets and resolution status"*, so the include inspector is named nowhere

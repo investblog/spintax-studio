@@ -213,32 +213,48 @@ an upload container. Four things fix it, in order of what they buy — **all but
 **Still open, and the owner's to do:** delete the `.msixupload` files from the SourceForge
 folders. Deleting published files is not an agent's action here.
 
-## The integration is not what it looks like
+## The integration, and exactly how far it is proven
 
-**There is no webhook on the GitHub repository** — `gh api repos/investblog/spintax-studio/hooks`
-answers `[]`, measured 2026-09-05. SourceForge's page offers two things that read alike: an
-ongoing integration, which installs a webhook and copies *new* releases as they appear, and a
-one-time import form. What this project has is the second: everything on the Files tab arrived
-because somebody pressed Import, and `v0.2.2.0` arrived because it was pressed again.
+**Wired 2026-09-05 by the owner, the narrow way.** One webhook on the repository, which is
+what SourceForge's own manual instructions describe and what this project chose over the
+automatic setup. Read back from both sides rather than taken from either:
 
-So **every future release needs that form pressed, or the integration properly wired.** Wiring
-it is the owner's, and the two ways are not equally priced:
+```
+GitHub      hook 674990351   active   events ['release']   content_type form   secret set
+            url  https://sourceforge.net/p/spintax/files-sf/github_webhook
+SourceForge admin page reads "Integration configured"
+deliveries  ping           200 OK
+            release/edited 200 OK   (x2, fired deliberately as a test)
+```
 
-- **SourceForge's automatic setup asks for more than it sounds like.** Started on 2026-09-05
-  and stopped at GitHub's own consent screen, which is where the scopes become visible:
-  `write:repo_hook` **and `public_repo`** — read *and write* to public repositories, not merely
-  leave to add a hook. Nothing was authorised; measured afterwards, the repository still has
-  no webhook and the release body is untouched.
-- **The manual path is strictly narrower and does the same job.** One webhook on the
-  repository, pointed at the payload URL on that admin page with the secret shown beside it. A
-  webhook only *sends* SourceForge events; it grants access to nothing. The secret is not
-  copied into this file, deliberately.
+**What that proves and what it does not.** The pipe exists and carries real `release` events,
+not merely the ping SourceForge tells you to look for: two were delivered and answered 200.
+It does NOT prove that a new release gets IMPORTED, because the events fired were `edited`
+and the one that matters is `published`, and nothing visible changed on the Files tab
+afterwards — which says little either way, since SourceForge shows each file's GitHub
+timestamp rather than its own import time, so a re-import of identical bytes and a
+do-nothing look the same. **The first real proof is the next release**; until then the
+one-time import form is the fallback, and it is the thing to reach for if a release ever
+appears on GitHub and not here.
 
-**And the automatic form's checkbox is ticked by default:** *Add a SourceForge download button
-into GitHub release notes* — which rewrites the release body. Here that body is hand-written
-copy telling a reader which of four files to download, so the box wants clearing before that
-form is ever submitted. Worth writing down because it was submitted ticked on the first
-attempt; only the consent screen stopping the flow made it harmless.
+**Why not the automatic setup.** It was started and stopped at GitHub's consent screen,
+which is where the scopes stop being a description and become a list: `write:repo_hook`
+**and `public_repo`** — read *and write* to public repositories, not merely leave to add a
+hook. Nothing was authorised, and afterwards the repository still had no webhook and the
+release body was untouched. A webhook only *sends* SourceForge events and grants it access
+to nothing, which is the same job for less. The secret is not copied into this file.
+
+**And the automatic form's checkbox is ticked by default:** *Add a SourceForge download
+button into GitHub release notes* — which rewrites the release body. Here that body is
+hand-written copy telling a reader which of four files to download, so the box wants
+clearing before that form is ever submitted. Written down because it was submitted ticked on
+the first attempt, and only the consent screen stopping the flow made that harmless.
+
+**The test edit was not the no-op it was called.** Re-writing the release body with its own
+text went through a shell redirect that added a trailing newline, and the round trip
+normalised the stored line endings as well: the rendered text never changed, but "identical"
+was the wrong word for it. It was set back to exactly the authored notes through the API,
+byte for byte, and checked. A no-op is a claim like any other.
 
 ## The gate
 
