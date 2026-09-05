@@ -106,7 +106,37 @@ jobs:
         shell: bash
         run: |
           python scripts/make-msix.py
-          sha256sum build/spintax-studio.msix build/spintax-studio.msixupload > build/SHA256SUMS
+
+      # THE ONLY ASSET A DOWNLOADER CAN RUN. The MSIX beside it is unsigned -- the Store signs
+      # it -- so nobody outside Partner Center can install it, and the .msixupload is a
+      # submission container with no meaning outside the submission form. That was survivable
+      # while GitHub Releases were the only shelf; SourceForge mirrors this release and puts a
+      # Download button over whatever it finds, and on 2026-09-05 the button it built pointed
+      # at the source archive. The application is one self-contained executable with no
+      # runtime, which is exactly the form these shelves are for.
+      #
+      # `python -m zipfile` rather than 7z or Compress-Archive: python is already set up above,
+      # it is the same command on all three runners, and the archive it writes carries the
+      # top-level folder (verified) so unzipping does not spray four files into Downloads.
+      - name: Build the portable ZIP
+        shell: bash
+        run: |
+          version=$(tr -d ' \t\r\n' < VERSION)
+          name="spintax-studio-$version-win64-portable"
+          mkdir -p "build/$name"
+          cp spintax-studio.exe LICENSE NOTICE.md README.md "build/$name/"
+          (cd build && python -m zipfile -c "$name.zip" "$name")
+          echo "PORTABLE_ZIP=build/$name.zip" >> "$GITHUB_ENV"
+          # BASENAMES, from inside build/. The old line hashed `build/spintax-studio.msix`, so
+          # the manifest named a directory nobody downloading a release asset has -- GitHub
+          # serves assets by basename, and `sha256sum -c SHA256SUMS` next to the downloaded
+          # files answered "No such file or directory" for every line. It went unnoticed while
+          # the manifest was decoration; the portable ZIP is the first asset a stranger is
+          # meant to verify before running.
+          (cd build && sha256sum \
+            spintax-studio.msix \
+            spintax-studio.msixupload \
+            "$name.zip" > SHA256SUMS)
 
       - name: Create a draft GitHub Release
         shell: pwsh
@@ -114,6 +144,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create $env:GITHUB_REF_NAME `
+            $env:PORTABLE_ZIP `
             build/spintax-studio.msixupload `
             build/spintax-studio.msix `
             build/SHA256SUMS `

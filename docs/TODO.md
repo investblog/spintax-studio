@@ -639,10 +639,13 @@ republish, unmeasured when this block was first written, was shipped and measure
    same class the charter records twice already. The gate compares the bytes on either side of an
    arrow and nothing else; a sentence beside one is still on trust.
 
-**Not on the list, and not an oversight:** the listing's website and support URI both point at
+**Not on the list, and not an oversight:** the listing's website and support URI both pointed at
 `spintax.net` rather than the `spintax.studio` and `301.st/contact` the draft asked for. Owner's
 decision, 2026-08-04 — the site at `spintax.studio` is not ready to be the address a Store
-listing sends people to, and `spintax.net` is fully working. Leave it until that changes.
+listing sends people to, and `spintax.net` is fully working. **Half of that has since changed:**
+read cache-busted on 2026-09-05, the storefront answers `SupportUris = https://spintax.studio`
+while the website field is still `spintax.net`. The owner moved it; nothing here recorded the
+move, and only a read-back found it.
 
 The block below is the state as it stood going in, kept because item 4 is still live:
 
@@ -3339,6 +3342,36 @@ grew out of, noted where they attach. Recorded 2026-07-28 from two screenshots o
 - Confirms M3's shape rather than adding to it: its *«Удалить похожие»* is our shingle dedup
   and *«Перемешать»* is the order variants come out in — both belong next to the result list,
   as buttons over it, not inside a settings dialog.
+
+## SourceForge — the page is live, the shelf is not (opened 2026-09-05)
+
+<https://sourceforge.net/projects/spintax/> — **Spintax Studio only** (owner's decision), the
+unixname `spintax` fixed at creation. Created by importing the GitHub repository with the
+release importer switched on. Every field, its measured limit, and the twenty-seven category
+strings are in [`sourceforge-listing.md`](sourceforge-listing.md); the page was filled and
+read back from the server on 2026-09-05, and the owner uploaded the three screenshots.
+
+**What the import produced, before anything was filled in:** a big green Download button
+reading *"Download Spintax Studio v0.2.1.0 source code.zip"*. SourceForge chose the default
+itself, out of assets that were built for Partner Center — an unsigned MSIX, a `.msixupload`
+container, and the source archives GitHub generates. Nothing on that shelf can be run by a
+reader.
+
+- [ ] **Publish the `v0.2.2.0` GitHub release.** It is still a draft, so the importer
+      advertises `v0.2.1.0` while the Store has served 0.2.2.0 since 2026-08-20. Publishing is
+      the owner's command in this project — never an agent's initiative.
+- [ ] **Delete the `.msixupload` files from the SourceForge release folders.** Owner does this
+      from the file manager; deleting published files is not an agent's action here.
+- [ ] **After the next tag, mark the portable ZIP as the default download for Windows.**
+      `release.yml` builds `spintax-studio-<version>-win64-portable.zip` since 2026-09-05 —
+      exe, `LICENSE`, `NOTICE.md`, `README.md`, hashed into `SHA256SUMS`, attached first on the
+      draft release. **That step has never run:** the workflow fires on `v*` only, so the dry
+      run here (2 995 982 bytes, four entries under one top-level folder, smaller than the
+      MSIX) is evidence about the commands and not about the runner.
+- [ ] **Store feature bullet 6 is a release behind.** The live list carries the pre-merge
+      *"Variable inspector … undefined names"* instead of the merged *"Variable and include
+      inspectors: … targets and resolution status"*, so the include inspector is named nowhere
+      on the live page. Batched into the next visit; not worth a submission of its own.
 
 ## Publish prep — Microsoft Store (spec §11)
 

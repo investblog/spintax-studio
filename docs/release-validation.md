@@ -1,6 +1,7 @@
 # Release validation
 
-Six records, newest first: `v0.2.2.0` validated and submitted on 2026-08-20 (in certification),
+Six records, newest first: `v0.2.2.0` validated and submitted on 2026-08-20, live the same
+day and verified by installing on 2026-09-05,
 `v0.2.1.0` validated and published on 2026-08-18, `v0.2.0.0`
 validated on 2026-08-15, a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
 validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0.0` (R0) on
@@ -8,7 +9,7 @@ validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0
 
 ---
 
-# v0.2.2.0 — validated and submitted 2026-08-20, IN CERTIFICATION
+# v0.2.2.0 — validated and submitted 2026-08-20, LIVE the same day
 
 **Why it exists:** the shipped `0.2.1.0` leaves the diagnostics panel unresponsive on a
 converging circle of definitions — 8 859 ms and 2 097 152 rows on 507 bytes of the shared
@@ -104,6 +105,28 @@ Fourteen What's-new texts exist for the first time, one per listing language, un
 `## What's new in this version` in `marketing/store/<lang>.md` with the English in
 `docs/store-listing.md`. Longest is French at 1067 of Microsoft's 1500. The four corrections
 to the live `0.2.0.0` field ride with this visit or wait again.
+
+## Live, and verified by installing — measured 2026-09-05, sixteen days late
+
+The record above sat at IN CERTIFICATION for sixteen days because the session that submitted
+it closed and nothing asked again. It went live on the day it was submitted.
+
+```
+storefront   LastUpdateDateUtc 2026-08-20T16:10:47Z   (read cache-busted)
+installed    301.SpintaxStudio_0.2.2.0_x64__jnd8jmenjzsm0   SignatureKind Store
+exe resource FileVersion 0.2.2.0   Copyright (C) 2026 301.st. GPL-3.0-or-later
+```
+
+`Get-AppxPackage` is the check that answers, and it costs one command — the storefront alone
+would not have told me the package went live rather than only the listing text.
+
+**The listing question is closed, in the product's favour.** The What's-new field carries the
+0.2.2.0 block verbatim, and the description matches `store-listing.md` paragraph for
+paragraph, so all four corrections are live. **One feature bullet did not ride:** number 6 is
+still the pre-merge *"Variable inspector … undefined names"*, so the include inspector is
+named nowhere in the live list. The list is twenty either way, which is exactly why nothing
+caught it — `check-listing-drafts.py` counts bullets and has no idea what the storefront says.
+Queued for the next visit in `TODO.md`.
 
 ---
 

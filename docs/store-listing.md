@@ -6,9 +6,16 @@ product: spintax-studio
 
 # Microsoft Store listing
 
-**Live since 2026-08-04; `0.2.1.0` live since 2026-08-18** (storefront `LastUpdateDateUtc`
-`2026-08-18T19:01:12Z`, read back cache-busted on 2026-08-20 — the same read found the
-What's-new field still carrying the pre-review `0.2.0.0` draft; see that section): <https://apps.microsoft.com/detail/9mw3ch7b530p>.
+**Live since 2026-08-04; `0.2.2.0` live since 2026-08-20** (storefront `LastUpdateDateUtc`
+`2026-08-20T16:10:47Z`, read back cache-busted on 2026-09-05): <https://apps.microsoft.com/detail/9mw3ch7b530p>.
+**The `0.2.2.0` visit carried the description and the What's-new field** — both read back
+verbatim on 2026-09-05, so the four corrections are live and the field is no longer a version
+behind. **One feature bullet did not ride:** number 6 on the live page is the pre-merge
+*"Variable inspector for definitions, references, session values and undefined names"*, so the
+include inspector is named nowhere in the live list. The count is twenty either way, which is
+why nothing caught it — `check-listing-drafts.py` counts bullets and cannot compare them to
+the storefront. Queued for the next visit.
+
 This file is the copy for the NEXT submission; the measured read-back of the live page is
 recorded at the end. ([`publish/store-listing-edits.md`](publish/store-listing-edits.md) is
 dated history of the pre-`0.2.0.0` edit queue.)
@@ -131,6 +138,13 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
+**The 0.2.2.0 What's-new field rode, and the block below is the live text.** Read back
+cache-busted on 2026-09-05: the storefront's `Notes` carries it verbatim. That closes the
+question the submission left open and ends the run in which the field showed a version-old
+draft. *(This paragraph sits above the heading on purpose — anything inside the section is
+read as the field, and `check-listing-drafts.py` reported the first draft of it as a wrapped
+line and a stray backtick. The gate was right.)*
+
 ## What's new in this version (0.2.2.0)
 
 > **The text below is the field, verbatim and form-ready** — one line per bullet, no
@@ -175,7 +189,9 @@ version did, and it has no reader: anyone who met it could not install the app a
 anyone who can read this field already has a version that installs. Saying it would
 advertise a fault to the only people it never reached.
 
-**The four corrections ride with this visit.** The live field still says "your own AI
+**The four corrections rode with this visit — confirmed live 2026-09-05.** The description
+on the storefront now matches this file paragraph for paragraph, so all four are gone from
+the page and the paragraph below is history. It used to say "your own AI
 provider and key" without the when-needed qualifier, "any construct" (which overstates the
 Insert menu), "View > GSA import" (that is the enable switch, not the import path) and
 locates the splitter "between the panes". They are fixed in the corrected 0.2.0.0 block
@@ -325,12 +341,16 @@ and Fix, and the description above is the disclosure.)*
 - Website: `https://spintax.net` — **deliberate, decided 2026-08-04.** The draft asked for
   `https://spintax.studio/`; that site is not ready to be the address a Store listing sends
   people to, and `spintax.net` is fully working. Revisit when the studio site is.
-- Support contact: `https://spintax.net` — same decision. The draft asked for
-  `https://301.st/contact`. The direct contact obligation that arrives with live generative AI
+- Support contact: **`https://spintax.studio`, measured on the storefront 2026-09-05** — not
+  what this line said. It was set to `https://spintax.net` by the same 2026-08-04 decision that
+  chose the website (the draft had asked for `https://301.st/contact`), and the owner has since
+  moved it; the website field did not move with it. The change is undated here, which is the
+  point — a field edited at Partner Center leaves no trace in the repository unless a read-back
+  writes one. The direct contact obligation that arrives with live generative AI
   (spec §11, Store policy 11.16) is met since 2026-08-13 by the report channel itself:
   `support@301.st` in the description, the privacy policy and — since 2026-08-14, as plain text
   beside the licence — the About window (the Help-menu mailto item it replaced is gone; owner's
-  call). The SupportUris field can stay as decided.
+  call). That obligation is met by the address in the product, whatever `SupportUris` points at.
 - Additional license terms: **DECIDED — left blank** (owner, 2026-08-08). The analysis stands
   and is why the question was asked: the source licence is GPL-3.0-or-later (with the section 7
   exception in `NOTICE.md`), and Microsoft's Standard Application License Terms — which an empty
