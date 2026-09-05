@@ -7,11 +7,11 @@ tags: [distribution, marketing]
 
 # SourceForge project listing
 
-**Live since 2026-09-05.** Name, summary, description, sixteen features, homepage, support
+**Live since 2026-09-05.** Name, summary, description, 16 features, homepage, support
 URL and all twenty-seven categories are filled and were read back from the server after
 saving; the owner uploaded the three screenshots. What is written below is what the page
-carries, except where a section says otherwise — the Downloads section is a finding, not a
-record of a fix.
+carries. The Downloads section began as a finding and is now mostly a record of the fix; the
+one thing still open there, and the manual import behind it, are called out where they sit.
 
 The project is <https://sourceforge.net/projects/spintax/> — unixname `spintax`, fixed at
 creation and not editable; the display **Name** is a separate field, so the page can read
@@ -45,9 +45,9 @@ counters), because a limit discovered mid-paste is how a field gets filled badly
 | Preferred Support Page | `support_page` + `support_page_url` | None / project admins / URL |
 
 Two traps in that table. The description field is *called* `short_description` and is the
-long one; and a textarea submits **CRLF**, so eight paragraph breaks cost eight characters
-more than the text measures locally. The copy below is 973 characters as written and 981 as
-the browser will count it.
+long one; and a textarea submits **CRLF**, so its eight newline characters — four blank-line
+separators between five paragraphs, two newlines each — cost eight more than the text measures
+locally. The copy below is 973 characters as written and 981 as the browser will count it.
 
 Categorization is a separate page (`/admin/trove`) with nine sections; Screenshots is a
 third. Both are listed further down with the exact option strings the form offers.
@@ -72,10 +72,12 @@ the word *export*: *Write, preview and export spintax templates in a Windows edi
 
 ## Full Description (1000)
 
-**Form-ready, verbatim.** Paragraphs separated by one blank line and **not hard-wrapped** —
-a textarea keeps the breaks it is given, and a draft wrapped to this file's width would paste
-as ragged half-lines. That is the same trap the Store's What's-new field set.
+**Form-ready, verbatim** — the fence is the field, so nothing has to be inferred about where
+it starts and stops. Paragraphs separated by one blank line and **not hard-wrapped**: a
+textarea keeps the breaks it is given, and a draft wrapped to this file's width would paste as
+ragged half-lines. That is the same trap the Store's What's-new field set.
 
+```
 Spintax Studio is a native Windows editor for spintax templates: two panes, your template on the left, its live render on the right.
 
 Preview and the valid/invalid verdict come from the real spintax engine inside the application, not from a second parser. Diagnostics carry line and column positions and link to the built-in help; panels list variable definitions, references, session values and #include targets with their resolution status.
@@ -85,6 +87,7 @@ Generate variants locally, reproduce them with a seed, and export as plain text,
 Offline by default: no account, no telemetry, no Node.js, PHP or Python runtime — one self-contained executable. Optional AI drafting is off until you turn it on and talks only to the endpoint you configure, with your own key when it needs one.
 
 Interface and built-in help in 14 languages. Free and open source, GPL-3.0-or-later. The SPINTAX language and its engine family are documented at spintax.net.
+```
 
 **What is deliberately not in it**, having been cut for the 1000: the group editor, find and
 replace, the Insert menu, themes, and the GSA import. All five are in the Features list,
@@ -181,28 +184,65 @@ Measured on 2026-09-05, before the page was filled:
   draft** — so SourceForge advertises a version older than the Store's.
 
 So the page as imported hands a Windows user a source archive, an uninstallable package, and
-an upload container. Four things fix it, in order of what they buy:
+an upload container. Four things fix it, in order of what they buy — **all but one done on
+2026-09-05, and the ZIP did not wait for a new tag**:
 
-1. **Ship a portable ZIP — done in `release.yml`, 2026-09-05, and not yet built by anything.**
-   `spintax-studio-<version>-win64-portable.zip` holding `spintax-studio.exe`, `LICENSE`,
-   `NOTICE.md` and `README.md`, hashed into `SHA256SUMS` beside the other two and attached
-   first on the draft release. The commands were dry-run here — 2 995 982 bytes, four entries
-   under one top-level folder, *smaller than the MSIX* — but **the step has never run on a
-   runner**: `release.yml` fires on `v*` only, so the first proof is the next tag. The
-   executable is the only application payload — `make-msix.py` writes an `AppxManifest.xml`
-   and renders the tile art beside it, and both are packaging rather than program; the help
-   and icons are compiled in — so there is nothing else to put in the ZIP. It is unsigned, so
-   SmartScreen may warn depending on policy and reputation, and the Store link stays the
-   recommended install.
-2. **Publish the `v0.2.2.0` GitHub release** so the importer stops advertising 0.2.1.0.
-   *Not done and not to be done on an agent's initiative* — publishing is the owner's command
-   in this project, and the draft is the release.
-3. **Delete the `.msixupload` files** from the SourceForge folders, and leave the `.msix` only
-   if it is worth the confusion. **The owner does this**, from the file manager: deleting
-   published files is not an agent's action here.
-4. **Then set the default download.** SourceForge picked the source archive by itself and will
-   go on picking for itself until a file is marked *Default download for Windows* — which
-   cannot happen before the portable ZIP exists, i.e. before the next tag.
+1. **A portable ZIP, built from the artefact the TAG produced.** `release.yml` builds
+   `spintax-studio-<version>-win64-portable.zip` from now on. For `0.2.2.0`, which was tagged
+   before that step existed, the archive was made without rebuilding anything: download this
+   release's own `spintax-studio.msix`, check it against the published `SHA256SUMS`
+   (`729df8df…`, the value `release-validation.md` records), take `spintax-studio.exe` out of
+   it, and zip it with the tag's `LICENSE`, `NOTICE.md` and `README.md`. That exe is
+   **byte-identical to the one the Microsoft Store installs** (`9E7193F8…`, compared against
+   the installed 0.2.2.0), so the ZIP is the tag's output and not a local rebuild.
+   Then it was RUN: unzipped into an empty folder, launched, and it opened both windows the
+   charter describes (`Untitled — Spintax Studio` and `Spintax Studio`) with no error dialog.
+   The settings file was backed up first and verified unchanged after.
+2. **The `v0.2.2.0` GitHub release is published** (owner's command, 2026-09-05), so the
+   importer stops advertising 0.2.1.0.
+3. **The release notes now say which file to download**, because SourceForge writes the GitHub
+   release body into the folder as `README.md` and renders it under the file list — which is
+   exactly where a visitor who does not know what a `.msixupload` is will be looking.
+4. **The portable ZIP is the default download for Windows**, ticked in the file manager rather
+   than left to SourceForge's own heuristic (which had picked the source archive, and picked
+   the ZIP by itself once it existed — a guess that happened to be right is not a setting).
+   Verified from outside, logged out, with a Windows user agent:
+   `/projects/spintax/files/latest/download` resolves to
+   `spintax-studio-0.2.2.0-win64-portable.zip`.
+
+**Still open, and the owner's to do:** delete the `.msixupload` files from the SourceForge
+folders. Deleting published files is not an agent's action here.
+
+## The integration is not what it looks like
+
+**There is no webhook on the GitHub repository** — `gh api repos/investblog/spintax-studio/hooks`
+answers `[]`, measured 2026-09-05. SourceForge's page offers two things that read alike: an
+ongoing integration, which installs a webhook and copies *new* releases as they appear, and a
+one-time import form. What this project has is the second: everything on the Files tab arrived
+because somebody pressed Import, and `v0.2.2.0` arrived because it was pressed again.
+
+So **every future release needs that form pressed, or the integration properly wired.** Wiring
+it is the owner's: it is either an OAuth grant to SourceForge or a webhook created on the
+repository, and both are standing permissions on their account rather than a project edit.
+
+## The gate
+
+`scripts/check-sourceforge-listing.py`, run by the `listing` job in `ci.yml`. It holds this
+file to the form's three limits (counting the description in CRLF, as a textarea submits it),
+refuses a hard-wrapped description paragraph, and pins the licence name, the language count
+(read from the package manifest, not typed), and the two load-bearing AI wordings. It also
+checks **every number this file states about itself** — "14 of 40", "62 characters", "973 …
+and 981", "16 features" — because those are right when written and stale after one edit. The
+count is written in digits because a number WORD needs a table to read, and a table silently
+ignores the numeral it lacks.
+
+Verified the way this project verifies a gate: eleven mutations, each caught by name, the file
+restored byte-for-byte afterwards.
+
+**What it does not cover, written here rather than assumed:** it reads a file, not the live
+page. If somebody edits the project in the browser and not here, it passes and this file
+becomes fiction — which is precisely how the Store's `SupportUris` moved to `spintax.studio`
+with two documents still describing the old decision.
 
 ## Screenshots
 

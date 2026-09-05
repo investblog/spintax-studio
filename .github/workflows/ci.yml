@@ -154,6 +154,22 @@ jobs:
           lazbuild gui/SpintaxStudio.lpi
           test -f spintax-studio.exe
 
+  # The SourceForge page carries the product's claims in fields a third of the size of the
+  # Store's, and every one of its limits was read off that form's DOM once. A limit nothing
+  # measures is a limit you meet at the submission form -- twice already here, at twenty
+  # features and at the icon frames Windows asks for.
+  #
+  # Its sibling `check-listing-drafts.py` is NOT run here on purpose: `marketing/` is
+  # untracked, so on a clone it has no subject and exits 0. A check that cannot find its
+  # subject must fail, not pass -- so it stays a pre-submission command, and this job gates
+  # the file that IS tracked.
+  listing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: The SourceForge listing still fits the form it is pasted into
+        run: python3 scripts/check-sourceforge-listing.py
+
   # build.sh drives every consumer's first five minutes with this repository, so it is
   # gated like source rather than trusted.
   shellcheck:

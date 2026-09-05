@@ -120,6 +120,36 @@ exe resource FileVersion 0.2.2.0   Copyright (C) 2026 301.st. GPL-3.0-or-later
 `Get-AppxPackage` is the check that answers, and it costs one command — the storefront alone
 would not have told me the package went live rather than only the listing text.
 
+## A portable ZIP was added to this release afterwards, without rebuilding anything
+
+2026-09-05. `release.yml` did not build one when this tag was cut, and SourceForge — which
+mirrors these assets and puts a Download button over them — was offering the source archive.
+The archive was made out of THIS release's own artefact rather than from the working tree:
+
+```
+downloaded  spintax-studio.msix   sha256 729df8df…   = the published SHA256SUMS
+extracted   spintax-studio.exe    sha256 9E7193F8…   = the exe the Store installs (compared
+                                                       against the installed 0.2.2.0)
+zipped with the tag's LICENSE, NOTICE.md, README.md   2 993 373 bytes
+```
+
+So the ZIP is the tag's output. It was then RUN before being offered: unzipped into an empty
+folder and launched, giving both windows this project expects (`Untitled — Spintax Studio`
+and `Spintax Studio`), no error dialog. The settings file was copied first and verified
+unchanged afterwards — the probe that destroyed a reader's settings did so by guessing that
+path, so it is copy-first here, always.
+
+Uploaded as `spintax-studio-0.2.2.0-win64-portable.zip`, and its full hash written down on
+both sides so the claim is auditable rather than remembered:
+
+```
+local   sha256  3d36f58f9f7b809ae196e1f562bb4b85bc6c2675e30af8d95dd62969cc5f637e
+SourceForge     3d36f58f9f7b809ae196e1f562bb4b85bc6c2675e30af8d95dd62969cc5f637e
+                (read off the file's own properties panel after the import)
+```
+
+It is unsigned, and the release notes say so.
+
 **The listing question is closed, in the product's favour.** The What's-new field carries the
 0.2.2.0 block verbatim, and the description matches `store-listing.md` paragraph for
 paragraph, so all four corrections are live. **One feature bullet did not ride:** number 6 is

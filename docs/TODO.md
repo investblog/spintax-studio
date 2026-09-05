@@ -3343,35 +3343,45 @@ grew out of, noted where they attach. Recorded 2026-07-28 from two screenshots o
   and *«Перемешать»* is the order variants come out in — both belong next to the result list,
   as buttons over it, not inside a settings dialog.
 
-## SourceForge — the page is live, the shelf is not (opened 2026-09-05)
+## SourceForge — page and shelf both live; the import is manual (opened 2026-09-05)
 
 <https://sourceforge.net/projects/spintax/> — **Spintax Studio only** (owner's decision), the
-unixname `spintax` fixed at creation. Created by importing the GitHub repository with the
-release importer switched on. Every field, its measured limit, and the twenty-seven category
-strings are in [`sourceforge-listing.md`](sourceforge-listing.md); the page was filled and
-read back from the server on 2026-09-05, and the owner uploaded the three screenshots.
+unixname `spintax` fixed at creation. Created by importing the GitHub repository; the ongoing
+release integration looks switched on and is not (see the second open item). Every field, its
+measured limit, and the twenty-seven category strings are in
+[`sourceforge-listing.md`](sourceforge-listing.md); the page was filled and read back from the
+server on 2026-09-05, and the owner uploaded the three screenshots.
 
 **What the import produced, before anything was filled in:** a big green Download button
 reading *"Download Spintax Studio v0.2.1.0 source code.zip"*. SourceForge chose the default
 itself, out of assets that were built for Partner Center — an unsigned MSIX, a `.msixupload`
-container, and the source archives GitHub generates. Nothing on that shelf can be run by a
-reader.
+container, and the source archives GitHub generates. Nothing on that shelf could be run.
 
-- [ ] **Publish the `v0.2.2.0` GitHub release.** It is still a draft, so the importer
-      advertises `v0.2.1.0` while the Store has served 0.2.2.0 since 2026-08-20. Publishing is
-      the owner's command in this project — never an agent's initiative.
+**Closed 2026-09-05.** `v0.2.2.0` is published on GitHub (owner's command) and imported; its
+folder carries `spintax-studio-0.2.2.0-win64-portable.zip`, built from the tag's own MSIX
+after checking it against the published `SHA256SUMS` — the executable inside is byte-identical
+to the one the Store installs, and it was unzipped into an empty folder and launched before
+being offered to anyone. It is the default download for Windows, verified logged out with a
+Windows user agent: `/projects/spintax/files/latest/download` resolves to it. The release body
+now says which file to download, which SourceForge renders under the file list.
+
 - [ ] **Delete the `.msixupload` files from the SourceForge release folders.** Owner does this
       from the file manager; deleting published files is not an agent's action here.
-- [ ] **After the next tag, mark the portable ZIP as the default download for Windows.**
-      `release.yml` builds `spintax-studio-<version>-win64-portable.zip` since 2026-09-05 —
-      exe, `LICENSE`, `NOTICE.md`, `README.md`, hashed into `SHA256SUMS`, attached first on the
-      draft release. **That step has never run:** the workflow fires on `v*` only, so the dry
-      run here (2 995 982 bytes, four entries under one top-level folder, smaller than the
-      MSIX) is evidence about the commands and not about the runner.
+- [ ] **Decide how future releases reach SourceForge.** There is **no webhook on the GitHub
+      repository** — `gh api repos/investblog/spintax-studio/hooks` answers `[]`. The Files tab
+      was filled by the ONE-TIME import form, twice; the ongoing integration SourceForge
+      offers (which installs a webhook and copies new releases as they appear) was never
+      wired. So either press that form after every release, or wire it — and wiring is the
+      owner's, being an OAuth grant to SourceForge or a webhook on the repository rather than
+      a project edit.
 - [ ] **Store feature bullet 6 is a release behind.** The live list carries the pre-merge
       *"Variable inspector … undefined names"* instead of the merged *"Variable and include
       inspectors: … targets and resolution status"*, so the include inspector is named nowhere
       on the live page. Batched into the next visit; not worth a submission of its own.
+
+The listing copy, the form's measured limits and the categories are in
+[`sourceforge-listing.md`](sourceforge-listing.md), gated by
+`scripts/check-sourceforge-listing.py` from the `listing` job in CI.
 
 ## Publish prep — Microsoft Store (spec §11)
 
