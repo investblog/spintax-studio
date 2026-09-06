@@ -3413,9 +3413,33 @@ manifest, or any of whose URLs does not answer.
 tight one — it lands at 41. Element naming confirmed against PAD files in the wild, because
 `pad.asp-software.org` no longer resolves at all.
 
-- [ ] **Submit to SoftPortal** — <https://www.softportal.com/devsoftadd.html>. Their add page
-      is a developer login and their FAQ never mentions PAD, so whether they take a PAD URL is
-      unverified from outside; the copy and screenshots serve either way.
+- [x] **Submitted to SoftPortal, 2026-09-06 — awaiting moderation.** Nothing public yet: a
+      search for "spintax" on their site returns no program pages, which is what moderation
+      looks like.
+
+      **Their form does take a PAD URL** — the field is `pad`, "URL PAD-файла", seen once the
+      owner was logged in. From outside it was invisible: the add page is a developer login
+      and the FAQ never mentions PAD.
+
+      Three things the live form said that guessing had got wrong, all now in
+      [`pad-listing.md`](pad-listing.md) or fixed: the icon must be **at least 512x512**
+      (ours was 180, and `icon-512.png` exists because of this); keywords are separated by
+      **spaces**, not commas; and their language list has 34 entries which do **not** include
+      Croatian, Bosnian or Dutch, so only 11 of the product's 14 can be ticked and the number
+      fourteen has to live in the description instead.
+
+      Their category list is 288 flat entries with no section headings and four of them named
+      "Редакторы". The one for text is the one between `Распознавание` and `Текст в речь`;
+      the other useful two are `Редакторы кода` (next to `Создание справки`) and
+      `Раскрутка сайта` (next to `XML, RSS, CSS`). Three is their maximum.
+
+      **What was actually typed into the form is the owner's and was not observed here.**
+
+- [ ] **Watch what moderation does, and remember they mirror.** SoftPortal serves downloads
+      from its own server — their download pages offer "скачать с сервера SoftPortal" beside
+      "скачать с официального сайта" — so their copy of the ZIP goes stale at the next
+      release while the developer link stays current. That is the reason the secondary and
+      additional URL slots carry SourceForge and the Store.
 - [ ] **Company address and country are deliberately blank in the PAD.** Some portals reject a
       file without at least a country. Absent rather than invented — the owner fills them.
 - [x] **Regeneration is wired** (2026-09-06) — as `.github/workflows/pad.yml`, on
