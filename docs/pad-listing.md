@@ -1,0 +1,254 @@
+---
+type: release-artifact
+status: draft
+product: spintax-studio
+tags: [distribution, marketing]
+---
+
+# PAD listing
+
+The copy and the settled fields that `scripts/make-pad.py` turns into `pad.xml`, published at
+<https://spintax.studio/pad.xml> and handed to software portals that read PAD.
+
+**Nothing here is written into the XML by hand.** The version comes from `VERSION`, the
+languages the program speaks from `packaging/AppxManifest.xml.in`, and the download size from
+the release asset itself — measured at generation time, not typed. What lives in this file is
+the part a person writes: the descriptions, and the fields that are decisions.
+
+## The three languages, which are not the same question
+
+A PAD file talks about language in three places, and conflating the first two is the usual way
+these files go wrong:
+
+1. **`Program_Language`** — the languages the *program* speaks, one flat comma-separated list.
+   Ours is fourteen, derived from the package manifest so it cannot drift from what ships.
+2. **`Program_Descriptions/<Language>`** — one block per language the *description* is written
+   in, the element named by the English name of the language: `<English>`, `<Russian>`. We
+   describe in two of the fourteen, which is normal and explicit rather than a gap.
+3. **The `Char_Desc_*` limits**, which apply inside each block. This is why the first two are
+   different questions: the same sentence in Russian is longer, and at 45 characters that
+   stops being a detail. The Store listing taught it once already — count in the target
+   language, not in English.
+
+The element naming was confirmed against PAD files in the wild (Dolibarr ships `<English>`,
+`<French>`, `<Italian>`) rather than from the specification, because the canonical spec host
+`pad.asp-software.org` no longer resolves at all. Both files checked declare
+`MASTER_PAD_VERSION 3.11`, which is what we emit.
+
+## What is deliberately blank, and is the owner's to fill
+
+`Address_1`, `City_Town`, `State_Province`, `Zip_Postal_Code` and `Country` are absent. Some
+portals reject a PAD without at least a country. They are absent rather than invented — a
+postal address is not something to guess into a published file.
+
+## Fixed fields
+
+### Company_Name
+```
+301.st
+```
+
+### Company_WebSite_URL
+```
+https://301.st/
+```
+
+### Support_Email
+```
+support@301.st
+```
+
+### General_Email
+```
+support@301.st
+```
+
+### Program_Name
+```
+Spintax Studio
+```
+
+### Program_Release_Month
+```
+08
+```
+
+### Program_Release_Day
+```
+20
+```
+
+### Program_Release_Year
+```
+2026
+```
+
+### Program_Cost_Dollars
+```
+0
+```
+
+### Program_Type
+```
+Freeware
+```
+
+### Program_Release_Status
+```
+Minor Update
+```
+
+### Program_Install_Support
+```
+No Install Support
+```
+
+### Program_OS_Support
+```
+Win10,Win11
+```
+
+### Program_Language
+```
+English,Russian,Ukrainian,Belarusian,Serbian,Croatian,Bosnian,German,French,Spanish,Italian,Portuguese,Dutch,Turkish
+```
+
+### Program_Change_Info
+```
+The diagnostics panel answers at once on templates whose definitions refer to each other in a circle, and reports one finding per name. Importing a large GSA template no longer freezes the window. Two plural findings were wrong and are right. Engine updated to v0.8.0.
+```
+
+### Program_Specific_Category
+```
+Utilities
+```
+
+### Program_Category_Class
+```
+System Utilities::Text/Document Editors
+```
+
+### Program_System_Requirements
+```
+Windows 10 version 1809 or later, x64. No runtime to install: one self-contained executable.
+```
+
+### Primary_Download_URL
+```
+https://github.com/investblog/spintax-studio/releases/download/v{version}/spintax-studio-{version}-win64-portable.zip
+```
+
+### Secondary_Download_URL
+```
+https://sourceforge.net/projects/spintax/files/latest/download
+```
+
+### Application_Info_URL
+```
+https://spintax.studio/
+```
+
+### Application_Screenshot_URL
+```
+https://spintax.studio/assets/shots/editor.png
+```
+
+### Application_Icon_URL
+```
+https://spintax.studio/assets/apple-touch-icon.png
+```
+
+### Application_XML_File_URL
+```
+https://spintax.studio/pad.xml
+```
+
+### Distribution_Permissions
+```
+Spintax Studio is free software under the GNU General Public License, version 3 or later, with an additional permission under section 7 for the MPL-1.1 components it links. It may be distributed unmodified and free of charge. Source: https://github.com/investblog/spintax-studio
+```
+
+### EULA
+```
+GNU General Public License, version 3 or later, with an additional permission under GPL v3 section 7 for the linked MPL-1.1 components (SynEdit and TurboPower IPro). The full text ships with the download in LICENSE, and the additional permission in NOTICE.md.
+```
+
+## English
+
+### Keywords
+```
+spintax, spintax editor, template editor, text templates, live preview, variants, seed, XLSX export, SEO, localization, offline, Windows
+```
+
+### Char_Desc_45
+```
+Offline spintax editor with live preview
+```
+
+### Char_Desc_80
+```
+Windows editor for spintax templates, with live preview and export
+```
+
+### Char_Desc_250
+```
+Write, validate and preview spintax templates in a two-pane Windows editor. The preview and the valid/invalid verdict come from the real spintax engine inside the application. Generate variants with a seed, then export them. Works offline.
+```
+
+### Char_Desc_450
+```
+A native Windows editor for spintax templates: your template on the left, its live render on the right. Preview and the valid/invalid verdict come from the real spintax engine inside the application, so diagnostics carry line and column positions and panels show variables and includes. Generate variants locally, reproduce them with a seed, and export as text, XLSX or one file per variant. Interface and help in 14 languages.
+```
+
+### Char_Desc_2000
+```
+Spintax Studio is a native Windows editor for spintax templates: two panes, your template on the left, its live render on the right.
+
+Preview and the valid/invalid verdict come from the real spintax engine inside the application, not from a second parser. Diagnostics carry line and column positions and link to the built-in help; panels list variable definitions, references, session values and #include targets with their resolution status.
+
+Generate variants locally, reproduce them with a seed, and export as plain text, an XLSX workbook, or one file per variant.
+
+Offline by default: no account, no telemetry, no Node.js, PHP or Python runtime — one self-contained executable. Optional AI drafting is off until you turn it on and talks only to the endpoint you configure, with your own key when it needs one.
+
+Interface and built-in help in 14 languages. Free and open source, GPL-3.0-or-later. The SPINTAX language and its engine family are documented at spintax.net.
+```
+
+## Russian
+
+### Keywords
+```
+spintax, редактор spintax, шаблоны текста, живой предпросмотр, варианты, сид, экспорт XLSX, SEO, локализация, офлайн, Windows
+```
+
+### Char_Desc_45
+```
+Офлайн-редактор spintax-шаблонов с превью
+```
+
+### Char_Desc_80
+```
+Редактор spintax-шаблонов для Windows с живым предпросмотром
+```
+
+### Char_Desc_250
+```
+Пишите, проверяйте и смотрите spintax-шаблоны в двухпанельном редакторе для Windows. Предпросмотр и вердикт «верно / неверно» даёт настоящий движок внутри приложения. Генерируйте варианты с сидом и экспортируйте их. Работает офлайн.
+```
+
+### Char_Desc_450
+```
+Нативный редактор spintax-шаблонов для Windows: шаблон слева, его живой результат справа. Предпросмотр и вердикт «верно / неверно» даёт настоящий движок внутри приложения, поэтому диагностика приходит с номерами строки и столбца, а панели показывают переменные и включения. Генерируйте варианты локально, повторяйте их по сиду и экспортируйте в текст, XLSX или по файлу на вариант. Интерфейс и справка на 14 языках.
+```
+
+### Char_Desc_2000
+```
+Spintax Studio — нативный редактор spintax-шаблонов для Windows: две панели, шаблон слева, его живой результат справа.
+
+Предпросмотр и вердикт «верно / неверно» даёт настоящий движок внутри приложения, а не второй разбор. Диагностика приходит с номерами строки и столбца и связана со встроенной справкой; панели показывают определения и упоминания переменных, значения сессии и цели #include вместе с их состоянием.
+
+Генерируйте варианты локально, повторяйте их по сиду и экспортируйте в обычный текст, в книгу XLSX или по файлу на вариант.
+
+Офлайн по умолчанию: ни аккаунта, ни телеметрии, ни Node.js, PHP или Python — один самодостаточный исполняемый файл. Необязательное ИИ-подключение выключено, пока вы его не включите, и обращается только к настроенному вами эндпоинту, с вашим ключом, когда он нужен.
+
+Интерфейс и встроенная справка на 14 языках. Свободная программа с открытым исходным кодом, GPL-3.0-or-later. Язык SPINTAX и семейство его движков описаны на spintax.net.
+```

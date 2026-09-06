@@ -170,6 +170,14 @@ jobs:
       - name: The SourceForge listing still fits the form it is pasted into
         run: python3 scripts/check-sourceforge-listing.py
 
+      # --offline on purpose. With the network the generator also fetches every URL the PAD
+      # hands a portal, which is the check that matters most and the one that would make this
+      # job fail when somebody else's host is down. So CI asks the deterministic half -- the
+      # character limits per language, and that Program_Language still agrees with the package
+      # manifest -- and the URLs are checked by the run that actually writes the file.
+      - name: The PAD copy still fits the PAD limits, in both languages
+        run: python3 scripts/make-pad.py --check --offline
+
   # build.sh drives every consumer's first five minutes with this repository, so it is
   # gated like source rather than trusted.
   shellcheck:
