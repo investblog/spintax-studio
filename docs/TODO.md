@@ -3365,8 +3365,12 @@ being offered to anyone. It is the default download for Windows, verified logged
 Windows user agent: `/projects/spintax/files/latest/download` resolves to it. The release body
 now says which file to download, which SourceForge renders under the file list.
 
-- [ ] **Delete the `.msixupload` files from the SourceForge release folders.** Owner does this
-      from the file manager; deleting published files is not an agent's action here.
+- [x] **The `.msixupload` files are deleted from the SourceForge release folders** (owner,
+      2026-09-06). Verified cache-busted across all four folders, together with what survived:
+      the MSIX, both source archives and the release notes are still there, and
+      `/files/latest/download` still resolves to the portable ZIP for a Windows visitor. The
+      first read found three folders clean and `v0.2.2.0` — the one behind the Download button
+      — still holding one, which is the folder a spot check would have skipped.
 - [x] **The ongoing import is wired** (owner, 2026-09-05), the narrow way: one webhook on the
       repository rather than SourceForge's automatic setup, which asks GitHub for
       `write:repo_hook` **and `public_repo`** — read and write to public repositories. Read

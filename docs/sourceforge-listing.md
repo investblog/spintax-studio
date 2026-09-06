@@ -210,8 +210,13 @@ an upload container. Four things fix it, in order of what they buy — **all but
    `/projects/spintax/files/latest/download` resolves to
    `spintax-studio-0.2.2.0-win64-portable.zip`.
 
-**Still open, and the owner's to do:** delete the `.msixupload` files from the SourceForge
-folders. Deleting published files is not an agent's action here.
+5. **The `.msixupload` files are gone from every release folder** (owner, 2026-09-06 — deleting
+   published files is not an agent's action here). Read back cache-busted across all four
+   folders: none of them lists one, and nothing else went with them — the MSIX, the source
+   archives and the release-note `README.md` are all still in place, and the download the
+   button offers a Windows visitor is still the portable ZIP.
+
+Nothing is left open on the Downloads side.
 
 ## The integration, and exactly how far it is proven
 
