@@ -35,17 +35,51 @@ The element naming was confirmed against PAD files in the wild (Dolibarr ships `
 `pad.asp-software.org` no longer resolves at all. Both files checked declare
 `MASTER_PAD_VERSION 3.11`, which is what we emit.
 
-## What is deliberately blank, and is the owner's to fill
+## Which name goes above the address
 
-`Address_1`, `City_Town`, `State_Province`, `Zip_Postal_Code` and `Country` are absent. Some
-portals reject a PAD without at least a country. They are absent rather than invented — a
-postal address is not something to guess into a published file.
+Four names for "who makes this" are already published, and each is right where it stands: the
+Store shows publisher `301`, the executable's version resource carries `CompanyName`
+`spintax.net` and `LegalCopyright` `301.st`, the licence holder in `NOTICE.md` is `301.st`,
+and the legal entity is `310ST Ltd`.
+
+`Company_Name` here is **the legal entity**, because this is the first document that carries a
+**postal address** and a portal reads `Company_Info` as one block: the name and the address of
+the same body. `301.st` above 310ST Ltd's address would quietly assert that the address is the
+brand's. The brand keeps the places that are its own — `Company_WebSite_URL`, the descriptions,
+and the product site the PAD points at.
+
+**`301.st` and `310ST` are a transposition of two digits apart.** Neither is a typo of the
+other; do not "correct" either one.
+
+The address is taken from <https://301.st/requisites>, which the owner publishes. Only the name
+and the postal fields are copied here. **Bank and tax identifiers never belong in a PAD file**
+— it is a document handed to any robot that asks for it — and that page carries none anyway.
 
 ## Fixed fields
 
 ### Company_Name
 ```
-301.st
+310ST Ltd
+```
+
+### Address_1
+```
+124 City Road
+```
+
+### City_Town
+```
+London
+```
+
+### Zip_Postal_Code
+```
+EC1V 2NX
+```
+
+### Country
+```
+United Kingdom
 ```
 
 ### Company_WebSite_URL
