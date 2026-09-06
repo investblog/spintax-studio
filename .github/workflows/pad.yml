@@ -1,0 +1,93 @@
+name: Refresh the PAD file
+
+# WHY NOT IN release.yml. That workflow fires on the tag and creates a DRAFT release, whose
+# assets are not publicly downloadable. The PAD states a download URL and the size measured
+# FROM that download, and `make-pad.py` refuses to write a file whose URLs do not answer -- so
+# generating it there would fail every time, correctly. The moment the PAD becomes possible is
+# the moment the release is published, which is this trigger.
+#
+# AND THE FAILURE IS THE POINT. The last step compares the file the site serves with the one
+# this tag produces, and fails when they differ. Publishing to spintax.studio is a push to a
+# DIFFERENT repository, which this job has no credential for and will not be given one
+# silently -- so the job cannot do it, and instead makes forgetting loud. A PAD that states
+# last version's number is worse than no PAD: the portals re-read it and believe it.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build the PAD from (defaults to the latest release)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  pad:
+    runs-on: ubuntu-latest
+    steps:
+      # THE TAG, not the default branch. A `release: published` event checks out `main` by
+      # default, and `make-pad.py` reads VERSION from the working tree -- so without this the
+      # PAD would carry whatever main happens to say, which is the drift this file exists to
+      # prevent.
+      - name: Resolve the tag
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -n "${{ github.event.release.tag_name }}" ]; then
+            echo "ref=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            echo "ref=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=$(gh release view --repo ${{ github.repository }} --json tagName --jq .tagName)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.tag.outputs.ref }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      # Every URL inside is fetched here: download, mirror, homepage, screenshot, icon. This is
+      # the run that does it -- CI's `listing` job asks only the offline half on purpose, so a
+      # branch build never turns red because somebody else's host is down.
+      - name: Regenerate the PAD from the published release
+        run: python scripts/make-pad.py --out pad.xml
+
+      - name: Attach it to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ steps.tag.outputs.ref }}" pad.xml --clobber
+
+      # The site is a separate repository and this job holds no key to it. So it does not push
+      # -- it reports, by name, with the command to run.
+      - name: The file the site serves must be this one
+        run: |
+          curl -sS -H 'Cache-Control: no-cache' \
+            "https://spintax.studio/pad.xml?ci=${{ github.run_id }}" -o live-pad.xml \
+            || { echo "::error::https://spintax.studio/pad.xml could not be fetched at all"; exit 1; }
+          # By VERSION first, bytes second. A pure byte comparison can differ on line endings
+          # alone, and would then report "still describes 0.2.2.0; this release is 0.2.2.0",
+          # which is a failure message that tells the reader nothing.
+          ver() { python -c "import sys,xml.etree.ElementTree as E;print(E.parse(sys.argv[1]).getroot().findtext('Program_Info/Program_Version'))" "$1"; }
+          fresh=$(ver pad.xml)
+          stale=$(ver live-pad.xml)
+          if [ "$fresh" != "$stale" ]; then
+            echo "::error::spintax.studio/pad.xml still describes $stale; this release is $fresh."
+            echo "::error::Run 'python scripts/make-pad.py' locally, then commit static/pad.xml in the spintax.studio repository."
+            exit 1
+          fi
+          tr -d '\r' < pad.xml > a.xml
+          tr -d '\r' < live-pad.xml > b.xml
+          if ! cmp -s a.xml b.xml; then
+            echo "::error::The published PAD says $fresh, as it should, but differs from what this tag generates."
+            diff a.xml b.xml || true
+            exit 1
+          fi
+          echo "the published PAD is current: version $fresh, byte for byte"

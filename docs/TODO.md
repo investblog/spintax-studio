@@ -3418,9 +3418,26 @@ tight one — it lands at 41. Element naming confirmed against PAD files in the 
       unverified from outside; the copy and screenshots serve either way.
 - [ ] **Company address and country are deliberately blank in the PAD.** Some portals reject a
       file without at least a country. Absent rather than invented — the owner fills them.
-- [ ] **Regenerate on every release.** The PAD states a version, a size and a download URL, so
-      it is stale the moment a tag ships. Not yet wired into `release.yml`; today it is a
-      command somebody has to run.
+- [x] **Regeneration is wired** (2026-09-06) — as `.github/workflows/pad.yml`, on
+      `release: published`, and deliberately NOT in `release.yml`. That workflow fires on the
+      tag and creates a DRAFT release whose assets are not publicly downloadable; the PAD
+      states a download URL and the size measured FROM that download, and the generator
+      refuses a file whose URLs do not answer. So there it would fail every time, correctly.
+      Publishing the release is the moment the PAD becomes possible.
+
+      The job checks out the TAG (a `release` event checks out `main` by default, which is
+      exactly the drift being prevented), regenerates with every URL fetched, attaches
+      `pad.xml` to the release, and then compares the file the site serves with the one the
+      tag produces — **by version first, bytes second**, so a line-ending difference cannot
+      produce "still describes 0.2.2.0; this release is 0.2.2.0".
+
+      **It fails when the site is behind, and that failure is the feature.** Publishing to
+      `spintax.studio` is a push to a different repository, which this job holds no credential
+      for and will not be handed one quietly, so it cannot do it — it makes forgetting loud
+      instead, and names the command. Closing that last step needs a token the owner would
+      have to create; until then the red X is the reminder.
+      All three outcomes rehearsed locally: current, a version behind, and same version with
+      different bytes.
 
 ## Publish prep — Microsoft Store (spec §11)
 
