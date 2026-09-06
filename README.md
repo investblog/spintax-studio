@@ -26,8 +26,16 @@ family live at [spintax.net](https://spintax.net/).
 ## Install
 
 **[Get Spintax Studio from the Microsoft Store](https://apps.microsoft.com/detail/9mw3ch7b530p)** —
-free, Windows 10 1809 or later on x64, about 2.5 MB. The Store hosts, signs and updates the
-package; nothing else has to be installed to run it.
+free, Windows 10 1809 or later on x64, about 3.0 MB. The Store hosts, signs and updates the
+package; nothing else has to be installed to run it. `winget install 9MW3CH7B530P` installs
+the same package.
+
+**Or take the portable build:** `spintax-studio-<version>-win64-portable.zip` on the
+[latest release](https://github.com/investblog/spintax-studio/releases/latest), mirrored on
+[SourceForge](https://sourceforge.net/projects/spintax/files/latest/download). Unzip it and
+run `spintax-studio.exe` — nothing to install, no runtime, no account. It is not code-signed,
+so SmartScreen may warn; the Store package is signed and updates itself, which is why it is
+listed first.
 
 The rest of this file is for building from source.
 

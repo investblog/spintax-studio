@@ -3440,8 +3440,15 @@ tight one — it lands at 41. Element naming confirmed against PAD files in the 
       "скачать с официального сайта" — so their copy of the ZIP goes stale at the next
       release while the developer link stays current. That is the reason the secondary and
       additional URL slots carry SourceForge and the Store.
-- [ ] **Company address and country are deliberately blank in the PAD.** Some portals reject a
-      file without at least a country. Absent rather than invented — the owner fills them.
+- [x] **The company address is in the PAD** (owner supplied it, 2026-09-06): `310ST Ltd`,
+      `124 City Road`, `London`, `EC1V 2NX`, `United Kingdom`, from the requisites page 301.st
+      publishes. Only the name and the postal fields were copied — bank and tax identifiers
+      never belong in a file handed to any robot that asks, and that page carries none.
+
+      It also settled which of four published names goes above an address. `Company_Name` is
+      the legal entity, because a portal reads `Company_Info` as one body; `301.st` there
+      would assert that the address is the brand's. See `pad-listing.md` — and note that
+      `301.st` and `310ST` are two digits transposed, so neither is a typo of the other.
 - [x] **Regeneration is wired** (2026-09-06) — as `.github/workflows/pad.yml`, on
       `release: published`, and deliberately NOT in `release.yml`. That workflow fires on the
       tag and creates a DRAFT release whose assets are not publicly downloadable; the PAD
