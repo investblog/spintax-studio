@@ -57,6 +57,48 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       the variables panel, and a support surface for a product we do not control. Decide before
       M4 rather than during it.
 
+## Engine `v0.9.0` — decided to WAIT (2026-09-12)
+
+- [ ] **Bump `v0.8.1` → `v0.9.0` (or whatever supersedes it), after the code has settled.**
+      **Decision, owner, 2026-09-12: do not bump yet.** `v0.9.0` was tagged the same evening
+      (21:21 +0300) after thirteen review-fix commits on one issue (engine #5), and `main` had
+      moved on again within the hour. Give it a few days; if a `v0.9.1` appears, go straight to
+      it. Not a release of its own either — it joins the batch for the next Store visit.
+
+      **Measured when the decision was taken, not read off the tag:** the `interface` section of
+      `src/Spintax.pas` is **byte-identical** to `v0.8.1`, so it builds drop-in — and that is
+      where the danger starts, exactly as at `v0.5.1`, `v0.7.0` and `v0.8.0`. 8 files,
+      +1675/−277, 842 lines of `Spintax.pas`. What the tag says moved (mirrors
+      `@spintax/core 0.7.0`, spintax-js#78):
+
+      1. **A `%var%` directly inside `{…}` / `[…]` is spliced as TEXT before the split.**
+         `#set %x% = a|b` with `{%x%}` becomes a two-way choice. Render output moves, so
+         `SpxCount` (which mirrors the engine's rules) is the first suspect — it very likely
+         still counts one alternative.
+      2. **A one-option construct no longer spends an RNG draw.** Same seed, different variant
+         than `0.2.2.0` shows — any help/listing sentence about seeds reproducing a draw
+         across versions needs re-reading.
+      3. Every substitution charges the expansion budget; the parser is iterative.
+      4. `Spintax.Gsa.pas` changed too (+39) — Studio calls `SpGsaToSpintax` directly, so the
+         GSA checks are in scope.
+
+      **When picking it up:**
+      - [ ] Re-read `git -C engine log v0.8.1..<tag>` — confirm the tag chosen, re-diff `interface`.
+      - [ ] Corpus run here against `W:\Projects\spintax-js\packages\conformance\fixtures`;
+            record PASS/FAIL/SKIP in the charter's baseline line.
+      - [ ] `SpxCount` vs the engine on `%var%` inside `{}` / `[]` and on one-option constructs —
+            enumerate against the real engine, and read the engine's new branches for the
+            cases nobody thought to ask about (charter: "which of the CONSUMED unit's behaviours
+            has nothing pointing at it").
+      - [ ] Highlighter / group editor / variables panel: anything that reads a `%var%` inside
+            a choice as an atom.
+      - [ ] Every SENTENCE that describes the changed behaviour: `docs/help/*` (fourteen
+            languages), `docs/store-listing.md`, `marketing/store/*`. `TestHelpExamples`
+            catches rendered examples, not prose.
+      - [ ] Move the pin in the charter (BOTH places — its submodule paragraph still says
+            `v0.8.0`), the *Engine pull* line under Open decisions, and this file; codex review;
+            `gh run list` after the push.
+
 ## Where R0 is (published), and what `v0.2.0.0` carries (re-checked 2026-08-06; renamed 2026-08-14)
 
 **Published in the Microsoft Store** — <https://apps.microsoft.com/detail/9mw3ch7b530p>.
