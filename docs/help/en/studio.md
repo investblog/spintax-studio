@@ -112,7 +112,8 @@ the other engines will accept.
 **Variables** shows the names your document defines and the names it merely uses. A name it uses
 and nothing defines is one you can fill in here for the session: type a value beside it and the
 preview picks it up. Tick **as text** when the value is text that means itself rather than a
-little template of its own.
+little template of its own — its brackets are shielded, not its `|`: a value with a pipe in it,
+referenced inside a choice or a shuffle, still splits into options there.
 
 **Variants** generates many texts at once. Say how many, generate, and read them in the list
 before exporting. Near-duplicates can be dropped as they are produced, and a seed makes the
@@ -125,8 +126,10 @@ generate fifty and find out by reading them.
 It is an exact count only while every choice is left to chance. A conditional, a plural, or an
 `#include` whose target the set has not got is decided by something else — a value you supply,
 a number, a fragment that may yet arrive — so the panel says **at least** instead. That is the
-honest word: supplying a value can only add texts, never remove any. A number far too large to
-read stops at a trillion and says **at least** for the same reason.
+honest word: the number is taken with every element a value could blank left out, because a
+shuffle drops an element that renders empty — `[{?f?|xx}|aa|bb]` makes six texts with `f`
+unset and two with it set. A number far too large to read stops at a trillion and says
+**at least** for the same reason.
 
 A variant is one filled-in template — one choice made at every construct — and that is not
 the same as a text that reads differently. `{a|a}` is two variants and one text, deliberately:

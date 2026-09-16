@@ -305,12 +305,16 @@ one. two. three.  →  One. Two. Three.
 
 That is why the examples in this help so often answer with a capital where the template has a
 small letter. A dot after an abbreviation the engine knows does not end a sentence, and neither
-does anything shaped like `e.g.` or `U.S.` — **in Latin letters**, which is a real limit and not
-a hedge: the check for "is this the middle of a word" is an ASCII one, so the multi-dot form is
-recognised in `e.g.` and not in its Cyrillic equivalent.
+does anything shaped like `e.g.` or `U.S.` — a letter, a dot, a letter, a dot — in **any
+alphabet**: the check for "is this the middle of a word" reads every script, so `т.е.` is
+shielded exactly as `e.g.` is.
 
 ```spx-good
 e.g. this stays lower  →  e.g. this stays lower
+```
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
 ```
 
 ```spx-good
@@ -334,9 +338,10 @@ whole output is trimmed; the capital arrives after a line break and after a bloc
 after a full stop; and URLs with a scheme, e-mail addresses, bare domains and decimal numbers are
 shielded and come out exactly as typed.
 
-The last of those carries the same ASCII limit as the abbreviations above. A bare domain is
-shielded when it is written in Latin letters; `сайт.рф` is not, and the tidy-up puts a space and
-a capital inside it. The other document's chapter on abbreviations has the measurements.
+The last of those reads every alphabet too: a bare domain is shielded whether it is `one.two`
+or `сайт.рф`. And a shielded start is not a sentence start to the capitaliser, which is why the
+second example below comes back untouched — lowercase included. The other document's chapter
+on abbreviations has the measurements.
 
 ```spx-good
 hello , world  →  Hello, world

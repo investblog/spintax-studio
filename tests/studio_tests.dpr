@@ -4899,7 +4899,7 @@ const
   HELP_DOCS: array[0..41] of THelpDoc = (
     (Path: 'docs/help/en/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
     (Path: 'docs/help/ru/diagnostics.md'; Examples: 38; Codes: True;  Good: 8),
-    (Path: 'docs/help/en/syntax.md';      Examples: 38; Codes: False; Good: 34),
+    (Path: 'docs/help/en/syntax.md';      Examples: 39; Codes: False; Good: 35),
     (Path: 'docs/help/ru/syntax.md';      Examples: 41; Codes: False; Good: 37),
     { The product itself, added 2026-08-06 -- a reader who opens the help was being told how
       the LANGUAGE works and never what this program is. It carries one example, because it is
@@ -5299,7 +5299,7 @@ type
 
 const
   HELP_LANG_FACTS: array[0..13] of THelpLangFacts = (
-    (Code: 'en'; CleanExamples: 47; Silences: 5),
+    (Code: 'en'; CleanExamples: 48; Silences: 5),
     (Code: 'ru'; CleanExamples: 54; Silences: 7),
     (Code: 'de'; CleanExamples: 48; Silences: 6),
     (Code: 'fr'; CleanExamples: 50; Silences: 6),
@@ -7757,6 +7757,17 @@ begin
       { And an include can resolve without being a directive in the source at all:
         ResolveIncludes runs over the RENDERED text. }
       CheckFloor('include-inside-an-option', '{pp|#include "f"}');
+      { And an include that is one ELEMENT of a permutation is joined to the others by a
+        separator on render, so it never stands alone on its line and stays literal -- unless
+        it is the only element, which is why this is a floor and not a one. Counted 4, exact,
+        for two literal texts. }
+      CheckFloor('include-as-a-permutation-element',
+                 '[' + LineEnding + '#include "f"' + LineEnding + '|aa]');
+      { One brace deeper it is the same line: the element's rendered text is trimmed before
+        the join, so the include is never alone on its line. The first fix asked the top
+        frame only and multiplied the fragment in -- 6, exact, for four literal texts. }
+      CheckFloor('include-in-a-choice-inside-a-permutation',
+                 '[{' + LineEnding + '#include "f"' + LineEnding + '|xx}|aa]');
     finally
       ctx := SpxContext('en', vars);
       ctx.PostProcess := False;
@@ -7788,6 +7799,297 @@ begin
     CheckCounted('perm-unclosed-quote', '[<sep="X>aa|bb|cc]');
     { HTML content is content, and must not be downgraded by the open-config detector. }
     CheckCounted('perm-html-content', '[<li>aa|bb</li>]');
+
+    (* ---- THE v0.10.1 PIN: TWO RULES THE ENGINE CHANGED, EACH MEASURED HERE FIRST ----
+
+       Spec sec.5.9 and sec.5.13. A `%name%` written directly inside a construct is spliced
+       in as TEXT before the construct is split on `|`, so a value carrying a pipe is two
+       options -- and a permutation element is its RENDERED text, trimmed, so one that
+       renders empty is dropped before the size pick and the shuffle. Both are the PHP
+       engines' rule from the start, adopted by the reference in 0.7.0 and 0.8.0 and by this
+       engine in v0.9.0 and v0.10.0. Ninety-five shapes were enumerated against the pinned
+       engine BEFORE a line of the fix was written: seventeen answered too few and said
+       EXACT, twenty-one answered too many -- `[{?f?xx}|aa|bb]` said "at least 6" about a document
+       that makes two. Every exact case below is enumerated, and every floor is held to the
+       floor. *)
+
+    { The splice: a `#set`, a `#def`, a session value, a chain -- and the two negatives. }
+    CheckCounted('splice-set-in-choice', '#set %x% = aa|bb' + LineEnding + '{%x%}');
+    CheckCounted('splice-set-beside-an-option', '#set %x% = aa|bb' + LineEnding + '{%x%|cc}');
+    CheckCounted('splice-set-mid-option', '#set %x% = aa|bb' + LineEnding + '{pre%x%post|cc}');
+    CheckCounted('splice-set-twice-in-one-option', '#set %x% = aa|bb' + LineEnding + '{%x%%x%}');
+    CheckCounted('splice-set-in-perm', '#set %x% = aa|bb' + LineEnding + '[%x%|cc]');
+    CheckCounted('splice-set-with-a-construct', '#set %x% = {pp|qq}|rr' + LineEnding + '[%x%]');
+    CheckCounted('splice-def-plain', '#def %x% = aa|bb' + LineEnding + '{%x%|cc}');
+    CheckCounted('splice-through-a-chain', '#set %a% = %b%|xx' + LineEnding +
+                                           '#set %b% = pp|qq' + LineEnding + '{%a%}');
+    CheckCounted('splice-nested-construct', '#set %x% = aa|bb' + LineEnding + '[{%x%}|cc]');
+    { NOT at top level, where a pipe in a value is text -- measured, and the reason the splice
+      is confined to a frame. And an undefined name is the one literal it renders as. }
+    CheckCounted('no-splice-at-top-level', '#set %x% = aa|bb' + LineEnding + '%x%');
+    CheckCounted('undefined-name-is-one-literal', '{%nope%|cc}');
+    { A `#def` is one draw and its text is held: two draws times three options is six WAYS,
+      and four texts, because `rr` comes out of both draws -- the `duplicate-options` rule. }
+    CheckSays('splice-def-with-a-construct',
+              '#def %x% = {pp|qq}|rr' + LineEnding + '{%x%|zz}', 6, True);
+    { A cycle through the splice is left literal, as the engine leaves it: a floor. }
+    CheckFloor('splice-cycle', '#set %x% = aa|%x%' + LineEnding + '{%x%}');
+    { A reference in a permutation config is read with its value put in (the engine reads the
+      header raw); a name nothing defines leaves it unreadable, and a separator whose value
+      may carry a pipe is not promised. }
+    CheckCounted('config-size-from-a-value',
+                 '#set %n% = 1' + LineEnding + '[<minsize=%n%;maxsize=%n%>aa|bb|cc]');
+    CheckCounted('config-sep-from-a-value', '#set %S% = , ' + LineEnding + '[<sep=%S%>aa|bb]');
+    CheckFloor('config-size-from-nothing', '[<maxsize=%nope%>aa|bb|cc]');
+    CheckFloor('separator-carrying-a-pipe', '#set %S% = x|y' + LineEnding + '[aa <%S%> |bb]');
+
+    { The drop: by CHANCE, which is exact arithmetic (the ways split by how many elements
+      rendered), and by the INPUT, which is a floor. }
+    CheckCounted('drop-choice-with-a-blank-option', '[{pp|}|aa]');
+    CheckCounted('drop-in-the-middle', '[aa|{pp|}|bb]');
+    CheckCounted('drop-two-of-them', '[{pp|}|{qq|}]');
+    CheckCounted('drop-with-separators', '[<sep=", ">slots|{live|}|poker]');
+    CheckCounted('drop-takes-its-own-separator', '[aa<1>|{xx|}<2>|bb]');
+    CheckCounted('drop-empty-value', '#set %x% = ' + LineEnding + '[%x%|aa|bb]');
+    CheckCounted('drop-value-that-is-a-pipe', '#set %x% = |' + LineEnding + '[%x%|aa]');
+    CheckCounted('drop-value-with-a-blank-option', '#set %x% = {pp|}' + LineEnding + '[%x%|aa]');
+    CheckCounted('drop-two-values-independently', '#set %x% = {pp|}' + LineEnding +
+                                                  '#set %y% = {qq|}' + LineEnding + '[%x%|%y%|aa]');
+    CheckCounted('drop-nested-permutation', '[[{pp|}]|aa]');
+    CheckCounted('drop-blank-inner-option', '[{pp| }|aa]');
+    { An enumeration KEEPS its empty options; the pair is what holds the difference. }
+    CheckCounted('enum-keeps-a-blank-inner-option', '{{pp|}|aa}');
+    { A config over elements that may vanish: the size range clamps on what remains, so the
+      outcomes' texts overlap and a sum would over-count -- the largest single outcome, as a
+      floor. }
+    CheckFloor('drop-under-minsize', '[<minsize=1>{pp|}|aa]');
+    CheckFloor('drop-under-maxsize', '[<maxsize=1>{pp|}|aa]');
+    CheckFloor('drop-under-both', '[<minsize=1;maxsize=2>{pp|}|aa|bb]');
+    { A `#def` that may be blank is ONE draw shared by every reference, which this arithmetic
+      cannot separate: a floor. }
+    CheckFloor('drop-held-def', '#def %d% = {pp|}' + LineEnding + '[%d%|%d%|aa]');
+    { The input may blank a conditional or a plural, and the floor has to hold for EVERY
+      input: unset here, set below. The first of these said "at least 6" about two texts. }
+    CheckFloor('drop-conditional-without-else', '[{?f?xx}|aa|bb]');
+    CheckFloor('drop-conditional-blank-then', '[{?f?|xx}|aa|bb]');
+    CheckFloor('drop-plural-without-a-count', '[{plural %n%: one|many}|aa|bb]');
+    CheckFloor('conditional-with-ink-in-both-branches', '[{?f?xx|yy}|aa|bb]');
+    vars.AddOrSetValue('f', '1');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckFloor('drop-conditional-without-else-set', '[{?f?xx}|aa|bb]');
+    CheckFloor('drop-conditional-blank-then-set', '[{?f?|xx}|aa|bb]');
+    CheckFloor('conditional-with-a-pipe-in-the-else', '[{?f?aa|bb|cc}|dd]');
+    vars.Clear;
+    (* A SESSION VALUE SPLICES TOO -- and the window hands its name over AS TYPED
+       (SpxEngineThread copies `Vars[i].Name`), while the engine folds every key before it
+       overlays them. This unit looked the folded name up in the unfolded table, so a value
+       named with a capital was never found and counted as one; the probe that found it had
+       named its variable `L`. The third case is the one the old lookup got wrong outright:
+       a construct in a session value named in capitals, at top level. *)
+    vars.AddOrSetValue('L', 'xx|yy|zz');
+    vars.AddOrSetValue('Big', '{aa|bb}');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckCounted('splice-session-value', '{%L%}');
+    CheckCounted('splice-session-value-in-perm', '[<minsize=2>%L%]');
+    CheckCounted('session-value-named-in-capitals', '%Big% {cc|dd}');
+    vars.Clear;
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+
+    (* ---- WHAT THE REVIEW OF THE FIRST CUT FOUND, each reproduced against the engine before
+       it was believed. A value is scanned on its own, with no bracket in sight, so a head the
+       scanner classifies by CONTEXT -- a per-element `<sep>`, a `<maxsize=1>` config, a `?`
+       that opens a conditional, a `plural ` -- arrived as inked text and the count was an
+       over-count marked exact. Every one below is a floor now. Star-parens: braces. ---- *)
+    CheckFloor('value-that-is-a-separator', '#set %x% = <sep>' + LineEnding + '[aa|%x%|bb]');
+    CheckFloor('value-carrying-a-separator-option',
+               '#set %x% = aa|<x>|bb' + LineEnding + '[%x%]');
+    CheckFloor('value-that-is-a-config', '#set %cfg% = <maxsize=1>' + LineEnding + '[%cfg%aa|bb|cc]');
+    CheckFloor('value-that-opens-a-conditional', '#set %q% = ?' + LineEnding + '{%q%f?aa|bb}');
+    CheckFloor('value-that-is-a-plural',
+               '#set %x% = plural %n%: one|many' + LineEnding + '{%x%}');
+    { A pipe from a value inside a conditional is not an else: the engine resolves the
+      conditional first, and unset this renders empty and is dropped -- the first cut said
+      "at least 2" about one text. Both inputs. }
+    CheckFloor('piped-value-inside-a-conditional',
+               '#set %x% = aa|bb|dd' + LineEnding + '[{?f?%x%}|cc]');
+    { A conditional written in the header is resolved before the header is read. }
+    CheckFloor('conditional-in-the-config', '[<maxsize={?f?1|2}>aa|bb|cc]');
+    vars.AddOrSetValue('f', '1');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckFloor('piped-value-inside-a-conditional-set',
+               '#set %x% = aa|bb|dd' + LineEnding + '[{?f?%x%}|cc]');
+    CheckFloor('conditional-in-the-config-set', '[<maxsize={?f?1|2}>aa|bb|cc]');
+    vars.Clear;
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    (* WAYS, NOT TEXTS, on the empty side too: `{|}` is two ways as `{aa|aa}` is, and an option
+       every way of which renders empty is never an element but its ways are still drawn --
+       the engine renders every child before it assembles. Stated, like `duplicate-options`. *)
+    CheckSays('all-empty-option-still-draws', '[{|}|aa]', 2, True);
+    CheckSays('all-empty-nested-permutation', '[[{|}|{pp|}]|zz]', 6, True);
+    { "Never an element" was read off `Empties = Options`, and both are saturating products:
+      an element of twenty-six four-way choices saturated both and was dropped -- one, exact,
+      for 4^26 ways. The flag replaced the comparison. }
+    big := '';
+    for i := 1 to 26 do big := big + '{a|||}';
+    CheckSaturates('saturated-element-is-not-dropped', '[' + big + '|bb]');
+    { The end-of-document drain of an unclosed frame folded its count into ITSELF and popped
+      it; the parent never saw it. The document while an author types an outer brace first. }
+    CheckSays('unclosed-inner-brace-keeps-its-count', '{aa|bb} {cc {dd|ee}', 4, False);
+    CheckSays('unclosed-bracket-keeps-its-count', '[aa|{bb|cc}', 2, False);
+    { A def naming itself: the cycle guard fires INSIDE the value's own walk, and the outer
+      reference keeps its three options. The first cut let MacroCount's cycle exit overwrite
+      `isDef` and walked it as a `#set`, answering one. }
+    CheckSays('def-naming-itself-keeps-its-options',
+              '#def %d% = {%d%|aa|bb}' + LineEnding + '%d%', 3, False);
+    { A plain value referenced sixteen thousand times INSIDE a choice is as exact as at top
+      level: charging its characters against the WALK's budget made the count a floor one
+      brace away from the check that pins the top-level case. Sixty characters, because the
+      ENGINE's purse is a mebibyte of substituted text and 16 322 × 60 stays under it -- at
+      300 the engine itself leaves references literal, and "not exact" is then the truth
+      (`past-the-engine-budget-is-a-floor` below). }
+    big := '#set %x% = ' + StringOfChar('x', 60) + LineEnding;
+    for i := 1 to 16322 do big := big + '{%x%|y}';
+    CheckTrue('count/plain-value-in-a-choice-many-times/exact', SpxCountVariants(big, ctx).Exact);
+
+    (* ---- THE SECOND ROUND, on the fixes above. A conditional the VALUE'S OWN TEXT opens is
+       an ordinary construct -- its pipe is its branch -- where a pipe landing in a conditional
+       the DOCUMENT opened is not (the engine resolves that one before the value is in). The
+       first fix skipped both, and answered "at least 1" for a permutation that makes two texts
+       under every input. And a value that is HTML opens with `<` too: the separator tell has
+       to mean a WHOLE `<...>` (the engine's separator ends at the first `>`), or a link list
+       -- the SEO shape this product exists for -- counts one. Star-parens: braces. ---- *)
+    CheckSays('value-conditional-keeps-its-branches',
+              '#set %x% = {?f?aa|bb}' + LineEnding + '[%x%|cc]', 2, False);
+    CheckSays('value-conditional-with-constructs-in-both-branches',
+              '#set %x% = {?f?{a|b}|{c|d}}' + LineEnding + '{%x%|zz}', 3, False);
+    CheckCounted('html-values-in-a-permutation',
+                 '#set %l1% = <a href="x">one</a>' + LineEnding +
+                 '#set %l2% = <a href="y">two</a>' + LineEnding +
+                 '#set %l3% = <a href="z">three</a>' + LineEnding + '[%l1%|%l2%|%l3%]');
+    CheckCounted('html-value-with-a-pipe', '#set %x% = <b>bold</b>|plain' + LineEnding + '[%x%|cc]');
+    { A literal percent sign in a separator is not a reference, and must not cost Exact. }
+    CheckCounted('separator-with-a-literal-percent', '[aa<100%>|bb]');
+    CheckCounted('separator-with-a-percent-and-a-space', '[aa<50% off>|bb|cc]');
+
+    (* ---- WHAT THE CODEX GATE FOUND, each reproduced against the engine first. ----
+
+       THE SELECTED BRANCH, NOT THE BIGGEST. The engine decides a conditional on the RAW value
+       of the name, or on its absence, and the counter has the same table -- so most
+       conditions are decided here, and the biggest branch was not a floor for the input in
+       hand: unset, `{?f?{a|b}|x}` renders one way and said "at least 2". Undecidable
+       ones (a `#def` that renders) take the smallest branch. Star-parens: braces. *)
+    CheckSays('condition-undefined-takes-the-else', '{?f?{a|b}|x}', 1, False);
+    CheckSays('condition-undefined-else-has-constructs', '{?f?{a|b}|{c|d|e}}', 3, False);
+    CheckSays('condition-set-takes-the-then', '#set %f% = 1' + LineEnding + '{?f?{a|b}|x}', 2, False);
+    CheckSays('condition-inverted', '#set %f% = 1' + LineEnding + '{?!f?{a|b}|x}', 1, False);
+    { Truthy as WRITTEN: a value that is itself a choice with a blank option is still set. }
+    CheckSays('condition-on-a-choice-value', '#set %f% = {a|}' + LineEnding + '{?f?{a|b}|x}', 2, False);
+    CheckSays('condition-on-blanks-is-falsy', '#set %f% =   ' + LineEnding + '{?f?{a|b}|x}', 1, False);
+    { And the drop follows the decision: set, the then-branch has ink and the element stays. }
+    CheckSays('condition-set-keeps-the-element', '#set %f% = 1' + LineEnding + '[{?f?xx}|aa|bb]', 6, False);
+    CheckFloor('condition-set-blank-then-drops', '#set %f% = 1' + LineEnding + '[{?f?|xx}|aa|bb]');
+    vars.AddOrSetValue('f', 'yes');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckSays('condition-from-the-session', '{?f?{a|b}|x}', 2, False);
+    CheckSays('condition-from-the-session-keeps-the-element', '[{?f?xx}|aa|bb]', 6, False);
+    vars.Clear;
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    { A closer in a value put into a header or a separator closes the permutation early in
+      the engine's textual re-read: one element and a literal tail. Both said six. }
+    CheckFloor('closer-in-a-config-value', '#set %n% = ]' + LineEnding + '[<maxsize=%n%>aa|bb|cc]');
+    CheckFloor('closer-in-a-separator-value', '#set %s% = ]' + LineEnding + '[aa<%s%>|bb|cc]');
+    { A held `#def` is walked from its SOURCE, and a separator that is structure becomes
+      structure in the def's rendered text: `sep="|"` makes the held text a choice. Two
+      shuffles times two choices is four ways; two, exact, was the answer. A floor now. }
+    CheckFloor('held-def-with-a-pipe-separator', '#def %x% = [<sep="|">aa|bb]' + LineEnding + '{%x%}');
+    { Comment markers in a VALUE are literal to the engine (StripComments ran once, over the
+      source); the scanner strips them, so the element read as empty and was dropped. }
+    vars.AddOrSetValue('x', '/#q#/');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckFloor('comment-marker-in-a-session-value', '[%x%|aa]');
+    vars.Clear;
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    (* THE ENGINE'S EXPANSION BUDGET. Past one mebibyte of substituted text the engine leaves
+       a reference LITERAL, and a counter that went on expanding answered more than the engine
+       can produce. Charged in bytes, so this stops no later than the engine: the count is a
+       floor from there. Below the budget the same shape stays exact. *)
+    big := '#set %x% = ' + StringOfChar('a', 150) + '|' + StringOfChar('b', 149) + LineEnding + '{';
+    for i := 1 to 3600 do big := big + '%x%|';
+    big := big + 'z}';
+    { ...and it collapses to ONE: past the purse the engine's substitution order decides which
+      references stayed literal, and this walk does not replay that order. }
+    CheckSays('past-the-engine-budget-is-one', big, 1, False);
+    big := '#set %x% = ' + StringOfChar('a', 150) + '|' + StringOfChar('b', 149) + LineEnding + '{';
+    for i := 1 to 3000 do big := big + '%x%|';
+    big := big + 'z}';
+    CheckSays('within-the-engine-budget-is-exact', big, 6001, True);
+    (* ---- THE CODEX GATE'S SECOND ROUND. Star-parens: braces. ---- *)
+    { A control byte is a character to PCRE2's space class, so the condition is TRUE. }
+    vars.AddOrSetValue('f', #1);
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckSays('condition-on-a-control-byte-is-truthy', '{?f?x|{a|b}}', 1, False);
+    { The branch NOT taken must not decide whether the element vanishes. }
+    vars.AddOrSetValue('f', '1');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckSays('unselected-branch-does-not-drop-the-element',
+              '[{?f?xx|{plural 2: one|many}}|aa]', 2, False);
+    vars.Clear;
+    { A comment marker beside a closer in a value: the engine reads the closer, the scanner
+      folds it into a comment token. One, as the floor. }
+    vars.AddOrSetValue('x', '/# ] #/');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckSays('comment-marker-hiding-a-closer', '[%x%|aa|bb]', 1, False);
+    vars.Clear;
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    { A `#def` is charged once per reference, never for its source: two references to a
+      300 KiB definition are 600 KiB against the purse and stay exact, as in the engine
+      (measured); charged twice they would be 1.2 MiB and collapse. }
+    big := '#def %d% = ' + StringOfChar('d', 300 * 1024) + LineEnding + '{%d%|%d%}';
+    CheckTrue('count/def-charged-once-per-reference/exact', SpxCountVariants(big, ctx).Exact);
+
+    (* ---- THE CODEX GATE'S THIRD ROUND. Star-parens: braces. ---- *)
+    { A refused reference in a header is kept whole: `%a%b%` is `%a%` then `b%`, never
+      `%a` then `%b%`. With `a = ]` the engine closes the shuffle early -- one way. }
+    CheckSays('refused-header-reference-is-kept-whole',
+              '#set %a% = ]' + LineEnding + '#set %b% = 1' + LineEnding +
+              '[<maxsize=%a%b%>aa|bb|cc]', 1, False);
+    { A `#def` is worth its RENDER at every reference, not its source: `%big%` is five bytes
+      of source and 400 KiB of render, and two references plus the pre-render pass the purse,
+      so the choice that follows is literal to the engine. Collapses to one. }
+    vars.AddOrSetValue('big', StringOfChar('b', 400 * 1024));
+    vars.AddOrSetValue('y', 'a|b');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckSays('def-is-charged-by-its-render',
+              '#def %d% = %big%' + LineEnding + '%d% %d% {%y%|zz}', 1, False);
+    vars.Clear;
+    { Angle brackets behind a comment marker are structure too: the engine reads the value
+      literally and `<s/# >` is a separator with an empty element, dropped. }
+    vars.AddOrSetValue('x', '/# >');
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    CheckSays('comment-marker-hiding-an-angle', '[zz|<s%x%|bb|cc]', 1, False);
+    vars.Clear;
+    ctx := SpxContext('en', vars);
+    ctx.PostProcess := False;
+    { The walk's own budget spent leaves references as ink the engine expands; collapse. }
+    big := '#set %x% = {a}' + LineEnding + '#set %z% = ]' + LineEnding;
+    for i := 1 to 16200 do big := big + '%x% ';
+    big := big + '[%z%|aa|bb]';
+    CheckSays('work-budget-spent-collapses', big, 1, False);
     CheckCounted('perm-single-separator', '[<->aa|bb]');
     { A config the line-at-a-time scan cannot finish reading: the engine looks through the whole
       permutation, so this is a floor rather than a promise. }
@@ -10763,20 +11065,32 @@ begin
     400 references to it cost far less than the budget either way -- so it passed whether or not
     the already-rolled early exit was there, which review pointed out. At 20 KB a recount would
     spend 8 MB against a 4 MB budget, so removing that exit turns this from exact into a lower
-    bound. The numeric answer never moves, which is exactly why nothing noticed before. }
+    bound. The numeric answer never moves, which is exactly why nothing noticed before.
+
+    SINCE ENGINE v0.10.1 THIS IS A FLOOR ON THE ENGINE'S OWN ACCOUNT: every substitution is
+    charged against its mebibyte purse, the plain ones included (spec sec.5.8 reversed), and
+    400 references to a 20 KB definition are 8 MB of substituted text -- the engine leaves
+    references literal, measured, and the counter mirrors the purse and collapses to one. So
+    the check asks for the floor now; the early exit is a cost saving only, and the exact case
+    at 40 references (800 KB) is beside it. }
   body := '';
   for i := 1 to 2000 do body := body + '{a|b|c}xxx';
   body := '#def %d% = ' + body + LineEnding;
-  for i := 1 to 400 do body := body + '%d% ';
+  for i := 1 to 40 do body := body + '%d% ';
   c := SpxCountVariants(body, Default(TSpxContext));
-  Check('count/a def named four hundred times is still exact',
-        BoolToStr(c.Exact, True), 'True');
+  Check('count/a def named forty times is exact', BoolToStr(c.Exact, True), BoolToStr(True, True));
+  for i := 41 to 400 do body := body + '%d% ';
+  c := SpxCountVariants(body, Default(TSpxContext));
+  Check('count/a def named four hundred times is past the engine purse',
+        BoolToStr(c.Exact, True), 'False');
 
-  { AND A PLAIN VALUE IS NOT CHARGED AT ALL, which is the engine's own rule: a value carrying
-    no construct is substituted once and never expanded again, so it cannot fan anything out.
-    An ordinary 65 KB template of one trivial macro repeated -- count exactly one -- became a
-    lower bound when a flat per-expansion price was applied to every path. Review measured it;
-    the price had been measured on the include tree and applied everywhere. }
+  { AND A PLAIN VALUE IS NOT CHARGED AGAINST THE WALK'S BUDGET: a value carrying no construct
+    is substituted once and never expanded again, so it cannot fan anything out. An ordinary
+    65 KB template of one trivial macro repeated -- count exactly one -- became a lower bound
+    when a flat per-expansion price was applied to every path. Review measured it; the price
+    had been measured on the include tree and applied everywhere. (The ENGINE charges plain
+    values too since v0.9.0, against its mebibyte purse, which the counter mirrors separately:
+    16 322 one-character substitutions are 16 KB of it, nowhere near.) }
   body := '#set %x% = x' + LineEnding;
   for i := 1 to 16322 do body := body + '%x% ';
   c := SpxCountVariants(body, Default(TSpxContext));

@@ -19,7 +19,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
-      at `engine/`, pinned to tag `v0.8.1`. Clone with `--recurse-submodules`.
+      at `engine/`, pinned to tag `v0.10.1`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
       twice the same day). The family resolves includes **inside render**, behind a host
@@ -57,47 +57,144 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       the variables panel, and a support surface for a product we do not control. Decide before
       M4 rather than during it.
 
-## Engine `v0.9.0` — decided to WAIT (2026-09-12)
+## Engine bumped to `v0.10.1` (2026-09-16)
 
-- [ ] **Bump `v0.8.1` → `v0.9.0` (or whatever supersedes it), after the code has settled.**
-      **Decision, owner, 2026-09-12: do not bump yet.** `v0.9.0` was tagged the same evening
-      (21:21 +0300) after thirteen review-fix commits on one issue (engine #5), and `main` had
-      moved on again within the hour. Give it a few days; if a `v0.9.1` appears, go straight to
-      it. Not a release of its own either — it joins the batch for the next Store visit.
+- [x] **Bumped `v0.8.1` → `v0.10.1`, straight past `v0.9.0` and `v0.10.0`** — the 2026-09-12
+      decision was to wait for the code to settle and go to whatever superseded `v0.9.0`; three
+      tags landed in four days (09-12, 09-16 03:08, 09-16 13:53) and the two commits after the
+      last are docs only, so the tag is the pin. **Not a release**: it joins the batch for the
+      next Store visit.
 
-      **Measured when the decision was taken, not read off the tag:** the `interface` section of
-      `src/Spintax.pas` is **byte-identical** to `v0.8.1`, so it builds drop-in — and that is
-      where the danger starts, exactly as at `v0.5.1`, `v0.7.0` and `v0.8.0`. 8 files,
-      +1675/−277, 842 lines of `Spintax.pas`. What the tag says moved (mirrors
-      `@spintax/core 0.7.0`, spintax-js#78):
+      **Measured here, not read off the tags.** The `interface` section of `src/Spintax.pas` is
+      **byte-identical** to `v0.8.1` (diffed); `Spintax.Gsa.pas`'s gained a 21-line comment and
+      no declaration. 12 files, +3739/−560, 1890 lines of `Spintax.pas`. The runner binaries in
+      `engine/tests/` were 2026-08-19 artefacts — rebuilt first, then the corpus:
+      **`PASS=329 FAIL=0 SKIP=4` over 333 cases** (was 254 over 258) against
+      `C:\projects\spintax\spintax-js\packages\conformance\fixtures` at `origin/main`
+      `0988f5e`; `local_tests` 614/0, `gsa_tests` 102/0, both twins. Studio: 29 176 → 29 367
+      checks, 0 failed, both binaries (95 shapes enumerated against the engine by a probe
+      before the counter changed: 17 under-counts marked exact, 21 over-counts).
 
-      1. **A `%var%` directly inside `{…}` / `[…]` is spliced as TEXT before the split.**
-         `#set %x% = a|b` with `{%x%}` becomes a two-way choice. Render output moves, so
-         `SpxCount` (which mirrors the engine's rules) is the first suspect — it very likely
-         still counts one alternative.
-      2. **A one-option construct no longer spends an RNG draw.** Same seed, different variant
-         than `0.2.2.0` shows — any help/listing sentence about seeds reproducing a draw
-         across versions needs re-reading.
-      3. Every substitution charges the expansion budget; the parser is iterative.
-      4. `Spintax.Gsa.pas` changed too (+39) — Studio calls `SpGsaToSpintax` directly, so the
-         GSA checks are in scope.
+      **What moved, and what it did to this product** (engine spec §5.9–§5.14):
 
-      **When picking it up:**
-      - [ ] Re-read `git -C engine log v0.8.1..<tag>` — confirm the tag chosen, re-diff `interface`.
-      - [ ] Corpus run here against `W:\Projects\spintax-js\packages\conformance\fixtures`;
-            record PASS/FAIL/SKIP in the charter's baseline line.
-      - [ ] `SpxCount` vs the engine on `%var%` inside `{}` / `[]` and on one-option constructs —
-            enumerate against the real engine, and read the engine's new branches for the
-            cases nobody thought to ask about (charter: "which of the CONSUMED unit's behaviours
-            has nothing pointing at it").
-      - [ ] Highlighter / group editor / variables panel: anything that reads a `%var%` inside
-            a choice as an atom.
-      - [ ] Every SENTENCE that describes the changed behaviour: `docs/help/*` (fourteen
-            languages), `docs/store-listing.md`, `marketing/store/*`. `TestHelpExamples`
-            catches rendered examples, not prose.
-      - [ ] Move the pin in the charter (BOTH places — its submodule paragraph still says
-            `v0.8.0`), the *Engine pull* line under Open decisions, and this file; codex review;
-            `gh run list` after the push.
+      1. **The splice (§5.9, widened by §5.13).** A `%var%`, a `{?…}`, a size or a separator
+         written directly inside `{…}`/`[…]` is resolved as TEXT before the split. `SpxCount`
+         answered 1, EXACT, for `{%x%}` with `#set %x% = aa|bb` — seventeen such shapes,
+         enumerated against the pinned engine before any fix (95 shapes in all). Fixed by walking a value's tokens
+         in place when the reference sits in a frame (a `#set`/session value re-rolled, a
+         `#def` held — its constructs count one), and a config carrying a reference is read
+         with the plain value put in.
+      2. **The drop (§5.13).** A permutation element is its RENDERED text, trimmed; one that
+         renders empty is dropped with its separator before the size pick. `SpxCount` said 4
+         EXACT for `[{pp|}|aa]` (3), and "at least 6" for `[{?f?xx}|aa|bb]` (2) — twenty-one
+         OVER-counts, every one a broken floor. Fixed by carrying the number of EMPTY ways beside
+         the ways per option: exact through `PermutationCountWithEmpties` when there is no
+         config (the ways split by how many elements rendered), a floor when there is one, and
+         a floor with the element left out when the INPUT decides (a conditional, a plural, an
+         unresolved include, a held `#def`).
+      3. **A third defect the probe found by naming its variable `L`, older than the bump:** the
+         window hands session names over as typed and the engine folds them; the counter looked
+         the folded name up in the unfolded table, so a session value named with a capital was
+         never counted. The table is folded once per count and looked up in one probe -- a
+         first cut fell through to a linear scan for every non-session name, seconds per
+         keystroke at 16 000 session values; review timed it.
+      4. **One-option constructs spend no RNG draw (§5.10).** Same seed, different variant than
+         `0.2.2.0` shows for any template with a `{single}` construct — every GSA-imported
+         placeholder in prose. Counts unchanged. The help's seed sentences (`studio.md`) are
+         same-build claims and stay true; **the What's-new for the next visit must say seeded
+         output differs from 0.2.2.0**, or a reader with a saved seed files it as a bug.
+      5. **Post-process character classes are PCRE2 Unicode (§5.12).** The word boundary sees
+         every script: `т.е.`, `и.о.`, `т.д.` are shielded like `e.g.`, and `сайт.рф` like
+         `one.two`. `TestHelpExamples` caught **twelve arrows in four Cyrillic documents**
+         (`ru` ×4, `uk` ×3, `be` ×3, `sr` ×2) the moment the pin moved; all twelve fixed as
+         measurement. The PROSE said "the check is ASCII / Latin only" in all fourteen —
+         rewritten in `en` and `ru`; the other twelve are the open item below.
+      6. `plural.count-macro` is emitted once per tainted REFERENCE (was per block). The help
+         articles describe the code without a count, so nothing to move; `ENGINE_CODES` is
+         unchanged (diffed the code literals at both tags).
+      7. Parser, render walk and destructor iterative; every substitution charged; the GSA
+         escape for a block opening `?`/`plural ` is `{{}?a?b|c}` now. `gsa_tests` green here;
+         Studio's GSA checks unchanged.
+
+      **Three review rounds on the counter, every finding reproduced with the probe before it
+      was acted on.** Built-in review, two rounds: a spliced value scanned with no bracket in
+      sight hands over `<sep>`, `<maxsize=1>`, a leading `?` or `plural ` as inked TEXT (all
+      floors now); a pipe from a value inside a document-opened conditional is not a branch
+      (and one inside a conditional the value itself opens IS); the all-empty test read off
+      saturated products; the unclosed-frame drain multiplied into itself; plain values were
+      charged; a `#def` naming itself was walked as a `#set`; an `#include` that is one element
+      of a shuffle is literal; a linear scan over the session table cost seconds. Codex gate,
+      one round: the biggest branch of a conditional is NOT a floor for the input in hand —
+      the engine decides on the raw value or on the name's absence, and the counter has the
+      same table, so `CondBranchFor` decides too (undecidable → the smallest branch); a `]`
+      in a value put into a header or a separator closes the shuffle early; the engine's
+      1 MiB expansion purse (`SP_RENDER_EXPANSION_BUDGET`) is mirrored, charged in bytes, so
+      past it a reference is literal here as there; a held `#def` with `sep="|"` renders
+      structure the walk of its source cannot see (floor); comment markers in a value are
+      literal to the engine (`StripComments` ran once, over the source). And one prose
+      finding: `ru/syntax.md` had lost «латинские» before «адреса почты», which is still
+      true — the e-mail local part is ASCII in the engine.
+
+      **Codex, second round, and what was NOT taken from it.** Fixed: an empty purse collapses
+      the count to ONE (the engine's substitution order — a fixpoint over the body first, the
+      references a value brought in second — cannot be replayed, so past a mebibyte no floor
+      above one survives; measured: 400 × 20 KB leaves references literal, 2 × 300 KiB does
+      not); values a header or a separator refuses are charged all the same; a comment marker
+      beside a closer in a value collapses too; PCRE2's ASCII blanks are `#9..#13` and the
+      space, a control byte is a character; the SELECTED branch alone decides whether the
+      element may vanish; a `#def` is charged once per reference, never for its source.
+      **Declined, with reasons:** unreferenced `#def`s are not counted — the panel counts draws
+      the reader can see (`def-unused` has pinned 2 since the def slice), and the purse
+      angle (an unused def expanding past a mebibyte before the body) is recorded here as a
+      known limit rather than engineered around; and the `be`/`uk`/`sr` prose is the item
+      above, the owner's call. **One pre-existing check moved on the engine's account:**
+      "a def named four hundred times is still exact" was true at `v0.8.1`, where a plain
+      value was free, and is a floor at `v0.10.1`, where every substitution is charged.
+
+      **Codex, third and last round (the gate allows two re-reviews), four more, all taken:** a
+      refused reference in a header is kept whole rather than re-read from its closing percent
+      (`%a%b%`); a `#def` is charged by what its RENDER is worth — source plus everything the
+      count substituted into it, remembered per name — because `#def %d% = %big%` is five
+      bytes of source and 400 KiB of render at every reference; the walk's own work budget
+      spent collapses the count exactly as the purse does (a reference left as ink here is one
+      the engine expands, and what it puts in may close a bracket); and `<`/`>` are structure
+      behind a comment marker too. Fixed without a further Codex pass; pinned by four checks.
+
+      **Not quoted on purpose:** the engine's memory numbers for §5.14 — its own post-tag commit
+      `d9e3d07` retracts "peak memory fell" as single-sample working set.
+
+      **Stale citation caught by `TestEngineCitations`:** `Spintax.pas/ExpandVarsOnly` is gone;
+      `gui/SpxAiPane.pas` now cites `ResolveVariable`, where the `LowerAscii` lookup lives.
+
+- [ ] **The help's post-process prose is still "ASCII / Latin only" in twelve languages.** The
+      arrows are right everywhere (gated); the sentences around them are not, and in `uk`, `be`
+      and `sr` a BOLD HEADING now asserts the opposite of the example beneath it (`be` ≈359 and
+      ≈366, `sr` 366, `uk` 361 and 368 — the headings, not only the paragraphs). Per file, so a
+      translator does not hunt a phrase (the `v0.7.0` lesson): `be/syntax.md` 305–306, 334–335,
+      359–360, 366, and the closing paragraph of the silences (≈380); `bs/syntax.md` 335–336; `de/syntax.md` 320–321,
+      350; `es/syntax.md` 309–310, 340–341; `fr/syntax.md` 314–315, 344–345, and 372–378 where
+      `c.-à-d.` is still broken but **for a different reason** (the hyphens, not the `à` — the
+      example's arrow is right, the reason is not); `hr/syntax.md` 334–335; `it/syntax.md`
+      311–312, 340–341; `nl/syntax.md` 312–313, 341; `pt/syntax.md` 311–312, 342–343, and 381
+      where `n.º` is likewise still broken for a different reason (one dot, not the `º`);
+      `sr/syntax.md` 302–303, 331, 370–375; `tr/syntax.md` 304–305, 333, 352; `uk/syntax.md` 306–307,
+      334–335, 361–375. Each is a sentence measured at `v0.8.1` in that language's own
+      examples, and the replacement has to be measured in that language too — `en` and `ru`
+      were, above.
+
+      **And two sentences in `studio.md`, twelve languages each**, found by review: "supplying a
+      value can only add texts, never remove any" (the reason given for *at least*) is false
+      under the drop — `[{?f?|xx}|aa|bb]` is six texts unset and two set, measured — and "tick
+      as text when the value is text that means itself" omits that a `|` in a literal value
+      still splits inside a choice or a shuffle (the family's `neutralize` shields brackets, not
+      the pipe). Both rewritten in `en`/`ru`; the other twelve carry the old sentences at the
+      "at least" paragraph and the Variables paragraph of `docs/help/<lang>/studio.md`.
+
+- [ ] **What's-new for the next visit, engine part:** seeded variants differ from 0.2.2.0 for
+      templates with a single-option construct; Cyrillic multi-dot abbreviations and bare
+      domains are no longer broken apart; the variant counter is right about values with a pipe
+      and about elements that render empty; engine `v0.10.1`. Fourteen languages, terminology
+      off the shipped help (`engine` = `Maschine`/`motor`/…), one line per bullet.
 
 ## Where R0 is (published), and what `v0.2.0.0` carries (re-checked 2026-08-06; renamed 2026-08-14)
 

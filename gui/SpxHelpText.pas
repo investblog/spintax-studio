@@ -152,7 +152,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    'bac2f82fe77328e3', '1161eb58753cc15f', '38df3cd4190ac46b', 'e908447ddf6f7cbf', 'c5226848658b80c2', '434752b56808b4b8', 'e05d6f8a7288a764', '45a56cf11fcf0166', '89a8ff0a570a7147', 'b4a72047b507b425', '488ce59bac9e29c3', 'ea2383e9db780d10', '3f8c75118b73d98f', '7813c6dc420189dd', '503c829c41759228', 'ab8950089825a79c', 'c85b5f196fca1f91', 'c434023fabaad742', 'be3c9da1f1522b01', '4ddfd411500958cc', '1c4c3b93a10a0ace', '335889dd80f48659', 'b54956a9ee49f248', '4247434725480d75', '14e7aaad0600c183', '18c7da1e110847db', '8c12a62b81359e52', 'cbed7bf2c514a8d5', '9dacb63502e5aa97', 'd33afaa14aeb660b', 'ee229cb3a76fbe42', 'ea10d49bf126b2b6', '98b8a4033fabe327', '38f95f3dd0a3854a', '56ba422eb944d0c7', '6edb66eefdd4c6b7', 'bcad9b0e49bbe8b4', 'f938d7a90e73bc73', '08cc0b89d53a1d0a', 'bc5b347f1f9bb702', '47d9d375a0b29342', '430cd907796bd630'
+    '3bb13f28fd73f76b', 'f16127c5429f1251', '38df3cd4190ac46b', 'ebb93ffb5f833294', '0c55a25f865d87bf', 'a6da134c4920534e', 'e05d6f8a7288a764', '45a56cf11fcf0166', '89a8ff0a570a7147', 'b4a72047b507b425', '488ce59bac9e29c3', 'ea2383e9db780d10', '3f8c75118b73d98f', '7813c6dc420189dd', '503c829c41759228', 'ab8950089825a79c', 'c85b5f196fca1f91', 'c434023fabaad742', 'be3c9da1f1522b01', '4ddfd411500958cc', '1c4c3b93a10a0ace', '335889dd80f48659', 'b54956a9ee49f248', '4247434725480d75', '14e7aaad0600c183', '18c7da1e110847db', '8c12a62b81359e52', 'cbed7bf2c514a8d5', '93fad56decf03f0b', 'd33afaa14aeb660b', 'ee229cb3a76fbe42', '43d771ac4dc6ed16', '98b8a4033fabe327', '38f95f3dd0a3854a', 'eda13d593cf988f2', '6edb66eefdd4c6b7', 'bcad9b0e49bbe8b4', 'f938d7a90e73bc73', '08cc0b89d53a1d0a', 'bc5b347f1f9bb702', '47d9d375a0b29342', '430cd907796bd630'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -789,15 +789,15 @@ const
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..461] of Integer = (
-    0, 7, 14, 19, 25, 35, 52, 55, 58, 67, 72, 78, 90, 115, 125, 132, 139, 148, 152, 167, 189, 191, 201, 208, 221, 237, 263, 285, 305, 319, 332, 345, 353, 362, 369, 376, 381, 387, 397, 414, 417, 420, 429, 434, 440, 452, 477, 487, 494, 502, 511, 515, 529, 559, 561, 572, 579, 592, 608, 634, 656, 675, 689, 702, 722, 730, 737, 744, 751, 756, 762, 772, 789, 792, 795, 804, 809, 815, 827, 852, 862, 869, 876, 885, 889, 904, 929, 931, 941, 948, 961, 977, 1003, 1025, 1045, 1059, 1072, 1085, 1093, 1102, 1109, 1116, 1121, 1127, 1137, 1154, 1157, 1160, 1169, 1174, 1180, 1192, 1217, 1227, 1234, 1241, 1250, 1254, 1269, 1297, 1299, 1309, 1316, 1329, 1345, 1371, 1393, 1413, 1427, 1440, 1453, 1461, 1470, 1477, 1484, 1489, 1495, 1505, 1522, 1525, 1528, 1537, 1542, 1548, 1560, 1585, 1595, 1602, 1609, 1618, 1622, 1637, 1665, 1667, 1677, 1684, 1697, 1713, 1739, 1761, 1781, 1795, 1808, 1821, 1829, 1838, 1845, 1852, 1857, 1863, 1873, 1890, 1893, 1896, 1905, 1910, 1916, 1928, 1953, 1963, 1970, 1977, 1986, 1990, 2005, 2033, 2035, 2045, 2052, 2065, 2081, 2107, 2129, 2149, 2163, 2176, 2189, 2197, 2206, 2213, 2220, 2225, 2231, 2241, 2258, 2261, 2264, 2273, 2278, 2284, 2296, 2321, 2331, 2338, 2345, 2354, 2358, 2373, 2403, 2405, 2415, 2422, 2435, 2451, 2477, 2499, 2519, 2533, 2546, 2559, 2567, 2576, 2583, 2590, 2595, 2601, 2611, 2628, 2631, 2634, 2643, 2648, 2654, 2666, 2691, 2701, 2708, 2715, 2724, 2728, 2743, 2768, 2770, 2780, 2787, 2800, 2816, 2842, 2864, 2884, 2898, 2911, 2924, 2932, 2941, 2948, 2955, 2960, 2966, 2976, 2993, 2996, 2999, 3008, 3013, 3019, 3031, 3056, 3066, 3073, 3080, 3089, 3093, 3108, 3135, 3137, 3147, 3154, 3167, 3183, 3209, 3231, 3251, 3265, 3278, 3291, 3299, 3308, 3315, 3322, 3327, 3333, 3343, 3360, 3363, 3366, 3375, 3380, 3386, 3398, 3423, 3433, 3440, 3448, 3457, 3461, 3476, 3505, 3507, 3517, 3524, 3537, 3553, 3579, 3601, 3621, 3635, 3648, 3661, 3669, 3678, 3685, 3692, 3697, 3703, 3713, 3730, 3733, 3736, 3745, 3750, 3756, 3768, 3793, 3803, 3810, 3818, 3827, 3831, 3846, 3875, 3877, 3887, 3894, 3907, 3923, 3949, 3971, 3991, 4005, 4018, 4031, 4039, 4048, 4055, 4062, 4067, 4073, 4083, 4100, 4103, 4106, 4115, 4120, 4126, 4138, 4163, 4173, 4180, 4188, 4197, 4201, 4216, 4246, 4248, 4258, 4265, 4278, 4294, 4320, 4342, 4362, 4376, 4389, 4402, 4410, 4419, 4426, 4433, 4438, 4444, 4454, 4471, 4474, 4477, 4486, 4491, 4497, 4509, 4534, 4544, 4551, 4559, 4568, 4572, 4588, 4615, 4617, 4627, 4634, 4647, 4663, 4689, 4711, 4731, 4745, 4758, 4771, 4779, 4788, 4795, 4802, 4807, 4813, 4823, 4840, 4843, 4846, 4855, 4860, 4866, 4878, 4903, 4913, 4920, 4928, 4937, 4941, 4957, 4984, 4986, 4996, 5003, 5016, 5032, 5058, 5080, 5100, 5114, 5127, 5140, 5148
+    0, 7, 14, 19, 25, 35, 52, 55, 58, 67, 72, 78, 90, 115, 125, 132, 139, 148, 152, 168, 190, 192, 202, 209, 222, 238, 264, 286, 306, 320, 333, 346, 354, 363, 370, 377, 382, 388, 398, 415, 418, 421, 430, 435, 441, 453, 478, 488, 495, 503, 512, 516, 530, 560, 562, 573, 580, 593, 609, 635, 657, 676, 690, 703, 723, 731, 738, 745, 752, 757, 763, 773, 790, 793, 796, 805, 810, 816, 828, 853, 863, 870, 877, 886, 890, 905, 930, 932, 942, 949, 962, 978, 1004, 1026, 1046, 1060, 1073, 1086, 1094, 1103, 1110, 1117, 1122, 1128, 1138, 1155, 1158, 1161, 1170, 1175, 1181, 1193, 1218, 1228, 1235, 1242, 1251, 1255, 1270, 1298, 1300, 1310, 1317, 1330, 1346, 1372, 1394, 1414, 1428, 1441, 1454, 1462, 1471, 1478, 1485, 1490, 1496, 1506, 1523, 1526, 1529, 1538, 1543, 1549, 1561, 1586, 1596, 1603, 1610, 1619, 1623, 1638, 1666, 1668, 1678, 1685, 1698, 1714, 1740, 1762, 1782, 1796, 1809, 1822, 1830, 1839, 1846, 1853, 1858, 1864, 1874, 1891, 1894, 1897, 1906, 1911, 1917, 1929, 1954, 1964, 1971, 1978, 1987, 1991, 2006, 2034, 2036, 2046, 2053, 2066, 2082, 2108, 2130, 2150, 2164, 2177, 2190, 2198, 2207, 2214, 2221, 2226, 2232, 2242, 2259, 2262, 2265, 2274, 2279, 2285, 2297, 2322, 2332, 2339, 2346, 2355, 2359, 2374, 2404, 2406, 2416, 2423, 2436, 2452, 2478, 2500, 2520, 2534, 2547, 2560, 2568, 2577, 2584, 2591, 2596, 2602, 2612, 2629, 2632, 2635, 2644, 2649, 2655, 2667, 2692, 2702, 2709, 2716, 2725, 2729, 2744, 2769, 2771, 2781, 2788, 2801, 2817, 2843, 2865, 2885, 2899, 2912, 2925, 2933, 2942, 2949, 2956, 2961, 2967, 2977, 2994, 2997, 3000, 3009, 3014, 3020, 3032, 3057, 3067, 3074, 3081, 3090, 3094, 3109, 3136, 3138, 3148, 3155, 3168, 3184, 3210, 3232, 3252, 3266, 3279, 3292, 3300, 3309, 3316, 3323, 3328, 3334, 3344, 3361, 3364, 3367, 3376, 3381, 3387, 3399, 3424, 3434, 3441, 3449, 3458, 3462, 3477, 3506, 3508, 3518, 3525, 3538, 3554, 3580, 3602, 3622, 3636, 3649, 3662, 3670, 3679, 3686, 3693, 3698, 3704, 3714, 3731, 3734, 3737, 3746, 3751, 3757, 3769, 3794, 3804, 3811, 3819, 3828, 3832, 3847, 3876, 3878, 3888, 3895, 3908, 3924, 3950, 3972, 3992, 4006, 4019, 4032, 4040, 4049, 4056, 4063, 4068, 4074, 4084, 4101, 4104, 4107, 4116, 4121, 4127, 4139, 4164, 4174, 4181, 4189, 4198, 4202, 4217, 4247, 4249, 4259, 4266, 4279, 4295, 4321, 4343, 4363, 4377, 4390, 4403, 4411, 4420, 4427, 4434, 4439, 4445, 4455, 4472, 4475, 4478, 4487, 4492, 4498, 4510, 4535, 4545, 4552, 4560, 4569, 4573, 4589, 4616, 4618, 4628, 4635, 4648, 4664, 4690, 4712, 4732, 4746, 4759, 4772, 4780, 4789, 4796, 4803, 4808, 4814, 4824, 4841, 4844, 4847, 4856, 4861, 4867, 4879, 4904, 4914, 4921, 4929, 4938, 4942, 4958, 4985, 4987, 4997, 5004, 5017, 5033, 5059, 5081, 5101, 5115, 5128, 5141, 5149
   );
   HELP_LAST: array[0..461] of Integer = (
-    6, 13, 18, 24, 34, 51, 54, 57, 66, 71, 77, 89, 114, 124, 131, 138, 147, 151, 166, 188, 190, 200, 207, 220, 236, 262, 284, 304, 318, 331, 344, 352, 361, 368, 375, 380, 386, 396, 413, 416, 419, 428, 433, 439, 451, 476, 486, 493, 501, 510, 514, 528, 558, 560, 571, 578, 591, 607, 633, 655, 674, 688, 701, 721, 729, 736, 743, 750, 755, 761, 771, 788, 791, 794, 803, 808, 814, 826, 851, 861, 868, 875, 884, 888, 903, 928, 930, 940, 947, 960, 976, 1002, 1024, 1044, 1058, 1071, 1084, 1092, 1101, 1108, 1115, 1120, 1126, 1136, 1153, 1156, 1159, 1168, 1173, 1179, 1191, 1216, 1226, 1233, 1240, 1249, 1253, 1268, 1296, 1298, 1308, 1315, 1328, 1344, 1370, 1392, 1412, 1426, 1439, 1452, 1460, 1469, 1476, 1483, 1488, 1494, 1504, 1521, 1524, 1527, 1536, 1541, 1547, 1559, 1584, 1594, 1601, 1608, 1617, 1621, 1636, 1664, 1666, 1676, 1683, 1696, 1712, 1738, 1760, 1780, 1794, 1807, 1820, 1828, 1837, 1844, 1851, 1856, 1862, 1872, 1889, 1892, 1895, 1904, 1909, 1915, 1927, 1952, 1962, 1969, 1976, 1985, 1989, 2004, 2032, 2034, 2044, 2051, 2064, 2080, 2106, 2128, 2148, 2162, 2175, 2188, 2196, 2205, 2212, 2219, 2224, 2230, 2240, 2257, 2260, 2263, 2272, 2277, 2283, 2295, 2320, 2330, 2337, 2344, 2353, 2357, 2372, 2402, 2404, 2414, 2421, 2434, 2450, 2476, 2498, 2518, 2532, 2545, 2558, 2566, 2575, 2582, 2589, 2594, 2600, 2610, 2627, 2630, 2633, 2642, 2647, 2653, 2665, 2690, 2700, 2707, 2714, 2723, 2727, 2742, 2767, 2769, 2779, 2786, 2799, 2815, 2841, 2863, 2883, 2897, 2910, 2923, 2931, 2940, 2947, 2954, 2959, 2965, 2975, 2992, 2995, 2998, 3007, 3012, 3018, 3030, 3055, 3065, 3072, 3079, 3088, 3092, 3107, 3134, 3136, 3146, 3153, 3166, 3182, 3208, 3230, 3250, 3264, 3277, 3290, 3298, 3307, 3314, 3321, 3326, 3332, 3342, 3359, 3362, 3365, 3374, 3379, 3385, 3397, 3422, 3432, 3439, 3447, 3456, 3460, 3475, 3504, 3506, 3516, 3523, 3536, 3552, 3578, 3600, 3620, 3634, 3647, 3660, 3668, 3677, 3684, 3691, 3696, 3702, 3712, 3729, 3732, 3735, 3744, 3749, 3755, 3767, 3792, 3802, 3809, 3817, 3826, 3830, 3845, 3874, 3876, 3886, 3893, 3906, 3922, 3948, 3970, 3990, 4004, 4017, 4030, 4038, 4047, 4054, 4061, 4066, 4072, 4082, 4099, 4102, 4105, 4114, 4119, 4125, 4137, 4162, 4172, 4179, 4187, 4196, 4200, 4215, 4245, 4247, 4257, 4264, 4277, 4293, 4319, 4341, 4361, 4375, 4388, 4401, 4409, 4418, 4425, 4432, 4437, 4443, 4453, 4470, 4473, 4476, 4485, 4490, 4496, 4508, 4533, 4543, 4550, 4558, 4567, 4571, 4587, 4614, 4616, 4626, 4633, 4646, 4662, 4688, 4710, 4730, 4744, 4757, 4770, 4778, 4787, 4794, 4801, 4806, 4812, 4822, 4839, 4842, 4845, 4854, 4859, 4865, 4877, 4902, 4912, 4919, 4927, 4936, 4940, 4956, 4983, 4985, 4995, 5002, 5015, 5031, 5057, 5079, 5099, 5113, 5126, 5139, 5147, 5156
+    6, 13, 18, 24, 34, 51, 54, 57, 66, 71, 77, 89, 114, 124, 131, 138, 147, 151, 167, 189, 191, 201, 208, 221, 237, 263, 285, 305, 319, 332, 345, 353, 362, 369, 376, 381, 387, 397, 414, 417, 420, 429, 434, 440, 452, 477, 487, 494, 502, 511, 515, 529, 559, 561, 572, 579, 592, 608, 634, 656, 675, 689, 702, 722, 730, 737, 744, 751, 756, 762, 772, 789, 792, 795, 804, 809, 815, 827, 852, 862, 869, 876, 885, 889, 904, 929, 931, 941, 948, 961, 977, 1003, 1025, 1045, 1059, 1072, 1085, 1093, 1102, 1109, 1116, 1121, 1127, 1137, 1154, 1157, 1160, 1169, 1174, 1180, 1192, 1217, 1227, 1234, 1241, 1250, 1254, 1269, 1297, 1299, 1309, 1316, 1329, 1345, 1371, 1393, 1413, 1427, 1440, 1453, 1461, 1470, 1477, 1484, 1489, 1495, 1505, 1522, 1525, 1528, 1537, 1542, 1548, 1560, 1585, 1595, 1602, 1609, 1618, 1622, 1637, 1665, 1667, 1677, 1684, 1697, 1713, 1739, 1761, 1781, 1795, 1808, 1821, 1829, 1838, 1845, 1852, 1857, 1863, 1873, 1890, 1893, 1896, 1905, 1910, 1916, 1928, 1953, 1963, 1970, 1977, 1986, 1990, 2005, 2033, 2035, 2045, 2052, 2065, 2081, 2107, 2129, 2149, 2163, 2176, 2189, 2197, 2206, 2213, 2220, 2225, 2231, 2241, 2258, 2261, 2264, 2273, 2278, 2284, 2296, 2321, 2331, 2338, 2345, 2354, 2358, 2373, 2403, 2405, 2415, 2422, 2435, 2451, 2477, 2499, 2519, 2533, 2546, 2559, 2567, 2576, 2583, 2590, 2595, 2601, 2611, 2628, 2631, 2634, 2643, 2648, 2654, 2666, 2691, 2701, 2708, 2715, 2724, 2728, 2743, 2768, 2770, 2780, 2787, 2800, 2816, 2842, 2864, 2884, 2898, 2911, 2924, 2932, 2941, 2948, 2955, 2960, 2966, 2976, 2993, 2996, 2999, 3008, 3013, 3019, 3031, 3056, 3066, 3073, 3080, 3089, 3093, 3108, 3135, 3137, 3147, 3154, 3167, 3183, 3209, 3231, 3251, 3265, 3278, 3291, 3299, 3308, 3315, 3322, 3327, 3333, 3343, 3360, 3363, 3366, 3375, 3380, 3386, 3398, 3423, 3433, 3440, 3448, 3457, 3461, 3476, 3505, 3507, 3517, 3524, 3537, 3553, 3579, 3601, 3621, 3635, 3648, 3661, 3669, 3678, 3685, 3692, 3697, 3703, 3713, 3730, 3733, 3736, 3745, 3750, 3756, 3768, 3793, 3803, 3810, 3818, 3827, 3831, 3846, 3875, 3877, 3887, 3894, 3907, 3923, 3949, 3971, 3991, 4005, 4018, 4031, 4039, 4048, 4055, 4062, 4067, 4073, 4083, 4100, 4103, 4106, 4115, 4120, 4126, 4138, 4163, 4173, 4180, 4188, 4197, 4201, 4216, 4246, 4248, 4258, 4265, 4278, 4294, 4320, 4342, 4362, 4376, 4389, 4402, 4410, 4419, 4426, 4433, 4438, 4444, 4454, 4471, 4474, 4477, 4486, 4491, 4497, 4509, 4534, 4544, 4551, 4559, 4568, 4572, 4588, 4615, 4617, 4627, 4634, 4647, 4663, 4689, 4711, 4731, 4745, 4758, 4771, 4779, 4788, 4795, 4802, 4807, 4813, 4823, 4840, 4843, 4846, 4855, 4860, 4866, 4878, 4903, 4913, 4920, 4928, 4937, 4941, 4957, 4984, 4986, 4996, 5003, 5016, 5032, 5058, 5080, 5100, 5114, 5127, 5140, 5148, 5157
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..5156] of string = (
+  HELP_LINE: array[0..5157] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -891,7 +891,9 @@ const
     '<p><b>Variables</b> shows the names your document defines and the names it merely uses' +
       '. A name it uses and nothing defines is one you can fill in here for the session: type' +
       ' a value beside it and the preview picks it up. Tick <b>as text</b> when the value is ' +
-      'text that means itself rather than a little template of its own.</p>',
+      'text that means itself rather than a little template of its own — its brackets are shi' +
+      'elded, not its <code>|</code>: a value with a pipe in it, referenced inside a choice o' +
+      'r a shuffle, still splits into options there.</p>',
     '<p><b>Variants</b> generates many texts at once. Say how many, generate, and read them' +
       ' in the list before exporting. Near-duplicates can be dropped as they are produced, an' +
       'd a seed makes the whole set reproducible: the same seed and the same template give th' +
@@ -902,9 +904,11 @@ const
     '<p>It is an exact count only while every choice is left to chance. A conditional, a pl' +
       'ural, or an <code>#include</code> whose target the set has not got is decided by somet' +
       'hing else — a value you supply, a number, a fragment that may yet arrive — so the pane' +
-      'l says <b>at least</b> instead. That is the honest word: supplying a value can only ad' +
-      'd texts, never remove any. A number far too large to read stops at a trillion and says' +
-      ' <b>at least</b> for the same reason.</p>',
+      'l says <b>at least</b> instead. That is the honest word: the number is taken with ever' +
+      'y element a value could blank left out, because a shuffle drops an element that render' +
+      's empty — <code>[{?f?|xx}|aa|bb]</code> makes six texts with <code>f</code> unset and ' +
+      'two with it set. A number far too large to read stops at a trillion and says <b>at lea' +
+      'st</b> for the same reason.</p>',
     '<p>A variant is one filled-in template — one choice made at every construct — and that' +
       ' is not the same as a text that reads differently. <code>{a|a}</code> is two variants ' +
       'and one text, deliberately: the two options can stop matching after a single edit, and' +
@@ -1247,16 +1251,18 @@ const
     '<p>That is why the examples in this help so often answer with a capital where the temp' +
       'late has a small letter. A dot after an abbreviation the engine knows does not end a s' +
       'entence, and neither does anything shaped like <code>e.g.</code> or <code>U.S.</code> ' +
-      '— <b>in Latin letters</b>, which is a real limit and not a hedge: the check for "is th' +
-      'is the middle of a word" is an ASCII one, so the multi-dot form is recognised in <code' +
-      '>e.g.</code> and not in its Cyrillic equivalent.</p>',
+      '— a letter, a dot, a letter, a dot — in <b>any alphabet</b>: the check for "is this th' +
+      'e middle of a word" reads every script, so <code>т.е.</code> is shielded exactly as <c' +
+      'ode>e.g.</code> is.</p>',
     '<p><small><tt><a href="ex:26">e.g. this stays lower</a><br>→&nbsp; e.g. this stays low' +
       'er</tt></small></p>',
-    '<p><small><tt><a href="ex:27">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
+    '<p><small><tt><a href="ex:27">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+      'mall></p>',
+    '<p><small><tt><a href="ex:28">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
       're low</tt></small></p>',
     '<p>Any other word ends a sentence, however short — length has nothing to do with it:</' +
       'p>',
-    '<p><small><tt><a href="ex:28">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices a' +
+    '<p><small><tt><a href="ex:29">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices a' +
       're low</tt></small></p>',
     '<p>The list the engine knows has 46 entries, <b>29 of them Cyrillic</b>, and the other' +
       ' document goes through it under <b>A silence in every language</b>.</p>',
@@ -1267,43 +1273,44 @@ const
       'and after a block tag as well as after a full stop; and URLs with a scheme, e-mail add' +
       'resses, bare domains and decimal numbers are shielded and come out exactly as typed.</' +
       'p>',
-    '<p>The last of those carries the same ASCII limit as the abbreviations above. A bare d' +
-      'omain is shielded when it is written in Latin letters; <code>сайт.рф</code> is not, an' +
-      'd the tidy-up puts a space and a capital inside it. The other document''s chapter on a' +
-      'bbreviations has the measurements.</p>',
-    '<p><small><tt><a href="ex:29">hello , world</a><br>→&nbsp; Hello, world</tt></small></' +
+    '<p>The last of those reads every alphabet too: a bare domain is shielded whether it is' +
+      ' <code>one.two</code> or <code>сайт.рф</code>. And a shielded start is not a sentence ' +
+      'start to the capitaliser, which is why the second example below comes back untouched —' +
+      ' lowercase included. The other document''s chapter on abbreviations has the measuremen' +
+      'ts.</p>',
+    '<p><small><tt><a href="ex:30">hello , world</a><br>→&nbsp; Hello, world</tt></small></' +
       'p>',
-    '<p><small><tt><a href="ex:30">one.two</a><br>→&nbsp; one.two</tt></small></p>',
+    '<p><small><tt><a href="ex:31">one.two</a><br>→&nbsp; one.two</tt></small></p>',
     '<h2 id="silences">Silences</h2>',
     '<p>Every case below renders, produces something other than what it looks like, and dra' +
       'ws <b>no diagnostic at all</b>. They are collected here because nothing else in the wi' +
       'ndow will ever mention them.</p>',
     '<p><b>A <code>#include</code> that is not alone on its line is plain text.</b></p>',
-    '<p><small><tt><a href="ex:31">Before. #include "intro"</a><br>→&nbsp; Before. #include' +
+    '<p><small><tt><a href="ex:32">Before. #include "intro"</a><br>→&nbsp; Before. #include' +
       ' "intro"</tt></small></p>',
     '<p>The same is true of a directive with anything after it, and of <code>#include"intro' +
       '"</code> with no space. The rule is the family''s rather than this engine''s, and it i' +
       's what makes a directive recognisable without parsing the whole line.</p>',
     '<p><b>A condition whose name starts with a digit is not a condition.</b> It becomes an' +
       ' ordinary choice between <code>?1x?yes</code> and <code>no</code>:</p>',
-    '<p><small><tt><a href="ex:32">{?1x?yes|no}</a><br>→&nbsp; ?1x? Yes</tt></small></p>',
+    '<p><small><tt><a href="ex:33">{?1x?yes|no}</a><br>→&nbsp; ?1x? Yes</tt></small></p>',
     '<p><b>A <code>&lt;…&gt;</code> at the head of a later item is not a separator</b> and ' +
       'prints as it stands:</p>',
-    '<p><small><tt><a href="ex:33">[red|&lt;and&gt;green]</a><br>→&nbsp; &lt;and&gt;Green r' +
+    '<p><small><tt><a href="ex:34">[red|&lt;and&gt;green]</a><br>→&nbsp; &lt;and&gt;Green r' +
       'ed</tt></small></p>',
     '<p>The block at the head of the <b>first</b> item is the separator — that is the synta' +
       'x the shuffles chapter opens with:</p>',
-    '<p><small><tt><a href="ex:34">[&lt;and&gt;red|green]</a><br>→&nbsp; Green and red</tt>' +
+    '<p><small><tt><a href="ex:35">[&lt;and&gt;red|green]</a><br>→&nbsp; Green and red</tt>' +
       '</small></p>',
     '<p>Anywhere after a <code>|</code> it is plain text, and a separator between two items' +
       ' goes at the <b>end</b> of the first.</p>',
     '<p><b>A bare tag at the end of an item is taken as that pair''s separator</b> and prin' +
       'ted as its own text:</p>',
-    '<p><small><tt><a href="ex:35">[one&lt;br&gt;|two]</a><br>→&nbsp; Two one</tt></small><' +
+    '<p><small><tt><a href="ex:36">[one&lt;br&gt;|two]</a><br>→&nbsp; Two one</tt></small><' +
       '/p>',
     '<p>Under this seed the two landed in the other order, so the separator did not come ou' +
       't at all. With a third item there is somewhere for it to land, and it appears:</p>',
-    '<p><small><tt><a href="ex:36">[red|green&lt;br&gt;|blue]</a><br>→&nbsp; Green br blue ' +
+    '<p><small><tt><a href="ex:37">[red|green&lt;br&gt;|blue]</a><br>→&nbsp; Green br blue ' +
       'red</tt></small></p>',
     '<p>The <code>&lt;br&gt;</code> sits between <code>green</code> and what follows it, wh' +
       'erever the shuffle puts that pair. A closing tag (<code>&lt;/b&gt;</code>), a self-clo' +
@@ -1311,12 +1318,12 @@ const
       't;</code>) and a tag in the middle of an item are all left alone.</p>',
     '<p><b>An unclosed comment is ordinary text</b> — it opens nothing, and the <code>/#</c' +
       'ode> is printed:</p>',
-    '<p><small><tt><a href="ex:37">before /# rest of it</a><br>→&nbsp; Before /# rest of it' +
+    '<p><small><tt><a href="ex:38">before /# rest of it</a><br>→&nbsp; Before /# rest of it' +
       '</tt></small></p>',
     '<p>But it is still half of a pair. If a <code>#/</code> appears further down the docum' +
       'ent, the two find each other and everything between them goes — including whatever the' +
       ' author wrote in between:</p>',
-    '<p><small><tt><a href="ex:38">{a /# oops|b} middle #/ tail</a><br>→&nbsp; {a tail</tt>' +
+    '<p><small><tt><a href="ex:39">{a /# oops|b} middle #/ tail</a><br>→&nbsp; {a tail</tt>' +
       '</small></p>',
     '<p>The choice above lost its second alternative and its closing brace, and no diagnost' +
       'ic says so: this is what the text MEANS, not a mistake the engine can see. When a <cod' +
@@ -1384,19 +1391,19 @@ const
       'f how the construct is built.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — a bracket is opened and neve' +
       'r closed</h3>',
-    '<p><small><tt><a href="ex:39">a price {cheap|dear</a><br>→&nbsp; A price {cheap|dear</' +
+    '<p><small><tt><a href="ex:40">a price {cheap|dear</a><br>→&nbsp; A price {cheap|dear</' +
       'tt></small></p>',
     '<p>The engine does not guess where you meant to close it. The text stays as it is, bra' +
       'ce and all, and the choice never happens.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — closed by a bracket of a' +
       'nother kind</h3>',
-    '<p><small><tt><a href="ex:40">a price {cheap|dear]</a><br>→&nbsp; A price {cheap|dear]' +
+    '<p><small><tt><a href="ex:41">a price {cheap|dear]</a><br>→&nbsp; A price {cheap|dear]' +
       '</tt></small></p>',
     '<p><code>{</code> waits for <code>}</code> and <code>[</code> waits for <code>]</code>' +
       '. A permutation closed by a brace is not a permutation.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — a closin' +
       'g bracket with nothing open</h3>',
-    '<p><small><tt><a href="ex:41">a price cheap} and all</a><br>→&nbsp; A price cheap} and' +
+    '<p><small><tt><a href="ex:42">a price cheap} and all</a><br>→&nbsp; A price cheap} and' +
       ' all</tt></small></p>',
     '<p>Most often a leftover from an edit: the opening brace was deleted and the closing o' +
       'ne stayed.</p>',
@@ -1404,7 +1411,7 @@ const
     '<h2 id="definitions">Definitions</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — this <code>#set</code> line does n' +
       'ot follow the rule</h3>',
-    '<p><small><tt><a href="ex:42">#set city = Boston</a><br><a href="ex:42">in %city%</a><' +
+    '<p><small><tt><a href="ex:43">#set city = Boston</a><br><a href="ex:43">in %city%</a><' +
       'br>→&nbsp; #set city = Boston ⏎ In %city%</tt></small></p>',
     '<p><b>The name goes in per cent signs:</b> <code>#set %city% = Boston</code>. This is ' +
       'the commonest first mistake and it puts two lines in the panel at once — the malformed' +
@@ -1415,7 +1422,7 @@ const
       'result.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — this <code>#def</code> line does n' +
       'ot follow the rule</h3>',
-    '<p><small><tt><a href="ex:43">#def pages = {1|3}</a><br><a href="ex:43">%pages%</a><br' +
+    '<p><small><tt><a href="ex:44">#def pages = {1|3}</a><br><a href="ex:44">%pages%</a><br' +
       '>→&nbsp; #def pages = 1 ⏎ %pages%</tt></small></p>',
     '<p>The same rule and the same price. <code>#def</code> differs from <code>#set</code> ' +
       'not in spelling but in <b>when</b> the value is expanded: <code>#set</code> expands it' +
@@ -1427,15 +1434,15 @@ const
       'tops being a directive.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — this name ' +
       'is already defined above</h3>',
-    '<p><small><tt><a href="ex:44">#set %x% = first</a><br><a href="ex:44">#set %x% = secon' +
-      'd</a><br><a href="ex:44">%x%</a><br>→&nbsp; Second</tt></small></p>',
+    '<p><small><tt><a href="ex:45">#set %x% = first</a><br><a href="ex:45">#set %x% = secon' +
+      'd</a><br><a href="ex:45">%x%</a><br>→&nbsp; Second</tt></small></p>',
     '<p>It works — the <b>last</b> definition wins — but the engine calls it an error: a do' +
       'cument where one name is set twice reads ambiguously, and in a month you will not reme' +
       'mber which of the two lines is the live one. The error points at the <b>second</b> def' +
       'inition; the first is further up.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> inside a definition value</h3>',
-    '<p><small><tt><a href="ex:45">#def %x% = #include "frag"</a><br><a href="ex:45">%x%</a' +
+    '<p><small><tt><a href="ex:46">#def %x% = #include "frag"</a><br><a href="ex:46">%x%</a' +
       '><br>→&nbsp; Fragment</tt></small></p>',
     '<p>An include inside a value expands at a different moment than you would expect, and ' +
       'the family forbids it. Put the <code>#include</code> on a line of its own.</p>',
@@ -1443,7 +1450,7 @@ const
     '<h2 id="variables">Variables</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — this variable is defined' +
       ' nowhere</h3>',
-    '<p><small><tt><a href="ex:46">hello, %name%</a><br>→&nbsp; Hello, %name%</tt></small><' +
+    '<p><small><tt><a href="ex:47">hello, %name%</a><br>→&nbsp; Hello, %name%</tt></small><' +
       '/p>',
     '<p>A warning rather than an error: the engine prints the name as it stands. That is by' +
       ' design — the value may arrive from outside, from the host. In Studio you supply such ' +
@@ -1477,7 +1484,7 @@ const
     '<li><b>Ctrl+click</b> writes a definition into the document and opens the group editor' +
       ' on it. The value you have already typed moves in as its first option:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:47">#set %brand% = {Vulkan}</a><br><a href="ex:47">casino %b' +
+    '<p><small><tt><a href="ex:48">#set %brand% = {Vulkan}</a><br><a href="ex:48">casino %b' +
       'rand%</a><br>→&nbsp; Casino Vulkan</tt></small></p>',
     '<p>The difference between the two is what survives closing the window. A session value' +
       ' does not: it is not in the file, not in git, and no other engine in the family can se' +
@@ -1490,7 +1497,7 @@ const
       'd per cent signs stay characters.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — the definition' +
       ' refers to itself</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = a %x% b</a><br><a href="ex:48">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:49">#set %x% = a %x% b</a><br><a href="ex:49">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Fifty levels, then a stop. The engine expands to the depth limit and halts, leaving' +
       ' <code>%x%</code> in the middle. Not a loop, and not what you wanted either.</p>',
@@ -1500,8 +1507,8 @@ const
       'holds one more of each.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — the de' +
       'finitions refer in a circle</h3>',
-    '<p><small><tt><a href="ex:49">#set %x% = %y%</a><br><a href="ex:49">#set %y% = %x%</a>' +
-      '<br><a href="ex:49">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:50">#set %x% = %y%</a><br><a href="ex:50">#set %y% = %x%</a>' +
+      '<br><a href="ex:50">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Each side expands exactly <b>once</b> and then stops: <code>%x%</code> became <code' +
       '>%y%</code>, not <code>%x%</code>. The engine unwinds rather than looping, and what su' +
       'rvives is the other name in the circle — put <code>%x% %y%</code> in a document and it' +
@@ -1521,16 +1528,16 @@ const
     '<hr>',
     '<h2 id="includes">Includes</h2>',
     '<h3 id="includes-0"><code>#include</code> only works from the start of a line</h3>',
-    '<p><small><tt><a href="ex:50">before #include "frag" after</a><br>→&nbsp; Before #incl' +
+    '<p><small><tt><a href="ex:51">before #include "frag" after</a><br>→&nbsp; Before #incl' +
       'ude "frag" after</tt></small></p>',
-    '<p><small><tt><a href="ex:51">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
+    '<p><small><tt><a href="ex:52">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Not a diagnostic, and that is the point: an <code>#include</code> in the middle of ' +
       'a line is <b>not</b> an include. The engine reads it as ordinary text and says nothing' +
       ', because there is nothing to complain about — you wrote text and got text.</p>',
     '<p><b>The target may sit on a later line, though</b>, and that surprises people the ot' +
       'her way round. The gap the engine allows between the keyword and its target includes l' +
       'ine breaks, so this is one include and it works:</p>',
-    '<p><small><tt><a href="ex:52">#include</a><br><a href="ex:52">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:53">#include</a><br><a href="ex:53">"frag"</a><br>→&nbsp; Fr' +
       'agment</tt></small></p>',
     '<p>Blank lines in between are fine too. What is not allowed is anything else: a word b' +
       'efore the target, or anything but spaces after it, and the whole thing goes back to be' +
@@ -1539,7 +1546,7 @@ const
       'see the end of.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — no such target i' +
       'n the set</h3>',
-    '<p><small><tt><a href="ex:53">#include "nosuch"</a><br>→&nbsp; (empty)</tt></small></p' +
+    '<p><small><tt><a href="ex:54">#include "nosuch"</a><br>→&nbsp; (empty)</tt></small></p' +
       '>',
     '<p>Targets are the <code>.spintax</code> files in the folder of the open document. An ' +
       'unknown target expands to nothing — the paragraph disappears rather than breaking, whi' +
@@ -1556,7 +1563,7 @@ const
       'lder and the file really is not in it.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — the target exists, in an' +
       'other case</h3>',
-    '<p><small><tt><a href="ex:54">#include "intro"</a><br>→&nbsp; (empty)</tt></small></p>',
+    '<p><small><tt><a href="ex:55">#include "intro"</a><br>→&nbsp; (empty)</tt></small></p>',
     '<p>The set holds <code>Intro.spintax</code> — and the engine still says there is no su' +
       'ch target, while Studio adds its note about the case. Case matters: <code>intro</code>' +
       ' and <code>Intro</code> are different targets. Windows would open the file in either c' +
@@ -1564,7 +1571,7 @@ const
       'e preview would disagree with the production server about the same document.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — an include in a circle</h3>',
     '<p>If <code>loop.spintax</code> contains <code>#include "loop"</code>, then:</p>',
-    '<p><small><tt><a href="ex:55">#include "loop"</a><br>→&nbsp; (empty)</tt></small></p>',
+    '<p><small><tt><a href="ex:56">#include "loop"</a><br>→&nbsp; (empty)</tt></small></p>',
     '<p>The engine substitutes nothing rather than infinity. The note is there so you know ' +
       'why the paragraph vanished.</p>',
     '<p>The row is against <b><code>loop</code></b>, not against the document you are looki' +
@@ -1575,7 +1582,7 @@ const
     '<h2 id="plurals">Plurals</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — not as many forms as the locale asks' +
       ' for</h3>',
-    '<p><small><tt><a href="ex:56">#set %n% = 5</a><br><a href="ex:56">%n% {plural %n%: ite' +
+    '<p><small><tt><a href="ex:57">#set %n% = 5</a><br><a href="ex:57">%n% {plural %n%: ite' +
       'm|items|itemses}</a><br>→&nbsp; 5 ｛plural 5: item|items|itemses｝</tt></small></p>',
     '<p><b>Not emptiness — the engine prints the whole construct</b>, with the braces repla' +
       'ced by wide ones <code>｛｝</code>. That is how it says "I saw this and could not apply ' +
@@ -1585,8 +1592,8 @@ const
       '{plural %n%: item|items}</code> is the correct one.</p>',
     '<p><b>Emptiness happens for another reason, and the two are easy to confuse.</b> Compa' +
       're these two, which differ only in how many forms they carry:</p>',
-    '<p><small><tt><a href="ex:57">{plural %n%: item|items}</a><br>→&nbsp; (empty)&nbsp;&nb' +
-      'sp; two forms: right for English<br><a href="ex:58">{plural %n%: item|items|itemses}</' +
+    '<p><small><tt><a href="ex:58">{plural %n%: item|items}</a><br>→&nbsp; (empty)&nbsp;&nb' +
+      'sp; two forms: right for English<br><a href="ex:59">{plural %n%: item|items|itemses}</' +
       'a><br>→&nbsp; (empty)&nbsp;&nbsp; three forms: wrong for English</tt></small></p>',
     '<p>Both print nothing, and the panel treats them differently: the first draws only <co' +
       'de>variable.undefined</code>, the second draws <code>plural.arity</code> as well. So <' +
@@ -1604,7 +1611,7 @@ const
       '>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — the count comes from <co' +
       'de>#set</code>, and that rerolls on every reference</h3>',
-    '<p><small><tt><a href="ex:59">#set %n% = {1|2}</a><br><a href="ex:59">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:60">#set %n% = {1|2}</a><br><a href="ex:60">%n% {plural %n%:' +
       ' item|items}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Look at what survived: <b>the number printed and the noun did not.</b> The count ha' +
       's to be a number by the time the plural is chosen, and a <code>#set</code> whose value' +
@@ -1613,13 +1620,13 @@ const
       '. The count and the form cannot disagree; the engine drops the word instead.</p>',
     '<p><code>#def</code> behaves differently, expanding its value once per render, so the ' +
       'count slot gets a number:</p>',
-    '<p><small><tt><a href="ex:60">#def %n% = {1|2}</a><br><a href="ex:60">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:61">#def %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
       ' item|items}</a><br>→&nbsp; 1 item</tt></small></p>',
     '<p>There is no panel row at all for that one. Hence the rule: make the count a plain n' +
       'umber or a <code>#def</code>, never a <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — brackets inside ' +
       'the plural forms</h3>',
-    '<p><small><tt><a href="ex:61">{plural %n%: {item|thing}|items}</a><br>→&nbsp; ｛plural ' +
+    '<p><small><tt><a href="ex:62">{plural %n%: {item|thing}|items}</a><br>→&nbsp; ｛plural ' +
       '%n%: ｛item|thing｝|items｝</tt></small></p>',
     '<p>Forms are plain text. A choice inside them is not expanded, and the whole construct' +
       ' is printed in wide braces instead.</p>',
@@ -1627,7 +1634,7 @@ const
     '<h2 id="permutations">Permutations</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — unknown key in' +
       ' the permutation config</h3>',
-    '<p><small><tt><a href="ex:62">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:63">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>The known keys are <code>minsize</code>, <code>maxsize</code>, <code>sep</code> and' +
       ' <code>lastsep</code>. An unknown one is not a setting — and when it is the only thing' +
@@ -1635,7 +1642,7 @@ const
       'n the elements, which is what the output shows.</p>',
     '<p><b>With a real key beside it the outcome is completely different</b>, and this is t' +
       'he likelier mistake — one key mistyped among several:</p>',
-    '<p><small><tt><a href="ex:63">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:64">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>The block is a config, <code>sep</code> is obeyed, the unknown key is simply droppe' +
       'd, and the panel says the same thing about it either way. So the diagnostic tells you ' +
@@ -1643,13 +1650,13 @@ const
       ' that.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize is not a whole number</h3>',
-    '<p><small><tt><a href="ex:64">[&lt;minsize=two&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:65">[&lt;minsize=two&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>A non-numeric value is dropped along with its limit, and the default is used — whic' +
       'h is all the elements.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize is not a whole number</h3>',
-    '<p><small><tt><a href="ex:65">[&lt;maxsize=many&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:66">[&lt;maxsize=many&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Exactly the same from the other end: the upper limit disappears, and the output aga' +
       'in holds every element.</p>',
@@ -1688,8 +1695,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">A silence in every language: abbreviations</h2>',
     '<h3 id="abbreviations-0">An abbreviation keeps the next word lowercase</h3>',
-    '<p><small><tt><a href="ex:66">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
-      're low<br><a href="ex:67">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices are l' +
+    '<p><small><tt><a href="ex:67">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
+      're low<br><a href="ex:68">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices are l' +
       'ow</tt></small></p>',
     '<p>Two lines that differ by one word, and the second word of each tells you the rule: ' +
       'after <code>Ltd.</code> the sentence stays lowercase, after <code>Xyz.</code> it is ca' +
@@ -1717,15 +1724,15 @@ const
       'd-sentence, which is far commoner.</p>',
     '<hr>',
     '<h2 id="correct">What the correct form looks like</h2>',
-    '<p><small><tt><a href="ex:68">a price {cheap|dear}</a><br>→&nbsp; A price cheap</tt></' +
+    '<p><small><tt><a href="ex:69">a price {cheap|dear}</a><br>→&nbsp; A price cheap</tt></' +
       'small></p>',
-    '<p><small><tt><a href="ex:69">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:70">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:70">#set %vip% = 1</a><br><a href="ex:70">{?vip?for you|for ' +
+    '<p><small><tt><a href="ex:71">#set %vip% = 1</a><br><a href="ex:71">{?vip?for you|for ' +
       'everyone}</a><br>→&nbsp; For you</tt></small></p>',
-    '<p><small><tt><a href="ex:71">#set %n% = 5</a><br><a href="ex:71">%n% {plural %n%: ite' +
+    '<p><small><tt><a href="ex:72">#set %n% = 5</a><br><a href="ex:72">%n% {plural %n%: ite' +
       'm|items}</a><br>→&nbsp; 5 items</tt></small></p>',
-    '<p><small><tt><a href="ex:72">before /# a note #/ after</a><br>→&nbsp; Before after</t' +
+    '<p><small><tt><a href="ex:73">before /# a note #/ after</a><br>→&nbsp; Before after</t' +
       't></small></p>',
     '<p>Five constructions, five clean lines in the panel — which is to say none at all.</p' +
       '>',
@@ -1740,7 +1747,7 @@ const
       ', digits and the underscore. <code>%café%</code> is not a variable reference at all — ' +
       'the engine reads it as text and says nothing, because on its reading there is nothing ' +
       'to report:</p>',
-    '<p><small><tt><a href="ex:73">hello %café% and %name%</a><br>→&nbsp; Hello %café% and ' +
+    '<p><small><tt><a href="ex:74">hello %café% and %name%</a><br>→&nbsp; Hello %café% and ' +
       '%name%</tt></small></p>',
     '<p>Both came through unchanged, and that is the trap: only the second drew a row in th' +
       'e panel. The first is silent, so nothing tells you it will never be substituted. Renam' +
@@ -1857,7 +1864,8 @@ const
       'он только пользуется. Имя, которым пользуются и которое ничто не определяет, можно зап' +
       'олнить здесь на время сессии: впишите значение рядом, и предпросмотр его подхватит. От' +
       'метьте <b>как текст</b>, если значение — текст, который означает сам себя, а не малень' +
-      'кий шаблон.</p>',
+      'кий шаблон; заслоняются его скобки, но не <code>|</code>: значение с чертой, на которо' +
+      'е сослались внутри выбора или перестановки, там всё равно распадётся на варианты.</p>',
     '<p><b>Варианты</b> генерируют много текстов сразу. Скажите сколько, сгенерируйте и про' +
       'чтите список до экспорта. Похожие можно отбрасывать прямо при генерации, а сид делает ' +
       'весь набор воспроизводимым: тот же сид и тот же шаблон завтра дадут те же варианты.</p' +
@@ -1868,9 +1876,11 @@ const
     '<p>Точное оно, только пока каждый выбор оставлен случаю. Условие, форма числа и <code>' +
       '#include</code>, цели которого в наборе нет, решаются не случаем — значением, которое ' +
       'вы подставите, числом, фрагментом, который ещё может появиться, — и тогда панель говор' +
-      'ит <b>не менее</b>. Это честное слово: подставленное значение может только добавить те' +
-      'ксты, но не убрать. Число, слишком большое, чтобы его читать, останавливается на трилл' +
-      'ионе и говорит <b>не менее</b> по той же причине.</p>',
+      'ит <b>не менее</b>. Это честное слово: число взято без элементов, которые значение мож' +
+      'ет опустошить, потому что перестановка отбрасывает элемент, отрендерившийся пустым, — ' +
+      '<code>[{?f?|xx}|aa|bb]</code> даёт шесть текстов без <code>f</code> и два с ним. Число' +
+      ', слишком большое, чтобы его читать, останавливается на триллионе и говорит <b>не мене' +
+      'е</b> по той же причине.</p>',
     '<p>Вариант — это один заполненный шаблон, по одному выбору в каждой конструкции, и это' +
       ' не то же самое, что текст, который читается иначе. <code>{a|a}</code> — это два вариа' +
       'нта и один текст, и так задумано: два одинаковых варианта перестанут совпадать после п' +
@@ -2215,13 +2225,14 @@ const
       ' оставлять пустой вариант, не считая пробелы вокруг него.</p>',
     '<p>Остальное одним духом: пробел перед <code>,;:!?.</code> убирается, а после — добавл' +
       'яется; весь вывод обрезается по краям; заглавная приходит и после переноса строки, и п' +
-      'осле блочного тега; а ссылки со схемой, латинские адреса почты, латинские голые домены' +
-      ' и десятичные числа экранируются и выходят ровно как набраны.</p>',
+      'осле блочного тега; а ссылки со схемой, латинские адреса почты, голые домены и десятич' +
+      'ные числа экранируются и выходят ровно как набраны.</p>',
     '<p><small><tt><a href="ex:29">привет , мир</a><br>→&nbsp; Привет, мир</tt></small></p>',
     '<p><small><tt><a href="ex:30">one.two</a><br>→&nbsp; one.two</tt></small></p>',
-    '<p>Слово «латинские» здесь не оговорка, а измерение, и для русского автора это важнее ' +
-      'всего остального в главе: правило спрашивает границу слова, а она латинская. Кирилличе' +
-      'ский домен под него не попадает — про это глава про молчания.</p>',
+    '<p>Граница слова у этих правил юникодная, а не латинская — и для русского автора это в' +
+      'ажнее всего остального в главе: <code>сайт.рф</code> экранируется так же, как <code>on' +
+      'e.two</code>, а <code>т.е.</code> — так же, как <code>e.g.</code>. Измерения — в главе' +
+      ' про молчания.</p>',
     '<h2 id="silences">Молчания</h2>',
     '<p>Каждый случай ниже рендерится, даёт не то, на что похож, и <b>не порождает ни одной' +
       ' строки диагностики</b>. Они собраны здесь, потому что больше нигде в окне о них не ск' +
@@ -2257,24 +2268,22 @@ const
       'да бы перестановка эту пару ни поставила. Закрывающий тег (<code>&lt;/b&gt;</code>), с' +
       'амозакрывающийся (<code>&lt;br/&gt;</code>), тег с атрибутами (<code>&lt;br class="x"&' +
       'gt;</code>) и тег в середине элемента остаются нетронутыми.</p>',
-    '<p><b>Кириллический домен не заслоняется.</b> (Это молчание — про русский текст: прове' +
-      'рка «середина ли это слова» у движка латинская, так что дальше речь о том, с чем сталк' +
-      'иваются именно кириллические авторы.) Латинский выходит как набран, а <code>.рф</code>' +
-      ' движок разбирает на два предложения:</p>',
-    '<p><small><tt><a href="ex:37">сайт.рф наши цены низкие</a><br>→&nbsp; Сайт. Рф наши це' +
-      'ны низкие</tt></small></p>',
-    '<p>Это правило семейства, а не особенность здешнего движка: проверка границы слова спр' +
-      'ашивает про латиницу, и у целиком кириллической метки такой границы перед точкой нет. ' +
-      'Ссылка со схемой уцелеет — <code>https://сайт.рф/х</code> выходит нетронутой, — потому' +
-      ' что границу даёт латинское <code>https</code>.</p>',
-    '<p><b>Сокращение из нескольких точек работает только на латинице.</b> <code>e.g.</code' +
-      '> и <code>U.S.</code> движок узнаёт:</p>',
+    '<p><b>Кириллический домен заслоняется так же, как латинский.</b> Проверка «середина ли' +
+      ' это слова» у движка юникодная, так что <code>.рф</code> не разбирается на два предлож' +
+      'ения — а заслонённое начало строки для правила о прописной не начало предложения, поэт' +
+      'ому строчная в начале остаётся:</p>',
+    '<p><small><tt><a href="ex:37">сайт.рф наши цены низкие</a><br>→&nbsp; сайт.рф наши цен' +
+      'ы низкие</tt></small></p>',
+    '<p>Ссылка со схемой уцелеет тем более: <code>https://сайт.рф/х</code> выходит нетронут' +
+      'ой.</p>',
+    '<p><b>Сокращение из нескольких точек работает в любом алфавите.</b> <code>e.g.</code> ' +
+      'и <code>U.S.</code> движок узнаёт:</p>',
     '<p><small><tt><a href="ex:38">e.g. наши цены низкие</a><br>→&nbsp; e.g. наши цены низк' +
       'ие</tt></small></p>',
-    '<p>А <code>т.е.</code>, <code>т.д.</code> и <code>и.о.</code> — нет, по той же причине' +
-      ', что и домен:</p>',
-    '<p><small><tt><a href="ex:39">это т.е. вот так</a><br>→&nbsp; Это т. Е. Вот так</tt></' +
-      'small></p>',
+    '<p>И <code>т.е.</code>, <code>т.д.</code>, <code>и.о.</code> — тоже: буква, точка, бук' +
+      'ва, точка:</p>',
+    '<p><small><tt><a href="ex:39">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+      'mall></p>',
     '<p>Односложные сокращения из списка движка это не затрагивает: <code>г.</code>, <code>' +
       'стр.</code>, <code>рис.</code> заслонены, и их в списке 29 из 46.</p>',
     '<p><b>Незакрытый комментарий — обычный текст:</b> он ничего не открывает, и <code>/#</' +
@@ -2654,14 +2663,14 @@ const
       'тся с прописной. Движок ставит прописную после точки — но не после сокращения, которое' +
       ' он знает. Диагностики нет никакой: заметить можно только по выводу.</p>',
     '<p>Правило про <b>несколько точек подряд</b> — <code>e.g.</code>, <code>U.S.</code> — ' +
-      'тоже есть, и на кириллице оно <b>не работает</b>:</p>',
-    '<p><small><tt><a href="ex:71">это т.е. вот так</a><br>→&nbsp; Это т. Е. Вот так</tt></' +
-      'small></p>',
-    '<p><small><tt><a href="ex:72">и.о. директора здесь</a><br>→&nbsp; И. О. Директора здес' +
-      'ь</tt></small></p>',
-    '<p>Проверка начинается с границы слова, а граница у неё латинская. Раньше здесь было н' +
-      'аписано обратное — что <code>и.о.</code> и <code>т.д.</code> заэкранированы; это была ' +
-      'единственная непроверенная фраза в главе, и она была неверна.</p>',
+      'тоже есть, и на кириллице оно работает так же: буква, точка, буква, точка:</p>',
+    '<p><small><tt><a href="ex:71">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+      'mall></p>',
+    '<p><small><tt><a href="ex:72">и.о. директора здесь</a><br>→&nbsp; и.о. директора здесь' +
+      '</tt></small></p>',
+    '<p>Во второй строке начало осталось строчным: заслонённое сокращение в начале строки д' +
+      'ля правила о прописной — не начало предложения. Проверка начинается с границы слова, и' +
+      ' граница у неё юникодная.</p>',
     '<p><b>Список на 46 записей, и 29 из них русские:</b></p>',
     '<table border=1 cellpadding=4 cellspacing=0 width="100%">',
     '<tr><th></th><th></th></tr>',
@@ -2681,11 +2690,10 @@ const
       'заэкранировало её, хотя это название города. Во второй видно, что правило потокенное: ' +
       '<code>стр.</code> экранирует, а <code>12.</code> — нет, и <code>Там</code> встало с пр' +
       'описной. Переписывайте фразу, а не боритесь с правилом.</p>',
-    '<p>И обратный случай, тоже измеренный: <b>кириллический домен не заслоняется</b>. <cod' +
-      'e>сайт.рф наши цены</code> выходит как <code>Сайт. Рф наши цены</code> — латинский <co' +
-      'de>one.two</code> уцелел бы, а <code>.рф</code> разбирается на два предложения по той ' +
-      'же причине, что и <code>т.е.</code>: граница слова спрашивает про латиницу. Ссылка со ' +
-      'схемой уцелеет, <code>https://сайт.рф/х</code> выходит нетронутой.</p>',
+    '<p>И домен, тоже измеренный: <b>кириллический голый домен заслоняется</b>, как и латин' +
+      'ский. <code>сайт.рф наши цены</code> выходит как <code>сайт.рф наши цены</code> — стро' +
+      'чная в начале по той же причине, что у <code>и.о.</code> выше. Ссылка со схемой уцелее' +
+      'т, <code>https://сайт.рф/х</code> выходит нетронутой.</p>',
     '<hr>',
     '<h2 id="correct">Как выглядит правильное</h2>',
     '<p>Для контраста — то же самое, разобранное без единого замечания:</p>',
@@ -10224,7 +10232,7 @@ const
       'робіл і велику літеру.</p>',
     '<p><small><tt><a href="ex:30">привіт , світ</a><br>→&nbsp; Привіт, світ</tt></small></' +
       'p>',
-    '<p><small><tt><a href="ex:31">один.два</a><br>→&nbsp; Один. Два</tt></small></p>',
+    '<p><small><tt><a href="ex:31">один.два</a><br>→&nbsp; один.два</tt></small></p>',
     '<h2 id="silences">Мовчання</h2>',
     '<p>Кожен випадок нижче відтворюється, дає щось інше, ніж здається, і не тягне за собою' +
       ' <b>жодної діагностики</b>. Вони зібрані тут, бо більше ніщо у вікні їх ніколи не згад' +
@@ -10238,12 +10246,12 @@ const
       'кі</tt></small></p>',
     '<p><b>Скорочення з кількох крапок працює лише на латинці.</b> <code>e.g.</code> заслон' +
       'ено, а <code>т.д.</code> — ні, і опорядження заходить усередину самого скорочення:</p>',
-    '<p><small><tt><a href="ex:33">т.д. це лишається малим</a><br>→&nbsp; Т. Д. Це лишаєтьс' +
-      'я малим</tt></small></p>',
+    '<p><small><tt><a href="ex:33">т.д. це лишається малим</a><br>→&nbsp; т.д. це лишається' +
+      ' малим</tt></small></p>',
     '<p><b>Кириличний домен не заслоняється.</b> Латинський виходить як набраний, а <code>.' +
       'укр</code> рушій розбирає на два речення:</p>',
-    '<p><small><tt><a href="ex:34">сайт.укр три</a><br>→&nbsp; Сайт. Укр три</tt></small></' +
-      'p>',
+    '<p><small><tt><a href="ex:34">сайт.укр три</a><br>→&nbsp; сайт.укр три</tt></small></p' +
+      '>',
     '<p>Причин тут дві, а не одна, і плутати їх не варто. Перше — просто СПИСОК: у ньому 46' +
       ' слів, і те, що майже жодне з них не українське, до абетки стосунку не має. Рушій звір' +
       'яє їх повністю по-юнікодному, через що 29 кириличних записів узагалі працюють. Друге —' +
@@ -11178,7 +11186,7 @@ const
       'рабел і вялікую літару.</p>',
     '<p><small><tt><a href="ex:30">прывітанне , свет</a><br>→&nbsp; Прывітанне, свет</tt></' +
       'small></p>',
-    '<p><small><tt><a href="ex:31">адзін.два</a><br>→&nbsp; Адзін. Два</tt></small></p>',
+    '<p><small><tt><a href="ex:31">адзін.два</a><br>→&nbsp; адзін.два</tt></small></p>',
     '<h2 id="silences">Маўчанне</h2>',
     '<p>Кожны выпадак ніжэй адтвараецца, дае нешта іншае, чым здаецца, і не цягне за сабой ' +
       '<b>ніводнай дыягностыкі</b>. Яны сабраныя тут, бо больш нішто ў акне іх ніколі не згад' +
@@ -11193,12 +11201,12 @@ const
     '<p><b>Скарачэнне з некалькіх кропак працуе толькі на лацінцы.</b> <code>e.g.</code> за' +
       'слонена, а <code>т.д.</code> — не, і апрацоўка заходзіць усярэдзіну самога скарачэння:' +
       '</p>',
-    '<p><small><tt><a href="ex:33">т.д. гэта застаецца малым</a><br>→&nbsp; Т. Д. Гэта заст' +
-      'аецца малым</tt></small></p>',
+    '<p><small><tt><a href="ex:33">т.д. гэта застаецца малым</a><br>→&nbsp; т.д. гэта заста' +
+      'ецца малым</tt></small></p>',
     '<p><b>Кірылічны дамен не заслоняецца.</b> Лацінскі выходзіць як набраны, а <code>.бел<' +
       '/code> рухавік разбірае на два сказы:</p>',
-    '<p><small><tt><a href="ex:34">сайт.бел тры</a><br>→&nbsp; Сайт. Бел тры</tt></small></' +
-      'p>',
+    '<p><small><tt><a href="ex:34">сайт.бел тры</a><br>→&nbsp; сайт.бел тры</tt></small></p' +
+      '>',
     '<p>Прычын тут дзве, а не адна, і блытаць іх не варта. Першая — проста СПІС: у ім 46 сл' +
       'оў, і тое, што амаль ніводнае з іх не беларускае, да азбукі дачынення не мае. Рухавік ' +
       'звярае іх цалкам па-юнікодну, дзякуючы чаму 29 кірылічных запісаў наогул працуюць. Дру' +
@@ -12115,7 +12123,7 @@ const
       'елико слово.</p>',
     '<p><small><tt><a href="ex:30">здраво , свете</a><br>→&nbsp; Здраво, свете</tt></small>' +
       '</p>',
-    '<p><small><tt><a href="ex:31">један.два</a><br>→&nbsp; Један. Два</tt></small></p>',
+    '<p><small><tt><a href="ex:31">један.два</a><br>→&nbsp; један.два</tt></small></p>',
     '<h2 id="silences">Ћутање</h2>',
     '<p>Сваки случај испод се одиграва, даје нешто друго од онога што изгледа, и не повлачи' +
       ' за собом <b>ниједну дијагностику</b>. Сакупљени су овде јер их ништа друго у прозору ' +
@@ -12136,8 +12144,8 @@ const
       'r prices are low</tt></small></p>',
     '<p><b>Ћирилични домен није заклоњен.</b> Латинични излази како је откуцан, а <code>.ср' +
       'б</code> мотор раставља на две реченице:</p>',
-    '<p><small><tt><a href="ex:35">сајт.срб три</a><br>→&nbsp; Сајт. Срб три</tt></small></' +
-      'p>',
+    '<p><small><tt><a href="ex:35">сајт.срб три</a><br>→&nbsp; сајт.срб три</tt></small></p' +
+      '>',
     '<p>Разлога су два, а не један, и не вреди их мешати. Први је прост СПИСАК: у њему су 4' +
       '6 речи, и то што готово ниједна није српска нема везе с писмом. Мотор их пореди потпун' +
       'о уникодно, због чега 29 ћириличних уноса уопште и раде. Други је провера «да ли је ов' +
@@ -14494,12 +14502,12 @@ const
 
   { The templates the `ex:N` links point at, verbatim as the fixture ran them. }
   HELP_EX_FIRST: array[0..13] of Integer = (
-    0, 74, 154, 229, 306, 383, 460, 538, 613, 689, 767, 845, 924, 1001
+    0, 75, 155, 230, 307, 384, 461, 539, 614, 690, 768, 846, 925, 1002
   );
   HELP_EX_LAST: array[0..13] of Integer = (
-    73, 153, 228, 305, 382, 459, 537, 612, 688, 766, 844, 923, 1000, 1077
+    74, 154, 229, 306, 383, 460, 538, 613, 689, 767, 845, 924, 1001, 1078
   );
-  HELP_EX_TEMPLATE: array[0..1077] of string = (
+  HELP_EX_TEMPLATE: array[0..1078] of string = (
     '{Hi|Hello} there.',
     'A {small|large} room.',
     'Acme {Pro {Plus|Max}|Lite}',
@@ -14545,6 +14553,7 @@ const
     'draft /# not sure about this #/ ready',
     'one. two. three.',
     'e.g. this stays lower',
+    'это т.е. вот так',
     'Ltd. our prices are low',
     'Xyz. our prices are low',
     'hello , world',
@@ -16263,8 +16272,8 @@ const
     'prije /# bilješka #/ poslije',
     'zdravo, %šifra%'
   );
-  HELP_EX_DOC: array[0..1077] of Integer = (
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_EX_DOC: array[0..1078] of Integer = (
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
