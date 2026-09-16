@@ -536,6 +536,9 @@ function BuildMacros(Dirs: TSpDirectiveList): TCMacros;
 var i: Integer; m: TCMacro;
 begin
   Result := TCMacros.Create;
+  { Whole, not member by member: `Cost` is read only after MacroCount has set it, but a field
+    left to the stack is the shape `UnknownConfig` once arrived in -- as garbage. }
+  m := Default(TCMacro);
   m.IsDef := False;
   for i := 0 to Dirs.Count - 1 do
     if Dirs[i].Kind = 'set' then

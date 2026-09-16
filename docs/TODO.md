@@ -160,6 +160,12 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       the engine expands, and what it puts in may close a bracket); and `<`/`>` are structure
       behind a comment marker too. Fixed without a further Codex pass; pinned by four checks.
 
+      **Cost, re-measured on the FINAL unit after every review patch** (i386 probe build, one
+      run each): 16 000 `#set` macros each in its own spin, 78 ms (the `v0.8.1` counter: 94);
+      16 000 session values with 16 322 references inside choices, 94 ms; 4 000 references
+      over 16 000 session values, 16 ms. The 62 ms the commit message quotes was the unit
+      between the fold and the review patches, and is not the shipped number.
+
       **Not quoted on purpose:** the engine's memory numbers for §5.14 — its own post-tag commit
       `d9e3d07` retracts "peak memory fell" as single-sample working set.
 
