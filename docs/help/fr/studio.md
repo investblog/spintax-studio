@@ -117,7 +117,9 @@ valide est accepté par les autres moteurs.
 **Variables** montre les noms que votre document définit et ceux qu'il ne fait qu'employer. Un nom
 qu'il emploie et que rien ne définit, vous pouvez le remplir ici pour la session : écrivez une
 valeur à côté et l'aperçu la reprend. Cochez **en texte** quand la valeur est un texte qui se
-signifie lui-même plutôt qu'un petit gabarit à son tour.
+signifie lui-même plutôt qu'un petit gabarit à son tour — ce sont ses crochets qui sont protégés,
+pas son `|` : une valeur avec une barre, référencée dans un choix ou un brassage, s'y scinde quand
+même en possibilités.
 
 **Variantes** engendre beaucoup de textes d'un coup. Dites combien, engendrez-les et lisez-les dans
 la liste avant d'exporter. Les quasi-doublons peuvent être écartés à la production, et une graine
@@ -131,8 +133,9 @@ n'en engendriez cinquante et ne vous en aperceviez en les lisant.
 Ce n'est un compte exact que tant que chaque choix est laissé au hasard. Une condition, une forme
 de nombre ou un `#include` dont le jeu n'a pas la cible sont décidés par autre chose — une valeur
 que vous fournissez, un nombre, un extrait qui viendra peut-être —, et alors le panneau dit **au
-moins**. C'est le mot honnête : fournir une valeur ne peut qu'ajouter des textes, jamais en
-retirer. Un nombre bien trop grand pour être lu s'arrête à mille milliards et dit **au moins**
+moins**. C'est le mot honnête : le nombre est pris sans aucun élément qu'une valeur pourrait
+vider, car un brassage laisse tomber un élément rendu vide — `[{?f?|xx}|aa|bb]` donne six textes sans
+`f` et deux avec. Un nombre bien trop grand pour être lu s'arrête à mille milliards et dit **au moins**
 pour la même raison.
 
 Une variante est un gabarit rempli — un choix fait à chaque construction —, et ce n'est pas la

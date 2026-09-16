@@ -311,8 +311,13 @@ un. deux. trois.  →  Un. Deux. Trois.
 
 C'est pourquoi les exemples de cette aide répondent si souvent par une majuscule là où le gabarit
 a une minuscule. Un point après une abréviation que le moteur connaît ne termine pas une phrase,
-pas plus que ce qui a la forme de `e.g.` ou `U.S.` — **en lettres latines**, ce qui est une vraie
-limite et non une précaution : le contrôle « est-on au milieu d'un mot » est un contrôle ASCII.
+pas plus que ce qui a la forme de `e.g.` ou `U.S.` — une lettre, un point, une lettre, un point —
+dans **n'importe quel alphabet** : le contrôle « est-on au milieu d'un mot » lit toutes les écritures,
+et `т.е.` est protégé exactement comme `e.g.`.
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
+```
 
 ```spx-good
 etc. nos prix sont bas  →  etc. nos prix sont bas
@@ -341,9 +346,9 @@ balise de bloc, pas seulement après un point ; et les adresses avec schéma, le
 électroniques, les domaines nus et les nombres décimaux sont protégés et ressortent exactement
 tels qu'ils ont été tapés.
 
-Ce dernier point porte la même limite ASCII que les abréviations plus haut. Un domaine nu est
-protégé s'il est écrit en lettres latines ; `сайт.рф` ne l'est pas, et la finition y glisse une
-espace et une majuscule.
+Ce dernier point lit lui aussi tous les alphabets : un domaine nu est protégé, qu'il s'écrive
+`un.deux` ou `сайт.рф`. Et un début protégé n'est pas un début de phrase pour la majuscule — c'est
+pourquoi `un.deux` plus bas ressort intact, minuscule comprise.
 
 ```spx-good
 bonjour , monde  →  Bonjour, monde
@@ -374,8 +379,8 @@ cf. nos prix sont bas  →  Cf. Nos prix sont bas
 p. ex. cela reste en minuscule  →  p. ex. cela reste en minuscule
 ```
 
-`c.-à-d.` en revanche est cassé, et pour la raison ASCII donnée plus haut : les traits d'union
-entourent un `à` qui n'est pas une lettre latine pour ce contrôle, et la finition entre dans
+`c.-à-d.` en revanche est cassé, et la raison n'est pas l'alphabet : la forme que le moteur reconnaît
+est lettre-point-lettre-point, et les traits d'union la rompent, si bien que la finition entre dans
 l'abréviation :
 
 ```spx-good

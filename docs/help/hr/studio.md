@@ -106,7 +106,8 @@ mišljenje uređivača — zato predložak koji ova ploča nazove ispravnim prih
 **Varijable** pokazuju imena koja vaš dokument definira i ona koja samo koristi. Ime koje on koristi
 a ništa ne definira može se popuniti ovdje za ovu sesiju: upišite vrijednost pored i pregled će je
 pokupiti. Kvačicom označite **kao tekst** kada je vrijednost tekst koji znači sam sebe, a ne mali
-predložak.
+predložak — zaklonjene su njezine zagrade, ne njezina `|`: vrijednost s crtom, na koju se poziva
+unutar izbora ili miješanja, ondje se svejedno raspada na mogućnosti.
 
 **Varijante** rade mnogo tekstova odjednom. Recite koliko, napravite ih i pročitajte u popisu prije
 izvoza. Gotovo iste mogu se odbacivati već tijekom izrade, a seed čini cijeli skup ponovljivim: isto
@@ -118,8 +119,9 @@ Taj vam broj javlja da je predložak siromašan još prije nego što napravite p
 
 Točan je samo dok svaki izbor ostaje slučaju. Uvjet, oblik množine ili `#include` čiji cilj skup
 nema rješava nešto drugo — vrijednost koju ćete podmetnuti, broj, odlomak koji tek može doći — i
-tada ploča kaže **najmanje**. To je poštena riječ: podmetnuta vrijednost može samo dodati tekstove,
-a ne oduzeti ih. Broj prevelik da bi se čitao staje na bilijunu i kaže **najmanje** iz istog
+tada ploča kaže **najmanje**. To je poštena riječ: broj je uzet bez ijednog elementa koji bi vrijednost
+mogla isprazniti, jer miješanje ispušta element koji se iscrta prazan — `[{?f?|xx}|aa|bb]` daje šest
+tekstova bez `f` i dva s njim. Broj prevelik da bi se čitao staje na bilijunu i kaže **najmanje** iz istog
 razloga.
 
 Varijanta je jedan popunjen predložak, po jedan izbor u svakoj konstrukciji, i to nije isto što i

@@ -114,7 +114,9 @@ noemt door de andere machines aanvaard.
 **Variabelen** toont de namen die uw document definieert en de namen die het alleen gebruikt. Een
 naam die het gebruikt en die niets definieert kunt u hier voor de sessie invullen: schrijf er een
 waarde naast en de voorvertoning pakt hem op. Vink **als tekst** aan wanneer de waarde tekst is
-die zichzelf betekent en niet op zijn beurt een klein sjabloon.
+die zichzelf betekent en niet op zijn beurt een klein sjabloon — beschermd worden zijn haken, niet
+zijn `|`: een waarde met een streep erin, aangehaald binnen een keuze of een schudbeurt, valt daar
+toch uiteen in mogelijkheden.
 
 **Varianten** maakt veel teksten in één keer. Zeg hoeveel, maak ze aan en lees ze in de lijst
 voordat u exporteert. Bijna-doublures kunnen tijdens het maken worden weggelaten, en een
@@ -128,8 +130,9 @@ maakt en het al lezend merkt.
 Het is alleen een exact getal zolang elke keuze aan het toeval wordt overgelaten. Een voorwaarde,
 een getalsvorm of een `#include` waarvan de verzameling het doel niet heeft, wordt door iets anders
 beslist — een waarde die u aanlevert, een getal, een fragment dat misschien nog komt —, en dan zegt
-het paneel **ten minste**. Dat is het eerlijke woord: een waarde aanleveren kan alleen teksten
-toevoegen, nooit wegnemen. Een getal dat veel te groot is om te lezen stopt bij een biljoen en zegt
+het paneel **ten minste**. Dat is het eerlijke woord: het getal is genomen zonder enig element
+dat een waarde leeg kan maken, want een schudbeurt laat een element vallen dat leeg wordt gerenderd
+— `[{?f?|xx}|aa|bb]` geeft zes teksten zonder `f` en twee ermee. Een getal dat veel te groot is om te lezen stopt bij een biljoen en zegt
 om dezelfde reden **ten minste**.
 
 Een variant is één ingevuld sjabloon — bij elke constructie één gemaakte keuze — en dat is niet

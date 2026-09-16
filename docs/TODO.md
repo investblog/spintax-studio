@@ -172,29 +172,18 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       **Stale citation caught by `TestEngineCitations`:** `Spintax.pas/ExpandVarsOnly` is gone;
       `gui/SpxAiPane.pas` now cites `ResolveVariable`, where the `LowerAscii` lookup lives.
 
-- [ ] **The help's post-process prose is still "ASCII / Latin only" in twelve languages.** The
-      arrows are right everywhere (gated); the sentences around them are not, and in `uk`, `be`
-      and `sr` a BOLD HEADING now asserts the opposite of the example beneath it (`be` ≈359 and
-      ≈366, `sr` 366, `uk` 361 and 368 — the headings, not only the paragraphs). Per file, so a
-      translator does not hunt a phrase (the `v0.7.0` lesson): `be/syntax.md` 305–306, 334–335,
-      359–360, 366, and the closing paragraph of the silences (≈380); `bs/syntax.md` 335–336; `de/syntax.md` 320–321,
-      350; `es/syntax.md` 309–310, 340–341; `fr/syntax.md` 314–315, 344–345, and 372–378 where
-      `c.-à-d.` is still broken but **for a different reason** (the hyphens, not the `à` — the
-      example's arrow is right, the reason is not); `hr/syntax.md` 334–335; `it/syntax.md`
-      311–312, 340–341; `nl/syntax.md` 312–313, 341; `pt/syntax.md` 311–312, 342–343, and 381
-      where `n.º` is likewise still broken for a different reason (one dot, not the `º`);
-      `sr/syntax.md` 302–303, 331, 370–375; `tr/syntax.md` 304–305, 333, 352; `uk/syntax.md` 306–307,
-      334–335, 361–375. Each is a sentence measured at `v0.8.1` in that language's own
-      examples, and the replacement has to be measured in that language too — `en` and `ru`
-      were, above.
-
-      **And two sentences in `studio.md`, twelve languages each**, found by review: "supplying a
-      value can only add texts, never remove any" (the reason given for *at least*) is false
-      under the drop — `[{?f?|xx}|aa|bb]` is six texts unset and two set, measured — and "tick
-      as text when the value is text that means itself" omits that a `|` in a literal value
-      still splits inside a choice or a shuffle (the family's `neutralize` shields brackets, not
-      the pipe). Both rewritten in `en`/`ru`; the other twelve carry the old sentences at the
-      "at least" paragraph and the Variables paragraph of `docs/help/<lang>/studio.md`.
+- [x] **The help's post-process prose said "ASCII / Latin only" in twelve languages — rewritten
+      2026-09-16, on the owner's call, by the agent rather than a translator.** Every claim was
+      measured under the document's own locale before it was written (the shielding is
+      locale-independent, confirmed under all fourteen): `это т.е. вот так → Это т.е. вот так`
+      renders identically under de, fr, es, it, nl, pt and tr and is now a gated example in each
+      of those seven; `сайт.рф наши цены низкие` is gated in hr and bs; `т.ј. ово остаје мало` in
+      sr. The `fr` `c.-à-d.` and `pt` `n.º` examples were already right and their REASONS were
+      wrong (hyphens break the letter-dot form; one dot is not the multi-dot form) — reasons
+      rewritten, arrows untouched. The be/uk/sr silences keep their bold headings with the
+      opposite content, so the per-language silence counts are unchanged. Also the two
+      `studio.md` sentences ("can only add texts", "as text") in all twelve. What is NOT
+      measured is the translation quality: the facts are, the wording is the agent's.
 
 - [ ] **What's-new for the next visit, engine part:** seeded variants differ from 0.2.2.0 for
       templates with a single-option construct; Cyrillic multi-dot abbreviations and bare

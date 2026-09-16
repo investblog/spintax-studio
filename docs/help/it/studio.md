@@ -113,7 +113,9 @@ valido viene accettato dagli altri motori.
 **Variabili** mostra i nomi che il vostro documento definisce e quelli che soltanto usa. Un nome
 che usa e che nulla definisce potete riempirlo qui per la sessione: scrivete un valore accanto e
 l'anteprima lo raccoglie. Spuntate **come testo** quando il valore è testo che significa se stesso
-e non un piccolo modello a sua volta.
+e non un piccolo modello a sua volta — a essere protette sono le sue parentesi, non il suo `|`: un
+valore con una barra, referenziato dentro una scelta o un rimescolamento, lì si spezza comunque in
+possibilità.
 
 **Varianti** genera molti testi in una volta. Dite quanti, generateli e leggeteli nella lista prima
 di esportare. I quasi doppioni si possono scartare mentre nascono, e un seme rende ripetibile
@@ -126,7 +128,8 @@ generiate cinquanta e ve ne accorgiate leggendole.
 È un conto esatto solo finché ogni scelta è lasciata al caso. Una condizione, una forma di numero
 o un `#include` di cui l'insieme non ha il bersaglio sono decisi da altro — un valore che fornite
 voi, un numero, un frammento che forse arriverà —, e allora il pannello dice **almeno**. È la
-parola onesta: fornire un valore può solo aggiungere testi, mai toglierne. Un numero troppo grande
+parola onesta: il numero è preso senza alcun elemento che un valore possa svuotare, perché un
+rimescolamento scarta un elemento reso vuoto — `[{?f?|xx}|aa|bb]` dà sei testi senza `f` e due con. Un numero troppo grande
 per leggerlo si ferma a mille miliardi e dice **almeno** per la stessa ragione.
 
 Una variante è un modello riempito — una scelta fatta a ogni costrutto — e non è la stessa cosa di

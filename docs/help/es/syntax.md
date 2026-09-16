@@ -307,8 +307,13 @@ uno. dos. tres.  →  Uno. Dos. Tres.
 
 Por eso los ejemplos de esta ayuda responden tan a menudo con mayúscula donde la plantilla lleva
 minúscula. Un punto tras una abreviatura que el motor conoce no termina una oración, y tampoco lo
-hace nada con la forma de `e.g.` o `U.S.` —**en letras latinas**, que es un límite real y no una
-cautela: la comprobación de «esto es mitad de palabra» es una comprobación ASCII.
+hace nada con la forma de `e.g.` o `U.S.` —letra, punto, letra, punto— en **cualquier alfabeto**: la
+comprobación de «esto es mitad de palabra» lee todas las escrituras, y `т.е.` queda protegido
+exactamente igual que `e.g.`.
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
+```
 
 ```spx-good
 etc. nuestros precios son bajos  →  etc. nuestros precios son bajos
@@ -337,9 +342,9 @@ etiqueta de bloque, no solo tras un punto; y las direcciones con esquema, los co
 electrónicos, los dominios desnudos y los números decimales están protegidos y salen exactamente
 como se escribieron.
 
-Ese último punto lleva el mismo límite ASCII que las abreviaturas de arriba. Un dominio desnudo
-está protegido si se escribe en letras latinas; `сайт.рф` no lo está, y el retoque le mete dentro
-un espacio y una mayúscula.
+Ese último punto también lee cualquier alfabeto: un dominio desnudo está protegido, se escriba
+`uno.dos` o `сайт.рф`. Y un comienzo protegido no es comienzo de oración para la mayúscula —por eso
+`uno.dos` más abajo sale intacto, minúscula incluida.
 
 ```spx-good
 hola , mundo  →  Hola, mundo

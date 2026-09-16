@@ -331,9 +331,9 @@ obrezuje po rubovima; veliko slovo dolazi i nakon preloma retka i nakon blokovsk
 nakon točke; a adrese sa shemom, poštanske adrese, gole domene i decimalni brojevi zaklonjeni su i
 izlaze točno onako kako su otipkani.
 
-Posljednje nosi istu ASCII granicu kao i kratice gore, i za hrvatski radi u vašu korist: gola je
-domena zaklonjena jer je pisana latinicom, dok `сайт.рф` nije i dotjerivanje unutra ubacuje razmak i
-veliko slovo. Zbog toga i dvije riječi spojene točkom prolaze netaknute — motor u njima vidi domenu:
+Posljednje čita svako pismo: gola je domena zaklonjena bila pisana latinicom ili ćirilicom — `jedan.dva`
+i `сайт.рф` prolaze jednako. Zbog toga i dvije riječi spojene točkom prolaze netaknute — motor u njima
+vidi domenu, a zaklonjen početak za veliko slovo nije početak rečenice:
 
 ```spx-good
 zdravo , svijete  →  Zdravo, svijete
@@ -341,6 +341,10 @@ zdravo , svijete  →  Zdravo, svijete
 
 ```spx-good
 jedan.dva  →  jedan.dva
+```
+
+```spx-good
+сайт.рф наши цены низкие  →  сайт.рф наши цены низкие
 ```
 
 ## Tišina

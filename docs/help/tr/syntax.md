@@ -301,8 +301,12 @@ bir. iki. üç.  →  Bir. Iki. Üç.
 
 Bu yüzden bu yardımdaki örnekler, şablonda küçük harf varken çok kez büyük harfle yanıt verir.
 Makinenin bildiği bir kısaltmadan sonraki nokta bir cümleyi bitirmez; `e.g.` ya da `U.S.` biçiminde
-olan bir şey de bitirmez — **Latin harfleriyle**, ki bu gerçek bir sınırdır, bir kaçamak değil:
-«bir sözcüğün ortasında mıyız» denetimi bir ASCII denetimidir.
+olan bir şey de bitirmez — harf, nokta, harf, nokta — **hangi alfabede olursa olsun**: «bir sözcüğün
+ortasında mıyız» denetimi her yazıyı okur ve `т.е.` de tıpkı `e.g.` gibi korunur.
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
+```
 
 ```spx-good
 vs. fiyatlarımız düşük  →  vs. fiyatlarımız düşük
@@ -330,9 +334,9 @@ kenarlarından budanır; büyük harf yalnızca noktadan sonra değil, satır so
 sonra da gelir; ve şemalı adresler, e-posta adresleri, çıplak alan adları ve ondalık sayılar
 korunur ve tam olarak yazıldıkları gibi çıkar.
 
-Bunların sonuncusu yukarıdaki kısaltmalarla aynı ASCII sınırını taşır. Çıplak bir alan adı Latin
-harfleriyle yazılmışsa korunur; `сайт.рф` korunmaz ve son rötuş içine bir boşluk ve bir büyük harf
-sokar.
+Bunların sonuncusu da her alfabeyi okur: çıplak bir alan adı, ister `bir.iki` ister `сайт.рф`
+olsun, korunur. Korunan bir başlangıç ise büyük harf kuralı için cümle başı değildir — bu yüzden
+aşağıdaki `bir.iki` küçük harfiyle birlikte olduğu gibi çıkar.
 
 ```spx-good
 merhaba , dünya  →  Merhaba, dünya

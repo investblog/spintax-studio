@@ -309,8 +309,13 @@ een. twee. drie.  →  Een. Twee. Drie.
 
 Daarom antwoorden de voorbeelden in deze help zo vaak met een hoofdletter waar het sjabloon een
 kleine letter heeft. Een punt na een afkorting die de machine kent beëindigt geen zin, en evenmin
-doet iets dat de vorm van `e.g.` of `U.S.` heeft dat — **in Latijnse letters**, wat een echte grens
-is en geen slag om de arm: de controle «zitten we midden in een woord» is een ASCII-controle.
+doet iets dat de vorm van `e.g.` of `U.S.` heeft dat — letter, punt, letter, punt — in **elk
+alfabet**: de controle «zitten we midden in een woord» leest elk schrift, en `т.е.` is precies zo
+beschermd als `e.g.`.
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
+```
 
 ```spx-good
 Dr. onze prijzen zijn laag  →  Dr. onze prijzen zijn laag
@@ -338,9 +343,9 @@ uitvoer wordt aan de randen bijgesneden; de hoofdletter komt ook na een regelein
 bloktag, niet alleen na een punt; en adressen met schema, e-mailadressen, kale domeinen en
 decimale getallen zijn beschermd en komen er precies uit zoals ze zijn getypt.
 
-Voor dat laatste geldt dezelfde ASCII-grens als voor de afkortingen hierboven. Een kaal domein is
-beschermd als het in Latijnse letters is geschreven; `сайт.рф` is dat niet, en de afwerking zet er
-een spatie en een hoofdletter in.
+Ook dat laatste leest elk alfabet: een kaal domein is beschermd, of het nu `een.twee` of `сайт.рф`
+heet. En een beschermd begin is voor de hoofdletter geen zinsbegin — daarom komt `een.twee`
+hieronder onaangeroerd terug, kleine letter en al.
 
 ```spx-good
 hallo , wereld  →  Hallo, wereld

@@ -114,7 +114,8 @@ la aceptan los demás motores.
 **Variables** muestra los nombres que su documento define y los que solo usa. Un nombre que usa y
 que nada define puede rellenarlo aquí para la sesión: escriba un valor al lado y el avance lo
 recoge. Marque **como texto** cuando el valor sea texto que se significa a sí mismo y no una pequeña
-plantilla propia.
+plantilla propia —se protegen sus corchetes, no su `|`: un valor con una barra, referenciado dentro
+de una elección o una baraja, se parte allí igualmente en posibilidades.
 
 **Variantes** genera muchos textos de una vez. Diga cuántos, genérelos y léalos en la lista antes
 de exportar. Los casi duplicados pueden descartarse según se producen, y una semilla hace todo el
@@ -127,7 +128,8 @@ cincuenta y se dé cuenta leyéndolas.
 Es una cuenta exacta solo mientras cada elección quede al azar. Una condición, una forma de número
 o un `#include` cuya diana no tenga el juego los decide otra cosa —un valor que usted aporte, un
 número, un fragmento que quizá llegue—, y entonces el panel dice **al menos**. Esa es la palabra
-honrada: aportar un valor solo puede añadir textos, nunca quitarlos. Un número demasiado grande
+honrada: el número se toma sin ningún elemento que un valor pueda vaciar, porque una baraja descarta
+un elemento que se renderiza vacío —`[{?f?|xx}|aa|bb]` da seis textos sin `f` y dos con él. Un número demasiado grande
 para leerlo se detiene en un billón y dice **al menos** por la misma razón.
 
 Una variante es una plantilla rellenada —una elección hecha en cada construcción—, y eso no es lo

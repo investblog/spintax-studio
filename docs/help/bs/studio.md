@@ -104,7 +104,9 @@ uređivača — zato šablon koji ova ploča nazove ispravnim prihvataju i ostal
 
 **Promjenljive** pokazuju imena koja vaš dokument definiše i ona koja samo koristi. Ime koje on koristi
 a ništa ne definiše može se popuniti ovdje za ovu sesiju: upišite vrijednost pored i pregled će je
-pokupiti. Označite **kao tekst** kada je vrijednost tekst koji znači sam sebe, a ne mali šablon.
+pokupiti. Označite **kao tekst** kada je vrijednost tekst koji znači sam sebe, a ne mali šablon —
+zaklonjene su njegove zagrade, ne njegova `|`: vrijednost s crtom, na koju se poziva unutar izbora
+ili miješanja, tamo se svejedno raspada na mogućnosti.
 
 **Varijante** prave mnogo tekstova odjednom. Recite koliko, napravite ih i pročitajte u spisku prije
 izvoza. Gotovo iste mogu se odbacivati već tokom pravljenja, a seed čini cijeli skup ponovljivim:
@@ -116,8 +118,9 @@ vam broj javlja da je šablon siromašan još prije nego što napravite pedeset 
 
 Tačan je samo dok svaki izbor ostaje slučaju. Uvjet, oblik množine ili `#include` čiji cilj skup
 nema rješava nešto drugo — vrijednost koju ćete podmetnuti, broj, odlomak koji tek može doći — i
-tada ploča kaže **najmanje**. To je poštena riječ: podmetnuta vrijednost može samo dodati tekstove,
-a ne oduzeti ih. Broj prevelik da bi se čitao staje na bilionu i kaže **najmanje** iz istog razloga.
+tada ploča kaže **najmanje**. To je poštena riječ: broj je uzet bez ijednog elementa koji bi vrijednost
+mogla isprazniti, jer miješanje ispušta element koji se iscrta prazan — `[{?f?|xx}|aa|bb]` daje šest
+tekstova bez `f` i dva s njim. Broj prevelik da bi se čitao staje na bilionu i kaže **najmanje** iz istog razloga.
 
 Varijanta je jedan popunjen šablon, po jedan izbor u svakoj konstrukciji, i to nije isto što i tekst
 koji se drugačije čita. `{a|a}` su dvije varijante i jedan tekst, i tako je zamišljeno: dvije

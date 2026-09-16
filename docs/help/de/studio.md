@@ -120,7 +120,8 @@ Tafel gültig nennt, auch von den anderen Maschinen angenommen.
 Namen, den es benutzt und den nichts definiert, können Sie hier für die Sitzung ausfüllen:
 Schreiben Sie einen Wert daneben, und die Vorschau nimmt ihn auf. Setzen Sie den Haken bei
 **als Text**, wenn der Wert Text ist, der sich selbst meint, und nicht eine kleine Vorlage für
-sich.
+sich — geschützt werden seine Klammern, nicht sein `|`: ein Wert mit einem Strich, der innerhalb
+einer Auswahl oder einer Mischung referenziert wird, zerfällt dort trotzdem in Möglichkeiten.
 
 **Varianten** erzeugt viele Texte auf einmal. Sagen Sie wie viele, erzeugen Sie sie und lesen Sie
 sie in der Liste, bevor Sie exportieren. Beinahe-Dubletten lassen sich schon beim Erzeugen
@@ -134,8 +135,9 @@ fünfzig Stück erzeugen und es beim Lesen merken.
 Eine genaue Zahl ist es nur, solange jede Wahl dem Zufall überlassen bleibt. Eine Bedingung, eine
 Zahlform oder ein `#include`, dessen Ziel der Satz nicht hat, wird von etwas anderem entschieden
 — von einem Wert, den Sie liefern, von einer Zahl, von einem Ausschnitt, der noch kommen mag —,
-und dann sagt die Tafel **mindestens**. Das ist das ehrliche Wort: einen Wert zu liefern kann
-Texte nur hinzufügen, niemals wegnehmen. Eine Zahl, die zum Lesen viel zu groß wäre, hört bei
+und dann sagt die Tafel **mindestens**. Das ist das ehrliche Wort: die Zahl ist ohne jedes
+Element genommen, das ein Wert leer machen könnte, denn eine Mischung lässt ein Element fallen, das
+leer gerendert wird — `[{?f?|xx}|aa|bb]` ergibt sechs Texte ohne `f` und zwei mit ihm. Eine Zahl, die zum Lesen viel zu groß wäre, hört bei
 einer Billion auf und sagt aus demselben Grund **mindestens**.
 
 Eine Variante ist eine ausgefüllte Vorlage — an jedem Konstrukt eine getroffene Wahl —, und das

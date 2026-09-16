@@ -108,7 +108,8 @@ makineler de kabul eder.
 **Değişkenler** belgenizin tanımladığı adları ve yalnızca kullandığı adları gösterir. Kullandığı ve
 hiçbir şeyin tanımlamadığı bir adı burada oturum için doldurabilirsiniz: yanına bir değer yazın,
 önizleme onu alır. Değer kendi kendini anlatan bir metinse, kendi başına küçük bir şablon değilse,
-**Düz metin** kutusunu işaretleyin.
+**Düz metin** kutusunu işaretleyin. Korunan, değerin ayraçlarıdır, `|` değil: içinde çubuk olan bir
+değer, bir seçimin ya da bir karıştırmanın içinden anıldığında orada yine olasılıklara bölünür.
 
 **Varyantlar** bir seferde çok sayıda metin üretir. Kaç tane olduğunu söyleyin, üretin ve dışa
 aktarmadan önce listede okuyun. Neredeyse aynı olanlar üretilirken elenebilir ve bir tohum bütün
@@ -121,7 +122,8 @@ söyler.
 Yalnızca her seçim rastlantıya bırakıldığı sürece kesin bir sayıdır. Bir koşul, bir sayı biçimi ya
 da kümenin hedefini bulundurmadığı bir `#include` başka bir şeyce belirlenir — sizin vereceğiniz
 bir değerce, bir sayıca, belki gelecek bir parçaca — ve o zaman panel **en az** der. Dürüst söz
-budur: bir değer vermek metin ancak ekler, hiç eksiltmez. Okunamayacak kadar büyük bir sayı bir
+budur: sayı, bir değerin boşaltabileceği her öğe dışarıda bırakılarak alınır, çünkü bir karıştırma
+boş çıkan öğeyi düşürür — `[{?f?|xx}|aa|bb]` `f` yokken altı, varken iki metin verir. Okunamayacak kadar büyük bir sayı bir
 trilyonda durur ve aynı nedenle **en az** der.
 
 Bir çeşitleme, doldurulmuş bir şablondur — her yapıda yapılmış bir seçim — ve bu, başka türlü

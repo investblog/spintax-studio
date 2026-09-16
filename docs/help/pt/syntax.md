@@ -308,8 +308,13 @@ um. dois. três.  →  Um. Dois. Três.
 
 É por isso que os exemplos desta ajuda respondem tantas vezes com maiúscula onde o modelo tem
 minúscula. Um ponto depois de uma abreviatura que o motor conhece não acaba uma frase, e também
-não acaba nada com a forma de `e.g.` ou `U.S.` — **em letras latinas**, o que é um limite a sério
-e não uma cautela: a verificação de «isto é meio de palavra» é uma verificação ASCII.
+não acaba nada com a forma de `e.g.` ou `U.S.` — letra, ponto, letra, ponto — em **qualquer
+alfabeto**: a verificação de «isto é meio de palavra» lê todas as escritas, e `т.е.` fica protegido
+exactamente como `e.g.`.
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
+```
 
 ```spx-good
 Sr. os nossos preços são baixos  →  Sr. os nossos preços são baixos
@@ -339,9 +344,9 @@ uma etiqueta de bloco, e não só depois de um ponto; e os endereços com esquem
 correio, os domínios nus e os números decimais estão protegidos e saem exactamente como foram
 escritos.
 
-Este último ponto traz o mesmo limite ASCII das abreviaturas acima. Um domínio nu está protegido se
-for escrito em letras latinas; `сайт.рф` não está, e o retoque mete-lhe dentro um espaço e uma
-maiúscula.
+Também este último ponto lê qualquer alfabeto: um domínio nu está protegido, escreva-se `um.dois`
+ou `сайт.рф`. E um começo protegido não é começo de frase para a maiúscula — por isso `um.dois` mais
+abaixo sai intacto, minúscula incluída.
 
 ```spx-good
 olá , mundo  →  Olá, mundo
@@ -378,8 +383,9 @@ seguinte já não:
 p.ex. isto fica em minúscula  →  p.ex. Isto fica em minúscula
 ```
 
-E `n.º` sai partido, pelo mesmo motivo ASCII: o `º` não conta como letra para essa verificação, e
-o retoque entra dentro da abreviatura:
+E `n.º` sai partido, e o motivo não é o alfabeto: a forma de vários pontos precisa de pelo menos
+dois, e `n.º` tem um só, pelo que o `n` é procurado na lista como palavra solta, não está lá, e o
+retoque entra dentro da abreviatura:
 
 ```spx-good
 n.º os nossos preços são baixos  →  N. º os nossos preços são baixos

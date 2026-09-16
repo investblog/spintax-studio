@@ -113,7 +113,9 @@ outros motores.
 **Variáveis** mostra os nomes que o seu documento define e os que apenas usa. Um nome que usa e
 que nada define pode preenchê-lo aqui para a sessão: escreva um valor ao lado e a
 pré-visualização apanha-o. Marque **como texto** quando o valor for texto que se significa a si
-mesmo e não um pequeno modelo por sua vez.
+mesmo e não um pequeno modelo por sua vez — protegidos ficam os seus parênteses, não a sua `|`: um
+valor com uma barra, referenciado dentro de uma escolha ou de um baralhar, parte-se ali na mesma em
+possibilidades.
 
 **Variantes** gera muitos textos de uma vez. Diga quantos, gere-os e leia-os na lista antes de
 exportar. Os quase duplicados podem ser descartados à medida que nascem, e uma semente torna todo
@@ -126,8 +128,9 @@ lê-las.
 É uma conta exacta só enquanto cada escolha ficar ao acaso. Uma condição, uma forma de número ou
 um `#include` cujo alvo o conjunto não tenha são decididos por outra coisa — um valor que o
 utilizador forneça, um número, um excerto que talvez chegue —, e então o painel diz **pelo
-menos**. É a palavra honesta: fornecer um valor só pode acrescentar textos, nunca tirá-los. Um
-número grande demais para se ler pára num bilião e diz **pelo menos** pela mesma razão.
+menos**. É a palavra honesta: o número é tomado sem qualquer elemento que um valor possa esvaziar,
+porque um baralhar deixa cair um elemento que se renderiza vazio — `[{?f?|xx}|aa|bb]` dá seis
+textos sem `f` e dois com ele. Um número grande demais para se ler pára num bilião e diz **pelo menos** pela mesma razão.
 
 Uma variante é um modelo preenchido — uma escolha feita em cada construção — e isso não é o mesmo
 que um texto que se leia de outra maneira. `{a|a}` são duas variantes e um texto, e é de

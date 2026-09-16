@@ -332,9 +332,9 @@ obrezuje po ivicama; veliko slovo dolazi i nakon preloma reda i nakon blokovskog
 nakon tačke; a adrese sa shemom, poštanske adrese, goli domeni i decimalni brojevi zaklonjeni su i
 izlaze tačno onako kako su otkucani.
 
-Posljednje nosi istu ASCII granicu kao i skraćenice gore, i za bosanski radi u vašu korist: goli je
-domen zaklonjen jer je pisan latinicom, dok `сайт.рф` nije i dotjerivanje unutra ubacuje razmak i
-veliko slovo. Zbog toga i dvije riječi spojene tačkom prolaze netaknute — motor u njima vidi domen:
+Posljednje čita svako pismo: goli je domen zaklonjen bio pisan latinicom ili ćirilicom — `jedan.dva` i
+`сайт.рф` prolaze jednako. Zbog toga i dvije riječi spojene tačkom prolaze netaknute — motor u njima
+vidi domen, a zaklonjen početak za veliko slovo nije početak rečenice:
 
 ```spx-good
 zdravo , svijete  →  Zdravo, svijete
@@ -342,6 +342,10 @@ zdravo , svijete  →  Zdravo, svijete
 
 ```spx-good
 jedan.dva  →  jedan.dva
+```
+
+```spx-good
+сайт.рф наши цены низкие  →  сайт.рф наши цены низкие
 ```
 
 ## Tišina

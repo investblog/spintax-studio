@@ -308,8 +308,13 @@ uno. due. tre.  →  Uno. Due. Tre.
 
 Per questo gli esempi di questa guida rispondono così spesso con una maiuscola dove il modello ha
 una minuscola. Un punto dopo un'abbreviazione che il motore conosce non chiude una frase, e non la
-chiude nemmeno qualcosa nella forma di `e.g.` o `U.S.` — **in lettere latine**, che è un limite
-vero e non una cautela: il controllo «siamo in mezzo a una parola» è un controllo ASCII.
+chiude nemmeno qualcosa nella forma di `e.g.` o `U.S.` — lettera, punto, lettera, punto — in
+**qualunque alfabeto**: il controllo «siamo in mezzo a una parola» legge ogni scrittura, e `т.е.` è
+protetto esattamente come `e.g.`.
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
+```
 
 ```spx-good
 Dr. i nostri prezzi sono bassi  →  Dr. i nostri prezzi sono bassi
@@ -337,9 +342,9 @@ l'intera uscita viene rifilata ai bordi; la maiuscola arriva anche dopo un a cap
 blocco, non solo dopo un punto; e gli indirizzi con schema, gli indirizzi di posta, i domini nudi
 e i numeri decimali sono protetti ed escono esattamente come sono stati scritti.
 
-Quest'ultimo punto porta lo stesso limite ASCII delle abbreviazioni sopra. Un dominio nudo è
-protetto se è scritto in lettere latine; `сайт.рф` non lo è, e la rifinitura ci infila dentro uno
-spazio e una maiuscola.
+Anche quest'ultimo punto legge ogni alfabeto: un dominio nudo è protetto, che si scriva `uno.due` o
+`сайт.рф`. E un inizio protetto non è un inizio di frase per la maiuscola — per questo `uno.due` qui
+sotto esce intatto, minuscola compresa.
 
 ```spx-good
 ciao , mondo  →  Ciao, mondo

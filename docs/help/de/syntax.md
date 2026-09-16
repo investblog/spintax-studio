@@ -316,9 +316,13 @@ eins. zwei. drei.  →  Eins. Zwei. Drei.
 
 Deshalb antworten die Beispiele in dieser Hilfe so oft mit einem großen Buchstaben, wo die Vorlage
 einen kleinen hat. Ein Punkt hinter einer Abkürzung, die die Maschine kennt, beendet keinen Satz,
-und ebenso wenig etwas in der Form von `z.B.` oder `d.h.` — **in lateinischen Buchstaben**, was
-eine echte Grenze ist und keine Absicherung: die Prüfung „ist das die Mitte eines Wortes" ist eine
-ASCII-Prüfung.
+und ebenso wenig etwas in der Form von `z.B.` oder `d.h.` — Buchstabe, Punkt, Buchstabe, Punkt — in
+**jedem Alphabet**: die Prüfung „ist das die Mitte eines Wortes" liest jede Schrift, so dass `т.е.`
+genauso geschützt ist wie `z.B.`.
+
+```spx-good
+это т.е. вот так  →  Это т.е. вот так
+```
 
 ```spx-good
 z.B. das bleibt klein  →  z.B. das bleibt klein
@@ -347,9 +351,9 @@ einem Zeilenumbruch und nach einem Block-Tag, nicht nur nach einem Punkt; und Ad
 E-Mail-Adressen, nackte Domains und Dezimalzahlen sind geschützt und kommen genau so heraus, wie
 sie getippt wurden.
 
-Für den letzten Punkt gilt dieselbe ASCII-Grenze wie für die Abkürzungen oben. Eine nackte Domain
-ist geschützt, wenn sie in lateinischen Buchstaben geschrieben ist; `сайт.рф` ist es nicht, und
-der Feinschliff setzt ein Leerzeichen und einen großen Buchstaben hinein.
+Auch der letzte Punkt liest jedes Alphabet: eine nackte Domain ist geschützt, ob sie `eins.zwei` oder
+`сайт.рф` heißt. Und ein geschützter Anfang ist für die Großschreibung kein Satzanfang — deshalb
+kommt `eins.zwei` unten unverändert zurück, kleiner Anfangsbuchstabe eingeschlossen.
 
 ```spx-good
 hallo , Welt  →  Hallo, Welt
