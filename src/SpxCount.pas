@@ -480,7 +480,7 @@ end;
 procedure ReadPermConfig(const S: string; out AMin, AMax: Integer);
 
   function Num(const Key: string): Integer;
-  var low, d: string; k, j: Integer;
+  var low, d: string; k, j: Integer; big: Int64;
   begin
     Result := -1;
     low := LowerCase(S);
@@ -495,13 +495,23 @@ procedure ReadPermConfig(const S: string; out AMin, AMax: Integer);
       begin
         Inc(j);
         while (j <= Length(S)) and (S[j] in CFG_WS) do Inc(j);
+        { Saturated at High(Integer), as `Spintax.pas/FindInt` does since engine v0.11.1: the
+          render clamps a size to the element count anyway. StrToIntDef WRAPPED past 32 bits,
+          so `maxsize=4294967297` was read as 1 here while the engine reads it as "all of
+          them" -- measured, 3 exact against 15 rendered. }
         d := '';
+        big := 0;
         while (j <= Length(S)) and (S[j] in ['0'..'9']) do
         begin
           d := d + S[j];
+          if big <= High(Integer) then big := big * 10 + (Ord(S[j]) - Ord('0'));
           Inc(j);
         end;
-        if d <> '' then Exit(StrToIntDef(d, -1));
+        if d <> '' then
+        begin
+          if big > High(Integer) then Exit(High(Integer));
+          Exit(Integer(big));
+        end;
       end;
       { A regex retries at the next position; stopping at the first candidate reported
         nothing for a config that names the key twice. }

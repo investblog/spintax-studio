@@ -7868,6 +7868,20 @@ begin
     { A `#def` that may be blank is ONE draw shared by every reference, which this arithmetic
       cannot separate: a floor. }
     CheckFloor('drop-held-def', '#def %d% = {pp|}' + LineEnding + '[%d%|%d%|aa]');
+
+    (* ---- THE v0.11.1 PIN: A SIZE PAST 32 BITS SATURATES ----
+
+       `Spintax.pas/FindInt` used StrToInt and now saturates at High(Integer); the render
+       clamps that to the element count. The counter's StrToIntDef WRAPPED instead, so
+       2^32+1 read as 1 -- measured before the fix: the first case said 9 EXACT about a
+       document that makes 6 (over the floor), the other two 3 and 6 about 15 and 12. *)
+    CheckCounted('size-past-32-bits-both', '[<minsize=4294967297;maxsize=4294967298>aa|bb|cc]');
+    CheckCounted('size-past-32-bits-max', '[<maxsize=4294967297>aa|bb|cc]');
+    CheckCounted('size-past-32-bits-max-only', '[<minsize=2;maxsize=4294967298>aa|bb|cc]');
+    { maxsize, not minsize: a huge minsize clamps to all three and a failed parse also means
+      all three, so it could not tell saturation from failure (Codex review). Saturated, the
+      sizes run 1..3 -- 15; a parse failure leaves 6. }
+    CheckCounted('size-past-64-bits', '[<maxsize=99999999999999999999999>aa|bb|cc]');
     { The input may blank a conditional or a plural, and the floor has to hold for EVERY
       input: unset here, set below. The first of these said "at least 6" about two texts. }
     CheckFloor('drop-conditional-without-else', '[{?f?xx}|aa|bb]');

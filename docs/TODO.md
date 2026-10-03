@@ -57,6 +57,62 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       the variables panel, and a support surface for a product we do not control. Decide before
       M4 rather than during it.
 
+## Engine bumped to `v0.11.1` (2026-10-04, issue #24)
+
+- [x] **Bumped `v0.10.1` → `v0.11.1`**, both tags 2026-10-03. **Not a release**: it joins the
+      batch for the next Store visit. `interface` of `src/Spintax.pas` **byte-identical** to
+      `v0.10.1` (diffed). Runners rebuilt first, then the corpus: **`PASS=382 FAIL=0 SKIP=4`
+      over 386 cases** against `spintax-js` `origin/main` `9259be2` (`@spintax/core` 0.11.0);
+      `local_tests` 648/0, `gsa_tests` 102/0, both twins. Studio 29 467 → 29 475 checks, 0
+      failed, both binaries — and an x86_64 build of the suite too (see below).
+
+      **What moved, measured old-vs-new through Studio's own path** (`SpxRenderSample`,
+      `SpValidate`, `SpxCountVariants`), not read off the release notes:
+
+      1. **Closers.** The tidy-up no longer INSERTS a space between a mark and the quote or
+         bracket that closes it: `{он спросил «как дела?»|x}, и ушёл` was `…«как дела? », и
+         ушёл` and is `…«как дела?», и ушёл`; `(see above.) next` was `(see above. ) next`.
+         A space the author typed is kept. No gated help example and no help sentence
+         describes the old spacing (grepped en/ru).
+      2. **Bare separators.** `[<—>a|b]` was `B — a`, is `B—a`; `[<lastsep="和">A|B]` was
+         `B 和 A`, is `B和A`. Unchanged: `a — b` as text, `{a|b} — {c|d}`, and
+         `[<sep=" — ">a|b]` → `B — a`. The help has no `—` separator example and no claim
+         about padding.
+      3. **Arabic is six forms.** `{plural 2: one|many}` under `ar` was `Many` and is now
+         `plural.arity`; a six-form block is the valid one. **Unreachable from the window**:
+         `SPX_LOCALES` offers ten tags and no `ar`. The help's arity sentence names the six
+         three-form languages and "English needs two" — still true for every tag offered.
+      4. **Counts past 32 bits.** On this x86_64 build the old engine did NOT raise, as the
+         issue says it would: it WRAPPED, so `{plural 99999999999: a|b|c}` under `ru` gave the
+         `one` form (`A`) where it is `many` (`C`). Fixed either way.
+      5. **And one regression in Studio, from mirroring:** `SpxCount.ReadPermConfig` read a
+         size with `StrToIntDef`, while `Spintax.pas/FindInt` now saturates at High(Integer).
+         Fixed to saturate the same way; four `size-past-*` checks.
+
+      **What the reversion test taught.** With the fix reverted the LOCAL suite caught only one
+      of the three 32-bit shapes: `build.sh` compiles the suite for **i386**, and there
+      `StrToIntDef` returned -1 on overflow and by accident agreed with the engine on the other
+      two. Built with `-Px86_64` — the shipped architecture — the old code wraps: `9` EXACT
+      about a document that makes 6 (over the floor), 3 for 15, 6 for 12, all three red; with
+      the fix, 29 475/0 on x86_64 too. The fourth case (a `maxsize` past 64 bits) is red on
+      both: its first draft used `minsize`, where saturation and a failed parse both mean
+      "all three" and the check could not fail — the Codex gate caught it. **The local gate
+      is a 32-bit build of a 64-bit product**; CI's 64-bit legs are what see this class.
+
+- [ ] **The authoring prompt is four versions behind, and the Arabic arity shows it.**
+      `SpxPrompt.pas` is a port of `PROMPT_VERSION = '2'`; upstream is `'6'` and teaches a
+      six-form plural when the engine's arity is 6. Studio's `SyntaxBlock` picks the example
+      by `forms = 3` else two forms, so under `ar` it would state six forms and show two.
+      Latent — `ar` is not offered — but a resync of the port (with its byte-held fixtures)
+      is the fix, not a branch here. Found by the Codex gate on the bump.
+- [ ] **The 0.2.3.0 What's-new (staged, not committed — the 2026-09-16 session's work) says
+      "Engine updated to v0.10.1"** and has nothing on closers or bare separators. If the
+      bump rides with 0.2.3.0, that block and its thirteen local translations need the engine
+      line and probably a bullet for the closers, which a reader of Russian will see.
+- [ ] **The GUI was not compiled for this bump on this machine** — Lazarus is not installed
+      here (the charter's `C:\lazarus` line is stale). Interface is byte-identical, so the
+      risk is small; CI's Windows `lazbuild` leg is the check.
+
 ## Engine bumped to `v0.10.1` (2026-09-16)
 
 - [x] **Bumped `v0.8.1` → `v0.10.1`, straight past `v0.9.0` and `v0.10.0`** — the 2026-09-12
