@@ -138,14 +138,82 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
-**The 0.2.2.0 What's-new field rode, and the block below is the live text.** Read back
-cache-busted on 2026-09-05: the storefront's `Notes` carries it verbatim. That closes the
+**The 0.2.2.0 What's-new field rode; the 0.2.3.0 block below is the NEXT field** (prepared
+2026-09-16, not yet submitted), and the 0.2.2.0 block after it is the live text. Read back
+cache-busted on 2026-09-05: the storefront's `Notes` carries the 0.2.2.0 text verbatim. That closes the
 question the submission left open and ends the run in which the field showed a version-old
 draft. *(This paragraph sits above the heading on purpose — anything inside the section is
 read as the field, and `check-listing-drafts.py` reported the first draft of it as a wrapped
 line and a stray backtick. The gate was right.)*
 
-## What's new in this version (0.2.2.0)
+## What's new in this version (0.2.3.0)
+
+> **The text below is the field, verbatim and form-ready** — one line per bullet, no
+> backticks, no markdown; 1304 characters against Microsoft's 1500. The thirteen other
+> languages are in `marketing/store/<lang>.md` under the same heading, gated by
+> `check-listing-drafts.py`. Written 2026-09-16 against the tree at `8b9d603`; brought to
+> engine `v0.11.1` on 2026-10-04 against `2b96fec` and `git log v0.2.2.0..HEAD`, before the
+> tag.
+
+Spintax Studio 0.2.3 is about what the engine does with your text.
+
+• A value placed inside a choice or a shuffle is now read the way the rest of the spintax family reads it: a value carrying a | becomes several options, and a shuffle element that renders empty is dropped together with its separator instead of leaving a stray one.
+• A construct with a single option no longer spends a random draw, so for templates that contain one the same seed gives a different variant than 0.2.2 did. Within a version a seed still reproduces the draw exactly.
+• The tidy-up reads every alphabet: Cyrillic multi-dot abbreviations and bare domains such as т.е., и.о. and сайт.рф come out as typed, as e.g. and one.two always did.
+• The tidy-up no longer puts a space between ? ! or . and a closing quote or bracket: "Is it audited?", comes out as typed.
+• The variants panel's count is right about values that carry a | inside a choice or a shuffle, about shuffle elements that render empty, and about session values named with capital letters, and it says "at least" where the engine's expansion budget would leave references unexpanded.
+• Importing a GSA template converts far more quickly, and the lifted lists appear in the variables panel in their own order rather than 1, 10, 11, 2.
+• Engine updated to v0.11.1.
+
+## How the 0.2.3.0 field was written
+
+**Measured, not carried over.** Each bullet, and what stands behind it:
+
+- The splice and the drop: engine `v0.9.0`/`v0.10.0` (spec §5.9, §5.13), adopted from the
+  PHP engines through `@spintax/core` 0.7.0 and 0.8.0. Ninety-five shapes enumerated here
+  against the pinned engine; the preview a reader sees changes for `{%x%}` over
+  `#set %x% = a|b` and for `[a|{b|}|c]`, so it is said first.
+- The draw: §5.10, and the engine's own differential — 410 of 1 800 renders with a
+  one-option construct move, zero without. "Within a version" is the help's own seed sentence.
+- The tidy-up: §5.12; `это т.е. вот так → Это т.е. вот так` and `сайт.рф … → сайт.рф …` are
+  gated examples in the help now, measured under all fourteen locales.
+- The closers (added 2026-10-04 with the `v0.11.0` engine, @spintax/core #85): Studio's own
+  render path, seed 7, on `v0.10.1` and `v0.11.1` — `He asked "Is it audited?", then left.`
+  came out `"Is it audited? ",` before and as typed now, and the same for `(really!)` and
+  `(see above.)`. Each draft's example was measured the same way under its own locale before
+  it was written into the bullet (`«Как дела?»,`, `„Wie geht es?“,`, `(voir plus haut.)`, …);
+  a space the author typed stays either way. The word for the tidy-up is each draft's own
+  from the bullet above it; the wording of the new line is the agent's and not measured.
+- The counter: seventeen under-counts and twenty-one over-counts reproduced before the fix,
+  plus the capitalised session name and the engine's expansion purse (collapse to "at least
+  1" past a mebibyte of substitution) — all pinned in `tests/studio_tests.dpr`.
+- The import: engine `v0.8.1` made the lifter linear (5 229 ms → 31 ms at four thousand
+  macros) and Studio's own sort went from 3 266 ms to 63 at sixteen thousand; the order was
+  `CompareStr` on names carrying numbers and is natural order now (`2a644c2`). Neither is in
+  `0.2.2.0`, which was tagged before the pin.
+- The help: fourteen documents rewritten for the Unicode boundary, ten of them with a new
+  gated example. Its bullet ("describes all of this, in all fourteen languages") was cut on
+  2026-10-04: it would have been false under the closers line, which no help document
+  describes, and the room was needed — fr stood at 1497 of 1500. The lead lost its colon
+  clause for the same room, in every language alike, so the drafts stay a mirror by deletion.
+
+**What is deliberately NOT here.** The GSA escape change (`{{}?a?b|c}`), the circular
+diagnostic's shape (already shipped in 0.2.2.0), and everything about SourceForge and the PAD,
+which are shelves and not the product. From `v0.11.x`: a separator written bare that is non-ASCII
+and not a letter — a dash, an arrow — is no longer space-padded (ASCII ones never were) (`[<sep="—">a|b]`: `B — a` → `B—a`), as
+everywhere else in the family, and one written in Han or kana joins bare
+(`[<lastsep="和">A|B]`, seed 7: `B 和 A` → `B和A`); alphabetic separators, Cyrillic and Hangul included, are
+still padded, the spaced form `sep=" — "` is unchanged, and no help example uses a bare one;
+Arabic's six plural forms (`ar` is not among the window's locales); and a plural count or
+permutation size past 32 bits, which no longer raises. From `v0.10.x`, recorded in
+`docs/TODO.md` with the bump: `plural.count-macro` is reported once per tainted reference
+rather than once per block (a row count in the panel, which the help never states), and the
+parser and render walk became iterative with every substitution charged to the budget, which
+moves output only at the edges — where expansion reaches the budget a reference renders
+literal sooner, and nesting tolerates more depth. Left out as edge-case behaviour, not as
+internal.
+
+## What's new in this version (0.2.2.0) — LIVE
 
 > **The text below is the field, verbatim and form-ready** — one line per bullet, no
 > backticks, no markdown. Partner Center keeps the breaks it is given, so a draft wrapped to

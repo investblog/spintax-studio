@@ -59,7 +59,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 
 ## Engine bumped to `v0.11.1` (2026-10-04, issue #24)
 
-- [x] **Bumped `v0.10.1` → `v0.11.1`**, both tags 2026-10-03. **Not a release**: it joins the
+- [x] **Bumped `v0.10.1` → `v0.11.1`**; `v0.11.0` and `v0.11.1` both tagged 2026-10-03. **Not a release**: it joins the
       batch for the next Store visit. `interface` of `src/Spintax.pas` **byte-identical** to
       `v0.10.1` (diffed). Runners rebuilt first, then the corpus: **`PASS=382 FAIL=0 SKIP=4`
       over 386 cases** against `spintax-js` `origin/main` `9259be2` (`@spintax/core` 0.11.0);
@@ -105,13 +105,13 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       by `forms = 3` else two forms, so under `ar` it would state six forms and show two.
       Latent — `ar` is not offered — but a resync of the port (with its byte-held fixtures)
       is the fix, not a branch here. Found by the Codex gate on the bump.
-- [ ] **The 0.2.3.0 What's-new (staged, not committed — the 2026-09-16 session's work) says
-      "Engine updated to v0.10.1"** and has nothing on closers or bare separators. If the
-      bump rides with 0.2.3.0, that block and its thirteen local translations need the engine
-      line and probably a bullet for the closers, which a reader of Russian will see.
-- [ ] **The GUI was not compiled for this bump on this machine** — Lazarus is not installed
-      here (the charter's `C:\lazarus` line is stale). Interface is byte-identical, so the
-      risk is small; CI's Windows `lazbuild` leg is the check.
+- [x] **The 0.2.3.0 What's-new rides with this bump (2026-10-04).** All fifteen fields
+      (fourteen languages, Serbian in both scripts) say `v0.11.1` and carry a closers line, each draft's example measured under its own locale
+      on both engines; the help bullet and the lead's colon clause were cut to make room. The
+      record — and what was left out on purpose (bare separators, Arabic, 32 bits) — is in
+      `docs/store-listing.md`, *How the 0.2.3.0 field was written*.
+- [x] **The GUI was compiled for this bump on this machine** — Lazarus 4.8 at `D:\lazarus`
+      (`LAZARUS_DIR=/d/lazarus sh ./build.sh`), and the built app opened to its main form.
 
 ## Engine bumped to `v0.10.1` (2026-09-16)
 
@@ -241,11 +241,24 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       `studio.md` sentences ("can only add texts", "as text") in all twelve. What is NOT
       measured is the translation quality: the facts are, the wording is the agent's.
 
-- [ ] **What's-new for the next visit, engine part:** seeded variants differ from 0.2.2.0 for
-      templates with a single-option construct; Cyrillic multi-dot abbreviations and bare
-      domains are no longer broken apart; the variant counter is right about values with a pipe
-      and about elements that render empty; engine `v0.10.1`. Fourteen languages, terminology
-      off the shipped help (`engine` = `Maschine`/`motor`/…), one line per bullet.
+- [x] **What's-new for `0.2.3.0` — written 2026-09-16, fourteen languages, gated.** The English
+      field and its record are in `docs/store-listing.md` (*What's new in this version
+      (0.2.3.0)*); the thirteen others in `marketing/store/<lang>.md`, `sr-Latn` regenerated;
+      `check-listing-drafts.py --strict` clean — it refused four drafts at 1502–1532 characters
+      first, which is the gate doing its one job. **`marketing/` is gitignored** (the same split
+      as `assets/store/`), so the thirteen translations exist on THIS machine only; the English
+      field is the tracked one. Version bumped to `0.2.3.0` (`VERSION`, the
+      `.lpi`, About regenerated), NOT tagged.
+
+- [ ] **The `0.2.3.0` visit — the owner's commands, in order.** (1) `git tag v0.2.3.0` on the
+      commit that carries the bump and push it; `release.yml` builds the artefact. (2) WACK
+      against the TAG's artefact, record in `docs/release-validation.md`, identity read out of
+      the package. (3) Partner Center: upload the tag's `.msixupload`; paste the fifteen
+      What's-new fields (fourteen languages; Serbian twice, `sr-Latn` into the main `sr` row
+      and `sr-Cyrl` into the additional one); **fix feature bullet 6** (the item below — paste the merged *Variable
+      and include inspectors* line from `store-listing.md`); screenshots unchanged since 0.2.0.0.
+      (4) After certification: charter's opening paragraph and Release section, `docs/TODO.md`,
+      the storefront read back cache-busted, `Get-AppxPackage` on this machine.
 
 ## Where R0 is (published), and what `v0.2.0.0` carries (re-checked 2026-08-06; renamed 2026-08-14)
 
