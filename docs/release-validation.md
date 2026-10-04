@@ -1,11 +1,63 @@
 # Release validation
 
-Six records, newest first: `v0.2.2.0` validated and submitted on 2026-08-20, live the same
+Seven records, newest first: `v0.2.3.0` validated on 2026-10-04, `v0.2.2.0` validated and submitted on 2026-08-20, live the same
 day and verified by installing on 2026-09-05,
 `v0.2.1.0` validated and published on 2026-08-18, `v0.2.0.0`
 validated on 2026-08-15, a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
 validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0.0` (R0) on
 2026-08-03 and published on 2026-08-04.
+
+---
+
+# v0.2.3.0 — validated 2026-10-04
+
+**Why it exists:** engine `v0.11.1`. The tidy-up stops putting a space between `?` `!` `.` and
+a closing quote or bracket, and the variant counter reads a size past 32 bits the way the
+engine does. The What's-new field says the rest, in fifteen rows.
+
+## Candidate
+
+Tag `v0.2.3.0` → `2f83ec9`, built by `release.yml` from the tagged commit; CI green on that
+commit before the tag was cut, and on `a10381b` after it.
+
+## Identity, read out of the package
+
+`spintax-studio.msix` downloaded from the draft release into `build\wack-0.2.3.0\`; its
+SHA-256 `5668def2…0522b33` matches the published `SHA256SUMS`. The manifest says
+`301.SpintaxStudio`, `Version="0.2.3.0"`, `ProcessorArchitecture="x64"`.
+
+## WACK
+
+```powershell
+appcert.exe reset
+appcert.exe test -appxpackagepath build\wack-0.2.3.0\spintax-studio.msix `
+  -reportoutputpath build\wack\spintax-studio-wack-0.2.3.0.xml
+```
+
+**First run on this machine.** WACK is not installed here by default. It was added on
+2026-10-04 as the SDK's single App Certification Kit feature, at `D:\Windows Kits\10`
+(`winget install Microsoft.WindowsSDK.10.0.26100 --override '/features
+OptionId.WindowsSoftwareLogoToolkit /installpath "D:\Windows Kits\10" /quiet'`; the
+feature's id is `WindowsSoftwareLogoToolkit`, and `WindowsAppCertificationKit` is refused).
+Kit 10.0.26100.7705, Windows 11 Pro.
+
+Result: **`OVERALL_RESULT=PASS`, `PARTIAL_RUN=FALSE`**. 23 of 24 tests PASS. The one
+non-PASS is the **optional** Blocked Executable Files analyzer, with the same three findings
+as `0.2.2.0`:
+
+- `shell32.dll!ShellExecuteW` — the browser action behind the two link marks;
+- `reg` — `&reg;` in `TSynHTMLSyn`'s entity table;
+- `dnx` — the offset-table accident again, at a new address: the one match, at file offset
+  `0x7cf030`, sits in a run of little-endian dwords
+  `4c da 09 00 | 64 6e 78 00 | 50 da 09 00`, so it is the value `0x00786E64`, not a string.
+
+As before, an optional analyzer finding does not block the Store, and nothing was silenced.
+
+## Release
+
+Published on GitHub on 2026-10-04, after this run and on the owner's command. The Store
+submission is the owner's: upload THIS release's `spintax-studio.msixupload`, then paste
+the fifteen What's-new fields.
 
 ---
 

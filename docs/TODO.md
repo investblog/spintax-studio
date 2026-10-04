@@ -255,9 +255,11 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       tag → `2f83ec9` (engine `v0.11.1`; CI green on all six jobs first), `release.yml` run
       `37194799416` green, draft release holds the `.msix`, `.msixupload`, portable ZIP and
       `SHA256SUMS` — all three sums verified on download, MSIX identity
-      `301.SpintaxStudio 0.2.3.0 x64`, the ZIP's exe launched to its main form. (2) WACK
-      against the TAG's artefact, record in `docs/release-validation.md`, identity read out of
-      the package. (3) Partner Center: upload the tag's `.msixupload`; paste the fifteen
+      `301.SpintaxStudio 0.2.3.0 x64`, the ZIP's exe launched to its main form. (2) ~~WACK
+      against the TAG's artefact~~ — **done 2026-10-04:** `OVERALL_RESULT=PASS`, 23 of 24, the
+      optional blocked-executables analyzer with the same three findings as `0.2.2.0`; record in
+      `docs/release-validation.md`. WACK is at `D:\Windows Kits\10` on this machine now. The
+      GitHub release was published after the run, on the owner's command. (3) Partner Center: upload the tag's `.msixupload`; paste the fifteen
       What's-new fields (fourteen languages; Serbian twice, `sr-Latn` into the main `sr` row
       and `sr-Cyrl` into the additional one); **fix feature bullet 6** (the item below — paste the merged *Variable
       and include inspectors* line from `store-listing.md`); screenshots unchanged since 0.2.0.0.
