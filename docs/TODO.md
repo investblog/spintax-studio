@@ -248,10 +248,14 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       first, which is the gate doing its one job. **`marketing/` is gitignored** (the same split
       as `assets/store/`), so the thirteen translations exist on THIS machine only; the English
       field is the tracked one. Version bumped to `0.2.3.0` (`VERSION`, the
-      `.lpi`, About regenerated), NOT tagged.
+      `.lpi`, About regenerated), not tagged then — the tag came 2026-10-04, below.
 
-- [ ] **The `0.2.3.0` visit — the owner's commands, in order.** (1) `git tag v0.2.3.0` on the
-      commit that carries the bump and push it; `release.yml` builds the artefact. (2) WACK
+- [ ] **The `0.2.3.0` visit — the owner's commands, in order.** (1) ~~`git tag v0.2.3.0` on the
+      commit that carries the bump and push it~~ — **done 2026-10-04 on the owner's command:**
+      tag → `2f83ec9` (engine `v0.11.1`; CI green on all six jobs first), `release.yml` run
+      `37194799416` green, draft release holds the `.msix`, `.msixupload`, portable ZIP and
+      `SHA256SUMS` — all three sums verified on download, MSIX identity
+      `301.SpintaxStudio 0.2.3.0 x64`, the ZIP's exe launched to its main form. (2) WACK
       against the TAG's artefact, record in `docs/release-validation.md`, identity read out of
       the package. (3) Partner Center: upload the tag's `.msixupload`; paste the fifteen
       What's-new fields (fourteen languages; Serbian twice, `sr-Latn` into the main `sr` row
