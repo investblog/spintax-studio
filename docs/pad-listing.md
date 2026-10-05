@@ -11,9 +11,17 @@ The copy and the settled fields that `scripts/make-pad.py` turns into `pad.xml`,
 <https://spintax.studio/pad.xml> and handed to software portals that read PAD.
 
 **Nothing here is written into the XML by hand.** The version comes from `VERSION`, the
-languages the program speaks from `packaging/AppxManifest.xml.in`, and the download size from
-the release asset itself — measured at generation time, not typed. What lives in this file is
-the part a person writes: the descriptions, and the fields that are decisions.
+release date from the tag `v<version>`, the languages the program speaks from
+`packaging/AppxManifest.xml.in`, and the download size from the release asset itself —
+measured at generation time, not typed. What lives in this file is the part a person writes:
+the descriptions, and the fields that are decisions.
+
+**Except `Program_Change_Info`, which is per release and is NOT gated.** The 0.2.3.0 PAD
+first went out with 0.2.2.0's date and 0.2.2.0's notes ("Engine updated to v0.8.0"): the
+version moved by itself and the two hand-kept fields beside it did not. The date is derived
+now. The notes are prose and have to be rewritten at every release, from the What's-new in
+`store-listing.md`. The 0.2.3.0 text is 290 characters, near the length of the 0.2.2.0
+text (263). No limit for this field has been measured here, because the spec host is gone.
 
 ## The three languages, which are not the same question
 
@@ -113,21 +121,6 @@ support@301.st
 Spintax Studio
 ```
 
-### Program_Release_Month
-```
-08
-```
-
-### Program_Release_Day
-```
-20
-```
-
-### Program_Release_Year
-```
-2026
-```
-
 ### Program_Cost_Dollars
 ```
 0
@@ -160,7 +153,7 @@ English,Russian,Ukrainian,Belarusian,Serbian,Croatian,Bosnian,German,French,Span
 
 ### Program_Change_Info
 ```
-The diagnostics panel answers at once on templates whose definitions refer to each other in a circle, and reports one finding per name. Importing a large GSA template no longer freezes the window. Two plural findings were wrong and are right. Engine updated to v0.8.0.
+A value carrying a | inside a choice or a shuffle becomes several options. A seed can give a different variant than 0.2.2 did. The tidy-up reads every alphabet and no longer spaces ? ! . before a closing quote. The variant count is right in more cases. GSA import is faster. Engine v0.11.1.
 ```
 
 ### Program_Specific_Category

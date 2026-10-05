@@ -49,6 +49,7 @@ import argparse
 import io
 import os
 import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ElementTree
 from urllib import request, error
@@ -135,6 +136,35 @@ def fields(text, heading):
     if not out:
         die('no "### Field" blocks under "## %s"' % heading)
     return out
+
+
+def release_date(version):
+    """The date of the tag `v<version>`, as (year, month, day) strings.
+
+    The date was typed into the copy until 2026-10-05, and the 0.2.3.0 PAD came out carrying
+    0.2.2.0's day -- the version is derived, so it moved, and the date beside it did not. The
+    tag is what ships, so its date is the release date: `creatordate` is the tagger's date for
+    an annotated tag. No tag, no PAD -- a PAD dated by guess is the same defect again.
+
+    ANNOTATED ONLY. A lightweight tag has no date of its own, and `creatordate` then quietly
+    answers the tagged COMMIT's date, which can be weeks before the release. Every release tag
+    here is annotated; a lightweight one is refused by name rather than dated wrong.
+    """
+    try:
+        out = subprocess.run(
+            ['git', 'for-each-ref', '--format=%(objecttype) %(creatordate:short)',
+             'refs/tags/v' + version],
+            cwd=HERE, capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        die('cannot ask git for the date of tag v%s: %s' % (version, exc))
+    match = re.fullmatch(r'(\w+) (\d{4})-(\d{2})-(\d{2})', out)
+    if not match:
+        die('no tag v%s here, so no release date; a PAD is generated for a tagged version'
+            ' (git answered %r)' % (version, out))
+    if match.group(1) != 'tag':
+        die('tag v%s is lightweight, so it carries no date of its own; tag the release with'
+            ' `git tag -a`' % version)
+    return match.groups()[1:]
 
 
 def check_url(url, what, findings):
@@ -270,6 +300,10 @@ def main():
         die('--offline cannot write a PAD file: the size of the download is measured from the'
             ' download, and a PAD that misstates it misleads every portal that reads it')
 
+    # Asked only when writing: `--check` runs on branches, where VERSION can be ahead of every
+    # tag between the bump and the release, and that is not a defect.
+    year, month, day = release_date(version)
+
     # ---- build ------------------------------------------------------------------------------
     root = ElementTree.Element('XML_DIZ_INFO')
     info = element(root, 'MASTER_PAD_VERSION_INFO')
@@ -290,8 +324,10 @@ def main():
     program = element(root, 'Program_Info')
     element(program, 'Program_Name', fixed['Program_Name'])
     element(program, 'Program_Version', version)
-    for tag in ('Program_Release_Month', 'Program_Release_Day', 'Program_Release_Year',
-                'Program_Cost_Dollars', 'Program_Type', 'Program_Release_Status',
+    element(program, 'Program_Release_Month', month)
+    element(program, 'Program_Release_Day', day)
+    element(program, 'Program_Release_Year', year)
+    for tag in ('Program_Cost_Dollars', 'Program_Type', 'Program_Release_Status',
                 'Program_Install_Support', 'Program_OS_Support'):
         element(program, tag, fixed.get(tag, ''))
     element(program, 'Program_Language', ','.join(languages))

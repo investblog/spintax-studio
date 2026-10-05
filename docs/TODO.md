@@ -3678,6 +3678,24 @@ tight one — it lands at 41. Element naming confirmed against PAD files in the 
       have to create; until then the red X is the reminder.
       All three outcomes rehearsed locally: current, a version behind, and same version with
       different bytes.
+- [x] **The 0.2.3.0 PAD went out late, and with two of 0.2.2.0's fields** (2026-10-05). The
+      job failed on publishing exactly as designed ("still describes 0.2.2.0"). Regenerating
+      then showed that the version had moved and the two hand-kept fields beside it had not:
+      `Program_Release_*` said 2026-08-20, and `Program_Change_Info` said "Engine updated to
+      v0.8.0". The date now comes from the tag (`release_date` in `make-pad.py`). It reproduces
+      08-20 for `v0.2.2.0` and refuses an untagged version. The notes were rewritten for 0.2.3.0.
+      The site and the release asset `pad.xml` carry the corrected file.
+
+      **For 0.2.3.0 only, the site deliberately differs from what the tag generates**, because
+      `pad.yml` runs the TAG's copy of the script and copy, and the fix landed after the tag. A
+      `workflow_dispatch` run on `v0.2.3.0` reports "differs", which is expected and harmless.
+      **Do not re-run the original `release` event job:** it uploads the tag's stale `pad.xml`
+      over the corrected release asset (`--clobber`) BEFORE it compares (Codex, 2026-10-05).
+      Release tags must be annotated (`git tag -a`): `make-pad.py` refuses a lightweight one,
+      which has no date of its own.
+- [ ] **Before every tag: rewrite `Program_Change_Info` in `pad-listing.md`** from that
+      release's What's-new. It is the one per-release field still written by hand, and the tag
+      is what `pad.yml` generates from, so a fix after the tag does not reach the PAD.
 
 ## Publish prep — Microsoft Store (spec §11)
 
