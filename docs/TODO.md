@@ -3703,7 +3703,12 @@ tight one — it lands at 41. Element naming confirmed against PAD files in the 
       without a resubmission if they re-read at all.
 - [ ] **Catalog submissions, 2026-10-05.** Softpedia: PAD URL submitted, contact
       `webmaster@301.st`. They say up to 30 days, and not every program is listed. FreewareOne:
-      rejected on the old tree, to be resubmitted on the fixed one. Download-By.Net: not yet.
+      rejected on the old tree, then ACCEPTED on the fixed one (owner, 2026-10-05), category
+      `Web Development::Other` (theirs, not a PAD field). Download-By.Net: its `addpad.php`
+      answers 500 to any request, including a probe with no valid category, while its home page
+      answers 200. The server is broken, not our file; retry later. N5 Networks
+      (`files.n5net.com`): PAD queued, "up to 3 days for the listing to appear" (owner,
+      captcha).
 - [ ] **Before every tag: rewrite `Program_Change_Info` in `pad-listing.md`** from that
       release's What's-new. It is the one per-release field still written by hand, and the tag
       is what `pad.yml` generates from, so a fix after the tag does not reach the PAD.
