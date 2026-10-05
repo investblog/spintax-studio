@@ -312,13 +312,25 @@ def main():
     element(info, 'MASTER_PAD_INFO',
             'Portable Application Description, generated from docs/pad-listing.md')
 
+    # NESTING, which the element names alone do not tell you. Contact_Info and Support_Info sit
+    # INSIDE Company_Info, and File_Info and Expire_Info INSIDE Program_Info. Until 2026-10-05
+    # Support_Info and File_Info were emitted at the root, and Contact_Info and Expire_Info not
+    # at all. The names had been
+    # checked against PAD files in the wild and the tree had not. The first validator that read
+    # the file structurally (FreewareOne) rejected it for Contact_Email and File_Size_K. The
+    # tree below follows a real PAD 3.11 file (Programmer's Notepad's pad_file.xml) element for
+    # element.
     company = element(root, 'Company_Info')
     for tag in ('Company_Name', 'Address_1', 'Address_2', 'City_Town', 'State_Province',
                 'Zip_Postal_Code', 'Country', 'Company_WebSite_URL'):
         element(company, tag, fixed.get(tag, ''))
-
-    support = element(root, 'Support_Info')
-    for tag in ('Sales_Email', 'Support_Email', 'General_Email'):
+    contact = element(company, 'Contact_Info')
+    for tag in ('Author_First_Name', 'Author_Last_Name', 'Author_Email',
+                'Contact_First_Name', 'Contact_Last_Name', 'Contact_Email'):
+        element(contact, tag, fixed.get(tag, ''))
+    support = element(company, 'Support_Info')
+    for tag in ('Sales_Email', 'Support_Email', 'General_Email', 'Sales_Phone',
+                'Support_Phone', 'General_Phone', 'Fax_Phone'):
         element(support, tag, fixed.get(tag, ''))
 
     program = element(root, 'Program_Info')
@@ -327,7 +339,10 @@ def main():
     element(program, 'Program_Release_Month', month)
     element(program, 'Program_Release_Day', day)
     element(program, 'Program_Release_Year', year)
-    for tag in ('Program_Cost_Dollars', 'Program_Type', 'Program_Release_Status',
+    element(program, 'Program_Cost_Dollars', fixed.get('Program_Cost_Dollars', ''))
+    element(program, 'Program_Cost_Other_Code')
+    element(program, 'Program_Cost_Other')
+    for tag in ('Program_Type', 'Program_Release_Status',
                 'Program_Install_Support', 'Program_OS_Support'):
         element(program, tag, fixed.get(tag, ''))
     element(program, 'Program_Language', ','.join(languages))
@@ -337,11 +352,16 @@ def main():
     element(program, 'Program_System_Requirements',
             fixed.get('Program_System_Requirements', ''))
 
-    file_info = element(root, 'File_Info')
+    file_info = element(program, 'File_Info')
     total = int(size)
     element(file_info, 'File_Size_Bytes', str(total))
     element(file_info, 'File_Size_K', str(int(round(total / 1024.0))))
     element(file_info, 'File_Size_MB', '%.2f' % (total / 1048576.0))
+    expire = element(program, 'Expire_Info')
+    element(expire, 'Has_Expire_Info', 'N')   # free software; nothing expires
+    for tag in ('Expire_Count', 'Expire_Based_On', 'Expire_Other_Info', 'Expire_Month',
+                'Expire_Day', 'Expire_Year'):
+        element(expire, tag)
 
     descriptions = element(root, 'Program_Descriptions')
     for name in described:
@@ -361,6 +381,8 @@ def main():
     downloads = element(web, 'Download_URLs')
     element(downloads, 'Primary_Download_URL', download)
     element(downloads, 'Secondary_Download_URL', urls['Secondary_Download_URL'])
+    element(downloads, 'Additional_Download_URL_1')
+    element(downloads, 'Additional_Download_URL_2')
 
     permissions = element(root, 'Permissions')
     element(permissions, 'Distribution_Permissions', fixed.get('Distribution_Permissions', ''))

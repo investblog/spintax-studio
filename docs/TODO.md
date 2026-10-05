@@ -3693,6 +3693,17 @@ tight one — it lands at 41. Element naming confirmed against PAD files in the 
       over the corrected release asset (`--clobber`) BEFORE it compares (Codex, 2026-10-05).
       Release tags must be annotated (`git tag -a`): `make-pad.py` refuses a lightweight one,
       which has no date of its own.
+- [x] **The PAD's TREE was wrong since it was written, and a validator said so**
+      (2026-10-05). FreewareOne rejected it: `Contact_Info/Contact_Email` and
+      `Program_Info/File_Info/File_Size_K` were not found. `File_Info` had been emitted at the
+      root and `Contact_Info` not at all. Fixed and compared, path by path and in order, with a
+      real 3.11 file; `pad-listing.md` has the detail. **Portals the broken file was handed
+      to:** SoftPortal (2026-09-06, its own form read it, outcome still unknown) and Softpedia
+      (2026-10-05, result page never loaded). Both re-read the URL, so the fix reaches them
+      without a resubmission if they re-read at all.
+- [ ] **Catalog submissions, 2026-10-05.** Softpedia: PAD URL submitted, contact
+      `webmaster@301.st`. They say up to 30 days, and not every program is listed. FreewareOne:
+      rejected on the old tree, to be resubmitted on the fixed one. Download-By.Net: not yet.
 - [ ] **Before every tag: rewrite `Program_Change_Info` in `pad-listing.md`** from that
       release's What's-new. It is the one per-release field still written by hand, and the tag
       is what `pad.yml` generates from, so a fix after the tag does not reach the PAD.

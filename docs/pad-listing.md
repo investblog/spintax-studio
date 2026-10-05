@@ -43,6 +43,15 @@ The element naming was confirmed against PAD files in the wild (Dolibarr ships `
 `pad.asp-software.org` no longer resolves at all. Both files checked declare
 `MASTER_PAD_VERSION 3.11`, which is what we emit.
 
+**The NAMES were confirmed and the TREE was not, and that was the defect.** Until
+2026-10-05 `File_Info` sat at the root instead of inside `Program_Info`, `Support_Info` at
+the root instead of inside `Company_Info`, and `Contact_Info` was missing. FreewareOne's
+validator rejected the file for `Contact_Email` and `File_Size_K`. Softpedia took the same
+file earlier that day, and its result page never finished loading, so whatever it made of
+the file was never seen. The tree is now compared with a real 3.11 file (Programmer's
+Notepad's `pad_file.xml`) path by path and in order. Apart from our `<Russian>` block, their
+element paths are identical and in the same order. Values differ, as they must.
+
 ## Which name goes above the address
 
 Four names for "who makes this" are already published, and each is right where it stands: the
@@ -115,6 +124,21 @@ support@301.st
 ```
 support@301.st
 ```
+
+### Contact_Email
+```
+webmaster@301.st
+```
+
+### Author_Email
+```
+webmaster@301.st
+```
+
+*`Contact_Info` is required by structural PAD validators: FreewareOne rejected the file for
+`Contact_Email` on 2026-10-05. The address is the one the owner gave for catalog submissions
+that day. The first and last name fields are emitted empty on purpose. No person was named,
+and a portal that shows a contact name should show none rather than a guess.*
 
 ### Program_Name
 ```
