@@ -10,7 +10,8 @@ pages, read on 2026-10-05. Where each submission stands is recorded in `docs/TOD
 ## FileHorse — <https://www.filehorse.com/contact/>
 
 `/submit/` lists what to include and points to the contact form. That form has four required
-fields: **Name, Email, Subject, Message**, and no captcha (read in a browser, 2026-10-05). They
+fields: **Name, Email, Subject, Message**, and a reCAPTCHA checkbox, which the accessibility
+tree does not show and a screenshot does (read in a browser, 2026-10-05). They
 ask the sender to say who they are, review by hand, and scan with VirusTotal and Google Safe
 Browsing. They ask for an icon "preferably 256px x 256px". There is no exact 256 asset: the
 site has 96, 180 and 512, and the message offers the 512.

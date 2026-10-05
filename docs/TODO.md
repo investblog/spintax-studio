@@ -3708,7 +3708,10 @@ tight one — it lands at 41. Element naming confirmed against PAD files in the 
       answers 500 to any request, including a probe with no valid category, while its home page
       answers 200. The server is broken, not our file; retry later. N5 Networks
       (`files.n5net.com`): PAD queued, "up to 3 days for the listing to appear" (owner,
-      captcha).
+      captcha). FileHorse: message sent through the contact form (owner, reCAPTCHA), name
+      `Franky (PR, 301.st)`, reply to `webmaster@301.st`. The text is the one in
+      `catalog-listings.md`, and they say they may take 48 hours or more to answer.
+      AlternativeTo: waits for an account at least seven days old.
 - [ ] **Before every tag: rewrite `Program_Change_Info` in `pad-listing.md`** from that
       release's What's-new. It is the one per-release field still written by hand, and the tag
       is what `pad.yml` generates from, so a fix after the tag does not reach the PAD.
