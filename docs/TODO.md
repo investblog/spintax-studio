@@ -19,7 +19,7 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
 - [x] **GUI framework — Lazarus/LCL** ([ADR 0002](decisions/0002-gui-lazarus-lcl.md)). Same
       FPC as the engine, MIT, native Win widgets, one self-contained `.exe`, zero cost.
 - [x] **Engine pull — git submodule** ([ADR 0001](decisions/0001-engine-as-submodule.md)),
-      at `engine/`, pinned to tag `v0.11.1`. Clone with `--recurse-submodules`.
+      at `engine/`, pinned to tag `v0.12.0`. Clone with `--recurse-submodules`.
 - [x] **`#include` resolution + the on-disk template set**
       ([ADR 0003](decisions/0003-include-resolution-and-template-set.md), 2026-07-25, revised
       twice the same day). The family resolves includes **inside render**, behind a host
@@ -56,6 +56,32 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       refusal list has to be SHOWN, not swallowed), converter-invented variables appearing in
       the variables panel, and a support surface for a product we do not control. Decide before
       M4 rather than during it.
+
+## Engine bumped to `v0.12.0` (2026-10-06, issue #25)
+
+- [x] **Bumped `v0.11.1` → `v0.12.0`.** **Not a release**, and **not in `0.2.3.0`**: that tag
+      is already built against `v0.11.1` (`git ls-tree v0.2.3.0 engine`), so its What's-new
+      fields, which say `v0.11.1`, are right and stay. This joins the batch after it.
+      `interface` of `src/Spintax.pas` **byte-identical** to `v0.11.1` (diffed). Runners
+      rebuilt first, then the corpus: **`PASS=404 FAIL=0 SKIP=4` over 408 cases** against
+      `spintax-js` `origin/main` `65440d5` (`@spintax/core` 0.12.0); `local_tests` 660/0,
+      `gsa_tests` 102/0, both twins. Studio 29 475 checks, 0 failed, both binaries; GUI built.
+
+      **What moved, measured old-vs-new through `SpxRenderSample`, seed 7:**
+
+      1. **Thai, Lao, Khmer, Myanmar separators join bare**, under every locale:
+         `[<lastsep="และ">A|B]` was `B และ A`, is `BและA` (`en` and `ru` alike). The help has
+         no such separator example and no claim about it (grepped).
+      2. **Arabic `و`/`ف` and Hebrew `ו` attach to the next word — but only under an `ar` /
+         `he` locale**: `[<lastsep="و">الكازينو|البث]` was `البث و الكازينو`, is
+         `البث والكازينو` under `ar`, and is unchanged under `ru` and `en`. **The window cannot
+         reach this:** the locale box (`SPX_LOCALES`) offers ten tags, none of them `ar` or
+         `he`, so in Studio the conjunction stays padded, unlike the playground under `ar`.
+- [ ] **Decide whether the locale box offers `ar` / `he`** (and which others). Owner's call:
+      a locale is a promise about plurals as well as separators (`ar` has six plural forms),
+      and every locale the box offers is one more column the help's per-locale claims are
+      measured in. Until then, issue #25's Arabic/Hebrew rule is engine behaviour Studio does
+      not expose.
 
 ## Engine bumped to `v0.11.1` (2026-10-04, issue #24)
 
