@@ -3190,7 +3190,7 @@ end;
    line-number pad, an unnormalized locale handed to `PluralArity`, and a U+FEFF stripped at
    one end of a string and not the other. *)
 procedure CheckPromptPort;
-const DIR = 'tests/fixtures/prompt-v2/';
+const DIR = 'tests/fixtures/prompt/';
 
   function Slurp(const APath: string): string;
   var fs: TFileStream;
@@ -6301,7 +6301,7 @@ end;
    what those shapes are meant to be -- worth having, and not the same thing as evidence about
    what a given account returns today. They are PARSED rather than compared byte for byte, so
    their line endings do not matter; that is why this directory has no `-text` rule while
-   `tests/fixtures/prompt-v2` does. *)
+   `tests/fixtures/prompt` does. *)
 (* THE CONNECTION PROFILE (R1-4): its words, its origin rule, and its grants.
 
    THE WORDS ARE THE FILE FORMAT. `ai.kind` and `ai.auth` are stored as words because this

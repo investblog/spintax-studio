@@ -15,6 +15,8 @@ port-nolocale	authoring		generic	balanced
 port-ru-RU-email	authoring	ru-RU	email	balanced
 port-sr-Latn-RS	authoring	sr-Latn-RS	landing	balanced
 port-en-US-sms	authoring	en-US	sms	conservative
+port-ar-landing	authoring	ar	landing	balanced
+port-he-email	authoring	he	email	balanced
 repair-en	repair	en		
 repair-ru	repair	ru		
 repair-crlf	repair	en		

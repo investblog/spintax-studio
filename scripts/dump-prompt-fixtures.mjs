@@ -35,7 +35,7 @@ import { pathToFileURL } from 'node:url';
 
 const HERE = resolve(import.meta.dirname, '..');
 const JS = resolve(HERE, process.env.SPINTAX_JS ?? '../spintax-js');
-const OUT = join(HERE, 'tests', 'fixtures', 'prompt-v2');
+const OUT = join(HERE, 'tests', 'fixtures', 'prompt');
 
 const importFrom = (pkg) =>
   import(pathToFileURL(join(JS, 'packages', pkg, 'dist', 'index.js')).href);
@@ -189,6 +189,18 @@ const PORT_CASES = [
     brief: 'Naslov i jedna rečenica za stranicu.', allowedVariables: [] },
   { id: 'port-en-US-sms', locale: 'en-US', channel: 'sms', variationLevel: 'conservative',
     brief: 'Short delivery notice.', allowedVariables: [] },
+
+  /* THE SIX-FORM BRANCH, and its control. `ar` is the only locale where the engine answers an
+     arity of 6, and the builder then changes three things at once: the plural shape, the example
+     (an Arabic sentence with %n% INSIDE the forms), and a slot-order paragraph no other locale
+     gets. Taken on 2026-10-06, the day `ar` was decided for Studio's locale box; until then the
+     branch was latent here and the port answered it with the two-form shape -- which no fixture
+     could see, because no fixture asked. `he` is the control: arity 2, default profile, so it must come out
+     exactly like any other two-form language. */
+  { id: 'port-ar-landing', locale: 'ar', channel: 'landing', variationLevel: 'balanced',
+    brief: 'عنوان قصير وجملة واحدة لصفحة منتج.', allowedVariables: [] },
+  { id: 'port-he-email', locale: 'he', channel: 'email', variationLevel: 'balanced',
+    brief: 'מייל קצר על הנחה במנוי.', allowedVariables: [] },
 ];
 
 rmSync(OUT, { recursive: true, force: true });

@@ -26,7 +26,7 @@
 # So: no exceptions, no per-extension reasoning, nothing to keep in step with what the corpus
 # happens to contain. These are machine-generated and machine-compared. Read them through
 # scripts/dump-prompt-fixtures.mjs, not through a diff.
-tests/fixtures/prompt-v2/** -text
+tests/fixtures/prompt/** -text
 
 # Binary assets, never diffed or line-normalized
 *.ico binary

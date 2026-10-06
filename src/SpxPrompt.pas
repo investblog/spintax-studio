@@ -2,18 +2,19 @@
  * SpxPrompt -- the family's canonical LLM authoring prompt, ported.
  *
  * NOT A COPY, AND THE DIFFERENCE IS THE WHOLE POINT. The canonical prompt lives in
- * `spintax-js/packages/authoring-prompt` (`PROMPT_VERSION = '2'`), and that package exists
+ * `spintax-js/packages/authoring-prompt` (`PROMPT_VERSION = '6'`), and that package exists
  * because a copy of the prompt had ALREADY drifted: the Telegram bot taught three constructs
  * of five and was silent on the two where this engine is differentiated. Free Pascal cannot
  * import a TypeScript package, so Studio carries a port -- and a port is only a copy with
  * extra steps unless something holds it to the original. That something is
- * `tests/fixtures/prompt-v2/`, taken from the real builder by
+ * `tests/fixtures/prompt/`, taken from the real builder by
  * `scripts/dump-prompt-fixtures.mjs` and compared BYTE FOR BYTE by the suite (ADR 0011).
  *
  * The comparison can be exact because the prompt is DETERMINISTIC -- measured, two runs over
- * all sixteen cases byte-identical. The MODEL's answer to the prompt is not deterministic, and
- * that is a different question measured by a different instrument: the family's conformance
- * suite, which is statistical and reports 1.0 on claude-opus-5.
+ * every case byte-identical (24 at `PROMPT_VERSION` 6: 19 authoring, 5 repair). The MODEL's
+ * answer to the prompt is not deterministic, and that is a different question measured by a
+ * different instrument: the family's conformance suite, which is statistical and reported 1.0
+ * on claude-opus-5 for v2 (no run is filed for v6).
  *
  * NO GUI, NO NETWORK. This unit lives in src/ and builds text. Studio never calls a model: the
  * user carries the prompt to their own, brings the draft back, and the window validates it with
@@ -104,7 +105,7 @@ type
   end;
 
 const
-  SPX_PROMPT_VERSION = '2';
+  SPX_PROMPT_VERSION = '6';
 
 function SpxAllowedVar(const AName: string; AKase: TSpxVarCase = vcNone;
   const ANote: string = ''): TSpxAllowedVar;
@@ -246,7 +247,20 @@ const
     'Write the final copy as if for a human, then add markup only where a word or clause could genuinely' + LF +
     'be said another way. EVERY variant the renderer can produce must read like a human wrote it. A' + LF +
     'template that can produce one awkward variant is a broken template, no matter how much variety it' + LF +
-    'offers.';
+    'offers.' + LF +
+    LF +
+    'TWO PASSES, never merged. First write the copy straight through with NO markup at all, as one' + LF +
+    'finished piece of text. Only then go back over that finished text and add the markup. Inventing the' + LF +
+    'prose and choosing the branches at the same time is what produces variants that disagree with' + LF +
+    'themselves, and the longer the copy, the more reliably it happens — past a few sentences the two' + LF +
+    'passes stop being a preference and become the only way to get it right.' + LF +
+    LF +
+    'SCOPE — you write ONE block of copy: a paragraph, a headline, a message. Never a document. No' + LF +
+    'headings, no lists, no markdown, no HTML (hard rule 4), and no brief overrides that. If the brief' + LF +
+    'describes something with structure — an article, several sections, a page — write only the single' + LF +
+    'block it most directly asks for. The host calls you once per block and assembles the structure' + LF +
+    'itself; a template that tries to hold a whole document breaks in ways nobody can see in the' + LF +
+    'source.';
 
   RULES =
     'HARD RULES' + LF +
@@ -257,7 +271,15 @@ const
     '3. Counts. Any number followed by a noun goes through {plural …}. You cannot pick bucket forms by' + LF +
     '   hand — the engine does it per locale.' + LF +
     '4. No syntax outside the list above. No markdown, no HTML.' + LF +
-    '5. Do not spin proper nouns, brand names, prices, URLs, or legal wording. Vary the copy AROUND them.';
+    '5. Do not spin proper nouns, brand names, prices, URLs, or legal wording. Vary the copy AROUND them.' + LF +
+    '6. Directives. #def and #set must START THEIR OWN LINE, one per line, above the copy that uses them.' + LF +
+    '   A directive written mid-sentence is NOT a directive: it stays literal text and gets printed to' + LF +
+    '   the reader, and nothing downstream reports it as an error.' + LF +
+    '7. Addresses. Never end a sentence with an email address, a URL or a domain; put it inside the' + LF +
+    '   sentence: "Write to info@example.com and we will reply within a day." Right after an address the' + LF +
+    '   formatter cannot always tell where the address ends and the next sentence begins, so a sentence' + LF +
+    '   glued on can be printed as part of the address. Write the domain ending in lower case: a' + LF +
+    '   capitalised ending such as "example.Com" can be split into "example. Com".';
 
   OUTPUT_CONTRACT =
     'OUTPUT CONTRACT' + LF +
@@ -270,7 +292,10 @@ const
     '  rewrite the whole sentence.' + LF +
     '- Check every %var% against ALLOWED VARIABLES.' + LF +
     '- Check every [ … ] has a sep and really holds equal-weight items.' + LF +
-    '- Check every count goes through {plural …}.';
+    '- Check every count goes through {plural …}.' + LF +
+    '- Check every #def and #set is alone on its own line, not buried in a sentence.' + LF +
+    '- Check no sentence ends with an email address, a URL or a domain, and every domain ending is lower case.' + LF +
+    '- Check you returned ONE block, with no heading, list or markup of any kind.';
 
 (* The worked examples the prompt teaches from.
    Examples are written IN a language, so they follow the teaching PROFILE, never the arity --
@@ -280,10 +305,10 @@ const
 function ExamplesFor(const ALocale: string): TSpxExamples;
 var
   russian: Boolean;
-  threeForm: Boolean;
+  arity: Integer;
 begin
   russian := ProfileOf(ALocale) = tpEastSlavic;
-  threeForm := ArityOf(ALocale) = 3;
+  arity := ArityOf(ALocale);
 
   Result.Def :=
     '#def %product% = {course|training}' + LF +
@@ -304,7 +329,11 @@ begin
 
   if russian then
     Result.Plural := 'У вас %n% {plural %n%: товар|товара|товаров} в корзине.'
-  else if threeForm then
+  else if arity = 6 then
+    (* Arabic: six forms, and the one/two forms carry the number in the word itself, so %n% goes
+       INSIDE the forms that print it, not before the block. *)
+    Result.Plural := 'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.'
+  else if arity = 3 then
     Result.Plural := 'The sale ends in %n% {plural %n%: sat|sata|sati}.'
   else
     Result.Plural := 'You have %n% {plural %n%: item|items} in your cart.';
@@ -321,12 +350,22 @@ function SyntaxBlock(const ALocale: string): string;
 var
   ex: TSpxExamples;
   forms: Integer;
-  pluralForm, andWord: string;
+  pluralForm, slotOrder, andWord: string;
 begin
   ex := ExamplesFor(ALocale);
   forms := ArityOf(ALocale);
-  if forms = 3 then pluralForm := '{plural %n%: one|few|many}'
-                else pluralForm := '{plural %n%: one|many}';
+  if forms = 6 then pluralForm := '{plural %n%: zero|one|two|few|many|other}'
+  else if forms = 3 then pluralForm := '{plural %n%: one|few|many}'
+  else pluralForm := '{plural %n%: one|many}';
+  (* Six slots are not guessable from their names the way one|few|many is: say which counts land
+     where, and that the number may live inside a form. *)
+  if forms = 6 then
+    slotOrder := LF +
+      '    The six forms go in this order: zero (0), one (1), two (2), few (3–10, 103–110, …),' + LF +
+      '    many (11–99, 111–199, …), other (100–102, 200–202, …). A form may carry the number' + LF +
+      '    itself — write %n% inside the forms that print it and leave it out of the ones that do not.'
+  else
+    slotOrder := '';
   (* The conjunction belongs to the example LANGUAGE, not the arity: keying this on arity is
      what once put a Cyrillic "и" inside an English sentence for Latin-script hr/bs. *)
   if ProfileOf(ALocale) = tpEastSlavic then andWord := 'и' else andWord := 'and';
@@ -373,6 +412,9 @@ begin
     LF +
     '{?VAR?then|else}' + LF +
     '    Conditional. Emits "then" if VAR has a truthy value, otherwise "else".' + LF +
+    '    The "else" half is OPTIONAL: {?VAR?then} emits NOTHING when VAR is empty. That is the form to' + LF +
+    '    use for a detail that should simply disappear when the host has no value for it — do not pad' + LF +
+    '    it with a filler sentence.' + LF +
     '    Use it when the copy must adapt to data that may be missing:' + LF +
     Indent(ex.Conditional) + LF +
     LF +
@@ -380,7 +422,7 @@ begin
     '    Plural agreement by count. This target language takes EXACTLY ' + IntToStr(forms) + ' forms —' + LF +
     '    writing any other number of forms is a hard error, not a style choice. NEVER hand-roll counts' + LF +
     '    as {item|items}:' + LF +
-    Indent(ex.Plural);
+    Indent(ex.Plural) + slotOrder;
 end;
 
 (* Grammar is language-specific, and the Slavic cases are where a model quietly produces
@@ -399,10 +441,32 @@ begin
         '- Every option inside {…} must preserve GENDER, CASE and NUMBER agreement with the words around it.' + LF +
         '    WRONG: {хороший|отличная} курс     ← gender breaks in the second branch' + LF +
         '    RIGHT: {хороший|отличный} курс' + LF +
-        '- If a branch changes the noun, any adjective, participle or preposition that governs it may have' + LF +
-        '  to change too. In that case move them INSIDE the branch:' + LF +
-        '    WRONG: в {городе|деревню}' + LF +
-        '    RIGHT: {в городе|в деревню}' + LF +
+        '- If a branch changes the case the sentence needs, the preposition that governs it must move INSIDE' + LF +
+        '  the branch. A preposition left outside governs both branches, and only one of them survives:' + LF +
+        '    WRONG: {после|при} первом заказе   ← "после первом заказе": после takes the genitive' + LF +
+        '    RIGHT: {после первого заказа|при первом заказе}' + LF +
+        '- SPINNING A DECLINED NOUN OR ADJECTIVE. One rule underneath all of it: forms that must agree have' + LF +
+        '  to come from ONE roll. In order of preference:' + LF +
+        '  1. Choose synonyms that DECLINE ALIKE and keep the endings OUTSIDE the definition — then a single' + LF +
+        '     roll serves every case at once:' + LF +
+        '        #def %e% = {магазин|сайт|проект}' + LF +
+        '        О %e%е говорят, для %e%а есть скидка, к %e%у можно вернуться.' + LF +
+        '     Test every branch against every case you need. ONE differing ending disqualifies the branch:' + LF +
+        '     {больш|нов} breaks in the nominative alone ("Большый проект") and is correct everywhere else —' + LF +
+        '     exactly the kind of defect that survives proofreading and shows up in one variant out of many.' + LF +
+        '  2. Endings agree but the stems differ — cut at the STEM, and name the cases by REFERENCING it, so' + LF +
+        '     they still come from that one roll:' + LF +
+        '        #def %s%  = {посетител|гост}' + LF +
+        '        #def %V%  = %s%и' + LF +
+        '        #def %VG% = %s%ей' + LF +
+        '        %V% — для %VG%.' + LF +
+        '     The stem must be #def. Under #set it re-rolls at every use and you get "Гости — для' + LF +
+        '     посетителей".' + LF +
+        '  3. They genuinely decline differently — put the whole span inside ONE enumeration:' + LF +
+        '        #def %p% = {посетители — для посетителей|гости — для гостей}' + LF +
+        '  NEVER give each case its own list. Two definitions are two independent rolls:' + LF +
+        '        WRONG: #def %V% = {посетители|гости}' + LF +
+        '               #def %VG% = {посетителей|гостей}     ← renders "Гости — для посетителей"' + LF +
         '- NEVER hand-roll count forms: {товар|товара|товаров} is WRONG. Write {plural %n%: товар|товара|товаров}' + LF +
         '  and let the engine choose the bucket for the actual number — you cannot do it correctly, it depends' + LF +
         '  on the count.';
@@ -412,10 +476,16 @@ begin
         '- Every option inside {…} must preserve GENDER, CASE and NUMBER agreement with the words around it.' + LF +
         '    WRONG: {dobar|odlična} kurs      ← gender breaks in the second branch' + LF +
         '    RIGHT: {dobar|odličan} kurs' + LF +
-        '- If a branch changes the noun, any adjective or preposition that governs it may have to change too.' + LF +
-        '  In that case move them INSIDE the branch:' + LF +
-        '    WRONG: u {gradu|selo}' + LF +
-        '    RIGHT: {u gradu|u selo}' + LF +
+        '- If a branch changes the case the sentence needs, the preposition that governs it must move INSIDE' + LF +
+        '  the branch. A preposition left outside governs both branches, and only one of them survives:' + LF +
+        '    WRONG: {u|iz} gradu     ← "iz gradu": iz takes the genitive' + LF +
+        '    RIGHT: {u gradu|iz grada}' + LF +
+        '- Forms that must AGREE have to come from ONE roll. Prefer synonyms that DECLINE ALIKE and keep the' + LF +
+        '  endings outside the definition, so a single #def serves every case; test every branch against' + LF +
+        '  every case you need, because one differing ending is enough to break it. NEVER give each case its' + LF +
+        '  own list — two definitions roll independently, so the nominative from one and the genitive from' + LF +
+        '  the other will not match. If the synonyms genuinely decline differently, put the whole span inside' + LF +
+        '  one enumeration instead.' + LF +
         '- Counts take THREE buckets, same boundaries as Russian. NEVER hand-roll them:' + LF +
         '  {bonus|bonusa|bonusa} is WRONG. Write {plural %n%: bonus|bonusa|bonusa} and let the engine pick.' + LF +
         '- Write the WHOLE template in ONE script. Do not mix Latin and Cyrillic inside a template or, worse,' + LF +

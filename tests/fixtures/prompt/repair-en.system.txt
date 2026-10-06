@@ -37,39 +37,35 @@ SYNTAX — this is the COMPLETE list. Nothing else exists.
 %name%
     A variable, filled in by the host at render time. Use ONLY names from ALLOWED VARIABLES.
 
-[<minsize=2;maxsize=3;sep=", ";lastsep=" и ">a|b|c]
+[<minsize=2;maxsize=3;sep=", ";lastsep=" and ">a|b|c]
     Permutation: shuffles the items and joins them.
     ALWAYS set sep when the items are clauses — the DEFAULT SEPARATOR IS A SINGLE SPACE, which
     turns clauses into mush.
-    ALWAYS set lastsep for a human-readable list: "a, b и c"
+    ALWAYS set lastsep for a human-readable list: "a, b and c"
     instead of the robotic "a, b, c".
     minsize/maxsize pick a SUBSET, so the list itself varies in length.
     Use permutations only for items of EQUAL weight, where the order genuinely does not matter
     (benefits, features, providers):
-        Мы [<minsize=2;maxsize=3;sep=", ";lastsep=" и ">перезвоним за час|подберём тариф|перенесём данные].
+        We can [<minsize=2;maxsize=3;sep=", ";lastsep=" and ">reply within the hour|set up your account|migrate your data].
 
 {?VAR?then|else}
     Conditional. Emits "then" if VAR has a truthy value, otherwise "else".
+    The "else" half is OPTIONAL: {?VAR?then} emits NOTHING when VAR is empty. That is the form to
+    use for a detail that should simply disappear when the host has no value for it — do not pad
+    it with a filler sentence.
     Use it when the copy must adapt to data that may be missing:
         {?discount?Save %discount% today|Get started in minutes}
 
-{plural %n%: one|few|many}
-    Plural agreement by count. This target language takes EXACTLY 3 forms —
+{plural %n%: one|many}
+    Plural agreement by count. This target language takes EXACTLY 2 forms —
     writing any other number of forms is a hard error, not a style choice. NEVER hand-roll counts
     as {item|items}:
-        У вас %n% {plural %n%: товар|товара|товаров} в корзине.
+        You have %n% {plural %n%: item|items} in your cart.
 
-LANGUAGE: ru — agreement is strict and unforgiving. This is the hard part; slow down here.
-- Every option inside {…} must preserve GENDER, CASE and NUMBER agreement with the words around it.
-    WRONG: {хороший|отличная} курс     ← gender breaks in the second branch
-    RIGHT: {хороший|отличный} курс
-- If a branch changes the noun, any adjective, participle or preposition that governs it may have
-  to change too. In that case move them INSIDE the branch:
-    WRONG: в {городе|деревню}
-    RIGHT: {в городе|в деревню}
-- NEVER hand-roll count forms: {товар|товара|товаров} is WRONG. Write {plural %n%: товар|товара|товаров}
-  and let the engine choose the bucket for the actual number — you cannot do it correctly, it depends
-  on the count.
+LANGUAGE: en
+- Every option inside {…} must agree with the surrounding sentence: same part of speech, same
+  number, same tense, and the article before it must still be correct ("a offer" is a broken branch).
+- Never hand-roll counts as {item|items} — use {plural %n%: item|items}.
 
 VARIABLES
 Use ONLY the names given in ALLOWED VARIABLES, exactly as written.
@@ -78,25 +74,9 @@ A variable is substituted VERBATIM. The engine does not inflect, pluralize or re
 neither can you by bolting text onto the outside of it. Build the SENTENCE around the form the
 value already has.
 
-CASE IS PART OF THE VALUE, not a suggestion:
-- Variables that differ only by a suffix (%X%, %XGen%, %XDat%, %XLoc%, %XInstr%) are NOT synonyms.
-  They are the same word in different cases. Choose the one the sentence actually governs.
-- NEVER glue an ending onto a variable. A suffix bolted onto the outside of %X% renders as literal
-  text, not as an inflected word.
-- A preposition and the variable after it move TOGETHER. If you swap the preposition, you must swap
-  to the matching variable — or the sentence breaks.
-- If the case you need is NOT in the list, REWRITE THE SENTENCE so it needs a case that is. Never
-  approximate with the wrong one: a wrong case reads as broken copy, which is worse than plainer
-  copy.
-- A brand or proper name does not decline.
-
-Worked examples (Russian):
-      для %VisitorsGen%      (родительный — after "для")
-      к %VisitorsDat%        (дательный — after "к")
-      о %VisitorsLoc%        (предложный — after "о")
-      с %VisitorsInstr%      (творительный — after "с")
-- "%Visitors%ов" is not a genitive; it renders as the literal text "посетителиов".
-- Write "в %CasinoName%", never "%CasinoName%а".
+- Do not assume the shape of a value you have not seen. "a %product%" is a coin-flip between "a"
+  and "an"; write "our %product%" or restructure the sentence.
+- Do not pluralize or possessivize a variable by hand — if you need a count, use {plural …}.
 
 OUTPUT CONTRACT
 Return the template and NOTHING else — no explanation, no quotes, no code fences, no "Template:"

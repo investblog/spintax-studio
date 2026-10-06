@@ -50,6 +50,9 @@ SYNTAX — this is the COMPLETE list. Nothing else exists.
 
 {?VAR?then|else}
     Conditional. Emits "then" if VAR has a truthy value, otherwise "else".
+    The "else" half is OPTIONAL: {?VAR?then} emits NOTHING when VAR is empty. That is the form to
+    use for a detail that should simply disappear when the host has no value for it — do not pad
+    it with a filler sentence.
     Use it when the copy must adapt to data that may be missing:
         {?discount?Save %discount% today|Get started in minutes}
 

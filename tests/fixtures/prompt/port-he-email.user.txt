@@ -1,0 +1,7 @@
+CHANNEL: email — 2–5 sentences, conversational, one clear call to action.
+ALLOWED VARIABLES: (none — do not use any %variable%)
+
+BRIEF:
+מייל קצר על הנחה במנוי.
+
+Write the spintax template now. Output only the template.

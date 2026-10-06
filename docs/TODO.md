@@ -125,12 +125,21 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       "all three" and the check could not fail — the Codex gate caught it. **The local gate
       is a 32-bit build of a 64-bit product**; CI's 64-bit legs are what see this class.
 
-- [ ] **The authoring prompt is four versions behind, and the Arabic arity shows it.**
-      `SpxPrompt.pas` is a port of `PROMPT_VERSION = '2'`; upstream is `'6'` and teaches a
-      six-form plural when the engine's arity is 6. Studio's `SyntaxBlock` picks the example
+- [x] **The authoring prompt was four versions behind, and the Arabic arity showed it.**
+      `SpxPrompt.pas` was a port of `PROMPT_VERSION = '2'`; upstream is `'6'` and teaches a
+      six-form plural when the engine's arity is 6. Studio's `SyntaxBlock` picked the example
       by `forms = 3` else two forms, so under `ar` it would state six forms and show two.
-      Latent — `ar` is not offered — but a resync of the port (with its byte-held fixtures)
-      is the fix, not a branch here. Found by the Codex gate on the bump.
+      Found by the Codex gate on the bump. **Resynced 2026-10-06** to `'6'` (with `ar`/`he`
+      going into the locale box in the next commit): fixtures re-taken from `spintax-js` `65440d5` by
+      `scripts/dump-prompt-fixtures.mjs`, two runs byte-identical, now in
+      `tests/fixtures/prompt/` (was `prompt-v2/`, a name that would have lied about v6
+      contents). Two port cases added: `port-ar-landing` (the six-form branch) and
+      `port-he-email` (its two-form control). Breaking the six-form shape fails exactly
+      `prompt/port-ar-landing/system`. The v3–v5 text rides along too: the optional else in
+      every prompt (it is in the syntax block, which repair carries too); two passes, scope and
+      rules 6–7 in AUTHORING prompts only (repair carries no GOAL and no RULES); the case ladder
+      only for the East-Slavic and BCS profiles. The upstream conformance run on a
+      live model has not been repeated for v6 upstream either.
 - [x] **The 0.2.3.0 What's-new rides with this bump (2026-10-04).** All fifteen fields
       (fourteen languages, Serbian in both scripts) say `v0.11.1` and carry a closers line, each draft's example measured under its own locale
       on both engines; the help bullet and the lead's colon clause were cut to make room. The
@@ -2652,7 +2661,7 @@ dev-tool-заглушку», а R0 офлайновый — значит спр�
       with the line saying the comparisons are still quadratic.
 
       **And one thing that is NOT covered, said rather than assumed:** row order is prompt order
-      for the repair loop, and no `tests/fixtures/prompt-v2/` document puts two diagnostics at
+      for the repair loop, and no `tests/fixtures/prompt/` document (`prompt-v2/` until 2026-10-06; its repair diagnostics re-taken byte-identical) puts two diagnostics at
       one position — checked — so that byte-compared corpus does not exercise this coupling.
 
 - [ ] **The group editor reads a plural head more strictly than the engine does, and the bump

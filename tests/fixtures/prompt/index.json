@@ -1,5 +1,5 @@
 {
- "promptVersion": "2",
+ "promptVersion": "6",
  "cases": [
   {
    "id": "en-email-baseline",
@@ -253,6 +253,24 @@
    "variationLevel": "conservative",
    "allowedVariables": [],
    "brief": "Short delivery notice."
+  },
+  {
+   "id": "port-ar-landing",
+   "kind": "authoring",
+   "locale": "ar",
+   "channel": "landing",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "عنوان قصير وجملة واحدة لصفحة منتج."
+  },
+  {
+   "id": "port-he-email",
+   "kind": "authoring",
+   "locale": "he",
+   "channel": "email",
+   "variationLevel": "balanced",
+   "allowedVariables": [],
+   "brief": "מייל קצר על הנחה במנוי."
   },
   {
    "id": "repair-en",
