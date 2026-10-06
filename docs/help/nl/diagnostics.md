@@ -339,8 +339,13 @@ onderstreept, want aan de regel die u schreef mankeert niets.
 `｛｝`. Zo zegt zij «ik heb dit gezien en kon het niet toepassen». Onopvallend zou niemand dat
 noemen, en maar goed ook: een in stilte verdampte alinea zou meer tijd kosten om te vinden.
 
-Het Nederlands vraagt twee vormen, het Russisch drie. Onder de locale van dit document is
-`{plural %n%: ding|dingen}` de juiste.
+Het Nederlands vraagt twee vormen, het Russisch drie, het Arabisch zes. Onder de locale van dit
+document is `{plural %n%: ding|dingen}` de juiste; onder `ar` zijn dezelfde twee vormen de fout:
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **Leegte komt door iets anders, en de twee zijn gemakkelijk te verwarren.** Vergelijk deze twee,
 die alleen verschillen in hoeveel vormen ze dragen:

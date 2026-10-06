@@ -84,6 +84,11 @@ function SpxHelpExampleCount(ALang: Integer): Integer;
 function SpxHelpExample(ALang, AIndex: Integer; out ATemplate: string): Boolean;
 { Which document it belongs to, so it renders under that document's conditions. }
 function SpxHelpExampleDoc(ALang, AIndex: Integer): Integer;
+{ The locale it was MEASURED under: the one its own fence declared (`locale=ar`), else
+  its document's. The one place that rule lives -- the window renders a click under it
+  and the suite counts rows under it, and two copies of it would drift. '' for an
+  index this build does not have. }
+function SpxHelpExampleLocale(ALang, AIndex: Integer): string;
 { `ex:7` -> 7, or -1 for anything else. The one place the href form is known. }
 function SpxHelpExampleOf(const AHref: string): Integer;
 
@@ -152,7 +157,7 @@ const
     'docs/help/bs/diagnostics.md'
   );
   HELP_DOC_DIGEST: array[0..41] of string = (
-    '3bb13f28fd73f76b', 'f16127c5429f1251', '38df3cd4190ac46b', 'ebb93ffb5f833294', '0c55a25f865d87bf', 'a6da134c4920534e', '5c63fe5f998b2fda', 'f9ee1fbb060352f9', '89a8ff0a570a7147', '20c00a8363046686', '48a5eff6f8de5b49', 'ea2383e9db780d10', '89e5fd5ec5c74ab7', '3c4e7f34740a21c0', '503c829c41759228', '08eea87d8875f39b', '8a6fae48bb0934dd', 'c434023fabaad742', '044cd0235fee1278', 'c852e17d8be2c6e8', '1c4c3b93a10a0ace', 'bfde383572879d38', '509f8803e4590aa0', '4247434725480d75', '9de792c7434812de', 'c21a669957423a8e', '8c12a62b81359e52', 'c055a130a5be65ea', 'b9b48bb6c546f9e1', 'd33afaa14aeb660b', '3b47a8310a1e3590', '4b01025ebef1ace5', '98b8a4033fabe327', '38175ecb6336a1c8', 'ae540e6e20818dcb', '6edb66eefdd4c6b7', 'cae76229e4ce50e0', '993bf489f0236ded', '08cc0b89d53a1d0a', '653f290ae2c9d991', '50d8689dea96a8f1', '430cd907796bd630'
+    '3bb13f28fd73f76b', 'bff1730a31f2109e', '30c5119a0286e4a5', 'ebb93ffb5f833294', '652fd065e6b24421', 'b606d4694acc2d53', '5c63fe5f998b2fda', '838e8bebb80569de', '7ae814729b170922', '20c00a8363046686', 'fd013b35512d3dc0', '28314e15d883d226', '89e5fd5ec5c74ab7', 'ea5c3eb7be4e61b6', 'a0b55d7677a83f26', '08eea87d8875f39b', '684d01270e8d7ca8', '22b665bf55b945a2', '044cd0235fee1278', '9d104de1a926c73a', '716ccc145c82126d', 'bfde383572879d38', '02c096e08647a729', '20b085ea65c235d0', '9de792c7434812de', 'ba0406ae32dfdfd7', '9bee00ed2fb65c42', 'c055a130a5be65ea', '66aefad342404538', 'a91ac368383ebf2a', '3b47a8310a1e3590', 'ff413726e28327fe', 'd1dd0dc09021a4d8', '38175ecb6336a1c8', '548d00b23339bb1c', 'ca75bb48a89ab641', 'cae76229e4ce50e0', '3a323f97818b21ab', '2f08f70be0ca004c', '653f290ae2c9d991', 'e54efed4315842f5', '9a3b5ffbc726f7ee'
   );
   HELP_DOC_LOCALE: array[0..41] of string = (
     'en', 'en', 'en', 'ru', 'ru', 'ru', 'de', 'de', 'de', 'fr', 'fr', 'fr', 'es', 'es', 'es', 'it', 'it', 'it', 'pt', 'pt', 'pt', 'nl', 'nl', 'nl', 'tr', 'tr', 'tr', 'uk', 'uk', 'uk', 'be', 'be', 'be', 'sr', 'sr', 'sr', 'hr', 'hr', 'hr', 'bs', 'bs', 'bs'
@@ -789,15 +794,15 @@ const
     0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
   );
   HELP_FIRST: array[0..461] of Integer = (
-    0, 7, 14, 19, 25, 35, 52, 55, 58, 67, 72, 78, 90, 115, 125, 132, 139, 148, 152, 168, 190, 192, 202, 209, 222, 238, 264, 286, 306, 320, 333, 346, 354, 363, 370, 377, 382, 388, 398, 415, 418, 421, 430, 435, 441, 453, 478, 488, 495, 503, 512, 516, 530, 560, 562, 573, 580, 593, 609, 635, 657, 676, 690, 703, 723, 731, 738, 745, 752, 757, 763, 773, 790, 793, 796, 805, 810, 816, 828, 853, 863, 870, 877, 886, 890, 906, 931, 933, 943, 950, 963, 979, 1005, 1027, 1047, 1061, 1074, 1087, 1095, 1104, 1111, 1118, 1123, 1129, 1139, 1156, 1159, 1162, 1171, 1176, 1182, 1194, 1219, 1229, 1236, 1243, 1252, 1256, 1272, 1300, 1302, 1312, 1319, 1332, 1348, 1374, 1396, 1416, 1430, 1443, 1456, 1464, 1473, 1480, 1487, 1492, 1498, 1508, 1525, 1528, 1531, 1540, 1545, 1551, 1563, 1588, 1598, 1605, 1612, 1621, 1625, 1641, 1669, 1671, 1681, 1688, 1701, 1717, 1743, 1765, 1785, 1799, 1812, 1825, 1833, 1842, 1849, 1856, 1861, 1867, 1877, 1894, 1897, 1900, 1909, 1914, 1920, 1932, 1957, 1967, 1974, 1981, 1990, 1994, 2010, 2038, 2040, 2050, 2057, 2070, 2086, 2112, 2134, 2154, 2168, 2181, 2194, 2202, 2211, 2218, 2225, 2230, 2236, 2246, 2263, 2266, 2269, 2278, 2283, 2289, 2301, 2326, 2336, 2343, 2350, 2359, 2363, 2379, 2409, 2411, 2421, 2428, 2441, 2457, 2483, 2505, 2525, 2539, 2552, 2565, 2573, 2582, 2589, 2596, 2601, 2607, 2617, 2634, 2637, 2640, 2649, 2654, 2660, 2672, 2697, 2707, 2714, 2721, 2730, 2734, 2750, 2775, 2777, 2787, 2794, 2807, 2823, 2849, 2871, 2891, 2905, 2918, 2931, 2939, 2948, 2955, 2962, 2967, 2973, 2983, 3000, 3003, 3006, 3015, 3020, 3026, 3038, 3063, 3073, 3080, 3087, 3096, 3100, 3116, 3143, 3145, 3155, 3162, 3175, 3191, 3217, 3239, 3259, 3273, 3286, 3299, 3307, 3316, 3323, 3330, 3335, 3341, 3351, 3368, 3371, 3374, 3383, 3388, 3394, 3406, 3431, 3441, 3448, 3456, 3465, 3469, 3484, 3513, 3515, 3525, 3532, 3545, 3561, 3587, 3609, 3629, 3643, 3656, 3669, 3677, 3686, 3693, 3700, 3705, 3711, 3721, 3738, 3741, 3744, 3753, 3758, 3764, 3776, 3801, 3811, 3818, 3826, 3835, 3839, 3854, 3883, 3885, 3895, 3902, 3915, 3931, 3957, 3979, 3999, 4013, 4026, 4039, 4047, 4056, 4063, 4070, 4075, 4081, 4091, 4108, 4111, 4114, 4123, 4128, 4134, 4146, 4171, 4181, 4188, 4196, 4205, 4209, 4225, 4255, 4257, 4267, 4274, 4287, 4303, 4329, 4351, 4371, 4385, 4398, 4411, 4419, 4428, 4435, 4442, 4447, 4453, 4463, 4480, 4483, 4486, 4495, 4500, 4506, 4518, 4543, 4553, 4560, 4568, 4577, 4581, 4598, 4625, 4627, 4637, 4644, 4657, 4673, 4699, 4721, 4741, 4755, 4768, 4781, 4789, 4798, 4805, 4812, 4817, 4823, 4833, 4850, 4853, 4856, 4865, 4870, 4876, 4888, 4913, 4923, 4930, 4938, 4947, 4951, 4968, 4995, 4997, 5007, 5014, 5027, 5043, 5069, 5091, 5111, 5125, 5138, 5151, 5159
+    0, 7, 14, 19, 25, 35, 52, 55, 58, 67, 72, 78, 90, 124, 134, 141, 151, 160, 164, 180, 202, 204, 214, 221, 234, 250, 276, 298, 319, 333, 346, 359, 367, 376, 383, 390, 395, 401, 411, 428, 431, 434, 443, 448, 454, 466, 500, 510, 517, 528, 537, 541, 555, 585, 587, 598, 605, 618, 634, 660, 682, 702, 716, 729, 749, 757, 764, 771, 778, 783, 789, 799, 816, 819, 822, 831, 836, 842, 854, 888, 898, 905, 915, 924, 928, 944, 969, 971, 981, 988, 1001, 1017, 1043, 1065, 1086, 1100, 1113, 1126, 1134, 1143, 1150, 1157, 1162, 1168, 1178, 1195, 1198, 1201, 1210, 1215, 1221, 1233, 1267, 1277, 1284, 1294, 1303, 1307, 1323, 1351, 1353, 1363, 1370, 1383, 1399, 1425, 1447, 1468, 1482, 1495, 1508, 1516, 1525, 1532, 1539, 1544, 1550, 1560, 1577, 1580, 1583, 1592, 1597, 1603, 1615, 1649, 1659, 1666, 1676, 1685, 1689, 1705, 1733, 1735, 1745, 1752, 1765, 1781, 1807, 1829, 1850, 1864, 1877, 1890, 1898, 1907, 1914, 1921, 1926, 1932, 1942, 1959, 1962, 1965, 1974, 1979, 1985, 1997, 2031, 2041, 2048, 2058, 2067, 2071, 2087, 2115, 2117, 2127, 2134, 2147, 2163, 2189, 2211, 2232, 2246, 2259, 2272, 2280, 2289, 2296, 2303, 2308, 2314, 2324, 2341, 2344, 2347, 2356, 2361, 2367, 2379, 2413, 2423, 2430, 2440, 2449, 2453, 2469, 2499, 2501, 2511, 2518, 2531, 2547, 2573, 2595, 2616, 2630, 2643, 2656, 2664, 2673, 2680, 2687, 2692, 2698, 2708, 2725, 2728, 2731, 2740, 2745, 2751, 2763, 2797, 2807, 2814, 2824, 2833, 2837, 2853, 2878, 2880, 2890, 2897, 2910, 2926, 2952, 2974, 2995, 3009, 3022, 3035, 3043, 3052, 3059, 3066, 3071, 3077, 3087, 3104, 3107, 3110, 3119, 3124, 3130, 3142, 3176, 3186, 3193, 3203, 3212, 3216, 3232, 3259, 3261, 3271, 3278, 3291, 3307, 3333, 3355, 3376, 3390, 3403, 3416, 3424, 3433, 3440, 3447, 3452, 3458, 3468, 3485, 3488, 3491, 3500, 3505, 3511, 3523, 3557, 3567, 3574, 3585, 3594, 3598, 3613, 3642, 3644, 3654, 3661, 3674, 3690, 3716, 3738, 3759, 3773, 3786, 3799, 3807, 3816, 3823, 3830, 3835, 3841, 3851, 3868, 3871, 3874, 3883, 3888, 3894, 3906, 3940, 3950, 3957, 3968, 3977, 3981, 3996, 4025, 4027, 4037, 4044, 4057, 4073, 4099, 4121, 4142, 4156, 4169, 4182, 4190, 4199, 4206, 4213, 4218, 4224, 4234, 4251, 4254, 4257, 4266, 4271, 4277, 4289, 4323, 4333, 4340, 4351, 4360, 4364, 4380, 4410, 4412, 4422, 4429, 4442, 4458, 4484, 4506, 4527, 4541, 4554, 4567, 4575, 4584, 4591, 4598, 4603, 4609, 4619, 4636, 4639, 4642, 4651, 4656, 4662, 4674, 4708, 4718, 4725, 4736, 4745, 4749, 4766, 4793, 4795, 4805, 4812, 4825, 4841, 4867, 4889, 4910, 4924, 4937, 4950, 4958, 4967, 4974, 4981, 4986, 4992, 5002, 5019, 5022, 5025, 5034, 5039, 5045, 5057, 5091, 5101, 5108, 5119, 5128, 5132, 5149, 5176, 5178, 5188, 5195, 5208, 5224, 5250, 5272, 5293, 5307, 5320, 5333, 5341
   );
   HELP_LAST: array[0..461] of Integer = (
-    6, 13, 18, 24, 34, 51, 54, 57, 66, 71, 77, 89, 114, 124, 131, 138, 147, 151, 167, 189, 191, 201, 208, 221, 237, 263, 285, 305, 319, 332, 345, 353, 362, 369, 376, 381, 387, 397, 414, 417, 420, 429, 434, 440, 452, 477, 487, 494, 502, 511, 515, 529, 559, 561, 572, 579, 592, 608, 634, 656, 675, 689, 702, 722, 730, 737, 744, 751, 756, 762, 772, 789, 792, 795, 804, 809, 815, 827, 852, 862, 869, 876, 885, 889, 905, 930, 932, 942, 949, 962, 978, 1004, 1026, 1046, 1060, 1073, 1086, 1094, 1103, 1110, 1117, 1122, 1128, 1138, 1155, 1158, 1161, 1170, 1175, 1181, 1193, 1218, 1228, 1235, 1242, 1251, 1255, 1271, 1299, 1301, 1311, 1318, 1331, 1347, 1373, 1395, 1415, 1429, 1442, 1455, 1463, 1472, 1479, 1486, 1491, 1497, 1507, 1524, 1527, 1530, 1539, 1544, 1550, 1562, 1587, 1597, 1604, 1611, 1620, 1624, 1640, 1668, 1670, 1680, 1687, 1700, 1716, 1742, 1764, 1784, 1798, 1811, 1824, 1832, 1841, 1848, 1855, 1860, 1866, 1876, 1893, 1896, 1899, 1908, 1913, 1919, 1931, 1956, 1966, 1973, 1980, 1989, 1993, 2009, 2037, 2039, 2049, 2056, 2069, 2085, 2111, 2133, 2153, 2167, 2180, 2193, 2201, 2210, 2217, 2224, 2229, 2235, 2245, 2262, 2265, 2268, 2277, 2282, 2288, 2300, 2325, 2335, 2342, 2349, 2358, 2362, 2378, 2408, 2410, 2420, 2427, 2440, 2456, 2482, 2504, 2524, 2538, 2551, 2564, 2572, 2581, 2588, 2595, 2600, 2606, 2616, 2633, 2636, 2639, 2648, 2653, 2659, 2671, 2696, 2706, 2713, 2720, 2729, 2733, 2749, 2774, 2776, 2786, 2793, 2806, 2822, 2848, 2870, 2890, 2904, 2917, 2930, 2938, 2947, 2954, 2961, 2966, 2972, 2982, 2999, 3002, 3005, 3014, 3019, 3025, 3037, 3062, 3072, 3079, 3086, 3095, 3099, 3115, 3142, 3144, 3154, 3161, 3174, 3190, 3216, 3238, 3258, 3272, 3285, 3298, 3306, 3315, 3322, 3329, 3334, 3340, 3350, 3367, 3370, 3373, 3382, 3387, 3393, 3405, 3430, 3440, 3447, 3455, 3464, 3468, 3483, 3512, 3514, 3524, 3531, 3544, 3560, 3586, 3608, 3628, 3642, 3655, 3668, 3676, 3685, 3692, 3699, 3704, 3710, 3720, 3737, 3740, 3743, 3752, 3757, 3763, 3775, 3800, 3810, 3817, 3825, 3834, 3838, 3853, 3882, 3884, 3894, 3901, 3914, 3930, 3956, 3978, 3998, 4012, 4025, 4038, 4046, 4055, 4062, 4069, 4074, 4080, 4090, 4107, 4110, 4113, 4122, 4127, 4133, 4145, 4170, 4180, 4187, 4195, 4204, 4208, 4224, 4254, 4256, 4266, 4273, 4286, 4302, 4328, 4350, 4370, 4384, 4397, 4410, 4418, 4427, 4434, 4441, 4446, 4452, 4462, 4479, 4482, 4485, 4494, 4499, 4505, 4517, 4542, 4552, 4559, 4567, 4576, 4580, 4597, 4624, 4626, 4636, 4643, 4656, 4672, 4698, 4720, 4740, 4754, 4767, 4780, 4788, 4797, 4804, 4811, 4816, 4822, 4832, 4849, 4852, 4855, 4864, 4869, 4875, 4887, 4912, 4922, 4929, 4937, 4946, 4950, 4967, 4994, 4996, 5006, 5013, 5026, 5042, 5068, 5090, 5110, 5124, 5137, 5150, 5158, 5167
+    6, 13, 18, 24, 34, 51, 54, 57, 66, 71, 77, 89, 123, 133, 140, 150, 159, 163, 179, 201, 203, 213, 220, 233, 249, 275, 297, 318, 332, 345, 358, 366, 375, 382, 389, 394, 400, 410, 427, 430, 433, 442, 447, 453, 465, 499, 509, 516, 527, 536, 540, 554, 584, 586, 597, 604, 617, 633, 659, 681, 701, 715, 728, 748, 756, 763, 770, 777, 782, 788, 798, 815, 818, 821, 830, 835, 841, 853, 887, 897, 904, 914, 923, 927, 943, 968, 970, 980, 987, 1000, 1016, 1042, 1064, 1085, 1099, 1112, 1125, 1133, 1142, 1149, 1156, 1161, 1167, 1177, 1194, 1197, 1200, 1209, 1214, 1220, 1232, 1266, 1276, 1283, 1293, 1302, 1306, 1322, 1350, 1352, 1362, 1369, 1382, 1398, 1424, 1446, 1467, 1481, 1494, 1507, 1515, 1524, 1531, 1538, 1543, 1549, 1559, 1576, 1579, 1582, 1591, 1596, 1602, 1614, 1648, 1658, 1665, 1675, 1684, 1688, 1704, 1732, 1734, 1744, 1751, 1764, 1780, 1806, 1828, 1849, 1863, 1876, 1889, 1897, 1906, 1913, 1920, 1925, 1931, 1941, 1958, 1961, 1964, 1973, 1978, 1984, 1996, 2030, 2040, 2047, 2057, 2066, 2070, 2086, 2114, 2116, 2126, 2133, 2146, 2162, 2188, 2210, 2231, 2245, 2258, 2271, 2279, 2288, 2295, 2302, 2307, 2313, 2323, 2340, 2343, 2346, 2355, 2360, 2366, 2378, 2412, 2422, 2429, 2439, 2448, 2452, 2468, 2498, 2500, 2510, 2517, 2530, 2546, 2572, 2594, 2615, 2629, 2642, 2655, 2663, 2672, 2679, 2686, 2691, 2697, 2707, 2724, 2727, 2730, 2739, 2744, 2750, 2762, 2796, 2806, 2813, 2823, 2832, 2836, 2852, 2877, 2879, 2889, 2896, 2909, 2925, 2951, 2973, 2994, 3008, 3021, 3034, 3042, 3051, 3058, 3065, 3070, 3076, 3086, 3103, 3106, 3109, 3118, 3123, 3129, 3141, 3175, 3185, 3192, 3202, 3211, 3215, 3231, 3258, 3260, 3270, 3277, 3290, 3306, 3332, 3354, 3375, 3389, 3402, 3415, 3423, 3432, 3439, 3446, 3451, 3457, 3467, 3484, 3487, 3490, 3499, 3504, 3510, 3522, 3556, 3566, 3573, 3584, 3593, 3597, 3612, 3641, 3643, 3653, 3660, 3673, 3689, 3715, 3737, 3758, 3772, 3785, 3798, 3806, 3815, 3822, 3829, 3834, 3840, 3850, 3867, 3870, 3873, 3882, 3887, 3893, 3905, 3939, 3949, 3956, 3967, 3976, 3980, 3995, 4024, 4026, 4036, 4043, 4056, 4072, 4098, 4120, 4141, 4155, 4168, 4181, 4189, 4198, 4205, 4212, 4217, 4223, 4233, 4250, 4253, 4256, 4265, 4270, 4276, 4288, 4322, 4332, 4339, 4350, 4359, 4363, 4379, 4409, 4411, 4421, 4428, 4441, 4457, 4483, 4505, 4526, 4540, 4553, 4566, 4574, 4583, 4590, 4597, 4602, 4608, 4618, 4635, 4638, 4641, 4650, 4655, 4661, 4673, 4707, 4717, 4724, 4735, 4744, 4748, 4765, 4792, 4794, 4804, 4811, 4824, 4840, 4866, 4888, 4909, 4923, 4936, 4949, 4957, 4966, 4973, 4980, 4985, 4991, 5001, 5018, 5021, 5024, 5033, 5038, 5044, 5056, 5090, 5100, 5107, 5118, 5127, 5131, 5148, 5175, 5177, 5187, 5194, 5207, 5223, 5249, 5271, 5292, 5306, 5319, 5332, 5340, 5349
   );
 
   { Every page of every language, one element per line of HTML -- a change to the
     prose is then one readable hunk in a diff, which a byte array would not be. }
-  HELP_LINE: array[0..5167] of string = (
+  HELP_LINE: array[0..5349] of string = (
     '<h1 id="studio">Spintax Studio</h1>',
     '<p>This program is an editor for templates. A template is ordinary text with a few mar' +
       'ked places in it, and one template can produce a great many different texts — that is ' +
@@ -1076,7 +1081,10 @@ const
       'eview stops moving while you edit.</p>',
     '<p><code>locale</code> decides plural forms, and it is the selector above the right-ha' +
       'nd pane rather than the language of the interface. English needs two forms; Russian, U' +
-      'krainian, Belarusian, Serbian, Croatian and Bosnian need three.</p>',
+      'krainian, Belarusian, Serbian, Croatian and Bosnian need three; Arabic needs six. Unde' +
+      'r Arabic and Hebrew it also changes how a conjunction joins a list (see the separator)' +
+      '. The Arabic and Hebrew examples below are measured under their own locale, which the ' +
+      'sentence before each of them names.</p>',
     '<h2 id="choices">Choices</h2>',
     '<p>Braces with <code>|</code> between them: the engine picks <b>one</b>.</p>',
     '<p><small><tt><a href="ex:1">A {small|large} room.</a><br>→&nbsp; A small room.</tt></' +
@@ -1129,47 +1137,74 @@ const
       '&nbsp; Green, blue and red</tt></small></p>',
     '<p><code>sep</code> goes between the items and <code>lastsep</code> before the final o' +
       'ne, which is how an English list is punctuated.</p>',
+    '<p>A separator made only of letters gets a space on each side even when none was typed' +
+      ':</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="and"&gt;A|B]</a><br>→&nbsp; B and A</tt></s' +
+      'mall></p>',
+    '<p>Scripts written without spaces between words are the exception, under any locale: C' +
+      'hinese, Japanese, Thai, Lao, Khmer and Myanmar separators join bare.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Arabic and Hebrew have a rule of their own, and it is the <b>locale</b> that switch' +
+      'es it on, not the script. Under <code>ar</code> a separator that is exactly و or ف kee' +
+      'ps the space before it and drops the one after, because Arabic writes the conjunction ' +
+      'joined to the next word; under <code>he</code> the same goes for ו. It only happens be' +
+      'fore a word in that script — before a Latin name or a digit both spaces stay:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Under any other locale the conjunction stays a word of its own, which is right for ' +
+      'Persian and Urdu, where the same letter is written apart:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">How many</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;red|green|blue]</a><br>→&nbsp' +
-      '; Green blue</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;red|green|blue]</a><br>→&nbs' +
+      'p; Green blue</tt></small></p>',
     '<p><code>minsize</code> is the floor and <code>maxsize</code> the ceiling; the count b' +
       'etween them is random, like the order. Equal values take exactly that many. <b>With ne' +
       'ither, all of them — but with only <code>maxsize</code>, the floor is one</b>, which s' +
       'urprises people:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Three items, a ceiling of three, and one piece came out. Write <code>minsize</code>' +
       ' too when you mean "all of them, at most three". A <code>maxsize</code> above the numb' +
       'er of items is quietly reduced to it. A <code>minsize</code> above the <code>maxsize</' +
       'code> is accepted without a word, and the floor wins — the ceiling is raised to meet i' +
       't rather than the other way round:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;red|green|blue]</a><br>→&nbs' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;red|green|blue]</a><br>→&nbs' +
       'p; Green blue red</tt></small></p>',
     '<h3 id="shuffles-2">A separator between two items</h3>',
     '<p>A <code>&lt;…&gt;</code> written <b>between</b> two items is the separator for that' +
       ' pair.</p>',
-    '<p><small><tt><a href="ex:12">[red|green&lt;and&gt;|blue]</a><br>→&nbsp; Green and blu' +
+    '<p><small><tt><a href="ex:25">[red|green&lt;and&gt;|blue]</a><br>→&nbsp; Green and blu' +
       'e red</tt></small></p>',
     '<p>It belongs to the item <b>after</b> it and travels with that item through the shuff' +
       'le, so it turns up wherever that item lands rather than at a fixed place in the output' +
       '. A <code>&lt;…&gt;</code> after the <b>last</b> item is not a separator at all and pr' +
       'ints as text:</p>',
-    '<p><small><tt><a href="ex:13">[red|green|blue&lt;and&gt;]</a><br>→&nbsp; Green blue&lt' +
+    '<p><small><tt><a href="ex:26">[red|green|blue&lt;and&gt;]</a><br>→&nbsp; Green blue&lt' +
       ';and&gt; red</tt></small></p>',
     '<h2 id="macros">Macros</h2>',
     '<p><code>#set</code> gives a name to a piece of text. The name is used as <code>%name%' +
       '</code>, and the directive must be the first thing on its line — leading spaces and ta' +
       'bs are allowed, anything else is not.</p>',
-    '<p><small><tt><a href="ex:14">#set %city% = Boston</a><br><a href="ex:14">Fly to %city' +
+    '<p><small><tt><a href="ex:27">#set %city% = Boston</a><br><a href="ex:27">Fly to %city' +
       '%.</a><br>→&nbsp; Fly to Boston.</tt></small></p>',
     '<p>Names are ASCII letters, digits and <code>_</code>. A name in any other alphabet is' +
       ' not a name, which the other document covers under <code>set.malformed</code>.</p>',
     '<h3 id="macros-0"><code>#set</code> rolls again, <code>#def</code> rolls once</h3>',
     '<p>This is the whole difference between the two, and it only shows when the value cont' +
       'ains a choice.</p>',
-    '<p><small><tt><a href="ex:15">#set %pick% = {A|B}</a><br><a href="ex:15">%pick% %pick%' +
+    '<p><small><tt><a href="ex:28">#set %pick% = {A|B}</a><br><a href="ex:28">%pick% %pick%' +
       ' %pick%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %pick% = {A|B}</a><br><a href="ex:16">%pick% %pick%' +
+    '<p><small><tt><a href="ex:29">#def %pick% = {A|B}</a><br><a href="ex:29">%pick% %pick%' +
       ' %pick%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Both examples ran under the same seed. <code>#set</code> stores the template and ro' +
       'lls it at every use; <code>#def</code> rolls once and keeps the answer. Use <code>#def' +
@@ -1180,11 +1215,11 @@ const
       'fore you conclude from a single preview that a definition is not working.</p>',
     '<h2 id="conditions">Conditions</h2>',
     '<p><code>{?name?then|else}</code> asks whether a macro has a value.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?we have %n%|noth' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?we have %n%|noth' +
       'ing yet}</a><br>→&nbsp; We have 5</tt></small></p>',
     '<p>The <code>else</code> half may be left out — <code>{?name?then}</code> prints nothi' +
       'ng when the answer is no. A <code>!</code> inverts the question:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?stranger|fr' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?stranger|fr' +
       'iend}</a><br>→&nbsp; Friend</tt></small></p>',
     '<p>Having a value means having <b>at least one character that is not a space</b>. A ma' +
       'cro set to nothing, or to spaces only, counts as having no value.</p>',
@@ -1193,9 +1228,9 @@ const
       't turns into.</p>',
     '<h2 id="counting">Counting</h2>',
     '<p><code>{plural %n%: …}</code> picks the word form that goes with a number.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: fil' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: fil' +
       'e|files}</a><br>→&nbsp; 1 file</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: fil' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: fil' +
       'e|files}</a><br>→&nbsp; 5 files</tt></small></p>',
     '<p>The count is a <code>#def</code> here rather than a <code>#set</code> on purpose, a' +
       'nd the rule is worth keeping: <b>make the count a plain number or a <code>#def</code>,' +
@@ -1203,18 +1238,36 @@ const
       's the stored TEXT, <code>{5|5}</code> rather than <code>5</code> — not a number, so th' +
       'e whole construct produces nothing and the panel says <code>plural.count-macro</code>.' +
       ' The count and the form cannot disagree: the word disappears instead.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' file|files}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>The number of forms is decided by the locale, not by you: under <code>en</code> the' +
-      're are two, under <code>ru</code> three. The wrong number is an error the panel report' +
-      's (<code>plural.arity</code>), and the engine then prints the whole construct back wit' +
-      'h the braces swapped for wide ones <code>｛｝</code>, so it cannot be mistaken for outpu' +
-      't.</p>',
+      're are two, under <code>ru</code> three, under <code>ar</code> six — in the order zero' +
+      ', one, two, few, many, other. Arabic says "one book" and "two books" without a numeral' +
+      ', so the number goes <b>inside</b> the forms that print it rather than in front of the' +
+      ' block:</p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>The wrong number is an error the panel reports (<code>plural.arity</code>), and the' +
+      ' engine then prints the whole construct back with the braces swapped for wide ones <co' +
+      'de>｛｝</code>, so it cannot be mistaken for output.</p>',
     '<h2 id="fragments">Fragments</h2>',
     '<p><code>#include "name"</code> puts another template in at that point, and the direct' +
       'ive must be the first thing on its line — again, leading spaces and tabs are allowed.<' +
       '/p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Welcome to Acme.</tt></s' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Welcome to Acme.</tt></s' +
       'mall></p>',
     '<p>The fragment is rendered as its own template, so a choice inside it is made afresh:' +
       ' <code>intro</code> holds <code>{Acme|Globex}</code> and answers with either.</p>',
@@ -1226,7 +1279,7 @@ const
     '<h3 id="fragments-0">A fragment does not see your macros</h3>',
     '<p>It is rendered as its own template: it has the session''s values, but not the <code' +
       '>#set</code> and <code>#def</code> of the document that included it.</p>',
-    '<p><small><tt><a href="ex:23">#set %brand% = Acme</a><br><a href="ex:23">#include "sho' +
+    '<p><small><tt><a href="ex:42">#set %brand% = Acme</a><br><a href="ex:42">#include "sho' +
       'ut"</a><br>→&nbsp; The %brand% is here.</tt></small></p>',
     '<p><code>shout</code> is <code>The %brand% is here.</code>, and the name has to be def' +
       'ined in the fragment itself. This one is not a silence — the panel does say <code>vari' +
@@ -1237,7 +1290,7 @@ const
     '<h2 id="remarks">Remarks</h2>',
     '<p><code>/# … #/</code> is a comment: everything between the marks is removed before a' +
       'nything else happens.</p>',
-    '<p><small><tt><a href="ex:24">draft /# not sure about this #/ ready</a><br>→&nbsp; Dra' +
+    '<p><small><tt><a href="ex:43">draft /# not sure about this #/ ready</a><br>→&nbsp; Dra' +
       'ft ready</tt></small></p>',
     '<p>Comments do not nest. The first <code>#/</code> closes the comment, whatever came b' +
       'efore it, so a comment wrapped around text that itself contains <code>#/</code> ends e' +
@@ -1246,7 +1299,7 @@ const
     '<p>The output is not quite the text the constructs produced. Several things happen to ' +
       'it at the end; two you meet daily.</p>',
     '<p>The first letter of every sentence is capitalised:</p>',
-    '<p><small><tt><a href="ex:25">one. two. three.</a><br>→&nbsp; One. Two. Three.</tt></s' +
+    '<p><small><tt><a href="ex:44">one. two. three.</a><br>→&nbsp; One. Two. Three.</tt></s' +
       'mall></p>',
     '<p>That is why the examples in this help so often answer with a capital where the temp' +
       'late has a small letter. A dot after an abbreviation the engine knows does not end a s' +
@@ -1254,15 +1307,15 @@ const
       '— a letter, a dot, a letter, a dot — in <b>any alphabet</b>: the check for "is this th' +
       'e middle of a word" reads every script, so <code>т.е.</code> is shielded exactly as <c' +
       'ode>e.g.</code> is.</p>',
-    '<p><small><tt><a href="ex:26">e.g. this stays lower</a><br>→&nbsp; e.g. this stays low' +
+    '<p><small><tt><a href="ex:45">e.g. this stays lower</a><br>→&nbsp; e.g. this stays low' +
       'er</tt></small></p>',
-    '<p><small><tt><a href="ex:27">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:46">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:28">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
+    '<p><small><tt><a href="ex:47">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
       're low</tt></small></p>',
     '<p>Any other word ends a sentence, however short — length has nothing to do with it:</' +
       'p>',
-    '<p><small><tt><a href="ex:29">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices a' +
+    '<p><small><tt><a href="ex:48">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices a' +
       're low</tt></small></p>',
     '<p>The list the engine knows has 46 entries, <b>29 of them Cyrillic</b>, and the other' +
       ' document goes through it under <b>A silence in every language</b>.</p>',
@@ -1278,39 +1331,39 @@ const
       'start to the capitaliser, which is why the second example below comes back untouched —' +
       ' lowercase included. The other document''s chapter on abbreviations has the measuremen' +
       'ts.</p>',
-    '<p><small><tt><a href="ex:30">hello , world</a><br>→&nbsp; Hello, world</tt></small></' +
+    '<p><small><tt><a href="ex:49">hello , world</a><br>→&nbsp; Hello, world</tt></small></' +
       'p>',
-    '<p><small><tt><a href="ex:31">one.two</a><br>→&nbsp; one.two</tt></small></p>',
+    '<p><small><tt><a href="ex:50">one.two</a><br>→&nbsp; one.two</tt></small></p>',
     '<h2 id="silences">Silences</h2>',
     '<p>Every case below renders, produces something other than what it looks like, and dra' +
       'ws <b>no diagnostic at all</b>. They are collected here because nothing else in the wi' +
       'ndow will ever mention them.</p>',
     '<p><b>A <code>#include</code> that is not alone on its line is plain text.</b></p>',
-    '<p><small><tt><a href="ex:32">Before. #include "intro"</a><br>→&nbsp; Before. #include' +
+    '<p><small><tt><a href="ex:51">Before. #include "intro"</a><br>→&nbsp; Before. #include' +
       ' "intro"</tt></small></p>',
     '<p>The same is true of a directive with anything after it, and of <code>#include"intro' +
       '"</code> with no space. The rule is the family''s rather than this engine''s, and it i' +
       's what makes a directive recognisable without parsing the whole line.</p>',
     '<p><b>A condition whose name starts with a digit is not a condition.</b> It becomes an' +
       ' ordinary choice between <code>?1x?yes</code> and <code>no</code>:</p>',
-    '<p><small><tt><a href="ex:33">{?1x?yes|no}</a><br>→&nbsp; ?1x? Yes</tt></small></p>',
+    '<p><small><tt><a href="ex:52">{?1x?yes|no}</a><br>→&nbsp; ?1x? Yes</tt></small></p>',
     '<p><b>A <code>&lt;…&gt;</code> at the head of a later item is not a separator</b> and ' +
       'prints as it stands:</p>',
-    '<p><small><tt><a href="ex:34">[red|&lt;and&gt;green]</a><br>→&nbsp; &lt;and&gt;Green r' +
+    '<p><small><tt><a href="ex:53">[red|&lt;and&gt;green]</a><br>→&nbsp; &lt;and&gt;Green r' +
       'ed</tt></small></p>',
     '<p>The block at the head of the <b>first</b> item is the separator — that is the synta' +
       'x the shuffles chapter opens with:</p>',
-    '<p><small><tt><a href="ex:35">[&lt;and&gt;red|green]</a><br>→&nbsp; Green and red</tt>' +
+    '<p><small><tt><a href="ex:54">[&lt;and&gt;red|green]</a><br>→&nbsp; Green and red</tt>' +
       '</small></p>',
     '<p>Anywhere after a <code>|</code> it is plain text, and a separator between two items' +
       ' goes at the <b>end</b> of the first.</p>',
     '<p><b>A bare tag at the end of an item is taken as that pair''s separator</b> and prin' +
       'ted as its own text:</p>',
-    '<p><small><tt><a href="ex:36">[one&lt;br&gt;|two]</a><br>→&nbsp; Two one</tt></small><' +
+    '<p><small><tt><a href="ex:55">[one&lt;br&gt;|two]</a><br>→&nbsp; Two one</tt></small><' +
       '/p>',
     '<p>Under this seed the two landed in the other order, so the separator did not come ou' +
       't at all. With a third item there is somewhere for it to land, and it appears:</p>',
-    '<p><small><tt><a href="ex:37">[red|green&lt;br&gt;|blue]</a><br>→&nbsp; Green br blue ' +
+    '<p><small><tt><a href="ex:56">[red|green&lt;br&gt;|blue]</a><br>→&nbsp; Green br blue ' +
       'red</tt></small></p>',
     '<p>The <code>&lt;br&gt;</code> sits between <code>green</code> and what follows it, wh' +
       'erever the shuffle puts that pair. A closing tag (<code>&lt;/b&gt;</code>), a self-clo' +
@@ -1318,12 +1371,12 @@ const
       't;</code>) and a tag in the middle of an item are all left alone.</p>',
     '<p><b>An unclosed comment is ordinary text</b> — it opens nothing, and the <code>/#</c' +
       'ode> is printed:</p>',
-    '<p><small><tt><a href="ex:38">before /# rest of it</a><br>→&nbsp; Before /# rest of it' +
+    '<p><small><tt><a href="ex:57">before /# rest of it</a><br>→&nbsp; Before /# rest of it' +
       '</tt></small></p>',
     '<p>But it is still half of a pair. If a <code>#/</code> appears further down the docum' +
       'ent, the two find each other and everything between them goes — including whatever the' +
       ' author wrote in between:</p>',
-    '<p><small><tt><a href="ex:39">{a /# oops|b} middle #/ tail</a><br>→&nbsp; {a tail</tt>' +
+    '<p><small><tt><a href="ex:58">{a /# oops|b} middle #/ tail</a><br>→&nbsp; {a tail</tt>' +
       '</small></p>',
     '<p>The choice above lost its second alternative and its closing brace, and no diagnost' +
       'ic says so: this is what the text MEANS, not a mistake the engine can see. When a <cod' +
@@ -1391,19 +1444,19 @@ const
       'f how the construct is built.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — a bracket is opened and neve' +
       'r closed</h3>',
-    '<p><small><tt><a href="ex:40">a price {cheap|dear</a><br>→&nbsp; A price {cheap|dear</' +
+    '<p><small><tt><a href="ex:59">a price {cheap|dear</a><br>→&nbsp; A price {cheap|dear</' +
       'tt></small></p>',
     '<p>The engine does not guess where you meant to close it. The text stays as it is, bra' +
       'ce and all, and the choice never happens.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — closed by a bracket of a' +
       'nother kind</h3>',
-    '<p><small><tt><a href="ex:41">a price {cheap|dear]</a><br>→&nbsp; A price {cheap|dear]' +
+    '<p><small><tt><a href="ex:60">a price {cheap|dear]</a><br>→&nbsp; A price {cheap|dear]' +
       '</tt></small></p>',
     '<p><code>{</code> waits for <code>}</code> and <code>[</code> waits for <code>]</code>' +
       '. A permutation closed by a brace is not a permutation.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — a closin' +
       'g bracket with nothing open</h3>',
-    '<p><small><tt><a href="ex:42">a price cheap} and all</a><br>→&nbsp; A price cheap} and' +
+    '<p><small><tt><a href="ex:61">a price cheap} and all</a><br>→&nbsp; A price cheap} and' +
       ' all</tt></small></p>',
     '<p>Most often a leftover from an edit: the opening brace was deleted and the closing o' +
       'ne stayed.</p>',
@@ -1411,7 +1464,7 @@ const
     '<h2 id="definitions">Definitions</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — this <code>#set</code> line does n' +
       'ot follow the rule</h3>',
-    '<p><small><tt><a href="ex:43">#set city = Boston</a><br><a href="ex:43">in %city%</a><' +
+    '<p><small><tt><a href="ex:62">#set city = Boston</a><br><a href="ex:62">in %city%</a><' +
       'br>→&nbsp; #set city = Boston ⏎ In %city%</tt></small></p>',
     '<p><b>The name goes in per cent signs:</b> <code>#set %city% = Boston</code>. This is ' +
       'the commonest first mistake and it puts two lines in the panel at once — the malformed' +
@@ -1422,7 +1475,7 @@ const
       'result.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — this <code>#def</code> line does n' +
       'ot follow the rule</h3>',
-    '<p><small><tt><a href="ex:44">#def pages = {1|3}</a><br><a href="ex:44">%pages%</a><br' +
+    '<p><small><tt><a href="ex:63">#def pages = {1|3}</a><br><a href="ex:63">%pages%</a><br' +
       '>→&nbsp; #def pages = 1 ⏎ %pages%</tt></small></p>',
     '<p>The same rule and the same price. <code>#def</code> differs from <code>#set</code> ' +
       'not in spelling but in <b>when</b> the value is expanded: <code>#set</code> expands it' +
@@ -1434,15 +1487,15 @@ const
       'tops being a directive.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — this name ' +
       'is already defined above</h3>',
-    '<p><small><tt><a href="ex:45">#set %x% = first</a><br><a href="ex:45">#set %x% = secon' +
-      'd</a><br><a href="ex:45">%x%</a><br>→&nbsp; Second</tt></small></p>',
+    '<p><small><tt><a href="ex:64">#set %x% = first</a><br><a href="ex:64">#set %x% = secon' +
+      'd</a><br><a href="ex:64">%x%</a><br>→&nbsp; Second</tt></small></p>',
     '<p>It works — the <b>last</b> definition wins — but the engine calls it an error: a do' +
       'cument where one name is set twice reads ambiguously, and in a month you will not reme' +
       'mber which of the two lines is the live one. The error points at the <b>second</b> def' +
       'inition; the first is further up.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> inside a definition value</h3>',
-    '<p><small><tt><a href="ex:46">#def %x% = #include "frag"</a><br><a href="ex:46">%x%</a' +
+    '<p><small><tt><a href="ex:65">#def %x% = #include "frag"</a><br><a href="ex:65">%x%</a' +
       '><br>→&nbsp; Fragment</tt></small></p>',
     '<p>An include inside a value expands at a different moment than you would expect, and ' +
       'the family forbids it. Put the <code>#include</code> on a line of its own.</p>',
@@ -1450,7 +1503,7 @@ const
     '<h2 id="variables">Variables</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — this variable is defined' +
       ' nowhere</h3>',
-    '<p><small><tt><a href="ex:47">hello, %name%</a><br>→&nbsp; Hello, %name%</tt></small><' +
+    '<p><small><tt><a href="ex:66">hello, %name%</a><br>→&nbsp; Hello, %name%</tt></small><' +
       '/p>',
     '<p>A warning rather than an error: the engine prints the name as it stands. That is by' +
       ' design — the value may arrive from outside, from the host. In Studio you supply such ' +
@@ -1484,7 +1537,7 @@ const
     '<li><b>Ctrl+click</b> writes a definition into the document and opens the group editor' +
       ' on it. The value you have already typed moves in as its first option:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:48">#set %brand% = {Vulkan}</a><br><a href="ex:48">casino %b' +
+    '<p><small><tt><a href="ex:67">#set %brand% = {Vulkan}</a><br><a href="ex:67">casino %b' +
       'rand%</a><br>→&nbsp; Casino Vulkan</tt></small></p>',
     '<p>The difference between the two is what survives closing the window. A session value' +
       ' does not: it is not in the file, not in git, and no other engine in the family can se' +
@@ -1497,7 +1550,7 @@ const
       'd per cent signs stay characters.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — the definition' +
       ' refers to itself</h3>',
-    '<p><small><tt><a href="ex:49">#set %x% = a %x% b</a><br><a href="ex:49">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:68">#set %x% = a %x% b</a><br><a href="ex:68">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Fifty levels, then a stop. The engine expands to the depth limit and halts, leaving' +
       ' <code>%x%</code> in the middle. Not a loop, and not what you wanted either.</p>',
@@ -1507,8 +1560,8 @@ const
       'holds one more of each.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — the de' +
       'finitions refer in a circle</h3>',
-    '<p><small><tt><a href="ex:50">#set %x% = %y%</a><br><a href="ex:50">#set %y% = %x%</a>' +
-      '<br><a href="ex:50">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:69">#set %x% = %y%</a><br><a href="ex:69">#set %y% = %x%</a>' +
+      '<br><a href="ex:69">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Each side expands exactly <b>once</b> and then stops: <code>%x%</code> became <code' +
       '>%y%</code>, not <code>%x%</code>. The engine unwinds rather than looping, and what su' +
       'rvives is the other name in the circle — put <code>%x% %y%</code> in a document and it' +
@@ -1528,16 +1581,16 @@ const
     '<hr>',
     '<h2 id="includes">Includes</h2>',
     '<h3 id="includes-0"><code>#include</code> only works from the start of a line</h3>',
-    '<p><small><tt><a href="ex:51">before #include "frag" after</a><br>→&nbsp; Before #incl' +
+    '<p><small><tt><a href="ex:70">before #include "frag" after</a><br>→&nbsp; Before #incl' +
       'ude "frag" after</tt></small></p>',
-    '<p><small><tt><a href="ex:52">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
+    '<p><small><tt><a href="ex:71">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Not a diagnostic, and that is the point: an <code>#include</code> in the middle of ' +
       'a line is <b>not</b> an include. The engine reads it as ordinary text and says nothing' +
       ', because there is nothing to complain about — you wrote text and got text.</p>',
     '<p><b>The target may sit on a later line, though</b>, and that surprises people the ot' +
       'her way round. The gap the engine allows between the keyword and its target includes l' +
       'ine breaks, so this is one include and it works:</p>',
-    '<p><small><tt><a href="ex:53">#include</a><br><a href="ex:53">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:72">#include</a><br><a href="ex:72">"frag"</a><br>→&nbsp; Fr' +
       'agment</tt></small></p>',
     '<p>Blank lines in between are fine too. What is not allowed is anything else: a word b' +
       'efore the target, or anything but spaces after it, and the whole thing goes back to be' +
@@ -1546,7 +1599,7 @@ const
       'see the end of.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — no such target i' +
       'n the set</h3>',
-    '<p><small><tt><a href="ex:54">#include "nosuch"</a><br>→&nbsp; (empty)</tt></small></p' +
+    '<p><small><tt><a href="ex:73">#include "nosuch"</a><br>→&nbsp; (empty)</tt></small></p' +
       '>',
     '<p>Targets are the <code>.spintax</code> files in the folder of the open document. An ' +
       'unknown target expands to nothing — the paragraph disappears rather than breaking, whi' +
@@ -1563,7 +1616,7 @@ const
       'lder and the file really is not in it.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — the target exists, in an' +
       'other case</h3>',
-    '<p><small><tt><a href="ex:55">#include "intro"</a><br>→&nbsp; (empty)</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#include "intro"</a><br>→&nbsp; (empty)</tt></small></p>',
     '<p>The set holds <code>Intro.spintax</code> — and the engine still says there is no su' +
       'ch target, while Studio adds its note about the case. Case matters: <code>intro</code>' +
       ' and <code>Intro</code> are different targets. Windows would open the file in either c' +
@@ -1571,7 +1624,7 @@ const
       'e preview would disagree with the production server about the same document.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — an include in a circle</h3>',
     '<p>If <code>loop.spintax</code> contains <code>#include "loop"</code>, then:</p>',
-    '<p><small><tt><a href="ex:56">#include "loop"</a><br>→&nbsp; (empty)</tt></small></p>',
+    '<p><small><tt><a href="ex:75">#include "loop"</a><br>→&nbsp; (empty)</tt></small></p>',
     '<p>The engine substitutes nothing rather than infinity. The note is there so you know ' +
       'why the paragraph vanished.</p>',
     '<p>The row is against <b><code>loop</code></b>, not against the document you are looki' +
@@ -1582,18 +1635,21 @@ const
     '<h2 id="plurals">Plurals</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — not as many forms as the locale asks' +
       ' for</h3>',
-    '<p><small><tt><a href="ex:57">#set %n% = 5</a><br><a href="ex:57">%n% {plural %n%: ite' +
+    '<p><small><tt><a href="ex:76">#set %n% = 5</a><br><a href="ex:76">%n% {plural %n%: ite' +
       'm|items|itemses}</a><br>→&nbsp; 5 ｛plural 5: item|items|itemses｝</tt></small></p>',
     '<p><b>Not emptiness — the engine prints the whole construct</b>, with the braces repla' +
       'ced by wide ones <code>｛｝</code>. That is how it says "I saw this and could not apply ' +
       'it". Nobody would call that unnoticeable, and that is good: a paragraph that vanished ' +
       'silently would take longer to find.</p>',
-    '<p>English asks for two forms, Russian for three. Under this document''s locale <code>' +
-      '{plural %n%: item|items}</code> is the correct one.</p>',
+    '<p>English asks for two forms, Russian for three, Arabic for six. Under this document' +
+      '''s locale <code>{plural %n%: item|items}</code> is the correct one; under <code>ar</c' +
+      'ode> the same two forms are the error:</p>',
+    '<p><small><tt><a href="ex:77">#def %n% = 5</a><br><a href="ex:77">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Emptiness happens for another reason, and the two are easy to confuse.</b> Compa' +
       're these two, which differ only in how many forms they carry:</p>',
-    '<p><small><tt><a href="ex:58">{plural %n%: item|items}</a><br>→&nbsp; (empty)&nbsp;&nb' +
-      'sp; two forms: right for English<br><a href="ex:59">{plural %n%: item|items|itemses}</' +
+    '<p><small><tt><a href="ex:78">{plural %n%: item|items}</a><br>→&nbsp; (empty)&nbsp;&nb' +
+      'sp; two forms: right for English<br><a href="ex:79">{plural %n%: item|items|itemses}</' +
       'a><br>→&nbsp; (empty)&nbsp;&nbsp; three forms: wrong for English</tt></small></p>',
     '<p>Both print nothing, and the panel treats them differently: the first draws only <co' +
       'de>variable.undefined</code>, the second draws <code>plural.arity</code> as well. So <' +
@@ -1611,7 +1667,7 @@ const
       '>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — the count comes from <co' +
       'de>#set</code>, and that rerolls on every reference</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = {1|2}</a><br><a href="ex:60">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:80">#set %n% = {1|2}</a><br><a href="ex:80">%n% {plural %n%:' +
       ' item|items}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Look at what survived: <b>the number printed and the noun did not.</b> The count ha' +
       's to be a number by the time the plural is chosen, and a <code>#set</code> whose value' +
@@ -1620,13 +1676,13 @@ const
       '. The count and the form cannot disagree; the engine drops the word instead.</p>',
     '<p><code>#def</code> behaves differently, expanding its value once per render, so the ' +
       'count slot gets a number:</p>',
-    '<p><small><tt><a href="ex:61">#def %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:81">#def %n% = {1|2}</a><br><a href="ex:81">%n% {plural %n%:' +
       ' item|items}</a><br>→&nbsp; 1 item</tt></small></p>',
     '<p>There is no panel row at all for that one. Hence the rule: make the count a plain n' +
       'umber or a <code>#def</code>, never a <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — brackets inside ' +
       'the plural forms</h3>',
-    '<p><small><tt><a href="ex:62">{plural %n%: {item|thing}|items}</a><br>→&nbsp; ｛plural ' +
+    '<p><small><tt><a href="ex:82">{plural %n%: {item|thing}|items}</a><br>→&nbsp; ｛plural ' +
       '%n%: ｛item|thing｝|items｝</tt></small></p>',
     '<p>Forms are plain text. A choice inside them is not expanded, and the whole construct' +
       ' is printed in wide braces instead.</p>',
@@ -1634,7 +1690,7 @@ const
     '<h2 id="permutations">Permutations</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — unknown key in' +
       ' the permutation config</h3>',
-    '<p><small><tt><a href="ex:63">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:83">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>The known keys are <code>minsize</code>, <code>maxsize</code>, <code>sep</code> and' +
       ' <code>lastsep</code>. An unknown one is not a setting — and when it is the only thing' +
@@ -1642,7 +1698,7 @@ const
       'n the elements, which is what the output shows.</p>',
     '<p><b>With a real key beside it the outcome is completely different</b>, and this is t' +
       'he likelier mistake — one key mistyped among several:</p>',
-    '<p><small><tt><a href="ex:64">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:84">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>The block is a config, <code>sep</code> is obeyed, the unknown key is simply droppe' +
       'd, and the panel says the same thing about it either way. So the diagnostic tells you ' +
@@ -1650,13 +1706,13 @@ const
       ' that.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize is not a whole number</h3>',
-    '<p><small><tt><a href="ex:65">[&lt;minsize=two&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:85">[&lt;minsize=two&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>A non-numeric value is dropped along with its limit, and the default is used — whic' +
       'h is all the elements.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize is not a whole number</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;maxsize=many&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:86">[&lt;maxsize=many&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Exactly the same from the other end: the upper limit disappears, and the output aga' +
       'in holds every element.</p>',
@@ -1695,8 +1751,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">A silence in every language: abbreviations</h2>',
     '<h3 id="abbreviations-0">An abbreviation keeps the next word lowercase</h3>',
-    '<p><small><tt><a href="ex:67">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
-      're low<br><a href="ex:68">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices are l' +
+    '<p><small><tt><a href="ex:87">Ltd. our prices are low</a><br>→&nbsp; Ltd. our prices a' +
+      're low<br><a href="ex:88">Xyz. our prices are low</a><br>→&nbsp; Xyz. Our prices are l' +
       'ow</tt></small></p>',
     '<p>Two lines that differ by one word, and the second word of each tells you the rule: ' +
       'after <code>Ltd.</code> the sentence stays lowercase, after <code>Xyz.</code> it is ca' +
@@ -1724,15 +1780,15 @@ const
       'd-sentence, which is far commoner.</p>',
     '<hr>',
     '<h2 id="correct">What the correct form looks like</h2>',
-    '<p><small><tt><a href="ex:69">a price {cheap|dear}</a><br>→&nbsp; A price cheap</tt></' +
+    '<p><small><tt><a href="ex:89">a price {cheap|dear}</a><br>→&nbsp; A price cheap</tt></' +
       'small></p>',
-    '<p><small><tt><a href="ex:70">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:90">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:71">#set %vip% = 1</a><br><a href="ex:71">{?vip?for you|for ' +
+    '<p><small><tt><a href="ex:91">#set %vip% = 1</a><br><a href="ex:91">{?vip?for you|for ' +
       'everyone}</a><br>→&nbsp; For you</tt></small></p>',
-    '<p><small><tt><a href="ex:72">#set %n% = 5</a><br><a href="ex:72">%n% {plural %n%: ite' +
+    '<p><small><tt><a href="ex:92">#set %n% = 5</a><br><a href="ex:92">%n% {plural %n%: ite' +
       'm|items}</a><br>→&nbsp; 5 items</tt></small></p>',
-    '<p><small><tt><a href="ex:73">before /# a note #/ after</a><br>→&nbsp; Before after</t' +
+    '<p><small><tt><a href="ex:93">before /# a note #/ after</a><br>→&nbsp; Before after</t' +
       't></small></p>',
     '<p>Five constructions, five clean lines in the panel — which is to say none at all.</p' +
       '>',
@@ -1747,7 +1803,7 @@ const
       ', digits and the underscore. <code>%café%</code> is not a variable reference at all — ' +
       'the engine reads it as text and says nothing, because on its reading there is nothing ' +
       'to report:</p>',
-    '<p><small><tt><a href="ex:74">hello %café% and %name%</a><br>→&nbsp; Hello %café% and ' +
+    '<p><small><tt><a href="ex:94">hello %café% and %name%</a><br>→&nbsp; Hello %café% and ' +
       '%name%</tt></small></p>',
     '<p>Both came through unchanged, and that is the trap: only the second drew a row in th' +
       'e panel. The first is silent, so nothing tells you it will never be substituted. Renam' +
@@ -2040,7 +2096,10 @@ const
       'явится поле с числом, и предпросмотр перестанет меняться, пока вы правите.</p>',
     '<p><code>locale</code> решает, сколько форм у множественного числа, и берётся из селек' +
       'тора над правой панелью, а не из языка интерфейса. Английскому нужно две формы; русско' +
-      'му, украинскому, белорусскому, сербскому, хорватскому и боснийскому — три.</p>',
+      'му, украинскому, белорусскому, сербскому, хорватскому и боснийскому — три; арабскому —' +
+      ' шесть. Под арабской и ивритской локалью она ещё решает, как союз присоединяется в спи' +
+      'ске (см. разделитель). Арабские и ивритские примеры ниже измерены под своей локалью — ' +
+      'её называет фраза перед каждым из них.</p>',
     '<h2 id="choices">Выбор</h2>',
     '<p>Фигурные скобки с <code>|</code> внутри: движок берёт <b>один</b> вариант.</p>',
     '<p><small><tt><a href="ex:1">Комната {маленькая|большая}.</a><br>→&nbsp; Комната мален' +
@@ -2091,46 +2150,74 @@ const
     '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" и "&gt;красный|зелёный|синий]</a>' +
       '<br>→&nbsp; Зелёный, синий и красный</tt></small></p>',
     '<p><code>sep</code> идёт между элементами, <code>lastsep</code> — перед последним.</p>',
+    '<p>Разделитель из одних букв получает по пробелу с каждой стороны, даже если их не наб' +
+      'рали:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="и"&gt;А|Б]</a><br>→&nbsp; Б и А</tt></small' +
+      '></p>',
+    '<p>Исключение — письменности, где слова не разделяют пробелами, и под любой локалью: к' +
+      'итайский, японский, тайский, лаосский, кхмерский и бирманский разделители пишутся слит' +
+      'но.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>У арабского и иврита своё правило, и включает его <b>локаль</b>, а не письменность.' +
+      ' Под <code>ar</code> разделитель, который состоит ровно из و или ف, сохраняет пробел п' +
+      'еред собой и теряет пробел после: по-арабски союз пишется слитно со следующим словом. ' +
+      'Под <code>he</code> то же самое делает ו. Только перед словом той же письменности — пе' +
+      'ред латинским названием или цифрой оба пробела остаются:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Под любой другой локалью союз остаётся отдельным словом — так и нужно для персидско' +
+      'го и урду, где та же буква пишется отдельно:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Сколько брать</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;красный|зелёный|синий]</a><br' +
-      '>→&nbsp; Зелёный синий</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;красный|зелёный|синий]</a><b' +
+      'r>→&nbsp; Зелёный синий</tt></small></p>',
     '<p><code>minsize</code> — нижняя граница, <code>maxsize</code> — верхняя; число между ' +
       'ними случайно, как и порядок. Равные значения берут ровно столько. <b>Без обоих — все,' +
       ' но с одним только <code>maxsize</code> нижняя граница равна единице</b>, и это удивля' +
       'ет:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;а|б|в]</a><br>→&nbsp; В</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;а|б|в]</a><br>→&nbsp; В</tt></small></' +
       'p>',
     '<p>Три элемента, потолок три, а вышел один. Когда имеется в виду «все, но не больше тр' +
       'ёх», пишите и <code>minsize</code>. <code>maxsize</code>, превышающий число элементов,' +
       ' тихо уменьшается до него. <code>minsize</code>, превышающий <code>maxsize</code>, при' +
       'нимается без единого слова, и побеждает нижняя граница: потолок поднимают к ней, а не ' +
       'наоборот:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;красный|зелёный|синий]</a><b' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;красный|зелёный|синий]</a><b' +
       'r>→&nbsp; Зелёный синий красный</tt></small></p>',
     '<h3 id="shuffles-2">Разделитель между двумя элементами</h3>',
     '<p>Блок <code>&lt;…&gt;</code>, написанный <b>между</b> двумя элементами, — разделител' +
       'ь этой пары.</p>',
-    '<p><small><tt><a href="ex:12">[красный|зелёный&lt;и&gt;|синий]</a><br>→&nbsp; Зелёный ' +
+    '<p><small><tt><a href="ex:25">[красный|зелёный&lt;и&gt;|синий]</a><br>→&nbsp; Зелёный ' +
       'и синий красный</tt></small></p>',
     '<p>Он принадлежит элементу <b>после</b> себя и переезжает вместе с ним при перемешиван' +
       'ии, поэтому всплывает там, куда попал этот элемент, а не на фиксированном месте. Блок ' +
       'после <b>последнего</b> элемента разделителем не является и печатается текстом:</p>',
-    '<p><small><tt><a href="ex:13">[красный|зелёный|синий&lt;и&gt;]</a><br>→&nbsp; Зелёный ' +
+    '<p><small><tt><a href="ex:26">[красный|зелёный|синий&lt;и&gt;]</a><br>→&nbsp; Зелёный ' +
       'синий&lt;и&gt; красный</tt></small></p>',
     '<h2 id="macros">Макросы</h2>',
     '<p><code>#set</code> даёт имя куску текста. К имени обращаются как <code>%имя%</code>,' +
       ' а директива обязана быть первой на своей строке — пробелы и табуляции перед ней допус' +
       'тимы, что-либо ещё нет.</p>',
-    '<p><small><tt><a href="ex:14">#set %city% = Москва</a><br><a href="ex:14">Город — %cit' +
+    '<p><small><tt><a href="ex:27">#set %city% = Москва</a><br><a href="ex:27">Город — %cit' +
       'y%.</a><br>→&nbsp; Город — Москва.</tt></small></p>',
     '<p>Имя состоит из <b>латинских</b> букв, цифр и <code>_</code>. Имя в другом алфавите ' +
       'именем не является — про это второй документ, статья <code>set.malformed</code>.</p>',
     '<h3 id="macros-0"><code>#set</code> разворачивает заново, <code>#def</code> — один раз' +
       '</h3>',
     '<p>В этом вся разница между ними, и видна она только когда в значении есть выбор.</p>',
-    '<p><small><tt><a href="ex:15">#set %pick% = {А|Б}</a><br><a href="ex:15">%pick% %pick%' +
+    '<p><small><tt><a href="ex:28">#set %pick% = {А|Б}</a><br><a href="ex:28">%pick% %pick%' +
       ' %pick%</a><br>→&nbsp; А А Б</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %pick% = {А|Б}</a><br><a href="ex:16">%pick% %pick%' +
+    '<p><small><tt><a href="ex:29">#def %pick% = {А|Б}</a><br><a href="ex:29">%pick% %pick%' +
       ' %pick%</a><br>→&nbsp; А А А</tt></small></p>',
     '<p>Оба примера прогнаны на одном зерне. <code>#set</code> хранит шаблон и разворачивае' +
       'т его при каждой ссылке; <code>#def</code> разворачивает один раз и запоминает ответ. ' +
@@ -2141,11 +2228,11 @@ const
       'м по одному предпросмотру решить, что объявление не работает.</p>',
     '<h2 id="conditions">Условия</h2>',
     '<p><code>{?имя?тогда|иначе}</code> спрашивает, есть ли у макроса значение.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?у нас %n%|пока н' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?у нас %n%|пока н' +
       'ичего}</a><br>→&nbsp; У нас 5</tt></small></p>',
     '<p>Половину «иначе» можно опустить — <code>{?имя?тогда}</code> при отрицательном ответ' +
       'е не печатает ничего. <code>!</code> переворачивает вопрос:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?незнакомец|' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?незнакомец|' +
       'друг}</a><br>→&nbsp; Друг</tt></small></p>',
     '<p>Иметь значение — значит иметь <b>хотя бы один непробельный символ</b>. Макрос, кото' +
       'рому присвоили пустоту или одни пробелы, считается не имеющим значения.</p>',
@@ -2154,11 +2241,11 @@ const
       '>',
     '<h2 id="counting">Счёт</h2>',
     '<p><code>{plural %n%: …}</code> подбирает форму слова к числу.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: фай' +
       'л|файла|файлов}</a><br>→&nbsp; 1 файл</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 2</a><br><a href="ex:20">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:33">#def %n% = 2</a><br><a href="ex:33">%n% {plural %n%: фай' +
       'л|файла|файлов}</a><br>→&nbsp; 2 файла</tt></small></p>',
-    '<p><small><tt><a href="ex:21">#def %n% = 5</a><br><a href="ex:21">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:34">#def %n% = 5</a><br><a href="ex:34">%n% {plural %n%: фай' +
       'л|файла|файлов}</a><br>→&nbsp; 5 файлов</tt></small></p>',
     '<p>Счёт здесь <code>#def</code>, а не <code>#set</code>, и это правило стоит держать: ' +
       '<b>счёт делают числом или <code>#def</code>, никогда не <code>#set</code>.</b> В слот ' +
@@ -2166,16 +2253,34 @@ const
       '5</code> — числом он не является, вся конструкция даёт пустоту, а панель ставит <code>' +
       'plural.count-macro</code>. Разойтись счёт с формой не могут: слово просто исчезает.</p' +
       '>',
-    '<p><small><tt><a href="ex:22">#set %n% = {5|5}</a><br><a href="ex:22">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:35">#set %n% = {5|5}</a><br><a href="ex:35">%n% {plural %n%:' +
       ' файл|файла|файлов}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Сколько форм, решает локаль, а не вы: под <code>ru</code> их три, под <code>en</cod' +
-      'e> две. Неверное число — ошибка, которую панель показывает как <code>plural.arity</cod' +
-      'e>, и движок печатает всю конструкцию обратно, заменив скобки на широкие <code>｛｝</cod' +
-      'e>, чтобы её нельзя было принять за вывод.</p>',
+      'e> две, под <code>ar</code> шесть — в порядке zero, one, two, few, many, other. По-ара' +
+      'бски «одна книга» и «две книги» говорят без числительного, поэтому число ставят <b>вну' +
+      'трь</b> тех форм, что его печатают, а не перед блоком:</p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 3</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:37">#def %n% = 2</a><br><a href="ex:37">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:38">#def %n% = 0</a><br><a href="ex:38">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:39">#def %n% = 1</a><br><' +
+      'a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:40' +
+      '">#def %n% = 11</a><br><a href="ex:40">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:41">#def %n% = 100</a><br><a href="ex:41">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Неверное число — ошибка, которую панель показывает как <code>plural.arity</code>, и' +
+      ' движок печатает всю конструкцию обратно, заменив скобки на широкие <code>｛｝</code>, ч' +
+      'тобы её нельзя было принять за вывод.</p>',
     '<h2 id="fragments">Фрагменты</h2>',
     '<p><code>#include "имя"</code> подставляет в это место другой шаблон, и директива тоже' +
       ' обязана быть первой на своей строке — пробелы и табуляции перед ней допустимы.</p>',
-    '<p><small><tt><a href="ex:23">#include "intro"</a><br>→&nbsp; Добро пожаловать в Акме.' +
+    '<p><small><tt><a href="ex:42">#include "intro"</a><br>→&nbsp; Добро пожаловать в Акме.' +
       '</tt></small></p>',
     '<p>Фрагмент рендерится как собственный шаблон, поэтому выбор внутри него делается зано' +
       'во: <code>intro</code> содержит <code>{Акме|Глобекс}</code> и отвечает то одним, то др' +
@@ -2188,7 +2293,7 @@ const
     '<h3 id="fragments-0">Фрагмент не видит ваших макросов</h3>',
     '<p>Он рендерится как собственный шаблон: значения сессии у него есть, а <code>#set</co' +
       'de> и <code>#def</code> документа, который его включил, — нет.</p>',
-    '<p><small><tt><a href="ex:24">#set %brand% = Акме</a><br><a href="ex:24">#include "sho' +
+    '<p><small><tt><a href="ex:43">#set %brand% = Акме</a><br><a href="ex:43">#include "sho' +
       'ut"</a><br>→&nbsp; Здесь %brand%.</tt></small></p>',
     '<p><code>shout</code> — это <code>Здесь %brand%.</code>, и имя должно быть объявлено в' +
       ' самом фрагменте. Это не молчание — панель говорит <code>variable.undefined</code>, — ' +
@@ -2199,7 +2304,7 @@ const
     '<h2 id="remarks">Комментарии</h2>',
     '<p><code>/# … #/</code> — комментарий: всё между метками убирается прежде всего осталь' +
       'ного.</p>',
-    '<p><small><tt><a href="ex:25">черновик /# не уверен #/ готово</a><br>→&nbsp; Черновик ' +
+    '<p><small><tt><a href="ex:44">черновик /# не уверен #/ готово</a><br>→&nbsp; Черновик ' +
       'готово</tt></small></p>',
     '<p>Комментарии не вкладываются. Первый же <code>#/</code> закрывает комментарий, что б' +
       'ы ни стояло до него, так что комментарий вокруг текста, в котором есть <code>#/</code>' +
@@ -2208,15 +2313,15 @@ const
     '<p>Вывод — не совсем тот текст, который дали конструкции. В конце с ним происходит нес' +
       'колько вещей, и две встречаются ежедневно.</p>',
     '<p>Первая буква каждого предложения становится заглавной:</p>',
-    '<p><small><tt><a href="ex:26">раз. два. три.</a><br>→&nbsp; Раз. Два. Три.</tt></small' +
+    '<p><small><tt><a href="ex:45">раз. два. три.</a><br>→&nbsp; Раз. Два. Три.</tt></small' +
       '></p>',
     '<p>Поэтому примеры в этой справке так часто отвечают заглавной там, где в шаблоне стро' +
       'чная. Точка после сокращения, которое движок знает, предложения не заканчивает:</p>',
-    '<p><small><tt><a href="ex:27">г. Москва наши цены низкие</a><br>→&nbsp; г. Москва наши' +
+    '<p><small><tt><a href="ex:46">г. Москва наши цены низкие</a><br>→&nbsp; г. Москва наши' +
       ' цены низкие</tt></small></p>',
     '<p>Любое другое слово заканчивает, каким бы коротким оно ни было — длина здесь ни при ' +
       'чём:</p>',
-    '<p><small><tt><a href="ex:28">Ыыы. наши цены низкие</a><br>→&nbsp; Ыыы. Наши цены низк' +
+    '<p><small><tt><a href="ex:47">Ыыы. наши цены низкие</a><br>→&nbsp; Ыыы. Наши цены низк' +
       'ие</tt></small></p>',
     '<p>В списке движка 46 записей, и <b>29 из них кириллические</b> — <code>г.</code>, <co' +
       'de>стр.</code>, <code>рис.</code> и прочие; второй документ разбирает их в главе <b>Мо' +
@@ -2227,8 +2332,8 @@ const
       'яется; весь вывод обрезается по краям; заглавная приходит и после переноса строки, и п' +
       'осле блочного тега; а ссылки со схемой, латинские адреса почты, голые домены и десятич' +
       'ные числа экранируются и выходят ровно как набраны.</p>',
-    '<p><small><tt><a href="ex:29">привет , мир</a><br>→&nbsp; Привет, мир</tt></small></p>',
-    '<p><small><tt><a href="ex:30">one.two</a><br>→&nbsp; one.two</tt></small></p>',
+    '<p><small><tt><a href="ex:48">привет , мир</a><br>→&nbsp; Привет, мир</tt></small></p>',
+    '<p><small><tt><a href="ex:49">one.two</a><br>→&nbsp; one.two</tt></small></p>',
     '<p>Граница слова у этих правил юникодная, а не латинская — и для русского автора это в' +
       'ажнее всего остального в главе: <code>сайт.рф</code> экранируется так же, как <code>on' +
       'e.two</code>, а <code>т.е.</code> — так же, как <code>e.g.</code>. Измерения — в главе' +
@@ -2238,31 +2343,31 @@ const
       ' строки диагностики</b>. Они собраны здесь, потому что больше нигде в окне о них не ск' +
       'ажут.</p>',
     '<p><b><code>#include</code>, который не один на строке, — обычный текст.</b></p>',
-    '<p><small><tt><a href="ex:31">Сначала. #include "intro"</a><br>→&nbsp; Сначала. #inclu' +
+    '<p><small><tt><a href="ex:50">Сначала. #include "intro"</a><br>→&nbsp; Сначала. #inclu' +
       'de "intro"</tt></small></p>',
     '<p>То же верно для директивы, после которой что-то есть, и для <code>#include"intro"</' +
       'code> без пробела. Это правило общее для всего семейства движков, а не особенность зде' +
       'шнего, и именно оно позволяет узнавать директиву, не разбирая всю строку.</p>',
     '<p><b>Условие, имя которого начинается с цифры, — не условие.</b> Оно становится обычн' +
       'ым выбором между <code>?1x?да</code> и <code>нет</code>:</p>',
-    '<p><small><tt><a href="ex:32">{?1x?да|нет}</a><br>→&nbsp; ?1x? Да</tt></small></p>',
+    '<p><small><tt><a href="ex:51">{?1x?да|нет}</a><br>→&nbsp; ?1x? Да</tt></small></p>',
     '<p><b>Блок <code>&lt;…&gt;</code> в начале не первого элемента разделителем не являетс' +
       'я</b> и печатается как есть:</p>',
-    '<p><small><tt><a href="ex:33">[красный|&lt;и&gt;зелёный]</a><br>→&nbsp; &lt;и&gt;Зелён' +
+    '<p><small><tt><a href="ex:52">[красный|&lt;и&gt;зелёный]</a><br>→&nbsp; &lt;и&gt;Зелён' +
       'ый красный</tt></small></p>',
     '<p>Блок в начале <b>первого</b> элемента — это как раз разделитель, с которого начинае' +
       'тся глава про перестановки:</p>',
-    '<p><small><tt><a href="ex:34">[&lt;и&gt;красный|зелёный]</a><br>→&nbsp; Зелёный и крас' +
+    '<p><small><tt><a href="ex:53">[&lt;и&gt;красный|зелёный]</a><br>→&nbsp; Зелёный и крас' +
       'ный</tt></small></p>',
     '<p>Сразу после <code>|</code> он обычный текст, а разделитель пары пишут в <b>конце</b' +
       '> первого из двух элементов.</p>',
     '<p><b>Голый тег в конце элемента принимается за разделитель этой пары</b> и печатается' +
       ' обычным текстом:</p>',
-    '<p><small><tt><a href="ex:35">[один&lt;br&gt;|два]</a><br>→&nbsp; Два один</tt></small' +
+    '<p><small><tt><a href="ex:54">[один&lt;br&gt;|два]</a><br>→&nbsp; Два один</tt></small' +
       '></p>',
     '<p>На этом зерне пара легла в другом порядке, и разделитель не вышел вовсе. С третьим ' +
       'элементом ему есть куда попасть, и он появляется:</p>',
-    '<p><small><tt><a href="ex:36">[красный|зелёный&lt;br&gt;|синий]</a><br>→&nbsp; Зелёный' +
+    '<p><small><tt><a href="ex:55">[красный|зелёный&lt;br&gt;|синий]</a><br>→&nbsp; Зелёный' +
       ' br синий красный</tt></small></p>',
     '<p><code>&lt;br&gt;</code> стоит между <code>зелёный</code> и тем, что идёт за ним, ку' +
       'да бы перестановка эту пару ни поставила. Закрывающий тег (<code>&lt;/b&gt;</code>), с' +
@@ -2272,28 +2377,28 @@ const
       ' это слова» у движка юникодная, так что <code>.рф</code> не разбирается на два предлож' +
       'ения — а заслонённое начало строки для правила о прописной не начало предложения, поэт' +
       'ому строчная в начале остаётся:</p>',
-    '<p><small><tt><a href="ex:37">сайт.рф наши цены низкие</a><br>→&nbsp; сайт.рф наши цен' +
+    '<p><small><tt><a href="ex:56">сайт.рф наши цены низкие</a><br>→&nbsp; сайт.рф наши цен' +
       'ы низкие</tt></small></p>',
     '<p>Ссылка со схемой уцелеет тем более: <code>https://сайт.рф/х</code> выходит нетронут' +
       'ой.</p>',
     '<p><b>Сокращение из нескольких точек работает в любом алфавите.</b> <code>e.g.</code> ' +
       'и <code>U.S.</code> движок узнаёт:</p>',
-    '<p><small><tt><a href="ex:38">e.g. наши цены низкие</a><br>→&nbsp; e.g. наши цены низк' +
+    '<p><small><tt><a href="ex:57">e.g. наши цены низкие</a><br>→&nbsp; e.g. наши цены низк' +
       'ие</tt></small></p>',
     '<p>И <code>т.е.</code>, <code>т.д.</code>, <code>и.о.</code> — тоже: буква, точка, бук' +
       'ва, точка:</p>',
-    '<p><small><tt><a href="ex:39">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:58">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
     '<p>Односложные сокращения из списка движка это не затрагивает: <code>г.</code>, <code>' +
       'стр.</code>, <code>рис.</code> заслонены, и их в списке 29 из 46.</p>',
     '<p><b>Незакрытый комментарий — обычный текст:</b> он ничего не открывает, и <code>/#</' +
       'code> печатается:</p>',
-    '<p><small><tt><a href="ex:40">сначала /# остальное</a><br>→&nbsp; Сначала /# остальное' +
+    '<p><small><tt><a href="ex:59">сначала /# остальное</a><br>→&nbsp; Сначала /# остальное' +
       '</tt></small></p>',
     '<p>Но он остаётся половиной пары. Если ниже по документу встретится <code>#/</code>, э' +
       'ти двое найдут друг друга, и всё между ними исчезнет — вместе с тем, что автор написал' +
       ' посередине:</p>',
-    '<p><small><tt><a href="ex:41">{a /# упс|b} между #/ хвост</a><br>→&nbsp; {a хвост</tt>' +
+    '<p><small><tt><a href="ex:60">{a /# упс|b} между #/ хвост</a><br>→&nbsp; {a хвост</tt>' +
       '</small></p>',
     '<p>Выбор наверху потерял вторую альтернативу и закрывающую скобку, и ни одна диагности' +
       'ка об этом не скажет: так этот текст <b>значит</b>, а не ошибается. Если <code>/#</cod' +
@@ -2356,20 +2461,20 @@ const
       ' он и есть часть строения конструкции.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — скобка открыта и не закрыта<' +
       '/h3>',
-    '<p><small><tt><a href="ex:42">цена {дешёвая|дорогая</a><br>→&nbsp; Цена {дешёвая|дорог' +
+    '<p><small><tt><a href="ex:61">цена {дешёвая|дорогая</a><br>→&nbsp; Цена {дешёвая|дорог' +
       'ая</tt></small></p>',
     '<p>Незакрытая группа перестаёт быть группой: движок печатает её как обычный текст, вме' +
       'сте со скобкой. Ищите пару к скобке в указанном месте.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — скобка закрыта скобкой д' +
       'ругого вида</h3>',
-    '<p><small><tt><a href="ex:43">цена {дешёвая|дорогая]</a><br>→&nbsp; Цена {дешёвая|доро' +
+    '<p><small><tt><a href="ex:62">цена {дешёвая|дорогая]</a><br>→&nbsp; Цена {дешёвая|доро' +
       'гая]</tt></small></p>',
     '<p><code>{</code> закрывается только <code>}</code>, <code>[</code> только <code>]</co' +
       'de>. Смешение — почти всегда опечатка, и результат тот же, что у незакрытой: текст как' +
       ' есть.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — закрываю' +
       'щая скобка без открывающей</h3>',
-    '<p><small><tt><a href="ex:44">цена дешёвая} и всё</a><br>→&nbsp; Цена дешёвая} и всё</' +
+    '<p><small><tt><a href="ex:63">цена дешёвая} и всё</a><br>→&nbsp; Цена дешёвая} и всё</' +
       'tt></small></p>',
     '<p>Обычно остаётся после того, как открывающую скобку удалили, а закрывающую забыли.</' +
       'p>',
@@ -2377,7 +2482,7 @@ const
     '<h2 id="definitions">Определения</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — строка <code>#set</code> написана ' +
       'не по правилу</h3>',
-    '<p><small><tt><a href="ex:45">#set city = Москва</a><br><a href="ex:45">в %city%</a><b' +
+    '<p><small><tt><a href="ex:64">#set city = Москва</a><br><a href="ex:64">в %city%</a><b' +
       'r>→&nbsp; #set city = Москва ⏎ В %city%</tt></small></p>',
     '<p><b>Имя пишется в процентах:</b> <code>#set %city% = Москва</code>. Это самая частая' +
       ' ошибка новичка, и она даёт сразу две строки в панели: саму «строку не по правилу» и «' +
@@ -2388,7 +2493,7 @@ const
       'зультат.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — строка <code>#def</code> написана ' +
       'не по правилу</h3>',
-    '<p><small><tt><a href="ex:46">#def pages = {1|3}</a><br><a href="ex:46">%pages%</a><br' +
+    '<p><small><tt><a href="ex:65">#def pages = {1|3}</a><br><a href="ex:65">%pages%</a><br' +
       '>→&nbsp; #def pages = 1 ⏎ %pages%</tt></small></p>',
     '<p>То же правило и та же цена. <code>#def</code> отличается от <code>#set</code> не на' +
       'писанием, а тем, <b>когда</b> раскрывается значение: <code>#set</code> разворачивает е' +
@@ -2400,15 +2505,15 @@ const
       'о перестаёт быть директивой.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — это имя уж' +
       'е определено выше</h3>',
-    '<p><small><tt><a href="ex:47">#set %x% = первый</a><br><a href="ex:47">#set %x% = втор' +
-      'ой</a><br><a href="ex:47">%x%</a><br>→&nbsp; Второй</tt></small></p>',
+    '<p><small><tt><a href="ex:66">#set %x% = первый</a><br><a href="ex:66">#set %x% = втор' +
+      'ой</a><br><a href="ex:66">%x%</a><br>→&nbsp; Второй</tt></small></p>',
     '<p>Работает — побеждает <b>последнее</b> определение, — но движок считает это ошибкой:' +
       ' документ, где одно имя задано дважды, читается неоднозначно, и через месяц вы не вспо' +
       'мните, какая из двух строк живая. Ошибка указывает на <b>второе</b> определение; перво' +
       'е ищите выше по тексту.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> внутри значения определения</h3>',
-    '<p><small><tt><a href="ex:48">#def %x% = #include "frag"</a><br><a href="ex:48">%x%</a' +
+    '<p><small><tt><a href="ex:67">#def %x% = #include "frag"</a><br><a href="ex:67">%x%</a' +
       '><br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Вставка внутри значения разворачивается не тогда, когда вы думаете, и семейство это' +
       ' запрещает. Вынесите <code>#include</code> отдельной строкой.</p>',
@@ -2416,7 +2521,7 @@ const
     '<h2 id="variables">Переменные</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — переменная нигде не опре' +
       'делена</h3>',
-    '<p><small><tt><a href="ex:49">привет, %name%</a><br>→&nbsp; Привет, %name%</tt></small' +
+    '<p><small><tt><a href="ex:68">привет, %name%</a><br>→&nbsp; Привет, %name%</tt></small' +
       '></p>',
     '<p>Предупреждение, а не ошибка: движок печатает имя как есть. Так и задумано — значени' +
       'е может прийти снаружи, от хоста. В Studio такие значения задаются на вкладке «Перемен' +
@@ -2432,7 +2537,7 @@ const
     '<li><b>Ctrl+клик</b> пишет определение в документ и открывает на нём групповой редакто' +
       'р. Значение, которое вы уже набрали в поле, переезжает в него первым вариантом:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:50">#set %brand% = {Vulkan}</a><br><a href="ex:50">казино %b' +
+    '<p><small><tt><a href="ex:69">#set %brand% = {Vulkan}</a><br><a href="ex:69">казино %b' +
       'rand%</a><br>→&nbsp; Казино Vulkan</tt></small></p>',
     '<p>Разница между двумя способами — в том, что переживёт закрытие окна. Значение сессии' +
       ' не переживает: его нет в файле, нет в git, и другие движки семейства его не видят. Оп' +
@@ -2462,7 +2567,7 @@ const
       'гда скобки и проценты останутся символами.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — определение сс' +
       'ылается само на себя</h3>',
-    '<p><small><tt><a href="ex:51">#set %x% = а %x% б</a><br><a href="ex:51">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:70">#set %x% = а %x% б</a><br><a href="ex:70">%x%</a><br>→&n' +
       'bsp; А а а … %x% … б б б</tt></small></p>',
     '<p>Пятьдесят уровней, потом остановка.</p>',
     '<p>Движок разворачивает до предела глубины и останавливается, оставляя <code>%x%</code' +
@@ -2473,8 +2578,8 @@ const
       'нии лежит ещё по одной.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — опреде' +
       'ления ссылаются по кругу</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = %y%</a><br><a href="ex:52">#set %y% = %x%</a>' +
-      '<br><a href="ex:52">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:71">#set %x% = %y%</a><br><a href="ex:71">#set %y% = %x%</a>' +
+      '<br><a href="ex:71">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Каждая сторона разворачивается ровно <b>один раз</b> и останавливается: <code>%x%</' +
       'code> стал <code>%y%</code>, а не <code>%x%</code>. Движок раскручивает круг, а не ход' +
       'ит по нему, и выживает второе имя из круга — поставьте в документ <code>%x% %y%</code>' +
@@ -2495,15 +2600,15 @@ const
     '<h2 id="includes">Вставки</h2>',
     '<h3 id="includes-0"><code>#include</code> работает только с начала строки</h3>',
     '<p>Это не диагностика, а поведение, о которое спотыкаются чаще всего:</p>',
-    '<p><small><tt><a href="ex:53">до #include "frag" после</a><br>→&nbsp; До #include "fra' +
-      'g" после&nbsp;&nbsp; (осталось текстом, молча)<br><a href="ex:54">#include "frag"</a><' +
+    '<p><small><tt><a href="ex:72">до #include "frag" после</a><br>→&nbsp; До #include "fra' +
+      'g" после&nbsp;&nbsp; (осталось текстом, молча)<br><a href="ex:73">#include "frag"</a><' +
       'br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Посреди строки <code>#include</code> — обычный текст, и <b>никакой диагностики не б' +
       'удет</b>: движок просто не увидел там директиву.</p>',
     '<p><b>А вот цель может стоять строкой ниже</b> — и это удивляет с другой стороны. Зазо' +
       'р, который движок допускает между словом и целью, включает переводы строк, так что это' +
       ' одна вставка, и она работает:</p>',
-    '<p><small><tt><a href="ex:55">#include</a><br><a href="ex:55">"frag"</a><br>→&nbsp; Фр' +
+    '<p><small><tt><a href="ex:74">#include</a><br><a href="ex:74">"frag"</a><br>→&nbsp; Фр' +
       'агмент</tt></small></p>',
     '<p>Пустые строки между ними тоже можно. Нельзя всё остальное: слово перед целью или чт' +
       'о-нибудь кроме пробелов после неё — и всё снова становится текстом. Редактор красит це' +
@@ -2511,7 +2616,7 @@ const
       'е обещает директиву, конца которой ещё не видит.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — такой цели нет в' +
       ' наборе</h3>',
-    '<p><small><tt><a href="ex:56">#include "нетакого"</a><br>→&nbsp; (пусто)</tt></small><' +
+    '<p><small><tt><a href="ex:75">#include "нетакого"</a><br>→&nbsp; (пусто)</tt></small><' +
       '/p>',
     '<p>Целями считаются файлы <code>.spintax</code> в папке открытого документа. Вставка н' +
       'еизвестной цели разворачивается в пустоту — абзац исчезает, а не ломается, поэтому про' +
@@ -2528,7 +2633,7 @@ const
       'айла.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — цель есть, но в другом р' +
       'егистре</h3>',
-    '<p><small><tt><a href="ex:57">#include "intro"</a><br>→&nbsp; (пусто)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "intro"</a><br>→&nbsp; (пусто)</tt></small></p>',
     '<p>При этом в наборе лежит <code>Intro.spintax</code> — и движок всё равно выдаёт «так' +
       'ой цели нет», а Studio добавляет свою заметку про регистр. Регистр важен: <code>intro<' +
       '/code> и <code>Intro</code> — разные цели. Windows открыл бы файл в любом регистре, по' +
@@ -2536,7 +2641,7 @@ const
       'ы с боевым сервером на том же документе.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — вставка по кругу</h3>',
     '<p>Если <code>loop.spintax</code> содержит <code>#include "loop"</code>, то:</p>',
-    '<p><small><tt><a href="ex:58">#include "loop"</a><br>→&nbsp; (пусто)</tt></small></p>',
+    '<p><small><tt><a href="ex:77">#include "loop"</a><br>→&nbsp; (пусто)</tt></small></p>',
     '<p>Движок подставляет пустоту вместо бесконечности. Заметка нужна, чтобы вы поняли, по' +
       'чему абзац исчез.</p>',
     '<p>Строка выписана на <b><code>loop</code></b>, а не на документ, который вы смотрите:' +
@@ -2546,17 +2651,20 @@ const
     '<h2 id="plurals">Множественное число</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — форм не столько, сколько требует лок' +
       'аль</h3>',
-    '<p><small><tt><a href="ex:59">#set %n% = 5</a><br><a href="ex:59">%n% {plural %n%: тов' +
+    '<p><small><tt><a href="ex:78">#set %n% = 5</a><br><a href="ex:78">%n% {plural %n%: тов' +
       'ар|товара}</a><br>→&nbsp; 5 ｛plural 5: товар|товара｝</tt></small></p>',
     '<p><b>Не пустота — движок печатает конструкцию целиком</b>, заменив обычные скобки на ' +
       'широкие <code>｛｝</code>. Так он говорит: «я это увидел и не смог применить». Незаметны' +
       'м это не назовёшь, и это хорошо: молча пропавший абзац искали бы дольше.</p>',
-    '<p>Русскому нужно три формы, английскому две — <code>{plural %n%: file|files}</code>. ' +
-      'Локаль берётся из селектора над правой панелью, а не из языка интерфейса.</p>',
+    '<p>Русскому нужно три формы, английскому две — <code>{plural %n%: file|files}</code>, ' +
+      'арабскому шесть. Локаль берётся из селектора над правой панелью, а не из языка интерфе' +
+      'йса. Под <code>ar</code> две формы — тоже ошибка:</p>',
+    '<p><small><tt><a href="ex:79">#def %n% = 5</a><br><a href="ex:79">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Пустота бывает по другой причине, и её легко спутать.</b> Движок проверяет в так' +
       'ом порядке:</p>',
-    '<p><small><tt><a href="ex:60">{plural %n%: {товар|штука}|товара}</a><br>→&nbsp; ｛plura' +
-      'l %n%: ｛товар|штука｝|товара｝&nbsp;&nbsp; скобки внутри форм<br><a href="ex:61">{plural' +
+    '<p><small><tt><a href="ex:80">{plural %n%: {товар|штука}|товара}</a><br>→&nbsp; ｛plura' +
+      'l %n%: ｛товар|штука｝|товара｝&nbsp;&nbsp; скобки внутри форм<br><a href="ex:81">{plural' +
       ' %n%: товар|товара}</a><br>→&nbsp; (пусто)&nbsp;&nbsp; счётчик не число: %n% не опреде' +
       'лён</tt></small></p>',
     '<p>Первое — <code>plural.nested-brackets</code>. Второе панель тоже пометит как <code>' +
@@ -2571,7 +2679,7 @@ const
       'арность на самом деле.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — счётчик берёт значение и' +
       'з <code>#set</code></h3>',
-    '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:82">#set %n% = {1|2}</a><br><a href="ex:82">%n% {plural %n%:' +
       ' товар|товара|товаров}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Смотрите, что осталось в выводе: <b>число напечаталось, а существительного нет</b>.' +
       ' Значение <code>#set</code> разворачивается заново при каждой ссылке, поэтому в слот с' +
@@ -2580,13 +2688,13 @@ const
       'не могут: движок скорее уберёт слово целиком.</p>',
     '<p><code>#def</code> ведёт себя иначе — он разворачивает значение один раз за рендер, ' +
       'поэтому в слот счётчика попадает уже число:</p>',
-    '<p><small><tt><a href="ex:63">#def %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#def %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' товар|товара|товаров}</a><br>→&nbsp; 1 товар</tt></small></p>',
     '<p>Строки в панели при этом нет вообще. Отсюда и правило: счётчиком делайте обычное чи' +
       'сло или <code>#def</code>, но не <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — скобки внутри фо' +
       'рм</h3>',
-    '<p><small><tt><a href="ex:64">{plural %n%: {товар|штука}|товара|товаров}</a><br>→&nbsp' +
+    '<p><small><tt><a href="ex:84">{plural %n%: {товар|штука}|товара|товаров}</a><br>→&nbsp' +
       '; ｛plural %n%: ｛товар|штука｝|товара|товаров｝</tt></small></p>',
     '<p>Обратите внимание на вывод: движок печатает конструкцию <b>широкими</b> скобками <c' +
       'ode>｛ ｝</code> вместо обычных. Так он показывает, что разобрать не смог, не ломая при ' +
@@ -2595,7 +2703,7 @@ const
     '<h2 id="permutations">Перестановки</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — неизвестный кл' +
       'юч в настройке</h3>',
-    '<p><small><tt><a href="ex:65">[&lt;foo=1&gt;а|б|в]</a><br>→&nbsp; Бfoo=1вfoo=1а</tt></' +
+    '<p><small><tt><a href="ex:85">[&lt;foo=1&gt;а|б|в]</a><br>→&nbsp; Бfoo=1вfoo=1а</tt></' +
       'small></p>',
     '<p>Смотрите внимательно на вывод: когда неизвестный ключ — единственное, что есть в бл' +
       'оке, блок вообще не настройка, и он попадает в текст как <b>разделитель</b> между элем' +
@@ -2603,20 +2711,20 @@ const
       'tsep</code>.</p>',
     '<p><b>Если рядом стоит настоящий ключ, исход совсем другой</b> — и это более вероятная' +
       ' ошибка: один ключ из нескольких набран неверно:</p>',
-    '<p><small><tt><a href="ex:66">[&lt;sep=", ";foo=1&gt;а|б|в]</a><br>→&nbsp; Б, в, а</tt' +
+    '<p><small><tt><a href="ex:86">[&lt;sep=", ";foo=1&gt;а|б|в]</a><br>→&nbsp; Б, в, а</tt' +
       '></small></p>',
     '<p>Блок остаётся настройкой, <code>sep</code> выполняется, неизвестный ключ просто отб' +
       'расывается, а панель в обоих случаях говорит одно и то же. То есть диагностика сообщае' +
       'т, что ключ не понят, но не сообщает, что случилось дальше. Про это читайте вывод.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— минимум задан не числом</h3>',
-    '<p><small><tt><a href="ex:67">[&lt;minsize=два&gt;а|б|в]</a><br>→&nbsp; Б в а</tt></sm' +
+    '<p><small><tt><a href="ex:87">[&lt;minsize=два&gt;а|б|в]</a><br>→&nbsp; Б в а</tt></sm' +
       'all></p>',
     '<p>Нечисловое значение отбрасывается вместе со своим ограничением, и берётся значение ' +
       'по умолчанию — то есть все элементы.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— максимум задан не числом</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;maxsize=много&gt;а|б|в]</a><br>→&nbsp; Б в а</tt></' +
+    '<p><small><tt><a href="ex:88">[&lt;maxsize=много&gt;а|б|в]</a><br>→&nbsp; Б в а</tt></' +
       'small></p>',
     '<p>Ровно то же самое с другого конца: ограничение сверху пропадает, и в выводе снова в' +
       'се элементы.</p>',
@@ -2655,8 +2763,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Молчание, которое встречают все: сокращения</h2>',
     '<h3 id="abbreviations-0">Сокращение оставляет следующее слово строчным</h3>',
-    '<p><small><tt><a href="ex:69">цена 100 руб. наша скидка ждёт</a><br>→&nbsp; Цена 100 р' +
-      'уб. наша скидка ждёт<br><a href="ex:70">цена 100 ххх. наша скидка ждёт</a><br>→&nbsp; ' +
+    '<p><small><tt><a href="ex:89">цена 100 руб. наша скидка ждёт</a><br>→&nbsp; Цена 100 р' +
+      'уб. наша скидка ждёт<br><a href="ex:90">цена 100 ххх. наша скидка ждёт</a><br>→&nbsp; ' +
       'Цена 100 ххх. Наша скидка ждёт</tt></small></p>',
     '<p>Две строки, отличающиеся одним словом, и второе слово каждой показывает правило: по' +
       'сле <code>руб.</code> предложение остаётся строчным, после <code>ххх.</code> — начинае' +
@@ -2664,9 +2772,9 @@ const
       ' он знает. Диагностики нет никакой: заметить можно только по выводу.</p>',
     '<p>Правило про <b>несколько точек подряд</b> — <code>e.g.</code>, <code>U.S.</code> — ' +
       'тоже есть, и на кириллице оно работает так же: буква, точка, буква, точка:</p>',
-    '<p><small><tt><a href="ex:71">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:91">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:72">и.о. директора здесь</a><br>→&nbsp; и.о. директора здесь' +
+    '<p><small><tt><a href="ex:92">и.о. директора здесь</a><br>→&nbsp; и.о. директора здесь' +
       '</tt></small></p>',
     '<p>Во второй строке начало осталось строчным: заслонённое сокращение в начале строки д' +
       'ля правила о прописной — не начало предложения. Проверка начинается с границы слова, и' +
@@ -2683,8 +2791,8 @@ const
       'зык вы выбрали.</p>',
     '<p>Кусается это чаще, чем кажется, потому что <code>г.</code>, <code>ул.</code>, <code' +
       '>стр.</code>, <code>см.</code> — обычные слова русской прозы:</p>',
-    '<p><small><tt><a href="ex:73">дом 5 г. москва</a><br>→&nbsp; Дом 5 г. москва<br><a hre' +
-      'f="ex:74">смотрите стр. 12. там всё есть</a><br>→&nbsp; Смотрите стр. 12. Там всё есть' +
+    '<p><small><tt><a href="ex:93">дом 5 г. москва</a><br>→&nbsp; Дом 5 г. москва<br><a hre' +
+      'f="ex:94">смотрите стр. 12. там всё есть</a><br>→&nbsp; Смотрите стр. 12. Там всё есть' +
       '</tt></small></p>',
     '<p>В первой строке <code>москва</code> осталась строчной — сокращение <code>г.</code> ' +
       'заэкранировало её, хотя это название города. Во второй видно, что правило потокенное: ' +
@@ -2697,15 +2805,15 @@ const
     '<hr>',
     '<h2 id="correct">Как выглядит правильное</h2>',
     '<p>Для контраста — то же самое, разобранное без единого замечания:</p>',
-    '<p><small><tt><a href="ex:75">цена {дешёвая|дорогая}</a><br>→&nbsp; Цена дешёвая</tt><' +
+    '<p><small><tt><a href="ex:95">цена {дешёвая|дорогая}</a><br>→&nbsp; Цена дешёвая</tt><' +
       '/small></p>',
-    '<p><small><tt><a href="ex:76">[&lt;minsize=2;sep=", "&gt;а|б|в]</a><br>→&nbsp; В, б</t' +
+    '<p><small><tt><a href="ex:96">[&lt;minsize=2;sep=", "&gt;а|б|в]</a><br>→&nbsp; В, б</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:77">#set %vip% = 1</a><br><a href="ex:77">{?vip?для вас|для ' +
+    '<p><small><tt><a href="ex:97">#set %vip% = 1</a><br><a href="ex:97">{?vip?для вас|для ' +
       'всех}</a><br>→&nbsp; Для вас</tt></small></p>',
-    '<p><small><tt><a href="ex:78">#set %n% = 5</a><br><a href="ex:78">%n% {plural %n%: тов' +
+    '<p><small><tt><a href="ex:98">#set %n% = 5</a><br><a href="ex:98">%n% {plural %n%: тов' +
       'ар|товара|товаров}</a><br>→&nbsp; 5 товаров</tt></small></p>',
-    '<p><small><tt><a href="ex:79">до /# заметка #/ после</a><br>→&nbsp; До после</tt></sma' +
+    '<p><small><tt><a href="ex:99">до /# заметка #/ после</a><br>→&nbsp; До после</tt></sma' +
       'll></p>',
     '<hr>',
     '<h2 id="faq">Часто спрашивают</h2>',
@@ -3037,7 +3145,10 @@ const
     '<p><code>locale</code> entscheidet über die Zahlformen, und es ist der Wähler über der' +
       ' rechten Hälfte, nicht die Sprache der Oberfläche. Deutsch und Englisch brauchen zwei ' +
       'Formen; Russisch, Ukrainisch, Belarussisch, Serbisch, Kroatisch und Bosnisch brauchen ' +
-      'drei.</p>',
+      'drei; Arabisch braucht sechs. Unter Arabisch und Hebräisch ändert es außerdem, wie ein' +
+      'e Konjunktion eine Liste verbindet (siehe das Trennzeichen). Die arabischen und hebräi' +
+      'schen Beispiele unten sind unter ihrer eigenen Locale gemessen, die der Satz vor jedem' +
+      ' von ihnen nennt.</p>',
     '<h2 id="choices">Auswahl</h2>',
     '<p>Geschweifte Klammern mit <code>|</code> dazwischen: die Maschine nimmt <b>eine</b>.' +
       '</p>',
@@ -3093,38 +3204,67 @@ const
       'nbsp; Grün, blau und rot</tt></small></p>',
     '<p><code>sep</code> steht zwischen den Stücken und <code>lastsep</code> vor dem letzte' +
       'n.</p>',
+    '<p>Ein Trennzeichen, das nur aus Buchstaben besteht, bekommt auf jeder Seite ein Leerz' +
+      'eichen, auch wenn keines getippt wurde:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="und"&gt;A|B]</a><br>→&nbsp; B und A</tt></s' +
+      'mall></p>',
+    '<p>Schriften, die ohne Leerzeichen zwischen den Wörtern geschrieben werden, sind die A' +
+      'usnahme, unter jeder Locale: chinesische, japanische, thailändische, laotische, Khmer-' +
+      ' und birmanische Trennzeichen werden ohne Zwischenraum angefügt.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Arabisch und Hebräisch haben eine eigene Regel, und es ist die <b>Locale</b>, die s' +
+      'ie einschaltet, nicht die Schrift. Unter <code>ar</code> behält ein Trennzeichen, das ' +
+      'genau و oder ف ist, das Leerzeichen davor und verliert das danach, weil Arabisch die K' +
+      'onjunktion mit dem nächsten Wort verbunden schreibt; unter <code>he</code> gilt dassel' +
+      'be für ו. Das geschieht nur vor einem Wort in dieser Schrift — vor einem lateinischen ' +
+      'Namen oder einer Ziffer bleiben beide Leerzeichen:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Unter jeder anderen Locale bleibt die Konjunktion ein eigenes Wort, und das ist ric' +
+      'htig für Persisch und Urdu, wo derselbe Buchstabe getrennt geschrieben wird:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Wie viele</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;rot|grün|blau]</a><br>→&nbsp;' +
-      ' Grün blau</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;rot|grün|blau]</a><br>→&nbsp' +
+      '; Grün blau</tt></small></p>',
     '<p><code>minsize</code> ist der Boden und <code>maxsize</code> die Decke; die Anzahl d' +
       'azwischen ist zufällig wie die Reihenfolge. Gleiche Werte nehmen genau so viele. <b>Oh' +
       'ne beide alle — aber mit nur <code>maxsize</code> liegt der Boden bei eins</b>, was Le' +
       'ute überrascht:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Drei Stücke, eine Decke von drei, und eines kam heraus. Schreiben Sie auch <code>mi' +
       'nsize</code>, wenn Sie „alle, höchstens drei" meinen. Ein <code>maxsize</code> über de' +
       'r Anzahl der Stücke wird stillschweigend auf sie gesenkt. Ein <code>minsize</code> übe' +
       'r dem <code>maxsize</code> wird wortlos hingenommen, und der Boden gewinnt — die Decke' +
       ' wird zu ihm angehoben und nicht umgekehrt:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;rot|grün|blau]</a><br>→&nbsp' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;rot|grün|blau]</a><br>→&nbsp' +
       '; Grün blau rot</tt></small></p>',
     '<h3 id="shuffles-2">Ein Trennzeichen zwischen zwei Stücken</h3>',
     '<p>Ein <code>&lt;…&gt;</code>, das <b>zwischen</b> zwei Stücke geschrieben wird, ist d' +
       'as Trennzeichen für dieses Paar.</p>',
-    '<p><small><tt><a href="ex:12">[rot|grün&lt;und&gt;|blau]</a><br>→&nbsp; Grün und blau ' +
+    '<p><small><tt><a href="ex:25">[rot|grün&lt;und&gt;|blau]</a><br>→&nbsp; Grün und blau ' +
       'rot</tt></small></p>',
     '<p>Es gehört zu dem Stück <b>danach</b> und wandert mit diesem Stück durch das Mischen' +
       ', taucht also dort auf, wo dieses Stück landet, statt an einer festen Stelle der Ausga' +
       'be. Ein <code>&lt;…&gt;</code> hinter dem <b>letzten</b> Stück ist überhaupt kein Tren' +
       'nzeichen und wird als Text gedruckt:</p>',
-    '<p><small><tt><a href="ex:13">[rot|grün|blau&lt;und&gt;]</a><br>→&nbsp; Grün blau&lt;u' +
+    '<p><small><tt><a href="ex:26">[rot|grün|blau&lt;und&gt;]</a><br>→&nbsp; Grün blau&lt;u' +
       'nd&gt; rot</tt></small></p>',
     '<h2 id="macros">Makros</h2>',
     '<p><code>#set</code> gibt einem Stück Text einen Namen. Der Name wird als <code>%name%' +
       '</code> benutzt, und die Anweisung muss das Erste in ihrer Zeile sein — führende Leerz' +
       'eichen und Tabulatoren sind erlaubt, alles andere nicht.</p>',
-    '<p><small><tt><a href="ex:14">#set %stadt% = Berlin</a><br><a href="ex:14">Flug nach %' +
+    '<p><small><tt><a href="ex:27">#set %stadt% = Berlin</a><br><a href="ex:27">Flug nach %' +
       'stadt%.</a><br>→&nbsp; Flug nach Berlin.</tt></small></p>',
     '<p>Namen bestehen aus lateinischen Buchstaben, Ziffern und <code>_</code>. Ein Name in' +
       ' einem anderen Alphabet ist kein Name, worüber das andere Dokument unter <code>set.mal' +
@@ -3134,9 +3274,9 @@ const
       'h3>',
     '<p>Das ist der ganze Unterschied zwischen beiden, und er zeigt sich nur, wenn der Wert' +
       ' eine Auswahl enthält.</p>',
-    '<p><small><tt><a href="ex:15">#set %wahl% = {A|B}</a><br><a href="ex:15">%wahl% %wahl%' +
+    '<p><small><tt><a href="ex:28">#set %wahl% = {A|B}</a><br><a href="ex:28">%wahl% %wahl%' +
       ' %wahl%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %wahl% = {A|B}</a><br><a href="ex:16">%wahl% %wahl%' +
+    '<p><small><tt><a href="ex:29">#def %wahl% = {A|B}</a><br><a href="ex:29">%wahl% %wahl%' +
       ' %wahl%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Beide Beispiele liefen unter demselben Startwert. <code>#set</code> bewahrt die Vor' +
       'lage auf und würfelt sie bei jeder Benutzung; <code>#def</code> würfelt einmal und beh' +
@@ -3149,11 +3289,11 @@ const
       'eine Festlegung funktioniere nicht.</p>',
     '<h2 id="conditions">Bedingungen</h2>',
     '<p><code>{?name?dann|sonst}</code> fragt, ob ein Makro einen Wert hat.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?wir haben %n%|no' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?wir haben %n%|no' +
       'ch nichts}</a><br>→&nbsp; Wir haben 5</tt></small></p>',
     '<p>Die <code>sonst</code>-Hälfte darf fehlen — <code>{?name?dann}</code> gibt nichts a' +
       'us, wenn die Antwort nein ist. Ein <code>!</code> dreht die Frage um:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?Fremder|Fre' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?Fremder|Fre' +
       'und}</a><br>→&nbsp; Freund</tt></small></p>',
     '<p>Einen Wert zu haben heißt, <b>mindestens ein Zeichen zu haben, das kein Leerzeichen' +
       ' ist</b>. Ein Makro, das auf nichts gesetzt ist oder nur auf Leerzeichen, gilt als ohn' +
@@ -3163,9 +3303,9 @@ const
       ' aus einem Namen wird, der mit einer Ziffer anfängt.</p>',
     '<h2 id="counting">Zählung</h2>',
     '<p><code>{plural %n%: …}</code> wählt die Wortform, die zu einer Zahl gehört.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: Dat' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: Dat' +
       'ei|Dateien}</a><br>→&nbsp; 1 Datei</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: Dat' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: Dat' +
       'ei|Dateien}</a><br>→&nbsp; 5 Dateien</tt></small></p>',
     '<p>Die Zahl ist hier mit Absicht ein <code>#def</code> und kein <code>#set</code>, und' +
       ' die Regel lohnt sich zu behalten: <b>machen Sie die Zahl zu einer schlichten Ziffer o' +
@@ -3174,18 +3314,36 @@ const
       ' statt <code>5</code> — keine Zahl also, weshalb das ganze Konstrukt nichts ergibt und' +
       ' die Tafel <code>plural.count-macro</code> sagt. Die Zahl und die Form können sich nic' +
       'ht widersprechen: stattdessen verschwindet das Wort.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' Datei|Dateien}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Wie viele Formen es sind, entscheidet die Locale und nicht Sie: unter <code>de</cod' +
-      'e> sind es zwei, unter <code>ru</code> drei. Die falsche Anzahl ist ein Fehler, den di' +
-      'e Tafel meldet (<code>plural.arity</code>), und die Maschine druckt dann das ganze Kon' +
-      'strukt zurück, mit breiten Klammern <code>｛｝</code> statt der schmalen, damit man es n' +
-      'icht für Ausgabe hält.</p>',
+      'e> sind es zwei, unter <code>ru</code> drei, unter <code>ar</code> sechs — in der Reih' +
+      'enfolge zero, one, two, few, many, other. Arabisch sagt „ein Buch" und „zwei Bücher" o' +
+      'hne Zahlwort, also gehört die Zahl <b>in</b> die Formen, die sie drucken, statt vor de' +
+      'n Block:</p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Die falsche Anzahl ist ein Fehler, den die Tafel meldet (<code>plural.arity</code>)' +
+      ', und die Maschine druckt dann das ganze Konstrukt zurück, mit breiten Klammern <code>' +
+      '｛｝</code> statt der schmalen, damit man es nicht für Ausgabe hält.</p>',
     '<h2 id="fragments">Ausschnitte</h2>',
     '<p><code>#include "name"</code> setzt an dieser Stelle eine andere Vorlage ein, und di' +
       'e Anweisung muss das Erste in ihrer Zeile sein — auch hier sind führende Leerzeichen u' +
       'nd Tabulatoren erlaubt.</p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Willkommen bei Acme.</tt' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Willkommen bei Acme.</tt' +
       '></small></p>',
     '<p>Der Ausschnitt wird als eigene Vorlage gerendert, eine Auswahl darin wird also fris' +
       'ch getroffen: <code>intro</code> enthält <code>{Acme|Globex}</code> und antwortet mit ' +
@@ -3199,7 +3357,7 @@ const
     '<h3 id="fragments-0">Ein Ausschnitt sieht Ihre Makros nicht</h3>',
     '<p>Er wird als eigene Vorlage gerendert: er hat die Werte der Sitzung, aber nicht die ' +
       '<code>#set</code> und <code>#def</code> des Dokuments, das ihn hereingeholt hat.</p>',
-    '<p><small><tt><a href="ex:23">#set %marke% = Acme</a><br><a href="ex:23">#include "sho' +
+    '<p><small><tt><a href="ex:42">#set %marke% = Acme</a><br><a href="ex:42">#include "sho' +
       'ut"</a><br>→&nbsp; Die %marke% ist da.</tt></small></p>',
     '<p><code>shout</code> ist <code>Die %marke% ist da.</code>, und der Name muss im Aussc' +
       'hnitt selbst festgelegt sein. Das ist keine Stille — die Tafel sagt durchaus <code>var' +
@@ -3210,7 +3368,7 @@ const
     '<h2 id="remarks">Anmerkungen</h2>',
     '<p><code>/# … #/</code> ist ein Kommentar: alles zwischen den Marken wird entfernt, be' +
       'vor irgendetwas anderes geschieht.</p>',
-    '<p><small><tt><a href="ex:24">Entwurf /# unsicher ob das bleibt #/ fertig</a><br>→&nbs' +
+    '<p><small><tt><a href="ex:43">Entwurf /# unsicher ob das bleibt #/ fertig</a><br>→&nbs' +
       'p; Entwurf fertig</tt></small></p>',
     '<p>Kommentare verschachteln sich nicht. Das erste <code>#/</code> schließt den Komment' +
       'ar, was auch immer davor stand, ein Kommentar um Text herum, der selbst <code>#/</code' +
@@ -3219,7 +3377,7 @@ const
     '<p>Die Ausgabe ist nicht ganz der Text, den die Konstrukte erzeugt haben. Am Ende gesc' +
       'hieht ihr mehreres; zweierlei begegnet Ihnen täglich.</p>',
     '<p>Der erste Buchstabe jedes Satzes wird großgeschrieben:</p>',
-    '<p><small><tt><a href="ex:25">eins. zwei. drei.</a><br>→&nbsp; Eins. Zwei. Drei.</tt><' +
+    '<p><small><tt><a href="ex:44">eins. zwei. drei.</a><br>→&nbsp; Eins. Zwei. Drei.</tt><' +
       '/small></p>',
     '<p>Deshalb antworten die Beispiele in dieser Hilfe so oft mit einem großen Buchstaben,' +
       ' wo die Vorlage einen kleinen hat. Ein Punkt hinter einer Abkürzung, die die Maschine ' +
@@ -3227,15 +3385,15 @@ const
       'der <code>d.h.</code> — Buchstabe, Punkt, Buchstabe, Punkt — in <b>jedem Alphabet</b>:' +
       ' die Prüfung „ist das die Mitte eines Wortes" liest jede Schrift, so dass <code>т.е.</' +
       'code> genauso geschützt ist wie <code>z.B.</code>.</p>',
-    '<p><small><tt><a href="ex:26">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:45">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:27">z.B. das bleibt klein</a><br>→&nbsp; z.B. das bleibt kle' +
+    '<p><small><tt><a href="ex:46">z.B. das bleibt klein</a><br>→&nbsp; z.B. das bleibt kle' +
       'in</tt></small></p>',
-    '<p><small><tt><a href="ex:28">Dr. unsere Preise sind niedrig</a><br>→&nbsp; Dr. unsere' +
+    '<p><small><tt><a href="ex:47">Dr. unsere Preise sind niedrig</a><br>→&nbsp; Dr. unsere' +
       ' Preise sind niedrig</tt></small></p>',
     '<p>Jedes andere Wort beendet einen Satz, wie kurz es auch sei — die Länge hat nichts d' +
       'amit zu tun:</p>',
-    '<p><small><tt><a href="ex:29">Xyz. unsere Preise sind niedrig</a><br>→&nbsp; Xyz. Unse' +
+    '<p><small><tt><a href="ex:48">Xyz. unsere Preise sind niedrig</a><br>→&nbsp; Xyz. Unse' +
       're Preise sind niedrig</tt></small></p>',
     '<p>Die Liste, die die Maschine kennt, hat 46 Einträge, <b>29 davon kyrillisch</b>, und' +
       ' das andere Dokument geht sie unter <b>Eine Stille für jede Sprache</b> durch. Für deu' +
@@ -3253,8 +3411,8 @@ const
       'e <code>eins.zwei</code> oder <code>сайт.рф</code> heißt. Und ein geschützter Anfang i' +
       'st für die Großschreibung kein Satzanfang — deshalb kommt <code>eins.zwei</code> unten' +
       ' unverändert zurück, kleiner Anfangsbuchstabe eingeschlossen.</p>',
-    '<p><small><tt><a href="ex:30">hallo , Welt</a><br>→&nbsp; Hallo, Welt</tt></small></p>',
-    '<p><small><tt><a href="ex:31">eins.zwei</a><br>→&nbsp; eins.zwei</tt></small></p>',
+    '<p><small><tt><a href="ex:49">hallo , Welt</a><br>→&nbsp; Hallo, Welt</tt></small></p>',
+    '<p><small><tt><a href="ex:50">eins.zwei</a><br>→&nbsp; eins.zwei</tt></small></p>',
     '<h2 id="silences">Stillen</h2>',
     '<p>Jeder Fall unten rendert, ergibt etwas anderes als er aussieht und zieht <b>überhau' +
       'pt keine Diagnose</b> nach sich. Sie sind hier gesammelt, weil nichts sonst im Fenster' +
@@ -3265,7 +3423,7 @@ const
       'de> oben —, während <code>Nr.</code>, <code>bzw.</code>, <code>usw.</code>, <code>Str.' +
       '</code> und <code>ca.</code> einen Satz beenden und das nächste Wort großschreiben:</p' +
       '>',
-    '<p><small><tt><a href="ex:32">bzw. unsere Preise sind niedrig</a><br>→&nbsp; Bzw. Unse' +
+    '<p><small><tt><a href="ex:51">bzw. unsere Preise sind niedrig</a><br>→&nbsp; Bzw. Unse' +
       're Preise sind niedrig</tt></small></p>',
     '<p>Die Formen mit mehreren Punkten sind davon nicht betroffen: <code>z.B.</code>, <cod' +
       'e>d.h.</code> und <code>u.a.</code> gehen durch die Regel für mehrere Punkte und bleib' +
@@ -3273,7 +3431,7 @@ const
       ' vermeiden.</p>',
     '<p><b>Ein <code>#include</code>, das nicht allein in seiner Zeile steht, ist gewöhnlic' +
       'her Text.</b></p>',
-    '<p><small><tt><a href="ex:33">Vorher. #include "intro"</a><br>→&nbsp; Vorher. #include' +
+    '<p><small><tt><a href="ex:52">Vorher. #include "intro"</a><br>→&nbsp; Vorher. #include' +
       ' "intro"</tt></small></p>',
     '<p>Dasselbe gilt für eine Anweisung mit etwas dahinter und für <code>#include"intro"</' +
       'code> ohne Leerzeichen. Die Regel ist die der Familie und nicht die dieser Maschine, u' +
@@ -3282,25 +3440,25 @@ const
     '<p><b>Eine Bedingung, deren Name mit einer Ziffer beginnt, ist keine Bedingung.</b> Si' +
       'e wird zu einer gewöhnlichen Auswahl zwischen <code>?1x?ja</code> und <code>nein</code' +
       '>:</p>',
-    '<p><small><tt><a href="ex:34">{?1x?ja|nein}</a><br>→&nbsp; ?1x? Ja</tt></small></p>',
+    '<p><small><tt><a href="ex:53">{?1x?ja|nein}</a><br>→&nbsp; ?1x? Ja</tt></small></p>',
     '<p><b>Ein <code>&lt;…&gt;</code> am Kopf eines späteren Stücks ist kein Trennzeichen</' +
       'b> und wird gedruckt, wie es dasteht:</p>',
-    '<p><small><tt><a href="ex:35">[rot|&lt;und&gt;grün]</a><br>→&nbsp; &lt;und&gt;Grün rot' +
+    '<p><small><tt><a href="ex:54">[rot|&lt;und&gt;grün]</a><br>→&nbsp; &lt;und&gt;Grün rot' +
       '</tt></small></p>',
     '<p>Der Block am Kopf des <b>ersten</b> Stücks ist das Trennzeichen — das ist die Schre' +
       'ibweise, mit der das Kapitel über das Mischen beginnt:</p>',
-    '<p><small><tt><a href="ex:36">[&lt;und&gt;rot|grün]</a><br>→&nbsp; Grün und rot</tt></' +
+    '<p><small><tt><a href="ex:55">[&lt;und&gt;rot|grün]</a><br>→&nbsp; Grün und rot</tt></' +
       'small></p>',
     '<p>Irgendwo hinter einem <code>|</code> ist er gewöhnlicher Text, und ein Trennzeichen' +
       ' zwischen zwei Stücken gehört ans <b>Ende</b> des ersten.</p>',
     '<p><b>Ein nacktes Tag am Ende eines Stücks wird als Trennzeichen dieses Paares genomme' +
       'n</b> und als eigener Text gedruckt:</p>',
-    '<p><small><tt><a href="ex:37">[eins&lt;br&gt;|zwei]</a><br>→&nbsp; Zwei eins</tt></sma' +
+    '<p><small><tt><a href="ex:56">[eins&lt;br&gt;|zwei]</a><br>→&nbsp; Zwei eins</tt></sma' +
       'll></p>',
     '<p>Unter diesem Startwert landeten die zwei in der anderen Reihenfolge, das Trennzeich' +
       'en kam also gar nicht heraus. Mit einem dritten Stück gibt es einen Platz für es, und ' +
       'es erscheint:</p>',
-    '<p><small><tt><a href="ex:38">[rot|grün&lt;br&gt;|blau]</a><br>→&nbsp; Grün br blau ro' +
+    '<p><small><tt><a href="ex:57">[rot|grün&lt;br&gt;|blau]</a><br>→&nbsp; Grün br blau ro' +
       't</tt></small></p>',
     '<p>Das <code>&lt;br&gt;</code> sitzt zwischen <code>grün</code> und dem, was darauf fo' +
       'lgt, wohin das Mischen dieses Paar auch setzt. Ein schließendes Tag (<code>&lt;/b&gt;<' +
@@ -3309,12 +3467,12 @@ const
       'stet.</p>',
     '<p><b>Ein nicht geschlossener Kommentar ist gewöhnlicher Text</b> — er öffnet nichts, ' +
       'und das <code>/#</code> wird gedruckt:</p>',
-    '<p><small><tt><a href="ex:39">vorher /# der Rest davon</a><br>→&nbsp; Vorher /# der Re' +
+    '<p><small><tt><a href="ex:58">vorher /# der Rest davon</a><br>→&nbsp; Vorher /# der Re' +
       'st davon</tt></small></p>',
     '<p>Er ist aber immer noch die Hälfte eines Paares. Erscheint weiter unten im Dokument ' +
       'ein <code>#/</code>, finden die beiden einander, und alles dazwischen geht — samt alle' +
       'm, was der Autor dazwischen geschrieben hat:</p>',
-    '<p><small><tt><a href="ex:40">{a /# ups|b} Mitte #/ Schwanz</a><br>→&nbsp; {a Schwanz<' +
+    '<p><small><tt><a href="ex:59">{a /# ups|b} Mitte #/ Schwanz</a><br>→&nbsp; {a Schwanz<' +
       '/tt></small></p>',
     '<p>Die Auswahl oben verlor ihre zweite Alternative und ihre schließende Klammer, und k' +
       'eine Diagnose sagt es: das ist, was der Text BEDEUTET, und kein Fehler, den die Maschi' +
@@ -3384,20 +3542,20 @@ const
       'au des Konstrukts gehört.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — eine Klammer wird geöffnet u' +
       'nd nie geschlossen</h3>',
-    '<p><small><tt><a href="ex:41">ein Preis {billig|teuer</a><br>→&nbsp; Ein Preis {billig' +
+    '<p><small><tt><a href="ex:60">ein Preis {billig|teuer</a><br>→&nbsp; Ein Preis {billig' +
       '|teuer</tt></small></p>',
     '<p>Die Maschine rät nicht, wo Sie schließen wollten. Der Text bleibt, wie er ist, Klam' +
       'mer und alles, und die Auswahl findet nie statt.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — von einer Klammer andere' +
       'r Art geschlossen</h3>',
-    '<p><small><tt><a href="ex:42">ein Preis {billig|teuer]</a><br>→&nbsp; Ein Preis {billi' +
+    '<p><small><tt><a href="ex:61">ein Preis {billig|teuer]</a><br>→&nbsp; Ein Preis {billi' +
       'g|teuer]</tt></small></p>',
     '<p><code>{</code> wartet auf <code>}</code> und <code>[</code> auf <code>]</code>. Ein' +
       'e Mischung, die von einer geschweiften Klammer geschlossen wird, ist keine Mischung.</' +
       'p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — eine sch' +
       'ließende Klammer ohne offene</h3>',
-    '<p><small><tt><a href="ex:43">ein Preis billig} und alles</a><br>→&nbsp; Ein Preis bil' +
+    '<p><small><tt><a href="ex:62">ein Preis billig} und alles</a><br>→&nbsp; Ein Preis bil' +
       'lig} und alles</tt></small></p>',
     '<p>Sie bleibt als Text stehen. Meistens ist es eine Klammer, die von einer Änderung üb' +
       'rig blieb.</p>',
@@ -3405,7 +3563,7 @@ const
     '<h2 id="definitions">Festlegungen</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — diese <code>#set</code>-Zeile folg' +
       't nicht der Regel</h3>',
-    '<p><small><tt><a href="ex:44">#set stadt = Berlin</a><br><a href="ex:44">in %stadt%</a' +
+    '<p><small><tt><a href="ex:63">#set stadt = Berlin</a><br><a href="ex:63">in %stadt%</a' +
       '><br>→&nbsp; #set stadt = Berlin ⏎ In %stadt%</tt></small></p>',
     '<p><b>Der Name gehört zwischen Prozentzeichen:</b> <code>#set %stadt% = Berlin</code>.' +
       ' Das ist der häufigste erste Fehler, und er setzt gleich zwei Zeilen in die Tafel — di' +
@@ -3416,7 +3574,7 @@ const
       'liche Zeile und landet im Ergebnis.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — diese <code>#def</code>-Zeile folg' +
       't nicht der Regel</h3>',
-    '<p><small><tt><a href="ex:45">#def seiten = {1|3}</a><br><a href="ex:45">%seiten%</a><' +
+    '<p><small><tt><a href="ex:64">#def seiten = {1|3}</a><br><a href="ex:64">%seiten%</a><' +
       'br>→&nbsp; #def seiten = 1 ⏎ %seiten%</tt></small></p>',
     '<p>Dieselbe Regel und derselbe Preis. <code>#def</code> unterscheidet sich von <code>#' +
       'set</code> nicht in der Schreibung, sondern darin, <b>wann</b> der Wert entfaltet wird' +
@@ -3428,15 +3586,15 @@ const
       'st nicht abgeschaltet; sie hört bloß auf, eine Anweisung zu sein.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — dieser Nam' +
       'e ist oben schon festgelegt</h3>',
-    '<p><small><tt><a href="ex:46">#set %x% = erste</a><br><a href="ex:46">#set %x% = zweit' +
-      'e</a><br><a href="ex:46">%x%</a><br>→&nbsp; Zweite</tt></small></p>',
+    '<p><small><tt><a href="ex:65">#set %x% = erste</a><br><a href="ex:65">#set %x% = zweit' +
+      'e</a><br><a href="ex:65">%x%</a><br>→&nbsp; Zweite</tt></small></p>',
     '<p>Es funktioniert — die <b>letzte</b> Festlegung gewinnt —, aber die Maschine nennt e' +
       's einen Fehler: ein Dokument, in dem ein Name zweimal gesetzt wird, liest sich mehrdeu' +
       'tig, und in einem Monat wissen Sie nicht mehr, welche der beiden Zeilen die lebende is' +
       't. Der Fehler zeigt auf die <b>zweite</b> Festlegung; die erste steht weiter oben.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> im Wert einer Festlegung</h3>',
-    '<p><small><tt><a href="ex:47">#def %x% = #include "frag"</a><br><a href="ex:47">%x%</a' +
+    '<p><small><tt><a href="ex:66">#def %x% = #include "frag"</a><br><a href="ex:66">%x%</a' +
       '><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Eine Einfügung in einem Wert entfaltet sich zu einem anderen Zeitpunkt, als Sie erw' +
       'arten würden, und die Familie verbietet es. Setzen Sie das <code>#include</code> in ei' +
@@ -3445,7 +3603,7 @@ const
     '<h2 id="variables">Variablen</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — diese Variable ist nirge' +
       'nds festgelegt</h3>',
-    '<p><small><tt><a href="ex:48">hallo, %name%</a><br>→&nbsp; Hallo, %name%</tt></small><' +
+    '<p><small><tt><a href="ex:67">hallo, %name%</a><br>→&nbsp; Hallo, %name%</tt></small><' +
       '/p>',
     '<p>Eine Warnung und kein Fehler: die Maschine druckt den Namen, wie er dasteht. Das is' +
       't so gewollt — der Wert kann von außen kommen, vom Wirtsprogramm. In Studio liefern Si' +
@@ -3482,7 +3640,7 @@ const
       'or darauf. Der Wert, den Sie schon getippt haben, zieht als erste Möglichkeit ein:</li' +
       '>',
     '</ul>',
-    '<p><small><tt><a href="ex:49">#set %marke% = {Vulkan}</a><br><a href="ex:49">Kasino %m' +
+    '<p><small><tt><a href="ex:68">#set %marke% = {Vulkan}</a><br><a href="ex:68">Kasino %m' +
       'arke%</a><br>→&nbsp; Kasino Vulkan</tt></small></p>',
     '<p>Der Unterschied zwischen beiden ist, was das Schließen des Fensters übersteht. Ein ' +
       'Sitzungswert nicht: er steht nicht in der Datei, nicht in git, und keine andere Maschi' +
@@ -3497,7 +3655,7 @@ const
       'hen.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — die Festlegung' +
       ' nennt sich selbst</h3>',
-    '<p><small><tt><a href="ex:50">#set %x% = a %x% b</a><br><a href="ex:50">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:69">#set %x% = a %x% b</a><br><a href="ex:69">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Fünfzig Ebenen, dann Schluss. Die Maschine entfaltet bis zur Tiefengrenze und hält ' +
       'an und lässt <code>%x%</code> in der Mitte stehen. Keine Schleife, und auch nicht das,' +
@@ -3508,8 +3666,8 @@ const
       'en, wie er ist, und der Wert enthält von jedem einen mehr.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — die Fe' +
       'stlegungen nennen sich im Kreis</h3>',
-    '<p><small><tt><a href="ex:51">#set %x% = %y%</a><br><a href="ex:51">#set %y% = %x%</a>' +
-      '<br><a href="ex:51">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:70">#set %x% = %y%</a><br><a href="ex:70">#set %y% = %x%</a>' +
+      '<br><a href="ex:70">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Jede Seite entfaltet sich genau <b>einmal</b> und hält dann an: <code>%x%</code> wu' +
       'rde <code>%y%</code> und nicht <code>%x%</code>. Die Maschine rollt den Kreis auf, sta' +
       'tt ihn zu laufen, und übrig bleibt der andere Name aus dem Kreis — setzen Sie <code>%x' +
@@ -3532,16 +3690,16 @@ const
     '<hr>',
     '<h2 id="includes">Einfügungen</h2>',
     '<h3 id="includes-0"><code>#include</code> wirkt nur am Zeilenanfang</h3>',
-    '<p><small><tt><a href="ex:52">vorher #include "frag" danach</a><br>→&nbsp; Vorher #inc' +
+    '<p><small><tt><a href="ex:71">vorher #include "frag" danach</a><br>→&nbsp; Vorher #inc' +
       'lude "frag" danach</tt></small></p>',
-    '<p><small><tt><a href="ex:53">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Keine Diagnose, und genau darum geht es: ein <code>#include</code> mitten in einer ' +
       'Zeile ist <b>keine</b> Einfügung. Die Maschine liest es als gewöhnlichen Text und sagt' +
       ' nichts, weil es nichts zu beanstanden gibt — Sie schrieben Text und bekamen Text.</p>',
     '<p><b>Das Ziel darf aber eine Zeile tiefer stehen</b>, und das überrascht von der ande' +
       'ren Seite. Der Abstand, den die Maschine zwischen dem Wort und seinem Ziel erlaubt, sc' +
       'hließt Zeilenumbrüche ein, das hier ist also eine Einfügung und sie wirkt:</p>',
-    '<p><small><tt><a href="ex:54">#include</a><br><a href="ex:54">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:73">#include</a><br><a href="ex:73">"frag"</a><br>→&nbsp; Fr' +
       'agment</tt></small></p>',
     '<p>Leere Zeilen dazwischen gehen auch. Alles andere geht nicht: ein Wort vor dem Ziel ' +
       'oder irgendetwas außer Leerzeichen dahinter — und das Ganze ist wieder Text. Der Edito' +
@@ -3549,7 +3707,7 @@ const
       ' gekommen ist: er verspricht keine Anweisung, deren Ende er noch nicht sieht.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — kein solches Zie' +
       'l im Satz</h3>',
-    '<p><small><tt><a href="ex:55">#include "nichtda"</a><br>→&nbsp; (leer)</tt></small></p' +
+    '<p><small><tt><a href="ex:74">#include "nichtda"</a><br>→&nbsp; (leer)</tt></small></p' +
       '>',
     '<p>Ziele sind die <code>.spintax</code>-Dateien im Ordner des offenen Dokuments. Ein u' +
       'nbekanntes Ziel entfaltet sich zu nichts — der Absatz verschwindet, statt kaputtzugehe' +
@@ -3566,7 +3724,7 @@ const
       'inen Ordner gibt und die Datei wirklich nicht darin ist.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — das Ziel gibt es, in and' +
       'erer Schreibung</h3>',
-    '<p><small><tt><a href="ex:56">#include "intro"</a><br>→&nbsp; (leer)</tt></small></p>',
+    '<p><small><tt><a href="ex:75">#include "intro"</a><br>→&nbsp; (leer)</tt></small></p>',
     '<p>Der Satz enthält <code>Intro.spintax</code> — und die Maschine sagt trotzdem, es ge' +
       'be kein solches Ziel, während Studio seine Notiz über die Schreibung hinzufügt. Die Sc' +
       'hreibung zählt: <code>intro</code> und <code>Intro</code> sind verschiedene Ziele. Win' +
@@ -3574,7 +3732,7 @@ const
       'ystem: sonst widerspräche die Vorschau dem Server über dasselbe Dokument.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — eine Einfügung im Kreis</h3>',
     '<p>Enthält <code>loop.spintax</code> selbst <code>#include "loop"</code>, dann:</p>',
-    '<p><small><tt><a href="ex:57">#include "loop"</a><br>→&nbsp; (leer)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "loop"</a><br>→&nbsp; (leer)</tt></small></p>',
     '<p>Die Maschine setzt nichts ein statt der Unendlichkeit. Die Notiz ist da, damit Sie ' +
       'wissen, warum der Absatz verschwand.</p>',
     '<p>Die Zeile ist gegen <b><code>loop</code></b> ausgestellt und nicht gegen das Dokume' +
@@ -3585,19 +3743,22 @@ const
     '<h2 id="plurals">Zahlformen</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — nicht so viele Formen, wie die Local' +
       'e verlangt</h3>',
-    '<p><small><tt><a href="ex:58">#set %n% = 5</a><br><a href="ex:58">%n% {plural %n%: Din' +
+    '<p><small><tt><a href="ex:77">#set %n% = 5</a><br><a href="ex:77">%n% {plural %n%: Din' +
       'g|Dinge|Dingse}</a><br>→&nbsp; 5 ｛plural 5: Ding|Dinge|Dingse｝</tt></small></p>',
     '<p><b>Keine Leere — die Maschine druckt das ganze Konstrukt</b>, mit breiten Klammern ' +
       '<code>｛｝</code> statt der schmalen. So sagt sie „ich habe das gesehen und konnte es ni' +
       'cht anwenden". Unübersehbar nennt das niemand, und das ist gut so: ein still verschwun' +
       'dener Absatz brauchte länger, bis man ihn fände.</p>',
-    '<p>Deutsch verlangt zwei Formen, Russisch drei. Unter der Locale dieses Dokuments ist ' +
-      '<code>{plural %n%: Ding|Dinge}</code> die richtige.</p>',
+    '<p>Deutsch verlangt zwei Formen, Russisch drei, Arabisch sechs. Unter der Locale diese' +
+      's Dokuments ist <code>{plural %n%: Ding|Dinge}</code> die richtige; unter <code>ar</co' +
+      'de> sind dieselben zwei Formen der Fehler:</p>',
+    '<p><small><tt><a href="ex:78">#def %n% = 5</a><br><a href="ex:78">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Leere entsteht aus einem anderen Grund, und die beiden sind leicht zu verwechsel' +
       'n.</b> Vergleichen Sie diese zwei, die sich nur in der Zahl der Formen unterscheiden:<' +
       '/p>',
-    '<p><small><tt><a href="ex:59">{plural %n%: Ding|Dinge}</a><br>→&nbsp; (leer)&nbsp;&nbs' +
-      'p; zwei Formen: richtig für Deutsch<br><a href="ex:60">{plural %n%: Ding|Dinge|Dingse}' +
+    '<p><small><tt><a href="ex:79">{plural %n%: Ding|Dinge}</a><br>→&nbsp; (leer)&nbsp;&nbs' +
+      'p; zwei Formen: richtig für Deutsch<br><a href="ex:80">{plural %n%: Ding|Dinge|Dingse}' +
       '</a><br>→&nbsp; (leer)&nbsp;&nbsp; drei Formen: falsch für Deutsch</tt></small></p>',
     '<p>Beide drucken nichts, und die Tafel behandelt sie verschieden: die erste zieht nur ' +
       '<code>variable.undefined</code>, die zweite zieht auch <code>plural.arity</code>. <b>L' +
@@ -3615,7 +3776,7 @@ const
       'klich tut.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — die Zahl kommt aus einem' +
       ' <code>#set</code>, und das würfelt bei jeder Nennung neu</h3>',
-    '<p><small><tt><a href="ex:61">#set %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:81">#set %n% = {1|2}</a><br><a href="ex:81">%n% {plural %n%:' +
       ' Ding|Dinge}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Sehen Sie, was übrig blieb: <b>die Zahl wurde gedruckt und das Hauptwort nicht.</b>' +
       ' Die Zahl muss eine Zahl sein, wenn die Form gewählt wird, und ein <code>#set</code>, ' +
@@ -3625,14 +3786,14 @@ const
       'dessen das Wort fallen.</p>',
     '<p><code>#def</code> verhält sich anders und entfaltet seinen Wert einmal je Durchgang' +
       ', der Zahl-Platz bekommt also eine Zahl:</p>',
-    '<p><small><tt><a href="ex:62">#def %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:82">#def %n% = {1|2}</a><br><a href="ex:82">%n% {plural %n%:' +
       ' Ding|Dinge}</a><br>→&nbsp; 1 Ding</tt></small></p>',
     '<p>Dafür gibt es überhaupt keine Zeile in der Tafel. Daher die Regel: machen Sie die Z' +
       'ahl zu einer schlichten Ziffer oder einem <code>#def</code>, niemals zu einem <code>#s' +
       'et</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — Klammern in den ' +
       'Formen</h3>',
-    '<p><small><tt><a href="ex:63">{plural %n%: {Ding|Sache}|Dinge}</a><br>→&nbsp; ｛plural ' +
+    '<p><small><tt><a href="ex:83">{plural %n%: {Ding|Sache}|Dinge}</a><br>→&nbsp; ｛plural ' +
       '%n%: ｛Ding|Sache｝|Dinge｝</tt></small></p>',
     '<p>Formen sind schlichter Text. Eine Auswahl darin wird nicht entfaltet, und das ganze' +
       ' Konstrukt wird stattdessen in breiten Klammern gedruckt.</p>',
@@ -3640,7 +3801,7 @@ const
     '<h2 id="permutations">Mischungen</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — unbekannter Sc' +
       'hlüssel in der Einstellung</h3>',
-    '<p><small><tt><a href="ex:64">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:84">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Die bekannten Schlüssel sind <code>minsize</code>, <code>maxsize</code>, <code>sep<' +
       '/code> und <code>lastsep</code>. Ein unbekannter ist keine Einstellung — und wenn er d' +
@@ -3648,7 +3809,7 @@ const
       'Trennzeichen zwischen den Stücken, was die Ausgabe zeigt.</p>',
     '<p><b>Steht ein wirklicher Schlüssel daneben, ist der Ausgang völlig anders</b>, und d' +
       'as ist der wahrscheinlichere Fehler — ein Schlüssel von mehreren falsch getippt:</p>',
-    '<p><small><tt><a href="ex:65">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:85">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Der Block ist eine Einstellung, <code>sep</code> wird befolgt, der unbekannte Schlü' +
       'ssel schlicht fallen gelassen, und die Tafel sagt in beiden Fällen dasselbe darüber. D' +
@@ -3656,13 +3817,13 @@ const
       ' nicht, was danach geschah. Dafür lesen Sie die Ausgabe.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize ist keine ganze Zahl</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;minsize=zwei&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:86">[&lt;minsize=zwei&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Ein nicht numerischer Wert fällt samt seiner Grenze weg, und es gilt die Vorgabe — ' +
       'nämlich alle Stücke.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize ist keine ganze Zahl</h3>',
-    '<p><small><tt><a href="ex:67">[&lt;maxsize=viele&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
+    '<p><small><tt><a href="ex:87">[&lt;maxsize=viele&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
       'small></p>',
     '<p>Genau dasselbe vom anderen Ende: die obere Grenze verschwindet, und die Ausgabe ent' +
       'hält wieder jedes Stück.</p>',
@@ -3704,8 +3865,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Eine Stille für jede Sprache: Abkürzungen</h2>',
     '<h3 id="abbreviations-0">Eine Abkürzung lässt das nächste Wort klein</h3>',
-    '<p><small><tt><a href="ex:68">Dr. unsere Preise sind niedrig</a><br>→&nbsp; Dr. unsere' +
-      ' Preise sind niedrig<br><a href="ex:69">Xyz. unsere Preise sind niedrig</a><br>→&nbsp;' +
+    '<p><small><tt><a href="ex:88">Dr. unsere Preise sind niedrig</a><br>→&nbsp; Dr. unsere' +
+      ' Preise sind niedrig<br><a href="ex:89">Xyz. unsere Preise sind niedrig</a><br>→&nbsp;' +
       ' Xyz. Unsere Preise sind niedrig</tt></small></p>',
     '<p>Zwei Zeilen, die sich in einem Wort unterscheiden, und das zweite Wort jeder sagt I' +
       'hnen die Regel: nach <code>Dr.</code> bleibt der Satz klein, nach <code>Xyz.</code> wi' +
@@ -3734,15 +3895,15 @@ const
       'ilft nur, umzuformulieren.</p>',
     '<hr>',
     '<h2 id="correct">Wie die richtige Form aussieht</h2>',
-    '<p><small><tt><a href="ex:70">ein Preis {billig|teuer}</a><br>→&nbsp; Ein Preis billig' +
+    '<p><small><tt><a href="ex:90">ein Preis {billig|teuer}</a><br>→&nbsp; Ein Preis billig' +
       '</tt></small></p>',
-    '<p><small><tt><a href="ex:71">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:91">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:72">#set %vip% = 1</a><br><a href="ex:72">{?vip?für Sie|für ' +
+    '<p><small><tt><a href="ex:92">#set %vip% = 1</a><br><a href="ex:92">{?vip?für Sie|für ' +
       'alle}</a><br>→&nbsp; Für Sie</tt></small></p>',
-    '<p><small><tt><a href="ex:73">#set %n% = 5</a><br><a href="ex:73">%n% {plural %n%: Stü' +
+    '<p><small><tt><a href="ex:93">#set %n% = 5</a><br><a href="ex:93">%n% {plural %n%: Stü' +
       'ck|Stücke}</a><br>→&nbsp; 5 Stücke</tt></small></p>',
-    '<p><small><tt><a href="ex:74">vorher /# eine Notiz #/ danach</a><br>→&nbsp; Vorher dan' +
+    '<p><small><tt><a href="ex:94">vorher /# eine Notiz #/ danach</a><br>→&nbsp; Vorher dan' +
       'ach</tt></small></p>',
     '<p>Fünf Konstrukte, fünf saubere Zeilen: eine Auswahl, eine Mischung mit Einstellungen' +
       ', eine Bedingung, eine Zahlform mit einer Zahl davor und ein Kommentar. Keines davon s' +
@@ -3759,7 +3920,7 @@ const
       'einischen Buchstaben, Ziffern und dem Unterstrich. <code>%größe%</code> ist überhaupt ' +
       'keine Nennung einer Variablen — die Maschine liest es als Text und sagt nichts, weil e' +
       's aus ihrer Sicht nichts zu melden gibt:</p>',
-    '<p><small><tt><a href="ex:75">hallo %größe% und %name%</a><br>→&nbsp; Hallo %größe% un' +
+    '<p><small><tt><a href="ex:95">hallo %größe% und %name%</a><br>→&nbsp; Hallo %größe% un' +
       'd %name%</tt></small></p>',
     '<p>Beide kamen unverändert durch, und das ist die Falle: nur das zweite zog eine Zeile' +
       ' in der Tafel. Das erste ist still, nichts sagt Ihnen also, dass es nie eingesetzt wer' +
@@ -4085,7 +4246,10 @@ const
     '<p><code>locale</code> décide des formes de nombre, et c''est le sélecteur au-dessus d' +
       'u volet de droite, non la langue de l''interface. Le français et l''anglais demandent ' +
       'deux formes ; le russe, l''ukrainien, le biélorusse, le serbe, le croate et le bosnien' +
-      ' en demandent trois.</p>',
+      ' en demandent trois ; l''arabe en demande six. Sous l''arabe et l''hébreu, elle change' +
+      ' aussi la façon dont une conjonction joint une liste (voir le séparateur). Les exemple' +
+      's arabes et hébreux ci-dessous sont mesurés sous leur propre locale, que nomme la phra' +
+      'se qui précède chacun d''eux.</p>',
     '<h2 id="choices">Choix</h2>',
     '<p>Des accolades avec des <code>|</code> entre : le moteur en prend <b>un</b>.</p>',
     '<p><small><tt><a href="ex:1">Une {petite|grande} salle.</a><br>→&nbsp; Une petite sall' +
@@ -4138,38 +4302,67 @@ const
       '&nbsp; Vert, bleu et rouge</tt></small></p>',
     '<p><code>sep</code> va entre les morceaux et <code>lastsep</code> avant le dernier.</p' +
       '>',
+    '<p>Un séparateur fait uniquement de lettres reçoit une espace de chaque côté, même si ' +
+      'aucune n''a été tapée :</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="et"&gt;A|B]</a><br>→&nbsp; B et A</tt></sma' +
+      'll></p>',
+    '<p>Les écritures qui ne mettent pas d''espace entre les mots font exception, sous n''i' +
+      'mporte quelle locale : les séparateurs chinois, japonais, thaïs, laotiens, khmers et b' +
+      'irmans se joignent sans espace.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>L''arabe et l''hébreu ont une règle à eux, et c''est la <b>locale</b> qui l''active' +
+      ', non l''écriture. Sous <code>ar</code>, un séparateur qui est exactement و ou ف garde' +
+      ' l''espace devant lui et perd celle d''après, parce que l''arabe écrit la conjonction ' +
+      'collée au mot suivant ; sous <code>he</code>, il en va de même pour ו. Cela n''arrive ' +
+      'que devant un mot de cette écriture — devant un nom latin ou un chiffre, les deux espa' +
+      'ces restent :</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Sous toute autre locale, la conjonction reste un mot à part, ce qui est juste pour ' +
+      'le persan et l''ourdou, où la même lettre s''écrit séparée :</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Combien</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;rouge|vert|bleu]</a><br>→&nbs' +
-      'p; Vert bleu</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;rouge|vert|bleu]</a><br>→&nb' +
+      'sp; Vert bleu</tt></small></p>',
     '<p><code>minsize</code> est le plancher et <code>maxsize</code> le plafond ; le nombre' +
       ' entre les deux est aléatoire comme l''ordre. Des valeurs égales en prennent exactemen' +
       't autant. <b>Sans les deux, tous — mais avec <code>maxsize</code> seul, le plancher es' +
       't à un</b>, ce qui surprend :</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Trois morceaux, un plafond de trois, et un seul est sorti. Écrivez aussi <code>mins' +
       'ize</code> quand vous voulez dire « tous, trois au plus ». Un <code>maxsize</code> sup' +
       'érieur au nombre de morceaux est discrètement ramené à celui-ci. Un <code>minsize</cod' +
       'e> supérieur au <code>maxsize</code> est accepté sans un mot, et c''est le plancher qu' +
       'i gagne — le plafond est relevé jusqu''à lui et non l''inverse :</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;rouge|vert|bleu]</a><br>→&nb' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;rouge|vert|bleu]</a><br>→&nb' +
       'sp; Vert bleu rouge</tt></small></p>',
     '<h3 id="shuffles-2">Un séparateur entre deux morceaux</h3>',
     '<p>Un <code>&lt;…&gt;</code> écrit <b>entre</b> deux morceaux est le séparateur de cet' +
       'te paire.</p>',
-    '<p><small><tt><a href="ex:12">[rouge|vert&lt;et&gt;|bleu]</a><br>→&nbsp; Vert et bleu ' +
+    '<p><small><tt><a href="ex:25">[rouge|vert&lt;et&gt;|bleu]</a><br>→&nbsp; Vert et bleu ' +
       'rouge</tt></small></p>',
     '<p>Il appartient au morceau <b>qui suit</b> et voyage avec lui à travers le brassage ;' +
       ' il surgit donc là où ce morceau tombe et non à une place fixe de la sortie. Un <code>' +
       '&lt;…&gt;</code> après le <b>dernier</b> morceau n''est pas du tout un séparateur et s' +
       '''imprime comme du texte :</p>',
-    '<p><small><tt><a href="ex:13">[rouge|vert|bleu&lt;et&gt;]</a><br>→&nbsp; Vert bleu&lt;' +
+    '<p><small><tt><a href="ex:26">[rouge|vert|bleu&lt;et&gt;]</a><br>→&nbsp; Vert bleu&lt;' +
       'et&gt; rouge</tt></small></p>',
     '<h2 id="macros">Macros</h2>',
     '<p><code>#set</code> donne un nom à un morceau de texte. Le nom s''emploie comme <code' +
       '>%nom%</code>, et la directive doit être la première chose de sa ligne — les espaces e' +
       't tabulations de tête sont permis, rien d''autre.</p>',
-    '<p><small><tt><a href="ex:14">#set %ville% = Lyon</a><br><a href="ex:14">Vol vers %vil' +
+    '<p><small><tt><a href="ex:27">#set %ville% = Lyon</a><br><a href="ex:27">Vol vers %vil' +
       'le%.</a><br>→&nbsp; Vol vers Lyon.</tt></small></p>',
     '<p>Les noms se composent de lettres latines, de chiffres et de <code>_</code>. Un nom ' +
       'dans un autre alphabet n''est pas un nom, ce dont l''autre document parle sous <code>s' +
@@ -4179,9 +4372,9 @@ const
       '>',
     '<p>C''est toute la différence entre les deux, et elle ne se voit que si la valeur cont' +
       'ient un choix.</p>',
-    '<p><small><tt><a href="ex:15">#set %choix% = {A|B}</a><br><a href="ex:15">%choix% %cho' +
+    '<p><small><tt><a href="ex:28">#set %choix% = {A|B}</a><br><a href="ex:28">%choix% %cho' +
       'ix% %choix%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %choix% = {A|B}</a><br><a href="ex:16">%choix% %cho' +
+    '<p><small><tt><a href="ex:29">#def %choix% = {A|B}</a><br><a href="ex:29">%choix% %cho' +
       'ix% %choix%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Les deux exemples ont tourné sous la même graine. <code>#set</code> garde le gabari' +
       't et le tire à chaque emploi ; <code>#def</code> tire une fois et garde la réponse. Pr' +
@@ -4193,11 +4386,11 @@ const
       '/p>',
     '<h2 id="conditions">Conditions</h2>',
     '<p><code>{?nom?alors|sinon}</code> demande si une macro a une valeur.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?nous avons %n%|r' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?nous avons %n%|r' +
       'ien encore}</a><br>→&nbsp; Nous avons 5</tt></small></p>',
     '<p>La moitié <code>sinon</code> peut manquer — <code>{?nom?alors}</code> n''imprime ri' +
       'en quand la réponse est non. Un <code>!</code> retourne la question :</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?inconnu|ami' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?inconnu|ami' +
       '}</a><br>→&nbsp; Ami</tt></small></p>',
     '<p>Avoir une valeur, c''est avoir <b>au moins un caractère qui n''est pas une espace</' +
       'b>. Une macro mise à rien, ou à des espaces seulement, compte comme sans valeur.</p>',
@@ -4206,9 +4399,9 @@ const
       't un nom commençant par un chiffre.</p>',
     '<h2 id="counting">Compte</h2>',
     '<p><code>{plural %n%: …}</code> prend la forme de mot qui va avec un nombre.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: fic' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: fic' +
       'hier|fichiers}</a><br>→&nbsp; 1 fichier</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: fic' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: fic' +
       'hier|fichiers}</a><br>→&nbsp; 5 fichiers</tt></small></p>',
     '<p>Le compte est ici un <code>#def</code> et non un <code>#set</code>, à dessein, et l' +
       'a règle mérite d''être retenue : <b>faites du compte un chiffre simple ou un <code>#de' +
@@ -4217,18 +4410,36 @@ const
       ' — pas un nombre, donc, si bien que la construction entière ne produit rien et que le ' +
       'panneau dit <code>plural.count-macro</code>. Le compte et la forme ne peuvent se contr' +
       'edire : c''est le mot qui disparaît.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' fichier|fichiers}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Le nombre de formes est décidé par la locale et non par vous : sous <code>fr</code>' +
-      ' il y en a deux, sous <code>ru</code> trois. Le mauvais nombre est une erreur que le p' +
-      'anneau signale (<code>plural.arity</code>), et le moteur réimprime alors la constructi' +
-      'on entière, accolades remplacées par de larges <code>｛｝</code>, pour qu''on ne la pren' +
-      'ne pas pour de la sortie.</p>',
+      ' il y en a deux, sous <code>ru</code> trois, sous <code>ar</code> six — dans l''ordre ' +
+      'zero, one, two, few, many, other. L''arabe dit « un livre » et « deux livres » sans ch' +
+      'iffre, si bien que le nombre va <b>dans</b> les formes qui l''impriment plutôt que dev' +
+      'ant le bloc :</p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Le mauvais nombre est une erreur que le panneau signale (<code>plural.arity</code>)' +
+      ', et le moteur réimprime alors la construction entière, accolades remplacées par de la' +
+      'rges <code>｛｝</code>, pour qu''on ne la prenne pas pour de la sortie.</p>',
     '<h2 id="fragments">Extraits</h2>',
     '<p><code>#include "nom"</code> met un autre gabarit à cet endroit, et la directive doi' +
       't être la première chose de sa ligne — là encore, les espaces et tabulations de tête s' +
       'ont permis.</p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Bienvenue chez Acme.</tt' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Bienvenue chez Acme.</tt' +
       '></small></p>',
     '<p>L''extrait est rendu comme son propre gabarit ; un choix qui s''y trouve est donc r' +
       'efait : <code>intro</code> contient <code>{Acme|Globex}</code> et répond par l''un ou ' +
@@ -4241,7 +4452,7 @@ const
     '<h3 id="fragments-0">Un extrait ne voit pas vos macros</h3>',
     '<p>Il est rendu comme son propre gabarit : il a les valeurs de la session, mais pas le' +
       's <code>#set</code> ni les <code>#def</code> du document qui l''a fait venir.</p>',
-    '<p><small><tt><a href="ex:23">#set %marque% = Acme</a><br><a href="ex:23">#include "sh' +
+    '<p><small><tt><a href="ex:42">#set %marque% = Acme</a><br><a href="ex:42">#include "sh' +
       'out"</a><br>→&nbsp; La %marque% est là.</tt></small></p>',
     '<p><code>shout</code> vaut <code>La %marque% est là.</code>, et le nom doit être défin' +
       'i dans l''extrait lui-même. Ce n''est pas un silence — le panneau dit bel et bien <cod' +
@@ -4252,7 +4463,7 @@ const
     '<h2 id="remarks">Remarques</h2>',
     '<p><code>/# … #/</code> est un commentaire : tout ce qui se trouve entre les marques e' +
       'st retiré avant quoi que ce soit d''autre.</p>',
-    '<p><small><tt><a href="ex:24">brouillon /# pas sûr de ça #/ prêt</a><br>→&nbsp; Brouil' +
+    '<p><small><tt><a href="ex:43">brouillon /# pas sûr de ça #/ prêt</a><br>→&nbsp; Brouil' +
       'lon prêt</tt></small></p>',
     '<p>Les commentaires ne s''imbriquent pas. Le premier <code>#/</code> ferme le commenta' +
       'ire, quoi qu''il y ait eu avant ; un commentaire enroulé autour d''un texte contenant ' +
@@ -4261,7 +4472,7 @@ const
     '<p>La sortie n''est pas tout à fait le texte que les constructions ont produit. Plusie' +
       'urs choses lui arrivent à la fin ; deux vous croisent tous les jours.</p>',
     '<p>La première lettre de chaque phrase est mise en majuscule :</p>',
-    '<p><small><tt><a href="ex:25">un. deux. trois.</a><br>→&nbsp; Un. Deux. Trois.</tt></s' +
+    '<p><small><tt><a href="ex:44">un. deux. trois.</a><br>→&nbsp; Un. Deux. Trois.</tt></s' +
       'mall></p>',
     '<p>C''est pourquoi les exemples de cette aide répondent si souvent par une majuscule l' +
       'à où le gabarit a une minuscule. Un point après une abréviation que le moteur connaît ' +
@@ -4269,15 +4480,15 @@ const
       'e>U.S.</code> — une lettre, un point, une lettre, un point — dans <b>n''importe quel a' +
       'lphabet</b> : le contrôle « est-on au milieu d''un mot » lit toutes les écritures, et ' +
       '<code>т.е.</code> est protégé exactement comme <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:26">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:45">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:27">etc. nos prix sont bas</a><br>→&nbsp; etc. nos prix sont' +
+    '<p><small><tt><a href="ex:46">etc. nos prix sont bas</a><br>→&nbsp; etc. nos prix sont' +
       ' bas</tt></small></p>',
-    '<p><small><tt><a href="ex:28">Dr. nos prix sont bas</a><br>→&nbsp; Dr. nos prix sont b' +
+    '<p><small><tt><a href="ex:47">Dr. nos prix sont bas</a><br>→&nbsp; Dr. nos prix sont b' +
       'as</tt></small></p>',
     '<p>Tout autre mot termine une phrase, si court soit-il — la longueur n''y est pour rie' +
       'n :</p>',
-    '<p><small><tt><a href="ex:29">Xyz. nos prix sont bas</a><br>→&nbsp; Xyz. Nos prix sont' +
+    '<p><small><tt><a href="ex:48">Xyz. nos prix sont bas</a><br>→&nbsp; Xyz. Nos prix sont' +
       ' bas</tt></small></p>',
     '<p>La liste que le moteur connaît compte 46 entrées, <b>29 d''entre elles cyrilliques<' +
       '/b>, et l''autre document la parcourt sous <b>Un silence dans toutes les langues</b>. ' +
@@ -4294,9 +4505,9 @@ const
       'il s''écrive <code>un.deux</code> ou <code>сайт.рф</code>. Et un début protégé n''est ' +
       'pas un début de phrase pour la majuscule — c''est pourquoi <code>un.deux</code> plus b' +
       'as ressort intact, minuscule comprise.</p>',
-    '<p><small><tt><a href="ex:30">bonjour , monde</a><br>→&nbsp; Bonjour, monde</tt></smal' +
+    '<p><small><tt><a href="ex:49">bonjour , monde</a><br>→&nbsp; Bonjour, monde</tt></smal' +
       'l></p>',
-    '<p><small><tt><a href="ex:31">un.deux</a><br>→&nbsp; un.deux</tt></small></p>',
+    '<p><small><tt><a href="ex:50">un.deux</a><br>→&nbsp; un.deux</tt></small></p>',
     '<h2 id="silences">Silences</h2>',
     '<p>Chaque cas ci-dessous se rend, produit autre chose que ce dont il a l''air et n''en' +
       'traîne <b>aucun diagnostic</b>. Ils sont réunis ici parce que rien d''autre dans la fe' +
@@ -4307,20 +4518,20 @@ const
       '.</code>, <code>etc.</code> plus haut, et <code>no.</code>, qui y est aussi —, tandis ' +
       'que <code>cf.</code>, <code>env.</code>, <code>M.</code> et <code>av.</code> terminent' +
       ' une phrase et mettent le mot suivant en majuscule :</p>',
-    '<p><small><tt><a href="ex:32">cf. nos prix sont bas</a><br>→&nbsp; Cf. Nos prix sont b' +
+    '<p><small><tt><a href="ex:51">cf. nos prix sont bas</a><br>→&nbsp; Cf. Nos prix sont b' +
       'as</tt></small></p>',
     '<p><code>p. ex.</code> traverse la finition sans dommage, ce qui vaut d''être montré p' +
       'lutôt qu''expliqué :</p>',
-    '<p><small><tt><a href="ex:33">p. ex. cela reste en minuscule</a><br>→&nbsp; p. ex. cel' +
+    '<p><small><tt><a href="ex:52">p. ex. cela reste en minuscule</a><br>→&nbsp; p. ex. cel' +
       'a reste en minuscule</tt></small></p>',
     '<p><code>c.-à-d.</code> en revanche est cassé, et la raison n''est pas l''alphabet : l' +
       'a forme que le moteur reconnaît est lettre-point-lettre-point, et les traits d''union ' +
       'la rompent, si bien que la finition entre dans l''abréviation :</p>',
-    '<p><small><tt><a href="ex:34">c.-à-d. cela reste en minuscule</a><br>→&nbsp; C. -à-d. ' +
+    '<p><small><tt><a href="ex:53">c.-à-d. cela reste en minuscule</a><br>→&nbsp; C. -à-d. ' +
       'Cela reste en minuscule</tt></small></p>',
     '<p><b>Un <code>#include</code> qui n''est pas seul sur sa ligne est du texte ordinaire' +
       '.</b></p>',
-    '<p><small><tt><a href="ex:35">Avant. #include "intro"</a><br>→&nbsp; Avant. #include "' +
+    '<p><small><tt><a href="ex:54">Avant. #include "intro"</a><br>→&nbsp; Avant. #include "' +
       'intro"</tt></small></p>',
     '<p>Il en va de même d''une directive suivie de quoi que ce soit, et de <code>#include"' +
       'intro"</code> sans espace. La règle est celle de la famille et non celle de ce moteur,' +
@@ -4328,25 +4539,25 @@ const
       '/p>',
     '<p><b>Une condition dont le nom commence par un chiffre n''est pas une condition.</b> ' +
       'Elle devient un choix ordinaire entre <code>?1x?oui</code> et <code>non</code> :</p>',
-    '<p><small><tt><a href="ex:36">{?1x?oui|non}</a><br>→&nbsp; ?1x? Oui</tt></small></p>',
+    '<p><small><tt><a href="ex:55">{?1x?oui|non}</a><br>→&nbsp; ?1x? Oui</tt></small></p>',
     '<p><b>Un <code>&lt;…&gt;</code> en tête d''un morceau qui n''est pas le premier n''est' +
       ' pas un séparateur</b> et s''imprime tel quel :</p>',
-    '<p><small><tt><a href="ex:37">[rouge|&lt;et&gt;vert]</a><br>→&nbsp; &lt;et&gt;Vert rou' +
+    '<p><small><tt><a href="ex:56">[rouge|&lt;et&gt;vert]</a><br>→&nbsp; &lt;et&gt;Vert rou' +
       'ge</tt></small></p>',
     '<p>Le bloc en tête du <b>premier</b> morceau est le séparateur — c''est l''écriture pa' +
       'r laquelle s''ouvre le chapitre des brassages :</p>',
-    '<p><small><tt><a href="ex:38">[&lt;et&gt;rouge|vert]</a><br>→&nbsp; Vert et rouge</tt>' +
+    '<p><small><tt><a href="ex:57">[&lt;et&gt;rouge|vert]</a><br>→&nbsp; Vert et rouge</tt>' +
       '</small></p>',
     '<p>N''importe où après un <code>|</code> c''est du texte ordinaire, et un séparateur e' +
       'ntre deux morceaux se met à la <b>fin</b> du premier.</p>',
     '<p><b>Une balise nue à la fin d''un morceau est prise pour le séparateur de cette pair' +
       'e</b> et imprimée comme son propre texte :</p>',
-    '<p><small><tt><a href="ex:39">[un&lt;br&gt;|deux]</a><br>→&nbsp; Deux un</tt></small><' +
+    '<p><small><tt><a href="ex:58">[un&lt;br&gt;|deux]</a><br>→&nbsp; Deux un</tt></small><' +
       '/p>',
     '<p>Sous cette graine les deux sont tombés dans l''autre ordre, si bien que le séparate' +
       'ur n''est pas sorti du tout. Avec un troisième morceau il a où tomber, et il apparaît ' +
       ':</p>',
-    '<p><small><tt><a href="ex:40">[rouge|vert&lt;br&gt;|bleu]</a><br>→&nbsp; Vert br bleu ' +
+    '<p><small><tt><a href="ex:59">[rouge|vert&lt;br&gt;|bleu]</a><br>→&nbsp; Vert br bleu ' +
       'rouge</tt></small></p>',
     '<p>Le <code>&lt;br&gt;</code> se tient entre <code>vert</code> et ce qui le suit, où q' +
       'ue le brassage mette cette paire. Une balise fermante (<code>&lt;/b&gt;</code>), une a' +
@@ -4355,12 +4566,12 @@ const
       's.</p>',
     '<p><b>Un commentaire non fermé est du texte ordinaire</b> — il n''ouvre rien, et le <c' +
       'ode>/#</code> est imprimé :</p>',
-    '<p><small><tt><a href="ex:41">avant /# le reste de tout cela</a><br>→&nbsp; Avant /# l' +
+    '<p><small><tt><a href="ex:60">avant /# le reste de tout cela</a><br>→&nbsp; Avant /# l' +
       'e reste de tout cela</tt></small></p>',
     '<p>Il reste cependant la moitié d''une paire. Si un <code>#/</code> apparaît plus bas ' +
       'dans le document, les deux se trouvent et tout ce qui est entre eux s''en va — y compr' +
       'is ce que l''auteur a écrit entre-temps :</p>',
-    '<p><small><tt><a href="ex:42">{a /# oups|b} milieu #/ queue</a><br>→&nbsp; {a queue</t' +
+    '<p><small><tt><a href="ex:61">{a /# oups|b} milieu #/ queue</a><br>→&nbsp; {a queue</t' +
       't></small></p>',
     '<p>Le choix ci-dessus a perdu sa seconde variante et son accolade fermante, et aucun d' +
       'iagnostic ne le dit : c''est ce que le texte SIGNIFIE, et non une faute que le moteur ' +
@@ -4430,19 +4641,19 @@ const
       'qu''il fait partie de la construction.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — un crochet est ouvert et jam' +
       'ais fermé</h3>',
-    '<p><small><tt><a href="ex:43">un prix {bon|cher</a><br>→&nbsp; Un prix {bon|cher</tt><' +
+    '<p><small><tt><a href="ex:62">un prix {bon|cher</a><br>→&nbsp; Un prix {bon|cher</tt><' +
       '/small></p>',
     '<p>Le moteur ne devine pas où vous vouliez fermer. Le texte reste tel quel, accolade c' +
       'omprise, et le choix n''a jamais lieu.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — fermé par un crochet d''' +
       'une autre sorte</h3>',
-    '<p><small><tt><a href="ex:44">un prix {bon|cher]</a><br>→&nbsp; Un prix {bon|cher]</tt' +
+    '<p><small><tt><a href="ex:63">un prix {bon|cher]</a><br>→&nbsp; Un prix {bon|cher]</tt' +
       '></small></p>',
     '<p><code>{</code> attend <code>}</code> et <code>[</code> attend <code>]</code>. Un br' +
       'assage fermé par une accolade n''est pas un brassage.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — un croch' +
       'et fermant sans rien d''ouvert</h3>',
-    '<p><small><tt><a href="ex:45">un prix bon} et tout</a><br>→&nbsp; Un prix bon} et tout' +
+    '<p><small><tt><a href="ex:64">un prix bon} et tout</a><br>→&nbsp; Un prix bon} et tout' +
       '</tt></small></p>',
     '<p>Il reste là comme du texte. C''est le plus souvent un crochet resté d''une modifica' +
       'tion.</p>',
@@ -4450,7 +4661,7 @@ const
     '<h2 id="definitions">Définitions</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — cette ligne <code>#set</code> ne s' +
       'uit pas la règle</h3>',
-    '<p><small><tt><a href="ex:46">#set ville = Lyon</a><br><a href="ex:46">dans %ville%</a' +
+    '<p><small><tt><a href="ex:65">#set ville = Lyon</a><br><a href="ex:65">dans %ville%</a' +
       '><br>→&nbsp; #set ville = Lyon ⏎ Dans %ville%</tt></small></p>',
     '<p><b>Le nom va entre signes de pourcentage :</b> <code>#set %ville% = Lyon</code>. C' +
       '''est la première faute la plus courante, et elle met deux lignes d''un coup dans le p' +
@@ -4462,7 +4673,7 @@ const
       ' et elle va dans le résultat.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — cette ligne <code>#def</code> ne s' +
       'uit pas la règle</h3>',
-    '<p><small><tt><a href="ex:47">#def pages = {1|3}</a><br><a href="ex:47">%pages%</a><br' +
+    '<p><small><tt><a href="ex:66">#def pages = {1|3}</a><br><a href="ex:66">%pages%</a><br' +
       '>→&nbsp; #def pages = 1 ⏎ %pages%</tt></small></p>',
     '<p>La même règle et le même prix. <code>#def</code> ne diffère pas de <code>#set</code' +
       '> par l''orthographe mais par le <b>moment</b> où la valeur est déployée : <code>#set<' +
@@ -4474,15 +4685,15 @@ const
       'e ; elle cesse seulement d''être une directive.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — ce nom est' +
       ' déjà défini plus haut</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = premier</a><br><a href="ex:48">#set %x% = sec' +
-      'ond</a><br><a href="ex:48">%x%</a><br>→&nbsp; Second</tt></small></p>',
+    '<p><small><tt><a href="ex:67">#set %x% = premier</a><br><a href="ex:67">#set %x% = sec' +
+      'ond</a><br><a href="ex:67">%x%</a><br>→&nbsp; Second</tt></small></p>',
     '<p>Cela fonctionne — la <b>dernière</b> définition gagne — mais le moteur appelle cela' +
       ' une erreur : un document où un nom est posé deux fois se lit de manière ambiguë, et d' +
       'ans un mois vous ne saurez plus laquelle des deux lignes est la vivante. L''erreur mon' +
       'tre la <b>seconde</b> définition ; la première est plus haut.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> dans la valeur d''une définition</h3>',
-    '<p><small><tt><a href="ex:49">#def %x% = #include "frag"</a><br><a href="ex:49">%x%</a' +
+    '<p><small><tt><a href="ex:68">#def %x% = #include "frag"</a><br><a href="ex:68">%x%</a' +
       '><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Une inclusion dans une valeur se déploie à un autre moment que vous ne l''attendrie' +
       'z, et la famille l''interdit. Mettez le <code>#include</code> sur une ligne à lui.</p>',
@@ -4490,7 +4701,7 @@ const
     '<h2 id="variables">Variables</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — cette variable n''est dé' +
       'finie nulle part</h3>',
-    '<p><small><tt><a href="ex:50">bonjour, %nom%</a><br>→&nbsp; Bonjour, %nom%</tt></small' +
+    '<p><small><tt><a href="ex:69">bonjour, %nom%</a><br>→&nbsp; Bonjour, %nom%</tt></small' +
       '></p>',
     '<p>Un avertissement et non une erreur : le moteur imprime le nom tel quel. C''est voul' +
       'u — la valeur peut venir de dehors, de l''hôte. Dans Studio vous fournissez ces valeur' +
@@ -4528,7 +4739,7 @@ const
       'de groupe. La valeur que vous avez déjà tapée y entre comme première possibilité :</li' +
       '>',
     '</ul>',
-    '<p><small><tt><a href="ex:51">#set %marque% = {Vulkan}</a><br><a href="ex:51">casino %' +
+    '<p><small><tt><a href="ex:70">#set %marque% = {Vulkan}</a><br><a href="ex:70">casino %' +
       'marque%</a><br>→&nbsp; Casino Vulkan</tt></small></p>',
     '<p>La différence entre les deux, c''est ce qui survit à la fermeture de la fenêtre. Un' +
       'e valeur de session, non : elle n''est pas dans le fichier, pas dans git, et aucun aut' +
@@ -4541,7 +4752,7 @@ const
       'olonne : alors accolades et signes de pourcentage restent des caractères.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — la définition ' +
       'se nomme elle-même</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:71">#set %x% = a %x% b</a><br><a href="ex:71">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Cinquante niveaux, puis arrêt. Le moteur déploie jusqu''à la limite de profondeur e' +
       't s''arrête, en laissant <code>%x%</code> au milieu. Pas une boucle, et pas non plus c' +
@@ -4552,8 +4763,8 @@ const
       'elle quelle, et la valeur en contient une de plus de chaque.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — les dé' +
       'finitions se nomment en cercle</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = %y%</a><br><a href="ex:53">#set %y% = %x%</a>' +
-      '<br><a href="ex:53">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %x% = %y%</a><br><a href="ex:72">#set %y% = %x%</a>' +
+      '<br><a href="ex:72">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Chaque côté se déploie exactement <b>une fois</b> puis s''arrête : <code>%x%</code>' +
       ' est devenu <code>%y%</code> et non <code>%x%</code>. Le moteur déroule le cercle au l' +
       'ieu de le parcourir, et ce qui survit est l''autre nom du cercle — mettez <code>%x% %y' +
@@ -4575,9 +4786,9 @@ const
     '<hr>',
     '<h2 id="includes">Inclusions</h2>',
     '<h3 id="includes-0"><code>#include</code> ne marche qu''en début de ligne</h3>',
-    '<p><small><tt><a href="ex:54">avant #include "frag" après</a><br>→&nbsp; Avant #includ' +
+    '<p><small><tt><a href="ex:73">avant #include "frag" après</a><br>→&nbsp; Avant #includ' +
       'e "frag" après</tt></small></p>',
-    '<p><small><tt><a href="ex:55">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Pas de diagnostic, et c''est bien le propos : un <code>#include</code> au milieu d' +
       '''une ligne n''est <b>pas</b> une inclusion. Le moteur le lit comme du texte ordinaire' +
       ' et ne dit rien, parce qu''il n''y a rien à signaler — vous avez écrit du texte et obt' +
@@ -4585,7 +4796,7 @@ const
     '<p><b>La cible peut cependant se trouver une ligne plus bas</b>, et cela surprend de l' +
       '''autre côté. L''écart que le moteur autorise entre le mot et sa cible comprend les sa' +
       'uts de ligne ; ceci est donc une inclusion et elle marche :</p>',
-    '<p><small><tt><a href="ex:56">#include</a><br><a href="ex:56">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:75">#include</a><br><a href="ex:75">"frag"</a><br>→&nbsp; Fr' +
       'agment</tt></small></p>',
     '<p>Des lignes vides entre les deux passent aussi. Tout le reste ne passe pas : un mot ' +
       'avant la cible ou quoi que ce soit d''autre que des espaces derrière — et le tout rede' +
@@ -4594,7 +4805,7 @@ const
       'oit pas encore la fin.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — pas de cible de ' +
       'ce nom dans le jeu</h3>',
-    '<p><small><tt><a href="ex:57">#include "aucun"</a><br>→&nbsp; (vide)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "aucun"</a><br>→&nbsp; (vide)</tt></small></p>',
     '<p>Les cibles sont les fichiers <code>.spintax</code> du dossier du document ouvert. U' +
       'ne cible inconnue se déploie en rien — le paragraphe disparaît au lieu de casser, ce q' +
       'ui est précisément pourquoi c''est facile à manquer.</p>',
@@ -4610,7 +4821,7 @@ const
       '''apparaît que s''il y a un dossier et que le fichier n''y est vraiment pas.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — la cible existe, dans un' +
       'e autre casse</h3>',
-    '<p><small><tt><a href="ex:58">#include "intro"</a><br>→&nbsp; (vide)</tt></small></p>',
+    '<p><small><tt><a href="ex:77">#include "intro"</a><br>→&nbsp; (vide)</tt></small></p>',
     '<p>Le jeu contient <code>Intro.spintax</code> — et le moteur dit malgré tout qu''il n' +
       '''y a pas de cible de ce nom, tandis que Studio ajoute sa note sur la casse. La casse ' +
       'compte : <code>intro</code> et <code>Intro</code> sont des cibles différentes. Windows' +
@@ -4620,7 +4831,7 @@ const
     '<h3 id="note.cycle"><code>note.cycle</code> — une inclusion en cercle</h3>',
     '<p>Si <code>loop.spintax</code> contient lui-même <code>#include "loop"</code>, alors ' +
       ':</p>',
-    '<p><small><tt><a href="ex:59">#include "loop"</a><br>→&nbsp; (vide)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "loop"</a><br>→&nbsp; (vide)</tt></small></p>',
     '<p>Le moteur ne met rien plutôt que l''infini. La note est là pour que vous sachiez po' +
       'urquoi le paragraphe s''est évaporé.</p>',
     '<p>La ligne est portée contre <b><code>loop</code></b> et non contre le document que v' +
@@ -4631,19 +4842,22 @@ const
     '<h2 id="plurals">Formes de nombre</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — pas autant de formes que la locale e' +
       'n demande</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = 5</a><br><a href="ex:60">%n% {plural %n%: obj' +
+    '<p><small><tt><a href="ex:79">#set %n% = 5</a><br><a href="ex:79">%n% {plural %n%: obj' +
       'et|objets|objetses}</a><br>→&nbsp; 5 ｛plural 5: objet|objets|objetses｝</tt></small></p' +
       '>',
     '<p><b>Pas du vide — le moteur imprime la construction entière</b>, accolades remplacée' +
       's par de larges <code>｛｝</code>. C''est ainsi qu''il dit « j''ai vu ceci et n''ai pas ' +
       'pu l''appliquer ». Personne n''appellerait cela discret, et tant mieux : un paragraphe' +
       ' évaporé en silence prendrait plus longtemps à trouver.</p>',
-    '<p>Le français demande deux formes, le russe trois. Sous la locale de ce document, <co' +
-      'de>{plural %n%: objet|objets}</code> est la bonne.</p>',
+    '<p>Le français demande deux formes, le russe trois, l''arabe six. Sous la locale de ce' +
+      ' document, <code>{plural %n%: objet|objets}</code> est la bonne ; sous <code>ar</code>' +
+      ', ces deux mêmes formes sont l''erreur :</p>',
+    '<p><small><tt><a href="ex:80">#def %n% = 5</a><br><a href="ex:80">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Le vide vient d''une autre cause, et les deux se confondent aisément.</b> Compar' +
       'ez ces deux-là, qui ne diffèrent que par le nombre de formes :</p>',
-    '<p><small><tt><a href="ex:61">{plural %n%: objet|objets}</a><br>→&nbsp; (vide)&nbsp;&n' +
-      'bsp; deux formes : juste pour le français<br><a href="ex:62">{plural %n%: objet|objets' +
+    '<p><small><tt><a href="ex:81">{plural %n%: objet|objets}</a><br>→&nbsp; (vide)&nbsp;&n' +
+      'bsp; deux formes : juste pour le français<br><a href="ex:82">{plural %n%: objet|objets' +
       '|objetses}</a><br>→&nbsp; (vide)&nbsp;&nbsp; trois formes : faux pour le français</tt>' +
       '</small></p>',
     '<p>Les deux n''impriment rien, et le panneau les traite différemment : le premier ne t' +
@@ -4663,7 +4877,7 @@ const
       'mes fait vraiment.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — le compte vient d''un <c' +
       'ode>#set</code>, et cela retire à chaque mention</h3>',
-    '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#set %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' objet|objets}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Regardez ce qui a survécu : <b>le nombre a été imprimé et pas le substantif.</b> Le' +
       ' compte doit être un nombre au moment où la forme est prise, et un <code>#set</code> d' +
@@ -4673,13 +4887,13 @@ const
       'e plutôt tomber le mot.</p>',
     '<p><code>#def</code> se comporte autrement et déploie sa valeur une fois par rendu ; l' +
       'a place du compte reçoit donc un nombre :</p>',
-    '<p><small><tt><a href="ex:64">#def %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#def %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' objet|objets}</a><br>→&nbsp; 1 objet</tt></small></p>',
     '<p>Pour celui-là il n''y a aucune ligne dans le panneau. D''où la règle : faites du co' +
       'mpte un chiffre simple ou un <code>#def</code>, jamais un <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — des crochets dan' +
       's les formes</h3>',
-    '<p><small><tt><a href="ex:65">{plural %n%: {objet|chose}|objets}</a><br>→&nbsp; ｛plura' +
+    '<p><small><tt><a href="ex:85">{plural %n%: {objet|chose}|objets}</a><br>→&nbsp; ｛plura' +
       'l %n%: ｛objet|chose｝|objets｝</tt></small></p>',
     '<p>Les formes sont du texte simple. Un choix à l''intérieur n''est pas déployé, et c''' +
       'est la construction entière qui est imprimée en larges accolades.</p>',
@@ -4687,7 +4901,7 @@ const
     '<h2 id="permutations">Brassages</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — clé inconnue d' +
       'ans le réglage</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:86">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Les clés connues sont <code>minsize</code>, <code>maxsize</code>, <code>sep</code> ' +
       'et <code>lastsep</code>. Une clé inconnue n''est pas un réglage — et quand elle est la' +
@@ -4695,7 +4909,7 @@ const
       'arateur entre les morceaux, ce que montre la sortie.</p>',
     '<p><b>S''il y a une vraie clé à côté, l''issue est tout autre</b>, et c''est la faute ' +
       'la plus probable — une clé sur plusieurs mal tapée :</p>',
-    '<p><small><tt><a href="ex:67">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:87">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Le bloc est un réglage, <code>sep</code> est suivi, la clé inconnue simplement lais' +
       'sée tomber, et le panneau dit la même chose dans les deux cas. Le diagnostic vous dit ' +
@@ -4703,13 +4917,13 @@ const
       'e. Pour cela, lisez la sortie.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize n''est pas un entier</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;minsize=deux&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:88">[&lt;minsize=deux&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Une valeur non numérique tombe avec sa limite, et c''est la valeur par défaut qui v' +
       'aut — à savoir tous les morceaux.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize n''est pas un entier</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;maxsize=beaucoup&gt;a|b|c]</a><br>→&nbsp; B c a</tt' +
+    '<p><small><tt><a href="ex:89">[&lt;maxsize=beaucoup&gt;a|b|c]</a><br>→&nbsp; B c a</tt' +
       '></small></p>',
     '<p>Exactement la même chose de l''autre bout : la limite haute disparaît, et la sortie' +
       ' contient de nouveau chaque morceau.</p>',
@@ -4750,8 +4964,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Un silence dans toutes les langues : les abréviations</h2>',
     '<h3 id="abbreviations-0">Une abréviation laisse le mot suivant en minuscule</h3>',
-    '<p><small><tt><a href="ex:70">Dr. nos prix sont bas</a><br>→&nbsp; Dr. nos prix sont b' +
-      'as<br><a href="ex:71">Xyz. nos prix sont bas</a><br>→&nbsp; Xyz. Nos prix sont bas</tt' +
+    '<p><small><tt><a href="ex:90">Dr. nos prix sont bas</a><br>→&nbsp; Dr. nos prix sont b' +
+      'as<br><a href="ex:91">Xyz. nos prix sont bas</a><br>→&nbsp; Xyz. Nos prix sont bas</tt' +
       '></small></p>',
     '<p>Deux lignes qui diffèrent d''un mot, et le second mot de chacune vous donne la règl' +
       'e : après <code>Dr.</code> la phrase reste en minuscule, après <code>Xyz.</code> elle ' +
@@ -4780,15 +4994,15 @@ const
       'mage, et <code>c.-à-d.</code> en ressort cassé.</p>',
     '<hr>',
     '<h2 id="correct">À quoi ressemble la forme correcte</h2>',
-    '<p><small><tt><a href="ex:72">un prix {bon|cher}</a><br>→&nbsp; Un prix bon</tt></smal' +
+    '<p><small><tt><a href="ex:92">un prix {bon|cher}</a><br>→&nbsp; Un prix bon</tt></smal' +
       'l></p>',
-    '<p><small><tt><a href="ex:73">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:93">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">#set %vip% = 1</a><br><a href="ex:74">{?vip?pour vous|po' +
+    '<p><small><tt><a href="ex:94">#set %vip% = 1</a><br><a href="ex:94">{?vip?pour vous|po' +
       'ur tous}</a><br>→&nbsp; Pour vous</tt></small></p>',
-    '<p><small><tt><a href="ex:75">#set %n% = 5</a><br><a href="ex:75">%n% {plural %n%: art' +
+    '<p><small><tt><a href="ex:95">#set %n% = 5</a><br><a href="ex:95">%n% {plural %n%: art' +
       'icle|articles}</a><br>→&nbsp; 5 articles</tt></small></p>',
-    '<p><small><tt><a href="ex:76">avant /# une note #/ après</a><br>→&nbsp; Avant après</t' +
+    '<p><small><tt><a href="ex:96">avant /# une note #/ après</a><br>→&nbsp; Avant après</t' +
       't></small></p>',
     '<p>Cinq constructions, cinq lignes propres : un choix, un brassage avec réglages, une ' +
       'condition, une forme de nombre avec un nombre devant, et un commentaire. Aucune ne met' +
@@ -4805,7 +5019,7 @@ const
       'osent de lettres latines, de chiffres et du tiret bas. <code>%café%</code> n''est pas ' +
       'du tout une mention de variable — le moteur le lit comme du texte et ne dit rien, parc' +
       'e que de son point de vue il n''y a rien à signaler :</p>',
-    '<p><small><tt><a href="ex:77">bonjour %café% et %nom%</a><br>→&nbsp; Bonjour %café% et' +
+    '<p><small><tt><a href="ex:97">bonjour %café% et %nom%</a><br>→&nbsp; Bonjour %café% et' +
       ' %nom%</tt></small></p>',
     '<p>Les deux sont passés intacts, et c''est le piège : seul le second a tiré une ligne ' +
       'dans le panneau. Le premier est silencieux ; rien ne vous dit donc qu''il ne sera jama' +
@@ -5120,7 +5334,10 @@ const
       'uieto mientras usted trabaja.</p>',
     '<p><code>locale</code> decide las formas de número, y es el selector encima de la mita' +
       'd derecha, no el idioma de la interfaz. El español y el inglés piden dos formas; el ru' +
-      'so, el ucraniano, el bielorruso, el serbio, el croata y el bosnio piden tres.</p>',
+      'so, el ucraniano, el bielorruso, el serbio, el croata y el bosnio piden tres; el árabe' +
+      ' pide seis. Bajo el árabe y el hebreo, además, cambia cómo una conjunción une una list' +
+      'a (véase el separador). Los ejemplos en árabe y en hebreo de más abajo están medidos b' +
+      'ajo su propia locale, que nombra la frase anterior a cada uno de ellos.</p>',
     '<h2 id="choices">Elecciones</h2>',
     '<p>Llaves con <code>|</code> en medio: el motor toma <b>una</b>.</p>',
     '<p><small><tt><a href="ex:1">Una sala {pequeña|grande}.</a><br>→&nbsp; Una sala pequeñ' +
@@ -5171,37 +5388,66 @@ const
     '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" y "&gt;rojo|verde|azul]</a><br>→&' +
       'nbsp; Verde, azul y rojo</tt></small></p>',
     '<p><code>sep</code> va entre los trozos y <code>lastsep</code> antes del último.</p>',
+    '<p>Un separador hecho solo de letras recibe un espacio a cada lado aunque no se haya t' +
+      'ecleado ninguno:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="y"&gt;A|B]</a><br>→&nbsp; B y A</tt></small' +
+      '></p>',
+    '<p>Las escrituras que no ponen espacios entre las palabras son la excepción, bajo cual' +
+      'quier locale: los separadores chinos, japoneses, tailandeses, laosianos, jemeres y bir' +
+      'manos se unen sin espacio.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>El árabe y el hebreo tienen una regla propia, y quien la activa es la <b>locale</b>' +
+      ', no la escritura. Bajo <code>ar</code>, un separador que es exactamente و o ف conserv' +
+      'a el espacio de delante y pierde el de detrás, porque el árabe escribe la conjunción u' +
+      'nida a la palabra siguiente; bajo <code>he</code> vale lo mismo para ו. Solo ocurre de' +
+      'lante de una palabra en esa escritura: delante de un nombre latino o de una cifra se q' +
+      'uedan los dos espacios:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Bajo cualquier otra locale la conjunción sigue siendo una palabra aparte, que es lo' +
+      ' correcto para el persa y el urdu, donde la misma letra se escribe separada:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Cuántos</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;rojo|verde|azul]</a><br>→&nbs' +
-      'p; Verde azul</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;rojo|verde|azul]</a><br>→&nb' +
+      'sp; Verde azul</tt></small></p>',
     '<p><code>minsize</code> es el suelo y <code>maxsize</code> el techo; la cantidad entre' +
       ' ambos es aleatoria, como el orden. Valores iguales toman exactamente esos. <b>Sin nin' +
       'guno de los dos, todos; pero con solo <code>maxsize</code> el suelo queda en uno</b>, ' +
       'lo cual sorprende:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Tres trozos, un techo de tres, y salió uno. Escriba también <code>minsize</code> cu' +
       'ando quiera decir «todos, como mucho tres». Un <code>maxsize</code> mayor que el númer' +
       'o de trozos se rebaja calladamente a ese número. Un <code>minsize</code> mayor que el ' +
       '<code>maxsize</code> se acepta sin decir palabra, y gana el suelo: el techo se sube ha' +
       'sta él y no al revés:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;rojo|verde|azul]</a><br>→&nb' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;rojo|verde|azul]</a><br>→&nb' +
       'sp; Verde azul rojo</tt></small></p>',
     '<h3 id="shuffles-2">Un separador entre dos trozos</h3>',
     '<p>Un <code>&lt;…&gt;</code> escrito <b>entre</b> dos trozos es el separador de esa pa' +
       'reja.</p>',
-    '<p><small><tt><a href="ex:12">[rojo|verde&lt;y&gt;|azul]</a><br>→&nbsp; Verde y azul r' +
+    '<p><small><tt><a href="ex:25">[rojo|verde&lt;y&gt;|azul]</a><br>→&nbsp; Verde y azul r' +
       'ojo</tt></small></p>',
     '<p>Pertenece al trozo <b>posterior</b> y viaja con él por la baraja, así que asoma don' +
       'de caiga ese trozo y no en un sitio fijo de la salida. Un <code>&lt;…&gt;</code> tras ' +
       'el <b>último</b> trozo no es separador en absoluto y se imprime como texto:</p>',
-    '<p><small><tt><a href="ex:13">[rojo|verde|azul&lt;y&gt;]</a><br>→&nbsp; Verde azul&lt;' +
+    '<p><small><tt><a href="ex:26">[rojo|verde|azul&lt;y&gt;]</a><br>→&nbsp; Verde azul&lt;' +
       'y&gt; rojo</tt></small></p>',
     '<h2 id="macros">Macros</h2>',
     '<p><code>#set</code> da nombre a un trozo de texto. El nombre se usa como <code>%nombr' +
       'e%</code>, y la directiva debe ser lo primero de su línea: se permiten espacios y tabu' +
       'ladores delante, nada más.</p>',
-    '<p><small><tt><a href="ex:14">#set %ciudad% = Madrid</a><br><a href="ex:14">Vuelo a %c' +
+    '<p><small><tt><a href="ex:27">#set %ciudad% = Madrid</a><br><a href="ex:27">Vuelo a %c' +
       'iudad%.</a><br>→&nbsp; Vuelo a Madrid.</tt></small></p>',
     '<p>Los nombres se componen de letras latinas, cifras y <code>_</code>. Un nombre en ot' +
       'ro alfabeto no es un nombre, de lo que habla el otro documento bajo <code>set.malforme' +
@@ -5211,9 +5457,9 @@ const
       '>',
     '<p>Esa es toda la diferencia entre los dos, y solo se ve cuando el valor contiene una ' +
       'elección.</p>',
-    '<p><small><tt><a href="ex:15">#set %eleccion% = {A|B}</a><br><a href="ex:15">%eleccion' +
+    '<p><small><tt><a href="ex:28">#set %eleccion% = {A|B}</a><br><a href="ex:28">%eleccion' +
       '% %eleccion% %eleccion%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %eleccion% = {A|B}</a><br><a href="ex:16">%eleccion' +
+    '<p><small><tt><a href="ex:29">#def %eleccion% = {A|B}</a><br><a href="ex:29">%eleccion' +
       '% %eleccion% %eleccion%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Los dos ejemplos corrieron bajo la misma semilla. <code>#set</code> guarda la plant' +
       'illa y la tira en cada uso; <code>#def</code> tira una vez y se queda con la respuesta' +
@@ -5224,11 +5470,11 @@ const
       'aberlo antes de concluir, desde un solo avance, que una definición no funciona.</p>',
     '<h2 id="conditions">Condiciones</h2>',
     '<p><code>{?nombre?entonces|si no}</code> pregunta si una macro tiene valor.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?tenemos %n%|nada' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?tenemos %n%|nada' +
       ' aún}</a><br>→&nbsp; Tenemos 5</tt></small></p>',
     '<p>La mitad <code>si no</code> puede faltar: <code>{?nombre?entonces}</code> no imprim' +
       'e nada cuando la respuesta es no. Un <code>!</code> da la vuelta a la pregunta:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?desconocido' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?desconocido' +
       '|amigo}</a><br>→&nbsp; Amigo</tt></small></p>',
     '<p>Tener valor significa tener <b>al menos un carácter que no sea un espacio</b>. Una ' +
       'macro puesta a nada, o solo a espacios, cuenta como sin valor.</p>',
@@ -5237,9 +5483,9 @@ const
       'ierte un nombre que empieza por cifra.</p>',
     '<h2 id="counting">Cuenta</h2>',
     '<p><code>{plural %n%: …}</code> toma la forma de palabra que va con un número.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: arc' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: arc' +
       'hivo|archivos}</a><br>→&nbsp; 1 archivo</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: arc' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: arc' +
       'hivo|archivos}</a><br>→&nbsp; 5 archivos</tt></small></p>',
     '<p>La cuenta aquí es un <code>#def</code> y no un <code>#set</code>, a propósito, y la' +
       ' regla merece guardarse: <b>haga que la cuenta sea una cifra simple o un <code>#def</c' +
@@ -5248,18 +5494,35 @@ const
       'ro, por tanto—, de modo que la construcción entera no produce nada y el panel dice <co' +
       'de>plural.count-macro</code>. La cuenta y la forma no pueden contradecirse: lo que des' +
       'aparece es la palabra.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' archivo|archivos}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Cuántas formas hay lo decide la locale y no usted: bajo <code>es</code> son dos, ba' +
-      'jo <code>ru</code> tres. El número equivocado es un error que el panel señala (<code>p' +
-      'lural.arity</code>), y el motor reimprime entonces la construcción entera con las llav' +
-      'es cambiadas por unas anchas <code>｛｝</code>, para que no se confunda con la salida.</' +
-      'p>',
+      'jo <code>ru</code> tres, bajo <code>ar</code> seis, en el orden zero, one, two, few, m' +
+      'any, other. El árabe dice «un libro» y «dos libros» sin numeral, así que el número va ' +
+      '<b>dentro</b> de las formas que lo imprimen y no delante del bloque:</p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>El número equivocado es un error que el panel señala (<code>plural.arity</code>), y' +
+      ' el motor reimprime entonces la construcción entera con las llaves cambiadas por unas ' +
+      'anchas <code>｛｝</code>, para que no se confunda con la salida.</p>',
     '<h2 id="fragments">Fragmentos</h2>',
     '<p><code>#include "nombre"</code> pone otra plantilla en ese punto, y la directiva deb' +
       'e ser lo primero de su línea; también aquí se permiten espacios y tabuladores delante.' +
       '</p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Bienvenido a Acme.</tt><' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Bienvenido a Acme.</tt><' +
       '/small></p>',
     '<p>El fragmento se renderiza como plantilla propia, así que una elección dentro de él ' +
       'se hace de nuevo: <code>intro</code> contiene <code>{Acme|Globex}</code> y responde co' +
@@ -5272,7 +5535,7 @@ const
     '<h3 id="fragments-0">Un fragmento no ve sus macros</h3>',
     '<p>Se renderiza como plantilla propia: tiene los valores de la sesión, pero no los <co' +
       'de>#set</code> ni los <code>#def</code> del documento que lo trajo.</p>',
-    '<p><small><tt><a href="ex:23">#set %marca% = Acme</a><br><a href="ex:23">#include "sho' +
+    '<p><small><tt><a href="ex:42">#set %marca% = Acme</a><br><a href="ex:42">#include "sho' +
       'ut"</a><br>→&nbsp; La %marca% está aquí.</tt></small></p>',
     '<p><code>shout</code> vale <code>La %marca% está aquí.</code>, y el nombre ha de defin' +
       'irse en el fragmento mismo. Esto no es un silencio —el panel sí dice <code>variable.un' +
@@ -5283,7 +5546,7 @@ const
     '<h2 id="remarks">Comentarios</h2>',
     '<p><code>/# … #/</code> es un comentario: todo lo que hay entre las marcas se quita an' +
       'tes que cualquier otra cosa.</p>',
-    '<p><small><tt><a href="ex:24">borrador /# no seguro de esto #/ listo</a><br>→&nbsp; Bo' +
+    '<p><small><tt><a href="ex:43">borrador /# no seguro de esto #/ listo</a><br>→&nbsp; Bo' +
       'rrador listo</tt></small></p>',
     '<p>Los comentarios no se anidan. El primer <code>#/</code> cierra el comentario, hubie' +
       'ra lo que hubiera antes, así que un comentario envuelto alrededor de un texto que cont' +
@@ -5292,7 +5555,7 @@ const
     '<p>La salida no es del todo el texto que produjeron las construcciones. Al final le pa' +
       'san varias cosas; dos se encuentra usted a diario.</p>',
     '<p>La primera letra de cada oración se pone en mayúscula:</p>',
-    '<p><small><tt><a href="ex:25">uno. dos. tres.</a><br>→&nbsp; Uno. Dos. Tres.</tt></sma' +
+    '<p><small><tt><a href="ex:44">uno. dos. tres.</a><br>→&nbsp; Uno. Dos. Tres.</tt></sma' +
       'll></p>',
     '<p>Por eso los ejemplos de esta ayuda responden tan a menudo con mayúscula donde la pl' +
       'antilla lleva minúscula. Un punto tras una abreviatura que el motor conoce no termina ' +
@@ -5300,15 +5563,15 @@ const
       'de> —letra, punto, letra, punto— en <b>cualquier alfabeto</b>: la comprobación de «est' +
       'o es mitad de palabra» lee todas las escrituras, y <code>т.е.</code> queda protegido e' +
       'xactamente igual que <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:26">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:45">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:27">etc. nuestros precios son bajos</a><br>→&nbsp; etc. nues' +
+    '<p><small><tt><a href="ex:46">etc. nuestros precios son bajos</a><br>→&nbsp; etc. nues' +
       'tros precios son bajos</tt></small></p>',
-    '<p><small><tt><a href="ex:28">Sr. nuestros precios son bajos</a><br>→&nbsp; Sr. nuestr' +
+    '<p><small><tt><a href="ex:47">Sr. nuestros precios son bajos</a><br>→&nbsp; Sr. nuestr' +
       'os precios son bajos</tt></small></p>',
     '<p>Cualquier otra palabra termina una oración, por corta que sea: la longitud no tiene' +
       ' nada que ver:</p>',
-    '<p><small><tt><a href="ex:29">Xyz. nuestros precios son bajos</a><br>→&nbsp; Xyz. Nues' +
+    '<p><small><tt><a href="ex:48">Xyz. nuestros precios son bajos</a><br>→&nbsp; Xyz. Nues' +
       'tros precios son bajos</tt></small></p>',
     '<p>La lista que el motor conoce tiene 46 entradas, <b>29 de ellas cirílicas</b>, y el ' +
       'otro documento la recorre bajo <b>Un silencio en todos los idiomas</b>. Para el españo' +
@@ -5325,8 +5588,8 @@ const
       ' se escriba <code>uno.dos</code> o <code>сайт.рф</code>. Y un comienzo protegido no es' +
       ' comienzo de oración para la mayúscula —por eso <code>uno.dos</code> más abajo sale in' +
       'tacto, minúscula incluida.</p>',
-    '<p><small><tt><a href="ex:30">hola , mundo</a><br>→&nbsp; Hola, mundo</tt></small></p>',
-    '<p><small><tt><a href="ex:31">uno.dos</a><br>→&nbsp; uno.dos</tt></small></p>',
+    '<p><small><tt><a href="ex:49">hola , mundo</a><br>→&nbsp; Hola, mundo</tt></small></p>',
+    '<p><small><tt><a href="ex:50">uno.dos</a><br>→&nbsp; uno.dos</tt></small></p>',
     '<h2 id="silences">Silencios</h2>',
     '<p>Cada caso de abajo se renderiza, produce algo distinto de lo que aparenta y no prov' +
       'oca <b>ningún diagnóstico</b>. Están reunidos aquí porque nada más en la ventana va a ' +
@@ -5337,43 +5600,43 @@ const
       'de>Prof.</code> y <code>etc.</code> de arriba—, mientras que <code>Sra.</code>, <code>' +
       'núm.</code> y <code>pág.</code> terminan una oración y ponen en mayúscula la palabra s' +
       'iguiente:</p>',
-    '<p><small><tt><a href="ex:32">pág. nuestros precios son bajos</a><br>→&nbsp; Pág. Nues' +
+    '<p><small><tt><a href="ex:51">pág. nuestros precios son bajos</a><br>→&nbsp; Pág. Nues' +
       'tros precios son bajos</tt></small></p>',
     '<p><code>p. ej.</code>, con su espacio, atraviesa el retoque sin daño, lo cual vale má' +
       's mostrarlo que explicarlo:</p>',
-    '<p><small><tt><a href="ex:33">p. ej. esto sigue en minúscula</a><br>→&nbsp; p. ej. est' +
+    '<p><small><tt><a href="ex:52">p. ej. esto sigue en minúscula</a><br>→&nbsp; p. ej. est' +
       'o sigue en minúscula</tt></small></p>',
     '<p>Escrito junto, <code>p.ej.</code>, se protege a sí mismo por la regla de los varios' +
       ' puntos, pero la palabra que sigue ya no:</p>',
-    '<p><small><tt><a href="ex:34">p.ej. esto sigue en minúscula</a><br>→&nbsp; p.ej. Esto ' +
+    '<p><small><tt><a href="ex:53">p.ej. esto sigue en minúscula</a><br>→&nbsp; p.ej. Esto ' +
       'sigue en minúscula</tt></small></p>',
     '<p><b>Un <code>#include</code> que no está solo en su línea es texto corriente.</b></p' +
       '>',
-    '<p><small><tt><a href="ex:35">Antes. #include "intro"</a><br>→&nbsp; Antes. #include "' +
+    '<p><small><tt><a href="ex:54">Antes. #include "intro"</a><br>→&nbsp; Antes. #include "' +
       'intro"</tt></small></p>',
     '<p>Lo mismo vale para una directiva con algo detrás y para <code>#include"intro"</code' +
       '> sin espacio. La regla es de la familia y no de este motor, y es lo que hace reconoci' +
       'ble una directiva sin analizar la línea entera.</p>',
     '<p><b>Una condición cuyo nombre empieza por cifra no es una condición.</b> Se conviert' +
       'e en una elección corriente entre <code>?1x?sí</code> y <code>no</code>:</p>',
-    '<p><small><tt><a href="ex:36">{?1x?sí|no}</a><br>→&nbsp; ?1x? Sí</tt></small></p>',
+    '<p><small><tt><a href="ex:55">{?1x?sí|no}</a><br>→&nbsp; ?1x? Sí</tt></small></p>',
     '<p><b>Un <code>&lt;…&gt;</code> a la cabeza de un trozo que no es el primero no es un ' +
       'separador</b> y se imprime tal cual:</p>',
-    '<p><small><tt><a href="ex:37">[rojo|&lt;y&gt;verde]</a><br>→&nbsp; &lt;y&gt;Verde rojo' +
+    '<p><small><tt><a href="ex:56">[rojo|&lt;y&gt;verde]</a><br>→&nbsp; &lt;y&gt;Verde rojo' +
       '</tt></small></p>',
     '<p>El bloque a la cabeza del <b>primer</b> trozo sí es el separador: es la escritura c' +
       'on que empieza el capítulo de las barajas:</p>',
-    '<p><small><tt><a href="ex:38">[&lt;y&gt;rojo|verde]</a><br>→&nbsp; Verde y rojo</tt></' +
+    '<p><small><tt><a href="ex:57">[&lt;y&gt;rojo|verde]</a><br>→&nbsp; Verde y rojo</tt></' +
       'small></p>',
     '<p>En cualquier sitio tras un <code>|</code> es texto corriente, y un separador entre ' +
       'dos trozos va al <b>final</b> del primero.</p>',
     '<p><b>Una etiqueta desnuda al final de un trozo se toma por el separador de esa pareja' +
       '</b> y se imprime como texto propio:</p>',
-    '<p><small><tt><a href="ex:39">[uno&lt;br&gt;|dos]</a><br>→&nbsp; Dos uno</tt></small><' +
+    '<p><small><tt><a href="ex:58">[uno&lt;br&gt;|dos]</a><br>→&nbsp; Dos uno</tt></small><' +
       '/p>',
     '<p>Bajo esta semilla los dos cayeron en el otro orden, así que el separador no salió e' +
       'n absoluto. Con un tercer trozo hay dónde caer, y aparece:</p>',
-    '<p><small><tt><a href="ex:40">[rojo|verde&lt;br&gt;|azul]</a><br>→&nbsp; Verde br azul' +
+    '<p><small><tt><a href="ex:59">[rojo|verde&lt;br&gt;|azul]</a><br>→&nbsp; Verde br azul' +
       ' rojo</tt></small></p>',
     '<p>El <code>&lt;br&gt;</code> se coloca entre <code>verde</code> y lo que le siga, don' +
       'dequiera que la baraja ponga esa pareja. Una etiqueta de cierre (<code>&lt;/b&gt;</cod' +
@@ -5381,12 +5644,12 @@ const
       '="x"&gt;</code>) y una etiqueta en mitad de un trozo quedan todas intactas.</p>',
     '<p><b>Un comentario sin cerrar es texto corriente</b>: no abre nada, y el <code>/#</co' +
       'de> se imprime:</p>',
-    '<p><small><tt><a href="ex:41">antes /# el resto de esto</a><br>→&nbsp; Antes /# el res' +
+    '<p><small><tt><a href="ex:60">antes /# el resto de esto</a><br>→&nbsp; Antes /# el res' +
       'to de esto</tt></small></p>',
     '<p>Pero sigue siendo la mitad de una pareja. Si más abajo en el documento aparece un <' +
       'code>#/</code>, los dos se encuentran y todo lo que hay entre ellos se va, incluido lo' +
       ' que el autor escribiera en medio:</p>',
-    '<p><small><tt><a href="ex:42">{a /# ups|b} medio #/ cola</a><br>→&nbsp; {a cola</tt></' +
+    '<p><small><tt><a href="ex:61">{a /# ups|b} medio #/ cola</a><br>→&nbsp; {a cola</tt></' +
       'small></p>',
     '<p>La elección de arriba perdió su segunda alternativa y su llave de cierre, y ningún ' +
       'diagnóstico lo dice: eso es lo que el texto SIGNIFICA, y no un fallo que el motor pued' +
@@ -5453,26 +5716,26 @@ const
       'cómo está hecha la construcción.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — un corchete se abre y nunca ' +
       'se cierra</h3>',
-    '<p><small><tt><a href="ex:43">un precio {barato|caro</a><br>→&nbsp; Un precio {barato|' +
+    '<p><small><tt><a href="ex:62">un precio {barato|caro</a><br>→&nbsp; Un precio {barato|' +
       'caro</tt></small></p>',
     '<p>El motor no adivina dónde quería usted cerrar. El texto se queda como está, llave i' +
       'ncluida, y la elección no ocurre nunca.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — cerrado por un corchete ' +
       'de otra clase</h3>',
-    '<p><small><tt><a href="ex:44">un precio {barato|caro]</a><br>→&nbsp; Un precio {barato' +
+    '<p><small><tt><a href="ex:63">un precio {barato|caro]</a><br>→&nbsp; Un precio {barato' +
       '|caro]</tt></small></p>',
     '<p><code>{</code> espera <code>}</code> y <code>[</code> espera <code>]</code>. Una ba' +
       'raja cerrada por una llave no es una baraja.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — un corch' +
       'ete de cierre sin nada abierto</h3>',
-    '<p><small><tt><a href="ex:45">un precio barato} y todo</a><br>→&nbsp; Un precio barato' +
+    '<p><small><tt><a href="ex:64">un precio barato} y todo</a><br>→&nbsp; Un precio barato' +
       '} y todo</tt></small></p>',
     '<p>Se queda ahí como texto. Casi siempre es un corchete que sobró de un cambio.</p>',
     '<hr>',
     '<h2 id="definitions">Definiciones</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — esta línea <code>#set</code> no si' +
       'gue la regla</h3>',
-    '<p><small><tt><a href="ex:46">#set ciudad = Madrid</a><br><a href="ex:46">en %ciudad%<' +
+    '<p><small><tt><a href="ex:65">#set ciudad = Madrid</a><br><a href="ex:65">en %ciudad%<' +
       '/a><br>→&nbsp; #set ciudad = Madrid ⏎ En %ciudad%</tt></small></p>',
     '<p><b>El nombre va entre signos de porcentaje:</b> <code>#set %ciudad% = Madrid</code>' +
       '. Es el primer fallo más común, y pone dos líneas de golpe en el panel: la línea malfo' +
@@ -5483,7 +5746,7 @@ const
       'do.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — esta línea <code>#def</code> no si' +
       'gue la regla</h3>',
-    '<p><small><tt><a href="ex:47">#def paginas = {1|3}</a><br><a href="ex:47">%paginas%</a' +
+    '<p><small><tt><a href="ex:66">#def paginas = {1|3}</a><br><a href="ex:66">%paginas%</a' +
       '><br>→&nbsp; #def paginas = 1 ⏎ %paginas%</tt></small></p>',
     '<p>La misma regla y el mismo precio. <code>#def</code> no se diferencia de <code>#set<' +
       '/code> en la escritura sino en <b>cuándo</b> se despliega el valor: <code>#set</code> ' +
@@ -5495,15 +5758,15 @@ const
       'una directiva.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — este nombr' +
       'e ya está definido arriba</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = primero</a><br><a href="ex:48">#set %x% = seg' +
-      'undo</a><br><a href="ex:48">%x%</a><br>→&nbsp; Segundo</tt></small></p>',
+    '<p><small><tt><a href="ex:67">#set %x% = primero</a><br><a href="ex:67">#set %x% = seg' +
+      'undo</a><br><a href="ex:67">%x%</a><br>→&nbsp; Segundo</tt></small></p>',
     '<p>Funciona —gana la <b>última</b> definición—, pero el motor lo llama error: un docum' +
       'ento donde un nombre se pone dos veces se lee de manera ambigua, y dentro de un mes us' +
       'ted no recordará cuál de las dos líneas es la viva. El error señala la <b>segunda</b> ' +
       'definición; la primera está más arriba.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> dentro del valor de una definición</h3>',
-    '<p><small><tt><a href="ex:49">#def %x% = #include "frag"</a><br><a href="ex:49">%x%</a' +
+    '<p><small><tt><a href="ex:68">#def %x% = #include "frag"</a><br><a href="ex:68">%x%</a' +
       '><br>→&nbsp; Fragmento</tt></small></p>',
     '<p>Una inclusión dentro de un valor se despliega en otro momento del que usted esperar' +
       'ía, y la familia lo prohíbe. Ponga el <code>#include</code> en una línea propia.</p>',
@@ -5511,7 +5774,7 @@ const
     '<h2 id="variables">Variables</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — esta variable no está de' +
       'finida en ninguna parte</h3>',
-    '<p><small><tt><a href="ex:50">hola, %nombre%</a><br>→&nbsp; Hola, %nombre%</tt></small' +
+    '<p><small><tt><a href="ex:69">hola, %nombre%</a><br>→&nbsp; Hola, %nombre%</tt></small' +
       '></p>',
     '<p>Un aviso y no un error: el motor imprime el nombre tal cual. Es deliberado, porque ' +
       'el valor puede venir de fuera, del anfitrión. En Studio esos valores se aportan en la ' +
@@ -5547,7 +5810,7 @@ const
       'r de grupos. El valor que usted ya haya escrito entra como su primera posibilidad:</li' +
       '>',
     '</ul>',
-    '<p><small><tt><a href="ex:51">#set %marca% = {Vulkan}</a><br><a href="ex:51">casino %m' +
+    '<p><small><tt><a href="ex:70">#set %marca% = {Vulkan}</a><br><a href="ex:70">casino %m' +
       'arca%</a><br>→&nbsp; Casino Vulkan</tt></small></p>',
     '<p>La diferencia entre ambos es qué sobrevive al cerrar la ventana. Un valor de sesión' +
       ' no: no está en el archivo, no está en git, y ningún otro motor de la familia lo ve. U' +
@@ -5560,7 +5823,7 @@ const
       'umna: entonces las llaves y los signos de porcentaje siguen siendo caracteres.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — la definición ' +
       'se nombra a sí misma</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:71">#set %x% = a %x% b</a><br><a href="ex:71">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Cincuenta niveles y parada. El motor despliega hasta el límite de profundidad y se ' +
       'detiene, dejando <code>%x%</code> en medio. No es un bucle, y tampoco es lo que usted ' +
@@ -5571,8 +5834,8 @@ const
       'r contiene una más de cada.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — las de' +
       'finiciones se nombran en círculo</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = %y%</a><br><a href="ex:53">#set %y% = %x%</a>' +
-      '<br><a href="ex:53">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %x% = %y%</a><br><a href="ex:72">#set %y% = %x%</a>' +
+      '<br><a href="ex:72">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Cada lado se despliega exactamente <b>una vez</b> y se para: <code>%x%</code> se vo' +
       'lvió <code>%y%</code> y no <code>%x%</code>. El motor desenrolla el círculo en vez de ' +
       'recorrerlo, y lo que sobrevive es el otro nombre del círculo: ponga <code>%x% %y%</cod' +
@@ -5593,9 +5856,9 @@ const
     '<hr>',
     '<h2 id="includes">Inclusiones</h2>',
     '<h3 id="includes-0"><code>#include</code> solo funciona al principio de línea</h3>',
-    '<p><small><tt><a href="ex:54">antes #include "frag" después</a><br>→&nbsp; Antes #incl' +
+    '<p><small><tt><a href="ex:73">antes #include "frag" después</a><br>→&nbsp; Antes #incl' +
       'ude "frag" después</tt></small></p>',
-    '<p><small><tt><a href="ex:55">#include "frag"</a><br>→&nbsp; Fragmento</tt></small></p' +
+    '<p><small><tt><a href="ex:74">#include "frag"</a><br>→&nbsp; Fragmento</tt></small></p' +
       '>',
     '<p>Ningún diagnóstico, y en eso consiste: un <code>#include</code> en mitad de una lín' +
       'ea <b>no</b> es una inclusión. El motor lo lee como texto corriente y no dice nada, po' +
@@ -5603,7 +5866,7 @@ const
     '<p><b>La diana sí puede estar una línea más abajo</b>, y eso sorprende por el otro lad' +
       'o. El hueco que el motor permite entre la palabra y su diana incluye los saltos de lín' +
       'ea, así que esto es una inclusión y funciona:</p>',
-    '<p><small><tt><a href="ex:56">#include</a><br><a href="ex:56">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:75">#include</a><br><a href="ex:75">"frag"</a><br>→&nbsp; Fr' +
       'agmento</tt></small></p>',
     '<p>Las líneas en blanco en medio también valen. Lo demás no vale: una palabra antes de' +
       ' la diana o cualquier cosa que no sean espacios detrás, y el conjunto vuelve a ser tex' +
@@ -5611,7 +5874,7 @@ const
       ' que la diana llega: no promete una directiva cuyo final aún no ve.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — no hay diana con' +
       ' ese nombre en el juego</h3>',
-    '<p><small><tt><a href="ex:57">#include "ninguno"</a><br>→&nbsp; (vacío)</tt></small></' +
+    '<p><small><tt><a href="ex:76">#include "ninguno"</a><br>→&nbsp; (vacío)</tt></small></' +
       'p>',
     '<p>Las dianas son los archivos <code>.spintax</code> de la carpeta del documento abier' +
       'to. Una diana desconocida se despliega a nada: el párrafo desaparece en vez de rompers' +
@@ -5628,7 +5891,7 @@ const
       'hivo de verdad no está en ella.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — la diana existe, con otr' +
       'as mayúsculas</h3>',
-    '<p><small><tt><a href="ex:58">#include "intro"</a><br>→&nbsp; (vacío)</tt></small></p>',
+    '<p><small><tt><a href="ex:77">#include "intro"</a><br>→&nbsp; (vacío)</tt></small></p>',
     '<p>El juego contiene <code>Intro.spintax</code>, y aun así el motor dice que no hay di' +
       'ana con ese nombre, mientras Studio añade su nota sobre las mayúsculas. Importan: <cod' +
       'e>intro</code> e <code>Intro</code> son dianas distintas. Windows abriría el archivo d' +
@@ -5637,7 +5900,7 @@ const
     '<h3 id="note.cycle"><code>note.cycle</code> — una inclusión en círculo</h3>',
     '<p>Si <code>loop.spintax</code> contiene a su vez <code>#include "loop"</code>, entonc' +
       'es:</p>',
-    '<p><small><tt><a href="ex:59">#include "loop"</a><br>→&nbsp; (vacío)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "loop"</a><br>→&nbsp; (vacío)</tt></small></p>',
     '<p>El motor sustituye nada en lugar del infinito. La nota está para que usted sepa por' +
       ' qué el párrafo se esfumó.</p>',
     '<p>La fila va contra <b><code>loop</code></b> y no contra el documento que usted mira:' +
@@ -5648,19 +5911,22 @@ const
     '<h2 id="plurals">Formas de número</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — no hay tantas formas como pide la lo' +
       'cale</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = 5</a><br><a href="ex:60">%n% {plural %n%: obj' +
+    '<p><small><tt><a href="ex:79">#set %n% = 5</a><br><a href="ex:79">%n% {plural %n%: obj' +
       'eto|objetos|objetoses}</a><br>→&nbsp; 5 ｛plural 5: objeto|objetos|objetoses｝</tt></sma' +
       'll></p>',
     '<p><b>No es vacío: el motor imprime la construcción entera</b>, con las llaves cambiad' +
       'as por unas anchas <code>｛｝</code>. Así dice «he visto esto y no he podido aplicarlo».' +
       ' Nadie lo llamaría discreto, y mejor así: un párrafo esfumado en silencio costaría más' +
       ' de encontrar.</p>',
-    '<p>El español pide dos formas, el ruso tres. Bajo la locale de este documento la corre' +
-      'cta es <code>{plural %n%: objeto|objetos}</code>.</p>',
+    '<p>El español pide dos formas, el ruso tres, el árabe seis. Bajo la locale de este doc' +
+      'umento la correcta es <code>{plural %n%: objeto|objetos}</code>; bajo <code>ar</code> ' +
+      'esas mismas dos formas son el error:</p>',
+    '<p><small><tt><a href="ex:80">#def %n% = 5</a><br><a href="ex:80">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>El vacío viene por otra causa, y las dos se confunden con facilidad.</b> Compare' +
       ' estas dos, que solo se diferencian en cuántas formas llevan:</p>',
-    '<p><small><tt><a href="ex:61">{plural %n%: objeto|objetos}</a><br>→&nbsp; (vacío)&nbsp' +
-      ';&nbsp; dos formas: correcto para el español<br><a href="ex:62">{plural %n%: objeto|ob' +
+    '<p><small><tt><a href="ex:81">{plural %n%: objeto|objetos}</a><br>→&nbsp; (vacío)&nbsp' +
+      ';&nbsp; dos formas: correcto para el español<br><a href="ex:82">{plural %n%: objeto|ob' +
       'jetos|objetoses}</a><br>→&nbsp; (vacío)&nbsp;&nbsp; tres formas: incorrecto para el es' +
       'pañol</tt></small></p>',
     '<p>Las dos imprimen nada, y el panel las trata distinto: la primera solo saca <code>va' +
@@ -5679,7 +5945,7 @@ const
       'r, como hace el primer ejemplo, y verá lo que hace de verdad el número de formas.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — la cuenta viene de un <c' +
       'ode>#set</code>, y eso vuelve a tirar en cada mención</h3>',
-    '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#set %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' objeto|objetos}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Mire lo que sobrevivió: <b>el número se imprimió y el sustantivo no.</b> La cuenta ' +
       'ha de ser un número cuando se elige la forma, y un <code>#set</code> cuyo valor es a s' +
@@ -5688,13 +5954,13 @@ const
       'nta y la forma no pueden contradecirse; el motor deja caer la palabra en su lugar.</p>',
     '<p><code>#def</code> se comporta de otro modo y despliega su valor una vez por render,' +
       ' así que el hueco de la cuenta recibe un número:</p>',
-    '<p><small><tt><a href="ex:64">#def %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#def %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' objeto|objetos}</a><br>→&nbsp; 1 objeto</tt></small></p>',
     '<p>Para ese no hay fila ninguna en el panel. De ahí la regla: haga que la cuenta sea u' +
       'na cifra simple o un <code>#def</code>, nunca un <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — corchetes dentro' +
       ' de las formas</h3>',
-    '<p><small><tt><a href="ex:65">{plural %n%: {objeto|cosa}|objetos}</a><br>→&nbsp; ｛plur' +
+    '<p><small><tt><a href="ex:85">{plural %n%: {objeto|cosa}|objetos}</a><br>→&nbsp; ｛plur' +
       'al %n%: ｛objeto|cosa｝|objetos｝</tt></small></p>',
     '<p>Las formas son texto simple. Una elección dentro de ellas no se despliega, y lo que' +
       ' se imprime en su lugar es la construcción entera entre llaves anchas.</p>',
@@ -5702,7 +5968,7 @@ const
     '<h2 id="permutations">Barajas</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — clave desconoc' +
       'ida en el ajuste</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:86">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Las claves conocidas son <code>minsize</code>, <code>maxsize</code>, <code>sep</cod' +
       'e> y <code>lastsep</code>. Una desconocida no es un ajuste, y cuando es lo único que h' +
@@ -5710,7 +5976,7 @@ const
       'rador entre los trozos, que es lo que muestra la salida.</p>',
     '<p><b>Si hay una clave de verdad al lado, el desenlace es completamente otro</b>, y es' +
       'e es el fallo más probable: una clave de varias mal escrita:</p>',
-    '<p><small><tt><a href="ex:67">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:87">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>El bloque es un ajuste, <code>sep</code> se obedece, la clave desconocida simplemen' +
       'te se deja caer, y el panel dice lo mismo en ambos casos. El diagnóstico le dice, pues' +
@@ -5718,13 +5984,13 @@ const
       'p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize no es un número entero</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;minsize=dos&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:88">[&lt;minsize=dos&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Un valor no numérico cae junto con su límite, y vale el valor por defecto, que son ' +
       'todos los trozos.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize no es un número entero</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;maxsize=muchos&gt;a|b|c]</a><br>→&nbsp; B c a</tt><' +
+    '<p><small><tt><a href="ex:89">[&lt;maxsize=muchos&gt;a|b|c]</a><br>→&nbsp; B c a</tt><' +
       '/small></p>',
     '<p>Exactamente lo mismo por el otro extremo: el límite alto desaparece, y la salida vu' +
       'elve a contener cada trozo.</p>',
@@ -5763,8 +6029,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Un silencio en todos los idiomas: las abreviaturas</h2>',
     '<h3 id="abbreviations-0">Una abreviatura deja en minúscula la palabra siguiente</h3>',
-    '<p><small><tt><a href="ex:70">Sr. nuestros precios son bajos</a><br>→&nbsp; Sr. nuestr' +
-      'os precios son bajos<br><a href="ex:71">Xyz. nuestros precios son bajos</a><br>→&nbsp;' +
+    '<p><small><tt><a href="ex:90">Sr. nuestros precios son bajos</a><br>→&nbsp; Sr. nuestr' +
+      'os precios son bajos<br><a href="ex:91">Xyz. nuestros precios son bajos</a><br>→&nbsp;' +
       ' Xyz. Nuestros precios son bajos</tt></small></p>',
     '<p>Dos líneas que se diferencian en una palabra, y la segunda palabra de cada una le d' +
       'a la regla: tras <code>Sr.</code> la oración sigue en minúscula, tras <code>Xyz.</code' +
@@ -5793,15 +6059,15 @@ const
       'alabra siguiente se ponga en mayúscula.</p>',
     '<hr>',
     '<h2 id="correct">Qué aspecto tiene la forma correcta</h2>',
-    '<p><small><tt><a href="ex:72">un precio {barato|caro}</a><br>→&nbsp; Un precio barato<' +
+    '<p><small><tt><a href="ex:92">un precio {barato|caro}</a><br>→&nbsp; Un precio barato<' +
       '/tt></small></p>',
-    '<p><small><tt><a href="ex:73">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:93">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">#set %vip% = 1</a><br><a href="ex:74">{?vip?para usted|p' +
+    '<p><small><tt><a href="ex:94">#set %vip% = 1</a><br><a href="ex:94">{?vip?para usted|p' +
       'ara todos}</a><br>→&nbsp; Para usted</tt></small></p>',
-    '<p><small><tt><a href="ex:75">#set %n% = 5</a><br><a href="ex:75">%n% {plural %n%: art' +
+    '<p><small><tt><a href="ex:95">#set %n% = 5</a><br><a href="ex:95">%n% {plural %n%: art' +
       'ículo|artículos}</a><br>→&nbsp; 5 artículos</tt></small></p>',
-    '<p><small><tt><a href="ex:76">antes /# una nota #/ después</a><br>→&nbsp; Antes despué' +
+    '<p><small><tt><a href="ex:96">antes /# una nota #/ después</a><br>→&nbsp; Antes despué' +
       's</tt></small></p>',
     '<p>Cinco construcciones, cinco líneas limpias: una elección, una baraja con ajustes, u' +
       'na condición, una forma de número con un número delante y un comentario. Ninguna pone ' +
@@ -5818,7 +6084,7 @@ const
       'onen de letras latinas, cifras y el guion bajo. <code>%año%</code> no es en absoluto u' +
       'na mención de variable: el motor lo lee como texto y no dice nada, porque desde su pun' +
       'to de vista no hay nada que informar:</p>',
-    '<p><small><tt><a href="ex:77">hola %año% y %nombre%</a><br>→&nbsp; Hola %año% y %nombr' +
+    '<p><small><tt><a href="ex:97">hola %año% y %nombre%</a><br>→&nbsp; Hola %año% y %nombr' +
       'e%</tt></small></p>',
     '<p>Las dos pasaron intactas, y ahí está la trampa: solo la segunda sacó una fila en el' +
       ' panel. La primera es silenciosa, así que nada le avisa de que nunca se sustituirá. Cá' +
@@ -6131,8 +6397,10 @@ const
       'esta ferma mentre lavorate.</p>',
     '<p><code>locale</code> decide le forme di numero, ed è il selettore sopra la metà dest' +
       'ra, non la lingua dell''interfaccia. L''italiano e l''inglese chiedono due forme; il r' +
-      'usso, l''ucraino, il bielorusso, il serbo, il croato e il bosniaco ne chiedono tre.</p' +
-      '>',
+      'usso, l''ucraino, il bielorusso, il serbo, il croato e il bosniaco ne chiedono tre; l' +
+      '''arabo ne chiede sei. Sotto l''arabo e l''ebraico cambia anche il modo in cui una con' +
+      'giunzione unisce un elenco (vedi il separatore). Gli esempi in arabo e in ebraico più ' +
+      'sotto sono misurati sotto la loro locale, che la frase prima di ciascuno nomina.</p>',
     '<h2 id="choices">Scelte</h2>',
     '<p>Parentesi graffe con <code>|</code> in mezzo: il motore ne prende <b>una</b>.</p>',
     '<p><small><tt><a href="ex:1">Una {piccola|grande} stanza.</a><br>→&nbsp; Una piccola s' +
@@ -6183,38 +6451,67 @@ const
     '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" e "&gt;rosso|verde|blu]</a><br>→&' +
       'nbsp; Verde, blu e rosso</tt></small></p>',
     '<p><code>sep</code> va fra i pezzi e <code>lastsep</code> prima dell''ultimo.</p>',
+    '<p>Un separatore fatto solo di lettere riceve uno spazio per lato anche se non ne è st' +
+      'ato digitato nessuno:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="e"&gt;A|B]</a><br>→&nbsp; B e A</tt></small' +
+      '></p>',
+    '<p>Le scritture che non mettono spazi fra le parole fanno eccezione, sotto qualunque l' +
+      'ocale: i separatori cinesi, giapponesi, thailandesi, laotiani, khmer e birmani si unis' +
+      'cono senza spazio.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>L''arabo e l''ebraico hanno una regola propria, e ad attivarla è la <b>locale</b>, ' +
+      'non la scrittura. Sotto <code>ar</code> un separatore che sia esattamente و o ف tiene ' +
+      'lo spazio davanti e perde quello dietro, perché l''arabo scrive la congiunzione attacc' +
+      'ata alla parola seguente; sotto <code>he</code> vale lo stesso per ו. Succede solo dav' +
+      'anti a una parola in quella scrittura: davanti a un nome latino o a una cifra restano ' +
+      'entrambi gli spazi:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Sotto qualunque altra locale la congiunzione resta una parola a sé, ed è giusto cos' +
+      'ì per il persiano e l''urdu, dove la stessa lettera si scrive staccata:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Quanti</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;rosso|verde|blu]</a><br>→&nbs' +
-      'p; Verde blu</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;rosso|verde|blu]</a><br>→&nb' +
+      'sp; Verde blu</tt></small></p>',
     '<p><code>minsize</code> è il pavimento e <code>maxsize</code> il soffitto; il numero f' +
       'ra i due è casuale come l''ordine. Valori uguali ne prendono esattamente quelli. <b>Se' +
       'nza nessuno dei due, tutti; ma con il solo <code>maxsize</code> il pavimento resta a u' +
       'no</b>, cosa che sorprende:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Tre pezzi, un soffitto di tre, ed è uscito uno. Scrivete anche <code>minsize</code>' +
       ' quando intendete «tutti, al massimo tre». Un <code>maxsize</code> superiore al numero' +
       ' dei pezzi viene abbassato in silenzio a quel numero. Un <code>minsize</code> superior' +
       'e al <code>maxsize</code> è accettato senza una parola, e vince il pavimento: il soffi' +
       'tto viene alzato fino a lui e non il contrario:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;rosso|verde|blu]</a><br>→&nb' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;rosso|verde|blu]</a><br>→&nb' +
       'sp; Verde blu rosso</tt></small></p>',
     '<h3 id="shuffles-2">Un separatore fra due pezzi</h3>',
     '<p>Un <code>&lt;…&gt;</code> scritto <b>fra</b> due pezzi è il separatore di quella co' +
       'ppia.</p>',
-    '<p><small><tt><a href="ex:12">[rosso|verde&lt;e&gt;|blu]</a><br>→&nbsp; Verde e blu ro' +
+    '<p><small><tt><a href="ex:25">[rosso|verde&lt;e&gt;|blu]</a><br>→&nbsp; Verde e blu ro' +
       'sso</tt></small></p>',
     '<p>Appartiene al pezzo <b>successivo</b> e viaggia con lui nel rimescolamento, quindi ' +
       'spunta dove quel pezzo cade e non in un posto fisso dell''uscita. Un <code>&lt;…&gt;</' +
       'code> dopo l''<b>ultimo</b> pezzo non è affatto un separatore e si stampa come testo:<' +
       '/p>',
-    '<p><small><tt><a href="ex:13">[rosso|verde|blu&lt;e&gt;]</a><br>→&nbsp; Verde blu&lt;e' +
+    '<p><small><tt><a href="ex:26">[rosso|verde|blu&lt;e&gt;]</a><br>→&nbsp; Verde blu&lt;e' +
       '&gt; rosso</tt></small></p>',
     '<h2 id="macros">Macro</h2>',
     '<p><code>#set</code> dà un nome a un pezzo di testo. Il nome si usa come <code>%nome%<' +
       '/code>, e la direttiva deve essere la prima cosa della sua riga: spazi e tabulazioni d' +
       'avanti sono ammessi, nient''altro.</p>',
-    '<p><small><tt><a href="ex:14">#set %citta% = Milano</a><br><a href="ex:14">Volo per %c' +
+    '<p><small><tt><a href="ex:27">#set %citta% = Milano</a><br><a href="ex:27">Volo per %c' +
       'itta%.</a><br>→&nbsp; Volo per Milano.</tt></small></p>',
     '<p>I nomi sono fatti di lettere latine, cifre e <code>_</code>. Un nome in un altro al' +
       'fabeto non è un nome, di cui parla l''altro documento sotto <code>set.malformed</code>' +
@@ -6222,9 +6519,9 @@ const
     '<h3 id="macros-0"><code>#set</code> rilancia, <code>#def</code> estrae una volta</h3>',
     '<p>È tutta la differenza fra i due, e si vede solo quando il valore contiene una scelt' +
       'a.</p>',
-    '<p><small><tt><a href="ex:15">#set %scelta% = {A|B}</a><br><a href="ex:15">%scelta% %s' +
+    '<p><small><tt><a href="ex:28">#set %scelta% = {A|B}</a><br><a href="ex:28">%scelta% %s' +
       'celta% %scelta%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %scelta% = {A|B}</a><br><a href="ex:16">%scelta% %s' +
+    '<p><small><tt><a href="ex:29">#def %scelta% = {A|B}</a><br><a href="ex:29">%scelta% %s' +
       'celta% %scelta%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>I due esempi sono girati sotto lo stesso seme. <code>#set</code> conserva il modell' +
       'o e lo rilancia a ogni uso; <code>#def</code> estrae una volta e tiene la risposta. Us' +
@@ -6235,11 +6532,11 @@ const
       'erlo prima di concludere, da una sola anteprima, che una definizione non funziona.</p>',
     '<h2 id="conditions">Condizioni</h2>',
     '<p><code>{?nome?allora|altrimenti}</code> chiede se una macro ha un valore.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?abbiamo %n%|anco' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?abbiamo %n%|anco' +
       'ra niente}</a><br>→&nbsp; Abbiamo 5</tt></small></p>',
     '<p>La metà <code>altrimenti</code> può mancare: <code>{?nome?allora}</code> non stampa' +
       ' nulla quando la risposta è no. Un <code>!</code> rovescia la domanda:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?estraneo|am' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?estraneo|am' +
       'ico}</a><br>→&nbsp; Amico</tt></small></p>',
     '<p>Avere un valore significa avere <b>almeno un carattere che non sia uno spazio</b>. ' +
       'Una macro messa a nulla, o a soli spazi, conta come priva di valore.</p>',
@@ -6248,9 +6545,9 @@ const
       ' un nome che comincia con una cifra.</p>',
     '<h2 id="counting">Conteggio</h2>',
     '<p><code>{plural %n%: …}</code> prende la forma di parola che va con un numero.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: doc' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: doc' +
       'umento|documenti}</a><br>→&nbsp; 1 documento</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: doc' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: doc' +
       'umento|documenti}</a><br>→&nbsp; 5 documenti</tt></small></p>',
     '<p>Il conteggio qui è un <code>#def</code> e non un <code>#set</code>, di proposito, e' +
       ' la regola vale la pena tenerla: <b>fate del conteggio una cifra semplice o un <code>#' +
@@ -6259,17 +6556,35 @@ const
       'n un numero, quindi — cosicché l''intero costrutto non produce nulla e il pannello dic' +
       'e <code>plural.count-macro</code>. Il conteggio e la forma non possono contraddirsi: a' +
       ' sparire è la parola.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' documento|documenti}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Quante forme ci sono lo decide la locale e non voi: sotto <code>it</code> sono due,' +
-      ' sotto <code>ru</code> tre. Il numero sbagliato è un errore che il pannello segnala (<' +
-      'code>plural.arity</code>), e il motore ristampa allora l''intero costrutto con le graf' +
-      'fe sostituite da quelle larghe <code>｛｝</code>, perché non si scambi per uscita.</p>',
+      ' sotto <code>ru</code> tre, sotto <code>ar</code> sei, nell''ordine zero, one, two, fe' +
+      'w, many, other. L''arabo dice «un libro» e «due libri» senza numerale, quindi il numer' +
+      'o va <b>dentro</b> le forme che lo stampano e non davanti al blocco:</p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Il numero sbagliato è un errore che il pannello segnala (<code>plural.arity</code>)' +
+      ', e il motore ristampa allora l''intero costrutto con le graffe sostituite da quelle l' +
+      'arghe <code>｛｝</code>, perché non si scambi per uscita.</p>',
     '<h2 id="fragments">Frammenti</h2>',
     '<p><code>#include "nome"</code> mette un altro modello in quel punto, e la direttiva d' +
       'eve essere la prima cosa della sua riga; anche qui spazi e tabulazioni davanti sono am' +
       'messi.</p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Benvenuto da Acme.</tt><' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Benvenuto da Acme.</tt><' +
       '/small></p>',
     '<p>Il frammento è reso come modello a sé, quindi una scelta al suo interno viene rifat' +
       'ta: <code>intro</code> contiene <code>{Acme|Globex}</code> e risponde con l''uno o l''' +
@@ -6282,7 +6597,7 @@ const
     '<h3 id="fragments-0">Un frammento non vede le vostre macro</h3>',
     '<p>È reso come modello a sé: ha i valori della sessione, ma non i <code>#set</code> né' +
       ' i <code>#def</code> del documento che l''ha portato dentro.</p>',
-    '<p><small><tt><a href="ex:23">#set %marchio% = Acme</a><br><a href="ex:23">#include "s' +
+    '<p><small><tt><a href="ex:42">#set %marchio% = Acme</a><br><a href="ex:42">#include "s' +
       'hout"</a><br>→&nbsp; Il %marchio% è qui.</tt></small></p>',
     '<p><code>shout</code> vale <code>Il %marchio% è qui.</code>, e il nome va definito nel' +
       ' frammento stesso. Questo non è un silenzio — il pannello dice eccome <code>variable.u' +
@@ -6293,7 +6608,7 @@ const
     '<h2 id="remarks">Commenti</h2>',
     '<p><code>/# … #/</code> è un commento: tutto ciò che sta fra i segni viene tolto prima' +
       ' di qualsiasi altra cosa.</p>',
-    '<p><small><tt><a href="ex:24">bozza /# non sono sicuro #/ pronto</a><br>→&nbsp; Bozza ' +
+    '<p><small><tt><a href="ex:43">bozza /# non sono sicuro #/ pronto</a><br>→&nbsp; Bozza ' +
       'pronto</tt></small></p>',
     '<p>I commenti non si annidano. Il primo <code>#/</code> chiude il commento, qualunque ' +
       'cosa ci fosse prima, così un commento avvolto attorno a un testo che contiene a sua vo' +
@@ -6302,7 +6617,7 @@ const
     '<p>L''uscita non è del tutto il testo che i costrutti hanno prodotto. Alla fine le suc' +
       'cedono diverse cose; due le incontrate ogni giorno.</p>',
     '<p>La prima lettera di ogni frase viene messa in maiuscolo:</p>',
-    '<p><small><tt><a href="ex:25">uno. due. tre.</a><br>→&nbsp; Uno. Due. Tre.</tt></small' +
+    '<p><small><tt><a href="ex:44">uno. due. tre.</a><br>→&nbsp; Uno. Due. Tre.</tt></small' +
       '></p>',
     '<p>Per questo gli esempi di questa guida rispondono così spesso con una maiuscola dove' +
       ' il modello ha una minuscola. Un punto dopo un''abbreviazione che il motore conosce no' +
@@ -6310,15 +6625,15 @@ const
       'o <code>U.S.</code> — lettera, punto, lettera, punto — in <b>qualunque alfabeto</b>: i' +
       'l controllo «siamo in mezzo a una parola» legge ogni scrittura, e <code>т.е.</code> è ' +
       'protetto esattamente come <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:26">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:45">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:27">Dr. i nostri prezzi sono bassi</a><br>→&nbsp; Dr. i nost' +
+    '<p><small><tt><a href="ex:46">Dr. i nostri prezzi sono bassi</a><br>→&nbsp; Dr. i nost' +
       'ri prezzi sono bassi</tt></small></p>',
-    '<p><small><tt><a href="ex:28">Prof. i nostri prezzi sono bassi</a><br>→&nbsp; Prof. i ' +
+    '<p><small><tt><a href="ex:47">Prof. i nostri prezzi sono bassi</a><br>→&nbsp; Prof. i ' +
       'nostri prezzi sono bassi</tt></small></p>',
     '<p>Ogni altra parola chiude una frase, per corta che sia: la lunghezza non c''entra nu' +
       'lla:</p>',
-    '<p><small><tt><a href="ex:29">Xyz. i nostri prezzi sono bassi</a><br>→&nbsp; Xyz. I no' +
+    '<p><small><tt><a href="ex:48">Xyz. i nostri prezzi sono bassi</a><br>→&nbsp; Xyz. I no' +
       'stri prezzi sono bassi</tt></small></p>',
     '<p>L''elenco che il motore conosce ha 46 voci, <b>29 delle quali cirilliche</b>, e l''' +
       'altro documento lo percorre sotto <b>Un silenzio in ogni lingua</b>. Per l''italiano l' +
@@ -6335,8 +6650,8 @@ const
       'criva <code>uno.due</code> o <code>сайт.рф</code>. E un inizio protetto non è un inizi' +
       'o di frase per la maiuscola — per questo <code>uno.due</code> qui sotto esce intatto, ' +
       'minuscola compresa.</p>',
-    '<p><small><tt><a href="ex:30">ciao , mondo</a><br>→&nbsp; Ciao, mondo</tt></small></p>',
-    '<p><small><tt><a href="ex:31">uno.due</a><br>→&nbsp; uno.due</tt></small></p>',
+    '<p><small><tt><a href="ex:49">ciao , mondo</a><br>→&nbsp; Ciao, mondo</tt></small></p>',
+    '<p><small><tt><a href="ex:50">uno.due</a><br>→&nbsp; uno.due</tt></small></p>',
     '<h2 id="silences">Silenzi</h2>',
     '<p>Ogni caso qui sotto si rende, produce qualcosa di diverso da come appare e non tira' +
       ' <b>alcuna diagnostica</b>. Sono raccolti qui perché nient''altro nella finestra li me' +
@@ -6346,42 +6661,42 @@ const
       'idono con la metà latina dell''elenco — <code>Dr.</code> e <code>Prof.</code> qui sopr' +
       'a —, mentre <code>ecc.</code>, <code>Dott.</code>, <code>Sig.</code>, <code>pag.</code' +
       '> e <code>n.</code> chiudono una frase e mettono in maiuscolo la parola seguente:</p>',
-    '<p><small><tt><a href="ex:32">ecc. i nostri prezzi sono bassi</a><br>→&nbsp; Ecc. I no' +
+    '<p><small><tt><a href="ex:51">ecc. i nostri prezzi sono bassi</a><br>→&nbsp; Ecc. I no' +
       'stri prezzi sono bassi</tt></small></p>',
     '<p><code>p. es.</code>, con il suo spazio, attraversa la rifinitura senza danni, il ch' +
       'e vale più mostrarlo che spiegarlo:</p>',
-    '<p><small><tt><a href="ex:33">p. es. questo resta minuscolo</a><br>→&nbsp; p. es. ques' +
+    '<p><small><tt><a href="ex:52">p. es. questo resta minuscolo</a><br>→&nbsp; p. es. ques' +
       'to resta minuscolo</tt></small></p>',
     '<p>Scritto unito, <code>p.es.</code>, si protegge da sé per la regola dei più punti, m' +
       'a la parola che segue non più:</p>',
-    '<p><small><tt><a href="ex:34">p.es. questo resta minuscolo</a><br>→&nbsp; p.es. Questo' +
+    '<p><small><tt><a href="ex:53">p.es. questo resta minuscolo</a><br>→&nbsp; p.es. Questo' +
       ' resta minuscolo</tt></small></p>',
     '<p><b>Un <code>#include</code> che non è solo sulla sua riga è testo comune.</b></p>',
-    '<p><small><tt><a href="ex:35">Prima. #include "intro"</a><br>→&nbsp; Prima. #include "' +
+    '<p><small><tt><a href="ex:54">Prima. #include "intro"</a><br>→&nbsp; Prima. #include "' +
       'intro"</tt></small></p>',
     '<p>Lo stesso vale per una direttiva con qualcosa dietro e per <code>#include"intro"</c' +
       'ode> senza spazio. La regola è della famiglia e non di questo motore, ed è ciò che ren' +
       'de una direttiva riconoscibile senza analizzare l''intera riga.</p>',
     '<p><b>Una condizione il cui nome comincia con una cifra non è una condizione.</b> Dive' +
       'nta una scelta comune fra <code>?1x?sì</code> e <code>no</code>:</p>',
-    '<p><small><tt><a href="ex:36">{?1x?sì|no}</a><br>→&nbsp; ?1x? Sì</tt></small></p>',
+    '<p><small><tt><a href="ex:55">{?1x?sì|no}</a><br>→&nbsp; ?1x? Sì</tt></small></p>',
     '<p><b>Un <code>&lt;…&gt;</code> in testa a un pezzo che non è il primo non è un separa' +
       'tore</b> e si stampa così com''è:</p>',
-    '<p><small><tt><a href="ex:37">[rosso|&lt;e&gt;verde]</a><br>→&nbsp; &lt;e&gt;Verde ros' +
+    '<p><small><tt><a href="ex:56">[rosso|&lt;e&gt;verde]</a><br>→&nbsp; &lt;e&gt;Verde ros' +
       'so</tt></small></p>',
     '<p>Il blocco in testa al <b>primo</b> pezzo sì che è il separatore: è la scrittura con' +
       ' cui si apre il capitolo dei rimescolamenti:</p>',
-    '<p><small><tt><a href="ex:38">[&lt;e&gt;rosso|verde]</a><br>→&nbsp; Verde e rosso</tt>' +
+    '<p><small><tt><a href="ex:57">[&lt;e&gt;rosso|verde]</a><br>→&nbsp; Verde e rosso</tt>' +
       '</small></p>',
     '<p>Ovunque dopo un <code>|</code> è testo comune, e un separatore fra due pezzi va all' +
       'a <b>fine</b> del primo.</p>',
     '<p><b>Un tag nudo alla fine di un pezzo viene preso per il separatore di quella coppia' +
       '</b> e stampato come testo suo:</p>',
-    '<p><small><tt><a href="ex:39">[uno&lt;br&gt;|due]</a><br>→&nbsp; Due uno</tt></small><' +
+    '<p><small><tt><a href="ex:58">[uno&lt;br&gt;|due]</a><br>→&nbsp; Due uno</tt></small><' +
       '/p>',
     '<p>Sotto questo seme i due sono caduti nell''altro ordine, quindi il separatore non è ' +
       'uscito affatto. Con un terzo pezzo c''è dove cadere, e compare:</p>',
-    '<p><small><tt><a href="ex:40">[rosso|verde&lt;br&gt;|blu]</a><br>→&nbsp; Verde br blu ' +
+    '<p><small><tt><a href="ex:59">[rosso|verde&lt;br&gt;|blu]</a><br>→&nbsp; Verde br blu ' +
       'rosso</tt></small></p>',
     '<p>Il <code>&lt;br&gt;</code> sta fra <code>verde</code> e ciò che lo segue, ovunque i' +
       'l rimescolamento metta quella coppia. Un tag di chiusura (<code>&lt;/b&gt;</code>), un' +
@@ -6389,12 +6704,12 @@ const
       'gt;</code>) e un tag in mezzo a un pezzo restano tutti intatti.</p>',
     '<p><b>Un commento non chiuso è testo comune</b>: non apre nulla, e il <code>/#</code> ' +
       'viene stampato:</p>',
-    '<p><small><tt><a href="ex:41">prima /# il resto di questo</a><br>→&nbsp; Prima /# il r' +
+    '<p><small><tt><a href="ex:60">prima /# il resto di questo</a><br>→&nbsp; Prima /# il r' +
       'esto di questo</tt></small></p>',
     '<p>Ma resta pur sempre metà di una coppia. Se più in basso nel documento compare un <c' +
       'ode>#/</code>, i due si trovano e tutto ciò che sta in mezzo se ne va, compreso quel c' +
       'he l''autore ci ha scritto:</p>',
-    '<p><small><tt><a href="ex:42">{a /# ops|b} mezzo #/ coda</a><br>→&nbsp; {a coda</tt></' +
+    '<p><small><tt><a href="ex:61">{a /# ops|b} mezzo #/ coda</a><br>→&nbsp; {a coda</tt></' +
       'small></p>',
     '<p>La scelta qui sopra ha perso la seconda alternativa e la graffa di chiusura, e ness' +
       'una diagnostica lo dice: è ciò che il testo SIGNIFICA, e non un errore che il motore p' +
@@ -6463,26 +6778,26 @@ const
       'a parte di come il costrutto è fatto.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — una parentesi è aperta e mai' +
       ' chiusa</h3>',
-    '<p><small><tt><a href="ex:43">un prezzo {basso|alto</a><br>→&nbsp; Un prezzo {basso|al' +
+    '<p><small><tt><a href="ex:62">un prezzo {basso|alto</a><br>→&nbsp; Un prezzo {basso|al' +
       'to</tt></small></p>',
     '<p>Il motore non indovina dove volevate chiudere. Il testo resta com''è, graffa compre' +
       'sa, e la scelta non avviene mai.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — chiusa da una parentesi ' +
       'di altro tipo</h3>',
-    '<p><small><tt><a href="ex:44">un prezzo {basso|alto]</a><br>→&nbsp; Un prezzo {basso|a' +
+    '<p><small><tt><a href="ex:63">un prezzo {basso|alto]</a><br>→&nbsp; Un prezzo {basso|a' +
       'lto]</tt></small></p>',
     '<p><code>{</code> aspetta <code>}</code> e <code>[</code> aspetta <code>]</code>. Un r' +
       'imescolamento chiuso da una graffa non è un rimescolamento.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — una pare' +
       'ntesi di chiusura senza nulla di aperto</h3>',
-    '<p><small><tt><a href="ex:45">un prezzo basso} e tutto</a><br>→&nbsp; Un prezzo basso}' +
+    '<p><small><tt><a href="ex:64">un prezzo basso} e tutto</a><br>→&nbsp; Un prezzo basso}' +
       ' e tutto</tt></small></p>',
     '<p>Resta lì come testo. Quasi sempre è una parentesi avanzata da una modifica.</p>',
     '<hr>',
     '<h2 id="definitions">Definizioni</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — questa riga <code>#set</code> non ' +
       'segue la regola</h3>',
-    '<p><small><tt><a href="ex:46">#set citta = Milano</a><br><a href="ex:46">in %citta%</a' +
+    '<p><small><tt><a href="ex:65">#set citta = Milano</a><br><a href="ex:65">in %citta%</a' +
       '><br>→&nbsp; #set citta = Milano ⏎ In %citta%</tt></small></p>',
     '<p><b>Il nome va fra segni di percentuale:</b> <code>#set %citta% = Milano</code>. È i' +
       'l primo errore più comune, e mette due righe in una volta nel pannello: la riga malfor' +
@@ -6493,7 +6808,7 @@ const
       'el risultato.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — questa riga <code>#def</code> non ' +
       'segue la regola</h3>',
-    '<p><small><tt><a href="ex:47">#def pagine = {1|3}</a><br><a href="ex:47">%pagine%</a><' +
+    '<p><small><tt><a href="ex:66">#def pagine = {1|3}</a><br><a href="ex:66">%pagine%</a><' +
       'br>→&nbsp; #def pagine = 1 ⏎ %pagine%</tt></small></p>',
     '<p>La stessa regola e lo stesso prezzo. <code>#def</code> non differisce da <code>#set' +
       '</code> nella scrittura ma nel <b>quando</b> il valore viene dispiegato: <code>#set</c' +
@@ -6505,15 +6820,15 @@ const
       ' una direttiva.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — questo nom' +
       'e è già definito sopra</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = primo</a><br><a href="ex:48">#set %x% = secon' +
-      'do</a><br><a href="ex:48">%x%</a><br>→&nbsp; Secondo</tt></small></p>',
+    '<p><small><tt><a href="ex:67">#set %x% = primo</a><br><a href="ex:67">#set %x% = secon' +
+      'do</a><br><a href="ex:67">%x%</a><br>→&nbsp; Secondo</tt></small></p>',
     '<p>Funziona — vince l''<b>ultima</b> definizione — ma il motore lo chiama errore: un d' +
       'ocumento in cui un nome è posto due volte si legge in modo ambiguo, e fra un mese non ' +
       'ricorderete quale delle due righe è quella viva. L''errore indica la <b>seconda</b> de' +
       'finizione; la prima sta più in alto.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> dentro il valore di una definizione</h3>',
-    '<p><small><tt><a href="ex:49">#def %x% = #include "frag"</a><br><a href="ex:49">%x%</a' +
+    '<p><small><tt><a href="ex:68">#def %x% = #include "frag"</a><br><a href="ex:68">%x%</a' +
       '><br>→&nbsp; Frammento</tt></small></p>',
     '<p>Un''inclusione dentro un valore si dispiega in un momento diverso da quello che vi ' +
       'aspettereste, e la famiglia lo vieta. Mettete l''<code>#include</code> su una riga sua' +
@@ -6522,7 +6837,7 @@ const
     '<h2 id="variables">Variabili</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — questa variabile non è d' +
       'efinita da nessuna parte</h3>',
-    '<p><small><tt><a href="ex:50">ciao, %nome%</a><br>→&nbsp; Ciao, %nome%</tt></small></p' +
+    '<p><small><tt><a href="ex:69">ciao, %nome%</a><br>→&nbsp; Ciao, %nome%</tt></small></p' +
       '>',
     '<p>Un avviso e non un errore: il motore stampa il nome così com''è. È voluto, perché i' +
       'l valore può venire da fuori, dall''ospite. In Studio quei valori si forniscono nella ' +
@@ -6556,7 +6871,7 @@ const
     '<li><b>Ctrl+clic</b> scrive una definizione nel documento e ci apre sopra l''editor di' +
       ' gruppi. Il valore che avete già scritto vi entra come prima possibilità:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:51">#set %marchio% = {Vulkan}</a><br><a href="ex:51">casinò ' +
+    '<p><small><tt><a href="ex:70">#set %marchio% = {Vulkan}</a><br><a href="ex:70">casinò ' +
       '%marchio%</a><br>→&nbsp; Casinò Vulkan</tt></small></p>',
     '<p>La differenza fra i due è che cosa sopravvive alla chiusura della finestra. Un valo' +
       're di sessione no: non sta nel file, non sta in git, e nessun altro motore della famig' +
@@ -6569,7 +6884,7 @@ const
       ' colonna: allora graffe e segni di percentuale restano caratteri.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — la definizione' +
       ' nomina se stessa</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:71">#set %x% = a %x% b</a><br><a href="ex:71">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Cinquanta livelli, poi stop. Il motore dispiega fino al limite di profondità e si f' +
       'erma, lasciando <code>%x%</code> in mezzo. Non è un ciclo, e non è nemmeno quel che vo' +
@@ -6580,8 +6895,8 @@ const
       'e il valore ne contiene una in più di ciascuna.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — le def' +
       'inizioni si nominano in cerchio</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = %y%</a><br><a href="ex:53">#set %y% = %x%</a>' +
-      '<br><a href="ex:53">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %x% = %y%</a><br><a href="ex:72">#set %y% = %x%</a>' +
+      '<br><a href="ex:72">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Ogni lato si dispiega esattamente <b>una volta</b> e poi si ferma: <code>%x%</code>' +
       ' è diventato <code>%y%</code> e non <code>%x%</code>. Il motore srotola il cerchio inv' +
       'ece di percorrerlo, e ciò che sopravvive è l''altro nome del cerchio: mettete <code>%x' +
@@ -6603,9 +6918,9 @@ const
     '<hr>',
     '<h2 id="includes">Inclusioni</h2>',
     '<h3 id="includes-0"><code>#include</code> funziona solo a inizio riga</h3>',
-    '<p><small><tt><a href="ex:54">prima #include "frag" dopo</a><br>→&nbsp; Prima #include' +
+    '<p><small><tt><a href="ex:73">prima #include "frag" dopo</a><br>→&nbsp; Prima #include' +
       ' "frag" dopo</tt></small></p>',
-    '<p><small><tt><a href="ex:55">#include "frag"</a><br>→&nbsp; Frammento</tt></small></p' +
+    '<p><small><tt><a href="ex:74">#include "frag"</a><br>→&nbsp; Frammento</tt></small></p' +
       '>',
     '<p>Nessuna diagnostica, ed è proprio il punto: un <code>#include</code> in mezzo a una' +
       ' riga <b>non</b> è un''inclusione. Il motore lo legge come testo comune e non dice nul' +
@@ -6614,7 +6929,7 @@ const
     '<p><b>Il bersaglio però può stare una riga più sotto</b>, e questo sorprende dall''alt' +
       'ro lato. Lo spazio che il motore concede fra la parola e il suo bersaglio comprende gl' +
       'i a capo, quindi questa è un''inclusione e funziona:</p>',
-    '<p><small><tt><a href="ex:56">#include</a><br><a href="ex:56">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:75">#include</a><br><a href="ex:75">"frag"</a><br>→&nbsp; Fr' +
       'ammento</tt></small></p>',
     '<p>Anche righe vuote in mezzo vanno bene. Tutto il resto no: una parola prima del bers' +
       'aglio o qualunque cosa diversa da spazi dietro, e il tutto torna a essere testo. L''ed' +
@@ -6622,7 +6937,7 @@ const
       ' non è arrivato: non promette una direttiva di cui non vede ancora la fine.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — nessun bersaglio' +
       ' con quel nome nell''insieme</h3>',
-    '<p><small><tt><a href="ex:57">#include "nessuno"</a><br>→&nbsp; (vuoto)</tt></small></' +
+    '<p><small><tt><a href="ex:76">#include "nessuno"</a><br>→&nbsp; (vuoto)</tt></small></' +
       'p>',
     '<p>I bersagli sono i file <code>.spintax</code> nella cartella del documento aperto. U' +
       'n bersaglio sconosciuto si dispiega in nulla: il paragrafo sparisce invece di rompersi' +
@@ -6639,7 +6954,7 @@ const
       'il file davvero non c''è.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — il bersaglio esiste, con' +
       ' altre maiuscole</h3>',
-    '<p><small><tt><a href="ex:58">#include "intro"</a><br>→&nbsp; (vuoto)</tt></small></p>',
+    '<p><small><tt><a href="ex:77">#include "intro"</a><br>→&nbsp; (vuoto)</tt></small></p>',
     '<p>L''insieme contiene <code>Intro.spintax</code>, e il motore dice comunque che non c' +
       '''è un bersaglio con quel nome, mentre Studio aggiunge la sua nota sulle maiuscole. Co' +
       'ntano: <code>intro</code> e <code>Intro</code> sono bersagli diversi. Windows aprirebb' +
@@ -6649,7 +6964,7 @@ const
     '<h3 id="note.cycle"><code>note.cycle</code> — un''inclusione in cerchio</h3>',
     '<p>Se <code>loop.spintax</code> contiene a sua volta <code>#include "loop"</code>, all' +
       'ora:</p>',
-    '<p><small><tt><a href="ex:59">#include "loop"</a><br>→&nbsp; (vuoto)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "loop"</a><br>→&nbsp; (vuoto)</tt></small></p>',
     '<p>Il motore sostituisce nulla invece dell''infinito. La nota c''è perché sappiate per' +
       'ché il paragrafo è svanito.</p>',
     '<p>La riga è a carico di <b><code>loop</code></b> e non del documento che state guarda' +
@@ -6660,19 +6975,22 @@ const
     '<h2 id="plurals">Forme di numero</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — non tante forme quante la locale ne ' +
       'chiede</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = 5</a><br><a href="ex:60">%n% {plural %n%: ogg' +
+    '<p><small><tt><a href="ex:79">#set %n% = 5</a><br><a href="ex:79">%n% {plural %n%: ogg' +
       'etto|oggetti|oggettesi}</a><br>→&nbsp; 5 ｛plural 5: oggetto|oggetti|oggettesi｝</tt></s' +
       'mall></p>',
     '<p><b>Non vuoto: il motore stampa l''intero costrutto</b>, con le graffe sostituite da' +
       ' quelle larghe <code>｛｝</code>. Così dice «ho visto questo e non ho potuto applicarlo»' +
       '. Nessuno lo chiamerebbe discreto, e meglio così: un paragrafo svanito in silenzio cos' +
       'terebbe di più da trovare.</p>',
-    '<p>L''italiano chiede due forme, il russo tre. Sotto la locale di questo documento que' +
-      'lla giusta è <code>{plural %n%: oggetto|oggetti}</code>.</p>',
+    '<p>L''italiano chiede due forme, il russo tre, l''arabo sei. Sotto la locale di questo' +
+      ' documento quella giusta è <code>{plural %n%: oggetto|oggetti}</code>; sotto <code>ar<' +
+      '/code> le stesse due forme sono l''errore:</p>',
+    '<p><small><tt><a href="ex:80">#def %n% = 5</a><br><a href="ex:80">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Il vuoto viene da un''altra causa, e le due si confondono facilmente.</b> Confro' +
       'ntate queste due, che differiscono solo per quante forme portano:</p>',
-    '<p><small><tt><a href="ex:61">{plural %n%: oggetto|oggetti}</a><br>→&nbsp; (vuoto)&nbs' +
-      'p;&nbsp; due forme: giusto per l''italiano<br><a href="ex:62">{plural %n%: oggetto|ogg' +
+    '<p><small><tt><a href="ex:81">{plural %n%: oggetto|oggetti}</a><br>→&nbsp; (vuoto)&nbs' +
+      'p;&nbsp; due forme: giusto per l''italiano<br><a href="ex:82">{plural %n%: oggetto|ogg' +
       'etti|oggettesi}</a><br>→&nbsp; (vuoto)&nbsp;&nbsp; tre forme: sbagliato per l''italian' +
       'o</tt></small></p>',
     '<p>Entrambe non stampano nulla, e il pannello le tratta diversamente: la prima tira so' +
@@ -6690,7 +7008,7 @@ const
       ' esempio, e vedrà che cosa fa davvero il numero di forme.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — il conteggio viene da un' +
       ' <code>#set</code>, e quello rilancia a ogni menzione</h3>',
-    '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#set %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' oggetto|oggetti}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Guardate cosa è sopravvissuto: <b>il numero è stato stampato e il sostantivo no.</b' +
       '> Il conteggio deve essere un numero quando la forma viene scelta, e un <code>#set</co' +
@@ -6700,13 +7018,13 @@ const
       'ia cadere la parola.</p>',
     '<p><code>#def</code> si comporta diversamente e dispiega il suo valore una volta per r' +
       'esa, quindi il posto del conteggio riceve un numero:</p>',
-    '<p><small><tt><a href="ex:64">#def %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#def %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' oggetto|oggetti}</a><br>→&nbsp; 1 oggetto</tt></small></p>',
     '<p>Per quello non c''è alcuna riga nel pannello. Da qui la regola: fate del conteggio ' +
       'una cifra semplice o un <code>#def</code>, mai un <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — parentesi dentro' +
       ' le forme</h3>',
-    '<p><small><tt><a href="ex:65">{plural %n%: {oggetto|cosa}|oggetti}</a><br>→&nbsp; ｛plu' +
+    '<p><small><tt><a href="ex:85">{plural %n%: {oggetto|cosa}|oggetti}</a><br>→&nbsp; ｛plu' +
       'ral %n%: ｛oggetto|cosa｝|oggetti｝</tt></small></p>',
     '<p>Le forme sono testo semplice. Una scelta al loro interno non viene dispiegata, e al' +
       ' suo posto è l''intero costrutto a essere stampato fra graffe larghe.</p>',
@@ -6714,7 +7032,7 @@ const
     '<h2 id="permutations">Rimescolamenti</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — chiave sconosc' +
       'iuta nell''impostazione</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:86">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Le chiavi note sono <code>minsize</code>, <code>maxsize</code>, <code>sep</code> e ' +
       '<code>lastsep</code>. Una sconosciuta non è un''impostazione, e quando è l''unica cosa' +
@@ -6722,7 +7040,7 @@ const
       'a i pezzi, che è ciò che l''uscita mostra.</p>',
     '<p><b>Se accanto c''è una chiave vera, l''esito è tutt''altro</b>, ed è l''errore più ' +
       'probabile: una chiave su più scritta male:</p>',
-    '<p><small><tt><a href="ex:67">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:87">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Il blocco è un''impostazione, <code>sep</code> viene rispettato, la chiave sconosci' +
       'uta semplicemente lasciata cadere, e il pannello dice la stessa cosa in entrambi i cas' +
@@ -6730,13 +7048,13 @@ const
       ' successo dopo. Per quello leggete l''uscita.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize non è un numero intero</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;minsize=due&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:88">[&lt;minsize=due&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Un valore non numerico cade insieme al suo limite, e vale il valore predefinito, ci' +
       'oè tutti i pezzi.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize non è un numero intero</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;maxsize=molti&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
+    '<p><small><tt><a href="ex:89">[&lt;maxsize=molti&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
       'small></p>',
     '<p>Esattamente lo stesso dall''altro capo: il limite alto sparisce, e l''uscita contie' +
       'ne di nuovo ogni pezzo.</p>',
@@ -6777,8 +7095,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Un silenzio in ogni lingua: le abbreviazioni</h2>',
     '<h3 id="abbreviations-0">Un''abbreviazione lascia minuscola la parola seguente</h3>',
-    '<p><small><tt><a href="ex:70">Dr. i nostri prezzi sono bassi</a><br>→&nbsp; Dr. i nost' +
-      'ri prezzi sono bassi<br><a href="ex:71">Xyz. i nostri prezzi sono bassi</a><br>→&nbsp;' +
+    '<p><small><tt><a href="ex:90">Dr. i nostri prezzi sono bassi</a><br>→&nbsp; Dr. i nost' +
+      'ri prezzi sono bassi<br><a href="ex:91">Xyz. i nostri prezzi sono bassi</a><br>→&nbsp;' +
       ' Xyz. I nostri prezzi sono bassi</tt></small></p>',
     '<p>Due righe che differiscono di una parola, e la seconda parola di ciascuna vi dà la ' +
       'regola: dopo <code>Dr.</code> la frase resta minuscola, dopo <code>Xyz.</code> va in m' +
@@ -6807,15 +7125,15 @@ const
       'a lascia che la parola seguente vada in maiuscolo.</p>',
     '<hr>',
     '<h2 id="correct">Che aspetto ha la forma corretta</h2>',
-    '<p><small><tt><a href="ex:72">un prezzo {basso|alto}</a><br>→&nbsp; Un prezzo basso</t' +
+    '<p><small><tt><a href="ex:92">un prezzo {basso|alto}</a><br>→&nbsp; Un prezzo basso</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:73">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:93">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">#set %vip% = 1</a><br><a href="ex:74">{?vip?per lei|per ' +
+    '<p><small><tt><a href="ex:94">#set %vip% = 1</a><br><a href="ex:94">{?vip?per lei|per ' +
       'tutti}</a><br>→&nbsp; Per lei</tt></small></p>',
-    '<p><small><tt><a href="ex:75">#set %n% = 5</a><br><a href="ex:75">%n% {plural %n%: art' +
+    '<p><small><tt><a href="ex:95">#set %n% = 5</a><br><a href="ex:95">%n% {plural %n%: art' +
       'icolo|articoli}</a><br>→&nbsp; 5 articoli</tt></small></p>',
-    '<p><small><tt><a href="ex:76">prima /# una nota #/ dopo</a><br>→&nbsp; Prima dopo</tt>' +
+    '<p><small><tt><a href="ex:96">prima /# una nota #/ dopo</a><br>→&nbsp; Prima dopo</tt>' +
       '</small></p>',
     '<p>Cinque costrutti, cinque righe pulite: una scelta, un rimescolamento con impostazio' +
       'ni, una condizione, una forma di numero con un numero davanti e un commento. Nessuno m' +
@@ -6832,7 +7150,7 @@ const
       'mi sono fatti di lettere latine, cifre e del trattino basso. <code>%città%</code> non ' +
       'è affatto una menzione di variabile: il motore lo legge come testo e non dice nulla, p' +
       'erché dal suo punto di vista non c''è nulla da segnalare:</p>',
-    '<p><small><tt><a href="ex:77">ciao %città% e %nome%</a><br>→&nbsp; Ciao %città% e %nom' +
+    '<p><small><tt><a href="ex:97">ciao %città% e %nome%</a><br>→&nbsp; Ciao %città% e %nom' +
       'e%</tt></small></p>',
     '<p>Entrambe sono passate intatte, e qui sta la trappola: solo la seconda ha tirato una' +
       ' riga nel pannello. La prima è silenziosa, quindi nulla vi dice che non verrà mai sost' +
@@ -7136,7 +7454,10 @@ const
       'enquanto trabalha.</p>',
     '<p><code>locale</code> decide as formas de número, e é o selector por cima da metade d' +
       'ireita, não o idioma da interface. O português e o inglês pedem duas formas; o russo, ' +
-      'o ucraniano, o bielorrusso, o sérvio, o croata e o bósnio pedem três.</p>',
+      'o ucraniano, o bielorrusso, o sérvio, o croata e o bósnio pedem três; o árabe pede sei' +
+      's. Sob o árabe e o hebraico a locale muda também a maneira como uma conjunção liga uma' +
+      ' lista (ver o separador). Os exemplos em árabe e em hebraico mais abaixo são medidos s' +
+      'ob a sua própria locale, que a frase antes de cada um deles nomeia.</p>',
     '<h2 id="choices">Escolhas</h2>',
     '<p>Chavetas com <code>|</code> pelo meio: o motor apanha <b>uma</b>.</p>',
     '<p><small><tt><a href="ex:1">Uma sala {pequena|grande}.</a><br>→&nbsp; Uma sala pequen' +
@@ -7187,46 +7508,74 @@ const
     '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" e "&gt;vermelho|verde|azul]</a><b' +
       'r>→&nbsp; Verde, azul e vermelho</tt></small></p>',
     '<p><code>sep</code> vai entre os pedaços e <code>lastsep</code> antes do último.</p>',
+    '<p>Um separador feito só de letras ganha um espaço de cada lado, mesmo quando nenhum f' +
+      'oi escrito:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="e"&gt;A|B]</a><br>→&nbsp; B e A</tt></small' +
+      '></p>',
+    '<p>As escritas sem espaços entre as palavras são a excepção, sob qualquer locale: os s' +
+      'eparadores em chinês, japonês, tailandês, laosiano, khmer e birmanês juntam-se sem esp' +
+      'aço.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>O árabe e o hebraico têm uma regra própria, e quem a liga é a <b>locale</b>, não a ' +
+      'escrita. Sob <code>ar</code> um separador que seja exactamente و ou ف mantém o espaço ' +
+      'antes de si e perde o de depois, porque o árabe escreve a conjunção colada à palavra s' +
+      'eguinte; sob <code>he</code> o mesmo vale para ו. Só acontece antes de uma palavra nes' +
+      'sa escrita — antes de um nome latino ou de um algarismo ficam os dois espaços:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Sob qualquer outra locale a conjunção fica uma palavra à parte, o que está certo pa' +
+      'ra o persa e o urdu, onde a mesma letra se escreve separada:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Quantos</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;vermelho|verde|azul]</a><br>→' +
-      '&nbsp; Verde azul</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;vermelho|verde|azul]</a><br>' +
+      '→&nbsp; Verde azul</tt></small></p>',
     '<p><code>minsize</code> é o chão e <code>maxsize</code> o tecto; o número entre os doi' +
       's é aleatório como a ordem. Valores iguais apanham exactamente esses. <b>Sem nenhum do' +
       's dois, todos; mas só com <code>maxsize</code> o chão fica em um</b>, o que surpreende' +
       ':</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Três pedaços, um tecto de três, e saiu um. Escreva também <code>minsize</code> quan' +
       'do quiser dizer «todos, no máximo três». Um <code>maxsize</code> maior do que o número' +
       ' de pedaços é baixado em silêncio até esse número. Um <code>minsize</code> maior do qu' +
       'e o <code>maxsize</code> é aceite sem uma palavra, e ganha o chão: o tecto é levantado' +
       ' até ele e não ao contrário:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;vermelho|verde|azul]</a><br>' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;vermelho|verde|azul]</a><br>' +
       '→&nbsp; Verde azul vermelho</tt></small></p>',
     '<h3 id="shuffles-2">Um separador entre dois pedaços</h3>',
     '<p>Um <code>&lt;…&gt;</code> escrito <b>entre</b> dois pedaços é o separador desse par' +
       '.</p>',
-    '<p><small><tt><a href="ex:12">[vermelho|verde&lt;e&gt;|azul]</a><br>→&nbsp; Verde e az' +
+    '<p><small><tt><a href="ex:25">[vermelho|verde&lt;e&gt;|azul]</a><br>→&nbsp; Verde e az' +
       'ul vermelho</tt></small></p>',
     '<p>Pertence ao pedaço <b>seguinte</b> e viaja com ele pelo baralhar, aparecendo portan' +
       'to onde esse pedaço calhar e não num lugar fixo da saída. Um <code>&lt;…&gt;</code> de' +
       'pois do <b>último</b> pedaço não é separador nenhum e imprime-se como texto:</p>',
-    '<p><small><tt><a href="ex:13">[vermelho|verde|azul&lt;e&gt;]</a><br>→&nbsp; Verde azul' +
+    '<p><small><tt><a href="ex:26">[vermelho|verde|azul&lt;e&gt;]</a><br>→&nbsp; Verde azul' +
       '&lt;e&gt; vermelho</tt></small></p>',
     '<h2 id="macros">Macros</h2>',
     '<p><code>#set</code> dá nome a um pedaço de texto. O nome usa-se como <code>%nome%</co' +
       'de>, e a directiva tem de ser a primeira coisa da sua linha: espaços e tabulações à fr' +
       'ente são permitidos, mais nada.</p>',
-    '<p><small><tt><a href="ex:14">#set %cidade% = Lisboa</a><br><a href="ex:14">Voo para %' +
+    '<p><small><tt><a href="ex:27">#set %cidade% = Lisboa</a><br><a href="ex:27">Voo para %' +
       'cidade%.</a><br>→&nbsp; Voo para Lisboa.</tt></small></p>',
     '<p>Os nomes são feitos de letras latinas, algarismos e <code>_</code>. Um nome noutro ' +
       'alfabeto não é um nome, do que trata o outro documento sob <code>set.malformed</code>.' +
       ' Os acentos e o <code>ç</code>, portanto, não cabem num nome; num valor cabem.</p>',
     '<h3 id="macros-0"><code>#set</code> volta a tirar, <code>#def</code> tira uma vez</h3>',
     '<p>É toda a diferença entre os dois, e só se vê quando o valor contém uma escolha.</p>',
-    '<p><small><tt><a href="ex:15">#set %escolha% = {A|B}</a><br><a href="ex:15">%escolha% ' +
+    '<p><small><tt><a href="ex:28">#set %escolha% = {A|B}</a><br><a href="ex:28">%escolha% ' +
       '%escolha% %escolha%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %escolha% = {A|B}</a><br><a href="ex:16">%escolha% ' +
+    '<p><small><tt><a href="ex:29">#def %escolha% = {A|B}</a><br><a href="ex:29">%escolha% ' +
       '%escolha% %escolha%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Os dois exemplos correram sob a mesma semente. <code>#set</code> guarda o modelo e ' +
       'tira-o a cada uso; <code>#def</code> tira uma vez e fica com a resposta. Use <code>#de' +
@@ -7238,11 +7587,11 @@ const
       '.</p>',
     '<h2 id="conditions">Condições</h2>',
     '<p><code>{?nome?então|senão}</code> pergunta se uma macro tem valor.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?temos %n%|ainda ' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?temos %n%|ainda ' +
       'nada}</a><br>→&nbsp; Temos 5</tt></small></p>',
     '<p>A metade <code>senão</code> pode faltar: <code>{?nome?então}</code> não imprime nad' +
       'a quando a resposta é não. Um <code>!</code> vira a pergunta do avesso:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?estranho|am' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?estranho|am' +
       'igo}</a><br>→&nbsp; Amigo</tt></small></p>',
     '<p>Ter valor significa ter <b>pelo menos um caractere que não seja um espaço</b>. Uma ' +
       'macro posta a nada, ou só a espaços, conta como sem valor.</p>',
@@ -7251,9 +7600,9 @@ const
       'um nome que comece por algarismo.</p>',
     '<h2 id="counting">Contagem</h2>',
     '<p><code>{plural %n%: …}</code> apanha a forma de palavra que vai com um número.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: fic' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: fic' +
       'heiro|ficheiros}</a><br>→&nbsp; 1 ficheiro</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: fic' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: fic' +
       'heiro|ficheiros}</a><br>→&nbsp; 5 ficheiros</tt></small></p>',
     '<p>A contagem aqui é um <code>#def</code> e não um <code>#set</code>, de propósito, e ' +
       'a regra vale a pena guardar: <b>faça da contagem um algarismo simples ou um <code>#def' +
@@ -7262,17 +7611,35 @@ const
       ' um número, portanto —, de modo que a construção inteira não produz nada e o painel di' +
       'z <code>plural.count-macro</code>. A contagem e a forma não podem contradizer-se: o qu' +
       'e desaparece é a palavra.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' ficheiro|ficheiros}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Quantas formas há decide-o a locale e não o utilizador: sob <code>pt</code> são dua' +
-      's, sob <code>ru</code> três. O número errado é um erro que o painel assinala (<code>pl' +
-      'ural.arity</code>), e o motor reimprime então a construção inteira com as chavetas tro' +
-      'cadas por umas largas <code>｛｝</code>, para que não se confunda com saída.</p>',
+      's, sob <code>ru</code> três, sob <code>ar</code> seis — pela ordem zero, one, two, few' +
+      ', many, other. O árabe diz «um livro» e «dois livros» sem numeral, por isso o número v' +
+      'ai <b>dentro</b> das formas que o imprimem e não à frente do bloco:</p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>O número errado é um erro que o painel assinala (<code>plural.arity</code>), e o mo' +
+      'tor reimprime então a construção inteira com as chavetas trocadas por umas largas <cod' +
+      'e>｛｝</code>, para que não se confunda com saída.</p>',
     '<h2 id="fragments">Excertos</h2>',
     '<p><code>#include "nome"</code> põe outro modelo nesse ponto, e a directiva tem de ser' +
       ' a primeira coisa da sua linha; também aqui espaços e tabulações à frente são permitid' +
       'os.</p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Bem-vindo à Acme.</tt></' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Bem-vindo à Acme.</tt></' +
       'small></p>',
     '<p>O excerto é composto como modelo próprio, logo uma escolha lá dentro é feita de nov' +
       'o: <code>intro</code> contém <code>{Acme|Globex}</code> e responde com um ou com o out' +
@@ -7285,7 +7652,7 @@ const
     '<h3 id="fragments-0">Um excerto não vê as suas macros</h3>',
     '<p>É composto como modelo próprio: tem os valores da sessão, mas não os <code>#set</co' +
       'de> nem os <code>#def</code> do documento que o trouxe.</p>',
-    '<p><small><tt><a href="ex:23">#set %marca% = Acme</a><br><a href="ex:23">#include "sho' +
+    '<p><small><tt><a href="ex:42">#set %marca% = Acme</a><br><a href="ex:42">#include "sho' +
       'ut"</a><br>→&nbsp; A %marca% está aqui.</tt></small></p>',
     '<p><code>shout</code> vale <code>A %marca% está aqui.</code>, e o nome tem de estar de' +
       'finido no próprio excerto. Isto não é um silêncio — o painel diz mesmo <code>variable.' +
@@ -7296,7 +7663,7 @@ const
     '<h2 id="remarks">Comentários</h2>',
     '<p><code>/# … #/</code> é um comentário: tudo o que está entre as marcas é retirado an' +
       'tes de qualquer outra coisa.</p>',
-    '<p><small><tt><a href="ex:24">rascunho /# não tenho a certeza #/ pronto</a><br>→&nbsp;' +
+    '<p><small><tt><a href="ex:43">rascunho /# não tenho a certeza #/ pronto</a><br>→&nbsp;' +
       ' Rascunho pronto</tt></small></p>',
     '<p>Os comentários não se encaixam. O primeiro <code>#/</code> fecha o comentário, foss' +
       'e o que fosse que viesse antes, logo um comentário enrolado à volta de um texto que co' +
@@ -7305,7 +7672,7 @@ const
     '<p>A saída não é bem o texto que as construções produziram. No fim acontecem-lhe vária' +
       's coisas; duas encontra-as todos os dias.</p>',
     '<p>A primeira letra de cada frase passa a maiúscula:</p>',
-    '<p><small><tt><a href="ex:25">um. dois. três.</a><br>→&nbsp; Um. Dois. Três.</tt></sma' +
+    '<p><small><tt><a href="ex:44">um. dois. três.</a><br>→&nbsp; Um. Dois. Três.</tt></sma' +
       'll></p>',
     '<p>É por isso que os exemplos desta ajuda respondem tantas vezes com maiúscula onde o ' +
       'modelo tem minúscula. Um ponto depois de uma abreviatura que o motor conhece não acaba' +
@@ -7313,15 +7680,15 @@ const
       'de> — letra, ponto, letra, ponto — em <b>qualquer alfabeto</b>: a verificação de «isto' +
       ' é meio de palavra» lê todas as escritas, e <code>т.е.</code> fica protegido exactamen' +
       'te como <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:26">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:45">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:27">Sr. os nossos preços são baixos</a><br>→&nbsp; Sr. os no' +
+    '<p><small><tt><a href="ex:46">Sr. os nossos preços são baixos</a><br>→&nbsp; Sr. os no' +
       'ssos preços são baixos</tt></small></p>',
-    '<p><small><tt><a href="ex:28">etc. os nossos preços são baixos</a><br>→&nbsp; etc. os ' +
+    '<p><small><tt><a href="ex:47">etc. os nossos preços são baixos</a><br>→&nbsp; etc. os ' +
       'nossos preços são baixos</tt></small></p>',
     '<p>Qualquer outra palavra acaba uma frase, por curta que seja: o comprimento não tem n' +
       'ada a ver com isso:</p>',
-    '<p><small><tt><a href="ex:29">Xyz. os nossos preços são baixos</a><br>→&nbsp; Xyz. Os ' +
+    '<p><small><tt><a href="ex:48">Xyz. os nossos preços são baixos</a><br>→&nbsp; Xyz. Os ' +
       'nossos preços são baixos</tt></small></p>',
     '<p>A lista que o motor conhece tem 46 entradas, <b>29 delas cirílicas</b>, e o outro d' +
       'ocumento percorre-a sob <b>Um silêncio em todas as línguas</b>. Para o português o ess' +
@@ -7337,8 +7704,8 @@ const
       'a-se <code>um.dois</code> ou <code>сайт.рф</code>. E um começo protegido não é começo ' +
       'de frase para a maiúscula — por isso <code>um.dois</code> mais abaixo sai intacto, min' +
       'úscula incluída.</p>',
-    '<p><small><tt><a href="ex:30">olá , mundo</a><br>→&nbsp; Olá, mundo</tt></small></p>',
-    '<p><small><tt><a href="ex:31">um.dois</a><br>→&nbsp; um.dois</tt></small></p>',
+    '<p><small><tt><a href="ex:49">olá , mundo</a><br>→&nbsp; Olá, mundo</tt></small></p>',
+    '<p><small><tt><a href="ex:50">um.dois</a><br>→&nbsp; um.dois</tt></small></p>',
     '<h2 id="silences">Silêncios</h2>',
     '<p>Cada caso abaixo compõe-se, produz algo diferente do que aparenta e não puxa <b>dia' +
       'gnóstico nenhum</b>. Estão reunidos aqui porque mais nada na janela alguma vez os menc' +
@@ -7348,49 +7715,49 @@ const
       'cidem com a metade latina da lista — <code>Sr.</code>, <code>Dr.</code>, <code>Prof.</' +
       'code> e <code>etc.</code> acima —, ao passo que <code>Sra.</code> e <code>pág.</code> ' +
       'acabam uma frase e põem em maiúscula a palavra seguinte:</p>',
-    '<p><small><tt><a href="ex:32">pág. os nossos preços são baixos</a><br>→&nbsp; Pág. Os ' +
+    '<p><small><tt><a href="ex:51">pág. os nossos preços são baixos</a><br>→&nbsp; Pág. Os ' +
       'nossos preços são baixos</tt></small></p>',
     '<p><code>p. ex.</code>, com o seu espaço, atravessa o retoque sem dano, o que vale mai' +
       's mostrar do que explicar:</p>',
-    '<p><small><tt><a href="ex:33">p. ex. isto fica em minúscula</a><br>→&nbsp; p. ex. isto' +
+    '<p><small><tt><a href="ex:52">p. ex. isto fica em minúscula</a><br>→&nbsp; p. ex. isto' +
       ' fica em minúscula</tt></small></p>',
     '<p>Escrito junto, <code>p.ex.</code>, protege-se a si próprio pela regra dos vários po' +
       'ntos, mas a palavra seguinte já não:</p>',
-    '<p><small><tt><a href="ex:34">p.ex. isto fica em minúscula</a><br>→&nbsp; p.ex. Isto f' +
+    '<p><small><tt><a href="ex:53">p.ex. isto fica em minúscula</a><br>→&nbsp; p.ex. Isto f' +
       'ica em minúscula</tt></small></p>',
     '<p>E <code>n.º</code> sai partido, e o motivo não é o alfabeto: a forma de vários pont' +
       'os precisa de pelo menos dois, e <code>n.º</code> tem um só, pelo que o <code>n</code>' +
       ' é procurado na lista como palavra solta, não está lá, e o retoque entra dentro da abr' +
       'eviatura:</p>',
-    '<p><small><tt><a href="ex:35">n.º os nossos preços são baixos</a><br>→&nbsp; N. º os n' +
+    '<p><small><tt><a href="ex:54">n.º os nossos preços são baixos</a><br>→&nbsp; N. º os n' +
       'ossos preços são baixos</tt></small></p>',
     '<p><b>Um <code>#include</code> que não está sozinho na sua linha é texto comum.</b></p' +
       '>',
-    '<p><small><tt><a href="ex:36">Antes. #include "intro"</a><br>→&nbsp; Antes. #include "' +
+    '<p><small><tt><a href="ex:55">Antes. #include "intro"</a><br>→&nbsp; Antes. #include "' +
       'intro"</tt></small></p>',
     '<p>O mesmo vale para uma directiva com algo atrás e para <code>#include"intro"</code> ' +
       'sem espaço. A regra é da família e não deste motor, e é ela que torna uma directiva re' +
       'conhecível sem analisar a linha inteira.</p>',
     '<p><b>Uma condição cujo nome começa por algarismo não é uma condição.</b> Torna-se uma' +
       ' escolha comum entre <code>?1x?sim</code> e <code>não</code>:</p>',
-    '<p><small><tt><a href="ex:37">{?1x?sim|não}</a><br>→&nbsp; ?1x? Sim</tt></small></p>',
+    '<p><small><tt><a href="ex:56">{?1x?sim|não}</a><br>→&nbsp; ?1x? Sim</tt></small></p>',
     '<p><b>Um <code>&lt;…&gt;</code> à cabeça de um pedaço que não seja o primeiro não é se' +
       'parador</b> e imprime-se tal e qual:</p>',
-    '<p><small><tt><a href="ex:38">[vermelho|&lt;e&gt;verde]</a><br>→&nbsp; &lt;e&gt;Verde ' +
+    '<p><small><tt><a href="ex:57">[vermelho|&lt;e&gt;verde]</a><br>→&nbsp; &lt;e&gt;Verde ' +
       'vermelho</tt></small></p>',
     '<p>O bloco à cabeça do <b>primeiro</b> pedaço é que é o separador: é a escrita com que' +
       ' abre o capítulo dos baralhares:</p>',
-    '<p><small><tt><a href="ex:39">[&lt;e&gt;vermelho|verde]</a><br>→&nbsp; Verde e vermelh' +
+    '<p><small><tt><a href="ex:58">[&lt;e&gt;vermelho|verde]</a><br>→&nbsp; Verde e vermelh' +
       'o</tt></small></p>',
     '<p>Em qualquer sítio depois de um <code>|</code> é texto comum, e um separador entre d' +
       'ois pedaços vai ao <b>fim</b> do primeiro.</p>',
     '<p><b>Uma etiqueta nua no fim de um pedaço é tomada pelo separador desse par</b> e imp' +
       'ressa como texto seu:</p>',
-    '<p><small><tt><a href="ex:40">[um&lt;br&gt;|dois]</a><br>→&nbsp; Dois um</tt></small><' +
+    '<p><small><tt><a href="ex:59">[um&lt;br&gt;|dois]</a><br>→&nbsp; Dois um</tt></small><' +
       '/p>',
     '<p>Sob esta semente os dois calharam na outra ordem, pelo que o separador não saiu de ' +
       'todo. Com um terceiro pedaço há onde calhar, e ele aparece:</p>',
-    '<p><small><tt><a href="ex:41">[vermelho|verde&lt;br&gt;|azul]</a><br>→&nbsp; Verde br ' +
+    '<p><small><tt><a href="ex:60">[vermelho|verde&lt;br&gt;|azul]</a><br>→&nbsp; Verde br ' +
       'azul vermelho</tt></small></p>',
     '<p>O <code>&lt;br&gt;</code> fica entre <code>verde</code> e o que se lhe segue, ponha' +
       ' o baralhar esse par onde puser. Uma etiqueta de fecho (<code>&lt;/b&gt;</code>), uma ' +
@@ -7398,12 +7765,12 @@ const
       'class="x"&gt;</code>) e uma etiqueta a meio de um pedaço ficam todas intactas.</p>',
     '<p><b>Um comentário por fechar é texto comum</b>: não abre nada, e o <code>/#</code> é' +
       ' impresso:</p>',
-    '<p><small><tt><a href="ex:42">antes /# o resto disto</a><br>→&nbsp; Antes /# o resto d' +
+    '<p><small><tt><a href="ex:61">antes /# o resto disto</a><br>→&nbsp; Antes /# o resto d' +
       'isto</tt></small></p>',
     '<p>Mas continua a ser metade de um par. Se mais abaixo no documento aparecer um <code>' +
       '#/</code>, os dois encontram-se e tudo o que está entre eles vai-se — incluindo o que ' +
       'o autor tiver escrito pelo meio:</p>',
-    '<p><small><tt><a href="ex:43">{a /# ups|b} meio #/ cauda</a><br>→&nbsp; {a cauda</tt><' +
+    '<p><small><tt><a href="ex:62">{a /# ups|b} meio #/ cauda</a><br>→&nbsp; {a cauda</tt><' +
       '/small></p>',
     '<p>A escolha acima perdeu a segunda alternativa e a chaveta de fecho, e nenhum diagnós' +
       'tico o diz: é isso que o texto SIGNIFICA, e não um erro que o motor consiga ver. Quand' +
@@ -7468,26 +7835,26 @@ const
       'tá feita.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — um parêntese é aberto e nunc' +
       'a fechado</h3>',
-    '<p><small><tt><a href="ex:44">um preço {barato|caro</a><br>→&nbsp; Um preço {barato|ca' +
+    '<p><small><tt><a href="ex:63">um preço {barato|caro</a><br>→&nbsp; Um preço {barato|ca' +
       'ro</tt></small></p>',
     '<p>O motor não adivinha onde queria fechar. O texto fica como está, chaveta e tudo, e ' +
       'a escolha nunca acontece.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — fechado por um parêntese' +
       ' de outra espécie</h3>',
-    '<p><small><tt><a href="ex:45">um preço {barato|caro]</a><br>→&nbsp; Um preço {barato|c' +
+    '<p><small><tt><a href="ex:64">um preço {barato|caro]</a><br>→&nbsp; Um preço {barato|c' +
       'aro]</tt></small></p>',
     '<p><code>{</code> espera <code>}</code> e <code>[</code> espera <code>]</code>. Um bar' +
       'alhar fechado por uma chaveta não é um baralhar.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — um parên' +
       'tese de fecho sem nada aberto</h3>',
-    '<p><small><tt><a href="ex:46">um preço barato} e tudo</a><br>→&nbsp; Um preço barato} ' +
+    '<p><small><tt><a href="ex:65">um preço barato} e tudo</a><br>→&nbsp; Um preço barato} ' +
       'e tudo</tt></small></p>',
     '<p>Fica ali como texto. Quase sempre é um parêntese que sobrou de uma alteração.</p>',
     '<hr>',
     '<h2 id="definitions">Definições</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — esta linha <code>#set</code> não s' +
       'egue a regra</h3>',
-    '<p><small><tt><a href="ex:47">#set cidade = Lisboa</a><br><a href="ex:47">em %cidade%<' +
+    '<p><small><tt><a href="ex:66">#set cidade = Lisboa</a><br><a href="ex:66">em %cidade%<' +
       '/a><br>→&nbsp; #set cidade = Lisboa ⏎ Em %cidade%</tt></small></p>',
     '<p><b>O nome vai entre sinais de percentagem:</b> <code>#set %cidade% = Lisboa</code>.' +
       ' É o primeiro erro mais comum, e põe duas linhas de uma vez no painel: a própria linha' +
@@ -7497,7 +7864,7 @@ const
       'O motor não a leu como directiva, logo é uma linha comum e vai para o resultado.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — esta linha <code>#def</code> não s' +
       'egue a regra</h3>',
-    '<p><small><tt><a href="ex:48">#def paginas = {1|3}</a><br><a href="ex:48">%paginas%</a' +
+    '<p><small><tt><a href="ex:67">#def paginas = {1|3}</a><br><a href="ex:67">%paginas%</a' +
       '><br>→&nbsp; #def paginas = 1 ⏎ %paginas%</tt></small></p>',
     '<p>A mesma regra e o mesmo preço. <code>#def</code> não difere de <code>#set</code> na' +
       ' escrita mas em <b>quando</b> o valor é desdobrado: <code>#set</code> desdobra-o a cad' +
@@ -7509,15 +7876,15 @@ const
       'ctiva.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — este nome ' +
       'já está definido acima</h3>',
-    '<p><small><tt><a href="ex:49">#set %x% = primeiro</a><br><a href="ex:49">#set %x% = se' +
-      'gundo</a><br><a href="ex:49">%x%</a><br>→&nbsp; Segundo</tt></small></p>',
+    '<p><small><tt><a href="ex:68">#set %x% = primeiro</a><br><a href="ex:68">#set %x% = se' +
+      'gundo</a><br><a href="ex:68">%x%</a><br>→&nbsp; Segundo</tt></small></p>',
     '<p>Funciona — ganha a <b>última</b> definição — mas o motor chama-lhe erro: um documen' +
       'to em que um nome é posto duas vezes lê-se de modo ambíguo, e daqui a um mês não se le' +
       'mbrará de qual das duas linhas é a viva. O erro aponta a <b>segunda</b> definição; a p' +
       'rimeira está mais acima.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> dentro do valor de uma definição</h3>',
-    '<p><small><tt><a href="ex:50">#def %x% = #include "frag"</a><br><a href="ex:50">%x%</a' +
+    '<p><small><tt><a href="ex:69">#def %x% = #include "frag"</a><br><a href="ex:69">%x%</a' +
       '><br>→&nbsp; Fragmento</tt></small></p>',
     '<p>Uma inclusão dentro de um valor desdobra-se num momento diferente do que esperaria,' +
       ' e a família proíbe-o. Ponha o <code>#include</code> numa linha só dele.</p>',
@@ -7525,7 +7892,7 @@ const
     '<h2 id="variables">Variáveis</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — esta variável não está d' +
       'efinida em lado nenhum</h3>',
-    '<p><small><tt><a href="ex:51">olá, %nome%</a><br>→&nbsp; Olá, %nome%</tt></small></p>',
+    '<p><small><tt><a href="ex:70">olá, %nome%</a><br>→&nbsp; Olá, %nome%</tt></small></p>',
     '<p>Um aviso e não um erro: o motor imprime o nome tal e qual. É de propósito, porque o' +
       ' valor pode vir de fora, do anfitrião. No Studio esses valores fornecem-se no separado' +
       'r Variáveis, em <b>Valores de sessão</b>.</p>',
@@ -7557,7 +7924,7 @@ const
     '<li><b>Ctrl+clique</b> escreve uma definição no documento e abre-lhe por cima o editor' +
       ' de grupos. O valor que já tiver escrito entra como primeira possibilidade:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:52">#set %marca% = {Vulkan}</a><br><a href="ex:52">casino %m' +
+    '<p><small><tt><a href="ex:71">#set %marca% = {Vulkan}</a><br><a href="ex:71">casino %m' +
       'arca%</a><br>→&nbsp; Casino Vulkan</tt></small></p>',
     '<p>A diferença entre os dois é o que sobrevive a fechar a janela. Um valor de sessão n' +
       'ão: não está no ficheiro, não está no git, e nenhum outro motor da família o vê. Uma d' +
@@ -7570,7 +7937,7 @@ const
       ' chavetas e sinais de percentagem continuam a ser caracteres.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — a definição no' +
       'meia-se a si própria</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = a %x% b</a><br><a href="ex:53">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:72">#set %x% = a %x% b</a><br><a href="ex:72">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Cinquenta níveis, depois pára. O motor desdobra até ao limite de profundidade e pár' +
       'a, deixando <code>%x%</code> a meio. Não é um ciclo, e também não é o que queria.</p>',
@@ -7580,8 +7947,8 @@ const
       'is uma de cada.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — as def' +
       'inições nomeiam-se em círculo</h3>',
-    '<p><small><tt><a href="ex:54">#set %x% = %y%</a><br><a href="ex:54">#set %y% = %x%</a>' +
-      '<br><a href="ex:54">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:73">#set %x% = %y%</a><br><a href="ex:73">#set %y% = %x%</a>' +
+      '<br><a href="ex:73">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Cada lado desdobra-se exactamente <b>uma vez</b> e depois pára: <code>%x%</code> pa' +
       'ssou a <code>%y%</code> e não a <code>%x%</code>. O motor desenrola o círculo em vez d' +
       'e o percorrer, e o que sobrevive é o outro nome do círculo: ponha <code>%x% %y%</code>' +
@@ -7601,9 +7968,9 @@ const
     '<hr>',
     '<h2 id="includes">Inclusões</h2>',
     '<h3 id="includes-0"><code>#include</code> só funciona no princípio da linha</h3>',
-    '<p><small><tt><a href="ex:55">antes #include "frag" depois</a><br>→&nbsp; Antes #inclu' +
+    '<p><small><tt><a href="ex:74">antes #include "frag" depois</a><br>→&nbsp; Antes #inclu' +
       'de "frag" depois</tt></small></p>',
-    '<p><small><tt><a href="ex:56">#include "frag"</a><br>→&nbsp; Fragmento</tt></small></p' +
+    '<p><small><tt><a href="ex:75">#include "frag"</a><br>→&nbsp; Fragmento</tt></small></p' +
       '>',
     '<p>Nenhum diagnóstico, e é justamente esse o ponto: um <code>#include</code> a meio de' +
       ' uma linha <b>não</b> é uma inclusão. O motor lê-o como texto comum e não diz nada, po' +
@@ -7611,7 +7978,7 @@ const
     '<p><b>O alvo pode, contudo, ficar uma linha abaixo</b>, e isso surpreende pelo outro l' +
       'ado. O intervalo que o motor permite entre a palavra e o seu alvo inclui as mudanças d' +
       'e linha, logo isto é uma inclusão e funciona:</p>',
-    '<p><small><tt><a href="ex:57">#include</a><br><a href="ex:57">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:76">#include</a><br><a href="ex:76">"frag"</a><br>→&nbsp; Fr' +
       'agmento</tt></small></p>',
     '<p>Linhas vazias pelo meio também servem. O resto não serve: uma palavra antes do alvo' +
       ' ou qualquer coisa que não sejam espaços atrás, e o conjunto volta a ser texto. O edit' +
@@ -7619,7 +7986,7 @@ const
       ' promete uma directiva de que ainda não vê o fim.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — não há alvo com ' +
       'esse nome no conjunto</h3>',
-    '<p><small><tt><a href="ex:58">#include "nenhum"</a><br>→&nbsp; (vazio)</tt></small></p' +
+    '<p><small><tt><a href="ex:77">#include "nenhum"</a><br>→&nbsp; (vazio)</tt></small></p' +
       '>',
     '<p>Os alvos são os ficheiros <code>.spintax</code> da pasta do documento aberto. Um al' +
       'vo desconhecido desdobra-se em nada: o parágrafo desaparece em vez de partir, que é pr' +
@@ -7636,7 +8003,7 @@ const
       'o está lá.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — o alvo existe, com outra' +
       's maiúsculas</h3>',
-    '<p><small><tt><a href="ex:59">#include "intro"</a><br>→&nbsp; (vazio)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "intro"</a><br>→&nbsp; (vazio)</tt></small></p>',
     '<p>O conjunto contém <code>Intro.spintax</code>, e o motor diz mesmo assim que não há ' +
       'alvo com esse nome, enquanto o Studio acrescenta a sua nota sobre as maiúsculas. Elas ' +
       'contam: <code>intro</code> e <code>Intro</code> são alvos diferentes. O Windows abriri' +
@@ -7646,7 +8013,7 @@ const
     '<h3 id="note.cycle"><code>note.cycle</code> — uma inclusão em círculo</h3>',
     '<p>Se <code>loop.spintax</code> contiver ele próprio <code>#include "loop"</code>, ent' +
       'ão:</p>',
-    '<p><small><tt><a href="ex:60">#include "loop"</a><br>→&nbsp; (vazio)</tt></small></p>',
+    '<p><small><tt><a href="ex:79">#include "loop"</a><br>→&nbsp; (vazio)</tt></small></p>',
     '<p>O motor põe nada em vez do infinito. A nota está lá para que saiba porque é que o p' +
       'arágrafo se evaporou.</p>',
     '<p>A linha é passada contra <b><code>loop</code></b> e não contra o documento que está' +
@@ -7656,19 +8023,22 @@ const
     '<h2 id="plurals">Formas de número</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — não há tantas formas quantas a local' +
       'e pede</h3>',
-    '<p><small><tt><a href="ex:61">#set %n% = 5</a><br><a href="ex:61">%n% {plural %n%: obj' +
+    '<p><small><tt><a href="ex:80">#set %n% = 5</a><br><a href="ex:80">%n% {plural %n%: obj' +
       'eto|objetos|objetoses}</a><br>→&nbsp; 5 ｛plural 5: objeto|objetos|objetoses｝</tt></sma' +
       'll></p>',
     '<p><b>Não é vazio: o motor imprime a construção inteira</b>, com as chavetas trocadas ' +
       'por umas largas <code>｛｝</code>. É assim que diz «vi isto e não o consegui aplicar». D' +
       'iscreto não lhe chamaria ninguém, e ainda bem: um parágrafo evaporado em silêncio cust' +
       'aria mais a encontrar.</p>',
-    '<p>O português pede duas formas, o russo três. Sob a locale deste documento a certa é ' +
-      '<code>{plural %n%: objeto|objetos}</code>.</p>',
+    '<p>O português pede duas formas, o russo três, o árabe seis. Sob a locale deste docume' +
+      'nto a certa é <code>{plural %n%: objeto|objetos}</code>; sob <code>ar</code> as mesmas' +
+      ' duas formas são o erro:</p>',
+    '<p><small><tt><a href="ex:81">#def %n% = 5</a><br><a href="ex:81">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>O vazio vem de outra causa, e as duas confundem-se com facilidade.</b> Compare e' +
       'stas duas, que só diferem em quantas formas levam:</p>',
-    '<p><small><tt><a href="ex:62">{plural %n%: objeto|objetos}</a><br>→&nbsp; (vazio)&nbsp' +
-      ';&nbsp; duas formas: certo para o português<br><a href="ex:63">{plural %n%: objeto|obj' +
+    '<p><small><tt><a href="ex:82">{plural %n%: objeto|objetos}</a><br>→&nbsp; (vazio)&nbsp' +
+      ';&nbsp; duas formas: certo para o português<br><a href="ex:83">{plural %n%: objeto|obj' +
       'etos|objetoses}</a><br>→&nbsp; (vazio)&nbsp;&nbsp; três formas: errado para o portuguê' +
       's</tt></small></p>',
     '<p>As duas não imprimem nada, e o painel trata-as de modo diferente: a primeira puxa s' +
@@ -7686,7 +8056,7 @@ const
       'rimeiro exemplo, e verá o que o número de formas faz realmente.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — a contagem vem de um <co' +
       'de>#set</code>, e esse volta a tirar a cada menção</h3>',
-    '<p><small><tt><a href="ex:64">#set %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#set %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' objeto|objetos}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Veja o que sobreviveu: <b>o número foi impresso e o substantivo não.</b> A contagem' +
       ' tem de ser um número quando a forma é escolhida, e um <code>#set</code> cujo valor é ' +
@@ -7695,13 +8065,13 @@ const
       ' a forma não podem contradizer-se; o motor deixa cair a palavra.</p>',
     '<p><code>#def</code> comporta-se de outro modo e desdobra o seu valor uma vez por comp' +
       'osição, logo o lugar da contagem recebe um número:</p>',
-    '<p><small><tt><a href="ex:65">#def %n% = {1|2}</a><br><a href="ex:65">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:85">#def %n% = {1|2}</a><br><a href="ex:85">%n% {plural %n%:' +
       ' objeto|objetos}</a><br>→&nbsp; 1 objeto</tt></small></p>',
     '<p>Para esse não há linha nenhuma no painel. Daí a regra: faça da contagem um algarism' +
       'o simples ou um <code>#def</code>, nunca um <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — parênteses dentr' +
       'o das formas</h3>',
-    '<p><small><tt><a href="ex:66">{plural %n%: {objeto|coisa}|objetos}</a><br>→&nbsp; ｛plu' +
+    '<p><small><tt><a href="ex:86">{plural %n%: {objeto|coisa}|objetos}</a><br>→&nbsp; ｛plu' +
       'ral %n%: ｛objeto|coisa｝|objetos｝</tt></small></p>',
     '<p>As formas são texto simples. Uma escolha lá dentro não é desdobrada, e no seu lugar' +
       ' é a construção inteira que se imprime entre chavetas largas.</p>',
@@ -7709,7 +8079,7 @@ const
     '<h2 id="permutations">Baralhares</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — chave desconhe' +
       'cida na definição</h3>',
-    '<p><small><tt><a href="ex:67">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:87">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>As chaves conhecidas são <code>minsize</code>, <code>maxsize</code>, <code>sep</cod' +
       'e> e <code>lastsep</code>. Uma desconhecida não é uma definição, e quando é a única co' +
@@ -7717,7 +8087,7 @@ const
       's pedaços, que é o que a saída mostra.</p>',
     '<p><b>Se ao lado houver uma chave a sério, o desfecho é outro completamente</b>, e ess' +
       'e é o erro mais provável: uma chave de várias mal escrita:</p>',
-    '<p><small><tt><a href="ex:68">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:88">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>O bloco é uma definição, <code>sep</code> é cumprido, a chave desconhecida simplesm' +
       'ente deixada cair, e o painel diz o mesmo nos dois casos. O diagnóstico diz-lhe portan' +
@@ -7725,13 +8095,13 @@ const
       'ia a saída.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize não é um número inteiro</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;minsize=dois&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:89">[&lt;minsize=dois&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Um valor não numérico cai juntamente com o seu limite, e vale o valor por omissão, ' +
       'que são todos os pedaços.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize não é um número inteiro</h3>',
-    '<p><small><tt><a href="ex:70">[&lt;maxsize=muitos&gt;a|b|c]</a><br>→&nbsp; B c a</tt><' +
+    '<p><small><tt><a href="ex:90">[&lt;maxsize=muitos&gt;a|b|c]</a><br>→&nbsp; B c a</tt><' +
       '/small></p>',
     '<p>Exactamente o mesmo pelo outro extremo: o limite de cima desaparece, e a saída volt' +
       'a a conter cada pedaço.</p>',
@@ -7771,8 +8141,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Um silêncio em todas as línguas: as abreviaturas</h2>',
     '<h3 id="abbreviations-0">Uma abreviatura deixa em minúscula a palavra seguinte</h3>',
-    '<p><small><tt><a href="ex:71">Sr. os nossos preços são baixos</a><br>→&nbsp; Sr. os no' +
-      'ssos preços são baixos<br><a href="ex:72">Xyz. os nossos preços são baixos</a><br>→&nb' +
+    '<p><small><tt><a href="ex:91">Sr. os nossos preços são baixos</a><br>→&nbsp; Sr. os no' +
+      'ssos preços são baixos<br><a href="ex:92">Xyz. os nossos preços são baixos</a><br>→&nb' +
       'sp; Xyz. Os nossos preços são baixos</tt></small></p>',
     '<p>Duas linhas que diferem numa palavra, e a segunda palavra de cada uma dá-lhe a regr' +
       'a: depois de <code>Sr.</code> a frase fica em minúscula, depois de <code>Xyz.</code> v' +
@@ -7801,15 +8171,15 @@ const
       'cula, e <code>n.º</code> sai partido.</p>',
     '<hr>',
     '<h2 id="correct">Que aspecto tem a forma correcta</h2>',
-    '<p><small><tt><a href="ex:73">um preço {barato|caro}</a><br>→&nbsp; Um preço barato</t' +
+    '<p><small><tt><a href="ex:93">um preço {barato|caro}</a><br>→&nbsp; Um preço barato</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:94">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:75">#set %vip% = 1</a><br><a href="ex:75">{?vip?para si|para' +
+    '<p><small><tt><a href="ex:95">#set %vip% = 1</a><br><a href="ex:95">{?vip?para si|para' +
       ' todos}</a><br>→&nbsp; Para si</tt></small></p>',
-    '<p><small><tt><a href="ex:76">#set %n% = 5</a><br><a href="ex:76">%n% {plural %n%: art' +
+    '<p><small><tt><a href="ex:96">#set %n% = 5</a><br><a href="ex:96">%n% {plural %n%: art' +
       'igo|artigos}</a><br>→&nbsp; 5 artigos</tt></small></p>',
-    '<p><small><tt><a href="ex:77">antes /# uma nota #/ depois</a><br>→&nbsp; Antes depois<' +
+    '<p><small><tt><a href="ex:97">antes /# uma nota #/ depois</a><br>→&nbsp; Antes depois<' +
       '/tt></small></p>',
     '<p>Cinco construções, cinco linhas limpas: uma escolha, um baralhar com definições, um' +
       'a condição, uma forma de número com um número à frente e um comentário. Nenhuma põe se' +
@@ -7826,7 +8196,7 @@ const
       'feitos de letras latinas, algarismos e do sublinhado. <code>%endereço%</code> não é me' +
       'nção nenhuma de variável: o motor lê-o como texto e não diz nada, porque do ponto de v' +
       'ista dele não há nada a assinalar:</p>',
-    '<p><small><tt><a href="ex:78">olá %endereço% e %nome%</a><br>→&nbsp; Olá %endereço% e ' +
+    '<p><small><tt><a href="ex:98">olá %endereço% e %nome%</a><br>→&nbsp; Olá %endereço% e ' +
       '%nome%</tt></small></p>',
     '<p>Ambas passaram intactas, e a armadilha está aí: só a segunda puxou uma linha no pai' +
       'nel. A primeira é silenciosa, logo nada lhe diz que nunca será substituída. Mude-lhe o' +
@@ -8139,7 +8509,10 @@ const
     '<p><code>locale</code> bepaalt de getalsvormen, en het is de keuzelijst boven de recht' +
       'erhelft, niet de taal van de interface. Het Nederlands en het Engels vragen twee vorme' +
       'n; het Russisch, het Oekraïens, het Wit-Russisch, het Servisch, het Kroatisch en het B' +
-      'osnisch vragen er drie.</p>',
+      'osnisch vragen er drie; het Arabisch vraagt er zes. Onder het Arabisch en het Hebreeuw' +
+      's verandert de locale ook hoe een voegwoord een opsomming verbindt (zie het scheidings' +
+      'teken). De Arabische en Hebreeuwse voorbeelden hieronder zijn gemeten onder hun eigen ' +
+      'locale, die de zin vóór elk ervan noemt.</p>',
     '<h2 id="choices">Keuzes</h2>',
     '<p>Accolades met <code>|</code> ertussen: de machine pakt er <b>één</b>.</p>',
     '<p><small><tt><a href="ex:1">Een {kleine|grote} kamer.</a><br>→&nbsp; Een kleine kamer' +
@@ -8192,38 +8565,67 @@ const
       '→&nbsp; Groen, blauw en rood</tt></small></p>',
     '<p><code>sep</code> gaat tussen de stukken en <code>lastsep</code> voor het laatste.</' +
       'p>',
+    '<p>Een scheidingsteken dat alleen uit letters bestaat krijgt aan elke kant een spatie,' +
+      ' ook als er geen getypt is:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="en"&gt;A|B]</a><br>→&nbsp; B en A</tt></sma' +
+      'll></p>',
+    '<p>Schriften die zonder spaties tussen de woorden worden geschreven zijn de uitzonderi' +
+      'ng, onder elke locale: Chinese, Japanse, Thaise, Laotiaanse, Khmer- en Myanmarese sche' +
+      'idingstekens sluiten direct aan.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Het Arabisch en het Hebreeuws hebben een eigen regel, en het is de <b>locale</b> di' +
+      'e hem aanzet, niet het schrift. Onder <code>ar</code> houdt een scheidingsteken dat pr' +
+      'ecies و of ف is de spatie ervoor en laat het de spatie erna vallen, omdat het Arabisch' +
+      ' het voegwoord vast aan het volgende woord schrijft; onder <code>he</code> geldt hetze' +
+      'lfde voor ו. Het gebeurt alleen vóór een woord in dat schrift — vóór een Latijnse naam' +
+      ' of een cijfer blijven beide spaties staan:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Onder elke andere locale blijft het voegwoord een woord op zichzelf, en dat is juis' +
+      't voor het Perzisch en het Urdu, waar dezelfde letter los wordt geschreven:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Hoeveel</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;rood|groen|blauw]</a><br>→&nb' +
-      'sp; Groen blauw</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;rood|groen|blauw]</a><br>→&n' +
+      'bsp; Groen blauw</tt></small></p>',
     '<p><code>minsize</code> is de vloer en <code>maxsize</code> het plafond; het aantal er' +
       'tussen is willekeurig, net als de volgorde. Gelijke waarden pakken er precies zoveel. ' +
       '<b>Zonder allebei alle, maar met alleen <code>maxsize</code> ligt de vloer op één</b>,' +
       ' wat mensen verrast:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Drie stukken, een plafond van drie, en er kwam er één uit. Schrijf ook <code>minsiz' +
       'e</code> wanneer u «alle, hoogstens drie» bedoelt. Een <code>maxsize</code> boven het ' +
       'aantal stukken wordt stilletjes tot dat aantal verlaagd. Een <code>minsize</code> bove' +
       'n de <code>maxsize</code> wordt zonder een woord aanvaard, en de vloer wint: het plafo' +
       'nd wordt naar hem opgetrokken en niet andersom:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;rood|groen|blauw]</a><br>→&n' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;rood|groen|blauw]</a><br>→&n' +
       'bsp; Groen blauw rood</tt></small></p>',
     '<h3 id="shuffles-2">Een scheidingsteken tussen twee stukken</h3>',
     '<p>Een <code>&lt;…&gt;</code> dat <b>tussen</b> twee stukken wordt geschreven, is het ' +
       'scheidingsteken van dat paar.</p>',
-    '<p><small><tt><a href="ex:12">[rood|groen&lt;en&gt;|blauw]</a><br>→&nbsp; Groen en bla' +
+    '<p><small><tt><a href="ex:25">[rood|groen&lt;en&gt;|blauw]</a><br>→&nbsp; Groen en bla' +
       'uw rood</tt></small></p>',
     '<p>Het hoort bij het stuk <b>erna</b> en reist met dat stuk door de schudbeurt mee, du' +
       's het duikt op waar dat stuk terechtkomt en niet op een vaste plek in de uitvoer. Een ' +
       '<code>&lt;…&gt;</code> na het <b>laatste</b> stuk is helemaal geen scheidingsteken en ' +
       'wordt als tekst afgedrukt:</p>',
-    '<p><small><tt><a href="ex:13">[rood|groen|blauw&lt;en&gt;]</a><br>→&nbsp; Groen blauw&' +
+    '<p><small><tt><a href="ex:26">[rood|groen|blauw&lt;en&gt;]</a><br>→&nbsp; Groen blauw&' +
       'lt;en&gt; rood</tt></small></p>',
     '<h2 id="macros">Macro''s</h2>',
     '<p><code>#set</code> geeft een stuk tekst een naam. De naam wordt als <code>%naam%</co' +
       'de> gebruikt, en de aanwijzing moet het eerste op haar regel zijn — spaties en tabs er' +
       'voor mogen, verder niets.</p>',
-    '<p><small><tt><a href="ex:14">#set %stad% = Utrecht</a><br><a href="ex:14">Vlucht naar' +
+    '<p><small><tt><a href="ex:27">#set %stad% = Utrecht</a><br><a href="ex:27">Vlucht naar' +
       ' %stad%.</a><br>→&nbsp; Vlucht naar Utrecht.</tt></small></p>',
     '<p>Namen bestaan uit Latijnse letters, cijfers en <code>_</code>. Een naam in een ande' +
       'r alfabet is geen naam, waarover het andere document spreekt onder <code>set.malformed' +
@@ -8231,9 +8633,9 @@ const
     '<h3 id="macros-0"><code>#set</code> loot opnieuw, <code>#def</code> loot één keer</h3>',
     '<p>Dat is het hele verschil tussen de twee, en het blijkt alleen wanneer de waarde een' +
       ' keuze bevat.</p>',
-    '<p><small><tt><a href="ex:15">#set %keuze% = {A|B}</a><br><a href="ex:15">%keuze% %keu' +
+    '<p><small><tt><a href="ex:28">#set %keuze% = {A|B}</a><br><a href="ex:28">%keuze% %keu' +
       'ze% %keuze%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %keuze% = {A|B}</a><br><a href="ex:16">%keuze% %keu' +
+    '<p><small><tt><a href="ex:29">#def %keuze% = {A|B}</a><br><a href="ex:29">%keuze% %keu' +
       'ze% %keuze%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Beide voorbeelden liepen onder hetzelfde startgetal. <code>#set</code> bewaart het ' +
       'sjabloon en loot het bij elk gebruik; <code>#def</code> loot één keer en houdt het ant' +
@@ -8245,11 +8647,11 @@ const
       'g niet werkt.</p>',
     '<h2 id="conditions">Voorwaarden</h2>',
     '<p><code>{?naam?dan|anders}</code> vraagt of een macro een waarde heeft.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?we hebben %n%|no' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?we hebben %n%|no' +
       'g niets}</a><br>→&nbsp; We hebben 5</tt></small></p>',
     '<p>De helft <code>anders</code> mag ontbreken — <code>{?naam?dan}</code> drukt niets a' +
       'f wanneer het antwoord nee is. Een <code>!</code> draait de vraag om:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?vreemde|vri' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?vreemde|vri' +
       'end}</a><br>→&nbsp; Vriend</tt></small></p>',
     '<p>Een waarde hebben betekent <b>ten minste één teken hebben dat geen spatie is</b>. E' +
       'en macro die op niets is gezet, of alleen op spaties, telt als zonder waarde.</p>',
@@ -8258,9 +8660,9 @@ const
       'am verandert die met een cijfer begint.</p>',
     '<h2 id="counting">Telling</h2>',
     '<p><code>{plural %n%: …}</code> pakt de woordvorm die bij een getal hoort.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: bes' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: bes' +
       'tand|bestanden}</a><br>→&nbsp; 1 bestand</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: bes' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: bes' +
       'tand|bestanden}</a><br>→&nbsp; 5 bestanden</tt></small></p>',
     '<p>De telling is hier met opzet een <code>#def</code> en geen <code>#set</code>, en de' +
       ' regel is het bewaren waard: <b>maak van de telling een gewoon cijfer of een <code>#de' +
@@ -8269,17 +8671,35 @@ const
       '> — dus geen getal — waardoor de hele constructie niets oplevert en het paneel <code>p' +
       'lural.count-macro</code> zegt. De telling en de vorm kunnen elkaar niet tegenspreken: ' +
       'in plaats daarvan verdwijnt het woord.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' bestand|bestanden}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Hoeveel vormen er zijn bepaalt de locale en niet u: onder <code>nl</code> zijn het ' +
-      'er twee, onder <code>ru</code> drie. Het verkeerde aantal is een fout die het paneel m' +
-      'eldt (<code>plural.arity</code>), en de machine drukt dan de hele constructie terug af' +
-      ' met de accolades vervangen door brede <code>｛｝</code>, zodat men het niet voor uitvoe' +
-      'r aanziet.</p>',
+      'er twee, onder <code>ru</code> drie, onder <code>ar</code> zes — in de volgorde zero, ' +
+      'one, two, few, many, other. Het Arabisch zegt «één boek» en «twee boeken» zonder telwo' +
+      'ord, dus het getal gaat <b>in</b> de vormen die het afdrukken, en niet vóór het blok:<' +
+      '/p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Het verkeerde aantal is een fout die het paneel meldt (<code>plural.arity</code>), ' +
+      'en de machine drukt dan de hele constructie terug af met de accolades vervangen door b' +
+      'rede <code>｛｝</code>, zodat men het niet voor uitvoer aanziet.</p>',
     '<h2 id="fragments">Fragmenten</h2>',
     '<p><code>#include "naam"</code> zet op die plek een ander sjabloon neer, en de aanwijz' +
       'ing moet het eerste op haar regel zijn — ook hier mogen spaties en tabs ervoor.</p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Welkom bij Acme.</tt></s' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Welkom bij Acme.</tt></s' +
       'mall></p>',
     '<p>Het fragment wordt als eigen sjabloon weergegeven, dus een keuze erin wordt opnieuw' +
       ' gemaakt: <code>intro</code> bevat <code>{Acme|Globex}</code> en antwoordt met de een ' +
@@ -8294,7 +8714,7 @@ const
     '<p>Het wordt als eigen sjabloon weergegeven: het heeft de waarden van de sessie, maar ' +
       'niet de <code>#set</code> en <code>#def</code> van het document dat het binnenhaalde.<' +
       '/p>',
-    '<p><small><tt><a href="ex:23">#set %merk% = Acme</a><br><a href="ex:23">#include "shou' +
+    '<p><small><tt><a href="ex:42">#set %merk% = Acme</a><br><a href="ex:42">#include "shou' +
       't"</a><br>→&nbsp; Het %merk% is er.</tt></small></p>',
     '<p><code>shout</code> is <code>Het %merk% is er.</code>, en de naam moet in het fragme' +
       'nt zelf worden vastgelegd. Dit is geen stilte — het paneel zegt wel degelijk <code>var' +
@@ -8305,7 +8725,7 @@ const
     '<h2 id="remarks">Opmerkingen</h2>',
     '<p><code>/# … #/</code> is een opmerking: alles tussen de tekens wordt verwijderd voor' +
       'dat er iets anders gebeurt.</p>',
-    '<p><small><tt><a href="ex:24">concept /# nog niet zeker #/ klaar</a><br>→&nbsp; Concep' +
+    '<p><small><tt><a href="ex:43">concept /# nog niet zeker #/ klaar</a><br>→&nbsp; Concep' +
       't klaar</tt></small></p>',
     '<p>Opmerkingen nesten niet. De eerste <code>#/</code> sluit de opmerking, wat er ook v' +
       'oor stond, dus een opmerking om een tekst heen die zelf <code>#/</code> bevat eindigt ' +
@@ -8314,7 +8734,7 @@ const
     '<p>De uitvoer is niet helemaal de tekst die de constructies opleverden. Op het eind ov' +
       'erkomt haar het een en ander; twee dingen komt u dagelijks tegen.</p>',
     '<p>De eerste letter van elke zin wordt een hoofdletter:</p>',
-    '<p><small><tt><a href="ex:25">een. twee. drie.</a><br>→&nbsp; Een. Twee. Drie.</tt></s' +
+    '<p><small><tt><a href="ex:44">een. twee. drie.</a><br>→&nbsp; Een. Twee. Drie.</tt></s' +
       'mall></p>',
     '<p>Daarom antwoorden de voorbeelden in deze help zo vaak met een hoofdletter waar het ' +
       'sjabloon een kleine letter heeft. Een punt na een afkorting die de machine kent beëind' +
@@ -8322,15 +8742,15 @@ const
       'de> heeft dat — letter, punt, letter, punt — in <b>elk alfabet</b>: de controle «zitte' +
       'n we midden in een woord» leest elk schrift, en <code>т.е.</code> is precies zo besche' +
       'rmd als <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:26">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:45">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:27">Dr. onze prijzen zijn laag</a><br>→&nbsp; Dr. onze prijz' +
+    '<p><small><tt><a href="ex:46">Dr. onze prijzen zijn laag</a><br>→&nbsp; Dr. onze prijz' +
       'en zijn laag</tt></small></p>',
-    '<p><small><tt><a href="ex:28">o.a. dit blijft klein</a><br>→&nbsp; o.a. dit blijft kle' +
+    '<p><small><tt><a href="ex:47">o.a. dit blijft klein</a><br>→&nbsp; o.a. dit blijft kle' +
       'in</tt></small></p>',
     '<p>Elk ander woord beëindigt een zin, hoe kort ook — met lengte heeft het niets te mak' +
       'en:</p>',
-    '<p><small><tt><a href="ex:29">Xyz. onze prijzen zijn laag</a><br>→&nbsp; Xyz. Onze pri' +
+    '<p><small><tt><a href="ex:48">Xyz. onze prijzen zijn laag</a><br>→&nbsp; Xyz. Onze pri' +
       'jzen zijn laag</tt></small></p>',
     '<p>De lijst die de machine kent heeft 46 ingangen, <b>29 daarvan Cyrillisch</b>, en he' +
       't andere document loopt hem langs onder <b>Een stilte in elke taal</b>. Voor Nederland' +
@@ -8347,9 +8767,9 @@ const
       'n.twee</code> of <code>сайт.рф</code> heet. En een beschermd begin is voor de hoofdlet' +
       'ter geen zinsbegin — daarom komt <code>een.twee</code> hieronder onaangeroerd terug, k' +
       'leine letter en al.</p>',
-    '<p><small><tt><a href="ex:30">hallo , wereld</a><br>→&nbsp; Hallo, wereld</tt></small>' +
+    '<p><small><tt><a href="ex:49">hallo , wereld</a><br>→&nbsp; Hallo, wereld</tt></small>' +
       '</p>',
-    '<p><small><tt><a href="ex:31">een.twee</a><br>→&nbsp; een.twee</tt></small></p>',
+    '<p><small><tt><a href="ex:50">een.twee</a><br>→&nbsp; een.twee</tt></small></p>',
     '<h2 id="silences">Stiltes</h2>',
     '<p>Elk geval hieronder geeft weer, levert iets anders op dan het eruitziet en trekt <b' +
       '>geen enkele diagnose</b>. Ze staan hier bijeen omdat niets anders in het venster ze o' +
@@ -8360,39 +8780,39 @@ const
       'e>Prof.</code> hierboven —, terwijl <code>Dhr.</code>, <code>nr.</code>, <code>blz.</c' +
       'ode>, <code>bijv.</code> en <code>bv.</code> een zin beëindigen en het volgende woord ' +
       'een hoofdletter geven:</p>',
-    '<p><small><tt><a href="ex:32">bijv. dit blijft klein</a><br>→&nbsp; Bijv. Dit blijft k' +
+    '<p><small><tt><a href="ex:51">bijv. dit blijft klein</a><br>→&nbsp; Bijv. Dit blijft k' +
       'lein</tt></small></p>',
     '<p>De vormen met meerdere punten hebben er geen last van: <code>o.a.</code> en <code>a' +
       '.u.b.</code> gaan door de regel voor meerdere punten en blijven onaangeroerd. Voor de ' +
       'losse woorden helpt alleen herformuleren of de punt vermijden.</p>',
     '<p><b>Een <code>#include</code> dat niet alleen op zijn regel staat is gewone tekst.</' +
       'b></p>',
-    '<p><small><tt><a href="ex:33">Ervoor. #include "intro"</a><br>→&nbsp; Ervoor. #include' +
+    '<p><small><tt><a href="ex:52">Ervoor. #include "intro"</a><br>→&nbsp; Ervoor. #include' +
       ' "intro"</tt></small></p>',
     '<p>Hetzelfde geldt voor een aanwijzing met iets erachter en voor <code>#include"intro"' +
       '</code> zonder spatie. De regel is die van de familie en niet die van deze machine, en' +
       ' zij is het die een aanwijzing herkenbaar maakt zonder de hele regel te ontleden.</p>',
     '<p><b>Een voorwaarde waarvan de naam met een cijfer begint is geen voorwaarde.</b> Zij' +
       ' wordt een gewone keuze tussen <code>?1x?ja</code> en <code>nee</code>:</p>',
-    '<p><small><tt><a href="ex:34">{?1x?ja|nee}</a><br>→&nbsp; ?1x? Ja</tt></small></p>',
+    '<p><small><tt><a href="ex:53">{?1x?ja|nee}</a><br>→&nbsp; ?1x? Ja</tt></small></p>',
     '<p><b>Een <code>&lt;…&gt;</code> aan het hoofd van een later stuk is geen scheidingste' +
       'ken</b> en wordt afgedrukt zoals het er staat:</p>',
-    '<p><small><tt><a href="ex:35">[rood|&lt;en&gt;groen]</a><br>→&nbsp; &lt;en&gt;Groen ro' +
+    '<p><small><tt><a href="ex:54">[rood|&lt;en&gt;groen]</a><br>→&nbsp; &lt;en&gt;Groen ro' +
       'od</tt></small></p>',
     '<p>Het blok aan het hoofd van het <b>eerste</b> stuk is wél het scheidingsteken — dat ' +
       'is de schrijfwijze waarmee het hoofdstuk over schudbeurten opent:</p>',
-    '<p><small><tt><a href="ex:36">[&lt;en&gt;rood|groen]</a><br>→&nbsp; Groen en rood</tt>' +
+    '<p><small><tt><a href="ex:55">[&lt;en&gt;rood|groen]</a><br>→&nbsp; Groen en rood</tt>' +
       '</small></p>',
     '<p>Overal na een <code>|</code> is het gewone tekst, en een scheidingsteken tussen twe' +
       'e stukken hoort aan het <b>einde</b> van het eerste.</p>',
     '<p><b>Een kale tag aan het einde van een stuk wordt voor het scheidingsteken van dat p' +
       'aar aangezien</b> en als eigen tekst afgedrukt:</p>',
-    '<p><small><tt><a href="ex:37">[een&lt;br&gt;|twee]</a><br>→&nbsp; Twee een</tt></small' +
+    '<p><small><tt><a href="ex:56">[een&lt;br&gt;|twee]</a><br>→&nbsp; Twee een</tt></small' +
       '></p>',
     '<p>Onder dit startgetal vielen de twee in de andere volgorde, dus het scheidingsteken ' +
       'kwam er helemaal niet uit. Met een derde stuk is er plaats voor, en het verschijnt:</p' +
       '>',
-    '<p><small><tt><a href="ex:38">[rood|groen&lt;br&gt;|blauw]</a><br>→&nbsp; Groen br bla' +
+    '<p><small><tt><a href="ex:57">[rood|groen&lt;br&gt;|blauw]</a><br>→&nbsp; Groen br bla' +
       'uw rood</tt></small></p>',
     '<p>Het <code>&lt;br&gt;</code> staat tussen <code>groen</code> en wat erop volgt, waar' +
       ' de schudbeurt dat paar ook neerzet. Een sluitende tag (<code>&lt;/b&gt;</code>), een ' +
@@ -8400,12 +8820,12 @@ const
       't;</code>) en een tag midden in een stuk blijven allemaal onaangeroerd.</p>',
     '<p><b>Een niet-gesloten opmerking is gewone tekst</b> — hij opent niets, en de <code>/' +
       '#</code> wordt afgedrukt:</p>',
-    '<p><small><tt><a href="ex:39">ervoor /# de rest hiervan</a><br>→&nbsp; Ervoor /# de re' +
+    '<p><small><tt><a href="ex:58">ervoor /# de rest hiervan</a><br>→&nbsp; Ervoor /# de re' +
       'st hiervan</tt></small></p>',
     '<p>Maar hij is nog altijd de helft van een paar. Verschijnt er verderop in het documen' +
       't een <code>#/</code>, dan vinden de twee elkaar en gaat alles ertussen weg — met inbe' +
       'grip van wat de schrijver ertussen schreef:</p>',
-    '<p><small><tt><a href="ex:40">{a /# oeps|b} midden #/ staart</a><br>→&nbsp; {a staart<' +
+    '<p><small><tt><a href="ex:59">{a /# oeps|b} midden #/ staart</a><br>→&nbsp; {a staart<' +
       '/tt></small></p>',
     '<p>De keuze hierboven verloor haar tweede alternatief en haar sluitende accolade, en g' +
       'een diagnose zegt het: dit is wat de tekst BETEKENT, en geen fout die de machine kan z' +
@@ -8474,19 +8894,19 @@ const
       'est, omdat het deel uitmaakt van hoe de constructie gebouwd is.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — een haak wordt geopend en no' +
       'oit gesloten</h3>',
-    '<p><small><tt><a href="ex:41">een prijs {laag|hoog</a><br>→&nbsp; Een prijs {laag|hoog' +
+    '<p><small><tt><a href="ex:60">een prijs {laag|hoog</a><br>→&nbsp; Een prijs {laag|hoog' +
       '</tt></small></p>',
     '<p>De machine raadt niet waar u wilde sluiten. De tekst blijft zoals hij is, accolade ' +
       'en al, en de keuze vindt nooit plaats.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — gesloten door een haak v' +
       'an een andere soort</h3>',
-    '<p><small><tt><a href="ex:42">een prijs {laag|hoog]</a><br>→&nbsp; Een prijs {laag|hoo' +
+    '<p><small><tt><a href="ex:61">een prijs {laag|hoog]</a><br>→&nbsp; Een prijs {laag|hoo' +
       'g]</tt></small></p>',
     '<p><code>{</code> wacht op <code>}</code> en <code>[</code> wacht op <code>]</code>. E' +
       'en schudbeurt die door een accolade wordt gesloten is geen schudbeurt.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — een slui' +
       'tende haak zonder iets open</h3>',
-    '<p><small><tt><a href="ex:43">een prijs laag} en alles</a><br>→&nbsp; Een prijs laag} ' +
+    '<p><small><tt><a href="ex:62">een prijs laag} en alles</a><br>→&nbsp; Een prijs laag} ' +
       'en alles</tt></small></p>',
     '<p>Hij blijft er als tekst staan. Meestal is het een haak die van een wijziging is ove' +
       'rgebleven.</p>',
@@ -8494,7 +8914,7 @@ const
     '<h2 id="definitions">Vastleggingen</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — deze <code>#set</code>-regel volgt' +
       ' de regel niet</h3>',
-    '<p><small><tt><a href="ex:44">#set stad = Utrecht</a><br><a href="ex:44">in %stad%</a>' +
+    '<p><small><tt><a href="ex:63">#set stad = Utrecht</a><br><a href="ex:63">in %stad%</a>' +
       '<br>→&nbsp; #set stad = Utrecht ⏎ In %stad%</tt></small></p>',
     '<p><b>De naam hoort tussen procenttekens:</b> <code>#set %stad% = Utrecht</code>. Het ' +
       'is de meest voorkomende eerste fout, en hij zet meteen twee regels in het paneel — de ' +
@@ -8505,7 +8925,7 @@ const
       ' hij in het resultaat.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — deze <code>#def</code>-regel volgt' +
       ' de regel niet</h3>',
-    '<p><small><tt><a href="ex:45">#def paginas = {1|3}</a><br><a href="ex:45">%paginas%</a' +
+    '<p><small><tt><a href="ex:64">#def paginas = {1|3}</a><br><a href="ex:64">%paginas%</a' +
       '><br>→&nbsp; #def paginas = 1 ⏎ %paginas%</tt></small></p>',
     '<p>Dezelfde regel en dezelfde prijs. <code>#def</code> verschilt van <code>#set</code>' +
       ' niet in de schrijfwijze maar in <b>wanneer</b> de waarde wordt uitgevouwen: <code>#se' +
@@ -8517,15 +8937,15 @@ const
       'p een aanwijzing te zijn.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — deze naam ' +
       'is hierboven al vastgelegd</h3>',
-    '<p><small><tt><a href="ex:46">#set %x% = eerste</a><br><a href="ex:46">#set %x% = twee' +
-      'de</a><br><a href="ex:46">%x%</a><br>→&nbsp; Tweede</tt></small></p>',
+    '<p><small><tt><a href="ex:65">#set %x% = eerste</a><br><a href="ex:65">#set %x% = twee' +
+      'de</a><br><a href="ex:65">%x%</a><br>→&nbsp; Tweede</tt></small></p>',
     '<p>Het werkt — de <b>laatste</b> vastlegging wint — maar de machine noemt het een fout' +
       ': een document waarin een naam twee keer wordt gezet leest dubbelzinnig, en over een m' +
       'aand weet u niet meer welke van de twee regels de levende is. De fout wijst de <b>twee' +
       'de</b> vastlegging aan; de eerste staat hoger.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> in de waarde van een vastlegging</h3>',
-    '<p><small><tt><a href="ex:47">#def %x% = #include "frag"</a><br><a href="ex:47">%x%</a' +
+    '<p><small><tt><a href="ex:66">#def %x% = #include "frag"</a><br><a href="ex:66">%x%</a' +
       '><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Een invoeging in een waarde vouwt zich op een ander moment uit dan u zou verwachten' +
       ', en de familie verbiedt het. Zet het <code>#include</code> op een eigen regel.</p>',
@@ -8533,7 +8953,7 @@ const
     '<h2 id="variables">Variabelen</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — deze variabele is nergen' +
       's vastgelegd</h3>',
-    '<p><small><tt><a href="ex:48">hallo, %naam%</a><br>→&nbsp; Hallo, %naam%</tt></small><' +
+    '<p><small><tt><a href="ex:67">hallo, %naam%</a><br>→&nbsp; Hallo, %naam%</tt></small><' +
       '/p>',
     '<p>Een waarschuwing en geen fout: de machine drukt de naam af zoals hij er staat. Dat ' +
       'is met opzet — de waarde kan van buiten komen, van het gastprogramma. In Studio levert' +
@@ -8568,7 +8988,7 @@ const
     '<li><b>Ctrl+klik</b> schrijft een vastlegging in het document en opent er de groepsedi' +
       'tor op. De waarde die u al hebt getypt trekt er als eerste mogelijkheid in:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:49">#set %merk% = {Vulkan}</a><br><a href="ex:49">casino %me' +
+    '<p><small><tt><a href="ex:68">#set %merk% = {Vulkan}</a><br><a href="ex:68">casino %me' +
       'rk%</a><br>→&nbsp; Casino Vulkan</tt></small></p>',
     '<p>Het verschil tussen de twee is wat het sluiten van het venster overleeft. Een sessi' +
       'ewaarde niet: die staat niet in het bestand, niet in git, en geen andere machine van d' +
@@ -8581,7 +9001,7 @@ const
       'lom: dan blijven accolades en procenttekens tekens.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — de vastlegging' +
       ' noemt zichzelf</h3>',
-    '<p><small><tt><a href="ex:50">#set %x% = a %x% b</a><br><a href="ex:50">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:69">#set %x% = a %x% b</a><br><a href="ex:69">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Vijftig niveaus, dan stoppen. De machine vouwt uit tot de dieptegrens en houdt op, ' +
       'met <code>%x%</code> in het midden. Geen lus, en ook niet wat u wilde.</p>',
@@ -8591,8 +9011,8 @@ const
       'ls hij is, en de waarde bevat er van elk één meer.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — de vas' +
       'tleggingen noemen elkaar in een cirkel</h3>',
-    '<p><small><tt><a href="ex:51">#set %x% = %y%</a><br><a href="ex:51">#set %y% = %x%</a>' +
-      '<br><a href="ex:51">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:70">#set %x% = %y%</a><br><a href="ex:70">#set %y% = %x%</a>' +
+      '<br><a href="ex:70">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Elke kant vouwt zich precies <b>één keer</b> uit en houdt dan op: <code>%x%</code> ' +
       'werd <code>%y%</code> en niet <code>%x%</code>. De machine rolt de cirkel af in plaats' +
       ' van hem rond te gaan, en wat overblijft is de andere naam uit de cirkel — zet <code>%' +
@@ -8616,16 +9036,16 @@ const
     '<h2 id="includes">Invoegingen</h2>',
     '<h3 id="includes-0"><code>#include</code> werkt alleen aan het begin van een regel</h3' +
       '>',
-    '<p><small><tt><a href="ex:52">ervoor #include "frag" erna</a><br>→&nbsp; Ervoor #inclu' +
+    '<p><small><tt><a href="ex:71">ervoor #include "frag" erna</a><br>→&nbsp; Ervoor #inclu' +
       'de "frag" erna</tt></small></p>',
-    '<p><small><tt><a href="ex:53">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#include "frag"</a><br>→&nbsp; Fragment</tt></small></p>',
     '<p>Geen diagnose, en dat is nu juist het punt: een <code>#include</code> midden in een' +
       ' regel is <b>geen</b> invoeging. De machine leest het als gewone tekst en zegt niets, ' +
       'want er valt niets te klagen — u schreef tekst en kreeg tekst.</p>',
     '<p><b>Het doel mag echter een regel lager staan</b>, en dat verrast van de andere kant' +
       '. De ruimte die de machine tussen het woord en zijn doel toestaat omvat regeleindes, d' +
       'us dit is een invoeging en zij werkt:</p>',
-    '<p><small><tt><a href="ex:54">#include</a><br><a href="ex:54">"frag"</a><br>→&nbsp; Fr' +
+    '<p><small><tt><a href="ex:73">#include</a><br><a href="ex:73">"frag"</a><br>→&nbsp; Fr' +
       'agment</tt></small></p>',
     '<p>Lege regels ertussen mogen ook. Al het overige mag niet: een woord vóór het doel of' +
       ' iets anders dan spaties erachter, en het geheel is weer tekst. De editor kleurt het d' +
@@ -8633,7 +9053,7 @@ const
       't geen aanwijzing waarvan hij het einde nog niet ziet.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — geen doel met di' +
       'e naam in de verzameling</h3>',
-    '<p><small><tt><a href="ex:55">#include "geen"</a><br>→&nbsp; (leeg)</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#include "geen"</a><br>→&nbsp; (leeg)</tt></small></p>',
     '<p>Doelen zijn de <code>.spintax</code>-bestanden in de map van het geopende document.' +
       ' Een onbekend doel vouwt zich uit tot niets — de alinea verdwijnt in plaats van kapot ' +
       'te gaan, en dat is precies waarom het zo gemakkelijk te missen is.</p>',
@@ -8649,7 +9069,7 @@ const
       'r een map is en het bestand er werkelijk niet in zit.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — het doel bestaat, met an' +
       'dere hoofdletters</h3>',
-    '<p><small><tt><a href="ex:56">#include "intro"</a><br>→&nbsp; (leeg)</tt></small></p>',
+    '<p><small><tt><a href="ex:75">#include "intro"</a><br>→&nbsp; (leeg)</tt></small></p>',
     '<p>De verzameling bevat <code>Intro.spintax</code> — en de machine zegt toch dat er ge' +
       'en doel met die naam is, terwijl Studio zijn aantekening over de hoofdletters toevoegt' +
       '. Die tellen: <code>intro</code> en <code>Intro</code> zijn verschillende doelen. Wind' +
@@ -8658,7 +9078,7 @@ const
       'elfde document tegenspreken.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — een invoeging in een cirkel</h3>',
     '<p>Bevat <code>loop.spintax</code> zelf <code>#include "loop"</code>, dan:</p>',
-    '<p><small><tt><a href="ex:57">#include "loop"</a><br>→&nbsp; (leeg)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "loop"</a><br>→&nbsp; (leeg)</tt></small></p>',
     '<p>De machine zet niets neer in plaats van oneindigheid. De aantekening is er zodat u ' +
       'weet waarom de alinea verdampte.</p>',
     '<p>De regel staat op naam van <b><code>loop</code></b> en niet van het document waar u' +
@@ -8669,18 +9089,21 @@ const
     '<h2 id="plurals">Getalsvormen</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — niet zoveel vormen als de locale vra' +
       'agt</h3>',
-    '<p><small><tt><a href="ex:58">#set %n% = 5</a><br><a href="ex:58">%n% {plural %n%: din' +
+    '<p><small><tt><a href="ex:77">#set %n% = 5</a><br><a href="ex:77">%n% {plural %n%: din' +
       'g|dingen|dingens}</a><br>→&nbsp; 5 ｛plural 5: ding|dingen|dingens｝</tt></small></p>',
     '<p><b>Geen leegte — de machine drukt de hele constructie af</b>, met de accolades verv' +
       'angen door brede <code>｛｝</code>. Zo zegt zij «ik heb dit gezien en kon het niet toepa' +
       'ssen». Onopvallend zou niemand dat noemen, en maar goed ook: een in stilte verdampte a' +
       'linea zou meer tijd kosten om te vinden.</p>',
-    '<p>Het Nederlands vraagt twee vormen, het Russisch drie. Onder de locale van dit docum' +
-      'ent is <code>{plural %n%: ding|dingen}</code> de juiste.</p>',
+    '<p>Het Nederlands vraagt twee vormen, het Russisch drie, het Arabisch zes. Onder de lo' +
+      'cale van dit document is <code>{plural %n%: ding|dingen}</code> de juiste; onder <code' +
+      '>ar</code> zijn dezelfde twee vormen de fout:</p>',
+    '<p><small><tt><a href="ex:78">#def %n% = 5</a><br><a href="ex:78">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Leegte komt door iets anders, en de twee zijn gemakkelijk te verwarren.</b> Verg' +
       'elijk deze twee, die alleen verschillen in hoeveel vormen ze dragen:</p>',
-    '<p><small><tt><a href="ex:59">{plural %n%: ding|dingen}</a><br>→&nbsp; (leeg)&nbsp;&nb' +
-      'sp; twee vormen: juist voor het Nederlands<br><a href="ex:60">{plural %n%: ding|dingen' +
+    '<p><small><tt><a href="ex:79">{plural %n%: ding|dingen}</a><br>→&nbsp; (leeg)&nbsp;&nb' +
+      'sp; twee vormen: juist voor het Nederlands<br><a href="ex:80">{plural %n%: ding|dingen' +
       '|dingens}</a><br>→&nbsp; (leeg)&nbsp;&nbsp; drie vormen: onjuist voor het Nederlands</' +
       'tt></small></p>',
     '<p>Beide drukken niets af, en het paneel behandelt ze verschillend: de eerste trekt al' +
@@ -8700,7 +9123,7 @@ const
       't.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — de telling komt uit een ' +
       '<code>#set</code>, en die loot bij elke vermelding opnieuw</h3>',
-    '<p><small><tt><a href="ex:61">#set %n% = {1|2}</a><br><a href="ex:61">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:81">#set %n% = {1|2}</a><br><a href="ex:81">%n% {plural %n%:' +
       ' ding|dingen}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Kijk wat er overbleef: <b>het getal werd afgedrukt en het zelfstandig naamwoord nie' +
       't.</b> De telling moet een getal zijn wanneer de vorm wordt gekozen, en een <code>#set' +
@@ -8710,13 +9133,13 @@ const
       'reken; de machine laat in plaats daarvan het woord vallen.</p>',
     '<p><code>#def</code> gedraagt zich anders en vouwt zijn waarde één keer per weergave u' +
       'it, zodat de plek van de telling een getal krijgt:</p>',
-    '<p><small><tt><a href="ex:62">#def %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:82">#def %n% = {1|2}</a><br><a href="ex:82">%n% {plural %n%:' +
       ' ding|dingen}</a><br>→&nbsp; 1 ding</tt></small></p>',
     '<p>Voor die is er helemaal geen regel in het paneel. Vandaar de regel: maak van de tel' +
       'ling een gewoon cijfer of een <code>#def</code>, nooit een <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — haken binnen de ' +
       'vormen</h3>',
-    '<p><small><tt><a href="ex:63">{plural %n%: {ding|zaak}|dingen}</a><br>→&nbsp; ｛plural ' +
+    '<p><small><tt><a href="ex:83">{plural %n%: {ding|zaak}|dingen}</a><br>→&nbsp; ｛plural ' +
       '%n%: ｛ding|zaak｝|dingen｝</tt></small></p>',
     '<p>Vormen zijn eenvoudige tekst. Een keuze erin wordt niet uitgevouwen, en in plaats d' +
       'aarvan wordt de hele constructie tussen brede accolades afgedrukt.</p>',
@@ -8724,7 +9147,7 @@ const
     '<h2 id="permutations">Schudbeurten</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — onbekende sleu' +
       'tel in de instelling</h3>',
-    '<p><small><tt><a href="ex:64">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:84">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>De bekende sleutels zijn <code>minsize</code>, <code>maxsize</code>, <code>sep</cod' +
       'e> en <code>lastsep</code>. Een onbekende is geen instelling — en wanneer hij het enig' +
@@ -8732,7 +9155,7 @@ const
       'eken tussen de stukken, wat de uitvoer laat zien.</p>',
     '<p><b>Staat er een echte sleutel naast, dan is de afloop volstrekt anders</b>, en dat ' +
       'is de waarschijnlijkere fout — één van meerdere sleutels verkeerd getypt:</p>',
-    '<p><small><tt><a href="ex:65">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:85">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Het blok is een instelling, <code>sep</code> wordt opgevolgd, de onbekende sleutel ' +
       'simpelweg laten vallen, en het paneel zegt er in beide gevallen hetzelfde over. De dia' +
@@ -8740,13 +9163,13 @@ const
       ' gebeurde. Lees daarvoor de uitvoer.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize is geen heel getal</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;minsize=twee&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:86">[&lt;minsize=twee&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Een niet-numerieke waarde valt samen met haar grens weg, en de standaardwaarde geld' +
       't — namelijk alle stukken.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize is geen heel getal</h3>',
-    '<p><small><tt><a href="ex:67">[&lt;maxsize=veel&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:87">[&lt;maxsize=veel&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Precies hetzelfde van het andere eind: de bovengrens verdwijnt, en de uitvoer bevat' +
       ' weer elk stuk.</p>',
@@ -8786,8 +9209,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Een stilte in elke taal: afkortingen</h2>',
     '<h3 id="abbreviations-0">Een afkorting laat het volgende woord klein</h3>',
-    '<p><small><tt><a href="ex:68">Dr. onze prijzen zijn laag</a><br>→&nbsp; Dr. onze prijz' +
-      'en zijn laag<br><a href="ex:69">Xyz. onze prijzen zijn laag</a><br>→&nbsp; Xyz. Onze p' +
+    '<p><small><tt><a href="ex:88">Dr. onze prijzen zijn laag</a><br>→&nbsp; Dr. onze prijz' +
+      'en zijn laag<br><a href="ex:89">Xyz. onze prijzen zijn laag</a><br>→&nbsp; Xyz. Onze p' +
       'rijzen zijn laag</tt></small></p>',
     '<p>Twee regels die in één woord verschillen, en het tweede woord van elk geeft u de re' +
       'gel: na <code>Dr.</code> blijft de zin klein, na <code>Xyz.</code> krijgt hij een hoof' +
@@ -8815,15 +9238,15 @@ const
       'ode> — hebben er geen last van; voor de losse woorden helpt alleen herformuleren.</p>',
     '<hr>',
     '<h2 id="correct">Hoe de juiste vorm eruitziet</h2>',
-    '<p><small><tt><a href="ex:70">een prijs {laag|hoog}</a><br>→&nbsp; Een prijs laag</tt>' +
+    '<p><small><tt><a href="ex:90">een prijs {laag|hoog}</a><br>→&nbsp; Een prijs laag</tt>' +
       '</small></p>',
-    '<p><small><tt><a href="ex:71">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:91">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:72">#set %vip% = 1</a><br><a href="ex:72">{?vip?voor u|voor ' +
+    '<p><small><tt><a href="ex:92">#set %vip% = 1</a><br><a href="ex:92">{?vip?voor u|voor ' +
       'iedereen}</a><br>→&nbsp; Voor u</tt></small></p>',
-    '<p><small><tt><a href="ex:73">#set %n% = 5</a><br><a href="ex:73">%n% {plural %n%: art' +
+    '<p><small><tt><a href="ex:93">#set %n% = 5</a><br><a href="ex:93">%n% {plural %n%: art' +
       'ikel|artikelen}</a><br>→&nbsp; 5 artikelen</tt></small></p>',
-    '<p><small><tt><a href="ex:74">ervoor /# een notitie #/ erna</a><br>→&nbsp; Ervoor erna' +
+    '<p><small><tt><a href="ex:94">ervoor /# een notitie #/ erna</a><br>→&nbsp; Ervoor erna' +
       '</tt></small></p>',
     '<p>Vijf constructies, vijf schone regels: een keuze, een schudbeurt met instellingen, ' +
       'een voorwaarde, een getalsvorm met een getal ervoor en een opmerking. Geen ervan zet i' +
@@ -8840,7 +9263,7 @@ const
       ' Latijnse letters, cijfers en het onderstrepingsteken. <code>%één%</code> is helemaal ' +
       'geen vermelding van een variabele — de machine leest het als tekst en zegt niets, want' +
       ' vanuit haar oogpunt valt er niets te melden:</p>',
-    '<p><small><tt><a href="ex:75">hallo %één% en %naam%</a><br>→&nbsp; Hallo %één% en %naa' +
+    '<p><small><tt><a href="ex:95">hallo %één% en %naam%</a><br>→&nbsp; Hallo %één% en %naa' +
       'm%</tt></small></p>',
     '<p>Beide kwamen ongewijzigd door, en daar zit de valstrik: alleen de tweede trok een r' +
       'egel in het paneel. De eerste is stil, dus niets vertelt u dat hij nooit zal worden in' +
@@ -9136,7 +9559,10 @@ const
       'in, yanında bir sayı alanı belirir ve siz çalışırken önizleme durur.</p>',
     '<p><code>locale</code> sayı biçimlerini belirler ve arayüzün dili değil, sağ yarımın ü' +
       'stündeki seçicidir. Türkçe ve İngilizce iki biçim ister; Rusça, Ukraynaca, Belarusça, ' +
-      'Sırpça, Hırvatça ve Boşnakça üç ister.</p>',
+      'Sırpça, Hırvatça ve Boşnakça üç ister; Arapça altı ister. Arapça ve İbranice altında y' +
+      'erel ayar, bir bağlacın bir listeyi nasıl birleştirdiğini de değiştirir (bkz. ayırıcı)' +
+      '. Aşağıdaki Arapça ve İbranice örnekler kendi yerel ayarları altında ölçülmüştür; her ' +
+      'birinden önceki cümle o yerel ayarı adlandırır.</p>',
     '<h2 id="choices">Seçimler</h2>',
     '<p>Aralarında <code>|</code> bulunan kaşlı ayraçlar: makine <b>birini</b> alır.</p>',
     '<p><small><tt><a href="ex:1">{Küçük|Büyük} bir oda.</a><br>→&nbsp; Küçük bir oda.</tt>' +
@@ -9187,36 +9613,65 @@ const
       'r>→&nbsp; Yeşil, mavi ve kırmızı</tt></small></p>',
     '<p><code>sep</code> parçaların arasına, <code>lastsep</code> sonuncudan önce girer.</p' +
       '>',
+    '<p>Yalnızca harflerden oluşan bir ayırıcı, hiç boşluk yazılmamış olsa da her iki yanın' +
+      'a birer boşluk alır:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="ve"&gt;A|B]</a><br>→&nbsp; B ve A</tt></sma' +
+      'll></p>',
+    '<p>Sözcükler arasında boşluk bırakmadan yazılan yazı sistemleri, hangi yerel ayar olur' +
+      'sa olsun istisnadır: Çince, Japonca, Tayca, Laoca, Kmerce ve Birmanca ayırıcılar boşlu' +
+      'ksuz birleşir.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Arapça ile İbranicenin kendine özgü bir kuralı vardır ve onu açan yazı sistemi deği' +
+      'l <b>yerel ayardır</b>. <code>ar</code> altında tam olarak و ya da ف olan bir ayırıcı ' +
+      'önündeki boşluğu korur, arkasındakini düşürür, çünkü Arapça bağlacı sonraki sözcüğe bi' +
+      'tişik yazar; <code>he</code> altında aynısı ו için geçerlidir. Bu yalnızca o yazı sist' +
+      'emindeki bir sözcükten önce olur — Latin harfli bir addan ya da bir rakamdan önce iki ' +
+      'boşluk da kalır:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Başka her yerel ayar altında bağlaç ayrı bir sözcük olarak kalır; aynı harfin ayrı ' +
+      'yazıldığı Farsça ve Urduca için doğrusu da budur:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Kaç tane</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;kırmızı|yeşil|mavi]</a><br>→&' +
-      'nbsp; Yeşil mavi</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;kırmızı|yeşil|mavi]</a><br>→' +
+      '&nbsp; Yeşil mavi</tt></small></p>',
     '<p><code>minsize</code> taban, <code>maxsize</code> tavandır; aradaki sayı da sıra gib' +
       'i rastgeledir. Eşit değerler tam olarak o kadarını alır. <b>İkisi de yoksa hepsi — ama' +
       ' yalnız <code>maxsize</code> varsa taban bire iner</b>, ki bu şaşırtır:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Üç parça, üç tavan ve bir tanesi çıktı. «Hepsi, en çok üç» demek istiyorsanız <code' +
       '>minsize</code> de yazın. Parça sayısını aşan bir <code>maxsize</code> sessizce o sayı' +
       'ya indirilir. <code>maxsize</code>''ı aşan bir <code>minsize</code> tek söz edilmeden ' +
       'kabul edilir ve taban kazanır: tavan ona yükseltilir, tersi değil:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;kırmızı|yeşil|mavi]</a><br>→' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;kırmızı|yeşil|mavi]</a><br>→' +
       '&nbsp; Yeşil mavi kırmızı</tt></small></p>',
     '<h3 id="shuffles-2">İki parça arasında bir ayırıcı</h3>',
     '<p>İki parçanın <b>arasına</b> yazılan bir <code>&lt;…&gt;</code>, o çiftin ayırıcısıd' +
       'ır.</p>',
-    '<p><small><tt><a href="ex:12">[kırmızı|yeşil&lt;ve&gt;|mavi]</a><br>→&nbsp; Yeşil ve m' +
+    '<p><small><tt><a href="ex:25">[kırmızı|yeşil&lt;ve&gt;|mavi]</a><br>→&nbsp; Yeşil ve m' +
       'avi kırmızı</tt></small></p>',
     '<p>Kendisinden <b>sonraki</b> parçaya aittir ve karıştırma boyunca onunla birlikte yol' +
       'culuk eder; bu yüzden çıktıda sabit bir yerde değil, o parça nereye düşerse orada beli' +
       'rir. <b>Son</b> parçadan sonraki bir <code>&lt;…&gt;</code> hiç ayırıcı değildir ve me' +
       'tin olarak yazılır:</p>',
-    '<p><small><tt><a href="ex:13">[kırmızı|yeşil|mavi&lt;ve&gt;]</a><br>→&nbsp; Yeşil mavi' +
+    '<p><small><tt><a href="ex:26">[kırmızı|yeşil|mavi&lt;ve&gt;]</a><br>→&nbsp; Yeşil mavi' +
       '&lt;ve&gt; kırmızı</tt></small></p>',
     '<h2 id="macros">Makrolar</h2>',
     '<p><code>#set</code> bir metin parçasına ad verir. Ad <code>%ad%</code> biçiminde kull' +
       'anılır ve yönerge kendi satırındaki ilk şey olmalıdır — önünde boşluk ve sekme olabili' +
       'r, başka bir şey olamaz.</p>',
-    '<p><small><tt><a href="ex:14">#set %sehir% = Ankara</a><br><a href="ex:14">%sehir% uçu' +
+    '<p><small><tt><a href="ex:27">#set %sehir% = Ankara</a><br><a href="ex:27">%sehir% uçu' +
       'şu.</a><br>→&nbsp; Ankara uçuşu.</tt></small></p>',
     '<p>Adlar Latin harfleri, rakamlar ve <code>_</code> işaretinden oluşur. Başka bir alfa' +
       'bedeki bir ad, ad değildir; öteki belge bunu <code>set.malformed</code> altında anlatı' +
@@ -9225,9 +9680,9 @@ const
       '>',
     '<p>İkisi arasındaki bütün fark budur ve yalnızca değer bir seçim içerdiğinde görünür.<' +
       '/p>',
-    '<p><small><tt><a href="ex:15">#set %secim% = {A|B}</a><br><a href="ex:15">%secim% %sec' +
+    '<p><small><tt><a href="ex:28">#set %secim% = {A|B}</a><br><a href="ex:28">%secim% %sec' +
       'im% %secim%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %secim% = {A|B}</a><br><a href="ex:16">%secim% %sec' +
+    '<p><small><tt><a href="ex:29">#def %secim% = {A|B}</a><br><a href="ex:29">%secim% %sec' +
       'im% %secim%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>İki örnek de aynı tohum altında koştu. <code>#set</code> şablonu saklar ve her kull' +
       'anımda yeniden çeker; <code>#def</code> bir kez çeker ve yanıtı tutar. Kendisiyle uyuş' +
@@ -9238,11 +9693,11 @@ const
       'tanımın çalışmadığı sonucunu çıkarmadan önce bilmekte yarar var.</p>',
     '<h2 id="conditions">Koşullar</h2>',
     '<p><code>{?ad?ise|değilse}</code> bir makronun değeri olup olmadığını sorar.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?elimizde %n% var' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?elimizde %n% var' +
       '|henüz yok}</a><br>→&nbsp; Elimizde 5 var</tt></small></p>',
     '<p><code>değilse</code> yarısı yazılmayabilir — yanıt hayırsa <code>{?ad?ise}</code> h' +
       'içbir şey yazmaz. Bir <code>!</code> soruyu ters çevirir:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?yabancı|dos' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?yabancı|dos' +
       't}</a><br>→&nbsp; Dost</tt></small></p>',
     '<p>Değeri olmak, <b>boşluk olmayan en az bir karakteri olmak</b> demektir. Hiçbir şeye' +
       ' ya da yalnızca boşluklara ayarlanmış bir makro değersiz sayılır.</p>',
@@ -9251,9 +9706,9 @@ const
       'ğünü söyler.</p>',
     '<h2 id="counting">Sayım</h2>',
     '<p><code>{plural %n%: …}</code> bir sayıya uyan sözcük biçimini alır.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: dos' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: dos' +
       'ya|dosyalar}</a><br>→&nbsp; 1 dosya</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 5</a><br><a href="ex:20">%n% {plural %n%: dos' +
+    '<p><small><tt><a href="ex:33">#def %n% = 5</a><br><a href="ex:33">%n% {plural %n%: dos' +
       'ya|dosyalar}</a><br>→&nbsp; 5 dosyalar</tt></small></p>',
     '<p>Sayı burada bilerek bir <code>#def</code>tir, <code>#set</code> değil; kural akılda' +
       ' tutmaya değer: <b>sayıyı düz bir rakam ya da bir <code>#def</code> yapın, asla <code>' +
@@ -9261,16 +9716,34 @@ const
       'ir, <code>5</code> değil <code>{5|5}</code> — yani sayı değildir, dolayısıyla yapının ' +
       'tamamı hiçbir şey üretmez ve panel <code>plural.count-macro</code> der. Sayı ile biçim' +
       ' birbiriyle çelişemez: bunun yerine sözcük yok olur.</p>',
-    '<p><small><tt><a href="ex:21">#set %n% = {5|5}</a><br><a href="ex:21">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:34">#set %n% = {5|5}</a><br><a href="ex:34">%n% {plural %n%:' +
       ' dosya|dosyalar}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Kaç biçim olduğuna siz değil yerel ayar karar verir: <code>tr</code> altında iki, <' +
-      'code>ru</code> altında üç. Yanlış sayı panelin bildirdiği bir hatadır (<code>plural.ar' +
-      'ity</code>) ve makine o zaman yapının tamamını, kaşlı ayraçlar geniş <code>｛｝</code> i' +
-      'le değiştirilmiş olarak geri yazar; böylece çıktı sanılmaz.</p>',
+      'code>ru</code> altında üç, <code>ar</code> altında altı — zero, one, two, few, many, o' +
+      'ther sırasıyla. Arapça «bir kitap» ve «iki kitap» derken sayı sözcüğü kullanmaz, bu yü' +
+      'zden sayı bloğun önüne değil, onu yazan biçimlerin <b>içine</b> girer:</p>',
+    '<p><small><tt><a href="ex:35">#def %n% = 3</a><br><a href="ex:35">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 2</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:37">#def %n% = 0</a><br><a href="ex:37">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:38">#def %n% = 1</a><br><' +
+      'a href="ex:38">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:39' +
+      '">#def %n% = 11</a><br><a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:40">#def %n% = 100</a><br><a href="ex:40">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Yanlış sayı panelin bildirdiği bir hatadır (<code>plural.arity</code>) ve makine o ' +
+      'zaman yapının tamamını, kaşlı ayraçlar geniş <code>｛｝</code> ile değiştirilmiş olarak ' +
+      'geri yazar; böylece çıktı sanılmaz.</p>',
     '<h2 id="fragments">Parçalar</h2>',
     '<p><code>#include "ad"</code> o noktaya başka bir şablon koyar ve yönerge kendi satırı' +
       'ndaki ilk şey olmalıdır — burada da önünde boşluk ve sekme olabilir.</p>',
-    '<p><small><tt><a href="ex:22">#include "intro"</a><br>→&nbsp; Acme şirketine hoş geldi' +
+    '<p><small><tt><a href="ex:41">#include "intro"</a><br>→&nbsp; Acme şirketine hoş geldi' +
       'niz.</tt></small></p>',
     '<p>Parça kendi şablonu olarak işlenir, bu yüzden içindeki bir seçim yeniden yapılır: <' +
       'code>intro</code>, <code>{Acme|Globex}</code> içerir ve biri ya da öteki ile yanıt ver' +
@@ -9283,7 +9756,7 @@ const
     '<h3 id="fragments-0">Bir parça sizin makrolarınızı görmez</h3>',
     '<p>Kendi şablonu olarak işlenir: oturumun değerlerine sahiptir, ama onu içeri getiren ' +
       'belgenin <code>#set</code> ve <code>#def</code> tanımlarına değil.</p>',
-    '<p><small><tt><a href="ex:23">#set %marka% = Acme</a><br><a href="ex:23">#include "sho' +
+    '<p><small><tt><a href="ex:42">#set %marka% = Acme</a><br><a href="ex:42">#include "sho' +
       'ut"</a><br>→&nbsp; %marka% burada.</tt></small></p>',
     '<p><code>shout</code>, <code>%marka% burada.</code> demektir ve adın parçanın kendi iç' +
       'inde tanımlanması gerekir. Bu bir sessizlik değildir — panel <code>variable.undefined<' +
@@ -9294,7 +9767,7 @@ const
     '<h2 id="remarks">Açıklamalar</h2>',
     '<p><code>/# … #/</code> bir açıklamadır: işaretlerin arasındaki her şey, başka herhang' +
       'i bir şeyden önce kaldırılır.</p>',
-    '<p><small><tt><a href="ex:24">taslak /# emin değilim #/ hazır</a><br>→&nbsp; Taslak ha' +
+    '<p><small><tt><a href="ex:43">taslak /# emin değilim #/ hazır</a><br>→&nbsp; Taslak ha' +
       'zır</tt></small></p>',
     '<p>Açıklamalar iç içe geçmez. İlk <code>#/</code> açıklamayı kapatır, öncesinde ne olu' +
       'rsa olsun; bu yüzden kendisi <code>#/</code> içeren bir metnin çevresine sarılmış bir ' +
@@ -9303,7 +9776,7 @@ const
     '<p>Çıktı, yapıların ürettiği metnin tam olarak kendisi değildir. Sonda ona birkaç şey ' +
       'olur; ikisiyle her gün karşılaşırsınız.</p>',
     '<p>Her cümlenin ilk harfi büyütülür:</p>',
-    '<p><small><tt><a href="ex:25">bir. iki. üç.</a><br>→&nbsp; Bir. Iki. Üç.</tt></small><' +
+    '<p><small><tt><a href="ex:44">bir. iki. üç.</a><br>→&nbsp; Bir. Iki. Üç.</tt></small><' +
       '/p>',
     '<p>Bu yüzden bu yardımdaki örnekler, şablonda küçük harf varken çok kez büyük harfle y' +
       'anıt verir. Makinenin bildiği bir kısaltmadan sonraki nokta bir cümleyi bitirmez; <cod' +
@@ -9311,15 +9784,15 @@ const
       ', harf, nokta — <b>hangi alfabede olursa olsun</b>: «bir sözcüğün ortasında mıyız» den' +
       'etimi her yazıyı okur ve <code>т.е.</code> de tıpkı <code>e.g.</code> gibi korunur.</p' +
       '>',
-    '<p><small><tt><a href="ex:26">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
+    '<p><small><tt><a href="ex:45">это т.е. вот так</a><br>→&nbsp; Это т.е. вот так</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:27">vs. fiyatlarımız düşük</a><br>→&nbsp; vs. fiyatlarımız d' +
+    '<p><small><tt><a href="ex:46">vs. fiyatlarımız düşük</a><br>→&nbsp; vs. fiyatlarımız d' +
       'üşük</tt></small></p>',
-    '<p><small><tt><a href="ex:28">Dr. fiyatlarımız düşük</a><br>→&nbsp; Dr. fiyatlarımız d' +
+    '<p><small><tt><a href="ex:47">Dr. fiyatlarımız düşük</a><br>→&nbsp; Dr. fiyatlarımız d' +
       'üşük</tt></small></p>',
     '<p>Başka her sözcük bir cümleyi bitirir, ne kadar kısa olursa olsun — uzunluğun bununl' +
       'a ilgisi yoktur:</p>',
-    '<p><small><tt><a href="ex:29">Xyz. fiyatlarımız düşük</a><br>→&nbsp; Xyz. Fiyatlarımız' +
+    '<p><small><tt><a href="ex:48">Xyz. fiyatlarımız düşük</a><br>→&nbsp; Xyz. Fiyatlarımız' +
       ' düşük</tt></small></p>',
     '<p>Makinenin bildiği liste 46 girdilidir, <b>29''u Kiril</b>, ve öteki belge onu <b>He' +
       'r dilde bir sessizlik</b> başlığı altında baştan sona gezer. Türkçe metin için asıl ön' +
@@ -9335,9 +9808,9 @@ const
       'code> ister <code>сайт.рф</code> olsun, korunur. Korunan bir başlangıç ise büyük harf ' +
       'kuralı için cümle başı değildir — bu yüzden aşağıdaki <code>bir.iki</code> küçük harfi' +
       'yle birlikte olduğu gibi çıkar.</p>',
-    '<p><small><tt><a href="ex:30">merhaba , dünya</a><br>→&nbsp; Merhaba, dünya</tt></smal' +
+    '<p><small><tt><a href="ex:49">merhaba , dünya</a><br>→&nbsp; Merhaba, dünya</tt></smal' +
       'l></p>',
-    '<p><small><tt><a href="ex:31">bir.iki</a><br>→&nbsp; bir.iki</tt></small></p>',
+    '<p><small><tt><a href="ex:50">bir.iki</a><br>→&nbsp; bir.iki</tt></small></p>',
     '<h2 id="silences">Sessizlikler</h2>',
     '<p>Aşağıdaki her durum işlenir, göründüğünden başka bir şey üretir ve <b>hiçbir tanı</' +
       'b> doğurmaz. Buraya toplanmışlardır, çünkü pencerede başka hiçbir şey onlardan hiç söz' +
@@ -9346,7 +9819,7 @@ const
       ' çarpacağı sessizlik budur ve en görünür olanıdır: makinenin cümle başındaki büyütmesi' +
       ' <code>i</code> harfini <code>İ</code> değil <code>I</code> yapar, çünkü kural ASCII''' +
       'nin kuralıdır ve yerel ayarı hiç sormaz.</p>',
-    '<p><small><tt><a href="ex:32">işte bu bir cümle. işte diğeri</a><br>→&nbsp; Işte bu bi' +
+    '<p><small><tt><a href="ex:51">işte bu bir cümle. işte diğeri</a><br>→&nbsp; Işte bu bi' +
       'r cümle. Işte diğeri</tt></small></p>',
     '<p>Yukarıdaki <code>bir. iki. üç.</code> örneğinde de aynısı görülür: <code>iki</code>' +
       ', <code>İki</code> değil <code>Iki</code> olur. Hiçbir tanı bunu söylemez, çünkü makin' +
@@ -9356,36 +9829,36 @@ const
       'rısıyla çakışan sözcükler korunur — yukarıdaki <code>vs.</code>, <code>Dr.</code> ve <' +
       'code>Prof.</code> ile ayrıca <code>No.</code> —, buna karşılık <code>vb.</code>, <code' +
       '>sf.</code> ve <code>Sn.</code> bir cümleyi bitirir ve sonraki sözcüğü büyütür:</p>',
-    '<p><small><tt><a href="ex:33">vb. fiyatlarımız düşük</a><br>→&nbsp; Vb. Fiyatlarımız d' +
+    '<p><small><tt><a href="ex:52">vb. fiyatlarımız düşük</a><br>→&nbsp; Vb. Fiyatlarımız d' +
       'üşük</tt></small></p>',
     '<p><b>Kendi satırında yalnız olmayan bir <code>#include</code> sıradan metindir.</b></' +
       'p>',
-    '<p><small><tt><a href="ex:34">Önce. #include "intro"</a><br>→&nbsp; Önce. #include "in' +
+    '<p><small><tt><a href="ex:53">Önce. #include "intro"</a><br>→&nbsp; Önce. #include "in' +
       'tro"</tt></small></p>',
     '<p>Aynısı, arkasında bir şey bulunan bir yönerge için ve boşluksuz <code>#include"intr' +
       'o"</code> için de geçerlidir. Kural bu makinenin değil ailenin kuralıdır ve bir yönerg' +
       'eyi bütün satırı çözümlemeden tanınır kılan da odur.</p>',
     '<p><b>Adı rakamla başlayan bir koşul, koşul değildir.</b> <code>?1x?evet</code> ile <c' +
       'ode>hayır</code> arasında sıradan bir seçime dönüşür:</p>',
-    '<p><small><tt><a href="ex:35">{?1x?evet|hayır}</a><br>→&nbsp; ?1x? Evet</tt></small></' +
+    '<p><small><tt><a href="ex:54">{?1x?evet|hayır}</a><br>→&nbsp; ?1x? Evet</tt></small></' +
       'p>',
     '<p><b>Sonraki bir parçanın başındaki <code>&lt;…&gt;</code> ayırıcı değildir</b> ve ol' +
       'duğu gibi yazılır:</p>',
-    '<p><small><tt><a href="ex:36">[kırmızı|&lt;ve&gt;yeşil]</a><br>→&nbsp; &lt;ve&gt;Yeşil' +
+    '<p><small><tt><a href="ex:55">[kırmızı|&lt;ve&gt;yeşil]</a><br>→&nbsp; &lt;ve&gt;Yeşil' +
       ' kırmızı</tt></small></p>',
     '<p><b>İlk</b> parçanın başındaki blok ise ayırıcıdır — karıştırmalar bölümünün açıldığ' +
       'ı yazım budur:</p>',
-    '<p><small><tt><a href="ex:37">[&lt;ve&gt;kırmızı|yeşil]</a><br>→&nbsp; Yeşil ve kırmız' +
+    '<p><small><tt><a href="ex:56">[&lt;ve&gt;kırmızı|yeşil]</a><br>→&nbsp; Yeşil ve kırmız' +
       'ı</tt></small></p>',
     '<p>Bir <code>|</code> işaretinden sonra her yerde sıradan metindir ve iki parça arasın' +
       'daki bir ayırıcı, birincinin <b>sonuna</b> yazılır.</p>',
     '<p><b>Bir parçanın sonundaki çıplak bir etiket, o çiftin ayırıcısı sayılır</b> ve kend' +
       'i metni olarak yazılır:</p>',
-    '<p><small><tt><a href="ex:38">[bir&lt;br&gt;|iki]</a><br>→&nbsp; Iki bir</tt></small><' +
+    '<p><small><tt><a href="ex:57">[bir&lt;br&gt;|iki]</a><br>→&nbsp; Iki bir</tt></small><' +
       '/p>',
     '<p>Bu tohum altında ikisi öteki sırayla düştü, bu yüzden ayırıcı hiç çıkmadı. Üçüncü b' +
       'ir parçayla düşeceği bir yer olur ve görünür:</p>',
-    '<p><small><tt><a href="ex:39">[kırmızı|yeşil&lt;br&gt;|mavi]</a><br>→&nbsp; Yeşil br m' +
+    '<p><small><tt><a href="ex:58">[kırmızı|yeşil&lt;br&gt;|mavi]</a><br>→&nbsp; Yeşil br m' +
       'avi kırmızı</tt></small></p>',
     '<p><code>&lt;br&gt;</code>, <code>yeşil</code> ile ondan sonra geleni arasında durur, ' +
       'karıştırma o çifti nereye koyarsa koysun. Kapanan bir etiket (<code>&lt;/b&gt;</code>)' +
@@ -9394,12 +9867,12 @@ const
       ' kalır.</p>',
     '<p><b>Kapatılmamış bir açıklama sıradan metindir</b> — hiçbir şey açmaz ve <code>/#</c' +
       'ode> yazılır:</p>',
-    '<p><small><tt><a href="ex:40">önce /# bunun geri kalanı</a><br>→&nbsp; Önce /# bunun g' +
+    '<p><small><tt><a href="ex:59">önce /# bunun geri kalanı</a><br>→&nbsp; Önce /# bunun g' +
       'eri kalanı</tt></small></p>',
     '<p>Ama yine de bir çiftin yarısıdır. Belgenin ilerisinde bir <code>#/</code> belirirse' +
       ' ikisi birbirini bulur ve aralarındaki her şey gider — yazarın araya yazdıkları da dah' +
       'il:</p>',
-    '<p><small><tt><a href="ex:41">{a /# hop|b} orta #/ kuyruk</a><br>→&nbsp; {a kuyruk</tt' +
+    '<p><small><tt><a href="ex:60">{a /# hop|b} orta #/ kuyruk</a><br>→&nbsp; {a kuyruk</tt' +
       '></small></p>',
     '<p>Yukarıdaki seçim ikinci seçeneğini ve kapanan ayracını yitirdi ve hiçbir tanı bunu ' +
       'söylemiyor: metnin ANLAMI budur, makinenin görebileceği bir yanlış değil. Bir <code>/#' +
@@ -9461,26 +9934,26 @@ const
       'ü yapının kuruluşunun bir parçasıdır.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — bir ayraç açılıp hiç kapatıl' +
       'mamış</h3>',
-    '<p><small><tt><a href="ex:42">bir fiyat {ucuz|pahalı</a><br>→&nbsp; Bir fiyat {ucuz|pa' +
+    '<p><small><tt><a href="ex:61">bir fiyat {ucuz|pahalı</a><br>→&nbsp; Bir fiyat {ucuz|pa' +
       'halı</tt></small></p>',
     '<p>Makine nerede kapatmak istediğinizi tahmin etmez. Metin ayracıyla birlikte olduğu g' +
       'ibi kalır ve seçim hiç gerçekleşmez.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — başka türden bir ayraçla' +
       ' kapatılmış</h3>',
-    '<p><small><tt><a href="ex:43">bir fiyat {ucuz|pahalı]</a><br>→&nbsp; Bir fiyat {ucuz|p' +
+    '<p><small><tt><a href="ex:62">bir fiyat {ucuz|pahalı]</a><br>→&nbsp; Bir fiyat {ucuz|p' +
       'ahalı]</tt></small></p>',
     '<p><code>{</code> işareti <code>}</code> bekler, <code>[</code> işareti <code>]</code>' +
       ' bekler. Kaşlı ayraçla kapatılan bir karıştırma karıştırma değildir.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — açık hiç' +
       'bir şey yokken kapatan bir ayraç</h3>',
-    '<p><small><tt><a href="ex:44">bir fiyat ucuz} ve hepsi</a><br>→&nbsp; Bir fiyat ucuz} ' +
+    '<p><small><tt><a href="ex:63">bir fiyat ucuz} ve hepsi</a><br>→&nbsp; Bir fiyat ucuz} ' +
       've hepsi</tt></small></p>',
     '<p>Metin olarak orada kalır. Çoğunlukla bir düzenlemeden artakalmış bir ayraçtır.</p>',
     '<hr>',
     '<h2 id="definitions">Tanımlar</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — bu <code>#set</code> satırı kurala' +
       ' uymuyor</h3>',
-    '<p><small><tt><a href="ex:45">#set sehir = Ankara</a><br><a href="ex:45">%sehir% içind' +
+    '<p><small><tt><a href="ex:64">#set sehir = Ankara</a><br><a href="ex:64">%sehir% içind' +
       'e</a><br>→&nbsp; #set sehir = Ankara ⏎ %sehir% içinde</tt></small></p>',
     '<p><b>Ad yüzde işaretlerinin arasına yazılır:</b> <code>#set %sehir% = Ankara</code>. ' +
       'En sık yapılan ilk yanlış budur ve panele bir anda iki satır koyar — bozuk satırın ken' +
@@ -9490,7 +9963,7 @@ const
       'nerge olarak okumadı, yani sıradan bir satırdır ve sonuca girer.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — bu <code>#def</code> satırı kurala' +
       ' uymuyor</h3>',
-    '<p><small><tt><a href="ex:46">#def sayfalar = {1|3}</a><br><a href="ex:46">%sayfalar%<' +
+    '<p><small><tt><a href="ex:65">#def sayfalar = {1|3}</a><br><a href="ex:65">%sayfalar%<' +
       '/a><br>→&nbsp; #def sayfalar = 1 ⏎ %sayfalar%</tt></small></p>',
     '<p>Aynı kural ve aynı bedel. <code>#def</code>, <code>#set</code>ten yazılışıyla değil' +
       ', değerin <b>ne zaman</b> açıldığıyla ayrılır: <code>#set</code> onu her anımsatmada y' +
@@ -9502,15 +9975,15 @@ const
       '/p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — bu ad yuka' +
       'rıda zaten tanımlı</h3>',
-    '<p><small><tt><a href="ex:47">#set %x% = birinci</a><br><a href="ex:47">#set %x% = iki' +
-      'nci</a><br><a href="ex:47">%x%</a><br>→&nbsp; Ikinci</tt></small></p>',
+    '<p><small><tt><a href="ex:66">#set %x% = birinci</a><br><a href="ex:66">#set %x% = iki' +
+      'nci</a><br><a href="ex:66">%x%</a><br>→&nbsp; Ikinci</tt></small></p>',
     '<p>Çalışır — <b>son</b> tanım kazanır — ama makine buna hata der: bir adın iki kez kon' +
       'duğu bir belge çift anlamlı okunur ve bir ay sonra iki satırdan hangisinin canlı olduğ' +
       'unu hatırlamazsınız. Hata <b>ikinci</b> tanımı gösterir; birincisi daha yukarıdadır.</' +
       'p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — bir tanımın değeri i' +
       'çinde <code>#include</code></h3>',
-    '<p><small><tt><a href="ex:48">#def %x% = #include "frag"</a><br><a href="ex:48">%x%</a' +
+    '<p><small><tt><a href="ex:67">#def %x% = #include "frag"</a><br><a href="ex:67">%x%</a' +
       '><br>→&nbsp; Parça</tt></small></p>',
     '<p>Bir değerin içindeki ekleme beklediğinizden başka bir anda açılır ve aile bunu yasa' +
       'klar. <code>#include</code> işaretini kendi satırına koyun.</p>',
@@ -9518,7 +9991,7 @@ const
     '<h2 id="variables">Değişkenler</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — bu değişken hiçbir yerde' +
       ' tanımlı değil</h3>',
-    '<p><small><tt><a href="ex:49">merhaba, %ad%</a><br>→&nbsp; Merhaba, %ad%</tt></small><' +
+    '<p><small><tt><a href="ex:68">merhaba, %ad%</a><br>→&nbsp; Merhaba, %ad%</tt></small><' +
       '/p>',
     '<p>Hata değil, uyarı: makine adı olduğu gibi yazar. Bu bilerekdir — değer dışarıdan, k' +
       'onak programdan gelebilir. Studio''da bu tür değerleri Değişkenler sekmesinde, <b>Otur' +
@@ -9552,7 +10025,7 @@ const
     '<li><b>Ctrl+tık</b> belgeye bir tanım yazar ve üzerinde grup düzenleyiciyi açar. Daha ' +
       'önce yazdığınız değer ilk olasılık olarak içeri girer:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:50">#set %marka% = {Vulkan}</a><br><a href="ex:50">kumarhane' +
+    '<p><small><tt><a href="ex:69">#set %marka% = {Vulkan}</a><br><a href="ex:69">kumarhane' +
       ' %marka%</a><br>→&nbsp; Kumarhane Vulkan</tt></small></p>',
     '<p>İkisi arasındaki fark, pencereyi kapatmaktan neyin sağ çıktığıdır. Bir oturum değer' +
       'i çıkmaz: dosyada yoktur, git''te yoktur ve ailedeki başka hiçbir makine onu görmez. B' +
@@ -9565,7 +10038,7 @@ const
       'aman kaşlı ayraçlar ve yüzde işaretleri karakter olarak kalır.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — tanım kendi ke' +
       'ndini anıyor</h3>',
-    '<p><small><tt><a href="ex:51">#set %x% = a %x% b</a><br><a href="ex:51">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:70">#set %x% = a %x% b</a><br><a href="ex:70">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Elli düzey, sonra duruş. Makine derinlik sınırına kadar açar ve durur, <code>%x%</c' +
       'ode> işaretini ortada bırakır. Döngü değildir ve istediğiniz şey de değildir.</p>',
@@ -9575,8 +10048,8 @@ const
       '</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — tanıml' +
       'ar birbirini daire çizerek anıyor</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = %y%</a><br><a href="ex:52">#set %y% = %x%</a>' +
-      '<br><a href="ex:52">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:71">#set %x% = %y%</a><br><a href="ex:71">#set %y% = %x%</a>' +
+      '<br><a href="ex:71">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Her yan tam <b>bir kez</b> açılır ve sonra durur: <code>%x%</code>, <code>%x%</code' +
       '> değil <code>%y%</code> oldu. Makine daireyi dolaşmak yerine çözer ve sağ kalan, dair' +
       'edeki öteki addır — bir belgeye <code>%x% %y%</code> koyun, <code>%y% %x%</code> verir' +
@@ -9596,16 +10069,16 @@ const
     '<hr>',
     '<h2 id="includes">Eklemeler</h2>',
     '<h3 id="includes-0"><code>#include</code> yalnızca satır başında çalışır</h3>',
-    '<p><small><tt><a href="ex:53">önce #include "frag" sonra</a><br>→&nbsp; Önce #include ' +
+    '<p><small><tt><a href="ex:72">önce #include "frag" sonra</a><br>→&nbsp; Önce #include ' +
       '"frag" sonra</tt></small></p>',
-    '<p><small><tt><a href="ex:54">#include "frag"</a><br>→&nbsp; Parça</tt></small></p>',
+    '<p><small><tt><a href="ex:73">#include "frag"</a><br>→&nbsp; Parça</tt></small></p>',
     '<p>Hiçbir tanı yok ve asıl mesele de bu: satırın ortasındaki bir <code>#include</code>' +
       ' ekleme <b>değildir</b>. Makine onu sıradan metin olarak okur ve bir şey söylemez, çün' +
       'kü yakınılacak bir şey yoktur — metin yazdınız, metin aldınız.</p>',
     '<p><b>Hedef ise bir satır aşağıda durabilir</b> ve bu, öteki yandan şaşırtır. Makineni' +
       'n sözcük ile hedefi arasında bıraktığı boşluk satır sonlarını da içerir, dolayısıyla b' +
       'u bir eklemedir ve çalışır:</p>',
-    '<p><small><tt><a href="ex:55">#include</a><br><a href="ex:55">"frag"</a><br>→&nbsp; Pa' +
+    '<p><small><tt><a href="ex:74">#include</a><br><a href="ex:74">"frag"</a><br>→&nbsp; Pa' +
       'rça</tt></small></p>',
     '<p>Aralarında boş satırlar da olabilir. Başka her şey olamaz: hedeften önce bir sözcük' +
       ' ya da ardından boşluktan başka bir şey — ve bütünü yine metne döner. Düzenleyici hede' +
@@ -9613,7 +10086,7 @@ const
       'enüz görmediği bir yönerge sözü vermez.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — kümede bu adda h' +
       'edef yok</h3>',
-    '<p><small><tt><a href="ex:56">#include "hicbiri"</a><br>→&nbsp; (boş)</tt></small></p>',
+    '<p><small><tt><a href="ex:75">#include "hicbiri"</a><br>→&nbsp; (boş)</tt></small></p>',
     '<p>Hedefler, açık belgenin klasöründeki <code>.spintax</code> dosyalarıdır. Bilinmeyen' +
       ' bir hedef hiçliğe açılır — paragraf bozulmak yerine yok olur, ki bunu gözden kaçırmak' +
       ' tam da bu yüzden kolaydır.</p>',
@@ -9629,7 +10102,7 @@ const
       '>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — hedef var, ama başka büy' +
       'ük-küçük harfle</h3>',
-    '<p><small><tt><a href="ex:57">#include "intro"</a><br>→&nbsp; (boş)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "intro"</a><br>→&nbsp; (boş)</tt></small></p>',
     '<p>Kümede <code>Intro.spintax</code> vardır — ve makine yine de böyle bir hedef olmadı' +
       'ğını söyler, Studio ise büyük-küçük harf notunu ekler. Bunlar önemlidir: <code>intro</' +
       'code> ile <code>Intro</code> ayrı hedeflerdir. Windows dosyayı iki durumda da açardı; ' +
@@ -9638,7 +10111,7 @@ const
     '<h3 id="note.cycle"><code>note.cycle</code> — daire çizen bir ekleme</h3>',
     '<p><code>loop.spintax</code> dosyası kendisi <code>#include "loop"</code> içeriyorsa:<' +
       '/p>',
-    '<p><small><tt><a href="ex:58">#include "loop"</a><br>→&nbsp; (boş)</tt></small></p>',
+    '<p><small><tt><a href="ex:77">#include "loop"</a><br>→&nbsp; (boş)</tt></small></p>',
     '<p>Makine sonsuzluk yerine hiçbir şey koyar. Not, paragrafın neden yok olduğunu bilesi' +
       'niz diye oradadır.</p>',
     '<p>Satır, baktığınız belgeye değil <b><code>loop</code></b> üzerine kesilmiştir — dair' +
@@ -9648,19 +10121,22 @@ const
     '<h2 id="plurals">Sayı biçimleri</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — yerel ayarın istediği kadar biçim yo' +
       'k</h3>',
-    '<p><small><tt><a href="ex:59">#set %n% = 5</a><br><a href="ex:59">%n% {plural %n%: nes' +
+    '<p><small><tt><a href="ex:78">#set %n% = 5</a><br><a href="ex:78">%n% {plural %n%: nes' +
       'ne|nesneler|nesneleri}</a><br>→&nbsp; 5 ｛plural 5: nesne|nesneler|nesneleri｝</tt></sma' +
       'll></p>',
     '<p><b>Boşluk değil — makine yapının tamamını yazar</b>, kaşlı ayraçlar geniş <code>｛｝<' +
       '/code> ile değiştirilmiş olarak. «Bunu gördüm ve uygulayamadım» demenin yolu budur. Bu' +
       'na göze batmaz diyen olmaz ve iyi ki öyle: sessizce yok olan bir paragrafı bulmak daha' +
       ' uzun sürerdi.</p>',
-    '<p>Türkçe iki biçim ister, Rusça üç. Bu belgenin yerel ayarı altında doğrusu <code>{pl' +
-      'ural %n%: nesne|nesneler}</code>.</p>',
+    '<p>Türkçe iki biçim ister, Rusça üç, Arapça altı. Bu belgenin yerel ayarı altında doğr' +
+      'usu <code>{plural %n%: nesne|nesneler}</code>; <code>ar</code> altında aynı iki biçim ' +
+      'hatadır:</p>',
+    '<p><small><tt><a href="ex:79">#def %n% = 5</a><br><a href="ex:79">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Boşluk başka bir nedenden gelir ve ikisini karıştırmak kolaydır.</b> Yalnızca ka' +
       'ç biçim taşıdıkları bakımından ayrılan şu ikisini karşılaştırın:</p>',
-    '<p><small><tt><a href="ex:60">{plural %n%: nesne|nesneler}</a><br>→&nbsp; (boş)&nbsp;&' +
-      'nbsp; iki biçim: Türkçe için doğru<br><a href="ex:61">{plural %n%: nesne|nesneler|nesn' +
+    '<p><small><tt><a href="ex:80">{plural %n%: nesne|nesneler}</a><br>→&nbsp; (boş)&nbsp;&' +
+      'nbsp; iki biçim: Türkçe için doğru<br><a href="ex:81">{plural %n%: nesne|nesneler|nesn' +
       'eleri}</a><br>→&nbsp; (boş)&nbsp;&nbsp; üç biçim: Türkçe için yanlış</tt></small></p>',
     '<p>İkisi de hiçbir şey yazmaz ve panel onlara başka türlü davranır: birincisi yalnız <' +
       'code>variable.undefined</code> çeker, ikincisi ayrıca <code>plural.arity</code> çeker.' +
@@ -9677,7 +10153,7 @@ const
       'z.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — sayı bir <code>#set</cod' +
       'e>ten geliyor, o da her anımsatmada yeniden çekiyor</h3>',
-    '<p><small><tt><a href="ex:62">#set %n% = {1|2}</a><br><a href="ex:62">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:82">#set %n% = {1|2}</a><br><a href="ex:82">%n% {plural %n%:' +
       ' nesne|nesneler}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Neyin sağ kaldığına bakın: <b>sayı yazıldı, ad yazılmadı.</b> Biçim seçilirken sayı' +
       'nın sayı olması gerekir ve değeri kendisi bir seçim olan bir <code>#set</code> hiçbir ' +
@@ -9686,13 +10162,13 @@ const
       ' yerine sözcüğü düşürür.</p>',
     '<p><code>#def</code> başka türlü davranır ve değerini işleme başına bir kez açar, böyl' +
       'ece sayı yerine bir sayı gelir:</p>',
-    '<p><small><tt><a href="ex:63">#def %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#def %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' nesne|nesneler}</a><br>→&nbsp; 1 nesne</tt></small></p>',
     '<p>Onun için panelde hiç satır yoktur. Kural buradan gelir: sayıyı düz bir rakam ya da' +
       ' bir <code>#def</code> yapın, asla <code>#set</code> değil.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — biçimlerin içind' +
       'e ayraçlar</h3>',
-    '<p><small><tt><a href="ex:64">{plural %n%: {nesne|şey}|nesneler}</a><br>→&nbsp; ｛plura' +
+    '<p><small><tt><a href="ex:84">{plural %n%: {nesne|şey}|nesneler}</a><br>→&nbsp; ｛plura' +
       'l %n%: ｛nesne|şey｝|nesneler｝</tt></small></p>',
     '<p>Biçimler düz metindir. İçlerindeki bir seçim açılmaz ve onun yerine yapının tamamı ' +
       'geniş ayraçlar içinde yazılır.</p>',
@@ -9700,7 +10176,7 @@ const
     '<h2 id="permutations">Karıştırmalar</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — ayarda bilinme' +
       'yen anahtar</h3>',
-    '<p><small><tt><a href="ex:65">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:85">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Bilinen anahtarlar <code>minsize</code>, <code>maxsize</code>, <code>sep</code> ve ' +
       '<code>lastsep</code>''tir. Bilinmeyen biri ayar değildir — ve blokta tek başınaysa blo' +
@@ -9708,20 +10184,20 @@ const
       'rdiği de budur.</p>',
     '<p><b>Yanında gerçek bir anahtar varsa sonuç bambaşkadır</b> ve asıl olası yanlış budu' +
       'r — birkaç anahtardan biri yanlış yazılmıştır:</p>',
-    '<p><small><tt><a href="ex:66">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:86">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Blok bir ayardır, <code>sep</code> uygulanır, bilinmeyen anahtar öylece düşürülür v' +
       'e panel iki durumda da aynı şeyi söyler. Yani tanı size bir anahtarın anlaşılmadığını ' +
       'söyler; sonra ne olduğunu söylemez. Onun için çıktıyı okuyun.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minsize tam sayı değil</h3>',
-    '<p><small><tt><a href="ex:67">[&lt;minsize=iki&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:87">[&lt;minsize=iki&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Sayı olmayan bir değer sınırıyla birlikte düşer ve varsayılan geçerli olur — yani b' +
       'ütün parçalar.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maxsize tam sayı değil</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;maxsize=cok&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:88">[&lt;maxsize=cok&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Öteki uçtan tam olarak aynısı: üst sınır yok olur ve çıktı yine her parçayı taşır.<' +
       '/p>',
@@ -9757,8 +10233,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Her dilde bir sessizlik: kısaltmalar</h2>',
     '<h3 id="abbreviations-0">Bir kısaltma sonraki sözcüğü küçük bırakır</h3>',
-    '<p><small><tt><a href="ex:69">Dr. fiyatlarımız düşük</a><br>→&nbsp; Dr. fiyatlarımız d' +
-      'üşük<br><a href="ex:70">Xyz. fiyatlarımız düşük</a><br>→&nbsp; Xyz. Fiyatlarımız düşük' +
+    '<p><small><tt><a href="ex:89">Dr. fiyatlarımız düşük</a><br>→&nbsp; Dr. fiyatlarımız d' +
+      'üşük<br><a href="ex:90">Xyz. fiyatlarımız düşük</a><br>→&nbsp; Xyz. Fiyatlarımız düşük' +
       '</tt></small></p>',
     '<p>Bir sözcük bakımından ayrılan iki satır ve her birinin ikinci sözcüğü size kuralı v' +
       'eriyor: <code>Dr.</code> sonrasında cümle küçük kalır, <code>Xyz.</code> sonrasında bü' +
@@ -9785,15 +10261,15 @@ const
       'ode> değil <code>I</code> olur.</p>',
     '<hr>',
     '<h2 id="correct">Doğru biçim neye benzer</h2>',
-    '<p><small><tt><a href="ex:71">bir fiyat {ucuz|pahalı}</a><br>→&nbsp; Bir fiyat ucuz</t' +
+    '<p><small><tt><a href="ex:91">bir fiyat {ucuz|pahalı}</a><br>→&nbsp; Bir fiyat ucuz</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:72">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:92">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:73">#set %vip% = 1</a><br><a href="ex:73">{?vip?size|herkese' +
+    '<p><small><tt><a href="ex:93">#set %vip% = 1</a><br><a href="ex:93">{?vip?size|herkese' +
       '}</a><br>→&nbsp; Size</tt></small></p>',
-    '<p><small><tt><a href="ex:74">#set %n% = 5</a><br><a href="ex:74">%n% {plural %n%: ürü' +
+    '<p><small><tt><a href="ex:94">#set %n% = 5</a><br><a href="ex:94">%n% {plural %n%: ürü' +
       'n|ürünler}</a><br>→&nbsp; 5 ürünler</tt></small></p>',
-    '<p><small><tt><a href="ex:75">önce /# bir not #/ sonra</a><br>→&nbsp; Önce sonra</tt><' +
+    '<p><small><tt><a href="ex:95">önce /# bir not #/ sonra</a><br>→&nbsp; Önce sonra</tt><' +
       '/small></p>',
     '<p>Beş yapı, beş temiz satır: bir seçim, ayarlı bir karıştırma, bir koşul, önünde sayı' +
       ' bulunan bir sayı biçimi ve bir açıklama. Hiçbiri panele bir şey koymaz.</p>',
@@ -9808,7 +10284,7 @@ const
       ', rakamlardan ve alt çizgiden oluşur. <code>%şehir%</code> hiç değişken anımsatması de' +
       'ğildir — makine onu metin olarak okur ve bir şey söylemez, çünkü ona göre bildirilecek' +
       ' bir şey yoktur:</p>',
-    '<p><small><tt><a href="ex:76">merhaba %şehir% ve %ad%</a><br>→&nbsp; Merhaba %şehir% v' +
+    '<p><small><tt><a href="ex:96">merhaba %şehir% ve %ad%</a><br>→&nbsp; Merhaba %şehir% v' +
       'e %ad%</tt></small></p>',
     '<p>İkisi de değişmeden geçti ve tuzak burada: yalnızca ikincisi panelde bir satır çekt' +
       'i. Birincisi sessizdir, dolayısıyla hiçbir şey size onun asla yerine konmayacağını söy' +
@@ -10095,7 +10571,10 @@ const
       'ться поле числа, а перегляд стоятиме, поки ви працюєте.</p>',
     '<p><code>locale</code> вирішує форми числа, і це перемикач над правою половиною, а не ' +
       'мова інтерфейсу. Українській, російській, білоруській, сербській, хорватській і босній' +
-      'ській потрібні три форми; англійській — дві.</p>',
+      'ській потрібні три форми; англійській — дві; арабській — шість. Під арабською та іврит' +
+      'ською локаллю вона ще вирішує, як сполучник приєднується в переліку (див. роздільник).' +
+      ' Арабські та івритські приклади нижче виміряно під їхньою власною локаллю — її називає' +
+      ' фраза перед кожним із них.</p>',
     '<h2 id="choices">Вибір</h2>',
     '<p>Фігурні дужки з <code>|</code> між ними: рушій бере <b>один</b>.</p>',
     '<p><small><tt><a href="ex:1">{Мала|Велика} кімната.</a><br>→&nbsp; Мала кімната.</tt><' +
@@ -10145,36 +10624,64 @@ const
     '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" і "&gt;синій|жовтий|сірий]</a><br' +
       '>→&nbsp; Жовтий, сірий і синій</tt></small></p>',
     '<p><code>sep</code> іде між шматками, а <code>lastsep</code> — перед останнім.</p>',
+    '<p>Роздільник лише з літер отримує по пробілу з кожного боку, навіть якщо їх не набрал' +
+      'и:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="і"&gt;А|Б]</a><br>→&nbsp; Б і А</tt></small' +
+      '></p>',
+    '<p>Виняток — писемності, де слова не розділяють пробілами, і під будь-якою локаллю: ки' +
+      'тайський, японський, тайський, лаоський, кхмерський і бірманський роздільники пишуться' +
+      ' злитно.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Арабська та іврит мають своє правило, і вмикає його <b>локаль</b>, а не писемність.' +
+      ' Під <code>ar</code> роздільник, що складається рівно з و або ف, зберігає пробіл перед' +
+      ' собою і втрачає пробіл після: арабською сполучник пишуть злитно з наступним словом. П' +
+      'ід <code>he</code> те саме робить ו. Лише перед словом тієї самої писемності — перед л' +
+      'атинською назвою чи цифрою обидва пробіли лишаються:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Під будь-якою іншою локаллю сполучник лишається окремим словом — так і треба для пе' +
+      'рської та урду, де та сама літера пишеться окремо:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Скільки брати</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;синій|жовтий|сірий]</a><br>→&' +
-      'nbsp; Жовтий сірий</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;синій|жовтий|сірий]</a><br>→' +
+      '&nbsp; Жовтий сірий</tt></small></p>',
     '<p><code>minsize</code> — нижня межа, <code>maxsize</code> — верхня; число між ними ви' +
       'падкове, як і порядок. Рівні значення беруть рівно стільки. <b>Без обох — усі, але з о' +
       'дним лише <code>maxsize</code> нижня межа дорівнює одиниці</b>, і це дивує:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Три шматки, стеля три, а вийшов один. Коли мається на увазі «усі, але не більше трь' +
       'ох», пишіть і <code>minsize</code>. <code>maxsize</code>, більший за число шматків, ти' +
       'хо зменшують до нього. <code>minsize</code>, більший за <code>maxsize</code>, приймают' +
       'ь без жодного слова, і перемагає нижня межа: стелю піднімають до неї, а не навпаки:</p' +
       '>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;синій|жовтий|сірий]</a><br>→' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;синій|жовтий|сірий]</a><br>→' +
       '&nbsp; Жовтий сірий синій</tt></small></p>',
     '<h3 id="shuffles-2">Роздільник між двома шматками</h3>',
     '<p><code>&lt;…&gt;</code>, написаний <b>між</b> двома шматками, — роздільник цієї пари' +
       '.</p>',
-    '<p><small><tt><a href="ex:12">[синій|жовтий&lt;і&gt;|сірий]</a><br>→&nbsp; Жовтий і сі' +
+    '<p><small><tt><a href="ex:25">[синій|жовтий&lt;і&gt;|сірий]</a><br>→&nbsp; Жовтий і сі' +
       'рий синій</tt></small></p>',
     '<p>Він належить шматкові <b>після</b> себе і мандрує з ним крізь перемішування, тож ви' +
       'ринає там, куди цей шматок ляже, а не на сталому місці виводу. <code>&lt;…&gt;</code> ' +
       'після <b>останнього</b> шматка не роздільник узагалі й друкується текстом:</p>',
-    '<p><small><tt><a href="ex:13">[синій|жовтий|сірий&lt;і&gt;]</a><br>→&nbsp; Жовтий сіри' +
+    '<p><small><tt><a href="ex:26">[синій|жовтий|сірий&lt;і&gt;]</a><br>→&nbsp; Жовтий сіри' +
       'й&lt;і&gt; синій</tt></small></p>',
     '<h2 id="macros">Макроси</h2>',
     '<p><code>#set</code> дає імʼя шматкові тексту. Імʼя вживають як <code>%name%</code>, і' +
       ' директива мусить бути першою у своєму рядку — пробіли й табуляції перед нею можна, бі' +
       'льше нічого.</p>',
-    '<p><small><tt><a href="ex:14">#set %misto% = Київ</a><br><a href="ex:14">Місто: %misto' +
+    '<p><small><tt><a href="ex:27">#set %misto% = Київ</a><br><a href="ex:27">Місто: %misto' +
       '%.</a><br>→&nbsp; Місто: Київ.</tt></small></p>',
     '<p>Імена складаються з латинських літер, цифр і <code>_</code>. Імʼя в іншій абетці ім' +
       'енем не є — про це другий документ у статті <code>set.malformed</code>. Саме тому імʼя' +
@@ -10183,9 +10690,9 @@ const
     '<h3 id="macros-0"><code>#set</code> тягне заново, <code>#def</code> тягне один раз</h3' +
       '>',
     '<p>Це вся різниця між ними, і вона видно лише тоді, коли значення містить вибір.</p>',
-    '<p><small><tt><a href="ex:15">#set %vybir% = {A|B}</a><br><a href="ex:15">%vybir% %vyb' +
+    '<p><small><tt><a href="ex:28">#set %vybir% = {A|B}</a><br><a href="ex:28">%vybir% %vyb' +
       'ir% %vybir%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %vybir% = {A|B}</a><br><a href="ex:16">%vybir% %vyb' +
+    '<p><small><tt><a href="ex:29">#def %vybir% = {A|B}</a><br><a href="ex:29">%vybir% %vyb' +
       'ir% %vybir%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Обидва приклади бігли під одним зерном. <code>#set</code> зберігає шаблон і тягне й' +
       'ого при кожному вжитку; <code>#def</code> тягне раз і тримає відповідь. Беріть <code>#' +
@@ -10196,11 +10703,11 @@ const
       'ного перегляду вирішити, що визначення не працює.</p>',
     '<h2 id="conditions">Умови</h2>',
     '<p><code>{?name?тоді|інакше}</code> питає, чи має макрос значення.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?у нас %n%|поки н' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?у нас %n%|поки н' +
       'ічого}</a><br>→&nbsp; У нас 5</tt></small></p>',
     '<p>Половину <code>інакше</code> можна не писати — <code>{?name?тоді}</code> не друкує ' +
       'нічого, коли відповідь «ні». <code>!</code> перевертає питання:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?незнайомець' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?незнайомець' +
       '|друг}</a><br>→&nbsp; Друг</tt></small></p>',
     '<p>Мати значення — це мати <b>хоча б один непробільний символ</b>. Макрос, поставлений' +
       ' у ніщо або лише в пробіли, вважають без значення.</p>',
@@ -10209,11 +10716,11 @@ const
       'фри.</p>',
     '<h2 id="counting">Лічба</h2>',
     '<p><code>{plural %n%: …}</code> бере форму слова, яка пасує числу.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: фай' +
       'л|файли|файлів}</a><br>→&nbsp; 1 файл</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 2</a><br><a href="ex:20">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:33">#def %n% = 2</a><br><a href="ex:33">%n% {plural %n%: фай' +
       'л|файли|файлів}</a><br>→&nbsp; 2 файли</tt></small></p>',
-    '<p><small><tt><a href="ex:21">#def %n% = 5</a><br><a href="ex:21">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:34">#def %n% = 5</a><br><a href="ex:34">%n% {plural %n%: фай' +
       'л|файли|файлів}</a><br>→&nbsp; 5 файлів</tt></small></p>',
     '<p>Лічильник тут навмисне <code>#def</code>, а не <code>#set</code>, і правило варто з' +
       'апамʼятати: <b>робіть лічильник простим числом або <code>#def</code>, ніколи <code>#se' +
@@ -10221,16 +10728,34 @@ const
       'e>{5|5}</code>, а не <code>5</code> — тобто не число, — тож уся конструкція не дає ніч' +
       'ого, а панель каже <code>plural.count-macro</code>. Лічильник і форма не можуть супере' +
       'чити одне одному: натомість зникає слово.</p>',
-    '<p><small><tt><a href="ex:22">#set %n% = {5|5}</a><br><a href="ex:22">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:35">#set %n% = {5|5}</a><br><a href="ex:35">%n% {plural %n%:' +
       ' файл|файли|файлів}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Скільки форм, вирішує локаль, а не ви: під <code>uk</code> їх три, під <code>en</co' +
-      'de> — дві. Хибне число — це помилка, про яку панель повідомляє (<code>plural.arity</co' +
-      'de>), і рушій тоді друкує всю конструкцію назад, замінивши дужки на широкі <code>｛｝</c' +
-      'ode>, щоб її не сплутали з виводом.</p>',
+      'de> — дві, під <code>ar</code> — шість, у порядку zero, one, two, few, many, other. Ар' +
+      'абською «одна книжка» і «дві книжки» кажуть без числівника, тому число ставлять <b>все' +
+      'редину</b> тих форм, що його друкують, а не перед блоком:</p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 3</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:37">#def %n% = 2</a><br><a href="ex:37">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:38">#def %n% = 0</a><br><a href="ex:38">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:39">#def %n% = 1</a><br><' +
+      'a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:40' +
+      '">#def %n% = 11</a><br><a href="ex:40">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:41">#def %n% = 100</a><br><a href="ex:41">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Хибне число — це помилка, про яку панель повідомляє (<code>plural.arity</code>), і ' +
+      'рушій тоді друкує всю конструкцію назад, замінивши дужки на широкі <code>｛｝</code>, що' +
+      'б її не сплутали з виводом.</p>',
     '<h2 id="fragments">Уривки</h2>',
     '<p><code>#include "name"</code> ставить у цьому місці інший шаблон, і директива мусить' +
       ' бути першою у своєму рядку — тут теж пробіли й табуляції перед нею можна.</p>',
-    '<p><small><tt><a href="ex:23">#include "intro"</a><br>→&nbsp; Ласкаво просимо до Acme.' +
+    '<p><small><tt><a href="ex:42">#include "intro"</a><br>→&nbsp; Ласкаво просимо до Acme.' +
       '</tt></small></p>',
     '<p>Уривок відтворюється як власний шаблон, тож вибір усередині нього робиться заново: ' +
       '<code>intro</code> містить <code>{Acme|Globex}</code> і відповідає тим чи тим.</p>',
@@ -10242,7 +10767,7 @@ const
     '<h3 id="fragments-0">Уривок не бачить ваших макросів</h3>',
     '<p>Він відтворюється як власний шаблон: має значення сесії, але не <code>#set</code> і' +
       ' <code>#def</code> документа, який його вніс.</p>',
-    '<p><small><tt><a href="ex:24">#set %brand% = Acme</a><br><a href="ex:24">#include "sho' +
+    '<p><small><tt><a href="ex:43">#set %brand% = Acme</a><br><a href="ex:43">#include "sho' +
       'ut"</a><br>→&nbsp; %brand% тут.</tt></small></p>',
     '<p><code>shout</code> — це <code>%brand% тут.</code>, і імʼя має бути визначене в само' +
       'му уривку. Це не мовчання — панель таки каже <code>variable.undefined</code>, — але ка' +
@@ -10253,7 +10778,7 @@ const
     '<h2 id="remarks">Коментарі</h2>',
     '<p><code>/# … #/</code> — це коментар: усе між позначками прибирають раніше за будь-що' +
       ' інше.</p>',
-    '<p><small><tt><a href="ex:25">чернетка /# не впевнений #/ готово</a><br>→&nbsp; Чернет' +
+    '<p><small><tt><a href="ex:44">чернетка /# не впевнений #/ готово</a><br>→&nbsp; Чернет' +
       'ка готово</tt></small></p>',
     '<p>Коментарі не вкладаються. Перший <code>#/</code> закриває коментар, хоч би що було ' +
       'перед ним, тож коментар, обгорнутий навколо тексту, який сам містить <code>#/</code>, ' +
@@ -10262,20 +10787,20 @@ const
     '<p>Вивід — не зовсім той текст, що дали конструкції. Наприкінці з ним стається кілька ' +
       'речей; дві ви зустрічаєте щодня.</p>',
     '<p>Перша літера кожного речення стає великою:</p>',
-    '<p><small><tt><a href="ex:26">один. два. три.</a><br>→&nbsp; Один. Два. Три.</tt></sma' +
+    '<p><small><tt><a href="ex:45">один. два. три.</a><br>→&nbsp; Один. Два. Три.</tt></sma' +
       'll></p>',
     '<p>Через це приклади в цій довідці так часто відповідають великою літерою там, де в ша' +
       'блоні мала. Крапка після скорочення, яке рушій знає, речення не закінчує, і так само н' +
       'е закінчує його щось на кшталт <code>e.g.</code> чи <code>U.S.</code> — літера, крапка' +
       ', літера, крапка — у <b>будь-якому алфавіті</b>: перевірка «чи це середина слова» чита' +
       'є будь-яке письмо, і <code>т.д.</code> заслонено так само, як <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:27">г. Київ наші ціни низькі</a><br>→&nbsp; г. Київ наші цін' +
+    '<p><small><tt><a href="ex:46">г. Київ наші ціни низькі</a><br>→&nbsp; г. Київ наші цін' +
       'и низькі</tt></small></p>',
-    '<p><small><tt><a href="ex:28">напр. наші ціни низькі</a><br>→&nbsp; напр. наші ціни ни' +
+    '<p><small><tt><a href="ex:47">напр. наші ціни низькі</a><br>→&nbsp; напр. наші ціни ни' +
       'зькі</tt></small></p>',
     '<p>Будь-яке інше слово речення закінчує, хоч би яке коротке — довжина тут ні до чого:<' +
       '/p>',
-    '<p><small><tt><a href="ex:29">Ххх. наші ціни низькі</a><br>→&nbsp; Ххх. Наші ціни низь' +
+    '<p><small><tt><a href="ex:48">Ххх. наші ціни низькі</a><br>→&nbsp; Ххх. Наші ціни низь' +
       'кі</tt></small></p>',
     '<p>Список, який знає рушій, має 46 записів, <b>29 з них кириличні</b>, і другий докуме' +
       'нт проходить його під заголовком <b>Мовчання, яке зустрічають усі</b>. Для українськог' +
@@ -10290,9 +10815,9 @@ const
       'ode>, чи то <code>сайт.укр</code>. А заслонений початок для правила про велику літеру ' +
       '— не початок речення, тому <code>один.два</code> нижче виходить неторканим, з малою лі' +
       'терою включно.</p>',
-    '<p><small><tt><a href="ex:30">привіт , світ</a><br>→&nbsp; Привіт, світ</tt></small></' +
+    '<p><small><tt><a href="ex:49">привіт , світ</a><br>→&nbsp; Привіт, світ</tt></small></' +
       'p>',
-    '<p><small><tt><a href="ex:31">один.два</a><br>→&nbsp; один.два</tt></small></p>',
+    '<p><small><tt><a href="ex:50">один.два</a><br>→&nbsp; один.два</tt></small></p>',
     '<h2 id="silences">Мовчання</h2>',
     '<p>Кожен випадок нижче відтворюється, дає щось інше, ніж здається, і не тягне за собою' +
       ' <b>жодної діагностики</b>. Вони зібрані тут, бо більше ніщо у вікні їх ніколи не згад' +
@@ -10302,16 +10827,16 @@ const
       'ю половиною списку — <code>г.</code>, <code>ст.</code> та <code>напр.</code> вище, — т' +
       'оді як <code>вул.</code>, <code>стор.</code> і <code>грн.</code> закінчують речення й ' +
       'пишуть наступне слово з великої:</p>',
-    '<p><small><tt><a href="ex:32">вул. наші ціни низькі</a><br>→&nbsp; Вул. Наші ціни низь' +
+    '<p><small><tt><a href="ex:51">вул. наші ціни низькі</a><br>→&nbsp; Вул. Наші ціни низь' +
       'кі</tt></small></p>',
     '<p><b>Скорочення з кількох крапок працює в будь-якому алфавіті.</b> <code>e.g.</code> ' +
       'заслонено, і <code>т.д.</code> — теж: літера, крапка, літера, крапка, і заслонений поч' +
       'аток рядка лишається малим:</p>',
-    '<p><small><tt><a href="ex:33">т.д. це лишається малим</a><br>→&nbsp; т.д. це лишається' +
+    '<p><small><tt><a href="ex:52">т.д. це лишається малим</a><br>→&nbsp; т.д. це лишається' +
       ' малим</tt></small></p>',
     '<p><b>Кириличний домен заслоняється так само, як латинський.</b> <code>.укр</code> руш' +
       'ій на два речення не розбирає:</p>',
-    '<p><small><tt><a href="ex:34">сайт.укр три</a><br>→&nbsp; сайт.укр три</tt></small></p' +
+    '<p><small><tt><a href="ex:53">сайт.укр три</a><br>→&nbsp; сайт.укр три</tt></small></p' +
       '>',
     '<p>Причина того, що українські скорочення не заслонено, — просто СПИСОК: у ньому 46 сл' +
       'ів, і те, що майже жодне з них не українське, до абетки стосунку не має. Рушій звіряє ' +
@@ -10320,31 +10845,31 @@ const
       ' кириличні домени більше не ламаються.</p>',
     '<p><b><code>#include</code>, який не стоїть сам у своєму рядку, — звичайний текст.</b>' +
       '</p>',
-    '<p><small><tt><a href="ex:35">Перед. #include "intro"</a><br>→&nbsp; Перед. #include "' +
+    '<p><small><tt><a href="ex:54">Перед. #include "intro"</a><br>→&nbsp; Перед. #include "' +
       'intro"</tt></small></p>',
     '<p>Те саме стосується директиви з чимось за нею і <code>#include"intro"</code> без про' +
       'білу. Правило належить родині, а не цьому рушієві, і саме воно робить директиву впізна' +
       'ваною без розбору всього рядка.</p>',
     '<p><b>Умова, імʼя якої починається з цифри, умовою не є.</b> Вона стає звичайним вибор' +
       'ом між <code>?1x?так</code> і <code>ні</code>:</p>',
-    '<p><small><tt><a href="ex:36">{?1x?так|ні}</a><br>→&nbsp; ?1x? Так</tt></small></p>',
+    '<p><small><tt><a href="ex:55">{?1x?так|ні}</a><br>→&nbsp; ?1x? Так</tt></small></p>',
     '<p><b><code>&lt;…&gt;</code> на початку не першого шматка роздільником не є</b> і друк' +
       'ується як стоїть:</p>',
-    '<p><small><tt><a href="ex:37">[синій|&lt;і&gt;жовтий]</a><br>→&nbsp; &lt;і&gt;Жовтий с' +
+    '<p><small><tt><a href="ex:56">[синій|&lt;і&gt;жовтий]</a><br>→&nbsp; &lt;і&gt;Жовтий с' +
       'иній</tt></small></p>',
     '<p>Блок на початку <b>першого</b> шматка — це якраз роздільник, з якого починається ро' +
       'зділ про перемішування:</p>',
-    '<p><small><tt><a href="ex:38">[&lt;і&gt;синій|жовтий]</a><br>→&nbsp; Жовтий і синій</t' +
+    '<p><small><tt><a href="ex:57">[&lt;і&gt;синій|жовтий]</a><br>→&nbsp; Жовтий і синій</t' +
       't></small></p>',
     '<p>Будь-де після <code>|</code> він звичайний текст, а роздільник між двома шматками п' +
       'ишуть у <b>кінці</b> першого.</p>',
     '<p><b>Голий тег у кінці шматка приймають за роздільник цієї пари</b> і друкують власни' +
       'м текстом:</p>',
-    '<p><small><tt><a href="ex:39">[один&lt;br&gt;|два]</a><br>→&nbsp; Два один</tt></small' +
+    '<p><small><tt><a href="ex:58">[один&lt;br&gt;|два]</a><br>→&nbsp; Два один</tt></small' +
       '></p>',
     '<p>На цьому зерні пара лягла в іншому порядку, тож роздільник не вийшов зовсім. З трет' +
       'ім шматком йому є куди лягти, і він з’являється:</p>',
-    '<p><small><tt><a href="ex:40">[синій|жовтий&lt;br&gt;|сірий]</a><br>→&nbsp; Жовтий br ' +
+    '<p><small><tt><a href="ex:59">[синій|жовтий&lt;br&gt;|сірий]</a><br>→&nbsp; Жовтий br ' +
       'сірий синій</tt></small></p>',
     '<p><code>&lt;br&gt;</code> стоїть між <code>жовтий</code> і тим, що йде за ним, куди б' +
       ' перемішування цю пару не поставило. Закривний тег (<code>&lt;/b&gt;</code>), самозакр' +
@@ -10352,12 +10877,12 @@ const
       ' і тег посеред шматка лишаються недоторканими.</p>',
     '<p><b>Незакритий коментар — звичайний текст</b>: він нічого не відкриває, і <code>/#</' +
       'code> друкується:</p>',
-    '<p><small><tt><a href="ex:41">перед /# решта цього</a><br>→&nbsp; Перед /# решта цього' +
+    '<p><small><tt><a href="ex:60">перед /# решта цього</a><br>→&nbsp; Перед /# решта цього' +
       '</tt></small></p>',
     '<p>Але він досі половина пари. Якщо далі в документі з’явиться <code>#/</code>, ці дво' +
       'є знайдуть одне одного, і все між ними зникне — разом із тим, що автор написав поміж:<' +
       '/p>',
-    '<p><small><tt><a href="ex:42">{a /# ой|b} середина #/ хвіст</a><br>→&nbsp; {a хвіст</t' +
+    '<p><small><tt><a href="ex:61">{a /# ой|b} середина #/ хвіст</a><br>→&nbsp; {a хвіст</t' +
       't></small></p>',
     '<p>Вибір вище втратив свій другий варіант і закривну дужку, і жодна діагностика про це' +
       ' не каже: це те, що текст ОЗНАЧАЄ, а не помилка, яку рушій може побачити. Коли <code>/' +
@@ -10422,26 +10947,26 @@ const
       'удови конструкції.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — дужку відкрито й не закрито<' +
       '/h3>',
-    '<p><small><tt><a href="ex:43">ціна {низька|висока</a><br>→&nbsp; Ціна {низька|висока</' +
+    '<p><small><tt><a href="ex:62">ціна {низька|висока</a><br>→&nbsp; Ціна {низька|висока</' +
       'tt></small></p>',
     '<p>Рушій не вгадує, де ви хотіли закрити. Текст лишається як є, разом із дужкою, і виб' +
       'ір не відбувається ніколи.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — закрито дужкою іншого ви' +
       'ду</h3>',
-    '<p><small><tt><a href="ex:44">ціна {низька|висока]</a><br>→&nbsp; Ціна {низька|висока]' +
+    '<p><small><tt><a href="ex:63">ціна {низька|висока]</a><br>→&nbsp; Ціна {низька|висока]' +
       '</tt></small></p>',
     '<p><code>{</code> чекає на <code>}</code>, а <code>[</code> — на <code>]</code>. Перем' +
       'ішування, закрите фігурною дужкою, перемішуванням не є.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — закривна' +
       ' дужка без відкритої</h3>',
-    '<p><small><tt><a href="ex:45">ціна низька} і все</a><br>→&nbsp; Ціна низька} і все</tt' +
+    '<p><small><tt><a href="ex:64">ціна низька} і все</a><br>→&nbsp; Ціна низька} і все</tt' +
       '></small></p>',
     '<p>Вона лишається текстом. Найчастіше це дужка, що зосталася від правки.</p>',
     '<hr>',
     '<h2 id="definitions">Визначення</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — цей рядок <code>#set</code> написа' +
       'но не за правилом</h3>',
-    '<p><small><tt><a href="ex:46">#set misto = Київ</a><br><a href="ex:46">у %misto%</a><b' +
+    '<p><small><tt><a href="ex:65">#set misto = Київ</a><br><a href="ex:65">у %misto%</a><b' +
       'r>→&nbsp; #set misto = Київ ⏎ У %misto%</tt></small></p>',
     '<p><b>Імʼя пишуть між знаками відсотка:</b> <code>#set %misto% = Київ</code>. Це найча' +
       'стіша перша помилка, і вона ставить у панель одразу два рядки — сам зіпсований рядок і' +
@@ -10451,7 +10976,7 @@ const
       'не прочитав її як директиву, отже це звичайний рядок, і він потрапляє в результат.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — цей рядок <code>#def</code> написа' +
       'но не за правилом</h3>',
-    '<p><small><tt><a href="ex:47">#def сторінки = {1|3}</a><br><a href="ex:47">%сторінки%<' +
+    '<p><small><tt><a href="ex:66">#def сторінки = {1|3}</a><br><a href="ex:66">%сторінки%<' +
       '/a><br>→&nbsp; #def сторінки = 1 ⏎ %сторінки%</tt></small></p>',
     '<p>Те саме правило й та сама ціна. <code>#def</code> різниться від <code>#set</code> н' +
       'е написанням, а тим, <b>коли</b> значення розгортається: <code>#set</code> розгортає й' +
@@ -10462,15 +10987,15 @@ const
       'м із дужками. Зіпсований рядок не вимкнено; він лише перестає бути директивою.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — це імʼя вж' +
       'е визначено вище</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = перше</a><br><a href="ex:48">#set %x% = друге' +
-      '</a><br><a href="ex:48">%x%</a><br>→&nbsp; Друге</tt></small></p>',
+    '<p><small><tt><a href="ex:67">#set %x% = перше</a><br><a href="ex:67">#set %x% = друге' +
+      '</a><br><a href="ex:67">%x%</a><br>→&nbsp; Друге</tt></small></p>',
     '<p>Воно працює — перемагає <b>останнє</b> визначення, — але рушій називає це помилкою:' +
       ' документ, де імʼя задано двічі, читається неоднозначно, і за місяць ви не згадаєте, я' +
       'кий із двох рядків живий. Помилка вказує на <b>друге</b> визначення; перше стоїть вище' +
       '.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> усередині значення визначення</h3>',
-    '<p><small><tt><a href="ex:49">#def %x% = #include "frag"</a><br><a href="ex:49">%x%</a' +
+    '<p><small><tt><a href="ex:68">#def %x% = #include "frag"</a><br><a href="ex:68">%x%</a' +
       '><br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Вставка всередині значення розгортається в іншу мить, ніж ви очікували б, і родина ' +
       'це забороняє. Ставте <code>#include</code> в окремий рядок.</p>',
@@ -10478,7 +11003,7 @@ const
     '<h2 id="variables">Змінні</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — ця змінна ніде не визнач' +
       'ена</h3>',
-    '<p><small><tt><a href="ex:50">привіт, %name%</a><br>→&nbsp; Привіт, %name%</tt></small' +
+    '<p><small><tt><a href="ex:69">привіт, %name%</a><br>→&nbsp; Привіт, %name%</tt></small' +
       '></p>',
     '<p>Попередження, а не помилка: рушій друкує імʼя як є. Так і задумано — значення може ' +
       'прийти ззовні, від програми-господаря. У Studio такі значення подають на вкладці «Змін' +
@@ -10510,7 +11035,7 @@ const
     '<li><b>Ctrl+клацання</b> пише визначення в документ і відкриває на ньому редактор груп' +
       '. Значення, яке ви вже набрали, входить туди першою можливістю:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:51">#set %brand% = {Vulkan}</a><br><a href="ex:51">казино %b' +
+    '<p><small><tt><a href="ex:70">#set %brand% = {Vulkan}</a><br><a href="ex:70">казино %b' +
       'rand%</a><br>→&nbsp; Казино Vulkan</tt></small></p>',
     '<p>Різниця між ними — те, що переживає закриття вікна. Значення сесії не переживає: йо' +
       'го немає ні у файлі, ні в git, і жоден інший рушій родини його не бачить. Визначення п' +
@@ -10523,7 +11048,7 @@ const
       'ідсотки лишаються символами.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — визначення пос' +
       'илається саме на себе</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:71">#set %x% = a %x% b</a><br><a href="ex:71">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Пʼятдесят рівнів, потім зупинка. Рушій розгортає до межі глибини й спиняється, лиша' +
       'ючи <code>%x%</code> посередині. Це не цикл, і не те, чого ви хотіли.</p>',
@@ -10532,8 +11057,8 @@ const
       'сятий рівень спиняється й лишає значення як є, а в значенні кожної на одну більше.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — визнач' +
       'ення посилаються по колу</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = %y%</a><br><a href="ex:53">#set %y% = %x%</a>' +
-      '<br><a href="ex:53">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %x% = %y%</a><br><a href="ex:72">#set %y% = %x%</a>' +
+      '<br><a href="ex:72">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Кожна сторона розгортається рівно <b>один раз</b> і спиняється: <code>%x%</code> ст' +
       'ав <code>%y%</code>, а не <code>%x%</code>. Рушій розкручує коло, а не ходить по ньому' +
       ', і виживає друге імʼя з кола — поставте в документ <code>%x% %y%</code>, і він видаст' +
@@ -10552,16 +11077,16 @@ const
     '<hr>',
     '<h2 id="includes">Вставки</h2>',
     '<h3 id="includes-0"><code>#include</code> працює лише з початку рядка</h3>',
-    '<p><small><tt><a href="ex:54">перед #include "frag" після</a><br>→&nbsp; Перед #includ' +
+    '<p><small><tt><a href="ex:73">перед #include "frag" після</a><br>→&nbsp; Перед #includ' +
       'e "frag" після</tt></small></p>',
-    '<p><small><tt><a href="ex:55">#include "frag"</a><br>→&nbsp; Фрагмент</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#include "frag"</a><br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Жодної діагностики, і в цьому вся суть: <code>#include</code> посеред рядка вставко' +
       'ю <b>не є</b>. Рушій читає його як звичайний текст і нічого не каже, бо нема на що ска' +
       'ржитися — ви написали текст і дістали текст.</p>',
     '<p><b>А от ціль може стояти рядком нижче</b>, і це дивує з іншого боку. Зазор, який ру' +
       'шій допускає між словом і ціллю, включає переноси рядків, тож це одна вставка, і вона ' +
       'працює:</p>',
-    '<p><small><tt><a href="ex:56">#include</a><br><a href="ex:56">"frag"</a><br>→&nbsp; Фр' +
+    '<p><small><tt><a href="ex:75">#include</a><br><a href="ex:75">"frag"</a><br>→&nbsp; Фр' +
       'агмент</tt></small></p>',
     '<p>Порожні рядки між ними теж можна. Не можна все інше: слово перед ціллю або будь-що,' +
       ' крім пробілів, після неї — і все знову стає текстом. Редактор фарбує ціль на її власн' +
@@ -10569,7 +11094,7 @@ const
       ', кінця якої ще не бачить.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — такої цілі в наб' +
       'орі немає</h3>',
-    '<p><small><tt><a href="ex:57">#include "немає"</a><br>→&nbsp; (порожньо)</tt></small><' +
+    '<p><small><tt><a href="ex:76">#include "немає"</a><br>→&nbsp; (порожньо)</tt></small><' +
       '/p>',
     '<p>Цілі — це файли <code>.spintax</code> у теці відкритого документа. Невідома ціль ро' +
       'згортається в ніщо: абзац зникає, а не ламається, і саме тому це так легко проґавити.<' +
@@ -10585,7 +11110,7 @@ const
       'УЄ» зʼявляється лише тоді, коли тека є, а файлу в ній справді немає.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — ціль є, але в іншому рег' +
       'істрі</h3>',
-    '<p><small><tt><a href="ex:58">#include "intro"</a><br>→&nbsp; (порожньо)</tt></small><' +
+    '<p><small><tt><a href="ex:77">#include "intro"</a><br>→&nbsp; (порожньо)</tt></small><' +
       '/p>',
     '<p>Набір містить <code>Intro.spintax</code> — а рушій усе одно каже, що такої цілі нем' +
       'ає, тоді як Studio додає свою примітку про регістр. Регістр важить: <code>intro</code>' +
@@ -10594,7 +11119,7 @@ const
       'ві про той самий документ.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — вставка по колу</h3>',
     '<p>Якщо <code>loop.spintax</code> сам містить <code>#include "loop"</code>, то:</p>',
-    '<p><small><tt><a href="ex:59">#include "loop"</a><br>→&nbsp; (порожньо)</tt></small></' +
+    '<p><small><tt><a href="ex:78">#include "loop"</a><br>→&nbsp; (порожньо)</tt></small></' +
       'p>',
     '<p>Рушій підставляє порожнечу замість нескінченності. Примітка потрібна, щоб ви зрозум' +
       'іли, чому абзац зник.</p>',
@@ -10605,17 +11130,20 @@ const
     '<h2 id="plurals">Форми числа</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — форм не стільки, скільки вимагає лок' +
       'аль</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = 5</a><br><a href="ex:60">%n% {plural %n%: об’' +
+    '<p><small><tt><a href="ex:79">#set %n% = 5</a><br><a href="ex:79">%n% {plural %n%: об’' +
       'єкт|об’єкти}</a><br>→&nbsp; 5 ｛plural 5: об’єкт|об’єкти｝</tt></small></p>',
     '<p><b>Не порожнеча — рушій друкує всю конструкцію</b>, замінивши дужки на широкі <code' +
       '>｛｝</code>. Так він каже «я це бачив і не зміг застосувати». Непомітним цього ніхто не' +
       ' назве, і це добре: абзац, що зник мовчки, шукали б довше.</p>',
-    '<p>Українській потрібні три форми, англійській — дві. Під локаллю цього документа прав' +
-      'ильна — <code>{plural %n%: об’єкт|об’єкти|об’єктів}</code>.</p>',
+    '<p>Українській потрібні три форми, англійській — дві, арабській — шість. Під локаллю ц' +
+      'ього документа правильна — <code>{plural %n%: об’єкт|об’єкти|об’єктів}</code>. Під <co' +
+      'de>ar</code> дві форми — теж помилка:</p>',
+    '<p><small><tt><a href="ex:80">#def %n% = 5</a><br><a href="ex:80">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Порожнеча виникає з іншої причини, і ці дві легко сплутати.</b> Порівняйте ці дв' +
       'і, що різняться лише кількістю форм:</p>',
-    '<p><small><tt><a href="ex:61">{plural %n%: об’єкт|об’єкти|об’єктів}</a><br>→&nbsp; (по' +
-      'рожньо)&nbsp;&nbsp; три форми: правильно для української<br><a href="ex:62">{plural %n' +
+    '<p><small><tt><a href="ex:81">{plural %n%: об’єкт|об’єкти|об’єктів}</a><br>→&nbsp; (по' +
+      'рожньо)&nbsp;&nbsp; три форми: правильно для української<br><a href="ex:82">{plural %n' +
       '%: об’єкт|об’єкти}</a><br>→&nbsp; (порожньо)&nbsp;&nbsp; дві форми: неправильно для ук' +
       'раїнської</tt></small></p>',
     '<p>Обидві не друкують нічого, а панель ставиться до них по-різному: перша тягне лише <' +
@@ -10633,7 +11161,7 @@ const
       'робить насправді.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — лічильник бере значення ' +
       'з <code>#set</code>, а той тягне заново при кожній згадці</h3>',
-    '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#set %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' об’єкт|об’єкти|об’єктів}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Подивіться, що вціліло: <b>число надруковано, а іменник ні.</b> Лічильник має бути ' +
       'числом на мить, коли обирають форму, а <code>#set</code>, значення якого саме є виборо' +
@@ -10642,13 +11170,13 @@ const
       'ть суперечити одне одному; рушій натомість упускає слово.</p>',
     '<p><code>#def</code> поводиться інакше й розгортає своє значення раз на відтворення, т' +
       'ож місце лічильника дістає число:</p>',
-    '<p><small><tt><a href="ex:64">#def %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#def %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' об’єкт|об’єкти|об’єктів}</a><br>→&nbsp; 1 об’єкт</tt></small></p>',
     '<p>Для цього в панелі немає жодного рядка. Звідси й правило: робіть лічильник простим ' +
       'числом або <code>#def</code>, ніколи <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — дужки всередині ' +
       'форм</h3>',
-    '<p><small><tt><a href="ex:65">{plural %n%: {об’єкт|річ}|об’єкти|об’єктів}</a><br>→&nbs' +
+    '<p><small><tt><a href="ex:85">{plural %n%: {об’єкт|річ}|об’єкти|об’єктів}</a><br>→&nbs' +
       'p; ｛plural %n%: ｛об’єкт|річ｝|об’єкти|об’єктів｝</tt></small></p>',
     '<p>Форми — це простий текст. Вибір усередині них не розгортається, і натомість уся кон' +
       'струкція друкується в широких дужках.</p>',
@@ -10656,27 +11184,27 @@ const
     '<h2 id="permutations">Перемішування</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — невідомий ключ' +
       ' у налаштуванні</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:86">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Відомі ключі — <code>minsize</code>, <code>maxsize</code>, <code>sep</code> і <code' +
       '>lastsep</code>. Невідомий налаштуванням не є, і коли він у блоці єдиний, увесь блок у' +
       'загалі не налаштування: він стає роздільником між шматками, що й показує вивід.</p>',
     '<p><b>Якщо поруч стоїть справжній ключ, вихід зовсім інший</b> — і це ймовірніша помил' +
       'ка: один ключ із кількох набрано неправильно:</p>',
-    '<p><small><tt><a href="ex:67">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:87">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Блок лишається налаштуванням, <code>sep</code> виконується, невідомий ключ просто в' +
       'ідкидають, а панель в обох випадках каже одне й те саме. Тобто діагностика повідомляє,' +
       ' що ключ не зрозуміли; вона не повідомляє, що сталося далі. Про це читайте вивід.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— мінімум задано не цілим числом</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;minsize=два&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:88">[&lt;minsize=два&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Нечислове значення відпадає разом зі своєю межею, і діє усталене — тобто всі шматки' +
       '.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— максимум задано не цілим числом</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;maxsize=багато&gt;a|b|c]</a><br>→&nbsp; B c a</tt><' +
+    '<p><small><tt><a href="ex:89">[&lt;maxsize=багато&gt;a|b|c]</a><br>→&nbsp; B c a</tt><' +
       '/small></p>',
     '<p>Рівно те саме з іншого кінця: верхня межа зникає, і вивід знову містить кожен шмато' +
       'к.</p>',
@@ -10712,8 +11240,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Мовчання, яке зустрічають усі: скорочення</h2>',
     '<h3 id="abbreviations-0">Скорочення лишає наступне слово малим</h3>',
-    '<p><small><tt><a href="ex:70">г. Київ наші ціни низькі</a><br>→&nbsp; г. Київ наші цін' +
-      'и низькі<br><a href="ex:71">Ххх. наші ціни низькі</a><br>→&nbsp; Ххх. Наші ціни низькі' +
+    '<p><small><tt><a href="ex:90">г. Київ наші ціни низькі</a><br>→&nbsp; г. Київ наші цін' +
+      'и низькі<br><a href="ex:91">Ххх. наші ціни низькі</a><br>→&nbsp; Ххх. Наші ціни низькі' +
       '</tt></small></p>',
     '<p>Два рядки, що різняться одним словом, і друге слово кожного дає вам правило: після ' +
       '<code>г.</code> речення лишається малим, після <code>Ххх.</code> — з великої. Рушій ст' +
@@ -10740,15 +11268,15 @@ const
       'е на латинці, і кириличний домен <code>.укр</code> теж не заслонено.</p>',
     '<hr>',
     '<h2 id="correct">Як виглядає правильне</h2>',
-    '<p><small><tt><a href="ex:72">ціна {низька|висока}</a><br>→&nbsp; Ціна низька</tt></sm' +
+    '<p><small><tt><a href="ex:92">ціна {низька|висока}</a><br>→&nbsp; Ціна низька</tt></sm' +
       'all></p>',
-    '<p><small><tt><a href="ex:73">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:93">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">#set %vip% = 1</a><br><a href="ex:74">{?vip?для вас|для ' +
+    '<p><small><tt><a href="ex:94">#set %vip% = 1</a><br><a href="ex:94">{?vip?для вас|для ' +
       'всіх}</a><br>→&nbsp; Для вас</tt></small></p>',
-    '<p><small><tt><a href="ex:75">#set %n% = 5</a><br><a href="ex:75">%n% {plural %n%: тов' +
+    '<p><small><tt><a href="ex:95">#set %n% = 5</a><br><a href="ex:95">%n% {plural %n%: тов' +
       'ар|товари|товарів}</a><br>→&nbsp; 5 товарів</tt></small></p>',
-    '<p><small><tt><a href="ex:76">перед /# нотатка #/ після</a><br>→&nbsp; Перед після</tt' +
+    '<p><small><tt><a href="ex:96">перед /# нотатка #/ після</a><br>→&nbsp; Перед після</tt' +
       '></small></p>',
     '<p>Пʼять конструкцій, пʼять чистих рядків: вибір, перемішування з налаштуваннями, умов' +
       'а, форма числа з числом перед нею і коментар. Жодна не ставить у панель нічого.</p>',
@@ -10762,7 +11290,7 @@ const
     '<p><b>Чому моя змінна з українським іменем не працює?</b> Імена змінних — лише латиниц' +
       'я. <code>%імя%</code> взагалі не вважається згадкою змінної: рушій друкує його текстом' +
       ' і <b>не видає жодної діагностики</b>:</p>',
-    '<p><small><tt><a href="ex:77">привіт, %імя%</a><br>→&nbsp; Привіт, %імя%</tt></small><' +
+    '<p><small><tt><a href="ex:97">привіт, %імя%</a><br>→&nbsp; Привіт, %імя%</tt></small><' +
       '/p>',
     '<p>Порівняйте з <code>%name%</code>, яке рядок у панелі таки тягне. Мовчазне саме перш' +
       'е — ніщо не скаже вам, що воно ніколи не підставиться. А <code>#set %імя% = Світ</code' +
@@ -11051,7 +11579,10 @@ const
       'іцца поле ліку, а прагляд будзе стаяць, пакуль вы працуеце.</p>',
     '<p><code>locale</code> вырашае формы ліку, і гэта пераключальнік над правай палавінай,' +
       ' а не мова інтэрфейсу. Беларускай, рускай, украінскай, сербскай, харвацкай і баснійска' +
-      'й патрэбныя тры формы; англійскай — дзве.</p>',
+      'й патрэбныя тры формы; англійскай — дзве; арабскай — шэсць. Пад арабскай і іўрыцкай ла' +
+      'каллю яна яшчэ вырашае, як злучнік далучаецца ў спісе (гл. падзяляльнік). Арабскія і і' +
+      'ўрыцкія прыклады ніжэй вымераныя пад сваёй лакаллю — яе называе сказ перад кожным з іх' +
+      '.</p>',
     '<h2 id="choices">Выбар</h2>',
     '<p>Фігурныя дужкі з <code>|</code> паміж імі: рухавік бярэ <b>адзін</b>.</p>',
     '<p><small><tt><a href="ex:1">{Малы|Вялікі} пакой.</a><br>→&nbsp; Малы пакой.</tt></sma' +
@@ -11101,36 +11632,63 @@ const
     '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" і "&gt;сіні|жоўты|шэры]</a><br>→&' +
       'nbsp; Жоўты, шэры і сіні</tt></small></p>',
     '<p><code>sep</code> ідзе паміж кавалкамі, а <code>lastsep</code> — перад апошнім.</p>',
+    '<p>Падзяляльнік з адных літар атрымлівае па прабеле з кожнага боку, нават калі іх не н' +
+      'абралі:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="і"&gt;А|Б]</a><br>→&nbsp; Б і А</tt></small' +
+      '></p>',
+    '<p>Выключэнне — пісьмы, дзе словы не раздзяляюць прабеламі, і пад любой лакаллю: кітай' +
+      'скі, японскі, тайскі, лаоскі, кхмерскі і бірманскі падзяляльнікі пішуцца разам.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>У арабскай і іўрыта сваё правіла, і ўключае яго <b>лакаль</b>, а не пісьмо. Пад <co' +
+      'de>ar</code> падзяляльнік, які складаецца роўна з و ці ف, захоўвае прабел перад сабой ' +
+      'і губляе прабел пасля: па-арабску злучнік пішацца разам з наступным словам. Пад <code>' +
+      'he</code> тое самае робіць ו. Толькі перад словам таго ж пісьма — перад лацінскай назв' +
+      'ай ці лічбай абодва прабелы застаюцца:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Пад любой іншай лакаллю злучнік застаецца асобным словам — так і трэба для персідск' +
+      'ай і урду, дзе тая ж літара пішацца асобна:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Колькі браць</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;сіні|жоўты|шэры]</a><br>→&nbs' +
-      'p; Жоўты шэры</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;сіні|жоўты|шэры]</a><br>→&nb' +
+      'sp; Жоўты шэры</tt></small></p>',
     '<p><code>minsize</code> — ніжняя мяжа, <code>maxsize</code> — верхняя; лік паміж імі в' +
       'ыпадковы, як і парадак. Роўныя значэнні бяруць роўна столькі. <b>Без абодвух — усе, ал' +
       'е з адным толькі <code>maxsize</code> ніжняя мяжа роўная адзінцы</b>, і гэта здзіўляе:' +
       '</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Тры кавалкі, столь тры, а выйшаў адзін. Калі маецца на ўвазе «усе, але не больш за ' +
       'тры», пішыце і <code>minsize</code>. <code>maxsize</code>, большы за лік кавалкаў, ціх' +
       'а змяншаюць да яго. <code>minsize</code>, большы за <code>maxsize</code>, прымаюць без' +
       ' ніводнага слова, і перамагае ніжняя мяжа: столь падымаюць да яе, а не наадварот:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;сіні|жоўты|шэры]</a><br>→&nb' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;сіні|жоўты|шэры]</a><br>→&nb' +
       'sp; Жоўты шэры сіні</tt></small></p>',
     '<h3 id="shuffles-2">Падзяляльнік паміж двума кавалкамі</h3>',
     '<p><code>&lt;…&gt;</code>, напісаны <b>паміж</b> двума кавалкамі, — падзяляльнік гэтай' +
       ' пары.</p>',
-    '<p><small><tt><a href="ex:12">[сіні|жоўты&lt;і&gt;|шэры]</a><br>→&nbsp; Жоўты і шэры с' +
+    '<p><small><tt><a href="ex:25">[сіні|жоўты&lt;і&gt;|шэры]</a><br>→&nbsp; Жоўты і шэры с' +
       'іні</tt></small></p>',
     '<p>Ён належыць кавалку <b>пасля</b> сябе і вандруе з ім праз перамешванне, таму выплыв' +
       'ае там, куды гэты кавалак ляжа, а не на сталым месцы вываду. <code>&lt;…&gt;</code> па' +
       'сля <b>апошняга</b> кавалка не падзяляльнік наогул і друкуецца тэкстам:</p>',
-    '<p><small><tt><a href="ex:13">[сіні|жоўты|шэры&lt;і&gt;]</a><br>→&nbsp; Жоўты шэры&lt;' +
+    '<p><small><tt><a href="ex:26">[сіні|жоўты|шэры&lt;і&gt;]</a><br>→&nbsp; Жоўты шэры&lt;' +
       'і&gt; сіні</tt></small></p>',
     '<h2 id="macros">Макрасы</h2>',
     '<p><code>#set</code> дае імя кавалку тэксту. Імя ўжываюць як <code>%name%</code>, і ды' +
       'рэктыва мусіць быць першай у сваім радку — прабелы і табуляцыі перад ёй можна, больш н' +
       'ічога.</p>',
-    '<p><small><tt><a href="ex:14">#set %horad% = Мінск</a><br><a href="ex:14">Горад: %hora' +
+    '<p><small><tt><a href="ex:27">#set %horad% = Мінск</a><br><a href="ex:27">Горад: %hora' +
       'd%.</a><br>→&nbsp; Горад: Мінск.</tt></small></p>',
     '<p>Імёны складаюцца з лацінскіх літар, лічбаў і <code>_</code>. Імя ў іншай азбуцы іме' +
       'м не з’яўляецца — пра гэта другі дакумент у артыкуле <code>set.malformed</code>. Менав' +
@@ -11140,9 +11698,9 @@ const
       '3>',
     '<p>Гэта ўся розніца паміж імі, і яна відаць толькі тады, калі значэнне змяшчае выбар.<' +
       '/p>',
-    '<p><small><tt><a href="ex:15">#set %vybar% = {A|B}</a><br><a href="ex:15">%vybar% %vyb' +
+    '<p><small><tt><a href="ex:28">#set %vybar% = {A|B}</a><br><a href="ex:28">%vybar% %vyb' +
       'ar% %vybar%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %vybar% = {A|B}</a><br><a href="ex:16">%vybar% %vyb' +
+    '<p><small><tt><a href="ex:29">#def %vybar% = {A|B}</a><br><a href="ex:29">%vybar% %vyb' +
       'ar% %vybar%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Абодва прыклады беглі пад адным зернем. <code>#set</code> захоўвае шаблон і цягне я' +
       'го пры кожным ужытку; <code>#def</code> цягне раз і трымае адказ. Бярыце <code>#def</c' +
@@ -11153,11 +11711,11 @@ const
       'чым з аднаго прагляду вырашыць, што вызначэнне не працуе.</p>',
     '<h2 id="conditions">Умовы</h2>',
     '<p><code>{?name?тады|інакш}</code> пытае, ці мае макрас значэнне.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?у нас %n%|пакуль' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?у нас %n%|пакуль' +
       ' нічога}</a><br>→&nbsp; У нас 5</tt></small></p>',
     '<p>Палову <code>інакш</code> можна не пісаць — <code>{?name?тады}</code> не друкуе ніч' +
       'ога, калі адказ «не». <code>!</code> перакульвае пытанне:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?незнаёмец|с' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?незнаёмец|с' +
       'ябар}</a><br>→&nbsp; Сябар</tt></small></p>',
     '<p>Мець значэнне — гэта мець <b>хоць адзін непрабельны сімвал</b>. Макрас, пастаўлены ' +
       'ў нішто або толькі ў прабелы, лічаць без значэння.</p>',
@@ -11166,11 +11724,11 @@ const
       ' лічбы.</p>',
     '<h2 id="counting">Лічба</h2>',
     '<p><code>{plural %n%: …}</code> бярэ форму слова, якая пасуе ліку.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: фай' +
       'л|файлы|файлаў}</a><br>→&nbsp; 1 файл</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 2</a><br><a href="ex:20">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:33">#def %n% = 2</a><br><a href="ex:33">%n% {plural %n%: фай' +
       'л|файлы|файлаў}</a><br>→&nbsp; 2 файлы</tt></small></p>',
-    '<p><small><tt><a href="ex:21">#def %n% = 5</a><br><a href="ex:21">%n% {plural %n%: фай' +
+    '<p><small><tt><a href="ex:34">#def %n% = 5</a><br><a href="ex:34">%n% {plural %n%: фай' +
       'л|файлы|файлаў}</a><br>→&nbsp; 5 файлаў</tt></small></p>',
     '<p>Лічыльнік тут наўмысна <code>#def</code>, а не <code>#set</code>, і правіла варта з' +
       'апомніць: <b>рабіце лічыльнік простым лікам або <code>#def</code>, ніколі <code>#set</' +
@@ -11178,16 +11736,34 @@ const
       '/code>, а не <code>5</code> — гэта значыць не лік, — таму ўся канструкцыя не дае нічог' +
       'а, а панэль кажа <code>plural.count-macro</code>. Лічыльнік і форма не могуць супярэчы' +
       'ць адно аднаму: замест гэтага знікае слова.</p>',
-    '<p><small><tt><a href="ex:22">#set %n% = {5|5}</a><br><a href="ex:22">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:35">#set %n% = {5|5}</a><br><a href="ex:35">%n% {plural %n%:' +
       ' файл|файлы|файлаў}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Колькі формаў, вырашае лакаль, а не вы: пад <code>be</code> іх тры, пад <code>en</c' +
-      'ode> — дзве. Няправільны лік — гэта памылка, пра якую панэль паведамляе (<code>plural.' +
-      'arity</code>), і рухавік тады друкуе ўсю канструкцыю назад, замяніўшы дужкі на шырокія' +
-      ' <code>｛｝</code>, каб яе не зблыталі з вывадам.</p>',
+      'ode> — дзве, пад <code>ar</code> — шэсць, у парадку zero, one, two, few, many, other. ' +
+      'Па-арабску «адна кніга» і «дзве кнігі» кажуць без лічэбніка, таму лік ставяць <b>унутр' +
+      '</b> тых формаў, што яго друкуюць, а не перад блокам:</p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 3</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:37">#def %n% = 2</a><br><a href="ex:37">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:38">#def %n% = 0</a><br><a href="ex:38">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:39">#def %n% = 1</a><br><' +
+      'a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:40' +
+      '">#def %n% = 11</a><br><a href="ex:40">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:41">#def %n% = 100</a><br><a href="ex:41">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Няправільны лік — гэта памылка, пра якую панэль паведамляе (<code>plural.arity</cod' +
+      'e>), і рухавік тады друкуе ўсю канструкцыю назад, замяніўшы дужкі на шырокія <code>｛｝<' +
+      '/code>, каб яе не зблыталі з вывадам.</p>',
     '<h2 id="fragments">Урыўкі</h2>',
     '<p><code>#include "name"</code> ставіць у гэтым месцы іншы шаблон, і дырэктыва мусіць ' +
       'быць першай у сваім радку — тут таксама прабелы і табуляцыі перад ёй можна.</p>',
-    '<p><small><tt><a href="ex:23">#include "intro"</a><br>→&nbsp; Сардэчна запрашаем у Acm' +
+    '<p><small><tt><a href="ex:42">#include "intro"</a><br>→&nbsp; Сардэчна запрашаем у Acm' +
       'e.</tt></small></p>',
     '<p>Урывак адтвараецца як уласны шаблон, таму выбар усярэдзіне яго робіцца нанова: <cod' +
       'e>intro</code> змяшчае <code>{Acme|Globex}</code> і адказвае тым ці тым.</p>',
@@ -11199,7 +11775,7 @@ const
     '<h3 id="fragments-0">Урывак не бачыць вашых макрасаў</h3>',
     '<p>Ён адтвараецца як уласны шаблон: мае значэнні сесіі, але не <code>#set</code> і <co' +
       'de>#def</code> дакумента, які яго ўнёс.</p>',
-    '<p><small><tt><a href="ex:24">#set %brand% = Acme</a><br><a href="ex:24">#include "sho' +
+    '<p><small><tt><a href="ex:43">#set %brand% = Acme</a><br><a href="ex:43">#include "sho' +
       'ut"</a><br>→&nbsp; %brand% тут.</tt></small></p>',
     '<p><code>shout</code> — гэта <code>%brand% тут.</code>, і імя мусіць быць вызначана ў ' +
       'самім урыўку. Гэта не маўчанне — панэль усё ж кажа <code>variable.undefined</code>, — ' +
@@ -11210,7 +11786,7 @@ const
     '<h2 id="remarks">Каментарыі</h2>',
     '<p><code>/# … #/</code> — гэта каментарый: усё паміж пазнакамі прыбіраюць раней за што' +
       ' заўгодна іншае.</p>',
-    '<p><small><tt><a href="ex:25">чарнавік /# не ўпэўнены #/ гатова</a><br>→&nbsp; Чарнаві' +
+    '<p><small><tt><a href="ex:44">чарнавік /# не ўпэўнены #/ гатова</a><br>→&nbsp; Чарнаві' +
       'к гатова</tt></small></p>',
     '<p>Каментарыі не ўкладаюцца. Першы <code>#/</code> закрывае каментарый, што б ні было ' +
       'перад ім, таму каментарый, абгорнуты вакол тэксту, які сам змяшчае <code>#/</code>, за' +
@@ -11219,20 +11795,20 @@ const
     '<p>Вывад — не зусім той тэкст, што далі канструкцыі. Напрыканцы з ім здараецца некальк' +
       'і рэчаў; дзве вы сустракаеце штодня.</p>',
     '<p>Першая літара кожнага сказа становіцца вялікай:</p>',
-    '<p><small><tt><a href="ex:26">адзін. два. тры.</a><br>→&nbsp; Адзін. Два. Тры.</tt></s' +
+    '<p><small><tt><a href="ex:45">адзін. два. тры.</a><br>→&nbsp; Адзін. Два. Тры.</tt></s' +
       'mall></p>',
     '<p>Праз гэта прыклады ў гэтай даведцы так часта адказваюць вялікай літарай там, дзе ў ' +
       'шаблоне малая. Кропка пасля скарачэння, якое рухавік ведае, сказ не заканчвае, і гэтак' +
       ' жа не заканчвае яго нешта накшталт <code>e.g.</code> ці <code>U.S.</code> — літара, к' +
       'ропка, літара, кропка — у <b>любым алфавіце</b>: праверка «ці гэта сярэдзіна слова» чы' +
       'тае любое пісьмо, і <code>т.д.</code> заслонена гэтак жа, як <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:27">г. Мінск нашы цэны нізкія</a><br>→&nbsp; г. Мінск нашы ц' +
+    '<p><small><tt><a href="ex:46">г. Мінск нашы цэны нізкія</a><br>→&nbsp; г. Мінск нашы ц' +
       'эны нізкія</tt></small></p>',
-    '<p><small><tt><a href="ex:28">напр. нашы цэны нізкія</a><br>→&nbsp; напр. нашы цэны ні' +
+    '<p><small><tt><a href="ex:47">напр. нашы цэны нізкія</a><br>→&nbsp; напр. нашы цэны ні' +
       'зкія</tt></small></p>',
     '<p>Любое іншае слова сказ заканчвае, якім бы кароткім яно ні было — даўжыня тут ні пры' +
       ' чым:</p>',
-    '<p><small><tt><a href="ex:29">Ххх. нашы цэны нізкія</a><br>→&nbsp; Ххх. Нашы цэны нізк' +
+    '<p><small><tt><a href="ex:48">Ххх. нашы цэны нізкія</a><br>→&nbsp; Ххх. Нашы цэны нізк' +
       'ія</tt></small></p>',
     '<p>Спіс, які ведае рухавік, мае 46 запісаў, <b>29 з іх кірылічныя</b>, і другі дакумен' +
       'т праходзіць яго пад загалоўкам <b>Маўчанне, якое сустракаюць усе</b>. Для беларускага' +
@@ -11248,9 +11824,9 @@ const
       'de>, ці то <code>сайт.бел</code>. А заслонены пачатак для правіла пра вялікую літару —' +
       ' не пачатак сказа, таму <code>адзін.два</code> ніжэй выходзіць некранутым, з малой літ' +
       'арай уключна.</p>',
-    '<p><small><tt><a href="ex:30">прывітанне , свет</a><br>→&nbsp; Прывітанне, свет</tt></' +
+    '<p><small><tt><a href="ex:49">прывітанне , свет</a><br>→&nbsp; Прывітанне, свет</tt></' +
       'small></p>',
-    '<p><small><tt><a href="ex:31">адзін.два</a><br>→&nbsp; адзін.два</tt></small></p>',
+    '<p><small><tt><a href="ex:50">адзін.два</a><br>→&nbsp; адзін.два</tt></small></p>',
     '<h2 id="silences">Маўчанне</h2>',
     '<p>Кожны выпадак ніжэй адтвараецца, дае нешта іншае, чым здаецца, і не цягне за сабой ' +
       '<b>ніводнай дыягностыкі</b>. Яны сабраныя тут, бо больш нішто ў акне іх ніколі не згад' +
@@ -11260,16 +11836,16 @@ const
       'рускай паловай спіса — <code>г.</code>, <code>ст.</code>, <code>напр.</code> і <code>р' +
       'уб.</code>, — тады як <code>вул.</code>, <code>стар.</code> і <code>хв.</code> заканчв' +
       'аюць сказ і пішуць наступнае слова з вялікай:</p>',
-    '<p><small><tt><a href="ex:32">вул. нашы цэны нізкія</a><br>→&nbsp; Вул. Нашы цэны нізк' +
+    '<p><small><tt><a href="ex:51">вул. нашы цэны нізкія</a><br>→&nbsp; Вул. Нашы цэны нізк' +
       'ія</tt></small></p>',
     '<p><b>Скарачэнне з некалькіх кропак працуе ў любым алфавіце.</b> <code>e.g.</code> зас' +
       'лонена, і <code>т.д.</code> — таксама: літара, кропка, літара, кропка, і заслонены пач' +
       'атак радка застаецца малым:</p>',
-    '<p><small><tt><a href="ex:33">т.д. гэта застаецца малым</a><br>→&nbsp; т.д. гэта заста' +
+    '<p><small><tt><a href="ex:52">т.д. гэта застаецца малым</a><br>→&nbsp; т.д. гэта заста' +
       'ецца малым</tt></small></p>',
     '<p><b>Кірылічны дамен заслоняецца гэтак жа, як лацінскі.</b> <code>.бел</code> рухавік' +
       ' на два сказы не разбірае:</p>',
-    '<p><small><tt><a href="ex:34">сайт.бел тры</a><br>→&nbsp; сайт.бел тры</tt></small></p' +
+    '<p><small><tt><a href="ex:53">сайт.бел тры</a><br>→&nbsp; сайт.бел тры</tt></small></p' +
       '>',
     '<p>Прычына таго, што беларускія скарачэнні не заслонены, — проста СПІС: у ім 46 слоў, ' +
       'і тое, што амаль ніводнае з іх не беларускае, да азбукі дачынення не мае. Рухавік звяр' +
@@ -11278,31 +11854,31 @@ const
       'х кропак і кірылічныя дамены болей не ломяцца.</p>',
     '<p><b><code>#include</code>, які не стаіць сам у сваім радку, — звычайны тэкст.</b></p' +
       '>',
-    '<p><small><tt><a href="ex:35">Перад. #include "intro"</a><br>→&nbsp; Перад. #include "' +
+    '<p><small><tt><a href="ex:54">Перад. #include "intro"</a><br>→&nbsp; Перад. #include "' +
       'intro"</tt></small></p>',
     '<p>Тое самае тычыцца дырэктывы з нечым за ёй і <code>#include"intro"</code> без прабел' +
       'у. Правіла належыць сям’і, а не гэтаму рухавіку, і менавіта яно робіць дырэктыву пазна' +
       'вальнай без разбору ўсяго радка.</p>',
     '<p><b>Умова, імя якой пачынаецца з лічбы, умовай не з’яўляецца.</b> Яна становіцца звы' +
       'чайным выбарам паміж <code>?1x?так</code> і <code>не</code>:</p>',
-    '<p><small><tt><a href="ex:36">{?1x?так|не}</a><br>→&nbsp; ?1x? Так</tt></small></p>',
+    '<p><small><tt><a href="ex:55">{?1x?так|не}</a><br>→&nbsp; ?1x? Так</tt></small></p>',
     '<p><b><code>&lt;…&gt;</code> на пачатку не першага кавалка падзяляльнікам не з’яўляецц' +
       'а</b> і друкуецца як стаіць:</p>',
-    '<p><small><tt><a href="ex:37">[сіні|&lt;і&gt;жоўты]</a><br>→&nbsp; &lt;і&gt;Жоўты сіні' +
+    '<p><small><tt><a href="ex:56">[сіні|&lt;і&gt;жоўты]</a><br>→&nbsp; &lt;і&gt;Жоўты сіні' +
       '</tt></small></p>',
     '<p>Блок на пачатку <b>першага</b> кавалка — гэта якраз падзяляльнік, з якога пачынаецц' +
       'а раздзел пра перамешванне:</p>',
-    '<p><small><tt><a href="ex:38">[&lt;і&gt;сіні|жоўты]</a><br>→&nbsp; Жоўты і сіні</tt></' +
+    '<p><small><tt><a href="ex:57">[&lt;і&gt;сіні|жоўты]</a><br>→&nbsp; Жоўты і сіні</tt></' +
       'small></p>',
     '<p>Дзе заўгодна пасля <code>|</code> ён звычайны тэкст, а падзяляльнік паміж двума кав' +
       'алкамі пішуць у <b>канцы</b> першага.</p>',
     '<p><b>Голы тэг у канцы кавалка прымаюць за падзяляльнік гэтай пары</b> і друкуюць улас' +
       'ным тэкстам:</p>',
-    '<p><small><tt><a href="ex:39">[адзін&lt;br&gt;|два]</a><br>→&nbsp; Два адзін</tt></sma' +
+    '<p><small><tt><a href="ex:58">[адзін&lt;br&gt;|два]</a><br>→&nbsp; Два адзін</tt></sma' +
       'll></p>',
     '<p>На гэтым зерні пара лягла ў іншым парадку, таму падзяляльнік не выйшаў зусім. З трэ' +
       'цім кавалкам яму ёсць куды легчы, і ён з’яўляецца:</p>',
-    '<p><small><tt><a href="ex:40">[сіні|жоўты&lt;br&gt;|шэры]</a><br>→&nbsp; Жоўты br шэры' +
+    '<p><small><tt><a href="ex:59">[сіні|жоўты&lt;br&gt;|шэры]</a><br>→&nbsp; Жоўты br шэры' +
       ' сіні</tt></small></p>',
     '<p><code>&lt;br&gt;</code> стаіць паміж <code>жоўты</code> і тым, што ідзе за ім, куды' +
       ' б перамешванне гэтую пару ні паставіла. Закрывальны тэг (<code>&lt;/b&gt;</code>), са' +
@@ -11310,12 +11886,12 @@ const
       '</code>) і тэг пасярэдзіне кавалка застаюцца некранутымі.</p>',
     '<p><b>Незакрыты каментарый — звычайны тэкст</b>: ён нічога не адкрывае, і <code>/#</co' +
       'de> друкуецца:</p>',
-    '<p><small><tt><a href="ex:41">перад /# астатняе гэтага</a><br>→&nbsp; Перад /# астатня' +
+    '<p><small><tt><a href="ex:60">перад /# астатняе гэтага</a><br>→&nbsp; Перад /# астатня' +
       'е гэтага</tt></small></p>',
     '<p>Але ён усё яшчэ палова пары. Калі далей у дакуменце з’явіцца <code>#/</code>, гэтыя' +
       ' двое знойдуць адно аднаго, і ўсё паміж імі знікне — разам з тым, што аўтар напісаў па' +
       'сярэдзіне:</p>',
-    '<p><small><tt><a href="ex:42">{a /# ой|b} сярэдзіна #/ хвост</a><br>→&nbsp; {a хвост</' +
+    '<p><small><tt><a href="ex:61">{a /# ой|b} сярэдзіна #/ хвост</a><br>→&nbsp; {a хвост</' +
       'tt></small></p>',
     '<p>Выбар вышэй страціў свой другі варыянт і закрывальную дужку, і ніводная дыягностыка' +
       ' пра гэта не кажа: гэта тое, што тэкст АЗНАЧАЕ, а не памылка, якую рухавік можа ўбачыц' +
@@ -11380,26 +11956,26 @@ const
       'стка будовы канструкцыі.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — дужку адкрыта і не закрыта</' +
       'h3>',
-    '<p><small><tt><a href="ex:43">цана {нізкая|высокая</a><br>→&nbsp; Цана {нізкая|высокая' +
+    '<p><small><tt><a href="ex:62">цана {нізкая|высокая</a><br>→&nbsp; Цана {нізкая|высокая' +
       '</tt></small></p>',
     '<p>Рухавік не адгадвае, дзе вы хацелі закрыць. Тэкст застаецца як ёсць, разам з дужкай' +
       ', і выбар не адбываецца ніколі.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — закрыта дужкай іншага ві' +
       'ду</h3>',
-    '<p><small><tt><a href="ex:44">цана {нізкая|высокая]</a><br>→&nbsp; Цана {нізкая|высока' +
+    '<p><small><tt><a href="ex:63">цана {нізкая|высокая]</a><br>→&nbsp; Цана {нізкая|высока' +
       'я]</tt></small></p>',
     '<p><code>{</code> чакае <code>}</code>, а <code>[</code> — <code>]</code>. Перамешванн' +
       'е, закрытае фігурнай дужкай, перамешваннем не з’яўляецца.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — закрывал' +
       'ьная дужка без адкрытай</h3>',
-    '<p><small><tt><a href="ex:45">цана нізкая} і ўсё</a><br>→&nbsp; Цана нізкая} і ўсё</tt' +
+    '<p><small><tt><a href="ex:64">цана нізкая} і ўсё</a><br>→&nbsp; Цана нізкая} і ўсё</tt' +
       '></small></p>',
     '<p>Яна застаецца тэкстам. Часцей за ўсё гэта дужка, што засталася ад праўкі.</p>',
     '<hr>',
     '<h2 id="definitions">Вызначэнні</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — гэты радок <code>#set</code> напіс' +
       'аны не па правіле</h3>',
-    '<p><small><tt><a href="ex:46">#set horad = Мінск</a><br><a href="ex:46">у %horad%</a><' +
+    '<p><small><tt><a href="ex:65">#set horad = Мінск</a><br><a href="ex:65">у %horad%</a><' +
       'br>→&nbsp; #set horad = Мінск ⏎ У %horad%</tt></small></p>',
     '<p><b>Імя пішуць паміж знакамі працэнта:</b> <code>#set %horad% = Мінск</code>. Гэта н' +
       'айчастая першая памылка, і яна ставіць у панэль адразу два радкі — сам сапсаваны радок' +
@@ -11410,7 +11986,7 @@ const
       '>',
     '<h3 id="def.malformed"><code>def.malformed</code> — гэты радок <code>#def</code> напіс' +
       'аны не па правіле</h3>',
-    '<p><small><tt><a href="ex:47">#def старонкі = {1|3}</a><br><a href="ex:47">%старонкі%<' +
+    '<p><small><tt><a href="ex:66">#def старонкі = {1|3}</a><br><a href="ex:66">%старонкі%<' +
       '/a><br>→&nbsp; #def старонкі = 1 ⏎ %старонкі%</tt></small></p>',
     '<p>Тое самае правіла і тая самая цана. <code>#def</code> адрозніваецца ад <code>#set</' +
       'code> не напісаннем, а тым, <b>калі</b> значэнне разгортваецца: <code>#set</code> разг' +
@@ -11421,15 +11997,15 @@ const
       'з дужкамі. Сапсаваны радок не выключаны; ён толькі перастае быць дырэктывай.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — гэтае імя ' +
       'ўжо вызначана вышэй</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = першае</a><br><a href="ex:48">#set %x% = друг' +
-      'ое</a><br><a href="ex:48">%x%</a><br>→&nbsp; Другое</tt></small></p>',
+    '<p><small><tt><a href="ex:67">#set %x% = першае</a><br><a href="ex:67">#set %x% = друг' +
+      'ое</a><br><a href="ex:67">%x%</a><br>→&nbsp; Другое</tt></small></p>',
     '<p>Яно працуе — перамагае <b>апошняе</b> вызначэнне, — але рухавік называе гэта памылк' +
       'ай: дакумент, дзе імя зададзена двойчы, чытаецца неадназначна, і праз месяц вы не прыг' +
       'адаеце, які з двух радкоў жывы. Памылка паказвае на <b>другое</b> вызначэнне; першае с' +
       'таіць вышэй.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> усярэдзіне значэння вызначэння</h3>',
-    '<p><small><tt><a href="ex:49">#def %x% = #include "frag"</a><br><a href="ex:49">%x%</a' +
+    '<p><small><tt><a href="ex:68">#def %x% = #include "frag"</a><br><a href="ex:68">%x%</a' +
       '><br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Устаўка ўсярэдзіне значэння разгортваецца ў іншы момант, чым вы чакалі б, і сям’я г' +
       'эта забараняе. Стаўце <code>#include</code> у асобны радок.</p>',
@@ -11437,7 +12013,7 @@ const
     '<h2 id="variables">Зменныя</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — гэтая зменная нідзе не в' +
       'ызначана</h3>',
-    '<p><small><tt><a href="ex:50">прывітанне, %name%</a><br>→&nbsp; Прывітанне, %name%</tt' +
+    '<p><small><tt><a href="ex:69">прывітанне, %name%</a><br>→&nbsp; Прывітанне, %name%</tt' +
       '></small></p>',
     '<p>Папярэджанне, а не памылка: рухавік друкуе імя як ёсць. Так і задумана — значэнне м' +
       'ожа прыйсці звонку, ад праграмы-гаспадара. У Studio такія значэнні падаюць на ўкладцы ' +
@@ -11469,7 +12045,7 @@ const
     '<li><b>Ctrl+пстрычка</b> піша вызначэнне ў дакумент і адкрывае на ім рэдактар груп. Зн' +
       'ачэнне, якое вы ўжо набралі, уваходзіць туды першай магчымасцю:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:51">#set %brand% = {Vulkan}</a><br><a href="ex:51">казіно %b' +
+    '<p><small><tt><a href="ex:70">#set %brand% = {Vulkan}</a><br><a href="ex:70">казіно %b' +
       'rand%</a><br>→&nbsp; Казіно Vulkan</tt></small></p>',
     '<p>Розніца паміж імі — тое, што перажывае закрыццё акна. Значэнне сесіі не перажывае: ' +
       'яго няма ні ў файле, ні ў git, і ніводны іншы рухавік сям’і яго не бачыць. Вызначэнне ' +
@@ -11482,7 +12058,7 @@ const
       'і і працэнты застаюцца сімваламі.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — вызначэнне спа' +
       'сылаецца само на сябе</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:71">#set %x% = a %x% b</a><br><a href="ex:71">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Пяцьдзясят узроўняў, потым прыпынак. Рухавік разгортвае да мяжы глыбіні і спыняецца' +
       ', пакідаючы <code>%x%</code> пасярэдзіне. Гэта не кола, і не тое, чаго вы хацелі.</p>',
@@ -11492,8 +12068,8 @@ const
       'у больш.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — вызнач' +
       'энні спасылаюцца па коле</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = %y%</a><br><a href="ex:53">#set %y% = %x%</a>' +
-      '<br><a href="ex:53">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %x% = %y%</a><br><a href="ex:72">#set %y% = %x%</a>' +
+      '<br><a href="ex:72">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Кожны бок разгортваецца роўна <b>адзін раз</b> і спыняецца: <code>%x%</code> стаў <' +
       'code>%y%</code>, а не <code>%x%</code>. Рухавік раскручвае кола, а не ходзіць па ім, і' +
       ' выжывае другое імя з кола — пастаўце ў дакумент <code>%x% %y%</code>, і ён выдасць <c' +
@@ -11513,16 +12089,16 @@ const
     '<hr>',
     '<h2 id="includes">Устаўкі</h2>',
     '<h3 id="includes-0"><code>#include</code> працуе толькі з пачатку радка</h3>',
-    '<p><small><tt><a href="ex:54">перад #include "frag" пасля</a><br>→&nbsp; Перад #includ' +
+    '<p><small><tt><a href="ex:73">перад #include "frag" пасля</a><br>→&nbsp; Перад #includ' +
       'e "frag" пасля</tt></small></p>',
-    '<p><small><tt><a href="ex:55">#include "frag"</a><br>→&nbsp; Фрагмент</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#include "frag"</a><br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Ніводнай дыягностыкі, і ў гэтым уся сутнасць: <code>#include</code> пасярэдзіне рад' +
       'ка ўстаўкай <b>не з’яўляецца</b>. Рухавік чытае яго як звычайны тэкст і нічога не кажа' +
       ', бо няма на што скардзіцца — вы напісалі тэкст і атрымалі тэкст.</p>',
     '<p><b>А вось мэта можа стаяць радком ніжэй</b>, і гэта здзіўляе з іншага боку. Прагал,' +
       ' які рухавік дапускае паміж словам і мэтай, уключае пераносы радкоў, таму гэта адна ўс' +
       'таўка, і яна працуе:</p>',
-    '<p><small><tt><a href="ex:56">#include</a><br><a href="ex:56">"frag"</a><br>→&nbsp; Фр' +
+    '<p><small><tt><a href="ex:75">#include</a><br><a href="ex:75">"frag"</a><br>→&nbsp; Фр' +
       'агмент</tt></small></p>',
     '<p>Пустыя радкі паміж імі таксама можна. Нельга ўсё астатняе: слова перад мэтай або шт' +
       'о заўгодна, акрамя прабелаў, пасля яе — і ўсё зноў становіцца тэкстам. Рэдактар фарбуе' +
@@ -11530,7 +12106,7 @@ const
       'не абяцае дырэктывы, канца якой яшчэ не бачыць.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — такой мэты ў наб' +
       'оры няма</h3>',
-    '<p><small><tt><a href="ex:57">#include "няма"</a><br>→&nbsp; (пуста)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "няма"</a><br>→&nbsp; (пуста)</tt></small></p>',
     '<p>Мэты — гэта файлы <code>.spintax</code> у папцы адкрытага дакумента. Невядомая мэта' +
       ' разгортваецца ў нішто: абзац знікае, а не ломіцца, і менавіта таму гэта так лёгка пра' +
       'пусціць.</p>',
@@ -11545,7 +12121,7 @@ const
       'а так. «НЯМА» з’яўляецца толькі тады, калі папка ёсць, а файла ў ёй сапраўды няма.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — мэта ёсць, але ў іншым р' +
       'эгістры</h3>',
-    '<p><small><tt><a href="ex:58">#include "intro"</a><br>→&nbsp; (пуста)</tt></small></p>',
+    '<p><small><tt><a href="ex:77">#include "intro"</a><br>→&nbsp; (пуста)</tt></small></p>',
     '<p>Набор змяшчае <code>Intro.spintax</code> — а рухавік усё роўна кажа, што такой мэты' +
       ' няма, тады як Studio дадае сваю заўвагу пра рэгістр. Рэгістр важыць: <code>intro</cod' +
       'e> і <code>Intro</code> — розныя мэты. Windows адкрыў бы файл і так, і так, і менавіта' +
@@ -11553,7 +12129,7 @@ const
       'веру пра той самы дакумент.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — устаўка па коле</h3>',
     '<p>Калі <code>loop.spintax</code> сам змяшчае <code>#include "loop"</code>, то:</p>',
-    '<p><small><tt><a href="ex:59">#include "loop"</a><br>→&nbsp; (пуста)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "loop"</a><br>→&nbsp; (пуста)</tt></small></p>',
     '<p>Рухавік падстаўляе пустэчу замест бясконцасці. Заўвага патрэбная, каб вы зразумелі,' +
       ' чаму абзац знік.</p>',
     '<p>Радок выпісаны на <b><code>loop</code></b>, а не на дакумент, які вы глядзіце: кола' +
@@ -11563,17 +12139,20 @@ const
     '<h2 id="plurals">Формы ліку</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — формаў не столькі, колькі патрабуе л' +
       'акаль</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = 5</a><br><a href="ex:60">%n% {plural %n%: аб’' +
+    '<p><small><tt><a href="ex:79">#set %n% = 5</a><br><a href="ex:79">%n% {plural %n%: аб’' +
       'ект|аб’екты}</a><br>→&nbsp; 5 ｛plural 5: аб’ект|аб’екты｝</tt></small></p>',
     '<p><b>Не пустэча — рухавік друкуе ўсю канструкцыю</b>, замяніўшы дужкі на шырокія <cod' +
       'e>｛｝</code>. Так ён кажа «я гэта бачыў і не змог ужыць». Незаўважным гэтага ніхто не н' +
       'азаве, і гэта добра: абзац, што знік моўчкі, шукалі б даўжэй.</p>',
-    '<p>Беларускай патрэбныя тры формы, англійскай — дзве. Пад лакаллю гэтага дакумента пра' +
-      'вільная — <code>{plural %n%: аб’ект|аб’екты|аб’ектаў}</code>.</p>',
+    '<p>Беларускай патрэбныя тры формы, англійскай — дзве, арабскай — шэсць. Пад лакаллю гэ' +
+      'тага дакумента правільная — <code>{plural %n%: аб’ект|аб’екты|аб’ектаў}</code>. Пад <c' +
+      'ode>ar</code> дзве формы — таксама памылка:</p>',
+    '<p><small><tt><a href="ex:80">#def %n% = 5</a><br><a href="ex:80">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Пустэча ўзнікае з іншай прычыны, і гэтыя дзве лёгка зблытаць.</b> Параўнайце гэт' +
       'ыя дзве, што адрозніваюцца толькі колькасцю формаў:</p>',
-    '<p><small><tt><a href="ex:61">{plural %n%: аб’ект|аб’екты|аб’ектаў}</a><br>→&nbsp; (пу' +
-      'ста)&nbsp;&nbsp; тры формы: правільна для беларускай<br><a href="ex:62">{plural %n%: а' +
+    '<p><small><tt><a href="ex:81">{plural %n%: аб’ект|аб’екты|аб’ектаў}</a><br>→&nbsp; (пу' +
+      'ста)&nbsp;&nbsp; тры формы: правільна для беларускай<br><a href="ex:82">{plural %n%: а' +
       'б’ект|аб’екты}</a><br>→&nbsp; (пуста)&nbsp;&nbsp; дзве формы: няправільна для беларуск' +
       'ай</tt></small></p>',
     '<p>Абедзве не друкуюць нічога, а панэль ставіцца да іх па-рознаму: першая цягне толькі' +
@@ -11591,7 +12170,7 @@ const
       'формаў робіць насамрэч.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — лічыльнік бярэ значэнне ' +
       'з <code>#set</code>, а той цягне нанова пры кожнай згадцы</h3>',
-    '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#set %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' аб’ект|аб’екты|аб’ектаў}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Паглядзіце, што ацалела: <b>лік надрукаваны, а назоўнік не.</b> Лічыльнік мусіць бы' +
       'ць лікам у момант, калі выбіраюць форму, а <code>#set</code>, значэнне якога само ёсць' +
@@ -11600,13 +12179,13 @@ const
       'к і форма не могуць супярэчыць адно аднаму; рухавік замест гэтага губляе слова.</p>',
     '<p><code>#def</code> паводзіць сябе інакш і разгортвае сваё значэнне раз на адтварэнне' +
       ', таму месца лічыльніка атрымлівае лік:</p>',
-    '<p><small><tt><a href="ex:64">#def %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#def %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' аб’ект|аб’екты|аб’ектаў}</a><br>→&nbsp; 1 аб’ект</tt></small></p>',
     '<p>Для гэтага ў панэлі няма ніводнага радка. Адсюль і правіла: рабіце лічыльнік просты' +
       'м лікам або <code>#def</code>, ніколі <code>#set</code>.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — дужкі ўсярэдзіне' +
       ' формаў</h3>',
-    '<p><small><tt><a href="ex:65">{plural %n%: {аб’ект|рэч}|аб’екты|аб’ектаў}</a><br>→&nbs' +
+    '<p><small><tt><a href="ex:85">{plural %n%: {аб’ект|рэч}|аб’екты|аб’ектаў}</a><br>→&nbs' +
       'p; ｛plural %n%: ｛аб’ект|рэч｝|аб’екты|аб’ектаў｝</tt></small></p>',
     '<p>Формы — гэта просты тэкст. Выбар усярэдзіне іх не разгортваецца, і замест гэтага ўс' +
       'я канструкцыя друкуецца ў шырокіх дужках.</p>',
@@ -11614,7 +12193,7 @@ const
     '<h2 id="permutations">Перамешванне</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — невядомы ключ ' +
       'у наладзе</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:86">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Вядомыя ключы — <code>minsize</code>, <code>maxsize</code>, <code>sep</code> і <cod' +
       'e>lastsep</code>. Невядомы наладай не з’яўляецца, і калі ён у блоку адзіны, увесь блок' +
@@ -11622,7 +12201,7 @@ const
       '</p>',
     '<p><b>Калі побач стаіць сапраўдны ключ, выхад зусім іншы</b> — і гэта больш верагодная' +
       ' памылка: адзін ключ з некалькіх набраны няправільна:</p>',
-    '<p><small><tt><a href="ex:67">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:87">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Блок застаецца наладай, <code>sep</code> выконваецца, невядомы ключ проста адкідваю' +
       'ць, а панэль у абодвух выпадках кажа адно і тое ж. Гэта значыць, дыягностыка паведамля' +
@@ -11630,13 +12209,13 @@ const
       'д.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— мінімум зададзены не цэлым лікам</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;minsize=два&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:88">[&lt;minsize=два&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Нелікавае значэнне адпадае разам са сваёй мяжой, і дзейнічае звычайнае — гэта значы' +
       'ць усе кавалкі.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— максімум зададзены не цэлым лікам</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;maxsize=шмат&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
+    '<p><small><tt><a href="ex:89">[&lt;maxsize=шмат&gt;a|b|c]</a><br>→&nbsp; B c a</tt></s' +
       'mall></p>',
     '<p>Роўна тое самае з іншага канца: верхняя мяжа знікае, і вывад зноў змяшчае кожны кав' +
       'алак.</p>',
@@ -11672,8 +12251,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Маўчанне, якое сустракаюць усе: скарачэнні</h2>',
     '<h3 id="abbreviations-0">Скарачэнне пакідае наступнае слова малым</h3>',
-    '<p><small><tt><a href="ex:70">г. Мінск нашы цэны нізкія</a><br>→&nbsp; г. Мінск нашы ц' +
-      'эны нізкія<br><a href="ex:71">Ххх. нашы цэны нізкія</a><br>→&nbsp; Ххх. Нашы цэны нізк' +
+    '<p><small><tt><a href="ex:90">г. Мінск нашы цэны нізкія</a><br>→&nbsp; г. Мінск нашы ц' +
+      'эны нізкія<br><a href="ex:91">Ххх. нашы цэны нізкія</a><br>→&nbsp; Ххх. Нашы цэны нізк' +
       'ія</tt></small></p>',
     '<p>Два радкі, што адрозніваюцца адным словам, і другое слова кожнага дае вам правіла: ' +
       'пасля <code>г.</code> сказ застаецца малым, пасля <code>Ххх.</code> — з вялікай. Рухав' +
@@ -11700,15 +12279,15 @@ const
       'ode> таксама не заслонены.</p>',
     '<hr>',
     '<h2 id="correct">Як выглядае правільнае</h2>',
-    '<p><small><tt><a href="ex:72">цана {нізкая|высокая}</a><br>→&nbsp; Цана нізкая</tt></s' +
+    '<p><small><tt><a href="ex:92">цана {нізкая|высокая}</a><br>→&nbsp; Цана нізкая</tt></s' +
       'mall></p>',
-    '<p><small><tt><a href="ex:73">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:93">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">#set %vip% = 1</a><br><a href="ex:74">{?vip?для вас|для ' +
+    '<p><small><tt><a href="ex:94">#set %vip% = 1</a><br><a href="ex:94">{?vip?для вас|для ' +
       'ўсіх}</a><br>→&nbsp; Для вас</tt></small></p>',
-    '<p><small><tt><a href="ex:75">#set %n% = 5</a><br><a href="ex:75">%n% {plural %n%: тав' +
+    '<p><small><tt><a href="ex:95">#set %n% = 5</a><br><a href="ex:95">%n% {plural %n%: тав' +
       'ар|тавары|тавараў}</a><br>→&nbsp; 5 тавараў</tt></small></p>',
-    '<p><small><tt><a href="ex:76">перад /# нататка #/ пасля</a><br>→&nbsp; Перад пасля</tt' +
+    '<p><small><tt><a href="ex:96">перад /# нататка #/ пасля</a><br>→&nbsp; Перад пасля</tt' +
       '></small></p>',
     '<p>Пяць канструкцый, пяць чыстых радкоў: выбар, перамешванне з наладамі, умова, форма ' +
       'ліку з лікам перад ёй і каментарый. Ніводная не ставіць у панэль нічога.</p>',
@@ -11722,7 +12301,7 @@ const
     '<p><b>Чаму мая зменная з беларускім іменем не працуе?</b> Імёны зменных — толькі лацін' +
       'ка. <code>%імя%</code> наогул не лічыцца згадкай зменнай: рухавік друкуе яго тэкстам і' +
       ' <b>не выдае ніводнай дыягностыкі</b>:</p>',
-    '<p><small><tt><a href="ex:77">прывітанне, %імя%</a><br>→&nbsp; Прывітанне, %імя%</tt><' +
+    '<p><small><tt><a href="ex:97">прывітанне, %імя%</a><br>→&nbsp; Прывітанне, %імя%</tt><' +
       '/small></p>',
     '<p>Параўнайце з <code>%name%</code>, якое радок у панэль усё ж цягне. Маўклівае менаві' +
       'та першае — нішто не скажа вам, што яно ніколі не падставіцца. А <code>#set %імя% = Св' +
@@ -12000,7 +12579,10 @@ const
       'ити поље за број, а преглед ће стајати док радите.</p>',
     '<p><code>locale</code> решава облике множине, и то је пребацивач изнад десне половине,' +
       ' а не језик интерфејса. Српском, хрватском, босанском, руском, украјинском и белоруско' +
-      'м требају три облика; енглеском — два.</p>',
+      'м требају три облика; енглеском — два; арапском — шест. Под арапским и хебрејским лока' +
+      'лом он још решава како се везник придружује у списку (в. раздвајач). Арапски и хебрејс' +
+      'ки примери испод измерени су под својим локалом — именује га реченица испред сваког од' +
+      ' њих.</p>',
     '<h2 id="choices">Избор</h2>',
     '<p>Витичасте заграде са <code>|</code> између: мотор узима <b>један</b>.</p>',
     '<p><small><tt><a href="ex:1">{Мала|Велика} соба.</a><br>→&nbsp; Мала соба.</tt></small' +
@@ -12048,34 +12630,62 @@ const
     '<p><small><tt><a href="ex:8">[&lt;sep=", ";lastsep=" и "&gt;плава|жута|сива]</a><br>→&' +
       'nbsp; Жута, сива и плава</tt></small></p>',
     '<p><code>sep</code> иде између комада, а <code>lastsep</code> — испред последњег.</p>',
+    '<p>Раздвајач само од слова добија по размак са сваке стране, чак и кад их нисте укуцал' +
+      'и:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="и"&gt;А|Б]</a><br>→&nbsp; Б и А</tt></small' +
+      '></p>',
+    '<p>Изузетак су писма у којима се речи не одвајају размацима, и то под било којим локал' +
+      'ом: кинески, јапански, тајландски, лаоски, кмерски и бурмански раздвајачи пишу се спој' +
+      'ено.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Арапски и хебрејски имају своје правило, и укључује га <b>локал</b>, а не писмо. По' +
+      'д <code>ar</code> раздвајач који се састоји тачно од و или ف задржава размак испред се' +
+      'бе и губи размак после: на арапском се везник пише спојено са следећом речју. Под <cod' +
+      'e>he</code> исто то ради ו. Само испред речи у истом писму — испред латиничног назива ' +
+      'или цифре оба размака остају:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Под било којим другим локалом везник остаје засебна реч — тако и треба за персијски' +
+      ' и урду, где се исто слово пише одвојено:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Колико узети</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;плава|жута|сива]</a><br>→&nbs' +
-      'p; Жута сива</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;плава|жута|сива]</a><br>→&nb' +
+      'sp; Жута сива</tt></small></p>',
     '<p><code>minsize</code> је доња граница, <code>maxsize</code> горња; број између њих ј' +
       'е случајан, као и редослед. Једнаке вредности узимају тачно толико. <b>Без оба — све, ' +
       'али са само <code>maxsize</code> доња граница је један</b>, и то изненађује:</p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Три комада, таваница три, а испао је један. Када се мисли «све, али не више од три»' +
       ', пишите и <code>minsize</code>. <code>maxsize</code> већи од броја комада тихо се сма' +
       'њује на њега. <code>minsize</code> већи од <code>maxsize</code> прихвата се без иједне' +
       ' речи, и побеђује доња граница: таваница се подиже до ње, а не обрнуто:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;плава|жута|сива]</a><br>→&nb' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;плава|жута|сива]</a><br>→&nb' +
       'sp; Жута сива плава</tt></small></p>',
     '<h3 id="shuffles-2">Раздвајач између два комада</h3>',
     '<p><code>&lt;…&gt;</code> написан <b>између</b> два комада раздвајач је тог пара.</p>',
-    '<p><small><tt><a href="ex:12">[плава|жута&lt;и&gt;|сива]</a><br>→&nbsp; Жута и сива пл' +
+    '<p><small><tt><a href="ex:25">[плава|жута&lt;и&gt;|сива]</a><br>→&nbsp; Жута и сива пл' +
       'ава</tt></small></p>',
     '<p>Он припада комаду <b>после</b> себе и путује с њим кроз мешање, па искрсне тамо где' +
       ' тај комад легне, а не на сталном месту излаза. <code>&lt;…&gt;</code> после <b>послед' +
       'њег</b> комада уопште није раздвајач и штампа се као текст:</p>',
-    '<p><small><tt><a href="ex:13">[плава|жута|сива&lt;и&gt;]</a><br>→&nbsp; Жута сива&lt;и' +
+    '<p><small><tt><a href="ex:26">[плава|жута|сива&lt;и&gt;]</a><br>→&nbsp; Жута сива&lt;и' +
       '&gt; плава</tt></small></p>',
     '<h2 id="macros">Макрои</h2>',
     '<p><code>#set</code> даје име комаду текста. Име се користи као <code>%name%</code>, и' +
       ' директива мора бити прва у свом реду — размаци и табулатори испред ње су дозвољени, н' +
       'ишта више.</p>',
-    '<p><small><tt><a href="ex:14">#set %grad% = Београд</a><br><a href="ex:14">Град: %grad' +
+    '<p><small><tt><a href="ex:27">#set %grad% = Београд</a><br><a href="ex:27">Град: %grad' +
       '%.</a><br>→&nbsp; Град: Београд.</tt></small></p>',
     '<p>Имена се састоје од латиничних слова, цифара и <code>_</code>. Име у другом писму и' +
       'ме није — о томе други документ у чланку <code>set.malformed</code>. Управо зато је им' +
@@ -12084,9 +12694,9 @@ const
     '<h3 id="macros-0"><code>#set</code> извлачи изнова, <code>#def</code> извлачи једном</' +
       'h3>',
     '<p>То је сва разлика међу њима, и види се само онда када вредност садржи избор.</p>',
-    '<p><small><tt><a href="ex:15">#set %izbor% = {A|B}</a><br><a href="ex:15">%izbor% %izb' +
+    '<p><small><tt><a href="ex:28">#set %izbor% = {A|B}</a><br><a href="ex:28">%izbor% %izb' +
       'or% %izbor%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %izbor% = {A|B}</a><br><a href="ex:16">%izbor% %izb' +
+    '<p><small><tt><a href="ex:29">#def %izbor% = {A|B}</a><br><a href="ex:29">%izbor% %izb' +
       'or% %izbor%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Оба примера трчала су под истим семеном. <code>#set</code> чува шаблон и извлачи га' +
       ' при сваком помену; <code>#def</code> извлачи једном и држи одговор. Узимајте <code>#d' +
@@ -12097,11 +12707,11 @@ const
       'то из једног прегледа закључите да дефиниција не ради.</p>',
     '<h2 id="conditions">Услови</h2>',
     '<p><code>{?name?онда|иначе}</code> пита да ли макро има вредност.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?имамо %n%|још ни' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?имамо %n%|још ни' +
       'шта}</a><br>→&nbsp; Имамо 5</tt></small></p>',
     '<p>Половина <code>иначе</code> може се изоставити — <code>{?name?онда}</code> не штамп' +
       'а ништа када је одговор «не». <code>!</code> преокреће питање:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?странац|при' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?странац|при' +
       'јатељ}</a><br>→&nbsp; Пријатељ</tt></small></p>',
     '<p>Имати вредност значи имати <b>бар један знак који није размак</b>. Макро постављен ' +
       'на ништа или само на размаке сматра се без вредности.</p>',
@@ -12109,11 +12719,11 @@ const
       'макроа — а одељак о ћутању каже у шта се претвара име које почиње цифром.</p>',
     '<h2 id="counting">Бројање</h2>',
     '<p><code>{plural %n%: …}</code> узима облик речи који одговара броју.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: фај' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: фај' +
       'л|фајла|фајлова}</a><br>→&nbsp; 1 фајл</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 2</a><br><a href="ex:20">%n% {plural %n%: фај' +
+    '<p><small><tt><a href="ex:33">#def %n% = 2</a><br><a href="ex:33">%n% {plural %n%: фај' +
       'л|фајла|фајлова}</a><br>→&nbsp; 2 фајла</tt></small></p>',
-    '<p><small><tt><a href="ex:21">#def %n% = 5</a><br><a href="ex:21">%n% {plural %n%: фај' +
+    '<p><small><tt><a href="ex:34">#def %n% = 5</a><br><a href="ex:34">%n% {plural %n%: фај' +
       'л|фајла|фајлова}</a><br>→&nbsp; 5 фајлова</tt></small></p>',
     '<p>Бројач је овде намерно <code>#def</code>, а не <code>#set</code>, и правило вреди у' +
       'памтити: <b>правите бројач простим бројем или <code>#def</code>-ом, никада <code>#set<' +
@@ -12121,16 +12731,34 @@ const
       '5|5}</code>, а не <code>5</code> — дакле не број — па цела конструкција не даје ништа,' +
       ' а панел каже <code>plural.count-macro</code>. Бројач и облик не могу противречити јед' +
       'ан другом: уместо тога нестаје реч.</p>',
-    '<p><small><tt><a href="ex:22">#set %n% = {5|5}</a><br><a href="ex:22">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:35">#set %n% = {5|5}</a><br><a href="ex:35">%n% {plural %n%:' +
       ' фајл|фајла|фајлова}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Колико облика, решава локал, а не ви: под <code>sr</code> их је три, под <code>en</' +
-      'code> — два. Погрешан број је грешка о којој панел јавља (<code>plural.arity</code>), ' +
-      'и мотор тада штампа целу конструкцију назад, заменивши заграде широким <code>｛｝</code>' +
-      ' да се не помеша са излазом.</p>',
+      'code> — два, под <code>ar</code> — шест, редом zero, one, two, few, many, other. На ар' +
+      'апском се «једна књига» и «две књиге» кажу без броја, па се број ставља <b>унутар</b> ' +
+      'оних облика који га штампају, а не испред блока:</p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 3</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:37">#def %n% = 2</a><br><a href="ex:37">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:38">#def %n% = 0</a><br><a href="ex:38">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:39">#def %n% = 1</a><br><' +
+      'a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:40' +
+      '">#def %n% = 11</a><br><a href="ex:40">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:41">#def %n% = 100</a><br><a href="ex:41">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Погрешан број је грешка о којој панел јавља (<code>plural.arity</code>), и мотор та' +
+      'да штампа целу конструкцију назад, заменивши заграде широким <code>｛｝</code> да се не ' +
+      'помеша са излазом.</p>',
     '<h2 id="fragments">Одломци</h2>',
     '<p><code>#include "name"</code> ставља на то место други шаблон, и директива мора бити' +
       ' прва у свом реду — и овде су размаци и табулатори испред ње дозвољени.</p>',
-    '<p><small><tt><a href="ex:23">#include "intro"</a><br>→&nbsp; Добро дошли у Acme.</tt>' +
+    '<p><small><tt><a href="ex:42">#include "intro"</a><br>→&nbsp; Добро дошли у Acme.</tt>' +
       '</small></p>',
     '<p>Одломак се одиграва као сопствени шаблон, па се избор унутар њега прави изнова: <co' +
       'de>intro</code> садржи <code>{Acme|Globex}</code> и одговара једним или другим.</p>',
@@ -12142,7 +12770,7 @@ const
     '<h3 id="fragments-0">Одломак не види ваше макрое</h3>',
     '<p>Он се одиграва као сопствени шаблон: има вредности сесије, али не и <code>#set</cod' +
       'e> и <code>#def</code> документа који га је унео.</p>',
-    '<p><small><tt><a href="ex:24">#set %brand% = Acme</a><br><a href="ex:24">#include "sho' +
+    '<p><small><tt><a href="ex:43">#set %brand% = Acme</a><br><a href="ex:43">#include "sho' +
       'ut"</a><br>→&nbsp; %brand% је овде.</tt></small></p>',
     '<p><code>shout</code> је <code>%brand% је овде.</code>, и име мора бити дефинисано у с' +
       'амом одломку. То није ћутање — панел ипак каже <code>variable.undefined</code> — али т' +
@@ -12152,7 +12780,7 @@ const
     '<h2 id="remarks">Коментари</h2>',
     '<p><code>/# … #/</code> је коментар: све између ознака уклања се пре свега осталог.</p' +
       '>',
-    '<p><small><tt><a href="ex:25">нацрт /# нисам сигуран #/ готово</a><br>→&nbsp; Нацрт го' +
+    '<p><small><tt><a href="ex:44">нацрт /# нисам сигуран #/ готово</a><br>→&nbsp; Нацрт го' +
       'тово</tt></small></p>',
     '<p>Коментари се не угнежђују. Први <code>#/</code> затвара коментар, шта год било пре ' +
       'њега, па се коментар омотан око текста који и сам садржи <code>#/</code> завршава рани' +
@@ -12161,22 +12789,22 @@ const
     '<p>Излаз није баш онај текст који су дале конструкције. На крају му се деси неколико с' +
       'твари; две сусрећете свакодневно.</p>',
     '<p>Прво слово сваке реченице постаје велико:</p>',
-    '<p><small><tt><a href="ex:26">један. два. три.</a><br>→&nbsp; Један. Два. Три.</tt></s' +
+    '<p><small><tt><a href="ex:45">један. два. три.</a><br>→&nbsp; Један. Два. Три.</tt></s' +
       'mall></p>',
     '<p>Због тога примери у овој помоћи тако често одговарају великим словом тамо где је у ' +
       'шаблону мало. Тачка после скраћенице коју мотор зна не завршава реченицу, и исто тако ' +
       'је не завршава нешто попут <code>e.g.</code> или <code>U.S.</code> — слово, тачка, сло' +
       'во, тачка — у <b>било ком писму</b>: провера «да ли је ово средина речи» чита свако пи' +
       'смо, па је <code>т.ј.</code> заклоњено исто као <code>e.g.</code>.</p>',
-    '<p><small><tt><a href="ex:27">т.ј. ово остаје мало</a><br>→&nbsp; т.ј. ово остаје мало' +
+    '<p><small><tt><a href="ex:46">т.ј. ово остаје мало</a><br>→&nbsp; т.ј. ово остаје мало' +
       '</tt></small></p>',
-    '<p><small><tt><a href="ex:28">г. Београд наше цене су ниске</a><br>→&nbsp; г. Београд ' +
+    '<p><small><tt><a href="ex:47">г. Београд наше цене су ниске</a><br>→&nbsp; г. Београд ' +
       'наше цене су ниске</tt></small></p>',
-    '<p><small><tt><a href="ex:29">ул. наше цене су ниске</a><br>→&nbsp; ул. наше цене су н' +
+    '<p><small><tt><a href="ex:48">ул. наше цене су ниске</a><br>→&nbsp; ул. наше цене су н' +
       'иске</tt></small></p>',
     '<p>Свака друга реч завршава реченицу, ма колико кратка била — дужина ту нема никакве в' +
       'езе:</p>',
-    '<p><small><tt><a href="ex:30">Ххх. наше цене су ниске</a><br>→&nbsp; Ххх. Наше цене су' +
+    '<p><small><tt><a href="ex:49">Ххх. наше цене су ниске</a><br>→&nbsp; Ххх. Наше цене су' +
       ' ниске</tt></small></p>',
     '<p>Списак који мотор зна има 46 уноса, <b>29 ћириличних</b>, и други документ пролази ' +
       'кроз њега под насловом <b>Ћутање које сусрећу сви</b>. За српски текст најважније је н' +
@@ -12191,9 +12819,9 @@ const
       'или <code>сајт.срб</code>. А заклоњен почетак за правило о великом слову није почетак ' +
       'реченице — зато <code>један.два</code> ниже излази нетакнут, с малим словом укључујући' +
       '.</p>',
-    '<p><small><tt><a href="ex:31">здраво , свете</a><br>→&nbsp; Здраво, свете</tt></small>' +
+    '<p><small><tt><a href="ex:50">здраво , свете</a><br>→&nbsp; Здраво, свете</tt></small>' +
       '</p>',
-    '<p><small><tt><a href="ex:32">један.два</a><br>→&nbsp; један.два</tt></small></p>',
+    '<p><small><tt><a href="ex:51">један.два</a><br>→&nbsp; један.два</tt></small></p>',
     '<h2 id="silences">Ћутање</h2>',
     '<p>Сваки случај испод се одиграва, даје нешто друго од онога што изгледа, и не повлачи' +
       ' за собом <b>ниједну дијагностику</b>. Сакупљени су овде јер их ништа друго у прозору ' +
@@ -12203,18 +12831,18 @@ const
       ', <code>стр.</code> и <code>тел.</code> — док <code>бр.</code>, <code>нпр.</code>, <co' +
       'de>итд.</code> и <code>тзв.</code> завршавају реченицу и следећу реч пишу великим слов' +
       'ом:</p>',
-    '<p><small><tt><a href="ex:33">бр. наше цене су ниске</a><br>→&nbsp; Бр. Наше цене су н' +
+    '<p><small><tt><a href="ex:52">бр. наше цене су ниске</a><br>→&nbsp; Бр. Наше цене су н' +
       'иске</tt></small></p>',
     '<p><b>Иста реч у два писма понаша се различито.</b> <code>dr.</code> је на латиничној ' +
       'половини списка и заклања оно што следи; ћирилично <code>др.</code> на списку не посто' +
       'ји, па завршава реченицу:</p>',
-    '<p><small><tt><a href="ex:34">др. Марић наше цене су ниске</a><br>→&nbsp; Др. Марић на' +
+    '<p><small><tt><a href="ex:53">др. Марић наше цене су ниске</a><br>→&nbsp; Др. Марић на' +
       'ше цене су ниске</tt></small></p>',
-    '<p><small><tt><a href="ex:35">dr. Smith our prices are low</a><br>→&nbsp; dr. Smith ou' +
+    '<p><small><tt><a href="ex:54">dr. Smith our prices are low</a><br>→&nbsp; dr. Smith ou' +
       'r prices are low</tt></small></p>',
     '<p><b>Ћирилични домен је заклоњен исто као латинични.</b> <code>.срб</code> мотор на д' +
       'ве реченице не раставља:</p>',
-    '<p><small><tt><a href="ex:36">сајт.срб три</a><br>→&nbsp; сајт.срб три</tt></small></p' +
+    '<p><small><tt><a href="ex:55">сајт.срб три</a><br>→&nbsp; сајт.срб три</tt></small></p' +
       '>',
     '<p>Разлог што српске скраћенице нису заклоњене јесте прост СПИСАК: у њему су 46 речи, ' +
       'и то што готово ниједна није српска нема везе с писмом. Мотор их пореди потпуно уникод' +
@@ -12222,31 +12850,31 @@ const
       '» сада је такође уникодна: због ње скраћенице од више тачака и ћирилични домени више н' +
       'е пуцају.</p>',
     '<p><b><code>#include</code> који не стоји сам у свом реду обичан је текст.</b></p>',
-    '<p><small><tt><a href="ex:37">Пре. #include "intro"</a><br>→&nbsp; Пре. #include "intr' +
+    '<p><small><tt><a href="ex:56">Пре. #include "intro"</a><br>→&nbsp; Пре. #include "intr' +
       'o"</tt></small></p>',
     '<p>Исто важи за директиву са нечим иза ње и за <code>#include"intro"</code> без размак' +
       'а. Правило припада породици, а не овом мотору, и управо оно чини директиву препознатљи' +
       'вом без разлагања целог реда.</p>',
     '<p><b>Услов чије име почиње цифром услов није.</b> Он постаје обичан избор између <cod' +
       'e>?1x?да</code> и <code>не</code>:</p>',
-    '<p><small><tt><a href="ex:38">{?1x?да|не}</a><br>→&nbsp; ?1x? Да</tt></small></p>',
+    '<p><small><tt><a href="ex:57">{?1x?да|не}</a><br>→&nbsp; ?1x? Да</tt></small></p>',
     '<p><b><code>&lt;…&gt;</code> на почетку комада који није први раздвајач није</b> и шта' +
       'мпа се како стоји:</p>',
-    '<p><small><tt><a href="ex:39">[плава|&lt;и&gt;жута]</a><br>→&nbsp; &lt;и&gt;Жута плава' +
+    '<p><small><tt><a href="ex:58">[плава|&lt;и&gt;жута]</a><br>→&nbsp; &lt;и&gt;Жута плава' +
       '</tt></small></p>',
     '<p>Блок на почетку <b>првог</b> комада управо је раздвајач којим почиње одељак о мешањ' +
       'у:</p>',
-    '<p><small><tt><a href="ex:40">[&lt;и&gt;плава|жута]</a><br>→&nbsp; Жута и плава</tt></' +
+    '<p><small><tt><a href="ex:59">[&lt;и&gt;плава|жута]</a><br>→&nbsp; Жута и плава</tt></' +
       'small></p>',
     '<p>Било где после <code>|</code> он је обичан текст, а раздвајач између два комада пиш' +
       'е се на <b>крају</b> првог.</p>',
     '<p><b>Го таг на крају комада узима се за раздвајач тог пара</b> и штампа се сопственим' +
       ' текстом:</p>',
-    '<p><small><tt><a href="ex:41">[један&lt;br&gt;|два]</a><br>→&nbsp; Два један</tt></sma' +
+    '<p><small><tt><a href="ex:60">[један&lt;br&gt;|два]</a><br>→&nbsp; Два један</tt></sma' +
       'll></p>',
     '<p>На овом семену пар је легао другим редоследом, па раздвајач уопште није испао. Са т' +
       'рећим комадом има где да легне, и појављује се:</p>',
-    '<p><small><tt><a href="ex:42">[плава|жута&lt;br&gt;|сива]</a><br>→&nbsp; Жута br сива ' +
+    '<p><small><tt><a href="ex:61">[плава|жута&lt;br&gt;|сива]</a><br>→&nbsp; Жута br сива ' +
       'плава</tt></small></p>',
     '<p><code>&lt;br&gt;</code> стоји између <code>жута</code> и онога што следи, где год м' +
       'ешање тај пар поставило. Затворени таг (<code>&lt;/b&gt;</code>), самозатворени (<code' +
@@ -12254,12 +12882,12 @@ const
       'д комада остају нетакнути.</p>',
     '<p><b>Незатворен коментар обичан је текст</b>: он ништа не отвара, и <code>/#</code> с' +
       'е штампа:</p>',
-    '<p><small><tt><a href="ex:43">пре /# остатак овога</a><br>→&nbsp; Пре /# остатак овога' +
+    '<p><small><tt><a href="ex:62">пре /# остатак овога</a><br>→&nbsp; Пре /# остатак овога' +
       '</tt></small></p>',
     '<p>Али он је и даље половина пара. Ако се даље у документу појави <code>#/</code>, то ' +
       'двоје ће се пронаћи и све између њих нестаће — заједно са оним што је аутор написао ме' +
       'ђу њима:</p>',
-    '<p><small><tt><a href="ex:44">{a /# упс|b} средина #/ реп</a><br>→&nbsp; {a реп</tt></' +
+    '<p><small><tt><a href="ex:63">{a /# упс|b} средина #/ реп</a><br>→&nbsp; {a реп</tt></' +
       'small></p>',
     '<p>Избор горе изгубио је своју другу варијанту и затворену заграду, и ниједна дијагнос' +
       'тика о томе не говори: то је оно што текст ЗНАЧИ, а не грешка коју мотор може видети. ' +
@@ -12322,26 +12950,26 @@ const
       'конструкције.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — заграда је отворена и није з' +
       'атворена</h3>',
-    '<p><small><tt><a href="ex:45">цена {ниска|висока</a><br>→&nbsp; Цена {ниска|висока</tt' +
+    '<p><small><tt><a href="ex:64">цена {ниска|висока</a><br>→&nbsp; Цена {ниска|висока</tt' +
       '></small></p>',
     '<p>Мотор не погађа где сте хтели да затворите. Текст остаје како јесте, заједно са заг' +
       'радом, и избор се не дешава никада.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — затворена је заградом др' +
       'уге врсте</h3>',
-    '<p><small><tt><a href="ex:46">цена {ниска|висока]</a><br>→&nbsp; Цена {ниска|висока]</' +
+    '<p><small><tt><a href="ex:65">цена {ниска|висока]</a><br>→&nbsp; Цена {ниска|висока]</' +
       'tt></small></p>',
     '<p><code>{</code> чека <code>}</code>, а <code>[</code> чека <code>]</code>. Мешање за' +
       'творено витичастом заградом мешање није.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — затворен' +
       'а заграда без отворене</h3>',
-    '<p><small><tt><a href="ex:47">цена ниска} и то је то</a><br>→&nbsp; Цена ниска} и то ј' +
+    '<p><small><tt><a href="ex:66">цена ниска} и то је то</a><br>→&nbsp; Цена ниска} и то ј' +
       'е то</tt></small></p>',
     '<p>Она остаје текст. Најчешће је то заграда преостала од измене.</p>',
     '<hr>',
     '<h2 id="definitions">Дефиниције</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — овај <code>#set</code> ред није на' +
       'писан по правилу</h3>',
-    '<p><small><tt><a href="ex:48">#set grad = Београд</a><br><a href="ex:48">у %grad%</a><' +
+    '<p><small><tt><a href="ex:67">#set grad = Београд</a><br><a href="ex:67">у %grad%</a><' +
       'br>→&nbsp; #set grad = Београд ⏎ У %grad%</tt></small></p>',
     '<p><b>Име се пише између знакова процента:</b> <code>#set %grad% = Београд</code>. То ' +
       'је најчешћа прва грешка, и она ставља у панел одмах два реда — сам покварен ред и «ова' +
@@ -12352,7 +12980,7 @@ const
       'p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — овај <code>#def</code> ред није на' +
       'писан по правилу</h3>',
-    '<p><small><tt><a href="ex:49">#def странице = {1|3}</a><br><a href="ex:49">%странице%<' +
+    '<p><small><tt><a href="ex:68">#def странице = {1|3}</a><br><a href="ex:68">%странице%<' +
       '/a><br>→&nbsp; #def странице = 1 ⏎ %странице%</tt></small></p>',
     '<p>Исто правило и иста цена. <code>#def</code> се од <code>#set</code> разликује не по' +
       ' писању, него по томе <b>када</b> се вредност развија: <code>#set</code> је развија пр' +
@@ -12363,15 +12991,15 @@ const
       ' са заградама. Покварен ред није искључен; он само престаје да буде директива.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — ово име је' +
       ' већ дефинисано горе</h3>',
-    '<p><small><tt><a href="ex:50">#set %x% = прво</a><br><a href="ex:50">#set %x% = друго<' +
-      '/a><br><a href="ex:50">%x%</a><br>→&nbsp; Друго</tt></small></p>',
+    '<p><small><tt><a href="ex:69">#set %x% = прво</a><br><a href="ex:69">#set %x% = друго<' +
+      '/a><br><a href="ex:69">%x%</a><br>→&nbsp; Друго</tt></small></p>',
     '<p>Оно ради — побеђује <b>последња</b> дефиниција — али мотор то назива грешком: докум' +
       'ент у коме је име задато двапут чита се двосмислено, и за месец дана нећете се сетити ' +
       'који је од та два реда жив. Грешка показује на <b>другу</b> дефиницију; прва стоји гор' +
       'е.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> унутар вредности дефиниције</h3>',
-    '<p><small><tt><a href="ex:51">#def %x% = #include "frag"</a><br><a href="ex:51">%x%</a' +
+    '<p><small><tt><a href="ex:70">#def %x% = #include "frag"</a><br><a href="ex:70">%x%</a' +
       '><br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Уметање унутар вредности развија се у другом тренутку него што бисте очекивали, и п' +
       'ородица то забрањује. Стављајте <code>#include</code> у засебан ред.</p>',
@@ -12379,7 +13007,7 @@ const
     '<h2 id="variables">Променљиве</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — ова променљива нигде ниј' +
       'е дефинисана</h3>',
-    '<p><small><tt><a href="ex:52">здраво, %name%</a><br>→&nbsp; Здраво, %name%</tt></small' +
+    '<p><small><tt><a href="ex:71">здраво, %name%</a><br>→&nbsp; Здраво, %name%</tt></small' +
       '></p>',
     '<p>Упозорење, а не грешка: мотор штампа име како јесте. Тако је и замишљено — вредност' +
       ' може доћи споља, од програма домаћина. У Studio се такве вредности предају на картици' +
@@ -12410,7 +13038,7 @@ const
     '<li><b>Ctrl+клик</b> уписује дефиницију у документ и отвара на њој уређивач група. Вре' +
       'дност коју сте већ откуцали улази тамо као прва могућност:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:53">#set %brand% = {Vulkan}</a><br><a href="ex:53">казино %b' +
+    '<p><small><tt><a href="ex:72">#set %brand% = {Vulkan}</a><br><a href="ex:72">казино %b' +
       'rand%</a><br>→&nbsp; Казино Vulkan</tt></small></p>',
     '<p>Разлика међу њима је оно што преживљава затварање прозора. Вредност сесије не прежи' +
       'вљава: нема је ни у фајлу ни у git-у, и ниједан други мотор породице је не види. Дефин' +
@@ -12423,7 +13051,7 @@ const
       'енти остају знаци.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — дефиниција упу' +
       'ћује сама на себе</h3>',
-    '<p><small><tt><a href="ex:54">#set %x% = a %x% b</a><br><a href="ex:54">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:73">#set %x% = a %x% b</a><br><a href="ex:73">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Педесет нивоа, потом заустављање. Мотор развија до границе дубине и стаје, остављај' +
       'ући <code>%x%</code> у средини. То није круг, и није оно што сте хтели.</p>',
@@ -12432,8 +13060,8 @@ const
       ' стаје и оставља вредност како јесте, а у вредности је сваког по једно више.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — дефини' +
       'ције упућују у круг</h3>',
-    '<p><small><tt><a href="ex:55">#set %x% = %y%</a><br><a href="ex:55">#set %y% = %x%</a>' +
-      '<br><a href="ex:55">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#set %x% = %y%</a><br><a href="ex:74">#set %y% = %x%</a>' +
+      '<br><a href="ex:74">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Свака страна се развија тачно <b>једном</b> и стаје: <code>%x%</code> је постао <co' +
       'de>%y%</code>, а не <code>%x%</code>. Мотор одмотава круг, а не хода по њему, и прежив' +
       'љава друго име из круга — ставите у документ <code>%x% %y%</code> и он ће дати <code>%' +
@@ -12452,16 +13080,16 @@ const
     '<hr>',
     '<h2 id="includes">Уметања</h2>',
     '<h3 id="includes-0"><code>#include</code> ради само с почетка реда</h3>',
-    '<p><small><tt><a href="ex:56">пре #include "frag" после</a><br>→&nbsp; Пре #include "f' +
+    '<p><small><tt><a href="ex:75">пре #include "frag" после</a><br>→&nbsp; Пре #include "f' +
       'rag" после</tt></small></p>',
-    '<p><small><tt><a href="ex:57">#include "frag"</a><br>→&nbsp; Фрагмент</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "frag"</a><br>→&nbsp; Фрагмент</tt></small></p>',
     '<p>Ниједна дијагностика, и у томе је цела поента: <code>#include</code> усред реда уме' +
       'тање <b>није</b>. Мотор га чита као обичан текст и ништа не каже, јер нема на шта да с' +
       'е жали — написали сте текст и добили текст.</p>',
     '<p><b>А циљ ипак може стајати ред ниже</b>, и то изненађује с друге стране. Размак кој' +
       'и мотор допушта између речи и циља укључује преломе редова, па је то једно уметање, и ' +
       'оно ради:</p>',
-    '<p><small><tt><a href="ex:58">#include</a><br><a href="ex:58">"frag"</a><br>→&nbsp; Фр' +
+    '<p><small><tt><a href="ex:77">#include</a><br><a href="ex:77">"frag"</a><br>→&nbsp; Фр' +
       'агмент</tt></small></p>',
     '<p>Празни редови између њих такође су дозвољени. Није дозвољено све остало: реч испред' +
       ' циља или било шта осим размака после њега — и све поново постаје текст. Уређивач боји' +
@@ -12469,7 +13097,7 @@ const
       'бећава директиву чији крај још не види.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — таквог циља у ск' +
       'упу нема</h3>',
-    '<p><small><tt><a href="ex:59">#include "нема"</a><br>→&nbsp; (празно)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "нема"</a><br>→&nbsp; (празно)</tt></small></p>',
     '<p>Циљеви су <code>.spintax</code> фајлови у фасцикли отвореног документа. Непознат ци' +
       'љ се развија у ништа: пасус нестаје, а не пуца, и управо зато је то тако лако превидет' +
       'и.</p>',
@@ -12484,7 +13112,7 @@ const
       'АЈЕ» се појављује само онда када фасцикла постоји, а фајла у њој стварно нема.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — циљ постоји, али у друго' +
       'ј величини слова</h3>',
-    '<p><small><tt><a href="ex:60">#include "intro"</a><br>→&nbsp; (празно)</tt></small></p' +
+    '<p><small><tt><a href="ex:79">#include "intro"</a><br>→&nbsp; (празно)</tt></small></p' +
       '>',
     '<p>Скуп садржи <code>Intro.spintax</code> — а мотор свеједно каже да таквог циља нема,' +
       ' док Studio додаје своју напомену о величини слова. Величина слова је важна: <code>int' +
@@ -12493,7 +13121,7 @@ const
       'ечио серверу о истом документу.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — уметање у круг</h3>',
     '<p>Ако <code>loop.spintax</code> и сам садржи <code>#include "loop"</code>, онда:</p>',
-    '<p><small><tt><a href="ex:61">#include "loop"</a><br>→&nbsp; (празно)</tt></small></p>',
+    '<p><small><tt><a href="ex:80">#include "loop"</a><br>→&nbsp; (празно)</tt></small></p>',
     '<p>Мотор подмеће празнину уместо бесконачности. Напомена је потребна да бисте разумели' +
       ' зашто је пасус нестао.</p>',
     '<p>Ред је исписан на <b><code>loop</code></b>, а не на документ у који гледате: круг п' +
@@ -12503,17 +13131,20 @@ const
     '<h2 id="plurals">Облици множине</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — облика нема онолико колико локал зах' +
       'тева</h3>',
-    '<p><small><tt><a href="ex:62">#set %n% = 5</a><br><a href="ex:62">%n% {plural %n%: обј' +
+    '<p><small><tt><a href="ex:81">#set %n% = 5</a><br><a href="ex:81">%n% {plural %n%: обј' +
       'екат|објекта}</a><br>→&nbsp; 5 ｛plural 5: објекат|објекта｝</tt></small></p>',
     '<p><b>Није празнина — мотор штампа целу конструкцију</b>, заменивши заграде широким <c' +
       'ode>｛｝</code>. Тако он каже «ово сам видео и нисам могао да применим». Неприметним то ' +
       'нико неће назвати, и то је добро: пасус који је нестао ћутке тражио би се дуже.</p>',
-    '<p>Српском требају три облика, енглеском — два. Под локалом овог документа исправно је' +
-      ' <code>{plural %n%: објекат|објекта|објеката}</code>.</p>',
+    '<p>Српском требају три облика, енглеском — два, арапском — шест. Под локалом овог доку' +
+      'мента исправно је <code>{plural %n%: објекат|објекта|објеката}</code>. Под <code>ar</c' +
+      'ode> су два облика такође грешка:</p>',
+    '<p><small><tt><a href="ex:82">#def %n% = 5</a><br><a href="ex:82">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Празнина настаје из другог разлога, и та два је лако помешати.</b> Упоредите ова' +
       ' два, која се разликују само по броју облика:</p>',
-    '<p><small><tt><a href="ex:63">{plural %n%: објекат|објекта|објеката}</a><br>→&nbsp; (п' +
-      'разно)&nbsp;&nbsp; три облика: исправно за српски<br><a href="ex:64">{plural %n%: обје' +
+    '<p><small><tt><a href="ex:83">{plural %n%: објекат|објекта|објеката}</a><br>→&nbsp; (п' +
+      'разно)&nbsp;&nbsp; три облика: исправно за српски<br><a href="ex:84">{plural %n%: обје' +
       'кат|објекта}</a><br>→&nbsp; (празно)&nbsp;&nbsp; два облика: неисправно за српски</tt>' +
       '</small></p>',
     '<p>Оба не штампају ништа, а панел се према њима односи другачије: први повлачи само <c' +
@@ -12530,7 +13161,7 @@ const
       'ради.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — бројач узима вредност из' +
       ' <code>#set</code>-а, а тај извлачи изнова при сваком помену</h3>',
-    '<p><small><tt><a href="ex:65">#set %n% = {1|2}</a><br><a href="ex:65">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:85">#set %n% = {1|2}</a><br><a href="ex:85">%n% {plural %n%:' +
       ' објекат|објекта|објеката}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Погледајте шта је преживело: <b>број је одштампан, а именица није.</b> Бројач мора ' +
       'бити број у тренутку када се бира облик, а <code>#set</code> чија је вредност и сама и' +
@@ -12539,13 +13170,13 @@ const
       'ечити један другом; мотор уместо тога испушта реч.</p>',
     '<p><code>#def</code> се понаша другачије и развија своју вредност једном по одигравању' +
       ', па место бројача добија број:</p>',
-    '<p><small><tt><a href="ex:66">#def %n% = {1|2}</a><br><a href="ex:66">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:86">#def %n% = {1|2}</a><br><a href="ex:86">%n% {plural %n%:' +
       ' објекат|објекта|објеката}</a><br>→&nbsp; 1 објекат</tt></small></p>',
     '<p>За то у панелу нема ниједног реда. Отуда и правило: правите бројач простим бројем и' +
       'ли <code>#def</code>-ом, никада <code>#set</code>-ом.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — заграде унутар о' +
       'блика</h3>',
-    '<p><small><tt><a href="ex:67">{plural %n%: {објекат|ствар}|објекта|објеката}</a><br>→&' +
+    '<p><small><tt><a href="ex:87">{plural %n%: {објекат|ствар}|објекта|објеката}</a><br>→&' +
       'nbsp; ｛plural %n%: ｛објекат|ствар｝|објекта|објеката｝</tt></small></p>',
     '<p>Облици су прост текст. Избор унутар њих се не развија, и уместо тога се цела констр' +
       'укција штампа у широким заградама.</p>',
@@ -12553,27 +13184,27 @@ const
     '<h2 id="permutations">Мешање</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — непознат кључ ' +
       'у подешавању</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:88">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Познати кључеви су <code>minsize</code>, <code>maxsize</code>, <code>sep</code> и <' +
       'code>lastsep</code>. Непознат подешавање није, и када је он у блоку једини, цео блок у' +
       'опште није подешавање: он постаје раздвајач између комада, што излаз и показује.</p>',
     '<p><b>Ако поред стоји прави кључ, излаз је сасвим другачији</b> — и то је вероватнија ' +
       'грешка: један кључ од неколико откуцан је погрешно:</p>',
-    '<p><small><tt><a href="ex:69">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:89">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Блок остаје подешавање, <code>sep</code> се извршава, непознат кључ се просто одбац' +
       'ује, а панел у оба случаја каже једно те исто. Дакле, дијагностика јавља да кључ није ' +
       'схваћен; она не јавља шта се даље догодило. О томе читајте излаз.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— минимум није задат целим бројем</h3>',
-    '<p><small><tt><a href="ex:70">[&lt;minsize=два&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:90">[&lt;minsize=два&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Небројчана вредност отпада заједно са својом границом, и важи уобичајено — дакле св' +
       'и комади.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— максимум није задат целим бројем</h3>',
-    '<p><small><tt><a href="ex:71">[&lt;maxsize=много&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
+    '<p><small><tt><a href="ex:91">[&lt;maxsize=много&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
       'small></p>',
     '<p>Тачно исто с другог краја: горња граница нестаје, и излаз опет садржи сваки комад.<' +
       '/p>',
@@ -12609,8 +13240,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Ћутање које сусрећу сви: скраћенице</h2>',
     '<h3 id="abbreviations-0">Скраћеница оставља следећу реч малом</h3>',
-    '<p><small><tt><a href="ex:72">г. Београд наше цене су ниске</a><br>→&nbsp; г. Београд ' +
-      'наше цене су ниске<br><a href="ex:73">Ххх. наше цене су ниске</a><br>→&nbsp; Ххх. Наше' +
+    '<p><small><tt><a href="ex:92">г. Београд наше цене су ниске</a><br>→&nbsp; г. Београд ' +
+      'наше цене су ниске<br><a href="ex:93">Ххх. наше цене су ниске</a><br>→&nbsp; Ххх. Наше' +
       ' цене су ниске</tt></small></p>',
     '<p>Два реда која се разликују у једној речи, и друга реч сваког даје вам правило: посл' +
       'е <code>г.</code> реченица остаје мала, после <code>Ххх.</code> — великим словом. Мото' +
@@ -12637,15 +13268,15 @@ const
       '> такође није заклоњен.</p>',
     '<hr>',
     '<h2 id="correct">Како изгледа исправно</h2>',
-    '<p><small><tt><a href="ex:74">цена {ниска|висока}</a><br>→&nbsp; Цена ниска</tt></smal' +
+    '<p><small><tt><a href="ex:94">цена {ниска|висока}</a><br>→&nbsp; Цена ниска</tt></smal' +
       'l></p>',
-    '<p><small><tt><a href="ex:75">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:95">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:76">#set %vip% = 1</a><br><a href="ex:76">{?vip?за вас|за св' +
+    '<p><small><tt><a href="ex:96">#set %vip% = 1</a><br><a href="ex:96">{?vip?за вас|за св' +
       'е}</a><br>→&nbsp; За вас</tt></small></p>',
-    '<p><small><tt><a href="ex:77">#set %n% = 5</a><br><a href="ex:77">%n% {plural %n%: арт' +
+    '<p><small><tt><a href="ex:97">#set %n% = 5</a><br><a href="ex:97">%n% {plural %n%: арт' +
       'икал|артикла|артикала}</a><br>→&nbsp; 5 артикала</tt></small></p>',
-    '<p><small><tt><a href="ex:78">пре /# белешка #/ после</a><br>→&nbsp; Пре после</tt></s' +
+    '<p><small><tt><a href="ex:98">пре /# белешка #/ после</a><br>→&nbsp; Пре после</tt></s' +
       'mall></p>',
     '<p>Пет конструкција, пет чистих редова: избор, мешање са подешавањима, услов, облик мн' +
       'ожине са бројем испред њега и коментар. Ниједна не ставља у панел ништа.</p>',
@@ -12659,7 +13290,7 @@ const
     '<p><b>Зашто моја променљива са српским именом не ради?</b> Имена променљивих су само л' +
       'атиница. <code>%име%</code> се уопште не рачуна као помен променљиве: мотор га штампа ' +
       'као текст и <b>не издаје ниједну дијагностику</b>:</p>',
-    '<p><small><tt><a href="ex:79">здраво, %име%</a><br>→&nbsp; Здраво, %име%</tt></small><' +
+    '<p><small><tt><a href="ex:99">здраво, %име%</a><br>→&nbsp; Здраво, %име%</tt></small><' +
       '/p>',
     '<p>Упоредите са <code>%name%</code>, које ред у панелу ипак повлачи. Ћутљиво је баш пр' +
       'во — ништа вам неће рећи да се оно никада неће подметнути. А <code>#set %име% = Свет</' +
@@ -12946,7 +13577,10 @@ const
       'viti polje za broj, a pregled će stajati dok radite.</p>',
     '<p><code>locale</code> rješava oblike množine, i to je prebacivač iznad desne polovice' +
       ', a ne jezik sučelja. Hrvatskom, srpskom, bosanskom, ruskom, ukrajinskom i bjeloruskom' +
-      ' trebaju tri oblika; engleskom — dva.</p>',
+      ' trebaju tri oblika; engleskom — dva; arapskom — šest. Pod arapskim i hebrejskim lokal' +
+      'om on još rješava kako se veznik pridružuje u popisu (vidi razdjeljivač). Arapski i he' +
+      'brejski primjeri ispod izmjereni su pod vlastitim lokalom — imenuje ga rečenica ispred' +
+      ' svakoga od njih.</p>',
     '<h2 id="choices">Izbor</h2>',
     '<p>Vitičaste zagrade s <code>|</code> između: motor uzima <b>jedan</b>.</p>',
     '<p><small><tt><a href="ex:1">{Mala|Velika} soba.</a><br>→&nbsp; Mala soba.</tt></small' +
@@ -12996,36 +13630,64 @@ const
       'nbsp; Žuta, siva i plava</tt></small></p>',
     '<p><code>sep</code> ide između komada, a <code>lastsep</code> — ispred posljednjeg.</p' +
       '>',
+    '<p>Razdjeljivač samo od slova dobiva po razmak sa svake strane, čak i kad ih niste upi' +
+      'sali:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="i"&gt;A|B]</a><br>→&nbsp; B i A</tt></small' +
+      '></p>',
+    '<p>Iznimka su pisma u kojima se riječi ne odvajaju razmacima, i to pod bilo kojim loka' +
+      'lom: kineski, japanski, tajlandski, laoski, kmerski i burmanski razdjeljivači pišu se ' +
+      'spojeno.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Arapski i hebrejski imaju svoje pravilo, i uključuje ga <b>lokal</b>, a ne pismo. P' +
+      'od <code>ar</code> razdjeljivač koji se sastoji točno od و ili ف zadržava razmak ispre' +
+      'd sebe i gubi razmak iza: na arapskom se veznik piše spojeno sa sljedećom riječju. Pod' +
+      ' <code>he</code> isto to čini ו. Samo ispred riječi u istom pismu — ispred latiničnog ' +
+      'naziva ili znamenke oba razmaka ostaju:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Pod bilo kojim drugim lokalom veznik ostaje zasebna riječ — tako i treba za perzijs' +
+      'ki i urdu, gdje se isto slovo piše odvojeno:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Koliko uzeti</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;plava|žuta|siva]</a><br>→&nbs' +
-      'p; Žuta siva</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;plava|žuta|siva]</a><br>→&nb' +
+      'sp; Žuta siva</tt></small></p>',
     '<p><code>minsize</code> je donja granica, <code>maxsize</code> gornja; broj je između ' +
       'njih slučajan, kao i redoslijed. Jednake vrijednosti uzimaju točno toliko. <b>Bez oba ' +
       '— sve, ali sa samo <code>maxsize</code> donja je granica jedan</b>, i to iznenađuje:</' +
       'p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Tri komada, strop tri, a ispao je jedan. Kada se misli «sve, ali ne više od tri», p' +
       'išite i <code>minsize</code>. <code>maxsize</code> veći od broja komada tiho se smanju' +
       'je na njega. <code>minsize</code> veći od <code>maxsize</code> prihvaća se bez ijedne ' +
       'riječi, i pobjeđuje donja granica: strop se podiže do nje, a ne obrnuto:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;plava|žuta|siva]</a><br>→&nb' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;plava|žuta|siva]</a><br>→&nb' +
       'sp; Žuta siva plava</tt></small></p>',
     '<h3 id="shuffles-2">Razdjeljivač između dva komada</h3>',
     '<p><code>&lt;…&gt;</code> napisan <b>između</b> dva komada razdjeljivač je tog para.</' +
       'p>',
-    '<p><small><tt><a href="ex:12">[plava|žuta&lt;i&gt;|siva]</a><br>→&nbsp; Žuta i siva pl' +
+    '<p><small><tt><a href="ex:25">[plava|žuta&lt;i&gt;|siva]</a><br>→&nbsp; Žuta i siva pl' +
       'ava</tt></small></p>',
     '<p>On pripada komadu <b>poslije</b> sebe i putuje s njim kroz miješanje, pa iskrsne ta' +
       'mo gdje taj komad legne, a ne na stalnom mjestu izlaza. <code>&lt;…&gt;</code> poslije' +
       ' <b>posljednjeg</b> komada uopće nije razdjeljivač i ispisuje se kao tekst:</p>',
-    '<p><small><tt><a href="ex:13">[plava|žuta|siva&lt;i&gt;]</a><br>→&nbsp; Žuta siva&lt;i' +
+    '<p><small><tt><a href="ex:26">[plava|žuta|siva&lt;i&gt;]</a><br>→&nbsp; Žuta siva&lt;i' +
       '&gt; plava</tt></small></p>',
     '<h2 id="macros">Makroi</h2>',
     '<p><code>#set</code> daje ime komadu teksta. Ime se koristi kao <code>%name%</code>, i' +
       ' direktiva mora biti prva u svom retku — razmaci i tabulatori ispred nje dopušteni su,' +
       ' ništa više.</p>',
-    '<p><small><tt><a href="ex:14">#set %grad% = Zagreb</a><br><a href="ex:14">Grad: %grad%' +
+    '<p><small><tt><a href="ex:27">#set %grad% = Zagreb</a><br><a href="ex:27">Grad: %grad%' +
       '.</a><br>→&nbsp; Grad: Zagreb.</tt></small></p>',
     '<p>Imena se sastoje od latiničnih slova, znamenki i <code>_</code>. Slovo s kvačicom s' +
       'lovom se ovdje ne smatra: <code>%šifra%</code> nije ime i motor o tome ne kaže ništa —' +
@@ -13033,9 +13695,9 @@ const
     '<h3 id="macros-0"><code>#set</code> izvlači iznova, <code>#def</code> izvlači jednom</' +
       'h3>',
     '<p>To je sva razlika među njima, i vidi se samo onda kada vrijednost sadrži izbor.</p>',
-    '<p><small><tt><a href="ex:15">#set %izbor% = {A|B}</a><br><a href="ex:15">%izbor% %izb' +
+    '<p><small><tt><a href="ex:28">#set %izbor% = {A|B}</a><br><a href="ex:28">%izbor% %izb' +
       'or% %izbor%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %izbor% = {A|B}</a><br><a href="ex:16">%izbor% %izb' +
+    '<p><small><tt><a href="ex:29">#def %izbor% = {A|B}</a><br><a href="ex:29">%izbor% %izb' +
       'or% %izbor%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Oba su primjera trčala pod istim sjemenom. <code>#set</code> čuva predložak i izvla' +
       'či ga pri svakom spomenu; <code>#def</code> izvlači jednom i drži odgovor. Uzimajte <c' +
@@ -13046,11 +13708,11 @@ const
       'nego što iz jednog pregleda zaključite da definicija ne radi.</p>',
     '<h2 id="conditions">Uvjeti</h2>',
     '<p><code>{?name?onda|inače}</code> pita ima li makro vrijednost.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?imamo %n%|još ni' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?imamo %n%|još ni' +
       'šta}</a><br>→&nbsp; Imamo 5</tt></small></p>',
     '<p>Polovica <code>inače</code> može se izostaviti — <code>{?name?onda}</code> ne ispis' +
       'uje ništa kada je odgovor «ne». <code>!</code> preokreće pitanje:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?stranac|pri' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?stranac|pri' +
       'jatelj}</a><br>→&nbsp; Prijatelj</tt></small></p>',
     '<p>Imati vrijednost znači imati <b>barem jedan znak koji nije razmak</b>. Makro postav' +
       'ljen na ništa ili samo na razmake smatra se bez vrijednosti.</p>',
@@ -13058,11 +13720,11 @@ const
       'makroa — a odjeljak o tišini kaže u što se pretvara ime koje počinje znamenkom.</p>',
     '<h2 id="counting">Brojanje</h2>',
     '<p><code>{plural %n%: …}</code> uzima oblik riječi koji odgovara broju.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: dok' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: dok' +
       'ument|dokumenta|dokumenata}</a><br>→&nbsp; 1 dokument</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 2</a><br><a href="ex:20">%n% {plural %n%: dok' +
+    '<p><small><tt><a href="ex:33">#def %n% = 2</a><br><a href="ex:33">%n% {plural %n%: dok' +
       'ument|dokumenta|dokumenata}</a><br>→&nbsp; 2 dokumenta</tt></small></p>',
-    '<p><small><tt><a href="ex:21">#def %n% = 5</a><br><a href="ex:21">%n% {plural %n%: dok' +
+    '<p><small><tt><a href="ex:34">#def %n% = 5</a><br><a href="ex:34">%n% {plural %n%: dok' +
       'ument|dokumenta|dokumenata}</a><br>→&nbsp; 5 dokumenata</tt></small></p>',
     '<p>Brojač je ovdje namjerno <code>#def</code>, a ne <code>#set</code>, i pravilo vrije' +
       'di zapamtiti: <b>radite brojač jednostavnim brojem ili <code>#def</code>-om, nikada <c' +
@@ -13070,16 +13732,34 @@ const
       'TEKST, <code>{5|5}</code>, a ne <code>5</code> — dakle ne broj — pa cijela konstrukcij' +
       'a ne daje ništa, a ploča kaže <code>plural.count-macro</code>. Brojač i oblik ne mogu ' +
       'proturječiti jedan drugome: umjesto toga nestaje riječ.</p>',
-    '<p><small><tt><a href="ex:22">#set %n% = {5|5}</a><br><a href="ex:22">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:35">#set %n% = {5|5}</a><br><a href="ex:35">%n% {plural %n%:' +
       ' dokument|dokumenta|dokumenata}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Koliko oblika, rješava lokal, a ne vi: pod <code>hr</code> ih je tri, pod <code>en<' +
-      '/code> — dva. Pogrešan je broj greška o kojoj ploča javlja (<code>plural.arity</code>)' +
-      ', i motor tada ispisuje cijelu konstrukciju natrag, zamijenivši zagrade širokima <code' +
-      '>｛｝</code> da se ne pomiješa s izlazom.</p>',
+      '/code> — dva, pod <code>ar</code> — šest, redom zero, one, two, few, many, other. Na a' +
+      'rapskom se «jedna knjiga» i «dvije knjige» kažu bez broja, pa se broj stavlja <b>unuta' +
+      'r</b> onih oblika koji ga ispisuju, a ne ispred bloka:</p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 3</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:37">#def %n% = 2</a><br><a href="ex:37">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:38">#def %n% = 0</a><br><a href="ex:38">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:39">#def %n% = 1</a><br><' +
+      'a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:40' +
+      '">#def %n% = 11</a><br><a href="ex:40">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:41">#def %n% = 100</a><br><a href="ex:41">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Pogrešan je broj greška o kojoj ploča javlja (<code>plural.arity</code>), i motor t' +
+      'ada ispisuje cijelu konstrukciju natrag, zamijenivši zagrade širokima <code>｛｝</code> ' +
+      'da se ne pomiješa s izlazom.</p>',
     '<h2 id="fragments">Odlomci</h2>',
     '<p><code>#include "name"</code> stavlja na to mjesto drugi predložak, i direktiva mora' +
       ' biti prva u svom retku — i ovdje su razmaci i tabulatori ispred nje dopušteni.</p>',
-    '<p><small><tt><a href="ex:23">#include "intro"</a><br>→&nbsp; Dobro došli u Acme.</tt>' +
+    '<p><small><tt><a href="ex:42">#include "intro"</a><br>→&nbsp; Dobro došli u Acme.</tt>' +
       '</small></p>',
     '<p>Odlomak se odigrava kao vlastiti predložak, pa se izbor unutar njega radi iznova: <' +
       'code>intro</code> sadrži <code>{Acme|Globex}</code> i odgovara jednim ili drugim.</p>',
@@ -13091,7 +13771,7 @@ const
     '<h3 id="fragments-0">Odlomak ne vidi vaše makroe</h3>',
     '<p>On se odigrava kao vlastiti predložak: ima vrijednosti sesije, ali ne i <code>#set<' +
       '/code> i <code>#def</code> dokumenta koji ga je unio.</p>',
-    '<p><small><tt><a href="ex:24">#set %brand% = Acme</a><br><a href="ex:24">#include "sho' +
+    '<p><small><tt><a href="ex:43">#set %brand% = Acme</a><br><a href="ex:43">#include "sho' +
       'ut"</a><br>→&nbsp; %brand% je ovdje.</tt></small></p>',
     '<p><code>shout</code> je <code>%brand% je ovdje.</code>, i ime mora biti definirano u ' +
       'samom odlomku. To nije tišina — ploča ipak kaže <code>variable.undefined</code> — ali ' +
@@ -13102,7 +13782,7 @@ const
     '<h2 id="remarks">Komentari</h2>',
     '<p><code>/# … #/</code> je komentar: sve između oznaka uklanja se prije svega ostalog.' +
       '</p>',
-    '<p><small><tt><a href="ex:25">nacrt /# nisam siguran #/ gotovo</a><br>→&nbsp; Nacrt go' +
+    '<p><small><tt><a href="ex:44">nacrt /# nisam siguran #/ gotovo</a><br>→&nbsp; Nacrt go' +
       'tovo</tt></small></p>',
     '<p>Komentari se ne ugnježđuju. Prvi <code>#/</code> zatvara komentar, što god bilo pri' +
       'je njega, pa se komentar omotan oko teksta koji i sam sadrži <code>#/</code> završava ' +
@@ -13111,21 +13791,21 @@ const
     '<p>Izlaz nije baš onaj tekst koji su dale konstrukcije. Na kraju mu se dogodi nekoliko' +
       ' stvari; dvije susrećete svakodnevno.</p>',
     '<p>Prvo slovo svake rečenice postaje veliko:</p>',
-    '<p><small><tt><a href="ex:26">jedan. dva. tri.</a><br>→&nbsp; Jedan. Dva. Tri.</tt></s' +
+    '<p><small><tt><a href="ex:45">jedan. dva. tri.</a><br>→&nbsp; Jedan. Dva. Tri.</tt></s' +
       'mall></p>',
     '<p>Zbog toga primjeri u ovoj pomoći tako često odgovaraju velikim slovom tamo gdje je ' +
       'u predlošku malo. Točka nakon kratice koju motor zna ne završava rečenicu, i za hrvats' +
       'ki su to upravo naslovi — <code>dr.</code>, <code>prof.</code> i <code>mr.</code> svi ' +
       'su na latiničnoj polovici popisa:</p>',
-    '<p><small><tt><a href="ex:27">dr. Marić naše cijene su niske</a><br>→&nbsp; dr. Marić ' +
+    '<p><small><tt><a href="ex:46">dr. Marić naše cijene su niske</a><br>→&nbsp; dr. Marić ' +
       'naše cijene su niske</tt></small></p>',
     '<p>Isto tako rečenicu ne završava ni kratica od više točaka, pa <code>d.o.o.</code> pr' +
       'olazi cijelo:</p>',
-    '<p><small><tt><a href="ex:28">Acme d.o.o. naše cijene su niske</a><br>→&nbsp; Acme d.o' +
+    '<p><small><tt><a href="ex:47">Acme d.o.o. naše cijene su niske</a><br>→&nbsp; Acme d.o' +
       '.o. naše cijene su niske</tt></small></p>',
     '<p>Svaka druga riječ završava rečenicu, ma koliko kratka bila — duljina tu nema nikakv' +
       'e veze:</p>',
-    '<p><small><tt><a href="ex:29">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. Naše cijen' +
+    '<p><small><tt><a href="ex:48">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. Naše cijen' +
       'e su niske</tt></small></p>',
     '<p>Popis koji motor zna ima 46 unosa, <b>29 ćiriličnih</b>, i drugi dokument prolazi k' +
       'roz njega pod naslovom <b>Tišina koju susreću svi</b>. Za hrvatski tekst najvažnije je' +
@@ -13141,10 +13821,10 @@ const
       'rilicom — <code>jedan.dva</code> i <code>сайт.рф</code> prolaze jednako. Zbog toga i d' +
       'vije riječi spojene točkom prolaze netaknute — motor u njima vidi domenu, a zaklonjen ' +
       'početak za veliko slovo nije početak rečenice:</p>',
-    '<p><small><tt><a href="ex:30">zdravo , svijete</a><br>→&nbsp; Zdravo, svijete</tt></sm' +
+    '<p><small><tt><a href="ex:49">zdravo , svijete</a><br>→&nbsp; Zdravo, svijete</tt></sm' +
       'all></p>',
-    '<p><small><tt><a href="ex:31">jedan.dva</a><br>→&nbsp; jedan.dva</tt></small></p>',
-    '<p><small><tt><a href="ex:32">сайт.рф наши цены низкие</a><br>→&nbsp; сайт.рф наши цен' +
+    '<p><small><tt><a href="ex:50">jedan.dva</a><br>→&nbsp; jedan.dva</tt></small></p>',
+    '<p><small><tt><a href="ex:51">сайт.рф наши цены низкие</a><br>→&nbsp; сайт.рф наши цен' +
       'ы низкие</tt></small></p>',
     '<h2 id="silences">Tišina</h2>',
     '<p>Svaki se slučaj ispod odigrava, daje nešto drugo od onoga što izgleda, i ne povlači' +
@@ -13155,11 +13835,11 @@ const
       '</code>, <code>itd.</code>, <code>tzv.</code>, <code>g.</code>, <code>ul.</code>, <cod' +
       'e>str.</code> i <code>tel.</code> nisu, i svaki od njih završava rečenicu i sljedeću r' +
       'iječ piše velikim slovom:</p>',
-    '<p><small><tt><a href="ex:33">npr. naše cijene su niske</a><br>→&nbsp; Npr. Naše cijen' +
+    '<p><small><tt><a href="ex:52">npr. naše cijene su niske</a><br>→&nbsp; Npr. Naše cijen' +
       'e su niske</tt></small></p>',
     '<p><b>Slovo s kvačicom u imenu varijable slovom se ne smatra.</b> <code>%šifra%</code>' +
       ' motoru uopće nije spomen varijable: on ga ispisuje kao tekst i ne kaže ništa:</p>',
-    '<p><small><tt><a href="ex:34">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
+    '<p><small><tt><a href="ex:53">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
       'll></p>',
     '<p>Razlog NIJE isti kao gore, i to vrijedi razdvojiti. Gore je bio popis -- koje riječ' +
       'i motor zna. Ovdje je pravilo o IMENIMA: reference varijabli motor čita ASCII slovima,' +
@@ -13167,31 +13847,31 @@ const
       'o što se išta odigra, pa dotjerivanje s tim nema veze. U vrijednosti su kvačice sasvim' +
       ' na mjestu; u imenu ne rade uopće.</p>',
     '<p><b><code>#include</code> koji ne stoji sam u svom retku običan je tekst.</b></p>',
-    '<p><small><tt><a href="ex:35">Prije. #include "intro"</a><br>→&nbsp; Prije. #include "' +
+    '<p><small><tt><a href="ex:54">Prije. #include "intro"</a><br>→&nbsp; Prije. #include "' +
       'intro"</tt></small></p>',
     '<p>Isto vrijedi za direktivu s nečim iza nje i za <code>#include"intro"</code> bez raz' +
       'maka. Pravilo pripada obitelji, a ne ovom motoru, i upravo ono čini direktivu prepozna' +
       'tljivom bez razlaganja cijelog retka.</p>',
     '<p><b>Uvjet čije ime počinje znamenkom uvjet nije.</b> On postaje običan izbor između ' +
       '<code>?1x?da</code> i <code>ne</code>:</p>',
-    '<p><small><tt><a href="ex:36">{?1x?da|ne}</a><br>→&nbsp; ?1x? Da</tt></small></p>',
+    '<p><small><tt><a href="ex:55">{?1x?da|ne}</a><br>→&nbsp; ?1x? Da</tt></small></p>',
     '<p><b><code>&lt;…&gt;</code> na početku komada koji nije prvi razdjeljivač nije</b> i ' +
       'ispisuje se kako stoji:</p>',
-    '<p><small><tt><a href="ex:37">[plava|&lt;i&gt;žuta]</a><br>→&nbsp; &lt;i&gt;Žuta plava' +
+    '<p><small><tt><a href="ex:56">[plava|&lt;i&gt;žuta]</a><br>→&nbsp; &lt;i&gt;Žuta plava' +
       '</tt></small></p>',
     '<p>Blok na početku <b>prvog</b> komada upravo je razdjeljivač kojim počinje odjeljak o' +
       ' miješanju:</p>',
-    '<p><small><tt><a href="ex:38">[&lt;i&gt;plava|žuta]</a><br>→&nbsp; Žuta i plava</tt></' +
+    '<p><small><tt><a href="ex:57">[&lt;i&gt;plava|žuta]</a><br>→&nbsp; Žuta i plava</tt></' +
       'small></p>',
     '<p>Bilo gdje nakon <code>|</code> on je običan tekst, a razdjeljivač između dva komada' +
       ' piše se na <b>kraju</b> prvog.</p>',
     '<p><b>Goli tag na kraju komada uzima se za razdjeljivač tog para</b> i ispisuje se vla' +
       'stitim tekstom:</p>',
-    '<p><small><tt><a href="ex:39">[jedan&lt;br&gt;|dva]</a><br>→&nbsp; Dva jedan</tt></sma' +
+    '<p><small><tt><a href="ex:58">[jedan&lt;br&gt;|dva]</a><br>→&nbsp; Dva jedan</tt></sma' +
       'll></p>',
     '<p>Na ovom je sjemenu par legao drugim redoslijedom, pa razdjeljivač uopće nije ispao.' +
       ' S trećim komadom ima gdje leći, i pojavljuje se:</p>',
-    '<p><small><tt><a href="ex:40">[plava|žuta&lt;br&gt;|siva]</a><br>→&nbsp; Žuta br siva ' +
+    '<p><small><tt><a href="ex:59">[plava|žuta&lt;br&gt;|siva]</a><br>→&nbsp; Žuta br siva ' +
       'plava</tt></small></p>',
     '<p><code>&lt;br&gt;</code> stoji između <code>žuta</code> i onoga što slijedi, gdje go' +
       'd miješanje taj par postavilo. Zatvoreni tag (<code>&lt;/b&gt;</code>), samozatvoreni ' +
@@ -13199,12 +13879,12 @@ const
       ' usred komada ostaju netaknuti.</p>',
     '<p><b>Nezatvoren komentar običan je tekst</b>: on ništa ne otvara, i <code>/#</code> s' +
       'e ispisuje:</p>',
-    '<p><small><tt><a href="ex:41">prije /# ostatak ovoga</a><br>→&nbsp; Prije /# ostatak o' +
+    '<p><small><tt><a href="ex:60">prije /# ostatak ovoga</a><br>→&nbsp; Prije /# ostatak o' +
       'voga</tt></small></p>',
     '<p>Ali on je i dalje polovica para. Ako se dalje u dokumentu pojavi <code>#/</code>, t' +
       'o će se dvoje pronaći i sve između njih nestat će — zajedno s onim što je autor napisa' +
       'o među njima:</p>',
-    '<p><small><tt><a href="ex:42">{a /# ups|b} sredina #/ rep</a><br>→&nbsp; {a rep</tt></' +
+    '<p><small><tt><a href="ex:61">{a /# ups|b} sredina #/ rep</a><br>→&nbsp; {a rep</tt></' +
       'small></p>',
     '<p>Izbor je gore izgubio svoju drugu varijantu i zatvorenu zagradu, i nijedna dijagnos' +
       'tika o tome ne govori: to je ono što tekst ZNAČI, a ne greška koju motor može vidjeti.' +
@@ -13268,26 +13948,26 @@ const
       't dio građe konstrukcije.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — zagrada je otvorena i nije z' +
       'atvorena</h3>',
-    '<p><small><tt><a href="ex:43">cijena {niska|visoka</a><br>→&nbsp; Cijena {niska|visoka' +
+    '<p><small><tt><a href="ex:62">cijena {niska|visoka</a><br>→&nbsp; Cijena {niska|visoka' +
       '</tt></small></p>',
     '<p>Motor ne pogađa gdje ste htjeli zatvoriti. Tekst ostaje kako jest, zajedno sa zagra' +
       'dom, i izbor se ne događa nikada.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — zatvorena je zagradom dr' +
       'uge vrste</h3>',
-    '<p><small><tt><a href="ex:44">cijena {niska|visoka]</a><br>→&nbsp; Cijena {niska|visok' +
+    '<p><small><tt><a href="ex:63">cijena {niska|visoka]</a><br>→&nbsp; Cijena {niska|visok' +
       'a]</tt></small></p>',
     '<p><code>{</code> čeka <code>}</code>, a <code>[</code> čeka <code>]</code>. Miješanje' +
       ' zatvoreno vitičastom zagradom miješanje nije.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — zatvoren' +
       'a zagrada bez otvorene</h3>',
-    '<p><small><tt><a href="ex:45">cijena niska} i to je to</a><br>→&nbsp; Cijena niska} i ' +
+    '<p><small><tt><a href="ex:64">cijena niska} i to je to</a><br>→&nbsp; Cijena niska} i ' +
       'to je to</tt></small></p>',
     '<p>Ona ostaje tekst. Najčešće je to zagrada preostala od izmjene.</p>',
     '<hr>',
     '<h2 id="definitions">Definicije</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — ovaj <code>#set</code> redak nije ' +
       'napisan po pravilu</h3>',
-    '<p><small><tt><a href="ex:46">#set grad = Zagreb</a><br><a href="ex:46">u %grad%</a><b' +
+    '<p><small><tt><a href="ex:65">#set grad = Zagreb</a><br><a href="ex:65">u %grad%</a><b' +
       'r>→&nbsp; #set grad = Zagreb ⏎ U %grad%</tt></small></p>',
     '<p><b>Ime se piše između znakova postotka:</b> <code>#set %grad% = Zagreb</code>. To j' +
       'e najčešća prva greška, i ona stavlja u ploču odmah dva retka — sam pokvaren redak i «' +
@@ -13298,7 +13978,7 @@ const
       'at.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — ovaj <code>#def</code> redak nije ' +
       'napisan po pravilu</h3>',
-    '<p><small><tt><a href="ex:47">#def stranice = {1|3}</a><br><a href="ex:47">%stranice%<' +
+    '<p><small><tt><a href="ex:66">#def stranice = {1|3}</a><br><a href="ex:66">%stranice%<' +
       '/a><br>→&nbsp; #def stranice = 1 ⏎ %stranice%</tt></small></p>',
     '<p>Isto pravilo i ista cijena. <code>#def</code> se od <code>#set</code> razlikuje ne ' +
       'po pisanju, nego po tome <b>kada</b> se vrijednost razvija: <code>#set</code> je razvi' +
@@ -13309,15 +13989,15 @@ const
       'edno sa zagradama. Pokvaren redak nije isključen; on samo prestaje biti direktiva.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — ovo je ime' +
       ' već definirano gore</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = prvo</a><br><a href="ex:48">#set %x% = drugo<' +
-      '/a><br><a href="ex:48">%x%</a><br>→&nbsp; Drugo</tt></small></p>',
+    '<p><small><tt><a href="ex:67">#set %x% = prvo</a><br><a href="ex:67">#set %x% = drugo<' +
+      '/a><br><a href="ex:67">%x%</a><br>→&nbsp; Drugo</tt></small></p>',
     '<p>Ono radi — pobjeđuje <b>posljednja</b> definicija — ali motor to naziva greškom: do' +
       'kument u kojemu je ime zadano dvaput čita se dvosmisleno, i za mjesec dana nećete se s' +
       'jetiti koji je od ta dva retka živ. Greška pokazuje na <b>drugu</b> definiciju; prva s' +
       'toji gore.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> unutar vrijednosti definicije</h3>',
-    '<p><small><tt><a href="ex:49">#def %x% = #include "frag"</a><br><a href="ex:49">%x%</a' +
+    '<p><small><tt><a href="ex:68">#def %x% = #include "frag"</a><br><a href="ex:68">%x%</a' +
       '><br>→&nbsp; Ulomak</tt></small></p>',
     '<p>Umetanje se unutar vrijednosti razvija u drugom trenutku nego što biste očekivali, ' +
       'i obitelj to zabranjuje. Stavljajte <code>#include</code> u zaseban redak.</p>',
@@ -13325,7 +14005,7 @@ const
     '<h2 id="variables">Varijable</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — ova varijabla nigdje nij' +
       'e definirana</h3>',
-    '<p><small><tt><a href="ex:50">zdravo, %name%</a><br>→&nbsp; Zdravo, %name%</tt></small' +
+    '<p><small><tt><a href="ex:69">zdravo, %name%</a><br>→&nbsp; Zdravo, %name%</tt></small' +
       '></p>',
     '<p>Upozorenje, a ne greška: motor ispisuje ime kako jest. Tako je i zamišljeno — vrije' +
       'dnost može doći izvana, od programa domaćina. U Studio se takve vrijednosti predaju na' +
@@ -13356,7 +14036,7 @@ const
     '<li><b>Ctrl+klik</b> upisuje definiciju u dokument i otvara na njoj uređivač grupa. Vr' +
       'ijednost koju ste već otipkali ulazi tamo kao prva mogućnost:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:51">#set %brand% = {Vulkan}</a><br><a href="ex:51">kasino %b' +
+    '<p><small><tt><a href="ex:70">#set %brand% = {Vulkan}</a><br><a href="ex:70">kasino %b' +
       'rand%</a><br>→&nbsp; Kasino Vulkan</tt></small></p>',
     '<p>Razlika je među njima ono što preživljava zatvaranje prozora. Vrijednost sesije ne ' +
       'preživljava: nema je ni u datoteci ni u gitu, i nijedan je drugi motor obitelji ne vid' +
@@ -13369,7 +14049,7 @@ const
       'vitičaste zagrade i postoci ostaju znaci.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — definicija upu' +
       'ćuje sama na sebe</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:71">#set %x% = a %x% b</a><br><a href="ex:71">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Pedeset razina, potom zaustavljanje. Motor razvija do granice dubine i staje, ostav' +
       'ljajući <code>%x%</code> u sredini. To nije krug, i nije ono što ste htjeli.</p>',
@@ -13378,8 +14058,8 @@ const
       'a staje i ostavlja vrijednost kako jest, a u vrijednosti je svakog po jedno više.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — defini' +
       'cije upućuju u krug</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = %y%</a><br><a href="ex:53">#set %y% = %x%</a>' +
-      '<br><a href="ex:53">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %x% = %y%</a><br><a href="ex:72">#set %y% = %x%</a>' +
+      '<br><a href="ex:72">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Svaka se strana razvija točno <b>jednom</b> i staje: <code>%x%</code> je postao <co' +
       'de>%y%</code>, a ne <code>%x%</code>. Motor odmotava krug, a ne hoda po njemu, i preži' +
       'vljava drugo ime iz kruga — stavite u dokument <code>%x% %y%</code> i on će dati <code' +
@@ -13398,16 +14078,16 @@ const
     '<hr>',
     '<h2 id="includes">Umetanja</h2>',
     '<h3 id="includes-0"><code>#include</code> radi samo s početka retka</h3>',
-    '<p><small><tt><a href="ex:54">prije #include "frag" poslije</a><br>→&nbsp; Prije #incl' +
+    '<p><small><tt><a href="ex:73">prije #include "frag" poslije</a><br>→&nbsp; Prije #incl' +
       'ude "frag" poslije</tt></small></p>',
-    '<p><small><tt><a href="ex:55">#include "frag"</a><br>→&nbsp; Ulomak</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#include "frag"</a><br>→&nbsp; Ulomak</tt></small></p>',
     '<p>Nijedna dijagnostika, i u tome je cijela poanta: <code>#include</code> usred retka ' +
       'umetanje <b>nije</b>. Motor ga čita kao običan tekst i ništa ne kaže, jer nema na što ' +
       'se žaliti — napisali ste tekst i dobili tekst.</p>',
     '<p><b>A cilj ipak može stajati redak niže</b>, i to iznenađuje s druge strane. Razmak ' +
       'koji motor dopušta između riječi i cilja uključuje prelome redaka, pa je to jedno umet' +
       'anje, i ono radi:</p>',
-    '<p><small><tt><a href="ex:56">#include</a><br><a href="ex:56">"frag"</a><br>→&nbsp; Ul' +
+    '<p><small><tt><a href="ex:75">#include</a><br><a href="ex:75">"frag"</a><br>→&nbsp; Ul' +
       'omak</tt></small></p>',
     '<p>Prazni su redci između njih također dopušteni. Nije dopušteno sve ostalo: riječ isp' +
       'red cilja ili bilo što osim razmaka iza njega — i sve ponovno postaje tekst. Uređivač ' +
@@ -13415,7 +14095,7 @@ const
       ': on ne obećava direktivu čiji kraj još ne vidi.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — takvog cilja u s' +
       'kupu nema</h3>',
-    '<p><small><tt><a href="ex:57">#include "nema"</a><br>→&nbsp; (prazno)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "nema"</a><br>→&nbsp; (prazno)</tt></small></p>',
     '<p>Ciljevi su <code>.spintax</code> datoteke u mapi otvorenog dokumenta. Nepoznat se c' +
       'ilj razvija u ništa: odlomak nestaje, a ne puca, i upravo je zato to tako lako previdj' +
       'eti.</p>',
@@ -13430,7 +14110,7 @@ const
       'e pojavljuje samo onda kada mapa postoji, a datoteke u njoj stvarno nema.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — cilj postoji, ali u drug' +
       'oj veličini slova</h3>',
-    '<p><small><tt><a href="ex:58">#include "intro"</a><br>→&nbsp; (prazno)</tt></small></p' +
+    '<p><small><tt><a href="ex:77">#include "intro"</a><br>→&nbsp; (prazno)</tt></small></p' +
       '>',
     '<p>Skup sadrži <code>Intro.spintax</code> — a motor svejedno kaže da takvog cilja nema' +
       ', dok Studio dodaje svoju napomenu o veličini slova. Veličina je slova važna: <code>in' +
@@ -13439,7 +14119,7 @@ const
       'led proturječio poslužitelju o istom dokumentu.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — umetanje u krug</h3>',
     '<p>Ako <code>loop.spintax</code> i sam sadrži <code>#include "loop"</code>, onda:</p>',
-    '<p><small><tt><a href="ex:59">#include "loop"</a><br>→&nbsp; (prazno)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "loop"</a><br>→&nbsp; (prazno)</tt></small></p>',
     '<p>Motor podmeće prazninu umjesto beskonačnosti. Napomena je potrebna da biste razumje' +
       'li zašto je odlomak nestao.</p>',
     '<p>Redak je ispisan na <b><code>loop</code></b>, a ne na dokument u koji gledate: krug' +
@@ -13449,18 +14129,21 @@ const
     '<h2 id="plurals">Oblici množine</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — oblika nema onoliko koliko lokal zah' +
       'tijeva</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = 5</a><br><a href="ex:60">%n% {plural %n%: obj' +
+    '<p><small><tt><a href="ex:79">#set %n% = 5</a><br><a href="ex:79">%n% {plural %n%: obj' +
       'ekt|objekta}</a><br>→&nbsp; 5 ｛plural 5: objekt|objekta｝</tt></small></p>',
     '<p><b>Nije praznina — motor ispisuje cijelu konstrukciju</b>, zamijenivši zagrade širo' +
       'kima <code>｛｝</code>. Tako on kaže «ovo sam vidio i nisam mogao primijeniti». Neprimje' +
       'tnim to nitko neće nazvati, i to je dobro: odlomak koji je nestao šutke tražio bi se d' +
       'ulje.</p>',
-    '<p>Hrvatskom trebaju tri oblika, engleskom — dva. Pod lokalom ovog dokumenta ispravno ' +
-      'je <code>{plural %n%: objekt|objekta|objekata}</code>.</p>',
+    '<p>Hrvatskom trebaju tri oblika, engleskom — dva, arapskom — šest. Pod lokalom ovog do' +
+      'kumenta ispravno je <code>{plural %n%: objekt|objekta|objekata}</code>. Pod <code>ar</' +
+      'code> su dva oblika također greška:</p>',
+    '<p><small><tt><a href="ex:80">#def %n% = 5</a><br><a href="ex:80">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Praznina nastaje iz drugog razloga, i ta se dva lako pomiješaju.</b> Usporedite ' +
       'ova dva, koja se razlikuju samo po broju oblika:</p>',
-    '<p><small><tt><a href="ex:61">{plural %n%: objekt|objekta|objekata}</a><br>→&nbsp; (pr' +
-      'azno)&nbsp;&nbsp; tri oblika: ispravno za hrvatski<br><a href="ex:62">{plural %n%: obj' +
+    '<p><small><tt><a href="ex:81">{plural %n%: objekt|objekta|objekata}</a><br>→&nbsp; (pr' +
+      'azno)&nbsp;&nbsp; tri oblika: ispravno za hrvatski<br><a href="ex:82">{plural %n%: obj' +
       'ekt|objekta}</a><br>→&nbsp; (prazno)&nbsp;&nbsp; dva oblika: neispravno za hrvatski</t' +
       't></small></p>',
     '<p>Oba ne ispisuju ništa, a ploča se prema njima odnosi drukčije: prvi povlači samo <c' +
@@ -13478,7 +14161,7 @@ const
       'roj oblika zaista radi.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — brojač uzima vrijednost ' +
       'iz <code>#set</code>-a, a taj izvlači iznova pri svakom spomenu</h3>',
-    '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#set %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' objekt|objekta|objekata}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Pogledajte što je preživjelo: <b>broj je ispisan, a imenica nije.</b> Brojač mora b' +
       'iti broj u trenutku kada se bira oblik, a <code>#set</code> čija je vrijednost i sama ' +
@@ -13487,13 +14170,13 @@ const
       'turječiti jedan drugome; motor umjesto toga ispušta riječ.</p>',
     '<p><code>#def</code> se ponaša drukčije i razvija svoju vrijednost jednom po odigravan' +
       'ju, pa mjesto brojača dobiva broj:</p>',
-    '<p><small><tt><a href="ex:64">#def %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#def %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' objekt|objekta|objekata}</a><br>→&nbsp; 1 objekt</tt></small></p>',
     '<p>Za to u ploči nema nijednog retka. Otuda i pravilo: radite brojač jednostavnim broj' +
       'em ili <code>#def</code>-om, nikada <code>#set</code>-om.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — zagrade unutar o' +
       'blika</h3>',
-    '<p><small><tt><a href="ex:65">{plural %n%: {objekt|stvar}|objekta|objekata}</a><br>→&n' +
+    '<p><small><tt><a href="ex:85">{plural %n%: {objekt|stvar}|objekta|objekata}</a><br>→&n' +
       'bsp; ｛plural %n%: ｛objekt|stvar｝|objekta|objekata｝</tt></small></p>',
     '<p>Oblici su prost tekst. Izbor se unutar njih ne razvija, i umjesto toga se cijela ko' +
       'nstrukcija ispisuje u širokim zagradama.</p>',
@@ -13501,27 +14184,27 @@ const
     '<h2 id="permutations">Miješanje</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — nepoznat ključ' +
       ' u postavci</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:86">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Poznati su ključevi <code>minsize</code>, <code>maxsize</code>, <code>sep</code> i ' +
       '<code>lastsep</code>. Nepoznat postavka nije, i kada je on u bloku jedini, cijeli blok' +
       ' uopće nije postavka: on postaje razdjeljivač između komada, što izlaz i pokazuje.</p>',
     '<p><b>Ako pored stoji pravi ključ, izlaz je sasvim drukčiji</b> — i to je vjerojatnija' +
       ' greška: jedan je ključ od nekoliko otipkan pogrešno:</p>',
-    '<p><small><tt><a href="ex:67">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:87">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Blok ostaje postavka, <code>sep</code> se izvršava, nepoznat se ključ prosto odbacu' +
       'je, a ploča u oba slučaja kaže jedno te isto. Dakle, dijagnostika javlja da ključ nije' +
       ' shvaćen; ona ne javlja što se dalje dogodilo. O tome čitajte izlaz.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minimum nije zadan cijelim brojem</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;minsize=dva&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:88">[&lt;minsize=dva&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Nebrojčana vrijednost otpada zajedno sa svojom granicom, i vrijedi uobičajeno — dak' +
       'le svi komadi.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maksimum nije zadan cijelim brojem</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;maxsize=mnogo&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
+    '<p><small><tt><a href="ex:89">[&lt;maxsize=mnogo&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
       'small></p>',
     '<p>Točno isto s drugog kraja: gornja granica nestaje, i izlaz opet sadrži svaki komad.' +
       '</p>',
@@ -13558,8 +14241,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Tišina koju susreću svi: kratice</h2>',
     '<h3 id="abbreviations-0">Kratica ostavlja sljedeću riječ malom</h3>',
-    '<p><small><tt><a href="ex:70">dr. Marić naše cijene su niske</a><br>→&nbsp; dr. Marić ' +
-      'naše cijene su niske<br><a href="ex:71">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. ' +
+    '<p><small><tt><a href="ex:90">dr. Marić naše cijene su niske</a><br>→&nbsp; dr. Marić ' +
+      'naše cijene su niske<br><a href="ex:91">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. ' +
       'Naše cijene su niske</tt></small></p>',
     '<p>Dva retka koja se razlikuju u jednoj riječi, i druga riječ svakog daje vam pravilo:' +
       ' nakon <code>dr.</code> rečenica ostaje mala, nakon <code>Xxx.</code> — velikim slovom' +
@@ -13586,15 +14269,15 @@ const
       'irilična nije.</p>',
     '<hr>',
     '<h2 id="correct">Kako izgleda ispravno</h2>',
-    '<p><small><tt><a href="ex:72">cijena {niska|visoka}</a><br>→&nbsp; Cijena niska</tt></' +
+    '<p><small><tt><a href="ex:92">cijena {niska|visoka}</a><br>→&nbsp; Cijena niska</tt></' +
       'small></p>',
-    '<p><small><tt><a href="ex:73">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:93">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">#set %vip% = 1</a><br><a href="ex:74">{?vip?za vas|za sv' +
+    '<p><small><tt><a href="ex:94">#set %vip% = 1</a><br><a href="ex:94">{?vip?za vas|za sv' +
       'e}</a><br>→&nbsp; Za vas</tt></small></p>',
-    '<p><small><tt><a href="ex:75">#set %n% = 5</a><br><a href="ex:75">%n% {plural %n%: art' +
+    '<p><small><tt><a href="ex:95">#set %n% = 5</a><br><a href="ex:95">%n% {plural %n%: art' +
       'ikl|artikla|artikala}</a><br>→&nbsp; 5 artikala</tt></small></p>',
-    '<p><small><tt><a href="ex:76">prije /# bilješka #/ poslije</a><br>→&nbsp; Prije poslij' +
+    '<p><small><tt><a href="ex:96">prije /# bilješka #/ poslije</a><br>→&nbsp; Prije poslij' +
       'e</tt></small></p>',
     '<p>Pet konstrukcija, pet čistih redaka: izbor, miješanje s postavkama, uvjet, oblik mn' +
       'ožine s brojem ispred njega i komentar. Nijedna ne stavlja u ploču ništa.</p>',
@@ -13608,7 +14291,7 @@ const
     '<p><b>Zašto moja varijabla s kvačicom u imenu ne radi?</b> Imena su varijabli samo ASC' +
       'II latinica. <code>%šifra%</code> motoru uopće nije spomen varijable: on ga ispisuje k' +
       'ao tekst i <b>ne izdaje nijednu dijagnostiku</b>:</p>',
-    '<p><small><tt><a href="ex:77">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
+    '<p><small><tt><a href="ex:97">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
       'll></p>',
     '<p>Usporedite s <code>%sifra%</code>, koje redak u ploči ipak povlači. Šutljivo je baš' +
       ' prvo — ništa vam neće reći da se ono nikada neće podmetnuti. A <code>#set %šifra% = t' +
@@ -13892,7 +14575,10 @@ const
       'i polje za broj, a pregled će stajati dok radite.</p>',
     '<p><code>locale</code> rješava oblike množine, i to je prebacivač iznad desne polovine' +
       ', a ne jezik sučelja. Bosanskom, hrvatskom, srpskom, ruskom, ukrajinskom i bjeloruskom' +
-      ' trebaju tri oblika; engleskom — dva.</p>',
+      ' trebaju tri oblika; engleskom — dva; arapskom — šest. Pod arapskim i hebrejskim lokal' +
+      'om on još rješava kako se veznik pridružuje u spisku (vidi razdjeljivač). Arapski i he' +
+      'brejski primjeri ispod izmjereni su pod vlastitim lokalom — imenuje ga rečenica ispred' +
+      ' svakog od njih.</p>',
     '<h2 id="choices">Izbor</h2>',
     '<p>Vitičaste zagrade s <code>|</code> između: motor uzima <b>jedan</b>.</p>',
     '<p><small><tt><a href="ex:1">{Mala|Velika} soba.</a><br>→&nbsp; Mala soba.</tt></small' +
@@ -13942,36 +14628,64 @@ const
       'nbsp; Žuta, siva i plava</tt></small></p>',
     '<p><code>sep</code> ide između komada, a <code>lastsep</code> — ispred posljednjeg.</p' +
       '>',
+    '<p>Razdjeljivač samo od slova dobija po razmak sa svake strane, čak i kad ih niste uku' +
+      'cali:</p>',
+    '<p><small><tt><a href="ex:9">[&lt;lastsep="i"&gt;A|B]</a><br>→&nbsp; B i A</tt></small' +
+      '></p>',
+    '<p>Izuzetak su pisma u kojima se riječi ne odvajaju razmacima, i to pod bilo kojim lok' +
+      'alom: kineski, japanski, tajlandski, laoski, kmerski i burmanski razdjeljivači pišu se' +
+      ' spojeno.</p>',
+    '<p><small><tt><a href="ex:10">[&lt;lastsep="和"&gt;A|B]</a><br>→&nbsp; B和A<br><a href="' +
+      'ex:11">[&lt;lastsep="と"&gt;A|B]</a><br>→&nbsp; BとA<br><a href="ex:12">[&lt;lastsep="แล' +
+      'ะ"&gt;A|B]</a><br>→&nbsp; BและA<br><a href="ex:13">[&lt;lastsep="ແລະ"&gt;A|B]</a><br>→' +
+      '&nbsp; BແລະA<br><a href="ex:14">[&lt;lastsep="ក"&gt;A|B]</a><br>→&nbsp; BកA<br><a href' +
+      '="ex:15">[&lt;lastsep="က"&gt;A|B]</a><br>→&nbsp; BကA</tt></small></p>',
+    '<p>Arapski i hebrejski imaju svoje pravilo, i uključuje ga <b>lokal</b>, a ne pismo. P' +
+      'od <code>ar</code> razdjeljivač koji se sastoji tačno od و ili ف zadržava razmak ispre' +
+      'd sebe i gubi razmak poslije: na arapskom se veznik piše spojeno sa sljedećom riječju.' +
+      ' Pod <code>he</code> isto to radi ו. Samo ispred riječi u istom pismu — ispred latinič' +
+      'nog naziva ili cifre oba razmaka ostaju:</p>',
+    '<p><small><tt><a href="ex:16">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;والكازينو<br><a href="ex:17">[&lt;lastsep="و"&gt;Evolution|الكازينو]</a><br>→&nbsp' +
+      '; الكازينو&nbsp;و Evolution<br><a href="ex:18">[&lt;lastsep="ف"&gt;الكازينو|البث]</a><' +
+      'br>→&nbsp; البث&nbsp;فالكازينو<br><a href="ex:19">[&lt;lastsep="و"&gt;2026|البث]</a><b' +
+      'r>→&nbsp; البث&nbsp;و&nbsp;2026</tt></small></p>',
+    '<p><small><tt><a href="ex:20">[&lt;lastsep="ו"&gt;קזינו|שידור]</a><br>→&nbsp; שידור&nb' +
+      'sp;וקזינו</tt></small></p>',
+    '<p>Pod bilo kojim drugim lokalom veznik ostaje zasebna riječ — tako i treba za perzijs' +
+      'ki i urdu, gdje se isto slovo piše odvojeno:</p>',
+    '<p><small><tt><a href="ex:21">[&lt;lastsep="و"&gt;الكازينو|البث]</a><br>→&nbsp; البث&n' +
+      'bsp;و&nbsp;الكازينو</tt></small></p>',
     '<h3 id="shuffles-1">Koliko uzeti</h3>',
-    '<p><small><tt><a href="ex:9">[&lt;minsize=2;maxsize=2&gt;plava|žuta|siva]</a><br>→&nbs' +
-      'p; Žuta siva</tt></small></p>',
+    '<p><small><tt><a href="ex:22">[&lt;minsize=2;maxsize=2&gt;plava|žuta|siva]</a><br>→&nb' +
+      'sp; Žuta siva</tt></small></p>',
     '<p><code>minsize</code> je donja granica, <code>maxsize</code> gornja; broj je između ' +
       'njih slučajan, kao i redoslijed. Jednake vrijednosti uzimaju tačno toliko. <b>Bez oba ' +
       '— sve, ali sa samo <code>maxsize</code> donja je granica jedan</b>, i to iznenađuje:</' +
       'p>',
-    '<p><small><tt><a href="ex:10">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
+    '<p><small><tt><a href="ex:23">[&lt;maxsize=3&gt;a|b|c]</a><br>→&nbsp; C</tt></small></' +
       'p>',
     '<p>Tri komada, plafon tri, a ispao je jedan. Kada se misli «sve, ali ne više od tri», ' +
       'pišite i <code>minsize</code>. <code>maxsize</code> veći od broja komada tiho se smanj' +
       'uje na njega. <code>minsize</code> veći od <code>maxsize</code> prihvata se bez ijedne' +
       ' riječi, i pobjeđuje donja granica: plafon se podiže do nje, a ne obrnuto:</p>',
-    '<p><small><tt><a href="ex:11">[&lt;minsize=3;maxsize=1&gt;plava|žuta|siva]</a><br>→&nb' +
+    '<p><small><tt><a href="ex:24">[&lt;minsize=3;maxsize=1&gt;plava|žuta|siva]</a><br>→&nb' +
       'sp; Žuta siva plava</tt></small></p>',
     '<h3 id="shuffles-2">Razdjeljivač između dva komada</h3>',
     '<p><code>&lt;…&gt;</code> napisan <b>između</b> dva komada razdjeljivač je tog para.</' +
       'p>',
-    '<p><small><tt><a href="ex:12">[plava|žuta&lt;i&gt;|siva]</a><br>→&nbsp; Žuta i siva pl' +
+    '<p><small><tt><a href="ex:25">[plava|žuta&lt;i&gt;|siva]</a><br>→&nbsp; Žuta i siva pl' +
       'ava</tt></small></p>',
     '<p>On pripada komadu <b>poslije</b> sebe i putuje s njim kroz miješanje, pa iskrsne ta' +
       'mo gdje taj komad legne, a ne na stalnom mjestu izlaza. <code>&lt;…&gt;</code> poslije' +
       ' <b>posljednjeg</b> komada uopće nije razdjeljivač i ispisuje se kao tekst:</p>',
-    '<p><small><tt><a href="ex:13">[plava|žuta|siva&lt;i&gt;]</a><br>→&nbsp; Žuta siva&lt;i' +
+    '<p><small><tt><a href="ex:26">[plava|žuta|siva&lt;i&gt;]</a><br>→&nbsp; Žuta siva&lt;i' +
       '&gt; plava</tt></small></p>',
     '<h2 id="macros">Makroi</h2>',
     '<p><code>#set</code> daje ime komadu teksta. Ime se koristi kao <code>%name%</code>, i' +
       ' direktiva mora biti prva u svom redu — razmaci i tabulatori ispred nje dozvoljeni su,' +
       ' ništa više.</p>',
-    '<p><small><tt><a href="ex:14">#set %grad% = Sarajevo</a><br><a href="ex:14">Grad: %gra' +
+    '<p><small><tt><a href="ex:27">#set %grad% = Sarajevo</a><br><a href="ex:27">Grad: %gra' +
       'd%.</a><br>→&nbsp; Grad: Sarajevo.</tt></small></p>',
     '<p>Imena se sastoje od latiničnih slova, cifara i <code>_</code>. Slovo s kvačicom slo' +
       'vom se ovdje ne smatra: <code>%šifra%</code> nije ime i motor o tome ne kaže ništa — o' +
@@ -13979,9 +14693,9 @@ const
     '<h3 id="macros-0"><code>#set</code> izvlači iznova, <code>#def</code> izvlači jednom</' +
       'h3>',
     '<p>To je sva razlika među njima, i vidi se samo onda kada vrijednost sadrži izbor.</p>',
-    '<p><small><tt><a href="ex:15">#set %izbor% = {A|B}</a><br><a href="ex:15">%izbor% %izb' +
+    '<p><small><tt><a href="ex:28">#set %izbor% = {A|B}</a><br><a href="ex:28">%izbor% %izb' +
       'or% %izbor%</a><br>→&nbsp; A A B</tt></small></p>',
-    '<p><small><tt><a href="ex:16">#def %izbor% = {A|B}</a><br><a href="ex:16">%izbor% %izb' +
+    '<p><small><tt><a href="ex:29">#def %izbor% = {A|B}</a><br><a href="ex:29">%izbor% %izb' +
       'or% %izbor%</a><br>→&nbsp; A A A</tt></small></p>',
     '<p>Oba su primjera trčala pod istim sjemenom. <code>#set</code> čuva šablon i izvlači ' +
       'ga pri svakom pominjanju; <code>#def</code> izvlači jednom i drži odgovor. Uzimajte <c' +
@@ -13992,11 +14706,11 @@ const
       'nego što iz jednog pregleda zaključite da definicija ne radi.</p>',
     '<h2 id="conditions">Uvjeti</h2>',
     '<p><code>{?name?onda|inače}</code> pita ima li makro vrijednost.</p>',
-    '<p><small><tt><a href="ex:17">#set %n% = 5</a><br><a href="ex:17">{?n?imamo %n%|još ni' +
+    '<p><small><tt><a href="ex:30">#set %n% = 5</a><br><a href="ex:30">{?n?imamo %n%|još ni' +
       'šta}</a><br>→&nbsp; Imamo 5</tt></small></p>',
     '<p>Polovina <code>inače</code> može se izostaviti — <code>{?name?onda}</code> ne ispis' +
       'uje ništa kada je odgovor «ne». <code>!</code> preokreće pitanje:</p>',
-    '<p><small><tt><a href="ex:18">#set %vip% = 1</a><br><a href="ex:18">{?!vip?stranac|pri' +
+    '<p><small><tt><a href="ex:31">#set %vip% = 1</a><br><a href="ex:31">{?!vip?stranac|pri' +
       'jatelj}</a><br>→&nbsp; Prijatelj</tt></small></p>',
     '<p>Imati vrijednost znači imati <b>barem jedan znak koji nije razmak</b>. Makro postav' +
       'ljen na ništa ili samo na razmake smatra se bez vrijednosti.</p>',
@@ -14004,11 +14718,11 @@ const
       'makroa — a odjeljak o tišini kaže u šta se pretvara ime koje počinje cifrom.</p>',
     '<h2 id="counting">Brojanje</h2>',
     '<p><code>{plural %n%: …}</code> uzima oblik riječi koji odgovara broju.</p>',
-    '<p><small><tt><a href="ex:19">#def %n% = 1</a><br><a href="ex:19">%n% {plural %n%: dok' +
+    '<p><small><tt><a href="ex:32">#def %n% = 1</a><br><a href="ex:32">%n% {plural %n%: dok' +
       'ument|dokumenta|dokumenata}</a><br>→&nbsp; 1 dokument</tt></small></p>',
-    '<p><small><tt><a href="ex:20">#def %n% = 2</a><br><a href="ex:20">%n% {plural %n%: dok' +
+    '<p><small><tt><a href="ex:33">#def %n% = 2</a><br><a href="ex:33">%n% {plural %n%: dok' +
       'ument|dokumenta|dokumenata}</a><br>→&nbsp; 2 dokumenta</tt></small></p>',
-    '<p><small><tt><a href="ex:21">#def %n% = 5</a><br><a href="ex:21">%n% {plural %n%: dok' +
+    '<p><small><tt><a href="ex:34">#def %n% = 5</a><br><a href="ex:34">%n% {plural %n%: dok' +
       'ument|dokumenta|dokumenata}</a><br>→&nbsp; 5 dokumenata</tt></small></p>',
     '<p>Brojač je ovdje namjerno <code>#def</code>, a ne <code>#set</code>, i pravilo vrije' +
       'di zapamtiti: <b>pravite brojač jednostavnim brojem ili <code>#def</code>-om, nikada <' +
@@ -14016,16 +14730,34 @@ const
       'EKST, <code>{5|5}</code>, a ne <code>5</code> — dakle ne broj — pa cijela konstrukcija' +
       ' ne daje ništa, a ploča kaže <code>plural.count-macro</code>. Brojač i oblik ne mogu p' +
       'rotivrječiti jedan drugom: umjesto toga nestaje riječ.</p>',
-    '<p><small><tt><a href="ex:22">#set %n% = {5|5}</a><br><a href="ex:22">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:35">#set %n% = {5|5}</a><br><a href="ex:35">%n% {plural %n%:' +
       ' dokument|dokumenta|dokumenata}</a><br>→&nbsp; 5</tt></small></p>',
     '<p>Koliko oblika, rješava lokal, a ne vi: pod <code>bs</code> ih je tri, pod <code>en<' +
-      '/code> — dva. Pogrešan je broj greška o kojoj ploča javlja (<code>plural.arity</code>)' +
-      ', i motor tada ispisuje cijelu konstrukciju nazad, zamijenivši zagrade širokim <code>｛' +
-      '｝</code> da se ne pomiješa s izlazom.</p>',
+      '/code> — dva, pod <code>ar</code> — šest, redom zero, one, two, few, many, other. Na a' +
+      'rapskom se «jedna knjiga» i «dvije knjige» kažu bez broja, pa se broj stavlja <b>unuta' +
+      'r</b> onih oblika koji ga ispisuju, a ne ispred bloka:</p>',
+    '<p><small><tt><a href="ex:36">#def %n% = 3</a><br><a href="ex:36">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;3&nbsp;كتب.</tt></small></p>',
+    '<p><small><tt><a href="ex:37">#def %n% = 2</a><br><a href="ex:37">في&nbsp;سلتك {plural' +
+      ' %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&n' +
+      'bsp;سلتك&nbsp;كتابان.<br><br><a href="ex:38">#def %n% = 0</a><br><a href="ex:38">في&nb' +
+      'sp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><' +
+      'br>→&nbsp; في&nbsp;سلتك&nbsp;0&nbsp;كتاب.<br><br><a href="ex:39">#def %n% = 1</a><br><' +
+      'a href="ex:39">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كت' +
+      'ابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;كتاب&nbsp;واحد.<br><br><a href="ex:40' +
+      '">#def %n% = 11</a><br><a href="ex:40">في&nbsp;سلتك {plural %n%: %n% كتاب|كتاب&nbsp;وا' +
+      'حد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbsp;سلتك&nbsp;11&nbsp;كتابً' +
+      'ا.<br><br><a href="ex:41">#def %n% = 100</a><br><a href="ex:41">في&nbsp;سلتك {plural %' +
+      'n%: %n% كتاب|كتاب&nbsp;واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.</a><br>→&nbsp; في&nbs' +
+      'p;سلتك&nbsp;100&nbsp;كتاب.</tt></small></p>',
+    '<p>Pogrešan je broj greška o kojoj ploča javlja (<code>plural.arity</code>), i motor t' +
+      'ada ispisuje cijelu konstrukciju nazad, zamijenivši zagrade širokim <code>｛｝</code> da' +
+      ' se ne pomiješa s izlazom.</p>',
     '<h2 id="fragments">Odlomci</h2>',
     '<p><code>#include "name"</code> stavlja na to mjesto drugi šablon, i direktiva mora bi' +
       'ti prva u svom redu — i ovdje su razmaci i tabulatori ispred nje dozvoljeni.</p>',
-    '<p><small><tt><a href="ex:23">#include "intro"</a><br>→&nbsp; Dobro došli u Acme.</tt>' +
+    '<p><small><tt><a href="ex:42">#include "intro"</a><br>→&nbsp; Dobro došli u Acme.</tt>' +
       '</small></p>',
     '<p>Odlomak se odigrava kao vlastiti šablon, pa se izbor unutar njega pravi iznova: <co' +
       'de>intro</code> sadrži <code>{Acme|Globex}</code> i odgovara jednim ili drugim.</p>',
@@ -14037,7 +14769,7 @@ const
     '<h3 id="fragments-0">Odlomak ne vidi vaše makroe</h3>',
     '<p>On se odigrava kao vlastiti šablon: ima vrijednosti sesije, ali ne i <code>#set</co' +
       'de> i <code>#def</code> dokumenta koji ga je unio.</p>',
-    '<p><small><tt><a href="ex:24">#set %brand% = Acme</a><br><a href="ex:24">#include "sho' +
+    '<p><small><tt><a href="ex:43">#set %brand% = Acme</a><br><a href="ex:43">#include "sho' +
       'ut"</a><br>→&nbsp; %brand% je ovdje.</tt></small></p>',
     '<p><code>shout</code> je <code>%brand% je ovdje.</code>, i ime mora biti definisano u ' +
       'samom odlomku. To nije tišina — ploča ipak kaže <code>variable.undefined</code> — ali ' +
@@ -14048,7 +14780,7 @@ const
     '<h2 id="remarks">Komentari</h2>',
     '<p><code>/# … #/</code> je komentar: sve između oznaka uklanja se prije svega ostalog.' +
       '</p>',
-    '<p><small><tt><a href="ex:25">nacrt /# nisam siguran #/ gotovo</a><br>→&nbsp; Nacrt go' +
+    '<p><small><tt><a href="ex:44">nacrt /# nisam siguran #/ gotovo</a><br>→&nbsp; Nacrt go' +
       'tovo</tt></small></p>',
     '<p>Komentari se ne ugnježđuju. Prvi <code>#/</code> zatvara komentar, šta god bilo pri' +
       'je njega, pa se komentar omotan oko teksta koji i sam sadrži <code>#/</code> završava ' +
@@ -14057,21 +14789,21 @@ const
     '<p>Izlaz nije baš onaj tekst koji su dale konstrukcije. Na kraju mu se desi nekoliko s' +
       'tvari; dvije srećete svakodnevno.</p>',
     '<p>Prvo slovo svake rečenice postaje veliko:</p>',
-    '<p><small><tt><a href="ex:26">jedan. dva. tri.</a><br>→&nbsp; Jedan. Dva. Tri.</tt></s' +
+    '<p><small><tt><a href="ex:45">jedan. dva. tri.</a><br>→&nbsp; Jedan. Dva. Tri.</tt></s' +
       'mall></p>',
     '<p>Zbog toga primjeri u ovoj pomoći tako često odgovaraju velikim slovom tamo gdje je ' +
       'u šablonu malo. Tačka nakon skraćenice koju motor zna ne završava rečenicu, i za bosan' +
       'ski su to upravo titule — <code>dr.</code>, <code>prof.</code> i <code>mr.</code> svi ' +
       'su na latiničnoj polovini spiska:</p>',
-    '<p><small><tt><a href="ex:27">dr. Hodžić naše cijene su niske</a><br>→&nbsp; dr. Hodži' +
+    '<p><small><tt><a href="ex:46">dr. Hodžić naše cijene su niske</a><br>→&nbsp; dr. Hodži' +
       'ć naše cijene su niske</tt></small></p>',
     '<p>Isto tako rečenicu ne završava ni skraćenica od više tačaka, pa <code>d.o.o.</code>' +
       ' prolazi cijelo:</p>',
-    '<p><small><tt><a href="ex:28">Acme d.o.o. naše cijene su niske</a><br>→&nbsp; Acme d.o' +
+    '<p><small><tt><a href="ex:47">Acme d.o.o. naše cijene su niske</a><br>→&nbsp; Acme d.o' +
       '.o. naše cijene su niske</tt></small></p>',
     '<p>Svaka druga riječ završava rečenicu, ma koliko kratka bila — dužina tu nema nikakve' +
       ' veze:</p>',
-    '<p><small><tt><a href="ex:29">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. Naše cijen' +
+    '<p><small><tt><a href="ex:48">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx. Naše cijen' +
       'e su niske</tt></small></p>',
     '<p>Spisak koji motor zna ima 46 unosa, <b>29 ćiriličnih</b>, i drugi dokument prolazi ' +
       'kroz njega pod naslovom <b>Tišina koju sreću svi</b>. Za bosanski tekst najvažnije je ' +
@@ -14087,10 +14819,10 @@ const
       'com — <code>jedan.dva</code> i <code>сайт.рф</code> prolaze jednako. Zbog toga i dvije' +
       ' riječi spojene tačkom prolaze netaknute — motor u njima vidi domen, a zaklonjen počet' +
       'ak za veliko slovo nije početak rečenice:</p>',
-    '<p><small><tt><a href="ex:30">zdravo , svijete</a><br>→&nbsp; Zdravo, svijete</tt></sm' +
+    '<p><small><tt><a href="ex:49">zdravo , svijete</a><br>→&nbsp; Zdravo, svijete</tt></sm' +
       'all></p>',
-    '<p><small><tt><a href="ex:31">jedan.dva</a><br>→&nbsp; jedan.dva</tt></small></p>',
-    '<p><small><tt><a href="ex:32">сайт.рф наши цены низкие</a><br>→&nbsp; сайт.рф наши цен' +
+    '<p><small><tt><a href="ex:50">jedan.dva</a><br>→&nbsp; jedan.dva</tt></small></p>',
+    '<p><small><tt><a href="ex:51">сайт.рф наши цены низкие</a><br>→&nbsp; сайт.рф наши цен' +
       'ы низкие</tt></small></p>',
     '<h2 id="silences">Tišina</h2>',
     '<p>Svaki se slučaj ispod odigrava, daje nešto drugo od onoga što izgleda, i ne povlači' +
@@ -14102,11 +14834,11 @@ const
       ' <code>sl.</code>, <code>g.</code>, <code>ul.</code>, <code>str.</code> i <code>tel.</' +
       'code> nisu, i svaki od njih završava rečenicu i sljedeću riječ piše velikim slovom:</p' +
       '>',
-    '<p><small><tt><a href="ex:33">npr. naše cijene su niske</a><br>→&nbsp; Npr. Naše cijen' +
+    '<p><small><tt><a href="ex:52">npr. naše cijene su niske</a><br>→&nbsp; Npr. Naše cijen' +
       'e su niske</tt></small></p>',
     '<p><b>Slovo s kvačicom u imenu varijable slovom se ne smatra.</b> <code>%šifra%</code>' +
       ' motoru uopće nije pominjanje varijable: on ga ispisuje kao tekst i ne kaže ništa:</p>',
-    '<p><small><tt><a href="ex:34">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
+    '<p><small><tt><a href="ex:53">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
       'll></p>',
     '<p>Razlog NIJE isti kao gore, i to vrijedi razdvojiti. Gore je bio popis -- koje riječ' +
       'i motor zna. Ovdje je pravilo o IMENIMA: reference varijabli motor čita ASCII slovima,' +
@@ -14114,31 +14846,31 @@ const
       'o što se išta odigra, pa dotjerivanje s tim nema veze. U vrijednosti su kvačice sasvim' +
       ' na mjestu; u imenu ne rade uopće.</p>',
     '<p><b><code>#include</code> koji ne stoji sam u svom redu običan je tekst.</b></p>',
-    '<p><small><tt><a href="ex:35">Prije. #include "intro"</a><br>→&nbsp; Prije. #include "' +
+    '<p><small><tt><a href="ex:54">Prije. #include "intro"</a><br>→&nbsp; Prije. #include "' +
       'intro"</tt></small></p>',
     '<p>Isto vrijedi za direktivu s nečim iza nje i za <code>#include"intro"</code> bez raz' +
       'maka. Pravilo pripada porodici, a ne ovom motoru, i upravo ono čini direktivu prepozna' +
       'tljivom bez razlaganja cijelog reda.</p>',
     '<p><b>Uvjet čije ime počinje cifrom uvjet nije.</b> On postaje običan izbor između <co' +
       'de>?1x?da</code> i <code>ne</code>:</p>',
-    '<p><small><tt><a href="ex:36">{?1x?da|ne}</a><br>→&nbsp; ?1x? Da</tt></small></p>',
+    '<p><small><tt><a href="ex:55">{?1x?da|ne}</a><br>→&nbsp; ?1x? Da</tt></small></p>',
     '<p><b><code>&lt;…&gt;</code> na početku komada koji nije prvi razdjeljivač nije</b> i ' +
       'ispisuje se kako stoji:</p>',
-    '<p><small><tt><a href="ex:37">[plava|&lt;i&gt;žuta]</a><br>→&nbsp; &lt;i&gt;Žuta plava' +
+    '<p><small><tt><a href="ex:56">[plava|&lt;i&gt;žuta]</a><br>→&nbsp; &lt;i&gt;Žuta plava' +
       '</tt></small></p>',
     '<p>Blok na početku <b>prvog</b> komada upravo je razdjeljivač kojim počinje odjeljak o' +
       ' miješanju:</p>',
-    '<p><small><tt><a href="ex:38">[&lt;i&gt;plava|žuta]</a><br>→&nbsp; Žuta i plava</tt></' +
+    '<p><small><tt><a href="ex:57">[&lt;i&gt;plava|žuta]</a><br>→&nbsp; Žuta i plava</tt></' +
       'small></p>',
     '<p>Bilo gdje nakon <code>|</code> on je običan tekst, a razdjeljivač između dva komada' +
       ' piše se na <b>kraju</b> prvog.</p>',
     '<p><b>Goli tag na kraju komada uzima se za razdjeljivač tog para</b> i ispisuje se vla' +
       'stitim tekstom:</p>',
-    '<p><small><tt><a href="ex:39">[jedan&lt;br&gt;|dva]</a><br>→&nbsp; Dva jedan</tt></sma' +
+    '<p><small><tt><a href="ex:58">[jedan&lt;br&gt;|dva]</a><br>→&nbsp; Dva jedan</tt></sma' +
       'll></p>',
     '<p>Na ovom je sjemenu par legao drugim redoslijedom, pa razdjeljivač uopće nije ispao.' +
       ' S trećim komadom ima gdje leći, i pojavljuje se:</p>',
-    '<p><small><tt><a href="ex:40">[plava|žuta&lt;br&gt;|siva]</a><br>→&nbsp; Žuta br siva ' +
+    '<p><small><tt><a href="ex:59">[plava|žuta&lt;br&gt;|siva]</a><br>→&nbsp; Žuta br siva ' +
       'plava</tt></small></p>',
     '<p><code>&lt;br&gt;</code> stoji između <code>žuta</code> i onoga što slijedi, gdje go' +
       'd miješanje taj par postavilo. Zatvoreni tag (<code>&lt;/b&gt;</code>), samozatvoreni ' +
@@ -14146,12 +14878,12 @@ const
       ' usred komada ostaju netaknuti.</p>',
     '<p><b>Nezatvoren komentar običan je tekst</b>: on ništa ne otvara, i <code>/#</code> s' +
       'e ispisuje:</p>',
-    '<p><small><tt><a href="ex:41">prije /# ostatak ovoga</a><br>→&nbsp; Prije /# ostatak o' +
+    '<p><small><tt><a href="ex:60">prije /# ostatak ovoga</a><br>→&nbsp; Prije /# ostatak o' +
       'voga</tt></small></p>',
     '<p>Ali on je i dalje polovina para. Ako se dalje u dokumentu pojavi <code>#/</code>, t' +
       'o će se dvoje pronaći i sve između njih nestat će — zajedno s onim što je autor napisa' +
       'o među njima:</p>',
-    '<p><small><tt><a href="ex:42">{a /# ups|b} sredina #/ rep</a><br>→&nbsp; {a rep</tt></' +
+    '<p><small><tt><a href="ex:61">{a /# ups|b} sredina #/ rep</a><br>→&nbsp; {a rep</tt></' +
       'small></p>',
     '<p>Izbor je gore izgubio svoju drugu varijantu i zatvorenu zagradu, i nijedna dijagnos' +
       'tika o tome ne govori: to je ono što tekst ZNAČI, a ne greška koju motor može vidjeti.' +
@@ -14214,26 +14946,26 @@ const
       'te dio građe konstrukcije.</p>',
     '<h3 id="bracket.unclosed"><code>bracket.unclosed</code> — zagrada je otvorena i nije z' +
       'atvorena</h3>',
-    '<p><small><tt><a href="ex:43">cijena {niska|visoka</a><br>→&nbsp; Cijena {niska|visoka' +
+    '<p><small><tt><a href="ex:62">cijena {niska|visoka</a><br>→&nbsp; Cijena {niska|visoka' +
       '</tt></small></p>',
     '<p>Motor ne pogađa gdje ste htjeli zatvoriti. Tekst ostaje kako jeste, zajedno sa zagr' +
       'adom, i izbor se ne dešava nikada.</p>',
     '<h3 id="bracket.mismatched"><code>bracket.mismatched</code> — zatvorena je zagradom dr' +
       'uge vrste</h3>',
-    '<p><small><tt><a href="ex:44">cijena {niska|visoka]</a><br>→&nbsp; Cijena {niska|visok' +
+    '<p><small><tt><a href="ex:63">cijena {niska|visoka]</a><br>→&nbsp; Cijena {niska|visok' +
       'a]</tt></small></p>',
     '<p><code>{</code> čeka <code>}</code>, a <code>[</code> čeka <code>]</code>. Miješanje' +
       ' zatvoreno vitičastom zagradom miješanje nije.</p>',
     '<h3 id="bracket.unexpected-closing"><code>bracket.unexpected-closing</code> — zatvoren' +
       'a zagrada bez otvorene</h3>',
-    '<p><small><tt><a href="ex:45">cijena niska} i to je to</a><br>→&nbsp; Cijena niska} i ' +
+    '<p><small><tt><a href="ex:64">cijena niska} i to je to</a><br>→&nbsp; Cijena niska} i ' +
       'to je to</tt></small></p>',
     '<p>Ona ostaje tekst. Najčešće je to zagrada preostala od izmjene.</p>',
     '<hr>',
     '<h2 id="definitions">Definicije</h2>',
     '<h3 id="set.malformed"><code>set.malformed</code> — ovaj <code>#set</code> red nije na' +
       'pisan po pravilu</h3>',
-    '<p><small><tt><a href="ex:46">#set grad = Sarajevo</a><br><a href="ex:46">u %grad%</a>' +
+    '<p><small><tt><a href="ex:65">#set grad = Sarajevo</a><br><a href="ex:65">u %grad%</a>' +
       '<br>→&nbsp; #set grad = Sarajevo ⏎ U %grad%</tt></small></p>',
     '<p><b>Ime se piše između znakova procenta:</b> <code>#set %grad% = Sarajevo</code>. To' +
       ' je najčešća prva greška, i ona stavlja u ploču odmah dva reda — sam pokvaren red i «o' +
@@ -14244,7 +14976,7 @@ const
       '.</p>',
     '<h3 id="def.malformed"><code>def.malformed</code> — ovaj <code>#def</code> red nije na' +
       'pisan po pravilu</h3>',
-    '<p><small><tt><a href="ex:47">#def stranice = {1|3}</a><br><a href="ex:47">%stranice%<' +
+    '<p><small><tt><a href="ex:66">#def stranice = {1|3}</a><br><a href="ex:66">%stranice%<' +
       '/a><br>→&nbsp; #def stranice = 1 ⏎ %stranice%</tt></small></p>',
     '<p>Isto pravilo i ista cijena. <code>#def</code> se od <code>#set</code> razlikuje ne ' +
       'po pisanju, nego po tome <b>kada</b> se vrijednost razvija: <code>#set</code> je razvi' +
@@ -14255,15 +14987,15 @@ const
       'no sa zagradama. Pokvaren red nije isključen; on samo prestaje biti direktiva.</p>',
     '<h3 id="definition.duplicate-name"><code>definition.duplicate-name</code> — ovo je ime' +
       ' već definisano gore</h3>',
-    '<p><small><tt><a href="ex:48">#set %x% = prvo</a><br><a href="ex:48">#set %x% = drugo<' +
-      '/a><br><a href="ex:48">%x%</a><br>→&nbsp; Drugo</tt></small></p>',
+    '<p><small><tt><a href="ex:67">#set %x% = prvo</a><br><a href="ex:67">#set %x% = drugo<' +
+      '/a><br><a href="ex:67">%x%</a><br>→&nbsp; Drugo</tt></small></p>',
     '<p>Ono radi — pobjeđuje <b>posljednja</b> definicija — ali motor to naziva greškom: do' +
       'kument u kojem je ime zadato dvaput čita se dvosmisleno, i za mjesec dana nećete se sj' +
       'etiti koji je od ta dva reda živ. Greška pokazuje na <b>drugu</b> definiciju; prva sto' +
       'ji gore.</p>',
     '<h3 id="def.include-in-value"><code>def.include-in-value</code> — <code>#include</code' +
       '> unutar vrijednosti definicije</h3>',
-    '<p><small><tt><a href="ex:49">#def %x% = #include "frag"</a><br><a href="ex:49">%x%</a' +
+    '<p><small><tt><a href="ex:68">#def %x% = #include "frag"</a><br><a href="ex:68">%x%</a' +
       '><br>→&nbsp; Odlomak</tt></small></p>',
     '<p>Umetanje se unutar vrijednosti razvija u drugom trenutku nego što biste očekivali, ' +
       'i porodica to zabranjuje. Stavljajte <code>#include</code> u zaseban red.</p>',
@@ -14271,7 +15003,7 @@ const
     '<h2 id="variables">Varijable</h2>',
     '<h3 id="variable.undefined"><code>variable.undefined</code> — ova varijabla nigdje nij' +
       'e definisana</h3>',
-    '<p><small><tt><a href="ex:50">zdravo, %name%</a><br>→&nbsp; Zdravo, %name%</tt></small' +
+    '<p><small><tt><a href="ex:69">zdravo, %name%</a><br>→&nbsp; Zdravo, %name%</tt></small' +
       '></p>',
     '<p>Upozorenje, a ne greška: motor ispisuje ime kako jeste. Tako je i zamišljeno — vrij' +
       'ednost može doći izvana, od programa domaćina. U Studio se takve vrijednosti predaju n' +
@@ -14302,7 +15034,7 @@ const
     '<li><b>Ctrl+klik</b> upisuje definiciju u dokument i otvara na njoj uređivač grupa. Vr' +
       'ijednost koju ste već otkucali ulazi tamo kao prva mogućnost:</li>',
     '</ul>',
-    '<p><small><tt><a href="ex:51">#set %brand% = {Vulkan}</a><br><a href="ex:51">kazino %b' +
+    '<p><small><tt><a href="ex:70">#set %brand% = {Vulkan}</a><br><a href="ex:70">kazino %b' +
       'rand%</a><br>→&nbsp; Kazino Vulkan</tt></small></p>',
     '<p>Razlika je među njima ono što preživljava zatvaranje prozora. Vrijednost sesije ne ' +
       'preživljava: nema je ni u fajlu ni u gitu, i nijedan je drugi motor porodice ne vidi. ' +
@@ -14315,7 +15047,7 @@ const
       'rocenti ostaju znaci.</p>',
     '<h3 id="variable.self-reference"><code>variable.self-reference</code> — definicija upu' +
       'ćuje sama na sebe</h3>',
-    '<p><small><tt><a href="ex:52">#set %x% = a %x% b</a><br><a href="ex:52">%x%</a><br>→&n' +
+    '<p><small><tt><a href="ex:71">#set %x% = a %x% b</a><br><a href="ex:71">%x%</a><br>→&n' +
       'bsp; A a a … %x% … b b b</tt></small></p>',
     '<p>Pedeset nivoa, potom zaustavljanje. Motor razvija do granice dubine i staje, ostavl' +
       'jajući <code>%x%</code> u sredini. To nije krug, i nije ono što ste htjeli.</p>',
@@ -14324,8 +15056,8 @@ const
       'o staje i ostavlja vrijednost kako jeste, a u vrijednosti je svakog po jedno više.</p>',
     '<h3 id="variable.circular-reference"><code>variable.circular-reference</code> — defini' +
       'cije upućuju u krug</h3>',
-    '<p><small><tt><a href="ex:53">#set %x% = %y%</a><br><a href="ex:53">#set %y% = %x%</a>' +
-      '<br><a href="ex:53">%x%</a><br>→&nbsp; %y%</tt></small></p>',
+    '<p><small><tt><a href="ex:72">#set %x% = %y%</a><br><a href="ex:72">#set %y% = %x%</a>' +
+      '<br><a href="ex:72">%x%</a><br>→&nbsp; %y%</tt></small></p>',
     '<p>Svaka se strana razvija tačno <b>jednom</b> i staje: <code>%x%</code> je postao <co' +
       'de>%y%</code>, a ne <code>%x%</code>. Motor odmotava krug, a ne hoda po njemu, i preži' +
       'vljava drugo ime iz kruga — stavite u dokument <code>%x% %y%</code> i on će dati <code' +
@@ -14344,16 +15076,16 @@ const
     '<hr>',
     '<h2 id="includes">Umetanja</h2>',
     '<h3 id="includes-0"><code>#include</code> radi samo s početka reda</h3>',
-    '<p><small><tt><a href="ex:54">prije #include "frag" poslije</a><br>→&nbsp; Prije #incl' +
+    '<p><small><tt><a href="ex:73">prije #include "frag" poslije</a><br>→&nbsp; Prije #incl' +
       'ude "frag" poslije</tt></small></p>',
-    '<p><small><tt><a href="ex:55">#include "frag"</a><br>→&nbsp; Odlomak</tt></small></p>',
+    '<p><small><tt><a href="ex:74">#include "frag"</a><br>→&nbsp; Odlomak</tt></small></p>',
     '<p>Nijedna dijagnostika, i u tome je cijela poenta: <code>#include</code> usred reda u' +
       'metanje <b>nije</b>. Motor ga čita kao običan tekst i ništa ne kaže, jer nema na šta d' +
       'a se žali — napisali ste tekst i dobili tekst.</p>',
     '<p><b>A cilj ipak može stajati red niže</b>, i to iznenađuje s druge strane. Razmak ko' +
       'ji motor dopušta između riječi i cilja uključuje prelome redova, pa je to jedno umetan' +
       'je, i ono radi:</p>',
-    '<p><small><tt><a href="ex:56">#include</a><br><a href="ex:56">"frag"</a><br>→&nbsp; Od' +
+    '<p><small><tt><a href="ex:75">#include</a><br><a href="ex:75">"frag"</a><br>→&nbsp; Od' +
       'lomak</tt></small></p>',
     '<p>Prazni su redovi između njih također dozvoljeni. Nije dozvoljeno sve ostalo: riječ ' +
       'ispred cilja ili bilo šta osim razmaka iza njega — i sve ponovo postaje tekst. Uređiva' +
@@ -14361,7 +15093,7 @@ const
       'ao: on ne obećava direktivu čiji kraj još ne vidi.</p>',
     '<h3 id="include.unknown-target"><code>include.unknown-target</code> — takvog cilja u s' +
       'kupu nema</h3>',
-    '<p><small><tt><a href="ex:57">#include "nema"</a><br>→&nbsp; (prazno)</tt></small></p>',
+    '<p><small><tt><a href="ex:76">#include "nema"</a><br>→&nbsp; (prazno)</tt></small></p>',
     '<p>Ciljevi su <code>.spintax</code> fajlovi u folderu otvorenog dokumenta. Nepoznat se' +
       ' cilj razvija u ništa: pasus nestaje, a ne puca, i upravo je zato to tako lako previdj' +
       'eti.</p>',
@@ -14376,7 +15108,7 @@ const
       'e pojavljuje samo onda kada folder postoji, a fajla u njemu stvarno nema.</p>',
     '<h3 id="note.case-mismatch"><code>note.case-mismatch</code> — cilj postoji, ali u drug' +
       'oj veličini slova</h3>',
-    '<p><small><tt><a href="ex:58">#include "intro"</a><br>→&nbsp; (prazno)</tt></small></p' +
+    '<p><small><tt><a href="ex:77">#include "intro"</a><br>→&nbsp; (prazno)</tt></small></p' +
       '>',
     '<p>Skup sadrži <code>Intro.spintax</code> — a motor svejedno kaže da takvog cilja nema' +
       ', dok Studio dodaje svoju napomenu o veličini slova. Veličina je slova važna: <code>in' +
@@ -14385,7 +15117,7 @@ const
       'vrječio serveru o istom dokumentu.</p>',
     '<h3 id="note.cycle"><code>note.cycle</code> — umetanje u krug</h3>',
     '<p>Ako <code>loop.spintax</code> i sam sadrži <code>#include "loop"</code>, onda:</p>',
-    '<p><small><tt><a href="ex:59">#include "loop"</a><br>→&nbsp; (prazno)</tt></small></p>',
+    '<p><small><tt><a href="ex:78">#include "loop"</a><br>→&nbsp; (prazno)</tt></small></p>',
     '<p>Motor podmeće prazninu umjesto beskonačnosti. Napomena je potrebna da biste razumje' +
       'li zašto je pasus nestao.</p>',
     '<p>Red je ispisan na <b><code>loop</code></b>, a ne na dokument u koji gledate: krug p' +
@@ -14395,18 +15127,21 @@ const
     '<h2 id="plurals">Oblici množine</h2>',
     '<h3 id="plural.arity"><code>plural.arity</code> — oblika nema onoliko koliko lokal zah' +
       'tijeva</h3>',
-    '<p><small><tt><a href="ex:60">#set %n% = 5</a><br><a href="ex:60">%n% {plural %n%: obj' +
+    '<p><small><tt><a href="ex:79">#set %n% = 5</a><br><a href="ex:79">%n% {plural %n%: obj' +
       'ekat|objekta}</a><br>→&nbsp; 5 ｛plural 5: objekat|objekta｝</tt></small></p>',
     '<p><b>Nije praznina — motor ispisuje cijelu konstrukciju</b>, zamijenivši zagrade širo' +
       'kim <code>｛｝</code>. Tako on kaže «ovo sam vidio i nisam mogao primijeniti». Neprimjet' +
       'nim to niko neće nazvati, i to je dobro: pasus koji je nestao šutke tražio bi se duže.' +
       '</p>',
-    '<p>Bosanskom trebaju tri oblika, engleskom — dva. Pod lokalom ovog dokumenta ispravno ' +
-      'je <code>{plural %n%: objekat|objekta|objekata}</code>.</p>',
+    '<p>Bosanskom trebaju tri oblika, engleskom — dva, arapskom — šest. Pod lokalom ovog do' +
+      'kumenta ispravno je <code>{plural %n%: objekat|objekta|objekata}</code>. Pod <code>ar<' +
+      '/code> su dva oblika također greška:</p>',
+    '<p><small><tt><a href="ex:80">#def %n% = 5</a><br><a href="ex:80">%n% {plural %n%: كتا' +
+      'ب|كتب}</a><br>→&nbsp; 5 ｛plural 5: كتاب|كتب｝</tt></small></p>',
     '<p><b>Praznina nastaje iz drugog razloga, i ta se dva lako pomiješaju.</b> Uporedite o' +
       'va dva, koja se razlikuju samo po broju oblika:</p>',
-    '<p><small><tt><a href="ex:61">{plural %n%: objekat|objekta|objekata}</a><br>→&nbsp; (p' +
-      'razno)&nbsp;&nbsp; tri oblika: ispravno za bosanski<br><a href="ex:62">{plural %n%: ob' +
+    '<p><small><tt><a href="ex:81">{plural %n%: objekat|objekta|objekata}</a><br>→&nbsp; (p' +
+      'razno)&nbsp;&nbsp; tri oblika: ispravno za bosanski<br><a href="ex:82">{plural %n%: ob' +
       'jekat|objekta}</a><br>→&nbsp; (prazno)&nbsp;&nbsp; dva oblika: neispravno za bosanski<' +
       '/tt></small></p>',
     '<p>Oba ne ispisuju ništa, a ploča se prema njima odnosi drugačije: prvi povlači samo <' +
@@ -14423,7 +15158,7 @@ const
       'j oblika zaista radi.</p>',
     '<h3 id="plural.count-macro"><code>plural.count-macro</code> — brojač uzima vrijednost ' +
       'iz <code>#set</code>-a, a taj izvlači iznova pri svakom pominjanju</h3>',
-    '<p><small><tt><a href="ex:63">#set %n% = {1|2}</a><br><a href="ex:63">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:83">#set %n% = {1|2}</a><br><a href="ex:83">%n% {plural %n%:' +
       ' objekat|objekta|objekata}</a><br>→&nbsp; 1</tt></small></p>',
     '<p>Pogledajte šta je preživjelo: <b>broj je ispisan, a imenica nije.</b> Brojač mora b' +
       'iti broj u trenutku kada se bira oblik, a <code>#set</code> čija je vrijednost i sama ' +
@@ -14432,13 +15167,13 @@ const
       'tivrječiti jedan drugom; motor umjesto toga ispušta riječ.</p>',
     '<p><code>#def</code> se ponaša drugačije i razvija svoju vrijednost jednom po odigrava' +
       'nju, pa mjesto brojača dobija broj:</p>',
-    '<p><small><tt><a href="ex:64">#def %n% = {1|2}</a><br><a href="ex:64">%n% {plural %n%:' +
+    '<p><small><tt><a href="ex:84">#def %n% = {1|2}</a><br><a href="ex:84">%n% {plural %n%:' +
       ' objekat|objekta|objekata}</a><br>→&nbsp; 1 objekat</tt></small></p>',
     '<p>Za to u ploči nema nijednog reda. Otuda i pravilo: pravite brojač jednostavnim broj' +
       'em ili <code>#def</code>-om, nikada <code>#set</code>-om.</p>',
     '<h3 id="plural.nested-brackets"><code>plural.nested-brackets</code> — zagrade unutar o' +
       'blika</h3>',
-    '<p><small><tt><a href="ex:65">{plural %n%: {objekat|stvar}|objekta|objekata}</a><br>→&' +
+    '<p><small><tt><a href="ex:85">{plural %n%: {objekat|stvar}|objekta|objekata}</a><br>→&' +
       'nbsp; ｛plural %n%: ｛objekat|stvar｝|objekta|objekata｝</tt></small></p>',
     '<p>Oblici su prost tekst. Izbor se unutar njih ne razvija, i umjesto toga se cijela ko' +
       'nstrukcija ispisuje u širokim zagradama.</p>',
@@ -14446,27 +15181,27 @@ const
     '<h2 id="permutations">Miješanje</h2>',
     '<h3 id="permutation.unknown-key"><code>permutation.unknown-key</code> — nepoznat ključ' +
       ' u postavci</h3>',
-    '<p><small><tt><a href="ex:66">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
+    '<p><small><tt><a href="ex:86">[&lt;foo=1&gt;a|b|c]</a><br>→&nbsp; Bfoo=1cfoo=1a</tt></' +
       'small></p>',
     '<p>Poznati su ključevi <code>minsize</code>, <code>maxsize</code>, <code>sep</code> i ' +
       '<code>lastsep</code>. Nepoznat postavka nije, i kada je on u bloku jedini, cijeli blok' +
       ' uopće nije postavka: on postaje razdjeljivač između komada, što izlaz i pokazuje.</p>',
     '<p><b>Ako pored stoji pravi ključ, izlaz je sasvim drugačiji</b> — i to je vjerovatnij' +
       'a greška: jedan je ključ od nekoliko otkucan pogrešno:</p>',
-    '<p><small><tt><a href="ex:67">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
+    '<p><small><tt><a href="ex:87">[&lt;sep=", ";foo=1&gt;a|b|c]</a><br>→&nbsp; B, c, a</tt' +
       '></small></p>',
     '<p>Blok ostaje postavka, <code>sep</code> se izvršava, nepoznat se ključ prosto odbacu' +
       'je, a ploča u oba slučaja kaže jedno te isto. Dakle, dijagnostika javlja da ključ nije' +
       ' shvaćen; ona ne javlja šta se dalje desilo. O tome čitajte izlaz.</p>',
     '<h3 id="permutation.minsize-not-integer"><code>permutation.minsize-not-integer</code> ' +
       '— minimum nije zadat cijelim brojem</h3>',
-    '<p><small><tt><a href="ex:68">[&lt;minsize=dva&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
+    '<p><small><tt><a href="ex:88">[&lt;minsize=dva&gt;a|b|c]</a><br>→&nbsp; B c a</tt></sm' +
       'all></p>',
     '<p>Nebrojčana vrijednost otpada zajedno sa svojom granicom, i vrijedi uobičajeno — dak' +
       'le svi komadi.</p>',
     '<h3 id="permutation.maxsize-not-integer"><code>permutation.maxsize-not-integer</code> ' +
       '— maksimum nije zadat cijelim brojem</h3>',
-    '<p><small><tt><a href="ex:69">[&lt;maxsize=mnogo&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
+    '<p><small><tt><a href="ex:89">[&lt;maxsize=mnogo&gt;a|b|c]</a><br>→&nbsp; B c a</tt></' +
       'small></p>',
     '<p>Tačno isto s drugog kraja: gornja granica nestaje, i izlaz opet sadrži svaki komad.' +
       '</p>',
@@ -14502,8 +15237,8 @@ const
     '<hr>',
     '<h2 id="abbreviations">Tišina koju sreću svi: skraćenice</h2>',
     '<h3 id="abbreviations-0">Skraćenica ostavlja sljedeću riječ malom</h3>',
-    '<p><small><tt><a href="ex:70">dr. Hodžić naše cijene su niske</a><br>→&nbsp; dr. Hodži' +
-      'ć naše cijene su niske<br><a href="ex:71">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx' +
+    '<p><small><tt><a href="ex:90">dr. Hodžić naše cijene su niske</a><br>→&nbsp; dr. Hodži' +
+      'ć naše cijene su niske<br><a href="ex:91">Xxx. naše cijene su niske</a><br>→&nbsp; Xxx' +
       '. Naše cijene su niske</tt></small></p>',
     '<p>Dva reda koja se razlikuju u jednoj riječi, i druga riječ svakog daje vam pravilo: ' +
       'nakon <code>dr.</code> rečenica ostaje mala, nakon <code>Xxx.</code> — velikim slovom.' +
@@ -14531,15 +15266,15 @@ const
       'da je goli domen zaklonjen jer je pisan latinicom — a ćirilični nije.</p>',
     '<hr>',
     '<h2 id="correct">Kako izgleda ispravno</h2>',
-    '<p><small><tt><a href="ex:72">cijena {niska|visoka}</a><br>→&nbsp; Cijena niska</tt></' +
+    '<p><small><tt><a href="ex:92">cijena {niska|visoka}</a><br>→&nbsp; Cijena niska</tt></' +
       'small></p>',
-    '<p><small><tt><a href="ex:73">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
+    '<p><small><tt><a href="ex:93">[&lt;minsize=2;sep=", "&gt;a|b|c]</a><br>→&nbsp; C, b</t' +
       't></small></p>',
-    '<p><small><tt><a href="ex:74">#set %vip% = 1</a><br><a href="ex:74">{?vip?za vas|za sv' +
+    '<p><small><tt><a href="ex:94">#set %vip% = 1</a><br><a href="ex:94">{?vip?za vas|za sv' +
       'e}</a><br>→&nbsp; Za vas</tt></small></p>',
-    '<p><small><tt><a href="ex:75">#set %n% = 5</a><br><a href="ex:75">%n% {plural %n%: art' +
+    '<p><small><tt><a href="ex:95">#set %n% = 5</a><br><a href="ex:95">%n% {plural %n%: art' +
       'ikal|artikla|artikala}</a><br>→&nbsp; 5 artikala</tt></small></p>',
-    '<p><small><tt><a href="ex:76">prije /# bilješka #/ poslije</a><br>→&nbsp; Prije poslij' +
+    '<p><small><tt><a href="ex:96">prije /# bilješka #/ poslije</a><br>→&nbsp; Prije poslij' +
       'e</tt></small></p>',
     '<p>Pet konstrukcija, pet čistih redova: izbor, miješanje s postavkama, uvjet, oblik mn' +
       'ožine s brojem ispred njega i komentar. Nijedna ne stavlja u ploču ništa.</p>',
@@ -14553,7 +15288,7 @@ const
     '<p><b>Zašto moja varijabla s kvačicom u imenu ne radi?</b> Imena su varijabli samo ASC' +
       'II latinica. <code>%šifra%</code> motoru uopće nije pominjanje varijable: on ga ispisu' +
       'je kao tekst i <b>ne izdaje nijednu dijagnostiku</b>:</p>',
-    '<p><small><tt><a href="ex:77">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
+    '<p><small><tt><a href="ex:97">zdravo, %šifra%</a><br>→&nbsp; Zdravo, %šifra%</tt></sma' +
       'll></p>',
     '<p>Uporedite s <code>%sifra%</code>, koje red u ploči ipak povlači. Šutljivo je baš pr' +
       'vo — ništa vam neće reći da se ono nikada neće podmetnuti. A <code>#set %šifra% = tajn' +
@@ -14583,12 +15318,12 @@ const
 
   { The templates the `ex:N` links point at, verbatim as the fixture ran them. }
   HELP_EX_FIRST: array[0..13] of Integer = (
-    0, 75, 155, 231, 309, 387, 465, 544, 620, 697, 775, 853, 933, 1011
+    0, 95, 195, 291, 389, 487, 585, 684, 780, 877, 975, 1073, 1173, 1271
   );
   HELP_EX_LAST: array[0..13] of Integer = (
-    74, 154, 230, 308, 386, 464, 543, 619, 696, 774, 852, 932, 1010, 1088
+    94, 194, 290, 388, 486, 584, 683, 779, 876, 974, 1072, 1172, 1270, 1368
   );
-  HELP_EX_TEMPLATE: array[0..1088] of string = (
+  HELP_EX_TEMPLATE: array[0..1368] of string = (
     '{Hi|Hello} there.',
     'A {small|large} room.',
     'Acme {Pro {Plus|Max}|Lite}',
@@ -14598,6 +15333,19 @@ const
     '[<maxsize 2>red|green|blue]',
     '[<xmaxsize=1>red|green|blue]',
     '[<sep=", ";lastsep=" and ">red|green|blue]',
+    '[<lastsep="and">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>red|green|blue]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>red|green|blue]',
@@ -14627,6 +15375,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: file|files}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %brand% = Acme' +
       #10 +
@@ -14687,6 +15453,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: item|items|itemses}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: item|items}',
     '{plural %n%: item|items|itemses}',
     '#set %n% = {1|2}' +
@@ -14721,6 +15490,19 @@ const
     '[<maxsize 2>красный|зелёный|синий]',
     '[<xmaxsize=1>красный|зелёный|синий]',
     '[<sep=", ";lastsep=" и ">красный|зелёный|синий]',
+    '[<lastsep="и">А|Б]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>красный|зелёный|синий]',
     '[<maxsize=3>а|б|в]',
     '[<minsize=3;maxsize=1>красный|зелёный|синий]',
@@ -14753,6 +15535,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: файл|файла|файлов}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %brand% = Акме' +
       #10 +
@@ -14814,6 +15614,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: товар|товара}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: {товар|штука}|товара}',
     '{plural %n%: товар|товара}',
     '#set %n% = {1|2}' +
@@ -14851,6 +15654,19 @@ const
     '[<maxsize 2>rot|grün|blau]',
     '[<xmaxsize=1>rot|grün|blau]',
     '[<sep=", ";lastsep=" und ">rot|grün|blau]',
+    '[<lastsep="und">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>rot|grün|blau]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>rot|grün|blau]',
@@ -14880,6 +15696,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: Datei|Dateien}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %marke% = Acme' +
       #10 +
@@ -14941,6 +15775,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: Ding|Dinge|Dingse}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: Ding|Dinge}',
     '{plural %n%: Ding|Dinge|Dingse}',
     '#set %n% = {1|2}' +
@@ -14975,6 +15812,19 @@ const
     '[<maxsize 2>rouge|vert|bleu]',
     '[<xmaxsize=1>rouge|vert|bleu]',
     '[<sep=", ";lastsep=" et ">rouge|vert|bleu]',
+    '[<lastsep="et">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>rouge|vert|bleu]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>rouge|vert|bleu]',
@@ -15004,6 +15854,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: fichier|fichiers}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %marque% = Acme' +
       #10 +
@@ -15067,6 +15935,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: objet|objets|objetses}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: objet|objets}',
     '{plural %n%: objet|objets|objetses}',
     '#set %n% = {1|2}' +
@@ -15101,6 +15972,19 @@ const
     '[<maxsize 2>rojo|verde|azul]',
     '[<xmaxsize=1>rojo|verde|azul]',
     '[<sep=", ";lastsep=" y ">rojo|verde|azul]',
+    '[<lastsep="y">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>rojo|verde|azul]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>rojo|verde|azul]',
@@ -15130,6 +16014,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: archivo|archivos}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %marca% = Acme' +
       #10 +
@@ -15193,6 +16095,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: objeto|objetos|objetoses}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: objeto|objetos}',
     '{plural %n%: objeto|objetos|objetoses}',
     '#set %n% = {1|2}' +
@@ -15227,6 +16132,19 @@ const
     '[<maxsize 2>rosso|verde|blu]',
     '[<xmaxsize=1>rosso|verde|blu]',
     '[<sep=", ";lastsep=" e ">rosso|verde|blu]',
+    '[<lastsep="e">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>rosso|verde|blu]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>rosso|verde|blu]',
@@ -15256,6 +16174,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: documento|documenti}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %marchio% = Acme' +
       #10 +
@@ -15319,6 +16255,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: oggetto|oggetti|oggettesi}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: oggetto|oggetti}',
     '{plural %n%: oggetto|oggetti|oggettesi}',
     '#set %n% = {1|2}' +
@@ -15353,6 +16292,19 @@ const
     '[<maxsize 2>vermelho|verde|azul]',
     '[<xmaxsize=1>vermelho|verde|azul]',
     '[<sep=", ";lastsep=" e ">vermelho|verde|azul]',
+    '[<lastsep="e">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>vermelho|verde|azul]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>vermelho|verde|azul]',
@@ -15382,6 +16334,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: ficheiro|ficheiros}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %marca% = Acme' +
       #10 +
@@ -15446,6 +16416,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: objeto|objetos|objetoses}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: objeto|objetos}',
     '{plural %n%: objeto|objetos|objetoses}',
     '#set %n% = {1|2}' +
@@ -15480,6 +16453,19 @@ const
     '[<maxsize 2>rood|groen|blauw]',
     '[<xmaxsize=1>rood|groen|blauw]',
     '[<sep=", ";lastsep=" en ">rood|groen|blauw]',
+    '[<lastsep="en">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>rood|groen|blauw]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>rood|groen|blauw]',
@@ -15509,6 +16495,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: bestand|bestanden}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %merk% = Acme' +
       #10 +
@@ -15570,6 +16574,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: ding|dingen|dingens}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: ding|dingen}',
     '{plural %n%: ding|dingen|dingens}',
     '#set %n% = {1|2}' +
@@ -15604,6 +16611,19 @@ const
     '[<maxsize 2>kırmızı|yeşil|mavi]',
     '[<xmaxsize=1>kırmızı|yeşil|mavi]',
     '[<sep=", ";lastsep=" ve ">kırmızı|yeşil|mavi]',
+    '[<lastsep="ve">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>kırmızı|yeşil|mavi]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>kırmızı|yeşil|mavi]',
@@ -15633,6 +16653,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: dosya|dosyalar}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %marka% = Acme' +
       #10 +
@@ -15695,6 +16733,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: nesne|nesneler|nesneleri}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: nesne|nesneler}',
     '{plural %n%: nesne|nesneler|nesneleri}',
     '#set %n% = {1|2}' +
@@ -15729,6 +16770,19 @@ const
     '[<maxsize 2>синій|жовтий|сірий]',
     '[<xmaxsize=1>синій|жовтий|сірий]',
     '[<sep=", ";lastsep=" і ">синій|жовтий|сірий]',
+    '[<lastsep="і">А|Б]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>синій|жовтий|сірий]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>синій|жовтий|сірий]',
@@ -15761,6 +16815,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: файл|файли|файлів}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %brand% = Acme' +
       #10 +
@@ -15823,6 +16895,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: об’єкт|об’єкти}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: об’єкт|об’єкти|об’єктів}',
     '{plural %n%: об’єкт|об’єкти}',
     '#set %n% = {1|2}' +
@@ -15857,6 +16932,19 @@ const
     '[<maxsize 2>сіні|жоўты|шэры]',
     '[<xmaxsize=1>сіні|жоўты|шэры]',
     '[<sep=", ";lastsep=" і ">сіні|жоўты|шэры]',
+    '[<lastsep="і">А|Б]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>сіні|жоўты|шэры]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>сіні|жоўты|шэры]',
@@ -15889,6 +16977,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: файл|файлы|файлаў}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %brand% = Acme' +
       #10 +
@@ -15951,6 +17057,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: аб’ект|аб’екты}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: аб’ект|аб’екты|аб’ектаў}',
     '{plural %n%: аб’ект|аб’екты}',
     '#set %n% = {1|2}' +
@@ -15985,6 +17094,19 @@ const
     '[<maxsize 2>плава|жута|сива]',
     '[<xmaxsize=1>плава|жута|сива]',
     '[<sep=", ";lastsep=" и ">плава|жута|сива]',
+    '[<lastsep="и">А|Б]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>плава|жута|сива]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>плава|жута|сива]',
@@ -16017,6 +17139,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: фајл|фајла|фајлова}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %brand% = Acme' +
       #10 +
@@ -16081,6 +17221,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: објекат|објекта}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: објекат|објекта|објеката}',
     '{plural %n%: објекат|објекта}',
     '#set %n% = {1|2}' +
@@ -16115,6 +17258,19 @@ const
     '[<maxsize 2>plava|žuta|siva]',
     '[<xmaxsize=1>plava|žuta|siva]',
     '[<sep=", ";lastsep=" i ">plava|žuta|siva]',
+    '[<lastsep="i">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>plava|žuta|siva]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>plava|žuta|siva]',
@@ -16147,6 +17303,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: dokument|dokumenta|dokumenata}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %brand% = Acme' +
       #10 +
@@ -16209,6 +17383,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: objekt|objekta}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: objekt|objekta|objekata}',
     '{plural %n%: objekt|objekta}',
     '#set %n% = {1|2}' +
@@ -16243,6 +17420,19 @@ const
     '[<maxsize 2>plava|žuta|siva]',
     '[<xmaxsize=1>plava|žuta|siva]',
     '[<sep=", ";lastsep=" i ">plava|žuta|siva]',
+    '[<lastsep="i">A|B]',
+    '[<lastsep="和">A|B]',
+    '[<lastsep="と">A|B]',
+    '[<lastsep="และ">A|B]',
+    '[<lastsep="ແລະ">A|B]',
+    '[<lastsep="ក">A|B]',
+    '[<lastsep="က">A|B]',
+    '[<lastsep="و">الكازينو|البث]',
+    '[<lastsep="و">Evolution|الكازينو]',
+    '[<lastsep="ف">الكازينو|البث]',
+    '[<lastsep="و">2026|البث]',
+    '[<lastsep="ו">קזינו|שידור]',
+    '[<lastsep="و">الكازينو|البث]',
     '[<minsize=2;maxsize=2>plava|žuta|siva]',
     '[<maxsize=3>a|b|c]',
     '[<minsize=3;maxsize=1>plava|žuta|siva]',
@@ -16275,6 +17465,24 @@ const
     '#set %n% = {5|5}' +
       #10 +
       '%n% {plural %n%: dokument|dokumenta|dokumenata}',
+    '#def %n% = 3' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 2' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 0' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 1' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 11' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
+    '#def %n% = 100' +
+      #10 +
+      'في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.',
     '#include "intro"',
     '#set %brand% = Acme' +
       #10 +
@@ -16337,6 +17545,9 @@ const
     '#set %n% = 5' +
       #10 +
       '%n% {plural %n%: objekat|objekta}',
+    '#def %n% = 5' +
+      #10 +
+      '%n% {plural %n%: كتاب|كتب}',
     '{plural %n%: objekat|objekta|objekata}',
     '{plural %n%: objekat|objekta}',
     '#set %n% = {1|2}' +
@@ -16363,8 +17574,11 @@ const
     'prije /# bilješka #/ poslije',
     'zdravo, %šifra%'
   );
-  HELP_EX_DOC: array[0..1088] of Integer = (
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  HELP_EX_DOC: array[0..1368] of Integer = (
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+  );
+  HELP_EX_LOCALE: array[0..1368] of string = (
+    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'he', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', 'ar', 'ar', 'ar', 'ar', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ar', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
   );
 
   { The `###` articles: page, id, title, and whether the id is a diagnostic code. }
@@ -17544,6 +18758,14 @@ function SpxHelpExampleDoc(ALang, AIndex: Integer): Integer;
 begin
   if (AIndex < 0) or (AIndex >= SpxHelpExampleCount(ALang)) then Exit(-1);
   Result := HELP_EX_DOC[HELP_EX_FIRST[ALang] + AIndex];
+end;
+
+function SpxHelpExampleLocale(ALang, AIndex: Integer): string;
+begin
+  Result := '';
+  if (AIndex < 0) or (AIndex >= SpxHelpExampleCount(ALang)) then Exit;
+  Result := HELP_EX_LOCALE[HELP_EX_FIRST[ALang] + AIndex];
+  if Result = '' then Result := SpxHelpLocale(ALang, SpxHelpExampleDoc(ALang, AIndex));
 end;
 
 function SpxHelpExampleOf(const AHref: string): Integer;

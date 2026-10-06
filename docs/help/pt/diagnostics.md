@@ -330,8 +330,13 @@ linha que escreveu não tem nada de errado.
 `｛｝`. É assim que diz «vi isto e não o consegui aplicar». Discreto não lhe chamaria ninguém, e
 ainda bem: um parágrafo evaporado em silêncio custaria mais a encontrar.
 
-O português pede duas formas, o russo três. Sob a locale deste documento a certa é
-`{plural %n%: objeto|objetos}`.
+O português pede duas formas, o russo três, o árabe seis. Sob a locale deste documento a certa é
+`{plural %n%: objeto|objetos}`; sob `ar` as mesmas duas formas são o erro:
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **O vazio vem de outra causa, e as duas confundem-se com facilidade.** Compare estas duas, que só
 diferem em quantas formas levam:

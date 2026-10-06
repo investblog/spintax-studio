@@ -16,6 +16,12 @@ include inspector is named nowhere in the live list. The count is twenty either 
 why nothing caught it — `check-listing-drafts.py` counts bullets and cannot compare them to
 the storefront. Queued for the next visit.
 
+**Queued for the version AFTER `0.2.3.0`** (none of it is in that tag): engine `v0.12.0`;
+Arabic and Hebrew as document locales (`ar`, `he` in the locale box, 2026-10-06); the AI
+prompt at `PROMPT_VERSION` 6, which teaches Arabic its six plural forms. The What's-new field
+and any feature bullet that counts languages must be re-measured against the build, not
+copied from here — the locale box now holds twelve tags, the window still speaks fourteen.
+
 This file is the copy for the NEXT submission; the measured read-back of the live page is
 recorded at the end. ([`publish/store-listing-edits.md`](publish/store-listing-edits.md) is
 dated history of the pre-`0.2.0.0` edit queue.)

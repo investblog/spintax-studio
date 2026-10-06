@@ -43,7 +43,10 @@ Sie arbeiten.
 
 `locale` entscheidet über die Zahlformen, und es ist der Wähler über der rechten Hälfte, nicht die
 Sprache der Oberfläche. Deutsch und Englisch brauchen zwei Formen; Russisch, Ukrainisch,
-Belarussisch, Serbisch, Kroatisch und Bosnisch brauchen drei.
+Belarussisch, Serbisch, Kroatisch und Bosnisch brauchen drei; Arabisch braucht sechs. Unter
+Arabisch und Hebräisch ändert es außerdem, wie eine Konjunktion eine Liste verbindet (siehe das
+Trennzeichen). Die arabischen und hebräischen Beispiele unten sind unter ihrer eigenen Locale
+gemessen, die der Satz vor jedem von ihnen nennt.
 
 ## Auswahl
 
@@ -124,6 +127,50 @@ Schreiben Sie die Einstellungen aus, wenn Sie zwei verschiedene Trennzeichen wol
 ```
 
 `sep` steht zwischen den Stücken und `lastsep` vor dem letzten.
+
+Ein Trennzeichen, das nur aus Buchstaben besteht, bekommt auf jeder Seite ein Leerzeichen, auch
+wenn keines getippt wurde:
+
+```spx-good
+[<lastsep="und">A|B]  →  B und A
+```
+
+Schriften, die ohne Leerzeichen zwischen den Wörtern geschrieben werden, sind die Ausnahme, unter
+jeder Locale: chinesische, japanische, thailändische, laotische, Khmer- und birmanische
+Trennzeichen werden ohne Zwischenraum angefügt.
+
+```spx-good
+[<lastsep="和">A|B]  →  B和A
+[<lastsep="と">A|B]  →  BとA
+[<lastsep="และ">A|B]  →  BและA
+[<lastsep="ແລະ">A|B]  →  BແລະA
+[<lastsep="ក">A|B]  →  BកA
+[<lastsep="က">A|B]  →  BကA
+```
+
+Arabisch und Hebräisch haben eine eigene Regel, und es ist die **Locale**, die sie einschaltet,
+nicht die Schrift. Unter `ar` behält ein Trennzeichen, das genau و oder ف ist, das Leerzeichen
+davor und verliert das danach, weil Arabisch die Konjunktion mit dem nächsten Wort verbunden
+schreibt; unter `he` gilt dasselbe für ו. Das geschieht nur vor einem Wort in dieser Schrift — vor
+einem lateinischen Namen oder einer Ziffer bleiben beide Leerzeichen:
+
+```spx-good locale=ar
+[<lastsep="و">الكازينو|البث]  →  البث والكازينو
+[<lastsep="و">Evolution|الكازينو]  →  الكازينو و Evolution
+[<lastsep="ف">الكازينو|البث]  →  البث فالكازينو
+[<lastsep="و">2026|البث]  →  البث و 2026
+```
+
+```spx-good locale=he
+[<lastsep="ו">קזינו|שידור]  →  שידור וקזינו
+```
+
+Unter jeder anderen Locale bleibt die Konjunktion ein eigenes Wort, und das ist richtig für
+Persisch und Urdu, wo derselbe Buchstabe getrennt geschrieben wird:
+
+```spx-good
+[<lastsep="و">الكازينو|البث]  →  البث و الكازينو
+```
 
 ### Wie viele
 
@@ -253,7 +300,33 @@ Zahl und die Form können sich nicht widersprechen: stattdessen verschwindet das
 ```
 
 Wie viele Formen es sind, entscheidet die Locale und nicht Sie: unter `de` sind es zwei, unter
-`ru` drei. Die falsche Anzahl ist ein Fehler, den die Tafel meldet (`plural.arity`), und die
+`ru` drei, unter `ar` sechs — in der Reihenfolge zero, one, two, few, many, other. Arabisch sagt
+„ein Buch" und „zwei Bücher" ohne Zahlwort, also gehört die Zahl **in** die Formen, die sie
+drucken, statt vor den Block:
+
+```spx-good locale=ar
+#def %n% = 3
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 3 كتب.
+```
+
+```spx-good locale=ar
+#def %n% = 2
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتابان.
+
+#def %n% = 0
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 0 كتاب.
+
+#def %n% = 1
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتاب واحد.
+
+#def %n% = 11
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 11 كتابًا.
+
+#def %n% = 100
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 100 كتاب.
+```
+
+Die falsche Anzahl ist ein Fehler, den die Tafel meldet (`plural.arity`), und die
 Maschine druckt dann das ganze Konstrukt zurück, mit breiten Klammern `｛｝` statt der schmalen,
 damit man es nicht für Ausgabe hält.
 

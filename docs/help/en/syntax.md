@@ -41,7 +41,9 @@ field appears beside it, and the preview stops moving while you edit.
 
 `locale` decides plural forms, and it is the selector above the right-hand pane rather than the
 language of the interface. English needs two forms; Russian, Ukrainian, Belarusian, Serbian,
-Croatian and Bosnian need three.
+Croatian and Bosnian need three; Arabic needs six. Under Arabic and Hebrew it also changes how a
+conjunction joins a list (see the separator). The Arabic and Hebrew examples below are measured
+under their own locale, which the sentence before each of them names.
 
 ## Choices
 
@@ -120,6 +122,47 @@ Write the settings out in full when you want two different separators:
 
 `sep` goes between the items and `lastsep` before the final one, which is how an English list is
 punctuated.
+
+A separator made only of letters gets a space on each side even when none was typed:
+
+```spx-good
+[<lastsep="and">A|B]  →  B and A
+```
+
+Scripts written without spaces between words are the exception, under any locale: Chinese,
+Japanese, Thai, Lao, Khmer and Myanmar separators join bare.
+
+```spx-good
+[<lastsep="和">A|B]  →  B和A
+[<lastsep="と">A|B]  →  BとA
+[<lastsep="และ">A|B]  →  BและA
+[<lastsep="ແລະ">A|B]  →  BແລະA
+[<lastsep="ក">A|B]  →  BកA
+[<lastsep="က">A|B]  →  BကA
+```
+
+Arabic and Hebrew have a rule of their own, and it is the **locale** that switches it on, not the
+script. Under `ar` a separator that is exactly و or ف keeps the space before it and drops the one
+after, because Arabic writes the conjunction joined to the next word; under `he` the same goes for
+ו. It only happens before a word in that script — before a Latin name or a digit both spaces stay:
+
+```spx-good locale=ar
+[<lastsep="و">الكازينو|البث]  →  البث والكازينو
+[<lastsep="و">Evolution|الكازينو]  →  الكازينو و Evolution
+[<lastsep="ف">الكازينو|البث]  →  البث فالكازينو
+[<lastsep="و">2026|البث]  →  البث و 2026
+```
+
+```spx-good locale=he
+[<lastsep="ו">קזינו|שידור]  →  שידור וקזינו
+```
+
+Under any other locale the conjunction stays a word of its own, which is right for Persian and
+Urdu, where the same letter is written apart:
+
+```spx-good
+[<lastsep="و">الكازينو|البث]  →  البث و الكازينو
+```
 
 ### How many
 
@@ -244,7 +287,33 @@ disappears instead.
 ```
 
 The number of forms is decided by the locale, not by you: under `en` there are two, under `ru`
-three. The wrong number is an error the panel reports (`plural.arity`), and the engine then prints
+three, under `ar` six — in the order zero, one, two, few, many, other. Arabic says "one book" and
+"two books" without a numeral, so the number goes **inside** the forms that print it rather than
+in front of the block:
+
+```spx-good locale=ar
+#def %n% = 3
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 3 كتب.
+```
+
+```spx-good locale=ar
+#def %n% = 2
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتابان.
+
+#def %n% = 0
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 0 كتاب.
+
+#def %n% = 1
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتاب واحد.
+
+#def %n% = 11
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 11 كتابًا.
+
+#def %n% = 100
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 100 كتاب.
+```
+
+The wrong number is an error the panel reports (`plural.arity`), and the engine then prints
 the whole construct back with the braces swapped for wide ones `｛｝`, so it cannot be mistaken for
 output.
 

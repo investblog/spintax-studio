@@ -323,8 +323,13 @@ sve u redu.
 kaže «ovo sam vidio i nisam mogao primijeniti». Neprimjetnim to nitko neće nazvati, i to je dobro:
 odlomak koji je nestao šutke tražio bi se dulje.
 
-Hrvatskom trebaju tri oblika, engleskom — dva. Pod lokalom ovog dokumenta ispravno je
-`{plural %n%: objekt|objekta|objekata}`.
+Hrvatskom trebaju tri oblika, engleskom — dva, arapskom — šest. Pod lokalom ovog dokumenta ispravno
+je `{plural %n%: objekt|objekta|objekata}`. Pod `ar` su dva oblika također greška:
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **Praznina nastaje iz drugog razloga, i ta se dva lako pomiješaju.** Usporedite ova dva, koja se
 razlikuju samo po broju oblika:

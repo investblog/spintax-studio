@@ -42,7 +42,10 @@ er verschijnt een getalveld naast, en de voorvertoning staat stil terwijl u werk
 
 `locale` bepaalt de getalsvormen, en het is de keuzelijst boven de rechterhelft, niet de taal van
 de interface. Het Nederlands en het Engels vragen twee vormen; het Russisch, het Oekraïens, het
-Wit-Russisch, het Servisch, het Kroatisch en het Bosnisch vragen er drie.
+Wit-Russisch, het Servisch, het Kroatisch en het Bosnisch vragen er drie; het Arabisch vraagt er
+zes. Onder het Arabisch en het Hebreeuws verandert de locale ook hoe een voegwoord een opsomming
+verbindt (zie het scheidingsteken). De Arabische en Hebreeuwse voorbeelden hieronder zijn gemeten
+onder hun eigen locale, die de zin vóór elk ervan noemt.
 
 ## Keuzes
 
@@ -123,6 +126,50 @@ Schrijf de instellingen voluit wanneer u twee verschillende scheidingstekens wil
 ```
 
 `sep` gaat tussen de stukken en `lastsep` voor het laatste.
+
+Een scheidingsteken dat alleen uit letters bestaat krijgt aan elke kant een spatie, ook als er geen
+getypt is:
+
+```spx-good
+[<lastsep="en">A|B]  →  B en A
+```
+
+Schriften die zonder spaties tussen de woorden worden geschreven zijn de uitzondering, onder elke
+locale: Chinese, Japanse, Thaise, Laotiaanse, Khmer- en Myanmarese scheidingstekens sluiten direct
+aan.
+
+```spx-good
+[<lastsep="和">A|B]  →  B和A
+[<lastsep="と">A|B]  →  BとA
+[<lastsep="และ">A|B]  →  BและA
+[<lastsep="ແລະ">A|B]  →  BແລະA
+[<lastsep="ក">A|B]  →  BកA
+[<lastsep="က">A|B]  →  BကA
+```
+
+Het Arabisch en het Hebreeuws hebben een eigen regel, en het is de **locale** die hem aanzet, niet
+het schrift. Onder `ar` houdt een scheidingsteken dat precies و of ف is de spatie ervoor en laat het
+de spatie erna vallen, omdat het Arabisch het voegwoord vast aan het volgende woord schrijft; onder
+`he` geldt hetzelfde voor ו. Het gebeurt alleen vóór een woord in dat schrift — vóór een Latijnse
+naam of een cijfer blijven beide spaties staan:
+
+```spx-good locale=ar
+[<lastsep="و">الكازينو|البث]  →  البث والكازينو
+[<lastsep="و">Evolution|الكازينو]  →  الكازينو و Evolution
+[<lastsep="ف">الكازينو|البث]  →  البث فالكازينو
+[<lastsep="و">2026|البث]  →  البث و 2026
+```
+
+```spx-good locale=he
+[<lastsep="ו">קזינו|שידור]  →  שידור וקזינו
+```
+
+Onder elke andere locale blijft het voegwoord een woord op zichzelf, en dat is juist voor het
+Perzisch en het Urdu, waar dezelfde letter los wordt geschreven:
+
+```spx-good
+[<lastsep="و">الكازينو|البث]  →  البث و الكازينو
+```
 
 ### Hoeveel
 
@@ -247,7 +294,33 @@ kunnen elkaar niet tegenspreken: in plaats daarvan verdwijnt het woord.
 %n% {plural %n%: bestand|bestanden}  →  5
 ```
 
-Hoeveel vormen er zijn bepaalt de locale en niet u: onder `nl` zijn het er twee, onder `ru` drie.
+Hoeveel vormen er zijn bepaalt de locale en niet u: onder `nl` zijn het er twee, onder `ru` drie,
+onder `ar` zes — in de volgorde zero, one, two, few, many, other. Het Arabisch zegt «één boek» en
+«twee boeken» zonder telwoord, dus het getal gaat **in** de vormen die het afdrukken, en niet vóór
+het blok:
+
+```spx-good locale=ar
+#def %n% = 3
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 3 كتب.
+```
+
+```spx-good locale=ar
+#def %n% = 2
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتابان.
+
+#def %n% = 0
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 0 كتاب.
+
+#def %n% = 1
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتاب واحد.
+
+#def %n% = 11
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 11 كتابًا.
+
+#def %n% = 100
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 100 كتاب.
+```
+
 Het verkeerde aantal is een fout die het paneel meldt (`plural.arity`), en de machine drukt dan de
 hele constructie terug af met de accolades vervangen door brede `｛｝`, zodat men het niet voor
 uitvoer aanziet.

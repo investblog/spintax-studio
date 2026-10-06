@@ -858,8 +858,8 @@ begin
     flag is also a country, and `en` is not one. }
   FLocale.Style := csOwnerDrawFixed;
   FLocale.OnDrawItem := @LocaleDrawItem;
-  { Every locale visible at once. The default is eight against ten items, which is a scrollbar
-    for the sake of two lines. }
+  { Every locale visible at once. The default is eight against twelve items (ten until
+    `ar`/`he`, 2026-10-06), which is a scrollbar for the sake of four lines. }
   FLocale.DropDownCount := FLocale.Items.Count;
 
   FSeeded := TCheckBox.Create(Self);
@@ -1464,8 +1464,9 @@ begin
     { The padding the rows are drawn with, on both sides, plus room to breathe -- and nothing
       for a scrollbar, because with DropDownCount at the item count there is not one.
 
-      Measured with the ten locales this ships with: the longest line is Belarusian, and the
-      first attempt left it 4 px from the edge. That is not clipping but it reads as if it
+      Measured with the ten locales this first shipped with: the longest line is Belarusian,
+      and still is with `ar`/`he` added (photographed 2026-10-06: 158 px, all twelve rows).
+      The first attempt left it 4 px from the edge. That is not clipping but it reads as if it
       were, and the slack costs nothing on a list nobody is short of room for. }
     if wide > 0 then
       SendMessage(FLocale.Handle, CB_SETDROPPEDWIDTH,
@@ -4336,7 +4337,14 @@ begin
       job.HelpDoc := SpxHelpPageDoc(job.HelpLang, FHelp.CurrentPage);
     if job.HelpDoc < 0 then job.HelpDoc := 0;
     job.UiLang := SpxUiLang;
-    job.Locale := SpxHelpLocale(job.HelpLang, job.HelpDoc);
+    { The EXAMPLE's locale, which is its document's unless its own block named one: the Arabic
+      and Hebrew examples live in every language's document and were measured under `ar`/`he`,
+      so the document's locale would render them into a different answer than the arrow beside
+      them. }
+    if FHelpExample >= 0 then
+      job.Locale := SpxHelpExampleLocale(job.HelpLang, FHelpExample)
+    else
+      job.Locale := SpxHelpLocale(job.HelpLang, job.HelpDoc);
     job.Seeded := not FHelpRandom;
     job.Seed := SpxHelpSeed(job.HelpLang, job.HelpDoc);
     job.HelpExample := FHelpExample;

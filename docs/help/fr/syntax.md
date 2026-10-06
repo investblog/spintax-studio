@@ -42,7 +42,10 @@ champ de nombre apparaît à côté, et l'aperçu cesse de bouger pendant que vo
 
 `locale` décide des formes de nombre, et c'est le sélecteur au-dessus du volet de droite, non la
 langue de l'interface. Le français et l'anglais demandent deux formes ; le russe, l'ukrainien, le
-biélorusse, le serbe, le croate et le bosnien en demandent trois.
+biélorusse, le serbe, le croate et le bosnien en demandent trois ; l'arabe en demande six. Sous
+l'arabe et l'hébreu, elle change aussi la façon dont une conjonction joint une liste (voir le
+séparateur). Les exemples arabes et hébreux ci-dessous sont mesurés sous leur propre locale, que
+nomme la phrase qui précède chacun d'eux.
 
 ## Choix
 
@@ -123,6 +126,50 @@ sortie répondent à des questions différentes.
 ```
 
 `sep` va entre les morceaux et `lastsep` avant le dernier.
+
+Un séparateur fait uniquement de lettres reçoit une espace de chaque côté, même si aucune n'a été
+tapée :
+
+```spx-good
+[<lastsep="et">A|B]  →  B et A
+```
+
+Les écritures qui ne mettent pas d'espace entre les mots font exception, sous n'importe quelle
+locale : les séparateurs chinois, japonais, thaïs, laotiens, khmers et birmans se joignent sans
+espace.
+
+```spx-good
+[<lastsep="和">A|B]  →  B和A
+[<lastsep="と">A|B]  →  BとA
+[<lastsep="และ">A|B]  →  BและA
+[<lastsep="ແລະ">A|B]  →  BແລະA
+[<lastsep="ក">A|B]  →  BកA
+[<lastsep="က">A|B]  →  BကA
+```
+
+L'arabe et l'hébreu ont une règle à eux, et c'est la **locale** qui l'active, non l'écriture. Sous
+`ar`, un séparateur qui est exactement و ou ف garde l'espace devant lui et perd celle d'après,
+parce que l'arabe écrit la conjonction collée au mot suivant ; sous `he`, il en va de même pour ו.
+Cela n'arrive que devant un mot de cette écriture — devant un nom latin ou un chiffre, les deux
+espaces restent :
+
+```spx-good locale=ar
+[<lastsep="و">الكازينو|البث]  →  البث والكازينو
+[<lastsep="و">Evolution|الكازينو]  →  الكازينو و Evolution
+[<lastsep="ف">الكازينو|البث]  →  البث فالكازينو
+[<lastsep="و">2026|البث]  →  البث و 2026
+```
+
+```spx-good locale=he
+[<lastsep="ו">קזינו|שידור]  →  שידור וקזינו
+```
+
+Sous toute autre locale, la conjonction reste un mot à part, ce qui est juste pour le persan et
+l'ourdou, où la même lettre s'écrit séparée :
+
+```spx-good
+[<lastsep="و">الكازينو|البث]  →  البث و الكازينو
+```
 
 ### Combien
 
@@ -248,7 +295,33 @@ compte et la forme ne peuvent se contredire : c'est le mot qui disparaît.
 ```
 
 Le nombre de formes est décidé par la locale et non par vous : sous `fr` il y en a deux, sous `ru`
-trois. Le mauvais nombre est une erreur que le panneau signale (`plural.arity`), et le moteur
+trois, sous `ar` six — dans l'ordre zero, one, two, few, many, other. L'arabe dit « un livre » et
+« deux livres » sans chiffre, si bien que le nombre va **dans** les formes qui l'impriment plutôt
+que devant le bloc :
+
+```spx-good locale=ar
+#def %n% = 3
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 3 كتب.
+```
+
+```spx-good locale=ar
+#def %n% = 2
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتابان.
+
+#def %n% = 0
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 0 كتاب.
+
+#def %n% = 1
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتاب واحد.
+
+#def %n% = 11
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 11 كتابًا.
+
+#def %n% = 100
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 100 كتاب.
+```
+
+Le mauvais nombre est une erreur que le panneau signale (`plural.arity`), et le moteur
 réimprime alors la construction entière, accolades remplacées par de larges `｛｝`, pour qu'on ne
 la prenne pas pour de la sortie.
 

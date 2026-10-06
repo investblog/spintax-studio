@@ -115,6 +115,19 @@ def esc(text):
     return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
+def rtl_letter(c):
+    """Hebrew, Arabic and their presentation forms -- the scripts written right to left."""
+    return ('֐' <= c <= 'ࣿ') or ('יִ' <= c <= '﷿') or ('ﹰ' <= c <= '﻿')
+
+
+def rtl_phrase(before, after):
+    """Whether a space between these two visible characters sits inside a right-to-left phrase."""
+    if not before or not after:
+        return False
+    kin = lambda c: rtl_letter(c) or ('0' <= c <= '9')   # ASCII, as the suite's gate reads it
+    return kin(before) and kin(after) and (rtl_letter(before) or rtl_letter(after))
+
+
 def preformatted(lines):
     """An example block, laid out like a <pre> and NOT one.
 
@@ -158,14 +171,25 @@ def preformatted(lines):
     # its own line that way, and the arrow puts the output on one -- and inside a PRE that LF was
     # a break. In a paragraph it is not: TrimFormatting turns it into a space, so the output
     # would join the template.
+    #
+    # AND A SPACE INSIDE AN ARABIC OR HEBREW PHRASE IS NON-BREAKING TOO, or the phrase reads
+    # backwards. IPro cuts text into words at ordinary spaces and lays the words out left to right;
+    # each word is shaped correctly and the ORDER is wrong, so `في سلتك 3 كتب.` came out with `في`
+    # on the left. Through a non-breaking space the phrase reaches Windows as one run and the system
+    # orders it right to left -- photographed both ways in one probe (2026-10-06). Only a space with
+    # a right-to-left letter on one side and a letter of that kind or a digit on the other: the
+    # break points everywhere else, which the narrow-panel rule above exists for, are untouched.
     for line in '\n'.join(lines).split('\n'):
-        buf, in_tag, run, seen = [], False, 0, False
+        buf, in_tag, run, seen, prev = [], False, 0, False, ''
         for ch in line:
             if ch == ' ' and not in_tag:
                 run += 1
                 continue
             if run:
-                buf.append('&nbsp;' * run if not seen else '&nbsp;' * (run - 1) + ' ')
+                if seen and rtl_phrase(prev, ch):
+                    buf.append('&nbsp;' * run)
+                else:
+                    buf.append('&nbsp;' * run if not seen else '&nbsp;' * (run - 1) + ' ')
                 run = 0
             if ch == '<':
                 in_tag = True
@@ -173,6 +197,7 @@ def preformatted(lines):
                 in_tag = False
             elif not in_tag:
                 seen = True
+                prev = ch
             buf.append(ch)
         # Trailing spaces have nothing after them to break before, so they stay as they were.
         if run:
@@ -212,11 +237,44 @@ NOTE_GAP = re.compile('^(.*→.*?)   +(\\S.*)$')
 
 ARROW = '→'
 
+# What the suite's Pascal `Trim` removes: every character up to and including the space, and no
+# other. Python's own strip() also eats a no-break space, so a fence line ending in one was a
+# fence here and junk there (Codex, 2026-10-06) -- the two readers must agree on the line too.
+PASCAL_BLANKS = ''.join(chr(c) for c in range(33))
+
 
 def link(index, inner):
     """An anchor the window resolves by number. `ex:` rather than a bare digit so a future kind
     of link cannot be mistaken for this one."""
     return '<a href="ex:%d">%s</a>' % (index, inner)
+
+
+def fence_info(lang, n, info):
+    """The opening fence's info string -> (kind, locale).
+
+    A KIND (`spx-good`, `spx-fixture` or none), optionally followed by `locale=xx`: the examples
+    in that one block render under that locale instead of the document's. It exists for the
+    behaviour a document's own locale cannot show -- Arabic's six plural forms, the conjunction
+    that attaches under `ar`/`he` -- which every language's help has to describe, and a claim
+    about it in prose would be the one unmeasured sentence on the page. The suite reads the same
+    string the same way and also checks the locale is one the window offers; here only its shape
+    is refused, because this script does not read the window's list. The conditions block takes
+    no locale of its own: it already declares one."""
+    parts = [p for p in re.split(r'[ \t]+', info) if p]   # ASCII blanks only, as the suite splits
+    kind = parts[0] if parts else ''
+    if kind.startswith('locale='):
+        kind, parts = '', [''] + parts
+    if kind not in ('', 'spx-fixture', 'spx-good'):
+        raise Bad(lang, n, 'an unknown fence info string %r' % info)
+    locale = ''
+    for p in parts[1:]:
+        m = re.match(r'^locale=([a-z]{2})$', p)
+        if not m or locale:
+            raise Bad(lang, n, 'an unknown fence info string %r' % info)
+        locale = m.group(1)
+    if locale and kind == 'spx-fixture':
+        raise Bad(lang, n, 'the conditions block declares its locale inside, not on the fence')
+    return kind, locale
 
 
 def fence_note(right):
@@ -316,6 +374,8 @@ def convert(lang, path, slugs, ex_base):
     fence_body = []
     fixture = {'locale': '', 'seed': 0, 'empty': '', 'includes': []}
     examples = []         # every example's template, in document order
+    ex_locales = []       # beside it: the fence's own locale, or '' for the document's
+    fence_locale = ''
     acc = []              # the template lines of the one being read
     seen_fixture = [False]
     fence_start = 0
@@ -379,16 +439,14 @@ def convert(lang, path, slugs, ex_base):
         page['html'].append('</table>')
 
     for n, raw_line in enumerate(lines, 1):
-        line = raw_line.rstrip()
-        stripped = line.strip()
+        line = raw_line.rstrip(PASCAL_BLANKS)
+        stripped = line.strip(PASCAL_BLANKS)
 
         if stripped.startswith('```'):
             if fence is None:
                 flush()
                 close_list()
-                fence = stripped[3:].strip()
-                if fence not in ('', 'spx-fixture', 'spx-good'):
-                    raise Bad(lang, n, 'an unknown fence info string %r' % fence)
+                fence, fence_locale = fence_info(lang, n, stripped[3:].strip())
                 fence_body = []
                 del acc[:]
                 fence_start = n
@@ -430,6 +488,7 @@ def convert(lang, path, slugs, ex_base):
                     acc.append(left.rstrip())
                 if acc:
                     examples.append('\n'.join(acc))
+                    ex_locales.append(fence_locale)
                     ex = ex_base + len(examples) - 1
                     # The TEMPLATE is the link and the output is not. Each line of a multi-line
                     # template is its own anchor pointing at the same example: a single-line
@@ -550,7 +609,7 @@ def convert(lang, path, slugs, ex_base):
         raise Bad(lang, fence_start, 'this fence is never closed')
     flush()
     close_list()
-    return pages, digest, fixture, examples
+    return pages, digest, fixture, examples, ex_locales
 
 
 BLOCK_TAGS = ['p', 'pre', 'blockquote', 'ul', 'li', 'table', 'tr', 'th', 'td',
@@ -868,6 +927,14 @@ begin
   Result := HELP_EX_DOC[HELP_EX_FIRST[ALang] + AIndex];
 end;
 
+function SpxHelpExampleLocale(ALang, AIndex: Integer): string;
+begin
+  Result := '';
+  if (AIndex < 0) or (AIndex >= SpxHelpExampleCount(ALang)) then Exit;
+  Result := HELP_EX_LOCALE[HELP_EX_FIRST[ALang] + AIndex];
+  if Result = '' then Result := SpxHelpLocale(ALang, SpxHelpExampleDoc(ALang, AIndex));
+end;
+
 function SpxHelpExampleOf(const AHref: string): Integer;
 var i, n: Integer; digits: string;
 begin
@@ -907,7 +974,7 @@ def main():
             # The examples of a language are ONE table, so this document's `ex:N` continue where
             # the previous document's stopped.
             ex_base = sum(len(e['examples']) for e in entries)
-            pages, digest, fixture, examples = convert(lang, path, DOC_SLUGS[kind], ex_base)
+            pages, digest, fixture, examples, ex_locales = convert(lang, path, DOC_SLUGS[kind], ex_base)
             if not seen_any(fixture):
                 raise SystemExit('%s: no spx-fixture block -- the pane could not reproduce the '
                                  'outputs it prints' % CURRENT[0])
@@ -917,7 +984,8 @@ def main():
             for page in pages:
                 refuse_bad_html(lang, page)
             entries.append({'kind': kind, 'path': CURRENT[0], 'digest': digest,
-                            'pages': pages, 'fixture': fixture, 'examples': examples})
+                            'pages': pages, 'fixture': fixture, 'examples': examples,
+                            'ex_locales': ex_locales})
         langs.append({'lang': lang, 'docs': entries})
 
     # THE DOCUMENTS MUST RUN PARALLEL, per kind, across the languages -- see above for why. The
@@ -969,7 +1037,7 @@ def main():
     flat_pages = []         # (slug, title, doc_in_lang, first_line, last_line)
     page_span = []          # (first, last) into flat_pages, per language
     flat = []               # every HTML line of every page
-    exs, ex_span, ex_doc = [], [], []
+    exs, ex_span, ex_doc, ex_loc = [], [], [], []
     anchors, anchor_span = [], []
 
     for entry in langs:
@@ -989,6 +1057,7 @@ def main():
                 flat.extend(page['html'])
             exs.extend(doc['examples'])
             ex_doc.extend([d] * len(doc['examples']))
+            ex_loc.extend(doc['ex_locales'])
         doc_span.append((first_doc, len(docs_flat) - 1))
         page_span.append((first_page, len(flat_pages) - 1))
         ex_span.append((first_ex, len(exs) - 1))
@@ -1116,6 +1185,11 @@ def main():
          'function SpxHelpExample(ALang, AIndex: Integer; out ATemplate: string): Boolean;',
          '{ Which document it belongs to, so it renders under that document\'s conditions. }',
          'function SpxHelpExampleDoc(ALang, AIndex: Integer): Integer;',
+         '{ The locale it was MEASURED under: the one its own fence declared (`locale=ar`), else',
+         '  its document\'s. The one place that rule lives -- the window renders a click under it',
+         '  and the suite counts rows under it, and two copies of it would drift. \'\' for an',
+         '  index this build does not have. }',
+         'function SpxHelpExampleLocale(ALang, AIndex: Integer): string;',
          '{ `ex:7` -> 7, or -1 for anything else. The one place the href form is known. }',
          'function SpxHelpExampleOf(const AHref: string): Integer;',
          '',
@@ -1157,6 +1231,7 @@ def main():
     u += arr('HELP_EX_LAST', 'Integer', [str(b) for _, b in ex_span])
     u += arr('HELP_EX_TEMPLATE', 'string', [literal(e) for e in exs], True)
     u += arr('HELP_EX_DOC', 'Integer', [str(d) for d in ex_doc])
+    u += arr('HELP_EX_LOCALE', 'string', ["'%s'" % l for l in ex_loc])
     u.append('')
     u.append('  { The `###` articles: page, id, title, and whether the id is a diagnostic code. }')
     u += arr('HELP_ANCHOR_FIRST', 'Integer', [str(a) for a, _ in anchor_span])

@@ -345,8 +345,13 @@ ist nichts unterstrichen, denn mit der Zeile, die Sie geschrieben haben, ist all
 schmalen. So sagt sie „ich habe das gesehen und konnte es nicht anwenden". Unübersehbar nennt das
 niemand, und das ist gut so: ein still verschwundener Absatz brauchte länger, bis man ihn fände.
 
-Deutsch verlangt zwei Formen, Russisch drei. Unter der Locale dieses Dokuments ist
-`{plural %n%: Ding|Dinge}` die richtige.
+Deutsch verlangt zwei Formen, Russisch drei, Arabisch sechs. Unter der Locale dieses Dokuments ist
+`{plural %n%: Ding|Dinge}` die richtige; unter `ar` sind dieselben zwei Formen der Fehler:
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **Leere entsteht aus einem anderen Grund, und die beiden sind leicht zu verwechseln.** Vergleichen
 Sie diese zwei, die sich nur in der Zahl der Formen unterscheiden:

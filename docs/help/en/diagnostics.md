@@ -328,8 +328,13 @@ open document, because there is nothing wrong with the line you wrote.
 `｛｝`. That is how it says "I saw this and could not apply it". Nobody would call that
 unnoticeable, and that is good: a paragraph that vanished silently would take longer to find.
 
-English asks for two forms, Russian for three. Under this document's locale
-`{plural %n%: item|items}` is the correct one.
+English asks for two forms, Russian for three, Arabic for six. Under this document's locale
+`{plural %n%: item|items}` is the correct one; under `ar` the same two forms are the error:
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **Emptiness happens for another reason, and the two are easy to confuse.** Compare these two,
 which differ only in how many forms they carry:

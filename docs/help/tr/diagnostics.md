@@ -322,8 +322,13 @@ yanlış yoktur.
 olarak. «Bunu gördüm ve uygulayamadım» demenin yolu budur. Buna göze batmaz diyen olmaz ve iyi ki
 öyle: sessizce yok olan bir paragrafı bulmak daha uzun sürerdi.
 
-Türkçe iki biçim ister, Rusça üç. Bu belgenin yerel ayarı altında doğrusu
-`{plural %n%: nesne|nesneler}`.
+Türkçe iki biçim ister, Rusça üç, Arapça altı. Bu belgenin yerel ayarı altında doğrusu
+`{plural %n%: nesne|nesneler}`; `ar` altında aynı iki biçim hatadır:
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **Boşluk başka bir nedenden gelir ve ikisini karıştırmak kolaydır.** Yalnızca kaç biçim taşıdıkları
 bakımından ayrılan şu ikisini karşılaştırın:

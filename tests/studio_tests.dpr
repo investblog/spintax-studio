@@ -4483,7 +4483,7 @@ const
      other than the default arity of two -- measured, `{plural %n%: one|few|many}` answers it
      at locale "" and answers nothing at "en", "ru" or any other tag.
 
-     Studio has no empty locale. `SPX_LOCALES` holds ten tags, none blank, the box is
+     Studio has no empty locale. `SPX_LOCALES` holds twelve tags, none blank, the box is
      csDropDownList so nothing can be typed into it, and the locale is not persisted, so every
      run starts on 'en'. A reader therefore cannot produce this code in the panel, and an
      article about it in fourteen languages would document something the product cannot do.
@@ -4659,10 +4659,23 @@ begin
       'Русский (ru)' would send PluralArity to a language nobody named, and the preview would
       then disagree with every other engine in the family without a diagnostic. }
     CheckTrue('locale/every-tag-is-two-letters', Length(SpxLocaleTag(i)) = 2);
-    { The round trip SpxLocaleEndonym relies on. Break it and every name silently becomes
-      'English', because SpxLangFor answers the base for whatever it does not know. }
-    CheckTrue('locale/every-tag-round-trips',
-              SpxLangCode(SpxLangFor(SpxLocaleTag(i))) = SpxLocaleTag(i));
+    { Every tag has a NAME -- from the window's own languages or from the table of locales the
+      window does not speak (`ar`, `he`). Named per tag, so a tag added without a name says
+      which one; the message is built from the index as well, because a failure message built
+      out of the failing value disappears when that value is empty. }
+    if SpxLocaleEndonym(i) = '' then
+      CheckTrue('locale/every-tag-has-a-name: #' + IntToStr(i) + ' "' + SpxLocaleTag(i) + '"',
+                False)
+    else
+      CheckTrue('locale/every-tag-has-a-name', True);
+    { The round trip is still what keeps a window language from glossing a tag it does not
+      own: a locale the window speaks must be named BY the window, never by the table. }
+    if SpxLangCode(SpxLangFor(SpxLocaleTag(i))) = SpxLocaleTag(i) then
+      Check('locale/a-window-language-names-its-own-tag', SpxLocaleEndonym(i),
+            SpxLangName(SpxLangFor(SpxLocaleTag(i))))
+    else
+      CheckTrue('locale/a-tag-the-window-does-not-speak-is-not-called-English',
+                SpxLocaleEndonym(i) <> SpxLangName(spxLangEn));
     { THE SCREEN-READER ASSERTION: a label equal to its own tag is a list that says 'ru' out
       loud, which is the state this slice ended. }
     CheckTrue('locale/label-is-not-the-bare-tag', SpxLocaleLabel(i) <> SpxLocaleTag(i));
@@ -4682,8 +4695,11 @@ begin
     product's readers write in, and a reorder would move every ItemIndex silently. }
   Check('locale/anchor-first-is-russian', SpxLocaleLabel(0), 'Русский (ru)');
   Check('locale/anchor-english-sits-fourth', SpxLocaleTag(3), 'en');
-  Check('locale/anchor-last-is-bosnian', SpxLocaleLabel(SpxLocaleCount - 1), 'Bosanski (bs)');
-  Check('locale/the-list-is-ten-long', IntToStr(SpxLocaleCount), '10');
+  Check('locale/anchor-bosnian-sits-tenth', SpxLocaleLabel(9), 'Bosanski (bs)');
+  { The two the window does not speak, appended after every stored index (2026-10-06). }
+  Check('locale/anchor-arabic', SpxLocaleLabel(10), 'العربية (ar)');
+  Check('locale/anchor-last-is-hebrew', SpxLocaleLabel(SpxLocaleCount - 1), 'עברית (he)');
+  Check('locale/the-list-is-twelve-long', IntToStr(SpxLocaleCount), '12');
 
   { The diagnostics panel is the largest body of prose in the window and the one place its
     words come from editor-core. Every code the engine can emit must read as a sentence in
@@ -4897,49 +4913,49 @@ type
 
 const
   HELP_DOCS: array[0..41] of THelpDoc = (
-    (Path: 'docs/help/en/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/ru/diagnostics.md'; Examples: 38; Codes: True;  Good: 8),
-    (Path: 'docs/help/en/syntax.md';      Examples: 39; Codes: False; Good: 35),
-    (Path: 'docs/help/ru/syntax.md';      Examples: 41; Codes: False; Good: 37),
+    (Path: 'docs/help/en/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/ru/diagnostics.md'; Examples: 39; Codes: True;  Good: 8),
+    (Path: 'docs/help/en/syntax.md';      Examples: 58; Codes: False; Good: 54),
+    (Path: 'docs/help/ru/syntax.md';      Examples: 60; Codes: False; Good: 56),
     { The product itself, added 2026-08-06 -- a reader who opens the help was being told how
       the LANGUAGE works and never what this program is. It carries one example, because it is
       about the window rather than the syntax, and that one is gated like every other. }
     (Path: 'docs/help/en/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/de/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/de/syntax.md';      Examples: 40; Codes: False; Good: 36),
+    (Path: 'docs/help/de/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/de/syntax.md';      Examples: 59; Codes: False; Good: 55),
     (Path: 'docs/help/de/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/fr/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/fr/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/fr/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/fr/syntax.md';      Examples: 61; Codes: False; Good: 57),
     (Path: 'docs/help/fr/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/es/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/es/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/es/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/es/syntax.md';      Examples: 61; Codes: False; Good: 57),
     (Path: 'docs/help/es/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/it/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/it/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/it/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/it/syntax.md';      Examples: 61; Codes: False; Good: 57),
     (Path: 'docs/help/it/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/pt/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/pt/syntax.md';      Examples: 43; Codes: False; Good: 39),
+    (Path: 'docs/help/pt/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/pt/syntax.md';      Examples: 62; Codes: False; Good: 58),
     (Path: 'docs/help/pt/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/nl/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/nl/syntax.md';      Examples: 40; Codes: False; Good: 36),
+    (Path: 'docs/help/nl/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/nl/syntax.md';      Examples: 59; Codes: False; Good: 55),
     (Path: 'docs/help/nl/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/tr/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/tr/syntax.md';      Examples: 41; Codes: False; Good: 37),
+    (Path: 'docs/help/tr/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/tr/syntax.md';      Examples: 60; Codes: False; Good: 56),
     (Path: 'docs/help/tr/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/uk/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/uk/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/uk/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/uk/syntax.md';      Examples: 61; Codes: False; Good: 57),
     (Path: 'docs/help/uk/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/be/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/be/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/be/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/be/syntax.md';      Examples: 61; Codes: False; Good: 57),
     (Path: 'docs/help/be/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/sr/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/sr/syntax.md';      Examples: 44; Codes: False; Good: 40),
+    (Path: 'docs/help/sr/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/sr/syntax.md';      Examples: 63; Codes: False; Good: 59),
     (Path: 'docs/help/sr/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/hr/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/hr/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/hr/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/hr/syntax.md';      Examples: 61; Codes: False; Good: 57),
     (Path: 'docs/help/hr/studio.md';      Examples: 1;  Codes: False; Good: 1),
-    (Path: 'docs/help/bs/diagnostics.md'; Examples: 35; Codes: True;  Good: 6),
-    (Path: 'docs/help/bs/syntax.md';      Examples: 42; Codes: False; Good: 38),
+    (Path: 'docs/help/bs/diagnostics.md'; Examples: 36; Codes: True;  Good: 6),
+    (Path: 'docs/help/bs/syntax.md';      Examples: 61; Codes: False; Good: 57),
     (Path: 'docs/help/bs/studio.md';      Examples: 1;  Codes: False; Good: 1),
     (Path: 'docs/help/ru/studio.md';      Examples: 1;  Codes: False; Good: 1));
 
@@ -5299,20 +5315,20 @@ type
 
 const
   HELP_LANG_FACTS: array[0..13] of THelpLangFacts = (
-    (Code: 'en'; CleanExamples: 48; Silences: 5),
-    (Code: 'ru'; CleanExamples: 54; Silences: 7),
-    (Code: 'de'; CleanExamples: 49; Silences: 6),
-    (Code: 'fr'; CleanExamples: 51; Silences: 6),
-    (Code: 'es'; CleanExamples: 51; Silences: 6),
-    (Code: 'it'; CleanExamples: 51; Silences: 6),
-    (Code: 'pt'; CleanExamples: 52; Silences: 6),
-    (Code: 'nl'; CleanExamples: 49; Silences: 6),
-    (Code: 'tr'; CleanExamples: 50; Silences: 8),
-    (Code: 'uk'; CleanExamples: 52; Silences: 8),
-    (Code: 'be'; CleanExamples: 52; Silences: 8),
-    (Code: 'sr'; CleanExamples: 54; Silences: 8),
-    (Code: 'hr'; CleanExamples: 52; Silences: 7),
-    (Code: 'bs'; CleanExamples: 52; Silences: 7));
+    (Code: 'en'; CleanExamples: 67; Silences: 5),
+    (Code: 'ru'; CleanExamples: 73; Silences: 7),
+    (Code: 'de'; CleanExamples: 68; Silences: 6),
+    (Code: 'fr'; CleanExamples: 70; Silences: 6),
+    (Code: 'es'; CleanExamples: 70; Silences: 6),
+    (Code: 'it'; CleanExamples: 70; Silences: 6),
+    (Code: 'pt'; CleanExamples: 71; Silences: 6),
+    (Code: 'nl'; CleanExamples: 68; Silences: 6),
+    (Code: 'tr'; CleanExamples: 69; Silences: 8),
+    (Code: 'uk'; CleanExamples: 71; Silences: 8),
+    (Code: 'be'; CleanExamples: 71; Silences: 8),
+    (Code: 'sr'; CleanExamples: 73; Silences: 8),
+    (Code: 'hr'; CleanExamples: 71; Silences: 7),
+    (Code: 'bs'; CleanExamples: 71; Silences: 7));
 
 function HelpFactsFor(const ACode: string; out AFacts: THelpLangFacts): Boolean;
 var i: Integer;
@@ -5337,14 +5353,57 @@ begin
     if SpxHelpLangCode(i) = ACode then Exit(True);
 end;
 
+(* The opening fence's info string, by make-help.py's fence_info grammar and no other: tokens
+   split on ASCII blanks; a KIND first unless the first token is already `locale=`; at most one
+   `locale=` followed by exactly two letters a-z; none on the conditions block. Codex found the
+   first version reading `locale=` as a substring, which accepted `locale=AR` and a locale on
+   `spx-fixture` -- strings the generator refuses, so the two parsers would have checked one
+   document and shipped another. False for anything the generator would refuse; the KIND is
+   checked against the known ones by the caller. *)
+function ParseFenceInfo(const AInfo: string; out AKind, ALocale: string): Boolean;
+var toks: TStringList; i, j: Integer; t, cur: string;
+begin
+  AKind := '';
+  ALocale := '';
+  Result := True;
+  toks := TStringList.Create;
+  try
+    cur := '';
+    for i := 1 to Length(AInfo) + 1 do
+      if (i > Length(AInfo)) or (AInfo[i] = ' ') or (AInfo[i] = #9) then
+      begin
+        if cur <> '' then toks.Add(cur);
+        cur := '';
+      end
+      else cur := cur + AInfo[i];
+    i := 0;
+    if (toks.Count > 0) and (Copy(toks[0], 1, 7) <> 'locale=') then
+    begin
+      AKind := toks[0];
+      i := 1;
+    end;
+    for i := i to toks.Count - 1 do
+    begin
+      t := toks[i];
+      if (ALocale <> '') or (Copy(t, 1, 7) <> 'locale=') or (Length(t) <> 9) then Exit(False);
+      for j := 8 to 9 do
+        if not (t[j] in ['a'..'z']) then Exit(False);
+      ALocale := Copy(t, 8, 2);
+    end;
+    if (ALocale <> '') and (AKind = 'spx-fixture') then Result := False;
+  finally
+    toks.Free;
+  end;
+end;
+
 procedure CheckHelpDoc(const ADoc: THelpDoc);
 var
-  line, want, doc_, got, tag, key, val, label_, locale, empty_: string;
+  line, want, doc_, got, tag, key, val, label_, locale, empty_, fenceLocale, fenceInfo: string;
   section, undemonstrated: string;
   seedInt: Integer;
   lines: TStringList;
   set_: TSpxTemplateSet;
-  ctx: TSpxContext;
+  ctx, exCtx: TSpxContext;
   i, p, checked, good, seed, exampleLine: Integer;
   inFence, isFixture, isGood, skip, haveFixture, ctxReady, sectionShown,
   sectionHadExamples: Boolean;
@@ -5363,6 +5422,7 @@ begin
     good := 0;
     seed := 0;
     locale := '';
+    fenceLocale := '';
     empty_ := '';
     inFence := False;
     isFixture := False;
@@ -5397,6 +5457,18 @@ begin
         if not inFence then
         begin
           tag := Trim(Copy(Trim(line), 4, MaxInt));
+          (* A `locale=xx` after the kind renders THIS block's examples under that locale --
+             read here exactly as make-help.py's fence_info reads it, because the window renders
+             a click under the same value and the two must not disagree. Shape is refused by the
+             generator; what only this side can check is that the window OFFERS the locale, or
+             the help would describe a render no reader can reproduce. *)
+          fenceInfo := tag;
+          if not ParseFenceInfo(fenceInfo, tag, fenceLocale) then
+            CheckTrue('help/' + label_ + '/the fence info string parses as make-help.py reads it [' +
+                      Trim(Copy(Trim(line), 4, MaxInt)) + '] at line ' + IntToStr(i + 1), False);
+          if (fenceLocale <> '') and (SpxLocaleIndexOf(fenceLocale) < 0) then
+            CheckTrue('help/' + label_ + '/a fence locale is one the window offers [' +
+                      fenceLocale + '] at line ' + IntToStr(i + 1), False);
           isFixture := tag = 'spx-fixture';
           { A `spx-good` fence CLAIMS the examples in it are clean, and the claim is checked
             below rather than believed. Without it the chapter about correct forms proved
@@ -5422,6 +5494,7 @@ begin
         begin
           isFixture := False;
           isGood := False;
+          fenceLocale := '';
         end;
         inFence := not inFence;
         doc_ := '';
@@ -5538,8 +5611,12 @@ begin
                 IntToStr(exampleLine), not skip);
       if not skip then
       begin
-        got := SpxRenderSample(doc_, ctx);
-        NoteTemplate(ADoc.Path, doc_);
+        exCtx := ctx;
+        if fenceLocale <> '' then exCtx.Locale := fenceLocale;
+        got := SpxRenderSample(doc_, exCtx);
+        { The LOCALE travels with the template: the window renders a click under
+          SpxHelpExampleLocale, so the comparison below must hold that to what was run too. }
+        NoteTemplate(ADoc.Path, exCtx.Locale + ' @ ' + doc_);
         (* AN ELLIPSIS IN THE OUTPUT IS A PARTIAL CLAIM, not an exemption. It used to skip the
            example entirely: unrendered, uncompared, uncounted, and -- because the counter and
            the causation flag lived in the same block -- it exempted the whole article too. The
@@ -5569,7 +5646,7 @@ begin
         if section <> '' then
         begin
           sectionHadExamples := True;
-          if Pos(':' + section + '@', RowsOf(doc_, ctx)) > 0 then sectionShown := True;
+          if Pos(':' + section + '@', RowsOf(doc_, exCtx)) > 0 then sectionShown := True;
         end;
         { THE `spx-good` CLAIM, held to. An example that says it is correct and draws a row is
           the same class of defect as an article that demonstrates the wrong code -- plausible
@@ -5578,7 +5655,7 @@ begin
         begin
           Check('help/' + label_ + '/a good example draws nothing: ' +
                 StringReplace(doc_, #10, ' / ', [rfReplaceAll]),
-                RowsOf(doc_, ctx), '<none>');
+                RowsOf(doc_, exCtx), '<none>');
           Inc(good);
         end;
         Inc(checked);
@@ -8663,7 +8740,7 @@ var
         every example was validated with no fragments at all, and the three `#include` examples
         counted as clean. The seed went into `Probes` by the same slip. Both compile. }
       rep := SpxHealthReport(tmpl,
-               SpxSeededContext(SpxHelpLocale(ALang, doc), nil,
+               SpxSeededContext(SpxHelpExampleLocale(ALang, AIndex), nil,
                                 SpxHelpSeed(ALang, doc), set_), 0);
       try
         rws := SpxPanelRows(rep, spxLangEn);
@@ -8888,7 +8965,8 @@ begin
       begin
         SpxHelpExample(lang, i, got);
         Check('help/unit/' + SpxHelpLangCode(lang) + '/example ' + IntToStr(i) +
-              ' is the one that was run', got, arts[i]);
+              ' is the one that was run, under the locale it was run under',
+              SpxHelpExampleLocale(lang, i) + ' @ ' + got, arts[i]);
       end;
     finally
       arts.Free;
@@ -9681,9 +9759,83 @@ begin
   end;
 end;
 
-procedure TestHelpExamples;
-var i: Integer; arts: TStringList; registered: TStringList;
+(* A SPACE INSIDE AN ARABIC OR HEBREW PHRASE IS NON-BREAKING ON THE PAGE, or the phrase reads
+   backwards. IPro cuts text into words at ordinary spaces and lays them out left to right, so
+   `في سلتك 3 كتب.` was drawn with its first word on the left; through &nbsp; the phrase reaches
+   Windows as one run and comes out right to left. Photographed both ways (2026-10-06), and the
+   rule lives in make-help.py's preformatted(). This holds the generated pages to it, in every
+   language, by the same test the generator uses: an ordinary space with a right-to-left letter on
+   one side and such a letter or a digit on the other. *)
+procedure CheckHelpRtlPhrases;
+  function Rtl(cp: LongWord): Boolean;
+  begin
+    Result := ((cp >= $0590) and (cp <= $08FF)) or ((cp >= $FB1D) and (cp <= $FDFF)) or
+              ((cp >= $FE70) and (cp <= $FEFF));
+  end;
+  function Kin(cp: LongWord): Boolean;
+  begin
+    Result := Rtl(cp) or ((cp >= Ord('0')) and (cp <= Ord('9')));
+  end;
+var lang, pg, i, n, phrases: Integer; s, bad: string; cp, prev: LongWord; gap: Boolean;
 begin
+  for lang := 0 to SPX_HELP_LANG_COUNT - 1 do
+  begin
+    bad := '';
+    phrases := 0;
+    for pg := 0 to SpxHelpPageCount(lang) - 1 do
+    begin
+      s := SpxHelpPageHtml(lang, pg);
+      prev := 0;
+      gap := False;
+      i := 1;
+      while i <= Length(s) do
+      begin
+        (* `&nbsp;` is skipped whole and leaves the previous letter in place: it is the space the
+           rule asks for, and one after a right-to-left letter is a phrase that was kept whole. *)
+        if Copy(s, i, 6) = '&nbsp;' then
+        begin
+          if Rtl(prev) then Inc(phrases);
+          i := i + 6;
+          Continue;
+        end;
+        cp := SpCodePointAt(s, i, n);
+        if n < 1 then n := 1;
+        if cp = Ord(' ') then gap := True
+        else
+        begin
+          if gap and Kin(prev) and Kin(cp) and (Rtl(prev) or Rtl(cp)) then
+            bad := bad + SpxHelpPageSlug(lang, pg) + '@' + IntToStr(i) + ' ';
+          prev := cp;
+          gap := False;
+        end;
+        i := i + n;
+      end;
+    end;
+    Check('help/rtl/' + SpxHelpLangCode(lang) + '/no ordinary space inside a right-to-left phrase',
+          Trim(bad), '');
+    { THE SUBJECT MUST BE THERE. Every language carries the Arabic and Hebrew examples since
+      2026-10-06; a check that found no phrase to hold would pass about a page it never read. }
+    CheckTrue('help/rtl/' + SpxHelpLangCode(lang) + '/found right-to-left phrases to check',
+              phrases > 0);
+  end;
+end;
+
+procedure TestHelpExamples;
+var i: Integer; arts: TStringList; registered: TStringList; k, l: string;
+begin
+  { The fence grammar, on the strings make-help.py's fence_info accepts and refuses. }
+  CheckTrue('help/fence/kind and locale', ParseFenceInfo('spx-good locale=ar', k, l) and
+            (k = 'spx-good') and (l = 'ar'));
+  CheckTrue('help/fence/locale alone', ParseFenceInfo('locale=he', k, l) and (k = '') and (l = 'he'));
+  CheckTrue('help/fence/a tab separates too', ParseFenceInfo('spx-good'#9'locale=ar', k, l) and
+            (l = 'ar'));
+  CheckTrue('help/fence/no locale', ParseFenceInfo('spx-good', k, l) and (l = ''));
+  CheckTrue('help/fence/upper case is refused', not ParseFenceInfo('spx-good locale=AR', k, l));
+  CheckTrue('help/fence/three letters are refused', not ParseFenceInfo('locale=ara', k, l));
+  CheckTrue('help/fence/two locales are refused', not ParseFenceInfo('locale=ar locale=he', k, l));
+  CheckTrue('help/fence/a stray token is refused', not ParseFenceInfo('spx-good junk', k, l));
+  CheckTrue('help/fence/the conditions block takes none',
+            not ParseFenceInfo('spx-fixture locale=ar', k, l));
   CheckHelpNamesControls;
   registered := TStringList.Create;
   try
@@ -13093,6 +13245,7 @@ begin
   TestGroups;
   TestEngineCodeList;
   TestHelpExamples;
+  CheckHelpRtlPhrases;
   TestHelpSilences;
   TestOfflineClaim;
   TestPlatformSplit;

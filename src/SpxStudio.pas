@@ -1193,7 +1193,7 @@ begin
     reports a verdict four implementations agree on, it does not teach style.
 
     `plural.locale-missing` arrived with v0.7.0 and is the one code here that a reader of THIS
-    application cannot meet: it needs an empty locale, and the box offers ten tags and no blank
+    application cannot meet: it needs an empty locale, and the box offers twelve tags and no blank
     (measured -- `{plural %n%: one|few|many}` answers it at locale "" and answers nothing at
     "en" or "ru"). Its wording is carried anyway, because what is one edit away is a bare slug
     on screen, and the suite gates the unreachability rather than believing this sentence.

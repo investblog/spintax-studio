@@ -341,8 +341,13 @@ souligné, car la ligne que vous avez écrite n'a rien de fautif.
 `｛｝`. C'est ainsi qu'il dit « j'ai vu ceci et n'ai pas pu l'appliquer ». Personne n'appellerait
 cela discret, et tant mieux : un paragraphe évaporé en silence prendrait plus longtemps à trouver.
 
-Le français demande deux formes, le russe trois. Sous la locale de ce document,
-`{plural %n%: objet|objets}` est la bonne.
+Le français demande deux formes, le russe trois, l'arabe six. Sous la locale de ce document,
+`{plural %n%: objet|objets}` est la bonne ; sous `ar`, ces deux mêmes formes sont l'erreur :
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **Le vide vient d'une autre cause, et les deux se confondent aisément.** Comparez ces deux-là, qui
 ne diffèrent que par le nombre de formes :

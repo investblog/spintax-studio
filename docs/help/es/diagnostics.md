@@ -332,8 +332,13 @@ que usted escribió no tiene nada de malo.
 `｛｝`. Así dice «he visto esto y no he podido aplicarlo». Nadie lo llamaría discreto, y mejor así:
 un párrafo esfumado en silencio costaría más de encontrar.
 
-El español pide dos formas, el ruso tres. Bajo la locale de este documento la correcta es
-`{plural %n%: objeto|objetos}`.
+El español pide dos formas, el ruso tres, el árabe seis. Bajo la locale de este documento la
+correcta es `{plural %n%: objeto|objetos}`; bajo `ar` esas mismas dos formas son el error:
+
+```locale=ar
+#def %n% = 5
+%n% {plural %n%: كتاب|كتب}   →  5 ｛plural 5: كتاب|كتب｝
+```
 
 **El vacío viene por otra causa, y las dos se confunden con facilidad.** Compare estas dos, que
 solo se diferencian en cuántas formas llevan:

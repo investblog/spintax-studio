@@ -38,7 +38,9 @@ polovice; označite je i pored će se pojaviti polje za broj, a pregled će staj
 
 `locale` rješava oblike množine, i to je prebacivač iznad desne polovice, a ne jezik sučelja.
 Hrvatskom, srpskom, bosanskom, ruskom, ukrajinskom i bjeloruskom trebaju tri oblika; engleskom —
-dva.
+dva; arapskom — šest. Pod arapskim i hebrejskim lokalom on još rješava kako se veznik pridružuje u
+popisu (vidi razdjeljivač). Arapski i hebrejski primjeri ispod izmjereni su pod vlastitim lokalom —
+imenuje ga rečenica ispred svakoga od njih.
 
 ## Izbor
 
@@ -114,6 +116,47 @@ Kada trebaju dva različita razdjeljivača, postavke se pišu u cijelosti:
 ```
 
 `sep` ide između komada, a `lastsep` — ispred posljednjeg.
+
+Razdjeljivač samo od slova dobiva po razmak sa svake strane, čak i kad ih niste upisali:
+
+```spx-good
+[<lastsep="i">A|B]  →  B i A
+```
+
+Iznimka su pisma u kojima se riječi ne odvajaju razmacima, i to pod bilo kojim lokalom: kineski,
+japanski, tajlandski, laoski, kmerski i burmanski razdjeljivači pišu se spojeno.
+
+```spx-good
+[<lastsep="和">A|B]  →  B和A
+[<lastsep="と">A|B]  →  BとA
+[<lastsep="และ">A|B]  →  BและA
+[<lastsep="ແລະ">A|B]  →  BແລະA
+[<lastsep="ក">A|B]  →  BកA
+[<lastsep="က">A|B]  →  BကA
+```
+
+Arapski i hebrejski imaju svoje pravilo, i uključuje ga **lokal**, a ne pismo. Pod `ar`
+razdjeljivač koji se sastoji točno od و ili ف zadržava razmak ispred sebe i gubi razmak iza: na
+arapskom se veznik piše spojeno sa sljedećom riječju. Pod `he` isto to čini ו. Samo ispred riječi u
+istom pismu — ispred latiničnog naziva ili znamenke oba razmaka ostaju:
+
+```spx-good locale=ar
+[<lastsep="و">الكازينو|البث]  →  البث والكازينو
+[<lastsep="و">Evolution|الكازينو]  →  الكازينو و Evolution
+[<lastsep="ف">الكازينو|البث]  →  البث فالكازينو
+[<lastsep="و">2026|البث]  →  البث و 2026
+```
+
+```spx-good locale=he
+[<lastsep="ו">קזינו|שידור]  →  שידור וקזינו
+```
+
+Pod bilo kojim drugim lokalom veznik ostaje zasebna riječ — tako i treba za perzijski i urdu, gdje
+se isto slovo piše odvojeno:
+
+```spx-good
+[<lastsep="و">الكازينو|البث]  →  البث و الكازينو
+```
 
 ### Koliko uzeti
 
@@ -241,9 +284,34 @@ riječ.
 %n% {plural %n%: dokument|dokumenta|dokumenata}  →  5
 ```
 
-Koliko oblika, rješava lokal, a ne vi: pod `hr` ih je tri, pod `en` — dva. Pogrešan je broj greška o
-kojoj ploča javlja (`plural.arity`), i motor tada ispisuje cijelu konstrukciju natrag, zamijenivši
-zagrade širokima `｛｝` da se ne pomiješa s izlazom.
+Koliko oblika, rješava lokal, a ne vi: pod `hr` ih je tri, pod `en` — dva, pod `ar` — šest, redom
+zero, one, two, few, many, other. Na arapskom se «jedna knjiga» i «dvije knjige» kažu bez broja, pa
+se broj stavlja **unutar** onih oblika koji ga ispisuju, a ne ispred bloka:
+
+```spx-good locale=ar
+#def %n% = 3
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 3 كتب.
+```
+
+```spx-good locale=ar
+#def %n% = 2
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتابان.
+
+#def %n% = 0
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 0 كتاب.
+
+#def %n% = 1
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتاب واحد.
+
+#def %n% = 11
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 11 كتابًا.
+
+#def %n% = 100
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 100 كتاب.
+```
+
+Pogrešan je broj greška o kojoj ploča javlja (`plural.arity`), i motor tada ispisuje cijelu
+konstrukciju natrag, zamijenivši zagrade širokima `｛｝` da se ne pomiješa s izlazom.
 
 ## Odlomci
 

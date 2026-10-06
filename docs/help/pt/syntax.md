@@ -41,7 +41,9 @@ numérico, e a pré-visualização fica quieta enquanto trabalha.
 
 `locale` decide as formas de número, e é o selector por cima da metade direita, não o idioma da
 interface. O português e o inglês pedem duas formas; o russo, o ucraniano, o bielorrusso, o sérvio,
-o croata e o bósnio pedem três.
+o croata e o bósnio pedem três; o árabe pede seis. Sob o árabe e o hebraico a locale muda também
+a maneira como uma conjunção liga uma lista (ver o separador). Os exemplos em árabe e em hebraico
+mais abaixo são medidos sob a sua própria locale, que a frase antes de cada um deles nomeia.
 
 ## Escolhas
 
@@ -121,6 +123,48 @@ Escreva as definições por extenso quando quiser dois separadores diferentes:
 ```
 
 `sep` vai entre os pedaços e `lastsep` antes do último.
+
+Um separador feito só de letras ganha um espaço de cada lado, mesmo quando nenhum foi escrito:
+
+```spx-good
+[<lastsep="e">A|B]  →  B e A
+```
+
+As escritas sem espaços entre as palavras são a excepção, sob qualquer locale: os separadores em
+chinês, japonês, tailandês, laosiano, khmer e birmanês juntam-se sem espaço.
+
+```spx-good
+[<lastsep="和">A|B]  →  B和A
+[<lastsep="と">A|B]  →  BとA
+[<lastsep="และ">A|B]  →  BและA
+[<lastsep="ແລະ">A|B]  →  BແລະA
+[<lastsep="ក">A|B]  →  BកA
+[<lastsep="က">A|B]  →  BကA
+```
+
+O árabe e o hebraico têm uma regra própria, e quem a liga é a **locale**, não a escrita. Sob `ar`
+um separador que seja exactamente و ou ف mantém o espaço antes de si e perde o de depois, porque o
+árabe escreve a conjunção colada à palavra seguinte; sob `he` o mesmo vale para ו. Só acontece
+antes de uma palavra nessa escrita — antes de um nome latino ou de um algarismo ficam os dois
+espaços:
+
+```spx-good locale=ar
+[<lastsep="و">الكازينو|البث]  →  البث والكازينو
+[<lastsep="و">Evolution|الكازينو]  →  الكازينو و Evolution
+[<lastsep="ف">الكازينو|البث]  →  البث فالكازينو
+[<lastsep="و">2026|البث]  →  البث و 2026
+```
+
+```spx-good locale=he
+[<lastsep="ו">קזינו|שידור]  →  שידור וקזינו
+```
+
+Sob qualquer outra locale a conjunção fica uma palavra à parte, o que está certo para o persa e o
+urdu, onde a mesma letra se escreve separada:
+
+```spx-good
+[<lastsep="و">الكازينو|البث]  →  البث و الكازينو
+```
 
 ### Quantos
 
@@ -245,9 +289,35 @@ não podem contradizer-se: o que desaparece é a palavra.
 %n% {plural %n%: ficheiro|ficheiros}  →  5
 ```
 
-Quantas formas há decide-o a locale e não o utilizador: sob `pt` são duas, sob `ru` três. O número
-errado é um erro que o painel assinala (`plural.arity`), e o motor reimprime então a construção
-inteira com as chavetas trocadas por umas largas `｛｝`, para que não se confunda com saída.
+Quantas formas há decide-o a locale e não o utilizador: sob `pt` são duas, sob `ru` três, sob `ar`
+seis — pela ordem zero, one, two, few, many, other. O árabe diz «um livro» e «dois livros» sem
+numeral, por isso o número vai **dentro** das formas que o imprimem e não à frente do bloco:
+
+```spx-good locale=ar
+#def %n% = 3
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 3 كتب.
+```
+
+```spx-good locale=ar
+#def %n% = 2
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتابان.
+
+#def %n% = 0
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 0 كتاب.
+
+#def %n% = 1
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتاب واحد.
+
+#def %n% = 11
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 11 كتابًا.
+
+#def %n% = 100
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 100 كتاب.
+```
+
+O número errado é um erro que o painel assinala (`plural.arity`), e o motor reimprime então a
+construção inteira com as chavetas trocadas por umas largas `｛｝`, para que não se confunda com
+saída.
 
 ## Excertos
 

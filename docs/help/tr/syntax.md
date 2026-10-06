@@ -39,7 +39,10 @@ yarımın üstündeki **seed** kutusudur; işaretleyin, yanında bir sayı alan�
 çalışırken önizleme durur.
 
 `locale` sayı biçimlerini belirler ve arayüzün dili değil, sağ yarımın üstündeki seçicidir. Türkçe
-ve İngilizce iki biçim ister; Rusça, Ukraynaca, Belarusça, Sırpça, Hırvatça ve Boşnakça üç ister.
+ve İngilizce iki biçim ister; Rusça, Ukraynaca, Belarusça, Sırpça, Hırvatça ve Boşnakça üç ister;
+Arapça altı ister. Arapça ve İbranice altında yerel ayar, bir bağlacın bir listeyi nasıl
+birleştirdiğini de değiştirir (bkz. ayırıcı). Aşağıdaki Arapça ve İbranice örnekler kendi yerel
+ayarları altında ölçülmüştür; her birinden önceki cümle o yerel ayarı adlandırır.
 
 ## Seçimler
 
@@ -117,6 +120,49 @@ de bloğun tamamını parçaların arasına yazıyor. Tanı ile çıktı ayrı s
 ```
 
 `sep` parçaların arasına, `lastsep` sonuncudan önce girer.
+
+Yalnızca harflerden oluşan bir ayırıcı, hiç boşluk yazılmamış olsa da her iki yanına birer boşluk
+alır:
+
+```spx-good
+[<lastsep="ve">A|B]  →  B ve A
+```
+
+Sözcükler arasında boşluk bırakmadan yazılan yazı sistemleri, hangi yerel ayar olursa olsun
+istisnadır: Çince, Japonca, Tayca, Laoca, Kmerce ve Birmanca ayırıcılar boşluksuz birleşir.
+
+```spx-good
+[<lastsep="和">A|B]  →  B和A
+[<lastsep="と">A|B]  →  BとA
+[<lastsep="และ">A|B]  →  BและA
+[<lastsep="ແລະ">A|B]  →  BແລະA
+[<lastsep="ក">A|B]  →  BកA
+[<lastsep="က">A|B]  →  BကA
+```
+
+Arapça ile İbranicenin kendine özgü bir kuralı vardır ve onu açan yazı sistemi değil **yerel
+ayardır**. `ar` altında tam olarak و ya da ف olan bir ayırıcı önündeki boşluğu korur, arkasındakini
+düşürür, çünkü Arapça bağlacı sonraki sözcüğe bitişik yazar; `he` altında aynısı ו için geçerlidir.
+Bu yalnızca o yazı sistemindeki bir sözcükten önce olur — Latin harfli bir addan ya da bir rakamdan
+önce iki boşluk da kalır:
+
+```spx-good locale=ar
+[<lastsep="و">الكازينو|البث]  →  البث والكازينو
+[<lastsep="و">Evolution|الكازينو]  →  الكازينو و Evolution
+[<lastsep="ف">الكازينو|البث]  →  البث فالكازينو
+[<lastsep="و">2026|البث]  →  البث و 2026
+```
+
+```spx-good locale=he
+[<lastsep="ו">קזינו|שידור]  →  שידור וקזינו
+```
+
+Başka her yerel ayar altında bağlaç ayrı bir sözcük olarak kalır; aynı harfin ayrı yazıldığı Farsça
+ve Urduca için doğrusu da budur:
+
+```spx-good
+[<lastsep="و">الكازينو|البث]  →  البث و الكازينو
+```
 
 ### Kaç tane
 
@@ -239,9 +285,35 @@ panel `plural.count-macro` der. Sayı ile biçim birbiriyle çelişemez: bunun y
 %n% {plural %n%: dosya|dosyalar}  →  5
 ```
 
-Kaç biçim olduğuna siz değil yerel ayar karar verir: `tr` altında iki, `ru` altında üç. Yanlış sayı
-panelin bildirdiği bir hatadır (`plural.arity`) ve makine o zaman yapının tamamını, kaşlı ayraçlar
-geniş `｛｝` ile değiştirilmiş olarak geri yazar; böylece çıktı sanılmaz.
+Kaç biçim olduğuna siz değil yerel ayar karar verir: `tr` altında iki, `ru` altında üç, `ar`
+altında altı — zero, one, two, few, many, other sırasıyla. Arapça «bir kitap» ve «iki kitap»
+derken sayı sözcüğü kullanmaz, bu yüzden sayı bloğun önüne değil, onu yazan biçimlerin **içine**
+girer:
+
+```spx-good locale=ar
+#def %n% = 3
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 3 كتب.
+```
+
+```spx-good locale=ar
+#def %n% = 2
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتابان.
+
+#def %n% = 0
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 0 كتاب.
+
+#def %n% = 1
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك كتاب واحد.
+
+#def %n% = 11
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 11 كتابًا.
+
+#def %n% = 100
+في سلتك {plural %n%: %n% كتاب|كتاب واحد|كتابان|%n% كتب|%n% كتابًا|%n% كتاب}.  →  في سلتك 100 كتاب.
+```
+
+Yanlış sayı panelin bildirdiği bir hatadır (`plural.arity`) ve makine o zaman yapının tamamını,
+kaşlı ayraçlar geniş `｛｝` ile değiştirilmiş olarak geri yazar; böylece çıktı sanılmaz.
 
 ## Parçalar
 

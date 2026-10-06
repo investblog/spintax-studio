@@ -74,14 +74,48 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
          no such separator example and no claim about it (grepped).
       2. **Arabic `و`/`ف` and Hebrew `ו` attach to the next word — but only under an `ar` /
          `he` locale**: `[<lastsep="و">الكازينو|البث]` was `البث و الكازينو`, is
-         `البث والكازينو` under `ar`, and is unchanged under `ru` and `en`. **The window cannot
-         reach this:** the locale box (`SPX_LOCALES`) offers ten tags, none of them `ar` or
-         `he`, so in Studio the conjunction stays padded, unlike the playground under `ar`.
-- [ ] **Decide whether the locale box offers `ar` / `he`** (and which others). Owner's call:
-      a locale is a promise about plurals as well as separators (`ar` has six plural forms),
-      and every locale the box offers is one more column the help's per-locale claims are
-      measured in. Until then, issue #25's Arabic/Hebrew rule is engine behaviour Studio does
-      not expose.
+         `البث والكازينو` under `ar`, and is unchanged under `ru` and `en`. **At the bump the
+         window could not reach this:** the locale box (`SPX_LOCALES`) offered ten tags, none
+         of them `ar` or `he` — closed the same day, below.
+- [x] **The locale box offers `ar` and `he` (owner, 2026-10-06: "if a client writes in their
+      language, they must be served, since the engine allows it").** Appended after `bs`, so
+      every stored index keeps its meaning. The window speaks neither, so their names come
+      from a tag-keyed table (`SPX_LOCALE_NAMES`) and the test asks every tag for a name —
+      dropping the `he` row fails `locale/every-tag-has-a-name: #11 "he"`. Three things came
+      with it: the AI prompt resynced to `PROMPT_VERSION` 6 first (above — under `ar` the v2
+      port taught a plural the engine rejects); the dropped list photographed (all twelve rows,
+      both scripts in their own order and Arabic joined, checked against the same strings drawn
+      by `DrawText`); and the help, in all fourteen languages, in the same change.
+
+      **The help** says what the two locales do — six Arabic forms in their order with the number
+      inside the forms, the conjunction rule under `ar`/`he`, and (from engine `v0.11`/`v0.12`,
+      never documented) the bare join of Chinese/Japanese/Thai/Lao/Khmer/Myanmar separators and
+      the padding of a letters-only one. Every claim is a gated example: a fence may now name its
+      own locale (` ```spx-good locale=ar `), read alike by `make-help.py` and the suite, refused
+      unless the window offers that locale, and carried to the window by
+      `SpxHelpExampleLocale` — the one place the rule lives, so a click renders under the locale
+      the arrow was measured under. Twenty examples per language (nineteen in the syntax
+      document, one in diagnostics), all matched the engine first time in all fourteen; the
+      first draft had nine, and the Codex gate named the branches the prose claimed without one
+      (`ف`, the digit exception, Lao/Khmer/Myanmar, four of the six plural slots — and kana was
+      found the same way), so each now has its example. The twelve translations by agents,
+      terms taken from each document; every example is byte-identical across languages except the
+      letters-only padding one, which uses each document's own word for "and". A third Codex
+      round found the Khmer and Myanmar samples (`និង`, `နှင့်`) carried combining marks, which
+      take the engine's non-letter path and stay bare whatever the script table says — so they
+      are single base letters now (`ក`, `က`), and dropping both ranges from the engine's table
+      turns exactly those examples red in all fourteen documents.
+
+      **And IPro drew every Arabic phrase backwards.** Each word shaped right, the ORDER left to
+      right — IPro cuts text into words at ordinary spaces. The editor and the preview were
+      already right (photographed). The page generator now makes a space inside a right-to-left
+      phrase non-breaking, so Windows orders the phrase itself; matched against `DrawText` line
+      for line. `help/rtl/*` holds the pages to it (all 28 checks red with the rule switched off).
+      The monospace face has no Thai, so `และ` comes out in a fallback face — legible, not pretty. **The probe's first two photographs were wrong**
+      by exactly 1.5: PowerShell is not DPI-aware, so `GetWindowRect` answered 105×161 for a
+      158×242 list and `PrintWindow` clipped to it — `SetProcessDPIAware()` first.
+      Kept to `ar`/`he`: `fa`, `ur`, `th` and the rest are default-arity locales where the
+      engine does nothing a box entry would change.
 
 ## Engine bumped to `v0.11.1` (2026-10-04, issue #24)
 

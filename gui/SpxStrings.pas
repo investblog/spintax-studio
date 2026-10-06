@@ -333,8 +333,21 @@ begin
 end;
 
 const
-  SPX_LOCALES: array[0..9] of string =
-    ('ru', 'uk', 'be', 'en', 'de', 'fr', 'es', 'sr', 'hr', 'bs');
+  { `ar` and `he` since 2026-10-06 (engine v0.12.0): the engine renders both differently from
+    the default -- six plural forms under `ar`, and the conjunctions و / ف / ו attach to the next
+    word -- so a reader writing in either needs the locale, whether or not the window speaks the
+    language. Appended, never inserted: every index before them is a stored ItemIndex. }
+  SPX_LOCALES: array[0..11] of string =
+    ('ru', 'uk', 'be', 'en', 'de', 'fr', 'es', 'sr', 'hr', 'bs', 'ar', 'he');
+
+  { Names for the locales the INTERFACE does not speak, keyed by tag. A locale is a fact about
+    the document, not about the window, so the box can offer a language the window has no
+    translation for -- and the name still has to come from somewhere, or the list says 'ar' out
+    loud. A tag in SPX_LOCALES with neither a window language nor a row here answers '' and fails
+    `locale/every-tag-has-a-name` by name. }
+  SPX_LOCALE_NAMES: array[0..1, 0..1] of string = (
+    ('ar', 'العربية'),
+    ('he', 'עברית'));
 
 function SpxLocaleCount: Integer;
 begin
@@ -348,7 +361,7 @@ begin
 end;
 
 function SpxLocaleEndonym(AIndex: Integer): string;
-var tag: string; lang: TSpxLang;
+var tag: string; lang: TSpxLang; i: Integer;
 begin
   Result := '';
   tag := SpxLocaleTag(AIndex);
@@ -356,9 +369,11 @@ begin
   lang := SpxLangFor(tag);
   { THE ROUND TRIP IS THE GUARD, not decoration. SpxLangFor answers spxLangEn for everything
     it does not recognise, so asking it for a tag the interface has no language for would
-    gloss that tag `English`. Comparing the code back catches exactly that: a locale this
-    product cannot name is shown bare, which is the same thing an unknown one does. }
-  if SameText(SpxLangCode(lang), tag) then Result := SpxLangName(lang);
+    gloss that tag `English`. Comparing the code back catches exactly that, and sends the tag
+    to the table of locales the window does not speak. }
+  if SameText(SpxLangCode(lang), tag) then Exit(SpxLangName(lang));
+  for i := Low(SPX_LOCALE_NAMES) to High(SPX_LOCALE_NAMES) do
+    if SameText(SPX_LOCALE_NAMES[i, 0], tag) then Exit(SPX_LOCALE_NAMES[i, 1]);
 end;
 
 function SpxLocaleLabel(AIndex: Integer): string;
