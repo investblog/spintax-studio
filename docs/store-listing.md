@@ -16,11 +16,12 @@ include inspector is named nowhere in the live list. The count is twenty either 
 why nothing caught it — `check-listing-drafts.py` counts bullets and cannot compare them to
 the storefront. Queued for the next visit.
 
-**Queued for the version AFTER `0.2.3.0`** (none of it is in that tag): engine `v0.12.0`;
-Arabic and Hebrew as document locales (`ar`, `he` in the locale box, 2026-10-06); the AI
-prompt at `PROMPT_VERSION` 6, which teaches Arabic its six plural forms. The What's-new field
-and any feature bullet that counts languages must be re-measured against the build, not
-copied from here — the locale box now holds twelve tags, the window still speaks fourteen.
+**The next submission is `0.2.4.0`, not `0.2.3.0`** (owner's decision, 2026-10-07): engine
+`v0.12.0`; Arabic and Hebrew as document locales (`ar`, `he` in the locale box, 2026-10-06);
+the AI prompt at `PROMPT_VERSION` 6, which teaches Arabic its six plural forms; and all of
+`0.2.3.0`, which was tagged and never submitted. Its What's-new field is below, written for
+the `0.2.2` → `0.2.4` step. No feature bullet counts locales; bullet 16 counts the window's
+fourteen languages, which did not change.
 
 This file is the copy for the NEXT submission; the measured read-back of the live page is
 recorded at the end. ([`publish/store-listing-edits.md`](publish/store-listing-edits.md) is
@@ -144,15 +145,81 @@ no claim. `scripts/check-listing-drafts.py` now counts, and refuses a twenty-fir
 19. Open-source GPL-3.0-or-later Studio built around the SPINTAX engine family
 20. Optional import of GSA Search Engine Ranker templates, converted and verified by the real engine
 
-**The 0.2.2.0 What's-new field rode; the 0.2.3.0 block below is the NEXT field** (prepared
-2026-09-16, not yet submitted), and the 0.2.2.0 block after it is the live text. Read back
+**The 0.2.2.0 What's-new field rode; the 0.2.4.0 block below is the NEXT field** (prepared
+2026-10-07, not yet submitted). `0.2.3.0` was tagged and never submitted, so the Store goes
+from `0.2.2` straight to `0.2.4` and the field describes both steps; the 0.2.3.0 block after
+it is kept as the record its carried bullets were measured in, and the 0.2.2.0 block after
+that is the live text. Read back
 cache-busted on 2026-09-05: the storefront's `Notes` carries the 0.2.2.0 text verbatim. That closes the
 question the submission left open and ends the run in which the field showed a version-old
 draft. *(This paragraph sits above the heading on purpose — anything inside the section is
 read as the field, and `check-listing-drafts.py` reported the first draft of it as a wrapped
 line and a stray backtick. The gate was right.)*
 
-## What's new in this version (0.2.3.0)
+## What's new in this version (0.2.4.0)
+
+> **The text below is the field, verbatim and form-ready** — one line per bullet, no
+> backticks, no markdown. The thirteen other languages are in `marketing/store/<lang>.md`
+> under the same heading, gated by `check-listing-drafts.py`. Written 2026-10-07 against
+> `git log v0.2.2.0..HEAD` at `8c10963` — the live version is `0.2.2.0`, so this is the
+> distance a Store user actually travels.
+
+Spintax Studio 0.2.4 adds Arabic and Hebrew and updates the engine to v0.12.0.
+
+• Arabic and Hebrew join the locale list. Arabic plurals take six forms, and under these locales a separator written as و or ف (ו in Hebrew) joins the next word when it is in the same script.
+• The AI prompt teaches Arabic's six plural forms and asks the model to write the text first and the markup second.
+• A separator typed without spaces in Chinese, Japanese, Thai, Lao, Khmer or Myanmar now stays without them.
+• A value with a | inside a choice or shuffle becomes several options; a shuffle element that renders empty is dropped with its separator.
+• A single-option construct no longer spends a random draw, so a seed may give a different variant than in 0.2.2; within a version it reproduces exactly.
+• The tidy-up reads every alphabet: т.е. and сайт.рф stay as typed, and so does "Is it audited?", with no space before the quote.
+• The variants count is right about values with a | and empty shuffle elements, and says "at least" where the engine would stop expanding.
+• GSA import is far faster and keeps lists in their own order, not 1, 10, 11, 2.
+• The help covers the new locales and separators in all fourteen languages.
+• Engine updated to v0.12.0.
+
+## How the 0.2.4.0 field was written
+
+**Measured, not carried over by eye.** The live field is 0.2.2.0's, so everything since is
+new to a Store reader; the 0.2.3.0 bullets are kept, shortened for room, and their evidence is
+the record under *How the 0.2.3.0 field was written* below. What is new here:
+
+- Arabic and Hebrew: the locale box holds twelve tags since `8c10963` (`SPX_LOCALES`, pinned
+  by `tests/studio_tests.dpr`). Six forms is `PluralArity('ar')`; the conjunction rule is
+  engine `Spintax.pas/PadSeparator`, and every clause of the bullet is a gated help example
+  measured under its own locale — `البث والكازينو` (joined), `الكازينو و Evolution` (a Latin
+  word keeps both spaces), `שידור וקזינו` under `he`.
+- The prompt: `SPX_PROMPT_VERSION = '6'`, held byte-exact to `@spintax/authoring-prompt` by
+  `tests/fixtures/prompt/`. "Asks the model" is deliberate — the prompt's TWO PASSES paragraph
+  is an instruction, not a guarantee about what a model writes.
+- The bare separators: engine `v0.11.0` (Han, kana) and `v0.12.0` (Thai, Lao, Khmer,
+  Myanmar); `0.2.2.0` padded all of them (`B 和 A`). Gated help examples in all fourteen
+  languages (`[<lastsep="และ">A|B]  →  BและA`); the Khmer and Myanmar ones were proved by
+  breaking the engine's table, which turns them red.
+- The help bullet is true where the 0.2.3.0 one was not: it names only the locales and the
+  separators, which every language's `syntax.md` now covers; it does not claim the closers.
+
+- The thirteen translations (2026-10-07): 1270–1468 characters, the long ones de, fr, nl.
+  Each closers example is the language's own from its 0.2.3.0 draft, rendered through
+  Studio's path at seed 7 on the `v0.2.2.0` tree and on this one — `«Как дела? »,` before,
+  `«Как дела?»,` now, and the same in all fourteen; fr's is a bracket, `(voir plus haut.)`,
+  and its bullet says so. Serbian Cyrillic says `сајт.срб`, not `сайт.рф`: `й` is not Serbian
+  and the Latin row is transliterated from it, so `сайт.рф` came out `saйt.rf`. Measured
+  `сајт. Срб` → `сајт.срб`. **The Latin row's examples (`t.e.`, `sajt.srb`) are true and show
+  no change** — Latin abbreviations were never broken — the same as in 0.2.3.0. Tr says
+  `Makine`, the help's word for the engine in all three of its documents.
+
+**Cut for room, kept true.** The 0.2.3.0 counter bullet lost the capitalised session name; the
+tidy-up's two bullets became one (same examples); the import bullet lost "in the variables
+panel". **Left out, as before:** a bare dash or arrow is no longer space-padded (`v0.11.0`), and
+no help example shows one; the help's RTL ordering fix, which only ever affected the Arabic
+and Hebrew examples added to the existing pages in this same version.
+
+**Codex, round 1 (2026-10-07):** bullet 1 named the script as the only condition for the
+و/ف/ו join, while the engine also requires the `ar`/`he` locale and the help says so — "under
+these locales" added in all fourteen languages; and this record called the RTL fix one of
+new Arabic/Hebrew help pages, which do not exist. Both confirmed and fixed.
+
+## What's new in this version (0.2.3.0) — TAGGED, NEVER SUBMITTED
 
 > **The text below is the field, verbatim and form-ready** — one line per bullet, no
 > backticks, no markdown; 1304 characters against Microsoft's 1500. The thirteen other
