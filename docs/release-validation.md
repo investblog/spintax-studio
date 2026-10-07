@@ -1,6 +1,6 @@
 # Release validation
 
-Seven records, newest first: `v0.2.3.0` validated on 2026-10-04, `v0.2.2.0` validated and submitted on 2026-08-20, live the same
+Eight records, newest first: `v0.2.4.0` validated on 2026-10-07, `v0.2.3.0` validated on 2026-10-04 (never submitted — superseded by `0.2.4.0`), `v0.2.2.0` validated and submitted on 2026-08-20, live the same
 day and verified by installing on 2026-09-05,
 `v0.2.1.0` validated and published on 2026-08-18, `v0.2.0.0`
 validated on 2026-08-15, a pre-tag check of the AI candidate on 2026-08-14, `v0.1.1.0`
@@ -9,7 +9,51 @@ validated on 2026-08-08 (tagged, never submitted — the tree moved on), `v0.1.0
 
 ---
 
-# v0.2.3.0 — validated 2026-10-04
+# v0.2.4.0 — validated 2026-10-07
+
+**Why it exists:** engine `v0.12.0`, Arabic and Hebrew in the locale box, the AI prompt at
+v6 — and everything in `0.2.3.0`, which was tagged and never submitted; the owner chose to
+ship one version carrying both. The What's-new field describes the `0.2.2` → `0.2.4` step.
+
+## Candidate
+
+Tag `v0.2.4.0` → `d420024`, cut on the owner's command after CI went green on that commit
+(all six jobs, CI run `37619209877`, read by full SHA). `release.yml` run `37619797824` green.
+
+## Identity, read out of the package
+
+The draft release's four assets downloaded into `build\wack-0.2.4.0\`; `sha256sum -c
+SHA256SUMS` OK for the `.msix`, the `.msixupload` and the portable ZIP. `spintax-studio.msix`
+SHA-256 `852bc4af…eadd84db`. Its manifest says `301.SpintaxStudio`, `Version="0.2.4.0"`,
+`ProcessorArchitecture="x64"`. The ZIP's `spintax-studio.exe` carries file version
+`0.2.4.0` and launched to its main form (`Spintax Studio`), then was stopped.
+
+## WACK
+
+```powershell
+appcert.exe reset
+appcert.exe test -appxpackagepath C:\projects\spintax\spintax-studio\build\wack-0.2.4.0\spintax-studio.msix `
+  -reportoutputpath C:\projects\spintax\spintax-studio\build\wack\spintax-studio-wack-0.2.4.0.xml
+```
+
+Both paths absolute: with relative ones appcert refuses with *"The '/reportoutputpath'
+argument must be valid path to the report file"* and exit −1.
+
+Result: **`OVERALL_RESULT=PASS`, `PARTIAL_RUN=FALSE`**. 23 of 24 tests PASS. The one
+non-PASS is the **optional** Blocked Executable Files analyzer, now with two findings, both
+known from `0.2.2.0`: `shell32.dll!ShellExecuteW` (the link marks' browser action) and `reg`
+(`&reg;` in `TSynHTMLSyn`'s entity table). The `dnx` match of the last two runs — an accident
+of an offset table — did not recur. Nothing was silenced.
+
+## Release
+
+Published on GitHub on 2026-10-07 on the owner's command ("релизим"). The Store submission is
+the owner's: upload THIS release's `spintax-studio.msixupload`, paste the fifteen What's-new
+fields, fix feature bullet 6.
+
+---
+
+# v0.2.3.0 — validated 2026-10-04 (never submitted — superseded by `0.2.4.0`)
 
 **Why it exists:** engine `v0.11.1`. The tidy-up stops putting a space between `?` `!` `.` and
 a closing quote or bracket, and the variant counter reads a size past 32 bits the way the

@@ -326,9 +326,12 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       fields rewritten for the `0.2.2` → `0.2.4` step (English and its record in
       `store-listing.md`, *What's new in this version (0.2.4.0)*; thirteen in
       `marketing/store/`, `sr-Latn` regenerated, `check-listing-drafts.py --strict` clean).
-      (1) `git tag v0.2.4.0` on the bump commit and push it — **only on the owner's command**;
-      CI green on that commit first. (2) WACK against the TAG's artefact, record in
-      `docs/release-validation.md`, identity read from the package. (3) Partner Center: upload
+      (1) ~~`git tag v0.2.4.0` on the bump commit and push it~~ — **done 2026-10-07 on the
+      owner's command:** tag → `d420024`, CI green on all six jobs first, `release.yml` green,
+      sums verified, MSIX identity `301.SpintaxStudio 0.2.4.0 x64`, the ZIP's exe launched.
+      (2) ~~WACK against the TAG's artefact~~ — **done 2026-10-07:** `OVERALL_RESULT=PASS`, 23 of
+      24, the optional analyzer with two known findings; record in `docs/release-validation.md`.
+      GitHub release published the same day on the owner's command. (3) Partner Center: upload
       the tag's `.msixupload`; paste the fifteen fields (Serbian twice, as below); **fix
       feature bullet 6**; screenshots unchanged. (4) After certification: the charter, this
       file, the storefront read back cache-busted, `Get-AppxPackage`.
