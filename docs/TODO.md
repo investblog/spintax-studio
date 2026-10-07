@@ -333,8 +333,14 @@ question lands with Pre-M0 (b), the Partner Center account type before the first
       24, the optional analyzer with two known findings; record in `docs/release-validation.md`.
       GitHub release published the same day on the owner's command. (3) Partner Center: upload
       the tag's `.msixupload`; paste the fifteen fields (Serbian twice, as below); **fix
-      feature bullet 6**; screenshots unchanged. (4) After certification: the charter, this
-      file, the storefront read back cache-busted, `Get-AppxPackage`.
+      feature bullet 6**; screenshots unchanged. — **the owner's; announced for 2026-10-07, not
+      confirmed from here.** (4) After certification: the charter, this file, the storefront
+      read back cache-busted (`Notes` = the 0.2.4.0 field; feature 6 = the merged line),
+      `Get-AppxPackage`.
+- [ ] **The catalog shelves still say `0.2.3.0`** — `docs/catalog-listings.md` (subject, program
+      line, ZIP link, "0.2.3.0 follows") and the PAD (`scripts/make-pad.py`, its
+      `Program_Change_Info`). Bring them to `0.2.4.0` once the Store carries it, not before:
+      their copy says what the Store shows.
 - [x] **The `0.2.3.0` visit — superseded by `0.2.4.0` (2026-10-07), steps (3)–(4) never run.**
       Kept for what (1)–(2) recorded. (1) ~~`git tag v0.2.3.0` on the
       commit that carries the bump and push it~~ — **done 2026-10-04 on the owner's command:**
